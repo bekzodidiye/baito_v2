@@ -35,7 +35,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
   const tabs = [
     { id: 1, label: 'Shaxsiy', icon: User },
-    { id: 2, label: 'Professional', icon: Briefcase },
+    { id: 2, label: 'Malakali', icon: Briefcase },
     { id: 3, label: 'Buyurtmalar', icon: History },
     { id: 4, label: 'Moliya', icon: Wallet },
     { id: 5, label: 'Sharhlar', icon: Star },

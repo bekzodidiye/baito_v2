@@ -2,13 +2,14 @@ import React from 'react';
 import { Mail, Phone, MapPin, Briefcase, LogOut } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { MODAL_TRANSLATIONS } from './MenuTranslations';
+import { showToast } from '../../utils/toast';
 
 interface ProfileContentProps {
   onClose: () => void;
 }
 
 export const ProfileContent: React.FC<ProfileContentProps> = ({ onClose }) => {
-  const { language, setIsLoggedIn, setToastMessage } = useApp();
+  const { language, logout, } = useApp();
   const t = MODAL_TRANSLATIONS[language];
 
   return (
@@ -78,10 +79,10 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({ onClose }) => {
       {/* Log Out Button */}
       <button
         onClick={() => {
-          setIsLoggedIn(false);
-          setToastMessage(t.logoutSuccess);
+          logout();
+          (t.logoutSuccess);
           setTimeout(() => {
-            setToastMessage(null);
+            (null);
           }, 3000);
           onClose();
         }}

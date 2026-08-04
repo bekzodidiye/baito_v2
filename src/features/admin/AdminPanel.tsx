@@ -40,6 +40,7 @@ export const AdminPanel: React.FC = () => {
     users,
     jobs,
     transactions,
+    supportTickets,
     settings,
     refresh,
     addBalance,
@@ -105,7 +106,7 @@ export const AdminPanel: React.FC = () => {
           )}
 
           {activeTab === 'support' && (
-            <AdminSupport />
+            <AdminSupport supportTickets={supportTickets} />
           )}
 
           {activeTab === 'broadcast' && (

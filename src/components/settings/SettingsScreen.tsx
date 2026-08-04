@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { ArrowLeft, Lock, Globe, Bell, Info, HelpCircle, ChevronRight, Trash2, Briefcase, MessageSquare } from 'lucide-react';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const SettingsScreen: React.FC = () => {
-  const { setCurrentScreen, language, setLanguage } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language, setLanguage } = useApp();
   const t = translations[language];
   const tMenu = (t as any).menu || {};
 

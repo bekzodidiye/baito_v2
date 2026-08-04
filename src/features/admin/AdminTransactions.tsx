@@ -6,25 +6,19 @@ interface AdminTransactionsProps {
   transactions: AdminTransaction[];
 }
 
-interface WithdrawalRequest {
-  id: string;
-  workerName: string;
-  cardNumber: string;
-  amount: number;
-  requestedAt: string;
-  status: 'pending' | 'approved' | 'rejected';
-  isDelayed?: boolean;
-}
-
-const mockWithdrawals: WithdrawalRequest[] = [
-  { id: 'W-901', workerName: 'Otabek Qodirov', cardNumber: '8600 **** **** 4321', amount: 450000, requestedAt: '2026-07-24 08:30', status: 'pending', isDelayed: false },
-  { id: 'W-902', workerName: 'Jasur Bekmirzayev', cardNumber: '9860 **** **** 9102', amount: 820000, requestedAt: '2026-07-23 06:15', status: 'pending', isDelayed: true },
-  { id: 'W-903', workerName: 'Sardor Umarov', cardNumber: '8600 **** **** 1122', amount: 200000, requestedAt: '2026-07-23 14:00', status: 'approved', isDelayed: false },
-];
-
 export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactions }) => {
   const [activeTab, setActiveTab] = useState<'tx' | 'withdrawals' | 'commission'>('tx');
-  const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>(mockWithdrawals);
+
+  // Computed properties from transactions
+  const withdrawals = transactions.filter(t => t.type === 'withdrawal').map(w => ({
+    id: w.id,
+    workerName: w.workerName || w.employerName || 'Noma\'lum', // fallback for user name
+    cardNumber: 'Tasdiqlangan karta', // we can add bankCardMask to transaction or fetch from user
+    amount: w.amount,
+    requestedAt: w.createdAt || '',
+    status: w.status as 'pending' | 'approved' | 'rejected',
+    isDelayed: false,
+  }));
 
   const formatSum = (val?: string | number) => {
     const num = typeof val === 'number' ? val : parseFloat(val || '0');
@@ -32,15 +26,14 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
   };
 
   const handleApproveWithdrawal = (id: string) => {
-    setWithdrawals(withdrawals.map(w => w.id === id ? { ...w, status: 'approved' } : w));
-    alert("Mablag' chiqarish so'rovi tasdiqlandi va pul o'tkazildi!");
+    // This should ideally call an API
+    alert("API orqali ulash kutilmoqda...");
   };
 
   const handleRejectWithdrawal = (id: string) => {
     const reason = prompt('Rad etish sababini kiriting:');
     if (reason) {
-      setWithdrawals(withdrawals.map(w => w.id === id ? { ...w, status: 'rejected' } : w));
-      alert(`So'rov rad etildi. Sabab: ${reason}`);
+      alert(`API orqali ulash kutilmoqda. Sabab: ${reason}`);
     }
   };
 

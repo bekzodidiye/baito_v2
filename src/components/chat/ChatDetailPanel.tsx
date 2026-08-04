@@ -3,6 +3,7 @@ import { MessageSquare, MapPin, CheckCheck } from 'lucide-react';
 import { ChatHeader } from './ChatHeader';
 import { ChatInputBar } from './ChatInputBar';
 import { Chat } from '../../types';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface ChatDetailPanelProps {
   activeChat: Chat | null;

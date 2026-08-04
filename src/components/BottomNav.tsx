@@ -3,9 +3,11 @@ import { useApp, ScreenType } from '../context/AppContext';
 import { Calendar, Map, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
 import { translations } from '../translations';
+import { useCurrentScreen } from '../hooks/useCurrentScreen';
 
 export const BottomNav: React.FC = () => {
-  const { currentScreen, language, requireAuth, selectedChatId, employerSelectedChatId } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language, requireAuth, selectedChatId, employerSelectedChatId } = useApp();
   const t = translations[language];
 
   if (

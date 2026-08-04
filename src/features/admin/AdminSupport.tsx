@@ -3,55 +3,19 @@ import { SupportTicket } from './types';
 import { Headphones, User } from 'lucide-react';
 import { SupportTicketChat } from './SupportTicketChat';
 
-const mockTickets: SupportTicket[] = [
-  {
-    id: 'TICK-101',
-    userName: 'Otabek Qodirov',
-    userRole: 'worker',
-    subject: 'E\'lon rasmi yuborilmadi va balansdan pul yechildi',
-    category: 'payment',
-    status: 'new',
-    priority: 'high',
-    createdAt: '2026-07-24 10:15',
-    messages: [
-      { sender: 'user', text: 'Assalomu alaykum! E\'lon berish uchun 15 000 UZS to\'ladim, lekin e\'lon hali ham kutilmoqda holatida.', timestamp: '10:15' },
-    ],
-  },
-  {
-    id: 'TICK-102',
-    userName: 'Shaxnoza Karimova',
-    userRole: 'employer',
-    subject: 'Ishchi topshiriqni yakunlamay ketib qoldi',
-    category: 'dispute',
-    status: 'in_progress',
-    priority: 'urgent',
-    createdAt: '2026-07-24 09:30',
-    messages: [
-      { sender: 'user', text: 'Santexnika bo\'yicha usta kelib ishni yarmida qoldirdi. To\'lov qaytarilishini so\'rayman.', timestamp: '09:30' },
-      { sender: 'admin', text: 'Assalomu alaykum! Muammoingiz qabul qilindi. Ishchi va siz bilan bog\'lanmoqdamiz.', timestamp: '09:45' },
-    ],
-  },
-  {
-    id: 'TICK-103',
-    userName: 'Jasur Bekmirzayev',
-    userRole: 'worker',
-    subject: 'Pasport verifikatsiyasi necha kun davom etadi?',
-    category: 'account',
-    status: 'resolved',
-    priority: 'medium',
-    createdAt: '2026-07-23 16:20',
-    messages: [
-      { sender: 'user', text: 'Hujjatlarimni yukladim, qachon tasdiqlanadi?', timestamp: '16:20' },
-      { sender: 'admin', text: 'Verifikatsiya odatda 1-2 soat ichida ko\'rib chiqiladi. Hujjatlaringiz tasdiqlandi!', timestamp: '16:35' },
-    ],
-  },
-];
+interface AdminSupportProps {
+  supportTickets: SupportTicket[];
+}
 
-export const AdminSupport: React.FC = () => {
-  const [tickets, setTickets] = useState<SupportTicket[]>(mockTickets);
+export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) => {
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'new' | 'in_progress' | 'resolved'>('all');
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [replyText, setReplyText] = useState('');
+
+  React.useEffect(() => {
+    setTickets(supportTickets);
+  }, [supportTickets]);
 
   const quickReplies = [
     'Assalomu alaykum! Murojaatingiz qabul qilindi, 15 daqiqa ichida o\'rganib chiqamiz.',

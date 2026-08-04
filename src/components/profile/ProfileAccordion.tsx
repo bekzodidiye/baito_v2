@@ -1,6 +1,8 @@
 import React from 'react';
 import { Briefcase, ChevronRight, History, MessageSquare, Award, Coins, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { showToast } from '../../utils/toast';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface ProfileAccordionProps {
   expandedSection: 'activity' | 'settings' | 'help' | null;
@@ -8,7 +10,7 @@ interface ProfileAccordionProps {
   t: any;
   language: string;
   setCurrentScreen: (screen: string) => void;
-  setToastMessage: (msg: string | null) => void;
+
   setActiveDialog: (dialog: 'withdraw' | 'edit' | 'none') => void;
   toggleLanguage: () => void;
 }
@@ -19,7 +21,6 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
   t,
   language,
   setCurrentScreen,
-  setToastMessage,
   setActiveDialog,
   toggleLanguage,
 }) => {
@@ -30,7 +31,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
       {/* 2. Sozlamalar Accordion (Direct Link) */}
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
         <button 
-          onClick={() => { setCurrentScreen('sozlamalar'); setToastMessage(null); }}
+          onClick={() => { setCurrentScreen('sozlamalar'); (null); }}
           className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer outline-none"
         >
           <div className="flex items-center gap-2">
@@ -44,7 +45,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
       {/* 3. Yordam Accordion (Direct Link) */}
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
         <button 
-          onClick={() => { setCurrentScreen('yordam'); setToastMessage(null); }}
+          onClick={() => { setCurrentScreen('yordam'); (null); }}
           className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer outline-none"
         >
           <div className="flex items-center gap-2">
@@ -77,7 +78,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
             >
               <div className="divide-y divide-slate-100">
                 <div 
-                  onClick={() => { setCurrentScreen('kalendar'); setToastMessage(null); }}
+                  onClick={() => { setCurrentScreen('kalendar'); (null); }}
                   className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
@@ -89,8 +90,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
 
                 <div 
                   onClick={() => {
-                    setToastMessage(language === 'uz' ? "Hozircha reytinglar yo'q." : language === 'ru' ? "Пока отзывов нет." : "No reviews yet.");
-                    setTimeout(() => setToastMessage(null), 3000);
+                    showToast(language === 'uz' ? "Hozircha reytinglar yo'q." : language === 'ru' ? "Пока отзывов нет." : "No reviews yet.");
                   }}
                   className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
                 >
@@ -103,8 +103,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
 
                 <div 
                   onClick={() => {
-                    setToastMessage(language === 'uz' ? "Nishonlar: Yangi foydalanuvchi, Doimiy xodim." : language === 'ru' ? "Значки: Новый пользователь, Постоянный сотрудник." : "Badges: New User, Loyal Worker.");
-                    setTimeout(() => setToastMessage(null), 3000);
+                    showToast(language === 'uz' ? "Nishonlar: Yangi foydalanuvchi, Doimiy xodim." : language === 'ru' ? "Значки: Новый пользователь, Постоянный сотрудник." : "Badges: New User, Loyal Worker.");
                   }}
                   className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
                 >
@@ -128,8 +127,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
 
                 <div 
                   onClick={() => {
-                    setToastMessage(language === 'uz' ? "Hujjatlar yuklanmoqda..." : language === 'ru' ? "Загрузка налоговых документов..." : "Loading tax documents...");
-                    setTimeout(() => setToastMessage(null), 3000);
+                    showToast(language === 'uz' ? "Hujjatlar yuklanmoqda..." : language === 'ru' ? "Загрузка налоговых документов..." : "Loading tax documents...");
                   }}
                   className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
                 >

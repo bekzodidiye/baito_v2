@@ -6,13 +6,15 @@ import { ProfileDialogs } from './ProfileDialogs';
 import { ProfileHero } from './ProfileHero';
 import { ProfileWidgets } from './ProfileWidgets';
 import { ProfileCompletionWidget } from './ProfileCompletionWidget';
+import { showToast } from '../../utils/toast';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const ProfileScreen: React.FC = () => {
   const {
     language,
+    isEditing,
     userProfile,
     setCurrentScreen,
-    setToastMessage,
     fileInputRef,
     expandedSection,
     setExpandedSection,
@@ -110,7 +112,6 @@ export const ProfileScreen: React.FC = () => {
             t={t}
             language={language}
             showVerified={showVerified}
-            setToastMessage={setToastMessage}
             setCurrentScreen={setCurrentScreen}
             setActiveDialog={setActiveDialog}
             balance={balance}
@@ -123,7 +124,6 @@ export const ProfileScreen: React.FC = () => {
             t={t}
             language={language}
             setCurrentScreen={setCurrentScreen}
-            setToastMessage={setToastMessage}
             setActiveDialog={setActiveDialog}
             toggleLanguage={toggleLanguage}
           />
@@ -158,6 +158,7 @@ export const ProfileScreen: React.FC = () => {
         editedPhone={editedPhone}
         setEditedPhone={setEditedPhone}
         handleSaveProfileSubmit={handleSaveProfileSubmit}
+        isEditing={isEditing}
       />
     </div>
   );

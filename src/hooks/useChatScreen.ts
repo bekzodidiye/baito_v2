@@ -1,24 +1,34 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { useChatsData } from "../context/useChatsData";
 import { getTranslatedChat } from '../chatTranslations';
 import { translations } from '../translations';
+import { useCurrentScreen } from '../hooks/useCurrentScreen';
 
 export function useChatScreen() {
   const { id: selectedChatId } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { chats, sendMessage, setCurrentScreen, language } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language } = useApp();
+  const { chats, sendMessage, setActiveChatId } = useChatsData(language);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const t = translations[language];
 
-  const rawActiveChat = chats.find(c => c.id === selectedChatId);
+  const rawActiveChat = chats.find((c: any) => c.id === selectedChatId);
   const activeChat = rawActiveChat ? getTranslatedChat(rawActiveChat, language) : null;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    if (selectedChatId) {
+      setActiveChatId(selectedChatId);
+    }
+  }, [selectedChatId, setActiveChatId]);
 
   useEffect(() => {
     scrollToBottom();

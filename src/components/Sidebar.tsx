@@ -8,6 +8,8 @@ import {
 import { Logo } from './Logo';
 import { translations } from '../translations';
 import { LanguageSelector } from './LanguageSelector';
+import { showToast } from '../utils/toast';
+import { useCurrentScreen } from '../hooks/useCurrentScreen';
 
 interface SidebarProps {
   onOpenModal?: (type: 'profile' | 'settings' | 'help' | 'auth') => void;
@@ -23,18 +25,15 @@ interface NavItem {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
-  const { 
-    currentScreen, setCurrentScreen, language, isLoggedIn, setIsLoggedIn, 
-    userProfile, unreadNotificationsCount, setToastMessage, requireAuth
-  } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language, isLoggedIn, logout, userProfile, unreadNotificationsCount, requireAuth } = useApp();
 
   const t = translations[language];
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
-    setToastMessage(t.logoutSuccess);
-    setTimeout(() => setToastMessage(null), 3000);
+    logout();
+    showToast(t.logoutSuccess);
   };
 
   const workerNav: NavItem[] = [

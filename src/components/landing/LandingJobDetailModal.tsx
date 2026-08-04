@@ -10,6 +10,7 @@ import { JobDetailsLocation } from '../job-details/JobDetailsLocation';
 import { JobDetailsTasks } from '../job-details/JobDetailsTasks';
 import { JobDetailsRequirements } from '../job-details/JobDetailsRequirements';
 import { Send, ArrowRight } from 'lucide-react';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface LandingJobDetailModalProps {
   selectedJob: Job;
@@ -30,7 +31,8 @@ export const LandingJobDetailModal: React.FC<LandingJobDetailModalProps> = ({
   isLocating,
   onOpenOnMap,
 }) => {
-  const { language, setCurrentScreen } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language } = useApp();
   const jobDetails = getJobDetails(selectedJob.title, language);
 
   const handleApplyOnLanding = () => {

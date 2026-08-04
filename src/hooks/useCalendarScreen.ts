@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+
+
 import { useApp } from '../context/AppContext';
+import { useJobsData } from "../context/useJobsData";
 import { Job } from '../types';
 import { getTranslatedJob } from '../jobTranslations';
 import { 
@@ -10,15 +13,8 @@ import {
 } from '../components/calendar/CalendarScreen.utils';
 
 export function useCalendarScreen() {
-  const { 
-    jobs: rawJobs, 
-    activeCalendarFilter, 
-    setActiveCalendarFilter, 
-    toggleBookmark, 
-    applyToJob, 
-    language, 
-    activeCalendarDay 
-  } = useApp();
+  const { activeCalendarFilter, setActiveCalendarFilter, language, activeCalendarDay } = useApp();
+  const { jobs: rawJobs, toggleBookmark, applyToJob } = useJobsData();
 
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -139,18 +135,20 @@ export function useCalendarScreen() {
   }
 
   const allAppliedJobs = jobs?.filter(j => {
-    if (!(j.applied || j.status === 'applied')) return false;
-    return !isOverlappingWithActiveJob(j, jobs || [], yearFromContext, monthFromContext, dayFromContext);
+    if (['confirmed', 'todo', 'hired', 'in_progress', 'completed', 'start_requested'].includes(j.status)) {
+      return false;
+    }
+    return Boolean(j.status === 'applied' || j.applied);
   }) || [];
 
   const allConfirmedJobs = jobs?.filter(j => {
-    if (j.status !== 'confirmed' && j.status !== 'todo') return false;
+    if (j.status !== 'confirmed' && j.status !== 'todo' && j.status !== 'hired') return false;
     const relation = getJobTimeRelation(j, yearFromContext, monthFromContext, dayFromContext);
     return relation === 'future'; 
   }) || [];
 
   const allTodoJobs = jobs?.filter(j => {
-    if (j.status !== 'confirmed' && j.status !== 'todo') return false;
+    if (j.status !== 'confirmed' && j.status !== 'todo' && j.status !== 'hired' && j.status !== 'in_progress' && j.status !== 'start_requested') return false;
     const relation = getJobTimeRelation(j, yearFromContext, monthFromContext, dayFromContext);
     return relation === 'today' || relation === 'past';
   }) || [];

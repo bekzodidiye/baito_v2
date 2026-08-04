@@ -1,9 +1,7 @@
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { AppContextType } from './types';
 import { useUIState } from './useUIState';
 import { useAuthState } from './useAuthState';
-import { useJobsData } from './useJobsData';
-import { useChatsData } from './useChatsData';
 
 export * from './types';
 export { getJobDates, safeGetItem, safeSetItem } from './utils';
@@ -13,40 +11,12 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const uiState = useUIState();
   const authState = useAuthState();
-  const jobsData = useJobsData();
-  const chatsData = useChatsData(authState.language);
 
-  // Employer access control logic
-  const isEmployer = authState.isLoggedIn && authState.userProfile?.selectedRole === 'employer';
-  let finalScreen = uiState.currentScreen;
-  
-  if (authState.isLoggedIn) {
-    if (isEmployer) {
-      if (['qidiruv', 'xarita', 'kalendar', 'xabarlar', 'chat', 'yakunlash'].includes(finalScreen)) {
-        finalScreen = 'employer-dashboard';
-      } else if (finalScreen === 'profil') {
-        finalScreen = 'employer-profile';
-      }
-    } else {
-      if (finalScreen.startsWith('employer-')) {
-        finalScreen = 'xarita';
-      }
-    }
-  }
-
-  useEffect(() => {
-    if (finalScreen !== uiState.currentScreen) {
-      uiState.setCurrentScreen(finalScreen);
-    }
-  }, [finalScreen, uiState.currentScreen, uiState.setCurrentScreen]);
-
-  const value: AppContextType = {
+  // Memoize value object to avoid Context Pollution re-renders
+  const value: AppContextType = useMemo(() => ({
     ...uiState,
     ...authState,
-    ...jobsData,
-    ...chatsData,
-    currentScreen: finalScreen,
-  };
+  }), [uiState, authState]);
 
   return (
     <AppContext.Provider value={value}>

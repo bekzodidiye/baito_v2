@@ -1,94 +1,109 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchChats, updateChatsStorage } from '../api/queries';
-import { initialChats } from '../mockData';
+import { useQuery } from '@tanstack/react-query';
+import { fetchChats, fetchChatMessages } from '../api/queries';
 import { Chat, Message } from '../types';
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect, useState } from 'react';
+import { useApp } from './AppContext';
 
 export function useChatsData(language: 'uz' | 'ru' | 'en') {
-  const queryClient = useQueryClient();
+  const { userProfile } = useApp();
+  const isLoggedIn = !!localStorage.getItem('baito_token');
+  
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>({});
 
-  const { data: chats = [] } = useQuery({
+  const { data: chats = [], refetch } = useQuery({
     queryKey: ['chats'],
-    queryFn: fetchChats,
-    initialData: () => {
-      try {
-        const saved = localStorage.getItem('baito_chats');
-        if (saved) return JSON.parse(saved);
-      } catch (e) {}
-      return initialChats;
+    queryFn: async () => {
+      const data = await fetchChats();
+      return data.map((c: any) => ({
+        id: c.id,
+        jobId: c.jobId,
+        companyName: c.otherUserName || 'Kompaniya',
+        companyLogo: c.otherUserAvatar || '',
+        lastMessage: c.lastMessage || 'Chat boshlandi',
+        lastMessageTime: c.lastMessageTime ? new Date(c.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+        messages: [],
+        unreadCount: 0
+      }));
     },
+    initialData: [],
     refetchInterval: false,
+    enabled: isLoggedIn,
   });
 
-  const setChats = useCallback((action: React.SetStateAction<Chat[]>) => {
-    queryClient.setQueryData<Chat[]>(['chats'], (old = []) => {
-      const newChats = typeof action === 'function' ? action(old) : action;
-      updateChatsStorage(newChats);
-      return newChats;
-    });
-  }, [queryClient]);
-
-  const addNewMessage = useCallback((chatId: string, sender: 'user' | 'recruiter', text: string, hasMap?: boolean, mapLocation?: string) => {
-    const timeNow = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
-    const newMsg: Message = {
-      id: Math.random().toString(),
-      sender,
-      text,
-      time: timeNow,
-      hasMap,
-      mapLocation
-    };
-
-    setChats(prevChats =>
-      prevChats.map(c => {
-        if (c.id === chatId) {
-          return {
-            ...c,
-            messages: [...(c.messages || []), newMsg],
-            lastMessageTime: timeNow,
-            unreadCount: sender === 'recruiter' ? c.unreadCount + 1 : c.unreadCount
-          };
+  // When activeChatId changes, fetch messages and connect WS
+  useEffect(() => {
+    if (!activeChatId || !userProfile?.id) return;
+    
+    let isMounted = true;
+    
+    const loadAndConnect = async () => {
+      try {
+        const msgs = await fetchChatMessages(activeChatId);
+        if (isMounted) {
+          const mapped: Message[] = msgs.map((m: any) => ({
+            id: m.id,
+            sender: m.senderId === userProfile.id ? 'user' : 'recruiter',
+            text: m.text,
+            time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            hasMap: m.hasMap,
+            mapLocation: m.mapLocation
+          }));
+          setMessagesMap(prev => ({ ...prev, [activeChatId]: mapped }));
         }
-        return c;
-      })
-    );
-  }, [setChats]);
+
+        if (wsRef.current) wsRef.current.close();
+        
+        const wsUrl = `ws://${window.location.hostname}:8000/api/v1/chats/ws/${activeChatId}`;
+        const ws = new WebSocket(wsUrl);
+        ws.onmessage = (event) => {
+          const m = JSON.parse(event.data);
+          const newMsg: Message = {
+            id: m.id,
+            sender: m.senderId === userProfile.id ? 'user' : 'recruiter',
+            text: m.text,
+            time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            hasMap: m.hasMap,
+            mapLocation: m.mapLocation
+          };
+          setMessagesMap(prev => {
+            const existing = prev[activeChatId] || [];
+            if (existing.find(x => x.id === newMsg.id)) return prev;
+            return { ...prev, [activeChatId]: [...existing, newMsg] };
+          });
+        };
+        wsRef.current = ws;
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadAndConnect();
+
+    return () => {
+      isMounted = false;
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, [activeChatId, userProfile?.id]);
 
   const sendMessage = useCallback((chatId: string, text: string) => {
-    addNewMessage(chatId, 'user', text);
+    if (!text.trim() || !userProfile?.id) return;
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        senderId: userProfile.id,
+        text: text.trim(),
+        hasMap: false
+      }));
+    }
+  }, [userProfile?.id]);
+  
+  const setChats = (updater: any) => {}; 
+  const addNewMessage = () => {}; 
 
-    // Recruiters reply sequence simulation
-    setTimeout(() => {
-      let reply = 'Tushunarli. Batafsil ma\'lumot va yo\'llanma bo\'yicha tez orada xabar beramiz.';
-      if (language === 'ru') {
-        reply = 'Понятно. Скоро мы сообщим вам подробную информацию и инструкции.';
-      } else if (language === 'en') {
-        reply = 'Understood. We will inform you about the details and instructions shortly.';
-      }
-      
-      let hasMap = false;
-      let mapLocation = '';
-      const txt = text.toLowerCase();
+  const chatsWithMessages = chats.map((c: any) => ({
+    ...c,
+    messages: messagesMap[c.id] || []
+  }));
 
-      if (txt.includes('salom') || txt.includes('assalom') || txt.includes('hello')) {
-        reply = language === 'ru' 
-          ? 'Здравствуйте! Спасибо за сообщение.' 
-          : language === 'en' 
-          ? 'Hello! Thank you for your message.' 
-          : 'Assalomu alaykum! Xabaringiz uchun rahmat.';
-      } else if (txt.includes('manzil') || txt.includes('qayerda') || txt.includes('location')) {
-        reply = language === 'ru'
-          ? 'Вы можете посмотреть адрес рабочего места на карте.'
-          : language === 'en'
-          ? 'You can see the address of the workplace on this map.'
-          : 'Ish joyi manzilini xarita orqali ko\'rib olishingiz mumkin.';
-        hasMap = true;
-        mapLocation = 'Tashkent, O\'zbekiston';
-      }
-
-      addNewMessage(chatId, 'recruiter', reply, hasMap, mapLocation);
-    }, 2500);
-  }, [addNewMessage, language]);
-
-  return { chats, setChats, addNewMessage, sendMessage };
+  return { chats: chatsWithMessages as Chat[], setChats, sendMessage, addNewMessage, setActiveChatId };
 }

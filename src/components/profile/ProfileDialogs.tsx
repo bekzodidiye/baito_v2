@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ProfileDialogsProps {
@@ -18,6 +18,7 @@ interface ProfileDialogsProps {
   editedPhone: string;
   setEditedPhone: (phone: string) => void;
   handleSaveProfileSubmit: (e: React.FormEvent) => void;
+  isEditing: boolean;
 }
 
 export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
@@ -36,6 +37,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
   editedPhone,
   setEditedPhone,
   handleSaveProfileSubmit,
+  isEditing,
 }) => {
   return (
     <AnimatePresence>
@@ -92,8 +94,9 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                 <div className="flex gap-2 pt-3">
                   <button 
                     type="button"
-                    onClick={() => setActiveDialog('none')}
-                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                    onClick={() => !isEditing && setActiveDialog('none')}
+                    disabled={isEditing}
+                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {t.cancel}
                   </button>
@@ -124,6 +127,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                     required
                     value={editedFirstName}
                     onChange={(e) => setEditedFirstName(e.target.value)}
+                    disabled={isEditing}
                     className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold outline-none text-slate-800"
                   />
                 </div>
@@ -135,6 +139,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                     required
                     value={editedLastName}
                     onChange={(e) => setEditedLastName(e.target.value)}
+                    disabled={isEditing}
                     className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold outline-none text-slate-800"
                   />
                 </div>
@@ -146,6 +151,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                     required
                     value={editedPhone}
                     onChange={(e) => setEditedPhone(e.target.value)}
+                    disabled={isEditing}
                     className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold outline-none text-slate-800"
                   />
                 </div>
@@ -153,17 +159,25 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                 <div className="flex gap-2 pt-3">
                   <button 
                     type="button"
-                    onClick={() => setActiveDialog('none')}
-                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                    onClick={() => !isEditing && setActiveDialog('none')}
+                    disabled={isEditing}
+                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {t.cancel}
                   </button>
                   <button 
                     type="submit"
-                    className="flex-1 py-3 bg-brand-primary hover:bg-brand-primary/95 text-white text-xs font-bold rounded-xl transition-all shadow-3xs flex items-center justify-center gap-1.5 cursor-pointer"
+                    disabled={isEditing}
+                    className="flex-1 py-3 bg-brand-primary hover:bg-brand-primary/95 text-white text-xs font-bold rounded-xl transition-all shadow-3xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    <span>{t.saveProfile}</span>
-                    <Check size={14} className="stroke-[2.5]" />
+                    {isEditing ? (
+                      <Loader2 size={14} className="animate-spin stroke-[2.5]" />
+                    ) : (
+                      <>
+                        <span>{t.saveProfile}</span>
+                        <Check size={14} className="stroke-[2.5]" />
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

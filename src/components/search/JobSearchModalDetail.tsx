@@ -15,7 +15,7 @@ interface JobSearchModalDetailProps {
   selectedJob: Job;
   setSelectedJob: (job: Job | null) => void;
   toggleBookmark: (id: string) => void;
-  applyToJob: (id: string) => boolean;
+  applyToJob: (id: string) => Promise<boolean> | boolean;
 }
 
 export const JobSearchModalDetail: React.FC<JobSearchModalDetailProps> = ({
@@ -32,7 +32,17 @@ export const JobSearchModalDetail: React.FC<JobSearchModalDetailProps> = ({
     }
   }, [selectedJob?.id]);
 
-  const jobDetails = getJobDetails(selectedJob.title, language);
+  const fallbackDetails = getJobDetails(selectedJob.title, language);
+
+  const tasks = selectedJob.responsibilities
+    ? selectedJob.responsibilities.split('\n').filter(Boolean)
+    : fallbackDetails.tasks;
+
+  const requirements = selectedJob.requirements
+    ? selectedJob.requirements.split('\n').filter(Boolean)
+    : fallbackDetails.requirements;
+
+  const warning = selectedJob.importantNote || fallbackDetails.warning;
 
   return (
     <div className="fixed inset-0 z-100 flex items-end justify-center p-0">
@@ -68,10 +78,10 @@ export const JobSearchModalDetail: React.FC<JobSearchModalDetailProps> = ({
           <div className="px-4 -mt-6 relative z-10 pb-6">
             <JobDetailsCard selectedJob={selectedJob} />
             <JobDetailsLocation selectedJob={selectedJob} />
-            <JobDetailsTasks tasks={jobDetails.tasks} />
+            <JobDetailsTasks tasks={tasks} />
             <JobDetailsRequirements 
-              requirements={jobDetails.requirements} 
-              warning={jobDetails.warning} 
+              requirements={requirements} 
+              warning={warning} 
             />
           </div>
         </div>
@@ -80,7 +90,7 @@ export const JobSearchModalDetail: React.FC<JobSearchModalDetailProps> = ({
         <JobDetailsFooter 
           selectedJob={selectedJob} 
           applyToJob={applyToJob}
-          onApplied={() => setSelectedJob({ ...selectedJob, applied: true, status: 'applied' })}
+          onApplied={(newStatus?: any) => setSelectedJob({ ...selectedJob, applied: true, status: newStatus || 'applied' })}
         />
       </motion.div>
     </div>

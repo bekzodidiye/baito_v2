@@ -10,9 +10,11 @@ import { JobPostForm } from './JobPostForm';
 import { EmployerAnalytics } from './EmployerAnalytics';
 import { Briefcase, FileText, MessageSquare, PlusCircle, LayoutDashboard, User, BarChart2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const EmployerPanel: React.FC = () => {
-  const { currentScreen, setCurrentScreen, language, employerSelectedChatId } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language, employerSelectedChatId } = useApp();
   const [targetCandidate, setTargetCandidate] = useState<string | null>(null);
 
   const handleApplicantsChat = (candidateName: string) => {
@@ -74,7 +76,7 @@ export const EmployerPanel: React.FC = () => {
   const isFormScreen = currentScreen === 'employer-post';
   if (isFormScreen) {
     return (
-      <div className="w-full pb-16 md:pb-6">
+      <div className="w-full min-h-screen bg-slate-50 overflow-y-auto">
         {renderContent()}
       </div>
     );

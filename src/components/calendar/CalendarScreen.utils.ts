@@ -21,17 +21,20 @@ export const WEEKDAYS_TRANSLATIONS = {
   en: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 };
 
+const getJobDateStr = (job: Job): string => {
+  return job.periodText || job.workDate || '2026-08-05';
+};
+
 export const isJobInMonth = (job: Job, year: number, month: number): boolean => {
-  if (!job.periodText) return false;
-  const datePart = job.periodText.split(' ')[0];
+  const dateStr = getJobDateStr(job);
+  const datePart = dateStr.split(' ')[0];
   const monthStr = String(month + 1).padStart(2, '0');
   const prefix = `${year}-${monthStr}-`;
   return datePart.startsWith(prefix);
 };
 
 export const isJobFutureDay = (job: Job, yearFromContext: number, monthFromContext: number, dayFromContext: number): boolean => {
-  if (!job.periodText) return false;
-  const dateStr = job.periodText.split(' ')[0];
+  const dateStr = getJobDateStr(job).split(' ')[0];
   const dayStr = dateStr.includes('~') ? dateStr.split('~')[0].split('-')[2] : dateStr.split('-')[2];
   const jobDay = parseInt(dayStr) || dayFromContext;
   
@@ -47,8 +50,8 @@ export const isJobFutureDay = (job: Job, yearFromContext: number, monthFromConte
 };
 
 export const isJobOnDay = (job: Job, day: number, year: number, month: number): boolean => {
-  if (!job.periodText) return false;
-  const datePart = job.periodText.split(' ')[0];
+  const dateStr = getJobDateStr(job);
+  const datePart = dateStr.split(' ')[0];
   const jobYear = parseInt(datePart.split('-')[0], 10);
   const jobMonth = parseInt(datePart.split('-')[1], 10);
   
@@ -71,8 +74,8 @@ export const getJobTimeRelation = (
   monthFromContext: number, 
   dayFromContext: number
 ) => {
-  if (!job.periodText) return 'past';
-  const datePart = job.periodText.split(' ')[0];
+  const dateStr = getJobDateStr(job);
+  const datePart = dateStr.split(' ')[0];
   const year = parseInt(datePart.split('-')[0], 10);
   const month = parseInt(datePart.split('-')[1], 10);
   
@@ -101,8 +104,8 @@ export const getJobTimeRelation = (
 };
 
 export const isOverlappingWithActiveJob = (job: Job, allJobs: Job[], yearFromContext: number, monthFromContext: number, dayFromContext: number) => {
-  if (!job.periodText) return false;
-  const datePart = job.periodText.split(' ')[0];
+  const dateStr = getJobDateStr(job);
+  const datePart = dateStr.split(' ')[0];
   const jobYear = parseInt(datePart.split('-')[0], 10);
   const jobMonth = parseInt(datePart.split('-')[1], 10) - 1; // 0-indexed
   let startDay = parseInt(datePart.split('-')[2], 10);
@@ -112,7 +115,7 @@ export const isOverlappingWithActiveJob = (job: Job, allJobs: Job[], yearFromCon
     endDay = parseInt(datePart.split('~')[1], 10);
   }
 
-  const activeJobs = allJobs.filter(j => ['confirmed', 'todo', 'completed'].includes(j.status));
+  const activeJobs = allJobs.filter(j => ['confirmed', 'todo', 'completed', 'in_progress'].includes(j.status));
   for (let d = startDay; d <= endDay; d++) {
     if (activeJobs.some(aj => isJobOnDay(aj, d, jobYear, jobMonth))) {
       return true;
@@ -138,15 +141,15 @@ export const getDayStatusForList = (
                    (currentYear === yearFromContext && (currentMonth + 1) === monthFromContext && day > dayFromContext);
   
   if (isToday) {
-    if (jobsOnDay.some(j => j.status === 'confirmed' || j.status === 'todo')) return 'todo';
+    if (jobsOnDay.some(j => j.status === 'confirmed' || j.status === 'todo' || j.status === 'in_progress')) return 'todo';
     if (jobsOnDay.some(j => j.status === 'completed')) return 'completed';
     if (jobsOnDay.some(j => j.status === 'applied' || j.applied)) return 'applied';
   } else if (isFuture) {
-    if (jobsOnDay.some(j => j.status === 'confirmed' || j.status === 'todo')) return 'confirmed';
+    if (jobsOnDay.some(j => j.status === 'confirmed' || j.status === 'todo' || j.status === 'in_progress')) return 'confirmed';
     if (jobsOnDay.some(j => j.status === 'completed')) return 'completed';
     if (jobsOnDay.some(j => j.status === 'applied' || j.applied)) return 'applied';
   } else {
-    if (jobsOnDay.some(j => j.status === 'confirmed' || j.status === 'todo')) return 'missed';
+    if (jobsOnDay.some(j => j.status === 'confirmed' || j.status === 'todo' || j.status === 'in_progress')) return 'todo';
     if (jobsOnDay.some(j => j.status === 'completed')) return 'completed';
     if (jobsOnDay.some(j => j.status === 'applied' || j.applied)) return 'applied';
   }

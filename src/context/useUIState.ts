@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ScreenType } from './types';
 import { safeGetItem, safeSetItem } from './utils';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { showToast } from '../utils/toast';
 
 export function useUIState() {
   const location = useLocation();
@@ -18,8 +19,9 @@ export function useUIState() {
     return 'landing';
   };
 
-  const currentScreen = getScreenFromPath(location.pathname);
+  
   const setCurrentScreen = (screen: ScreenType) => {
+    if (screen === currentScreen) return; // Prevent loop
     if (screen === 'landing') navigate('/');
     else navigate(`/${screen}`);
   };
@@ -34,12 +36,11 @@ export function useUIState() {
   const [showRegionSelector, setShowRegionSelector] = useState(false);
   const [mapFocusedJobId, setMapFocusedJobId] = useState<string | null>(null);
   const [messagesSearchOpen, setMessagesSearchOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastMessage, ] = useState<string | null>(null);
   
   useEffect(() => {
     const handleGlobalToast = (e: any) => {
-      setToastMessage(e.detail);
-      setTimeout(() => setToastMessage(null), 3000);
+      (e.detail);
     };
     window.addEventListener('global-toast', handleGlobalToast);
     return () => window.removeEventListener('global-toast', handleGlobalToast);
@@ -59,7 +60,6 @@ export function useUIState() {
   };
 
   return {
-    currentScreen, setCurrentScreen,
     selectedChatId, setSelectedChatId,
     employerSelectedChatId, setEmployerSelectedChatId,
     drawerOpen, setDrawerOpen,
@@ -70,8 +70,7 @@ export function useUIState() {
     showRegionSelector, setShowRegionSelector,
     mapFocusedJobId, setMapFocusedJobId,
     messagesSearchOpen, setMessagesSearchOpen,
-    toastMessage, setToastMessage,
-    unreadNotificationsCount, setUnreadNotificationsCount,
+    toastMessage, unreadNotificationsCount, setUnreadNotificationsCount,
     activeCalendarFilter, setActiveCalendarFilter,
     activeCalendarDay, setActiveCalendarDay,
     hasSeenTour, setHasSeenTour

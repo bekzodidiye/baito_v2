@@ -5,6 +5,7 @@ import { useMessagesScreen } from '../../hooks/useMessagesScreen';
 import { useChatScreen } from '../../hooks/useChatScreen';
 import { ChatListPanel } from '../chat/ChatListPanel';
 import { ChatDetailPanel } from '../chat/ChatDetailPanel';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const MessagesScreen: React.FC = () => {
   const {

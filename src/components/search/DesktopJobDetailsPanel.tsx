@@ -15,7 +15,7 @@ import { JobDetailsFooter } from '../job-details/JobDetailsFooter';
 interface DesktopJobDetailsPanelProps {
   activeJob: Job | null;
   toggleBookmark: (id: string) => void;
-  applyToJob: (id: string) => boolean;
+  applyToJob: (id: string) => Promise<boolean> | boolean;
   selectedJob: Job | null;
   setSelectedJob: (job: Job | null) => void;
 }

@@ -4,6 +4,7 @@ import { Job } from '../../types';
 import { getLatLng } from '../map/mapUtils';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface JobDetailsLocationProps {
   selectedJob: Job;
@@ -20,7 +21,8 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
   handleCalculateDistance,
   isLocating,
 }) => {
-  const { language, setMapFocusedJobId, setCurrentScreen } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language, setMapFocusedJobId } = useApp();
   const t = translations[language];
 
   const handleMapButtonClick = () => {

@@ -444,7 +444,7 @@ export const centralJobsEn = {
     salary: "220,000 UZS / day",
     tags: ["3 days", "Fishery", "Lunch included"],
     location: "Sirdaryo, Sayxunobod district",
-    description: "Feeding fish, clearing basin embankments, and washing professional nets at a central Sayxunobod fish farm.",
+    description: "Feeding fish, clearing basin embankments, and washing heavy-duty nets at a central Sayxunobod fish farm.",
     hourlyRate: "27,500 UZS",
     transportRate: "None",
     durationLabel: "3 days"

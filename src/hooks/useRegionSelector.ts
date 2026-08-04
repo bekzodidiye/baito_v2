@@ -8,12 +8,7 @@ import {
 } from '../components/map/regionData';
 
 export const useRegionSelector = () => {
-  const { 
-    showRegionSelector, 
-    setShowRegionSelector, 
-    setFilterLocation,
-    language
-  } = useApp();
+  const { showRegionSelector, setShowRegionSelector, setFilterLocation, language } = useApp();
 
   const { districtsGeoJsonData } = useUzbekistanGeoJson();
   const [searchText, setSearchText] = useState('');

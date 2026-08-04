@@ -1,9 +1,11 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { ArrowLeft, HelpCircle, FileText, MessageCircle, Phone, ChevronRight, Mail } from 'lucide-react';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const HelpScreen: React.FC = () => {
-  const { setCurrentScreen } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  
 
   return (
     <div className="flex-1 flex flex-col h-full w-full bg-brand-surface">

@@ -2,9 +2,11 @@ import React from 'react';
 import { Bell, Globe, Shield } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { MODAL_TRANSLATIONS } from './MenuTranslations';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const SettingsContent: React.FC = () => {
-  const { language, setLanguage, setCurrentScreen } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language, setLanguage } = useApp();
   const t = MODAL_TRANSLATIONS[language];
 
   return (

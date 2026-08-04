@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { useChatsData } from "../context/useChatsData";
 import { translations } from '../translations';
 import { getTranslatedChat } from '../chatTranslations';
 
 export function useMessagesScreen() {
   const navigate = useNavigate();
-  const { 
-    chats, 
-    setChats, 
-    messagesSearchOpen, 
-    setMessagesSearchOpen, 
-    language 
-  } = useApp();
+  const { messagesSearchOpen, setMessagesSearchOpen, language } = useApp();
+  const { chats, setChats } = useChatsData(language);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [composeOpen, setComposeOpen] = useState(false);

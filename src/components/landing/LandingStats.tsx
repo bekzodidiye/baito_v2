@@ -1,13 +1,15 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { ArrowRight, Rocket, Building2, UserCheck } from 'lucide-react';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface LandingStatsProps {
   onSelectRole?: (role: 'worker' | 'employer') => void;
 }
 
 export const LandingStats: React.FC<LandingStatsProps> = ({ onSelectRole }) => {
-  const { setCurrentScreen } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  
 
   const handleStart = (role: 'worker' | 'employer') => {
     if (onSelectRole) {

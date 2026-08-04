@@ -35,7 +35,7 @@ export const LoginPromptFooter: React.FC<LoginPromptFooterProps> = ({
             </button>
             <div className="text-center">
               <a
-                href="https://t.me/baito_admin_mock"
+                href="https://t.me/baito_admin"
                 target="_blank"
                 rel="noreferrer"
                 className="font-extrabold hover:underline text-[11px] text-[#000666] flex items-center justify-center gap-1.5"
@@ -59,7 +59,7 @@ export const LoginPromptFooter: React.FC<LoginPromptFooterProps> = ({
             </button>
             <div className="text-center">
               <a
-                href="https://t.me/baito_admin_mock"
+                href="https://t.me/baito_admin"
                 target="_blank"
                 rel="noreferrer"
                 className="font-extrabold hover:underline text-[11px] text-[#000666] flex items-center justify-center gap-1.5"
@@ -83,7 +83,7 @@ export const LoginPromptFooter: React.FC<LoginPromptFooterProps> = ({
             </button>
             <div className="text-center">
               <a
-                href="https://t.me/baito_admin_mock"
+                href="https://t.me/baito_admin"
                 target="_blank"
                 rel="noreferrer"
                 className="font-extrabold hover:underline text-[11px] text-[#000666] flex items-center justify-center gap-1.5"

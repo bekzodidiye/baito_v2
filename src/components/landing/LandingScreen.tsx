@@ -10,9 +10,11 @@ import { LandingFeatures } from './LandingFeatures';
 import { LandingTestimonials } from './LandingTestimonials';
 import { LandingFAQ } from './LandingFAQ';
 import { LandingFooter } from './LandingFooter';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const LandingScreen: React.FC = () => {
-  const { setCurrentScreen } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  
 
   const handleSelectRole = (role: 'worker' | 'employer') => {
     try {

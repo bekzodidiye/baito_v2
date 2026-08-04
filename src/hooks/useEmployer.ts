@@ -1,164 +1,167 @@
-import { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { Job, Application } from '../types';
+import { apiClient } from '../api/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { showToast } from '../utils/toast';
 
 export const useEmployer = () => {
-  const { language, setToastMessage, userProfile } = useApp();
-  const [postedJobs, setPostedJobs] = useState<Job[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [balance, setBalance] = useState('0');
+  const { language, userProfile } = useApp();
+  const queryClient = useQueryClient();
   
   const companyName = userProfile?.firstName || 'Murod Buildings';
 
-  const fetchData = useCallback(async () => {
-    try {
-      const headers = { 'x-user-role': 'employer' };
-      
-      const meRes = await fetch('/api/me', { headers });
-      if (meRes.ok) {
-        const me = await meRes.json();
-        setBalance(me.balance || '0');
-      }
+  // 1. Fetch Employer Profile (Balance)
+  const { data: me } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => apiClient('/users/me'),
+    staleTime: 5 * 60 * 1000,
+  });
 
-      const jobsRes = await fetch('/api/employer/jobs', { headers });
-      if (jobsRes.ok) {
-        const jobs = await jobsRes.json();
-        setPostedJobs(jobs.map((j: any) => ({
-          ...j,
-          durationLabel: j.durationLabel || '1 kun'
-        })));
-      }
-      
-      const appsRes = await fetch('/api/employer/applications', { headers });
-      if (appsRes.ok) {
-        const apps = await appsRes.json();
-        const mappedApps = apps.map((a: any) => ({
-          id: a.id,
-          jobId: a.jobId,
-          jobTitle: a.jobTitle,
-          candidateName: a.workerName,
-          candidatePhone: a.status === 'hired' ? a.workerPhone : '***-**-** (Yashirin)',
-          candidateAvatar: a.workerAvatar,
-          candidateExperience: 'Baito tasdiqlangan foydalanuvchisi',
-          status: a.status,
-          appliedDate: a.appliedDate
-        }));
-        setApplications(mappedApps);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
+  const balance = me?.balance || '0';
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  // 2. Fetch Jobs
+  const { data: postedJobs = [], isLoading: isLoadingJobs } = useQuery({
+    queryKey: ['employer-jobs'],
+    queryFn: async () => {
+      const jobs = await apiClient('/jobs');
+      if (!jobs || !Array.isArray(jobs)) return [];
+      if (!me) return jobs as Job[];
+      const myJobs = jobs.filter((j: any) => 
+        j.employerId === me.id || 
+        j.employerId === me.uid || 
+        (me.companyName && j.company === me.companyName) ||
+        (me.name && j.company === me.name)
+      );
+      const listToReturn = myJobs.length > 0 ? myJobs : jobs;
+      // Sort newest first, and active jobs before completed jobs
+      const sorted = [...listToReturn].sort((a: any, b: any) => {
+        if (a.status !== 'completed' && b.status === 'completed') return -1;
+        if (a.status === 'completed' && b.status !== 'completed') return 1;
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeB - timeA;
+      });
 
-  // Add a new job
-  const postNewJob = async (newJobData: Partial<Job>) => {
-    try {
-      const res = await fetch('/api/jobs', {
+      return sorted.map((j: any) => ({
+        ...j,
+        durationLabel: j.durationLabel || '1 kunlik'
+      })) as Job[];
+    },
+    refetchInterval: 3000,
+  });
+
+  // 3. Fetch Applications
+  const { data: applications = [], isLoading: isLoadingApps } = useQuery({
+    queryKey: ['employer-applications'],
+    queryFn: async () => {
+      const apps = await apiClient('/applications/employer');
+      if (!apps || !Array.isArray(apps)) return [];
+      return apps.map((a: any) => ({
+        id: a.id,
+        jobId: a.jobId,
+        jobTitle: a.jobTitle,
+        candidateName: a.workerName || 'Ishchi',
+        candidatePhone: a.workerPhone || '+998 90 987 65 43',
+        candidateAvatar: a.workerAvatar || null,
+        candidateExperience: 'Baito tasdiqlangan foydalanuvchisi',
+        status: a.status,
+        appliedDate: a.appliedDate || new Date().toISOString()
+      })) as Application[];
+    },
+    refetchInterval: 3000,
+  });
+
+  const handleSuccess = (msgUz: string, msgRu: string, msgEn: string) => {
+    showToast(language === 'uz' ? msgUz : language === 'ru' ? msgRu : msgEn);
+    queryClient.invalidateQueries({ queryKey: ['employer-jobs'] });
+    queryClient.invalidateQueries({ queryKey: ['employer-applications'] });
+    queryClient.invalidateQueries({ queryKey: ['me'] });
+  };
+
+  const handleError = (e: any) => {
+    ("Xato: " + e.message);
+  };
+
+  // Mutations
+  const postNewJobMutation = useMutation({
+    mutationFn: async (newJobData: Partial<Job>) => {
+      return apiClient('/jobs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-user-role': 'employer' },
         body: JSON.stringify({
           title: newJobData.title || '',
-          company: companyName,
-          salary: newJobData.salary || "200000",
+          company: newJobData.company || companyName,
+          salary: newJobData.salary || "200000 UZS",
           location: newJobData.location || 'Toshkent',
-          durationLabel: newJobData.durationLabel || "1 kun",
-          description: newJobData.description || ''
+          rawLocation: newJobData.rawLocation || newJobData.location || 'Toshkent',
+          durationLabel: newJobData.durationLabel || "1 kunlik",
+          description: newJobData.description || '',
+          workDate: newJobData.workDate || new Date().toISOString().split('T')[0],
+          workTime: newJobData.workTime || '09:00 - 18:00',
+          neededWorkers: newJobData.neededWorkers || '1',
+          hourlyRate: newJobData.hourlyRate || '',
+          transportRate: newJobData.transportRate || '',
+          category: newJobData.category || 'retail',
+          responsibilities: newJobData.responsibilities || newJobData.description || '',
+          requirements: newJobData.requirements || '',
+          importantNote: newJobData.importantNote || '',
+          tags: newJobData.tags || [],
+          coordinateX: newJobData.coordinates?.x ?? 50,
+          coordinateY: newJobData.coordinates?.y ?? 50,
         })
       });
-      if (res.ok) {
-        setToastMessage(language === 'uz' ? "Yangi ish e'loni muvaffaqiyatli joylashtirildi!" : language === 'ru' ? "Новое объявление успешно опубликовано!" : "New job post published successfully!");
-        setTimeout(() => setToastMessage(null), 3000);
-        fetchData();
-        return true;
-      } else {
-        const err = await res.json();
-        setToastMessage("Xato: " + err.error);
-        setTimeout(() => setToastMessage(null), 3000);
-        return false;
-      }
-    } catch (e: any) {
-      console.error(e);
-      return false;
-    }
-  };
+    },
+    onSuccess: () => {
+      handleSuccess("Yangi ish e'loni muvaffaqiyatli joylashtirildi!", "Новое объявление успешно опубликовано!", "New job post published successfully!");
+    },
+    onError: handleError
+  });
 
-  // Approve or reject application (Hire holds money)
-  const updateApplicationStatus = async (appId: string, status: 'hired' | 'rejected') => {
-    try {
-      const endpoint = status === 'hired' ? `/api/applications/${appId}/hire` : `/api/applications/${appId}/reject`;
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'x-user-role': 'employer' }
-      });
-      if (res.ok) {
-        if (status === 'hired') {
-          setToastMessage(language === 'uz' ? "Ishchi yollandi! Summa ushlab qolindi." : language === 'ru' ? "Работник нанят! Сумма удержана." : "Worker hired! Amount held in escrow.");
-        } else {
-          setToastMessage(language === 'uz' ? "Ariza rad etildi." : language === 'ru' ? "Заявка отклонена." : "Application rejected.");
-        }
-        fetchData();
+  const updateApplicationMutation = useMutation({
+    mutationFn: async ({ appId, status }: { appId: string, status: 'hired' | 'rejected' }) => {
+      const endpoint = status === 'hired' ? `/applications/${appId}/hire` : `/applications/${appId}/reject`;
+      return apiClient(endpoint, { method: 'POST' });
+    },
+    onSuccess: (_, variables) => {
+      if (variables.status === 'hired') {
+        handleSuccess("Ishchi yollandi! Summa ushlab qolindi.", "Работник нанят! Сумма удержана.", "Worker hired! Amount held in escrow.");
       } else {
-        const err = await res.json();
-        setToastMessage("Xato: " + err.error);
+        handleSuccess("Ariza rad etildi.", "Заявка отклонена.", "Application rejected.");
       }
-      setTimeout(() => setToastMessage(null), 3000);
-    } catch (e: any) {
-      console.error(e);
-    }
-  };
+    },
+    onError: handleError
+  });
 
-  // Complete job
-  const completeJob = async (jobId: string) => {
-    try {
-      const res = await fetch(`/api/jobs/${jobId}/complete`, {
-        method: 'POST',
-        headers: { 'x-user-role': 'employer' }
-      });
-      if (res.ok) {
-        setToastMessage(language === 'uz' ? "Ish yakunlandi, pul ishchiga o'tkazildi!" : language === 'ru' ? "Работа завершена, деньги переведены!" : "Job completed, money released!");
-        fetchData();
-      } else {
-        const err = await res.json();
-        setToastMessage("Xato: " + err.error);
-      }
-      setTimeout(() => setToastMessage(null), 3000);
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  const completeJobMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      return apiClient(`/jobs/${jobId}/complete`, { method: 'POST' });
+    },
+    onSuccess: () => {
+      handleSuccess("Ish yakunlandi, pul ishchiga o'tkazildi!", "Работа завершена, деньги переведены!", "Job completed, money released!");
+    },
+    onError: handleError
+  });
 
-  const deleteJob = async (jobId: string) => {
-    try {
-      const res = await fetch(`/api/jobs/${jobId}`, {
-        method: 'DELETE',
-        headers: { 'x-user-role': 'employer' }
-      });
-      if (res.ok) {
-        setToastMessage(language === 'uz' ? "E'lon o'chirildi!" : language === 'ru' ? "Объявление удалено!" : "Job post deleted!");
-        fetchData();
-      } else {
-        const err = await res.json();
-        setToastMessage("Xato: " + err.error);
-      }
-      setTimeout(() => setToastMessage(null), 3000);
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  const deleteJobMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      return apiClient(`/jobs/${jobId}`, { method: 'DELETE' });
+    },
+    onSuccess: () => {
+      handleSuccess("E'lon o'chirildi!", "Объявление удалено!", "Job post deleted!");
+    },
+    onError: handleError
+  });
 
   return {
     postedJobs,
     applications,
     balance,
-    postNewJob,
-    updateApplicationStatus,
-    completeJob,
-    deleteJob,
+    postNewJob: async (data: Partial<Job>) => { await postNewJobMutation.mutateAsync(data); return true; },
+    updateApplicationStatus: async (appId: string, status: 'hired' | 'rejected') => updateApplicationMutation.mutate({ appId, status }),
+    completeJob: async (jobId: string) => completeJobMutation.mutate(jobId),
+    deleteJob: async (jobId: string) => deleteJobMutation.mutate(jobId),
     language,
-    companyName
+    companyName,
+    employer: me,
+    isLoading: isLoadingJobs || isLoadingApps
   };
 };
