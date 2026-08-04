@@ -102,7 +102,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
                     value={searchQuery} 
                     onChange={(e) => setSearchQuery(e.target.value)} 
                     placeholder={activeTab === 'worker' ? "Kuryer, kassir, ofitsiant..." : "Aktiv lavozim qidirish..."} 
-                    className="w-full text-xs sm:text-sm font-bold bg-transparent text-slate-900 focus:outline-none placeholder:text-slate-400" 
+                    className="w-full text-xs sm:text-sm font-bold bg-transparent text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 placeholder:text-slate-400" 
                   />
                 </div>
                 <button 

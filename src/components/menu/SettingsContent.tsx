@@ -80,7 +80,7 @@ export const SettingsContent: React.FC = () => {
           <Shield size={12} />
           <span>{t.security}</span>
         </h5>
-        <button onClick={() => setCurrentScreen('xavfsizlik')} className="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-100 transition-colors text-left flex items-center justify-between cursor-pointer">
+        <button onClick={() => setCurrentScreen('security')} className="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-100 transition-colors text-left flex items-center justify-between cursor-pointer">
           <span>{t.changePassword}</span>
           <span className="text-[10px] text-slate-400">{t.unchanged}</span>
         </button>

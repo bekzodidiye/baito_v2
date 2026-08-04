@@ -1,7 +1,7 @@
 import React from 'react';
 import { Wallet, ShieldCheck, AlertTriangle } from 'lucide-react';
-import { showToast } from '../../utils/toast';
-import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { showToast } from '../../../utils/toast';
+import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 interface ProfileWidgetsProps {
   t: any;
@@ -36,7 +36,7 @@ export const ProfileWidgets: React.FC<ProfileWidgetsProps> = ({
           <h3 className="text-3xl font-black text-white my-2.5 tracking-tight">{Number(balance).toLocaleString()} so'm</h3>
           <button 
             onClick={() => setActiveDialog('withdraw')}
-            className="w-full py-2.5 bg-white text-brand-primary font-display font-black text-[11px] rounded-xl hover:bg-slate-50 transition-all cursor-pointer shadow-[0_4px_12px_rgba(255,255,255,0.15)] outline-none active:scale-[0.99]"
+            className="w-full py-2.5 bg-white text-brand-primary font-display font-black text-[11px] rounded-xl hover:bg-slate-50 transition-all cursor-pointer shadow-[0_4px_12px_rgba(255,255,255,0.15)] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-[0.99]"
           >
             {t.walletBtn}
           </button>
@@ -64,12 +64,12 @@ export const ProfileWidgets: React.FC<ProfileWidgetsProps> = ({
         <button 
           onClick={() => {
             if (showVerified) {
-              setCurrentScreen('yakunlash');
+              setCurrentScreen('verification');
             } else {
               showToast(language === 'uz' ? "Hujjatlaringizni tasdiqlash uchun tizimga bog'laning." : language === 'ru' ? "Свяжитесь с поддержкой для верификации." : "Contact support for verification.");
             }
           }}
-          className="w-full py-2.5 bg-brand-primary text-white hover:bg-brand-primary/95 text-[11px] rounded-xl font-extrabold transition-all shadow-3xs cursor-pointer outline-none"
+          className="w-full py-2.5 bg-brand-primary text-white hover:bg-brand-primary/95 text-[11px] rounded-xl font-extrabold transition-all shadow-3xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           {showVerified ? t.verifyBtn : t.verifyTitle}
         </button>

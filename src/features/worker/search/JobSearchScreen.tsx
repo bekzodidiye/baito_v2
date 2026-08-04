@@ -4,15 +4,15 @@ import { AnimatePresence } from 'motion/react';
 
 import { SearchFilterSection } from './SearchFilterSection';
 import { JobCardItem } from './JobCardItem';
-import { JobCardSkeleton } from '../map/JobCardSkeleton';
+import { JobCardSkeleton } from '../../../components/map/JobCardSkeleton';
 import { JobSearchModalDetail } from './JobSearchModalDetail';
 import { MapViewCallout } from './MapViewCallout';
 import { DesktopJobDetailsPanel } from './DesktopJobDetailsPanel';
-import { useJobSearchScreen } from '../../hooks/useJobSearchScreen';
-import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
+import { useJobSearchScreen } from '../../../hooks/useJobSearchScreen';
+import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll';
 import { SearchSidebar } from './SearchSidebar';
 import { JobSortHeader } from './JobSortHeader';
-import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 export const JobSearchScreen: React.FC = () => {
   const {
@@ -42,7 +42,7 @@ export const JobSearchScreen: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-5 pb-20 md:pb-4 pt-16 md:pt-4 px-4 md:pl-8 md:pr-6 lg:pl-10 lg:pr-8 w-full max-w-full overflow-x-hidden">
+    <div className="flex flex-col gap-5 pb-28 md:pb-4 pt-16 md:pt-4 px-4 md:pl-8 md:pr-6 lg:pl-10 lg:pr-8 w-full max-w-full overflow-x-hidden">
       {/* 1. MOBILE ONLY VIEW */}
       <div className="flex flex-col gap-5 md:hidden">
         <SearchFilterSection 

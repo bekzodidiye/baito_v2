@@ -23,8 +23,8 @@ interface JobSummaryCardProps {
   handleResetMap: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
-  mapType?: 'xarita' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro';
-  setMapType?: (type: 'xarita' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro') => void;
+  mapType?: 'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro';
+  setMapType?: (type: 'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro') => void;
 }
 
 export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
@@ -128,7 +128,7 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
               {filterLocation !== 'Barchasi' && (
                 <button
                   onClick={handleResetMap}
-                  className="mt-3 px-4 py-2 bg-brand-primary text-white text-xs font-bold rounded-xl shadow-xs hover:bg-brand-primary/95 transition-all cursor-pointer border-none outline-none"
+                  className="mt-3 px-4 py-2 bg-brand-primary text-white text-xs font-bold rounded-xl shadow-xs hover:bg-brand-primary/95 transition-all cursor-pointer border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
                 >
                   {language === 'uz' ? "Barcha hududlarni ko'rsatish" : language === 'ru' ? "Показать все регионы" : "Show all regions"}
                 </button>

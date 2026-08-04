@@ -111,7 +111,7 @@ export const MessagesScreen: React.FC = () => {
                   type="text"
                   required
                   placeholder={t.employerPlaceholder}
-                  className="bg-slate-50 border-none rounded-xl p-3 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
+                  className="bg-slate-50 border-none rounded-xl p-3 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20 transition-all"
                   value={composeCompany}
                   onChange={(e) => setComposeCompany(e.target.value)}
                 />
@@ -123,7 +123,7 @@ export const MessagesScreen: React.FC = () => {
                   required
                   rows={4}
                   placeholder={t.messagePlaceholder}
-                  className="bg-slate-50 border-none rounded-xl p-3 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all resize-none"
+                  className="bg-slate-50 border-none rounded-xl p-3 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20 transition-all resize-none"
                   value={composeMessage}
                   onChange={(e) => setComposeMessage(e.target.value)}
                 />

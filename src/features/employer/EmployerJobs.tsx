@@ -4,6 +4,7 @@ import { Briefcase, History } from 'lucide-react';
 import { EmployerPageHeader } from './EmployerPageHeader';
 import { EmployerJobDetailModal } from './EmployerJobDetailModal';
 import { EmployerJobCard } from './EmployerJobCard';
+import { FinishJobModal } from './components/FinishJobModal';
 import { Job } from '../../types';
 
 interface EmployerJobsProps {
@@ -14,6 +15,14 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
   const { postedJobs, language, completeJob, deleteJob } = useEmployer();
   const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [jobToComplete, setJobToComplete] = useState<Job | null>(null);
+
+  const handleFinishConfirm = async (data: { rating: number; review: string; bonus: number }) => {
+    if (jobToComplete) {
+      await completeJob(jobToComplete.id, data);
+      setJobToComplete(null);
+    }
+  };
 
   const activeJobs = postedJobs.filter(j => j.status !== 'completed');
   const historyJobs = postedJobs.filter(j => j.status === 'completed');
@@ -32,7 +41,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
       <div className="flex p-1 bg-slate-100/80 rounded-xl w-full max-w-sm">
         <button
           onClick={() => setActiveTab('active')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer outline-none ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
             activeTab === 'active' 
               ? 'bg-white text-brand-primary shadow-sm' 
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
@@ -46,7 +55,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
         </button>
         <button
           onClick={() => setActiveTab('history')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer outline-none ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
             activeTab === 'history' 
               ? 'bg-white text-brand-primary shadow-sm' 
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
@@ -97,7 +106,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
               job={job}
               language={language}
               onSelect={setSelectedJob}
-              onComplete={completeJob}
+              onComplete={(id) => setJobToComplete(job)}
               onDelete={deleteJob}
             />
           ))}
@@ -109,8 +118,21 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
         job={selectedJob}
         onClose={() => setSelectedJob(null)}
         language={language}
-        onComplete={completeJob}
+        onComplete={(id) => {
+          setSelectedJob(null);
+          const j = postedJobs.find(x => x.id === id);
+          if (j) setJobToComplete(j);
+        }}
         onDelete={deleteJob}
+      />
+
+      {/* Finish Job Modal */}
+      <FinishJobModal
+        isOpen={!!jobToComplete}
+        onClose={() => setJobToComplete(null)}
+        onConfirm={handleFinishConfirm}
+        jobTitle={jobToComplete?.title || ''}
+        language={language}
       />
     </div>
   );

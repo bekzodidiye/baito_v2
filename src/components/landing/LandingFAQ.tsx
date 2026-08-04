@@ -38,7 +38,7 @@ export const LandingFAQ: React.FC = () => {
               >
                 <button
                   onClick={() => toggleFAQ(idx)}
-                  className="w-full p-5 text-left flex items-center justify-between gap-4 cursor-pointer focus:outline-none"
+                  className="w-full p-5 text-left flex items-center justify-between gap-4 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
                 >
                   <span className="text-sm font-black text-slate-900">{q}</span>
                   <ChevronDown

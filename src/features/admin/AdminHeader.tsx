@@ -92,7 +92,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value as 'uz' | 'ru' | 'en')}
-              className="bg-transparent font-extrabold text-xs text-slate-800 focus:outline-none cursor-pointer"
+              className="bg-transparent font-extrabold text-xs text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 cursor-pointer"
             >
               <option value="uz">UZ</option>
               <option value="ru">RU</option>

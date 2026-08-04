@@ -1,6 +1,6 @@
 import L from 'leaflet';
 
-export type MapType = 'xarita' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro';
+export type MapType = 'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro';
 
 // Global memory cache for tile images to eliminate network latency when filtering or panning
 const tileMemoryCache = new Map<string, string>();

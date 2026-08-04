@@ -5,9 +5,8 @@ import { useCallback, useRef, useEffect, useState } from 'react';
 import { useApp } from './AppContext';
 
 export function useChatsData(language: 'uz' | 'ru' | 'en') {
-  const { userProfile } = useApp();
-  const isLoggedIn = !!localStorage.getItem('baito_token');
-  
+  const { userProfile, isLoggedIn } = useApp();
+
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>({});
@@ -55,7 +54,8 @@ export function useChatsData(language: 'uz' | 'ru' | 'en') {
 
         if (wsRef.current) wsRef.current.close();
         
-        const wsUrl = `ws://${window.location.hostname}:8000/api/v1/chats/ws/${activeChatId}`;
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.host}/api/v1/chats/ws/${activeChatId}`;
         const ws = new WebSocket(wsUrl);
         ws.onmessage = (event) => {
           const m = JSON.parse(event.data);
@@ -90,7 +90,6 @@ export function useChatsData(language: 'uz' | 'ru' | 'en') {
     if (!text.trim() || !userProfile?.id) return;
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
-        senderId: userProfile.id,
         text: text.trim(),
         hasMap: false
       }));

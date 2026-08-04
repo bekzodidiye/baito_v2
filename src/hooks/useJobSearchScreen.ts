@@ -37,7 +37,7 @@ export function useJobSearchScreen() {
     if (job) {
       navigate(`/jobs/${job.id}`);
     } else {
-      navigate('/qidiruv');
+      navigate('/jobs');
     }
   }, [navigate]);
 

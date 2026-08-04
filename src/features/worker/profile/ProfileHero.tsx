@@ -31,7 +31,7 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
         {/* Top Right Edit Button */}
         <button 
           onClick={onEditClick}
-          className="absolute top-3.5 right-3.5 z-20 bg-white/90 hover:bg-white text-slate-700 hover:text-brand-primary px-3 py-1.5 rounded-full font-sans font-bold text-xs shadow-2xs border border-slate-200/80 flex items-center gap-1.5 transition-all cursor-pointer outline-none active:scale-95"
+          className="absolute top-3.5 right-3.5 z-20 bg-white/90 hover:bg-white text-slate-700 hover:text-brand-primary px-3 py-1.5 rounded-full font-sans font-bold text-xs shadow-2xs border border-slate-200/80 flex items-center gap-1.5 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-95"
           title={t.editProfile}
         >
           <Edit2 size={13} className="stroke-[2.2]" />
@@ -52,7 +52,7 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
           </div>
           <button 
             onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-1 right-1 bg-brand-primary hover:bg-brand-primary/95 text-white w-8 h-8 rounded-full flex items-center justify-center border-2 border-white shadow-xs cursor-pointer active:scale-90 transition-transform outline-none"
+            className="absolute bottom-1 right-1 bg-brand-primary hover:bg-brand-primary/95 text-white w-8 h-8 rounded-full flex items-center justify-center border-2 border-white shadow-xs cursor-pointer active:scale-90 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           >
             <Camera size={14} className="stroke-[2.2]" />
           </button>

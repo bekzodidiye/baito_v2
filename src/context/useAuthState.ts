@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { safeGetItem, safeSetItem } from './utils';
 import { UserProfile, ScreenType } from './types';
 import { useNavigate } from 'react-router-dom';
@@ -81,14 +81,32 @@ export function useAuthState() {
     return true;
   }, [isLoggedIn, navigate]);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('baito_token');
-    localStorage.removeItem('baito_user_profile');
-    localStorage.removeItem('baito_is_logged_in');
+  const clearSession = useCallback(() => {
+    try {
+      localStorage.removeItem('baito_user_profile');
+      localStorage.removeItem('baito_is_logged_in');
+    } catch (e) {}
     setUserProfileState(null);
     setIsLoggedInState(false);
+  }, []);
+
+  const logout = useCallback(async () => {
+    const { logoutApi } = await import('../api/queries');
+    await logoutApi();
+    clearSession();
     navigate('/');
-  }, [navigate]);
+  }, [clearSession, navigate]);
+
+  // The server can invalidate the session cookie at any time; when apiClient
+  // detects that, drop the cached profile so the UI stops pretending we're in.
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      clearSession();
+      navigate('/login');
+    };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, [clearSession, navigate]);
 
   return {
     language, setLanguage,

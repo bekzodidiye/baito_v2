@@ -20,7 +20,7 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
 
   const handleMeningArizalarim = () => {
-    setCurrentScreen('kalendar');
+    setCurrentScreen('calendar');
     setActiveCalendarFilter('applied');
     setDrawerOpen(false);
   };
@@ -49,9 +49,9 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
         icon: User,
         action: () => {
           setDrawerOpen(false);
-          setCurrentScreen(isEmployer ? 'employer-profile' : 'profil');
+          setCurrentScreen(isEmployer ? 'employer-profile' : 'profile');
         },
-        active: currentScreen === 'profil' || currentScreen === 'employer-profile',
+        active: currentScreen === 'profile' || currentScreen === 'employer-profile',
       }
     );
     
@@ -61,7 +61,7 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
         label: t.myApplications,
         icon: ClipboardList,
         action: handleMeningArizalarim,
-        active: currentScreen === 'kalendar',
+        active: currentScreen === 'calendar',
       });
     }
     if (isEmployer) {
@@ -110,8 +110,8 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
       id: 'settings',
       label: t.settings,
       icon: Settings,
-      action: () => { setDrawerOpen(false); setCurrentScreen('sozlamalar'); },
-      active: currentScreen === 'sozlamalar',
+      action: () => { setDrawerOpen(false); setCurrentScreen('settings'); },
+      active: currentScreen === 'settings',
     },
     {
       id: 'help',

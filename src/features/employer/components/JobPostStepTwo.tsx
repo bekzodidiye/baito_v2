@@ -129,7 +129,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
             <DollarSign size={14} className="stroke-[2.5] text-brand-primary" />
             {language === 'uz' ? "Umumiy to'lov (so'm) *" : "Total Salary (UZS) *"}
           </label>
-          <input type="number" placeholder="200000" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} />
+          <input type="number" placeholder="200000" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} />
         </div>
       </div>
 
@@ -139,7 +139,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
           <Truck size={14} className="stroke-[2.5] text-brand-primary" />
           {language === 'uz' ? "Transport xarajati (so'm)" : "Transport Expenses"}
         </label>
-        <input type="number" placeholder="15000" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none" value={transportRate} onChange={(e) => setTransportRate(e.target.value)} />
+        <input type="number" placeholder="15000" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={transportRate} onChange={(e) => setTransportRate(e.target.value)} />
       </div>
 
       {/* Talablar va shartlar */}
@@ -148,7 +148,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
           <CheckCircle size={14} className="stroke-[2.5] text-emerald-600" />
           {language === 'uz' ? "Talablar va shartlar" : "Requirements"}
         </label>
-        <textarea rows={2} placeholder={language === 'uz' ? "1. Yosh 18-35\n2. Intizomli bo'lish" : "1. Age 18-35"} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none resize-none" value={requirements} onChange={(e) => setRequirements(e.target.value)} />
+        <textarea rows={2} placeholder={language === 'uz' ? "1. Yosh 18-35\n2. Intizomli bo'lish" : "1. Age 18-35"} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={requirements} onChange={(e) => setRequirements(e.target.value)} />
       </div>
 
       {/* Muhim eslatma */}
@@ -157,7 +157,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
           <AlertTriangle size={14} className="stroke-[2.5] text-amber-600" />
           {language === 'uz' ? "Muhim eslatma (ishchilar uchun)" : "Important Note"}
         </label>
-        <textarea rows={2} placeholder={language === 'uz' ? "Pasport asli nusxasi bilan kelish shart." : "Passport required."} className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-amber-950 focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 outline-none resize-none" value={importantNote} onChange={(e) => setImportantNote(e.target.value)} />
+        <textarea rows={2} placeholder={language === 'uz' ? "Pasport asli nusxasi bilan kelish shart." : "Passport required."} className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-amber-950 focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={importantNote} onChange={(e) => setImportantNote(e.target.value)} />
       </div>
 
       {/* Premium Modal */}

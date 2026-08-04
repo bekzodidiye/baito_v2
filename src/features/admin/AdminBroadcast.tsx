@@ -68,7 +68,7 @@ export const AdminBroadcast: React.FC<AdminBroadcastProps> = ({ onSendBroadcast 
               placeholder="Masalan: Tizimda yangilanishlar e'lon qilindi!"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-xs text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"
               required
             />
           </div>
@@ -80,7 +80,7 @@ export const AdminBroadcast: React.FC<AdminBroadcastProps> = ({ onSendBroadcast 
               placeholder="Foydalanuvchilarga ko'rinadigan to'liq bildirishnoma matnini yozing..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-xs text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"
               required
             />
           </div>

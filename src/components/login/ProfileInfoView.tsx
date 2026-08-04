@@ -84,11 +84,11 @@ export const ProfileInfoView: React.FC<ProfileInfoViewProps> = (props) => {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">{t.name}</label>
-            <input type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Aziz" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary outline-none" />
+            <input type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Aziz" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">{t.surname}</label>
-            <input type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Aliyev" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary outline-none" />
+            <input type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Aliyev" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
           </div>
         </div>
 
@@ -115,7 +115,7 @@ export const ProfileInfoView: React.FC<ProfileInfoViewProps> = (props) => {
 
         <div className="space-y-1">
           <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">{t.email}</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="aziz@example.com" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary outline-none" />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="aziz@example.com" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
         </div>
       </form>
     </motion.div>

@@ -12,28 +12,28 @@ export const BottomNav: React.FC = () => {
 
   if (
     currentScreen === 'chat' || 
-    currentScreen === 'bildirishnomalar' || 
-    currentScreen === 'profil' ||
-    ((currentScreen === 'xabarlar' || currentScreen === 'employer-chats') && (selectedChatId || employerSelectedChatId))
+    currentScreen === 'notifications' || 
+    currentScreen === 'profile' ||
+    ((currentScreen === 'messages' || currentScreen === 'employer-chats') && (selectedChatId || employerSelectedChatId))
   ) return null;
 
   const handleNavClick = (screen: ScreenType) => {
     requireAuth(screen);
   };
 
-  const isTabActive = (tab: 'kalendar' | 'qidiruv' | 'xabarlar') => {
-    if (tab === 'kalendar') return currentScreen === 'kalendar';
-    if (tab === 'qidiruv') return currentScreen === 'qidiruv' || currentScreen === 'xarita';
-    if (tab === 'xabarlar') return currentScreen === 'xabarlar' || (currentScreen as string) === 'chat';
+  const isTabActive = (tab: 'calendar' | 'jobs' | 'messages') => {
+    if (tab === 'calendar') return currentScreen === 'calendar';
+    if (tab === 'jobs') return currentScreen === 'jobs';
+    if (tab === 'messages') return currentScreen === 'messages' || (currentScreen as string) === 'chat';
     return false;
   };
 
-  const isMapScreen = currentScreen === 'xarita';
+  const isMapScreen = currentScreen === 'jobs';
 
   const navItems = [
-    { id: 'kalendar', label: t.calendar, icon: Calendar, screen: 'kalendar' as ScreenType },
-    { id: 'qidiruv', label: t.jobSearch, icon: Map, screen: 'xarita' as ScreenType },
-    { id: 'xabarlar', label: t.messages, icon: Mail, screen: 'xabarlar' as ScreenType },
+    { id: 'calendar', label: t.calendar, icon: Calendar, screen: 'calendar' as ScreenType },
+    { id: 'jobs', label: t.jobSearch, icon: Map, screen: 'jobs' as ScreenType },
+    { id: 'messages', label: t.messages, icon: Mail, screen: 'messages' as ScreenType },
   ];
 
   return (
@@ -42,14 +42,14 @@ export const BottomNav: React.FC = () => {
     }`}>
       <div className="flex justify-between items-center w-full max-w-sm mx-auto px-4 h-full relative">
         {navItems.map((item) => {
-          const active = isTabActive(item.id as 'kalendar' | 'qidiruv' | 'xabarlar');
+          const active = isTabActive(item.id as 'calendar' | 'jobs' | 'messages');
           const Icon = item.icon;
 
           return (
             <button
               key={item.id}
               onClick={() => handleNavClick(item.screen)}
-              className="flex flex-col items-center justify-center flex-1 h-full relative focus:outline-none select-none active:scale-95 transition-transform"
+              className="flex flex-col items-center justify-center flex-1 h-full relative focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 select-none active:scale-95 transition-transform"
             >
               <motion.div
                 animate={{ y: active ? 3 : 0 }}

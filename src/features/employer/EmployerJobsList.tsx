@@ -3,6 +3,7 @@ import { ChevronRight, Briefcase } from 'lucide-react';
 import { Language } from '../../translations';
 import { EmployerJobCard } from './EmployerJobCard';
 import { EmployerJobDetailModal } from './EmployerJobDetailModal';
+import { FinishJobModal } from './components/FinishJobModal';
 import { useEmployer } from '../../hooks/useEmployer';
 import { Job } from '../../types';
 
@@ -19,6 +20,14 @@ export const EmployerJobsList: React.FC<EmployerJobsListProps> = ({
 }) => {
   const { completeJob, deleteJob } = useEmployer();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [jobToComplete, setJobToComplete] = useState<Job | null>(null);
+
+  const handleFinishConfirm = async (data: { rating: number; review: string; bonus: number }) => {
+    if (jobToComplete) {
+      await completeJob(jobToComplete.id, data);
+      setJobToComplete(null);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -28,7 +37,7 @@ export const EmployerJobsList: React.FC<EmployerJobsListProps> = ({
         </h2>
         <button 
           onClick={onViewAllJobsClick}
-          className="text-xs font-bold text-brand-primary flex items-center gap-1 hover:underline cursor-pointer outline-none"
+          className="text-xs font-bold text-brand-primary flex items-center gap-1 hover:underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           {language === 'uz' ? "Barchasi" : language === 'ru' ? "Все" : "All"}
           <ChevronRight size={14} className="stroke-[2.5]" />
@@ -42,7 +51,7 @@ export const EmployerJobsList: React.FC<EmployerJobsListProps> = ({
             job={job}
             language={language as 'uz' | 'ru' | 'en'}
             onSelect={setSelectedJob}
-            onComplete={completeJob}
+            onComplete={(id) => setJobToComplete(job)}
             onDelete={deleteJob}
           />
         ))}
@@ -62,8 +71,21 @@ export const EmployerJobsList: React.FC<EmployerJobsListProps> = ({
         job={selectedJob}
         onClose={() => setSelectedJob(null)}
         language={language as 'uz' | 'ru' | 'en'}
-        onComplete={completeJob}
+        onComplete={(id) => {
+          setSelectedJob(null);
+          const j = postedJobs.find(x => x.id === id);
+          if (j) setJobToComplete(j);
+        }}
         onDelete={deleteJob}
+      />
+
+      {/* Finish Job Modal */}
+      <FinishJobModal
+        isOpen={!!jobToComplete}
+        onClose={() => setJobToComplete(null)}
+        onConfirm={handleFinishConfirm}
+        jobTitle={jobToComplete?.title || ''}
+        language={language as 'uz' | 'ru' | 'en'}
       />
     </div>
   );

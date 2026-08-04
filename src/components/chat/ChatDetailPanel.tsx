@@ -53,7 +53,7 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
         activeChat={activeChat}
         t={t}
         setCurrentScreen={(scr) => {
-          if (scr === 'xabarlar') {
+          if (scr === 'messages') {
             onBackMobile();
           } else {
             setCurrentScreen(scr);
@@ -112,7 +112,7 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
                         </div>
                       </div>
                       <button
-                        onClick={() => setCurrentScreen('xarita')}
+                        onClick={() => setCurrentScreen('jobs')}
                         className="w-full py-2 px-3 flex items-center justify-between bg-white text-brand-primary text-[11px] font-bold border-t border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors"
                       >
                         <span>{t.workplaceMap || "Xaritada ko'rish"}</span>

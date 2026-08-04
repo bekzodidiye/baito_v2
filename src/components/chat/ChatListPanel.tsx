@@ -30,7 +30,7 @@ export const ChatListPanel: React.FC<ChatListPanelProps> = ({
           <Search size={16} className="text-slate-400 group-focus-within:text-brand-primary shrink-0" />
           <input
             type="text"
-            className="w-full h-full ml-2 bg-transparent text-xs font-sans text-slate-800 focus:outline-none placeholder:text-slate-400 font-medium"
+            className="w-full h-full ml-2 bg-transparent text-xs font-sans text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 placeholder:text-slate-400 font-medium"
             placeholder={t.searchChatPlaceholder || "Ish beruvchi yoki xabarni izlash..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

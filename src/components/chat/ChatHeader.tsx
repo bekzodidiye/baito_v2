@@ -29,7 +29,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ activeChat, t, setCurren
       <div className="w-full max-w-5xl mx-auto flex justify-between items-center px-4 h-16">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setCurrentScreen('xabarlar')}
+            onClick={() => setCurrentScreen('messages')}
             className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low transition-colors cursor-pointer text-brand-text-variant"
             aria-label={t.back}
           >

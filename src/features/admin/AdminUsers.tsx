@@ -34,7 +34,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
             placeholder="Ism, telefon yoki kompaniya..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           />
         </div>
 

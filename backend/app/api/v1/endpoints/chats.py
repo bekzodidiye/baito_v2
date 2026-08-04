@@ -1,12 +1,21 @@
 from typing import Any, List
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
-from app import models, schemas
+from app import crud, models, schemas
 from app.api import deps
+from app.core.config import settings
 import json
 from sqlalchemy import or_
 
 router = APIRouter()
+
+def _get_participant_chat(db: Session, chat_id: str, user: models.User) -> models.Chat:
+    chat = db.query(models.Chat).filter(models.Chat.id == chat_id).first()
+    if not chat:
+        raise HTTPException(status_code=404, detail="Suhbat topilmadi")
+    if user.id not in (chat.workerId, chat.employerId):
+        raise HTTPException(status_code=403, detail="Bu suhbatga kirish huquqingiz yo'q")
+    return chat
 
 class ConnectionManager:
     def __init__(self):
@@ -71,7 +80,11 @@ def create_chat(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    # Check if chat already exists
+    # The caller must be one side of the chat they are creating, otherwise anyone
+    # could open a conversation between two unrelated users.
+    if current_user.id not in (chat_in.workerId, chat_in.employerId):
+        raise HTTPException(status_code=403, detail="Faqat o'z suhbatingizni ocha olasiz")
+
     existing = db.query(models.Chat).filter(
         models.Chat.jobId == chat_in.jobId,
         models.Chat.workerId == chat_in.workerId,
@@ -79,7 +92,7 @@ def create_chat(
     ).first()
     if existing:
         return existing
-        
+
     db_chat = models.Chat(**chat_in.model_dump())
     db.add(db_chat)
     db.commit()
@@ -92,25 +105,39 @@ def get_chat_messages(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
+    _get_participant_chat(db, chat_id, current_user)
     messages = db.query(models.Message).filter(models.Message.chatId == chat_id).order_by(models.Message.createdAt.asc()).all()
     return messages
 
 @router.websocket("/ws/{chat_id}")
 async def websocket_endpoint(websocket: WebSocket, chat_id: str, db: Session = Depends(deps.get_db)):
+    # The socket carries the same httpOnly session cookie as REST calls; without a
+    # valid one, or if the user is not a party to this chat, we never accept.
+    token = websocket.cookies.get(settings.ACCESS_COOKIE_NAME)
+    token_data = deps._decode(token, "access") if token else None
+    user = crud.user.get_by_uid(db, uid=token_data.sub) if token_data else None
+    if not user or user.isBanned:
+        await websocket.close(code=1008)
+        return
+
+    chat = db.query(models.Chat).filter(models.Chat.id == chat_id).first()
+    if not chat or user.id not in (chat.workerId, chat.employerId):
+        await websocket.close(code=1008)
+        return
+
     await manager.connect(websocket, chat_id)
     try:
         while True:
             data = await websocket.receive_text()
             message_data = json.loads(data)
-            sender_id = message_data.get("senderId")
             text = message_data.get("text")
             has_map = message_data.get("hasMap", False)
             map_location = message_data.get("mapLocation", "")
 
-            # Save to db
+            # senderId comes from the session, never from the client payload.
             new_msg = models.Message(
                 chatId=chat_id,
-                senderId=sender_id,
+                senderId=user.id,
                 text=text,
                 hasMap=has_map,
                 mapLocation=map_location

@@ -36,7 +36,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               required
               value={passData.current}
               onChange={(e) => setPassData({ ...passData, current: e.target.value })}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             />
           </div>
 
@@ -47,7 +47,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               required
               value={passData.newPass}
               onChange={(e) => setPassData({ ...passData, newPass: e.target.value })}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             />
           </div>
 
@@ -58,7 +58,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               required
               value={passData.confirm}
               onChange={(e) => setPassData({ ...passData, confirm: e.target.value })}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             />
           </div>
 

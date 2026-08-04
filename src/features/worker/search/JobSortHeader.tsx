@@ -62,7 +62,7 @@ export const JobSortHeader: React.FC<JobSortHeaderProps> = ({
         <button
           onClick={requestLocation}
           disabled={isRequestingLocation}
-          className={`flex items-center gap-1.5 bg-white shadow-[inset_0_4px_8px_rgba(0,0,0,0.14),_0_0_12px_rgba(0,0,0,0.04)] hover:bg-slate-50 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-all duration-200 cursor-pointer outline-none border-none ${
+          className={`flex items-center gap-1.5 bg-white shadow-[inset_0_4px_8px_rgba(0,0,0,0.14),_0_0_12px_rgba(0,0,0,0.04)] hover:bg-slate-50 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 border-none ${
             sortBy === 'yaqin' ? 'text-brand-primary' : 'text-slate-600'
           }`}
         >
@@ -84,7 +84,7 @@ export const JobSortHeader: React.FC<JobSortHeaderProps> = ({
 
         <button
           onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
-          className="flex items-center gap-1.5 bg-white text-brand-text-variant shadow-[inset_0_4px_8px_rgba(0,0,0,0.14),_0_0_12px_rgba(0,0,0,0.04)] hover:bg-slate-50 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-all duration-200 cursor-pointer outline-none border-none"
+          className="flex items-center gap-1.5 bg-white text-brand-text-variant shadow-[inset_0_4px_8px_rgba(0,0,0,0.14),_0_0_12px_rgba(0,0,0,0.04)] hover:bg-slate-50 rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 border-none"
         >
           <ArrowUpDown
             size={12}

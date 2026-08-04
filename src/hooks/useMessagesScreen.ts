@@ -40,7 +40,7 @@ export function useMessagesScreen() {
       );
       navigate(`/chats/${chatId}`);
     } else {
-      navigate('/xabarlar');
+      navigate('/messages');
     }
   };
 

@@ -83,22 +83,7 @@ const loadRegionsData = async () => {
       }
     }
   } catch (e) {
-    console.warn("fetch /uzbekistan_regions_std.json failed, trying import...", e);
-  }
-
-  try {
-    const module = await import('../../../public/uzbekistan_regions_std.json');
-    let data = module.default;
-    if (typeof data === 'string') {
-      const res = await fetch(data);
-      data = await res.json();
-    }
-    if (data && data.features) {
-      cachedRegionsData = shiftGeoJson(data, LNG_OFFSET, LAT_OFFSET);
-      return cachedRegionsData;
-    }
-  } catch (err) {
-    console.error("Error loading Regions GeoJSON:", err);
+    console.error("fetch /uzbekistan_regions_std.json failed", e);
   }
   return null;
 };
@@ -112,21 +97,7 @@ const loadDistrictsData = async () => {
       rawData = await res.json();
     }
   } catch (e) {
-    console.warn("fetch /uzbekistan_districts.json failed, trying import...", e);
-  }
-
-  if (!rawData) {
-    try {
-      const module = await import('../../../public/uzbekistan_districts.json');
-      let data = module.default;
-      if (typeof data === 'string') {
-        const res = await fetch(data);
-        data = await res.json();
-      }
-      rawData = data;
-    } catch (err) {
-      console.error("Error loading Districts GeoJSON:", err);
-    }
+    console.error("fetch /uzbekistan_districts.json failed", e);
   }
 
   if (rawData && rawData.features) {

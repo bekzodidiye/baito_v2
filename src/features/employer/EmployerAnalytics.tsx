@@ -5,19 +5,42 @@ import { motion } from 'motion/react';
 import { EmployerPageHeader } from './EmployerPageHeader';
 
 export const EmployerAnalytics: React.FC = () => {
-  const { language } = useEmployer();
+  const { language, postedJobs, applications } = useEmployer();
+
+  // Calculate stats based on real data
+  const today = new Date().toISOString().split('T')[0];
+  const todaysApps = applications.filter(a => a.appliedDate && a.appliedDate.startsWith(today)).length;
   
-  const chartData = [
-    { day: language === 'uz' ? 'Du' : language === 'ru' ? 'Пн' : "Mon", count: 12 },
-    { day: language === 'uz' ? 'Se' : language === 'ru' ? 'Вт' : "Tue", count: 18 },
-    { day: language === 'uz' ? 'Ch' : language === 'ru' ? 'Ср' : "Wed", count: 8 },
-    { day: language === 'uz' ? 'Pa' : language === 'ru' ? 'Чт' : "Thu", count: 24 },
-    { day: language === 'uz' ? 'Ju' : language === 'ru' ? 'Пт' : "Fri", count: 32 },
-    { day: language === 'uz' ? 'Sh' : language === 'ru' ? 'Сб' : "Sat", count: 14 },
-    { day: language === 'uz' ? 'Ya' : language === 'ru' ? 'Вс' : "Sun", count: 5 },
-  ];
+  const totalViews = postedJobs.length * 45; // Mocked views for now
   
-  const maxCount = Math.max(...chartData.map(d => d.count));
+  const filledPositions = applications.filter(a => a.status === 'hired').length;
+  const totalNeeded = postedJobs.reduce((acc, job) => acc + parseInt(job.neededWorkers || '1', 10), 0);
+  const fillRate = totalNeeded > 0 ? Math.round((filledPositions / totalNeeded) * 100) : 0;
+  
+  const totalCost = postedJobs.reduce((acc, job) => {
+      const salary = parseInt((job.salary || '0').replace(/\D/g, ''), 10);
+      return acc + (isNaN(salary) ? 0 : salary);
+  }, 0);
+  const avgCost = postedJobs.length > 0 ? Math.round(totalCost / postedJobs.length) : 0;
+  const formattedAvgCost = (avgCost / 1000).toFixed(0) + 'K';
+
+  // Chart data: past 7 days apps
+  const chartData = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const dStr = d.toISOString().split('T')[0];
+    const count = applications.filter(a => a.appliedDate && a.appliedDate.startsWith(dStr)).length;
+    const daysUz = ['Ya', 'Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh'];
+    const daysRu = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    const daysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return {
+      day: language === 'uz' ? daysUz[d.getDay()] : language === 'ru' ? daysRu[d.getDay()] : daysEn[d.getDay()],
+      count
+    };
+  });
+  
+  const maxCount = Math.max(...chartData.map(d => d.count)) || 10;
+
 
   return (
     <div className="w-full max-w-4xl mx-auto py-4 px-4 md:px-6 flex flex-col gap-6 pb-24 md:pb-6">
@@ -43,7 +66,7 @@ export const EmployerAnalytics: React.FC = () => {
             </div>
           </div>
           <div>
-            <p className="text-3xl font-black text-slate-800">24</p>
+            <p className="text-3xl font-black text-slate-800">{todaysApps}</p>
             <p className="text-[11px] font-bold text-emerald-500 mt-1 flex items-center gap-1">
               +12% {language === 'uz' ? "kechagidan" : language === 'ru' ? "вчера" : "from yesterday"}
             </p>
@@ -64,7 +87,7 @@ export const EmployerAnalytics: React.FC = () => {
             </div>
           </div>
           <div>
-            <p className="text-3xl font-black text-slate-800">1,204</p>
+            <p className="text-3xl font-black text-slate-800">{totalViews}</p>
             <p className="text-[11px] font-bold text-emerald-500 mt-1 flex items-center gap-1">
               +8% {language === 'uz' ? "o'tgan haftadan" : language === 'ru' ? "с прошлой недели" : "from last week"}
             </p>
@@ -85,9 +108,9 @@ export const EmployerAnalytics: React.FC = () => {
             </div>
           </div>
           <div>
-            <p className="text-3xl font-black text-slate-800">85%</p>
+            <p className="text-3xl font-black text-slate-800">{fillRate}%</p>
             <p className="text-[11px] font-bold text-slate-400 mt-1 flex items-center gap-1">
-              34 / 40 {language === 'uz' ? "ishchi qabul qilingan" : language === 'ru' ? "работников принято" : "workers hired"}
+              {filledPositions} / {totalNeeded} {language === 'uz' ? "ishchi qabul qilingan" : language === 'ru' ? "работников принято" : "workers hired"}
             </p>
           </div>
         </motion.div>
@@ -106,7 +129,7 @@ export const EmployerAnalytics: React.FC = () => {
             </div>
           </div>
           <div>
-            <p className="text-3xl font-black text-slate-800">25K <span className="text-sm font-bold text-slate-400">/ {language === 'uz' ? 'soat' : language === 'ru' ? 'час' : "hour"}</span></p>
+            <p className="text-3xl font-black text-slate-800">{formattedAvgCost} <span className="text-sm font-bold text-slate-400">/ {language === 'uz' ? 'soat' : language === 'ru' ? 'час' : "hour"}</span></p>
             <p className="text-[11px] font-bold text-slate-400 mt-1 flex items-center gap-1">
               {language === 'uz' ? "Barcha e'lonlar bo'yicha" : language === 'ru' ? "По всем объявлениям" : "Across all jobs"}
             </p>
@@ -128,7 +151,7 @@ export const EmployerAnalytics: React.FC = () => {
               {language === 'uz' ? "Oxirgi 7 kun ichida tushgan arizalar dinamikasi" : language === 'ru' ? "Динамика поступивших заявок за последние 7 дней" : "Dynamics of applications received over the last 7 days"}
             </p>
           </div>
-          <button onClick={() => window.dispatchEvent(new CustomEvent("global-toast", { detail: language === 'uz' ? "Statistika har kuni soat 00:00 da yangilanadi" : "Статистика обновляется ежедневно" }))} className="text-slate-400 hover:text-brand-primary transition-colors cursor-pointer outline-none" title="Ma'lumot">
+          <button onClick={() => window.dispatchEvent(new CustomEvent("global-toast", { detail: language === 'uz' ? "Statistika har kuni soat 00:00 da yangilanadi" : "Статистика обновляется ежедневно" }))} className="text-slate-400 hover:text-brand-primary transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" title="Ma'lumot">
             <Info size={18} />
           </button>
         </div>

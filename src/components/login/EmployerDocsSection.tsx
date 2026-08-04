@@ -57,7 +57,7 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
           placeholder="Perfect Jobs MCHJ"
-          className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 px-4 text-xs font-bold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+          className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 px-4 text-xs font-bold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
         />
       </div>
 
@@ -73,7 +73,7 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           value={stir}
           onChange={(e) => setStir(e.target.value.replace(/\D/g, ''))}
           placeholder="123456789"
-          className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 px-4 text-xs font-bold tracking-widest focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+          className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 px-4 text-xs font-bold tracking-widest focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
         />
       </div>
 

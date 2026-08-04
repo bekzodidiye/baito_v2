@@ -32,9 +32,10 @@ def create_notification(
     *,
     db: Session = Depends(deps.get_db),
     notification_in: schemas.NotificationCreate,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    _: models.User = Depends(deps.get_current_admin),
 ) -> Any:
     """
-    Create a new notification.
+    Create a notification for any user. Admin only — the payload names its own
+    recipient, so letting ordinary users call this would allow spoofed messages.
     """
     return crud.notification.create(db=db, obj_in=notification_in)

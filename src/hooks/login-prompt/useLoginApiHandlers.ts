@@ -33,10 +33,9 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
       };
       
       await registerApi(payload);
-      
-      const data = await loginApi(state.regPhone, state.regPassword);
-      localStorage.setItem('baito_token', data.access_token);
-      
+
+      await loginApi(state.regPhone, state.regPassword);
+
       const newProfile = {
         id: 'unknown',
         firstName: state.selectedRole === 'worker' ? (state.firstName || 'Ozodbek') : (state.companyName || 'Korzinka.uz'),
@@ -54,10 +53,11 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
       if (isModal && onClose) onClose();
       else {
         const redirected = executePendingRedirect();
-        if (!redirected) setCurrentScreen('yakunlash');
+        if (!redirected) setCurrentScreen('verification');
       }
-    } catch (err) {
-      showToast(language === 'uz' ? "Xatolik yuz berdi. Balki bu raqam ro'yxatdan o'tgandir?" : "Произошла ошибка при регистрации");
+    } catch (err: any) {
+      const msg = err?.message || (language === 'uz' ? "Xatolik yuz berdi. Balki bu raqam ro'yxatdan o'tgandir?" : "Произошла ошибка при регистрации");
+      showToast(msg);
     }
   };
 
@@ -71,10 +71,8 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
     try {
       const { loginApi } = await import('../../api/queries');
       const { apiClient } = await import('../../api/client');
-      const data = await loginApi(state.loginPhone, state.loginPassword);
-      
-      localStorage.setItem('baito_token', data.access_token);
-      
+      await loginApi(state.loginPhone, state.loginPassword);
+
       let profile = null;
       try {
         const me = await apiClient('/users/me');
@@ -107,7 +105,7 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
         if (!redirected) {
           if (profile.selectedRole === 'admin') setCurrentScreen('admin');
           else if (profile.selectedRole === 'employer') setCurrentScreen('employer-dashboard');
-          else setCurrentScreen('xarita');
+          else setCurrentScreen('jobs');
         }
       }
     } catch (err) {

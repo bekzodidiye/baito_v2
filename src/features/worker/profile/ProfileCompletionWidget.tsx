@@ -1,8 +1,8 @@
 import React from 'react';
 import { Target, ChevronRight, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useApp } from '../../context/AppContext';
-import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useApp } from '../../../context/AppContext';
+import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 interface ProfileCompletionWidgetProps {
   language: 'uz' | 'ru' | 'en';
@@ -11,13 +11,39 @@ interface ProfileCompletionWidgetProps {
 export const ProfileCompletionWidget: React.FC<ProfileCompletionWidgetProps> = ({ language }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   
-  const missingSections = language === 'uz' 
-    ? ['Ish tajribasi', "Ta'lim"] 
-    : language === 'ru' 
-      ? ['Опыт работы', 'Образование'] 
-      : ['Work Experience', 'Education'];
-      
-  const progress = 65;
+  
+  const { userProfile } = useApp();
+  
+  // Calculate completion based on actual user profile data
+  const fieldsToCheck = [
+    { key: 'firstName', name: language === 'uz' ? 'Ism' : language === 'ru' ? 'Имя' : 'First Name' },
+    { key: 'lastName', name: language === 'uz' ? 'Familiya' : language === 'ru' ? 'Фамилия' : 'Last Name' },
+    { key: 'phone', name: language === 'uz' ? 'Telefon' : language === 'ru' ? 'Телефон' : 'Phone' },
+    { key: 'profileImage', name: language === 'uz' ? 'Rasm' : language === 'ru' ? 'Фото' : 'Photo' },
+    { key: 'bio', name: language === 'uz' ? 'Bio' : language === 'ru' ? 'О себе' : 'Bio' },
+    { key: 'jobTitle', name: language === 'uz' ? 'Kasb' : language === 'ru' ? 'Профессия' : 'Job Title' },
+    { key: 'docFileName1', name: language === 'uz' ? 'Hujjat' : language === 'ru' ? 'Документ' : 'Document' }
+  ];
+
+  let completedFields = 0;
+  const missingSections: string[] = [];
+  
+  if (userProfile) {
+    fieldsToCheck.forEach(field => {
+      const val = userProfile[field.key as keyof typeof userProfile];
+      if (val && String(val).trim() !== '') {
+        completedFields++;
+      } else {
+        missingSections.push(field.name);
+      }
+    });
+  } else {
+    // If not loaded, default to show all missing
+    fieldsToCheck.forEach(field => missingSections.push(field.name));
+  }
+
+  const progress = Math.round((completedFields / fieldsToCheck.length) * 100) || 0;
+
 
   return (
     <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-3xs flex flex-col gap-3.5 shrink-0">
@@ -51,7 +77,7 @@ export const ProfileCompletionWidget: React.FC<ProfileCompletionWidgetProps> = (
 
       <div className="flex flex-col gap-2 mt-1">
         {missingSections.map((section, idx) => (
-          <button onClick={() => setCurrentScreen('profil')} key={idx} className="flex items-center justify-between py-2.5 px-3.5 bg-slate-50 hover:bg-brand-primary/5 rounded-xl transition-all duration-200 group border border-slate-100 hover:border-brand-primary/20 cursor-pointer outline-none active:scale-[0.98]">
+          <button onClick={() => { setCurrentScreen('profile'); setTimeout(() => window.dispatchEvent(new CustomEvent('scroll-to-profile-section', { detail: section })), 300); }} key={idx} className="flex items-center justify-between py-2.5 px-3.5 bg-slate-50 hover:bg-brand-primary/5 rounded-xl transition-all duration-200 group border border-slate-100 hover:border-brand-primary/20 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-[0.98]">
             <span className="text-[11px] font-bold text-slate-700 group-hover:text-brand-primary transition-colors">{section}</span>
             <ChevronRight size={14} className="text-slate-400 group-hover:text-brand-primary transition-colors" />
           </button>

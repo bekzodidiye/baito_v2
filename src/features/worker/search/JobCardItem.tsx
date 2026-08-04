@@ -1,10 +1,10 @@
 import React, { memo } from 'react';
 import { Briefcase, MapPin, Clock, Share2 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Job } from '../../types';
-import { getJobShiftTime, getJobDuration } from '../../utils/jobTimeUtils';
-import { getJobCategory } from '../../utils/jobCategoryUtils';
-import { useApp } from '../../context/AppContext';
+import { Job } from '../../../types';
+import { getJobShiftTime, getJobDuration } from '../../../utils/jobTimeUtils';
+import { getJobCategory } from '../../../utils/jobCategoryUtils';
+import { useApp } from '../../../context/AppContext';
 
 interface JobCardItemProps {
   job: Job;

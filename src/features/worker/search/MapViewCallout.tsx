@@ -1,5 +1,5 @@
 import React from 'react';
-import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 interface MapViewCalloutProps {
   setCurrentScreen: (screen: any) => void;
@@ -14,7 +14,7 @@ export const MapViewCallout: React.FC<MapViewCalloutProps> = ({ setCurrentScreen
           Lokatsiya bo'yicha qidiruv orqali uyingizga eng yaqin ish joylarini toping va yo'lga ketadigan vaqtni tejang.
         </p>
         <button
-          onClick={() => setCurrentScreen('xarita')}
+          onClick={() => setCurrentScreen('jobs')}
           className="bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-xs py-2.5 px-6 rounded-xl w-fit transition-all mt-2 cursor-pointer shadow-sm active:scale-95 duration-200"
         >
           Xaritani ochish

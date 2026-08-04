@@ -30,7 +30,7 @@ export function useMapViewScreen() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPanelExpanded, setIsPanelExpanded] = useState(false);
-  const [mapType, setMapType] = useState<'xarita' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro'>('xarita');
+  const [mapType, setMapType] = useState<'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro'>('jobs');
   
   const lastFittedLocationRef = useRef<string>('Barchasi');
 
@@ -122,7 +122,7 @@ export function useMapViewScreen() {
     getDisplayedJobs,
     language,
     districtsGeoJsonData,
-    isVisible: currentScreen === 'xarita'
+    isVisible: currentScreen === 'jobs'
   });
 
   const handleRefresh = () => {

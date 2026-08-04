@@ -27,13 +27,12 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
     }
 
     switch (currentScreen) {
-      case 'kalendar':
+      case 'calendar':
         return t.calendar;
       case 'employer-chats':
-      case 'xabarlar':
+      case 'messages':
         return t.messages;
-      case 'xarita':
-      case 'qidiruv':
+      case 'jobs':
       default:
         return t.jobSearch;
     }
@@ -41,10 +40,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
 
   const renderMobileActions = () => {
     switch (currentScreen) {
-      case 'kalendar':
+      case 'calendar':
         return (
           <div 
-            onClick={() => setCurrentScreen('bildirishnomalar')}
+            onClick={() => setCurrentScreen('notifications')}
             className="relative p-2 cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
           >
             <Bell size={22} />
@@ -56,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
           </div>
         );
       case 'employer-chats':
-      case 'xabarlar':
+      case 'messages':
         return (
           <button 
             onClick={() => setMessagesSearchOpen(!messagesSearchOpen)}
@@ -69,11 +68,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
             <Search size={22} />
           </button>
         );
-      case 'xarita':
+      case 'jobs':
         return (
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setCurrentScreen('qidiruv')}
+              onClick={() => setCurrentScreen('jobs')}
               className="p-2 cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
               title={t.listView}
             >
@@ -81,11 +80,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
             </button>
           </div>
         );
-      case 'qidiruv':
       default:
         return (
           <button
-            onClick={() => setCurrentScreen('xarita')}
+            onClick={() => setCurrentScreen('jobs')}
             className="p-2 cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
             title={t.mapView}
           >
@@ -98,7 +96,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
   return (
     <>
       {/* Mobile Top App Bar */}
-      {currentScreen !== 'chat' && currentScreen !== 'bildirishnomalar' && currentScreen !== 'profil' && !((currentScreen === 'xabarlar' || currentScreen === 'employer-chats') && (selectedChatId || employerSelectedChatId)) && (
+      {currentScreen !== 'chat' && currentScreen !== 'notifications' && currentScreen !== 'profile' && !((currentScreen === 'messages' || currentScreen === 'employer-chats') && (selectedChatId || employerSelectedChatId)) && (
         <header className="flex md:hidden justify-between items-center px-4 h-14 w-full z-50 bg-white shadow-[0_0_24px_rgba(0,0,0,0.08),_0_4px_12px_rgba(0,0,0,0.04)] fixed top-0 left-0">
           <button
             onClick={() => setDrawerOpen(true)}

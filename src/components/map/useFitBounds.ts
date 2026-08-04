@@ -28,7 +28,7 @@ export const useFitBounds = ({
     if (!map || filterLocation === 'Barchasi') return;
     
     if (lastFittedLocationRef.current !== filterLocation) {
-      setTimeout(() => {
+      const fitTimer = setTimeout(() => {
         if (!mapInstanceRef.current) return;
         const currentMap = mapInstanceRef.current;
         let foundAndFitted = false;
@@ -83,6 +83,8 @@ export const useFitBounds = ({
           }
         }
       }, 50);
+
+      return () => clearTimeout(fitTimer);
     }
   }, [isMapReady, filterLocation, mapInstanceRef, lastFittedLocationRef, geoJsonData, districtsGeoJsonData, regionsGeoJsonLayerRef, districtsGeoJsonLayerRef]);
 };

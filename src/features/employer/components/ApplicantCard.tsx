@@ -110,7 +110,7 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
               await confirmStartJobApi(app.jobId);
               window.location.reload();
             }}
-            className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow-md transition-all active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer outline-none animate-pulse"
+            className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow-md transition-all active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 animate-pulse"
           >
             <Check size={16} className="stroke-[3]" />
             <span>{language === 'uz' ? "Ishni boshlashni tasdiqlash" : language === 'ru' ? "Подтвердить начало работы" : "Confirm Start Job"}</span>
@@ -119,14 +119,14 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
           <>
             <button
               onClick={() => updateApplicationStatus(app.id, 'hired')}
-              className="flex-1 py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl text-xs font-bold transition-all active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer outline-none shadow-sm"
+              className="flex-1 py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl text-xs font-bold transition-all active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 shadow-sm"
             >
               <Check size={14} className="stroke-[2.5]" />
               <span>{language === 'uz' ? "Qabul qilish" : language === 'ru' ? "Одобрить" : "Approve"}</span>
             </button>
             <button
               onClick={() => updateApplicationStatus(app.id, 'rejected')}
-              className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-rose-600 rounded-xl transition-all active:scale-98 flex items-center justify-center cursor-pointer outline-none"
+              className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-rose-600 rounded-xl transition-all active:scale-98 flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             >
               <X size={16} className="stroke-[2.5]" />
             </button>
@@ -134,7 +134,7 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
         ) : app.status === 'hired' ? (
           <button
             onClick={() => onChatClick(app.candidateName)}
-            className="w-full py-2.5 bg-blue-50 hover:bg-blue-100/70 text-brand-primary rounded-xl text-xs font-bold transition-all active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer outline-none"
+            className="w-full py-2.5 bg-blue-50 hover:bg-blue-100/70 text-brand-primary rounded-xl text-xs font-bold transition-all active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           >
             <MessageSquare size={14} className="stroke-[2.5]" />
             <span>{language === 'uz' ? "Ishchi bilan bog'lanish" : language === 'ru' ? "Связаться с работником" : "Contact Worker"}</span>

@@ -85,7 +85,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   disabled={isSubmitting}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold outline-none text-slate-800 disabled:opacity-50"
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 text-slate-800 disabled:opacity-50"
                 />
               </div>
 
@@ -98,7 +98,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   disabled={isSubmitting}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold outline-none text-slate-800 disabled:opacity-50"
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 text-slate-800 disabled:opacity-50"
                 />
               </div>
 

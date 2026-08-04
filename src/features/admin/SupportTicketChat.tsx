@@ -85,7 +85,7 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="Javobingizni yozing..."
-            className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none"
+            className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           />
           <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer">
             <Send size={14} /> Yuborish

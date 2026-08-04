@@ -73,7 +73,7 @@ export const EmployerPaymentModal: React.FC<{ onClose: () => void }> = ({ onClos
                   value={amount}
                   onChange={e => setAmount(e.target.value)}
                   placeholder="100000"
-                  className="w-full bg-white border border-slate-200 focus:border-brand-primary rounded-xl py-3 pl-14 pr-4 text-sm font-bold outline-none focus:ring-1 focus:ring-brand-primary transition-all"
+                  className="w-full bg-white border border-slate-200 focus:border-brand-primary rounded-xl py-3 pl-14 pr-4 text-sm font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-1 focus:ring-brand-primary transition-all"
                 />
               </div>
               <button 
