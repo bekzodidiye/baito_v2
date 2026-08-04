@@ -1,0 +1,90 @@
+import React from 'react';
+import { useApp, ScreenType } from '../context/AppContext';
+import { Calendar, Map, Mail } from 'lucide-react';
+import { motion } from 'motion/react';
+import { translations } from '../translations';
+
+export const BottomNav: React.FC = () => {
+  const { currentScreen, language, requireAuth, selectedChatId, employerSelectedChatId } = useApp();
+  const t = translations[language];
+
+  if (
+    currentScreen === 'chat' || 
+    currentScreen === 'bildirishnomalar' || 
+    currentScreen === 'profil' ||
+    ((currentScreen === 'xabarlar' || currentScreen === 'employer-chats') && (selectedChatId || employerSelectedChatId))
+  ) return null;
+
+  const handleNavClick = (screen: ScreenType) => {
+    requireAuth(screen);
+  };
+
+  const isTabActive = (tab: 'kalendar' | 'qidiruv' | 'xabarlar') => {
+    if (tab === 'kalendar') return currentScreen === 'kalendar';
+    if (tab === 'qidiruv') return currentScreen === 'qidiruv' || currentScreen === 'xarita';
+    if (tab === 'xabarlar') return currentScreen === 'xabarlar' || (currentScreen as string) === 'chat';
+    return false;
+  };
+
+  const isMapScreen = currentScreen === 'xarita';
+
+  const navItems = [
+    { id: 'kalendar', label: t.calendar, icon: Calendar, screen: 'kalendar' as ScreenType },
+    { id: 'qidiruv', label: t.jobSearch, icon: Map, screen: 'xarita' as ScreenType },
+    { id: 'xabarlar', label: t.messages, icon: Mail, screen: 'xabarlar' as ScreenType },
+  ];
+
+  return (
+    <nav className={`fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-white/95 backdrop-blur-md pb-safe h-16 md:hidden border-t border-slate-100/80 ${
+      isMapScreen ? 'shadow-[0_-2px_10px_rgba(0,0,0,0.02)]' : 'shadow-[0_-4px_24px_rgba(0,0,0,0.04)]'
+    }`}>
+      <div className="flex justify-between items-center w-full max-w-sm mx-auto px-4 h-full relative">
+        {navItems.map((item) => {
+          const active = isTabActive(item.id as 'kalendar' | 'qidiruv' | 'xabarlar');
+          const Icon = item.icon;
+
+          return (
+            <button
+              key={item.id}
+              onClick={() => handleNavClick(item.screen)}
+              className="flex flex-col items-center justify-center flex-1 h-full relative focus:outline-none select-none active:scale-95 transition-transform"
+            >
+              <motion.div
+                animate={{ y: active ? 3 : 0 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 25 }}
+                className="relative w-9 h-9 flex items-center justify-center mb-1 rounded-full"
+              >
+                {/* Sliding background highlight */}
+                {active && (
+                  <motion.div
+                    layoutId="activeTabBubble"
+                    className="absolute inset-0 bg-brand-primary rounded-full shadow-[0_3px_10px_rgba(0,6,102,0.12)]"
+                    transition={{ type: 'spring', stiffness: 380, damping: 25 }}
+                  />
+                )}
+                
+                {/* Icon wrapper to ensure it stays above the sliding bubble */}
+                <span className="relative z-10 flex items-center justify-center">
+                  <Icon 
+                    size={19} 
+                    className={`transition-colors duration-200 ${
+                      active ? 'text-white stroke-[2.3]' : 'text-brand-text-variant/70 stroke-[1.8]'
+                    }`} 
+                  />
+                </span>
+              </motion.div>
+
+              <span className={`text-[10px] tracking-wide transition-all duration-200 z-10 ${
+                active
+                  ? 'font-bold text-brand-primary'
+                  : 'font-medium text-brand-text-variant/70'
+              }`}>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+};

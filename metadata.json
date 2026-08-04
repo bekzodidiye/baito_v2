@@ -1,0 +1,10 @@
+{
+  "name": "Remix Remix Remix: Remix: Remix: Remix: Remix: Remix: ProJob - Ish qidirish",
+  "description": "O\u0027zbekistondagi eng ilg\u0027or ish qidirish portali. Kalendar, interaktiv xarita va chat interfeysiga ega.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
