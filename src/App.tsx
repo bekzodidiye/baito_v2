@@ -68,7 +68,12 @@ function AppContent() {
   const isSettingsOrHelp = ['settings', 'security', 'help', 'faq', 'guide', 'terms', 'support-chat'].includes(currentScreen);
   const showNavigation = currentScreen !== 'admin' && currentScreen !== 'verification' && currentScreen !== 'login' && currentScreen !== 'register' && currentScreen !== 'landing' && !currentScreen.startsWith('employer-') && !isSettingsOrHelp;
 
-  const shouldMountMap = hasOpenedMap || currentScreen === 'jobs';
+  // Screens nobody may reach while logged out; they bounce back to the landing.
+  const isAuthGatedScreen = !isLoggedIn && !['landing', 'login', 'register', 'faq', 'terms', 'help', 'guide'].includes(currentScreen);
+
+  // The map is only reachable while logged in, so tie it to the session: on
+  // logout it unmounts instead of idling, hidden, behind the landing page.
+  const shouldMountMap = isLoggedIn && (hasOpenedMap || currentScreen === 'jobs');
 
   return (
     <div className={`flex flex-col md:flex-row bg-brand-background text-brand-text antialiased font-sans selection:bg-brand-primary-container selection:text-white ${
@@ -90,22 +95,25 @@ function AppContent() {
         {showNavigation && <Drawer onOpenModal={handleOpenModal} />}
 
         {/* Main Content Layout */}
-        <main id="main-content" tabIndex={-1} className={`flex-1 w-full min-w-0 ${['landing', 'admin', 'jobs', 'messages', 'chat', 'verification', 'login', 'settings', 'security', 'help', 'faq', 'guide', 'terms', 'support-chat', 'profile', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'jobs'].includes(currentScreen) ? 'max-w-none px-0 md:px-0' : 'max-w-7xl mx-auto px-4 md:px-6'}`}>
+        <main id="main-content" tabIndex={-1} className={`flex-1 w-full min-w-0 ${['landing', 'admin', 'jobs', 'messages', 'chat', 'verification', 'login', 'settings', 'security', 'help', 'faq', 'guide', 'terms', 'support-chat', 'profile', 'reviews', 'applications', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'jobs'].includes(currentScreen) ? 'max-w-none px-0 md:px-0' : 'max-w-7xl mx-auto px-4 md:px-6'}`}>
+          {/* Keyed on the screen so a crashed screen's fallback clears as soon as
+              the user navigates away. Only route content belongs in here. */}
           <ErrorBoundary key={currentScreen}>
             {/* If not logged in, and trying to access a protected screen, redirect to landing */}
-            {!isLoggedIn && !['landing', 'login', 'register', 'faq', 'terms', 'help', 'guide'].includes(currentScreen) ? (
-              <Navigate to="/" replace />
-            ) : (
-              <>
-                {currentScreen !== 'jobs' && <AppRoutes />}
-                
-                {/* Persistently mounted map to avoid Leaflet re-initialization overhead */}
-                <div className={currentScreen === 'jobs' ? 'block' : 'hidden'}>
-                  <MapViewScreen />
-                </div>
-              </>
-            )}
+            {isAuthGatedScreen ? <Navigate to="/" replace /> : currentScreen !== 'jobs' && <AppRoutes />}
           </ErrorBoundary>
+
+          {/* Persistently mounted map to avoid Leaflet re-initialization overhead.
+              It sits outside the keyed boundary on purpose: a key that changes on
+              every navigation would destroy and rebuild the Leaflet instance each
+              time, which is exactly what mounting it here is meant to avoid. */}
+          {shouldMountMap && (
+            <ErrorBoundary>
+              <div className={currentScreen === 'jobs' ? 'block' : 'hidden'}>
+                <MapViewScreen />
+              </div>
+            </ErrorBoundary>
+          )}
         </main>
 
         {/* Bottom Nav Bar (Mobile view only) */}

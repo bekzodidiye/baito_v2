@@ -17,11 +17,27 @@ export const useProfileScreen = () => {
       apiClient('/users/me')
         .then(data => {
           if (data && userProfile) {
+            let fName = userProfile.firstName;
+            let lName = userProfile.lastName;
+            if (data.name) {
+              if (data.name.includes(' ')) {
+                const parts = data.name.split(' ');
+                fName = parts[0];
+                lName = parts.slice(1).join(' ');
+              } else {
+                fName = data.name;
+              }
+            }
+            
             setUserProfile({
               ...userProfile,
-              firstName: data.name || userProfile.firstName,
+              firstName: fName,
+              lastName: lName,
               phone: data.phone || userProfile.phone,
               selectedRole: (data.role as 'worker' | 'employer') || userProfile.selectedRole,
+              isVerified: data.isVerified ?? userProfile.isVerified,
+              rating: data.rating ?? userProfile.rating,
+              completedJobsCount: data.completedJobsCount ?? userProfile.completedJobsCount,
             });
           }
         })
@@ -30,10 +46,55 @@ export const useProfileScreen = () => {
   }, []);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editedFirstName, setEditedFirstName] = useState(userProfile?.firstName || 'Ozodbek');
-  const [editedLastName, setEditedLastName] = useState(userProfile?.lastName || 'Salimov');
-  const [editedPhone, setEditedPhone] = useState(userProfile?.phone || '+998 (90) 123-45-67');
+  const [by, bm, bd] = (userProfile?.birthDate || '1996-01-19').split('-');
+
+  const [editForm, setEditForm] = useState({
+    firstName: userProfile?.firstName || '',
+    lastName: userProfile?.lastName || '',
+    phone: userProfile?.phone || '',
+    email: userProfile?.email || '',
+    birthDay: String(parseInt(bd || '19', 10)),
+    birthMonth: String(parseInt(bm || '1', 10)),
+    birthYear: by || '1996',
+    gender: userProfile?.gender || 'male',
+    region: userProfile?.region || '',
+    profession: userProfile?.profession || '',
+    aboutMe: userProfile?.aboutMe || '',
+    skills: userProfile?.skills?.join(', ') || '',
+    passportSeries: userProfile?.passportSeries?.replace(/[^A-Za-z]/g, '') || '',
+    passportNumber: userProfile?.passportSeries?.replace(/[^0-9]/g, '') || '',
+    pinfl: userProfile?.pinfl || '',
+    docFileName1: userProfile?.docFileName1 || '',
+    docFileName2: userProfile?.docFileName2 || '',
+    profileImage: userProfile?.profileImage || null
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (userProfile && !isEditing) {
+      const [by, bm, bd] = (userProfile.birthDate || '1996-01-19').split('-');
+      setEditForm({
+        firstName: userProfile.firstName || '',
+        lastName: userProfile.lastName || '',
+        phone: userProfile.phone || '',
+        email: userProfile.email || '',
+        birthDay: String(parseInt(bd || '19', 10)),
+        birthMonth: String(parseInt(bm || '1', 10)),
+        birthYear: by || '1996',
+        gender: userProfile.gender || 'male',
+        region: userProfile.region || '',
+        profession: userProfile.profession || '',
+        aboutMe: userProfile.aboutMe || '',
+        skills: userProfile.skills?.join(', ') || '',
+        passportSeries: userProfile.passportSeries?.replace(/[^A-Za-z]/g, '') || '',
+        passportNumber: userProfile.passportSeries?.replace(/[^0-9]/g, '') || '',
+        pinfl: userProfile.pinfl || '',
+        docFileName1: userProfile.docFileName1 || '',
+        docFileName2: userProfile.docFileName2 || '',
+        profileImage: userProfile.profileImage || null
+      });
+    }
+  }, [userProfile]);
 
   // Accordion active sections
   const [expandedSection, setExpandedSection] = useState<'activity' | 'settings' | 'help' | null>('activity');
@@ -48,6 +109,7 @@ export const useProfileScreen = () => {
   // Dynamic values
   const appliedJobsCount = jobs.filter(j => j.applied || j.status === 'applied').length;
   const showVerified = !!userProfile?.docFileName1;
+  const isVerifiedUser = !!userProfile?.isVerified;
   
   const profileName = userProfile 
     ? `${userProfile.firstName} ${userProfile.lastName}` 
@@ -78,26 +140,55 @@ export const useProfileScreen = () => {
   const handleSaveProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsEditing(true);
-    if (!editedFirstName.trim() || !editedLastName.trim()) {
+    if (!editForm.firstName.trim() || !editForm.lastName.trim()) {
       showToast(t.requiredFields);
       return;
     }
     const updated = {
       id: userProfile?.id || 'unknown',
-      firstName: editedFirstName,
-      lastName: editedLastName,
+      firstName: editForm.firstName,
+      lastName: editForm.lastName,
       selectedRole: userProfile?.selectedRole || 'worker',
-      birthDate: userProfile?.birthDate || '19.1.1996',
-      phone: editedPhone,
-      docFileName1: userProfile?.docFileName1 || 'passport_front_scan.png',
-      profileImage: userProfile?.profileImage || null
+      birthDate: `${editForm.birthYear}-${editForm.birthMonth.padStart(2, '0')}-${editForm.birthDay.padStart(2, '0')}`,
+      phone: editForm.phone,
+      docFileName1: editForm.docFileName1 || userProfile?.docFileName1 || 'passport_front_scan.png',
+      docFileName2: editForm.docFileName2 || userProfile?.docFileName2,
+      profileImage: editForm.profileImage || userProfile?.profileImage || null,
+      email: editForm.email,
+      gender: editForm.gender as 'male'|'female'|'',
+      region: editForm.region,
+      profession: editForm.profession,
+      aboutMe: editForm.aboutMe,
+      skills: editForm.skills.split(',').map((s: string) => s.trim()).filter(Boolean),
+      passportSeries: `${editForm.passportSeries} ${editForm.passportNumber}`.trim(),
+      pinfl: editForm.pinfl
     };
     try {
       const { apiClient } = await import('../api/client');
+      
+      const updatePayload = {
+        name: `${editForm.firstName} ${editForm.lastName}`.trim(),
+        phone: editForm.phone,
+        email: editForm.email || undefined,
+        gender: editForm.gender || undefined,
+        birthDate: updated.birthDate || undefined,
+        region: editForm.region || undefined,
+        category: editForm.profession || undefined,
+        bio: editForm.aboutMe || undefined,
+        skills: updated.skills.length > 0 ? updated.skills : undefined,
+        passportSeries: updated.passportSeries || undefined,
+        passportJshshir: updated.pinfl || undefined,
+        passportDocFront: editForm.docFileName1 || undefined,
+        passportDocBack: editForm.docFileName2 || undefined,
+        selfieWithDoc: (userProfile as any)?.docFileName3 || undefined,
+        avatarUrl: editForm.profileImage || undefined,
+      };
+
       await apiClient('/users/me', {
         method: 'PUT',
-        body: JSON.stringify({ name: `${editedFirstName} ${editedLastName}`, phone: editedPhone, role: userProfile?.selectedRole || 'worker' })
+        body: JSON.stringify(updatePayload)
       });
+
       setUserProfile(updated);
       setActiveDialog('none');
       showToast(t.savedSuccess);
@@ -157,9 +248,9 @@ export const useProfileScreen = () => {
   return {
     language,
     isEditing, userProfile, setCurrentScreen, setIsEditing,
-    editedFirstName, setEditedFirstName, editedLastName, setEditedLastName, editedPhone, setEditedPhone,
+    editForm, setEditForm,
     fileInputRef, expandedSection, setExpandedSection, activeDialog, setActiveDialog,
-    withdrawAmount, setWithdrawAmount, withdrawSuccess, t, appliedJobsCount, showVerified,
+    withdrawAmount, setWithdrawAmount, withdrawSuccess, t, appliedJobsCount, showVerified, isVerifiedUser,
     profileName, profileRole, profileImage, balance, toggleLanguage, handlePhotoUpload,
     handleSaveProfileSubmit, handleShare, handleLogout, handleWithdrawSubmit, toggleRole
   };

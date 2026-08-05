@@ -101,7 +101,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
 
                 <div 
                   onClick={() => {
-                    showToast(language === 'uz' ? "Hozircha reytinglar yo'q." : language === 'ru' ? "Пока отзывов нет." : "No reviews yet.");
+                    setCurrentScreen('reviews');
                   }}
                   className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
                 >
@@ -112,21 +112,10 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
                   <ChevronRight size={14} className="text-slate-350" />
                 </div>
 
-                <div 
-                  onClick={() => {
-                    showToast(language === 'uz' ? "Nishonlar: Yangi foydalanuvchi, Doimiy xodim." : language === 'ru' ? "Значки: Новый пользователь, Постоянный сотрудник." : "Badges: New User, Loyal Worker.");
-                  }}
-                  className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <Award size={14} className="text-slate-400" />
-                    <span className="text-xs font-semibold text-slate-700">{t.badgesList}</span>
-                  </div>
-                  <ChevronRight size={14} className="text-slate-350" />
-                </div>
+
 
                 <div 
-                  onClick={() => setActiveDialog('withdraw')}
+                  onClick={() => setCurrentScreen('payments')}
                   className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
@@ -138,7 +127,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
 
                 <div 
                   onClick={() => {
-                    showToast(language === 'uz' ? "Tez kunda..." : language === 'ru' ? "Скоро..." : "Coming soon...");
+                    setCurrentScreen('taxes');
                   }}
                   className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
                 >

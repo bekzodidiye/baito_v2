@@ -24,6 +24,34 @@ if (canvasProto && !canvasProto.__baitoTeardownGuard) {
   canvasProto.__baitoTeardownGuard = true;
 }
 
+// Zoom range of the job map. Kept here so the map options and the cluster guard
+// below can never drift apart.
+const MAP_MIN_ZOOM = 3;
+const MAP_MAX_ZOOM = 20;
+
+// leaflet.markercluster builds one DistanceGrid per zoom level:
+//   for (var zoom = maxZoom; zoom >= minZoom; zoom--)
+// A map that cannot name its max zoom — no zoom-bound layer attached, which
+// happens mid-teardown or if a tile layer is ever moved to another map —
+// answers getMaxZoom() with Infinity, and that loop then never ends: the tab
+// hard-locks at 100% CPU with no error to show for it. The library offers no
+// hook for this, so clamp it on the prototype, once.
+const clusterProto = (L as any).MarkerClusterGroup?.prototype;
+if (clusterProto && !clusterProto.__baitoZoomGuard) {
+  const originalGenerate = clusterProto._generateInitialClusters;
+  if (typeof originalGenerate === 'function') {
+    clusterProto._generateInitialClusters = function (...args: any[]) {
+      const map = this._map;
+      if (map) {
+        if (!Number.isFinite(map.getMaxZoom())) map.options.maxZoom = MAP_MAX_ZOOM;
+        if (!Number.isFinite(map.getMinZoom())) map.options.minZoom = MAP_MIN_ZOOM;
+      }
+      return originalGenerate.apply(this, args);
+    };
+    clusterProto.__baitoZoomGuard = true;
+  }
+}
+
 interface UseMapSetupProps {
   isPanelExpanded: boolean;
   isViloyatDashboard: boolean;
@@ -81,6 +109,12 @@ export const useMapSetup = ({
     const map = L.map(mapContainerRef.current, {
       center: [41.2, 64.0],
       zoom: 5.1,
+      // Pin the zoom range on the map itself. Without it Leaflet derives the
+      // range from whatever tile layer happens to be attached, and a map with
+      // none attached answers getMaxZoom() with Infinity — see the cluster
+      // guard at the top of this file for what that does.
+      minZoom: MAP_MIN_ZOOM,
+      maxZoom: MAP_MAX_ZOOM,
       zoomControl: false,
       attributionControl: true,
       preferCanvas: true,
@@ -128,24 +162,30 @@ export const useMapSetup = ({
       clearTimeout(invalidate1);
       clearTimeout(invalidate2);
       setIsMapReady(false);
-      if (mapInstanceRef.current) {
+      const mapToTearDown = mapInstanceRef.current;
+      if (mapToTearDown) {
         // Cancel any in-flight pan/zoom animation first: its next frame would
         // reach for a container that remove() has already torn down, which
         // throws "_leaflet_pos of undefined".
-        mapInstanceRef.current.stop();
+        mapToTearDown.stop();
 
         // Drain the layer groups before removing the map. The cluster group
         // adds markers on a chunked timer; left running, those chunks keep
-        // drawing into a map that is on its way out.
+        // drawing into a map that is on its way out. Detach each group first:
+        // clearLayers() on a group that is still attached makes markercluster
+        // rebuild its per-zoom grid, which is wasted work on teardown.
         for (const ref of [markerGroupRef, regionsGroupRef, userGroupRef, labelsGroupRef]) {
           try {
-            ref.current?.clearLayers();
+            const group = ref.current;
+            if (!group) continue;
+            mapToTearDown.removeLayer(group);
+            group.clearLayers();
           } catch {
             /* group already torn down */
           }
         }
 
-        mapInstanceRef.current.remove();
+        mapToTearDown.remove();
         mapInstanceRef.current = null;
         markerGroupRef.current = null;
         regionsGroupRef.current = null;

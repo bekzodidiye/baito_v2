@@ -7,7 +7,8 @@ interface ProfileHeroProps {
   profileImage: string;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   handlePhotoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  appliedJobsCount: number;
+  rating: number;
+  completedJobsCount: number;
   t: any;
   onEditClick: () => void;
 }
@@ -18,7 +19,8 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
   profileImage,
   fileInputRef,
   handlePhotoUpload,
-  appliedJobsCount,
+  rating,
+  completedJobsCount,
   t,
   onEditClick
 }) => {
@@ -71,7 +73,7 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
           
           <div className="flex items-center justify-center gap-1.5 mt-2 text-slate-500 text-[11px] font-semibold">
             <MapPin size={12} className="text-slate-400" />
-            <span>Toshkent, O'zbekiston • 30 yosh</span>
+            <span>Toshkent, O'zbekiston</span>
           </div>
         </div>
       </section>
@@ -81,7 +83,7 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
         <div className="flex flex-col items-center gap-1 flex-1">
           <div className="flex items-center gap-1 text-brand-primary">
             <Briefcase size={14} className="stroke-[2.2]" />
-            <p className="font-display font-black text-slate-800 text-sm">{appliedJobsCount > 0 ? appliedJobsCount : 12}</p>
+            <p className="font-display font-black text-slate-800 text-sm">{completedJobsCount}</p>
           </div>
           <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">{t.jobs}</p>
         </div>
@@ -91,20 +93,11 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
         <div className="flex flex-col items-center gap-1 flex-1">
           <div className="flex items-center gap-1 text-amber-500">
             <Star size={14} className="fill-amber-500 stroke-[2]" />
-            <p className="font-display font-black text-slate-800 text-sm">4.9</p>
+            <p className="font-display font-black text-slate-800 text-sm">{rating.toFixed(1)}</p>
           </div>
           <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">{t.rating}</p>
         </div>
-        
-        <div className="w-px h-8 bg-slate-100" />
-        
-        <div className="flex flex-col items-center gap-1 flex-1">
-          <div className="flex items-center gap-1 text-emerald-500">
-            <Award size={14} className="stroke-[2.2]" />
-            <p className="font-display font-black text-slate-800 text-sm">3</p>
-          </div>
-          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">{t.badges}</p>
-        </div>
+
       </section>
     </>
   );

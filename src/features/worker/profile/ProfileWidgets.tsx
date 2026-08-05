@@ -7,6 +7,7 @@ interface ProfileWidgetsProps {
   t: any;
   language: 'uz' | 'ru' | 'en';
   showVerified: boolean;
+  isVerifiedUser?: boolean;
 
   setCurrentScreen: (screen: string) => void;
   setActiveDialog: (dialog: 'withdraw' | 'edit' | null) => void;
@@ -17,6 +18,7 @@ export const ProfileWidgets: React.FC<ProfileWidgetsProps> = ({
   t,
   language,
   showVerified,
+  isVerifiedUser,
   setCurrentScreen,
   setActiveDialog,
   balance = '0'
@@ -35,7 +37,7 @@ export const ProfileWidgets: React.FC<ProfileWidgetsProps> = ({
           </p>
           <h3 className="text-3xl font-black text-white my-2.5 tracking-tight">{Number(balance).toLocaleString()} so'm</h3>
           <button 
-            onClick={() => setActiveDialog('withdraw')}
+            onClick={() => setCurrentScreen('payments')}
             className="w-full py-2.5 bg-white text-brand-primary font-display font-black text-[11px] rounded-xl hover:bg-slate-50 transition-all cursor-pointer shadow-[0_4px_12px_rgba(255,255,255,0.15)] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-[0.99]"
           >
             {t.walletBtn}
@@ -44,36 +46,38 @@ export const ProfileWidgets: React.FC<ProfileWidgetsProps> = ({
       </div>
 
       {/* Verification Widget Card */}
-      <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-3xs flex flex-col gap-3.5">
-        <div className="flex items-start gap-3">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-            showVerified ? 'bg-amber-50 text-amber-500 border border-amber-100' : 'bg-rose-50 text-rose-500 border border-rose-100'
-          }`}>
-            {showVerified ? <ShieldCheck size={20} className="stroke-[2]" /> : <AlertTriangle size={20} className="stroke-[2]" />}
+      {!isVerifiedUser && (
+        <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-3xs flex flex-col gap-3.5">
+          <div className="flex items-start gap-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+              showVerified ? 'bg-amber-50 text-amber-500 border border-amber-100' : 'bg-rose-50 text-rose-500 border border-rose-100'
+            }`}>
+              {showVerified ? <ShieldCheck size={20} className="stroke-[2]" /> : <AlertTriangle size={20} className="stroke-[2]" />}
+            </div>
+            <div className="flex-1 space-y-0.5">
+              <p className="font-display font-black text-xs text-slate-800">
+                {showVerified ? t.verified : t.verifyTitle}
+              </p>
+              <p className="text-[10px] font-medium text-slate-400 leading-normal">
+                {showVerified ? t.verifiedDesc : t.verifyDesc}
+              </p>
+            </div>
           </div>
-          <div className="flex-1 space-y-0.5">
-            <p className="font-display font-black text-xs text-slate-800">
-              {showVerified ? t.verified : t.verifyTitle}
-            </p>
-            <p className="text-[10px] font-medium text-slate-400 leading-normal">
-              {showVerified ? t.verifiedDesc : t.verifyDesc}
-            </p>
-          </div>
+          
+          <button 
+            onClick={() => {
+              if (showVerified) {
+                setCurrentScreen('verification');
+              } else {
+                showToast(language === 'uz' ? "Hujjatlaringizni tasdiqlash uchun tizimga bog'laning." : language === 'ru' ? "Свяжитесь с поддержкой для верификации." : "Contact support for verification.");
+              }
+            }}
+            className="w-full py-2.5 bg-brand-primary text-white hover:bg-brand-primary/95 text-[11px] rounded-xl font-extrabold transition-all shadow-3xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+          >
+            {showVerified ? t.verifyBtn : t.verifyTitle}
+          </button>
         </div>
-        
-        <button 
-          onClick={() => {
-            if (showVerified) {
-              setCurrentScreen('verification');
-            } else {
-              showToast(language === 'uz' ? "Hujjatlaringizni tasdiqlash uchun tizimga bog'laning." : language === 'ru' ? "Свяжитесь с поддержкой для верификации." : "Contact support for verification.");
-            }
-          }}
-          className="w-full py-2.5 bg-brand-primary text-white hover:bg-brand-primary/95 text-[11px] rounded-xl font-extrabold transition-all shadow-3xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-        >
-          {showVerified ? t.verifyBtn : t.verifyTitle}
-        </button>
-      </div>
+      )}
     </section>
   );
 };

@@ -10,6 +10,9 @@ const ChatScreen = React.lazy(() => import('./chat/ChatScreen').then(m => ({ def
 const NotificationsScreen = React.lazy(() => import('./notifications/NotificationsScreen').then(m => ({ default: m.NotificationsScreen })));
 const ProfileScreen = React.lazy(() => import('../features/worker/profile/ProfileScreen').then(m => ({ default: m.ProfileScreen })));
 const ApplicationsScreen = React.lazy(() => import('../features/worker/applications/ApplicationsScreen').then(m => ({ default: m.ApplicationsScreen })));
+const ReviewsScreen = React.lazy(() => import('../features/worker/profile/ReviewsScreen').then(m => ({ default: m.ReviewsScreen })));
+const PaymentsScreen = React.lazy(() => import('../features/worker/profile/PaymentsScreen').then(m => ({ default: m.PaymentsScreen })));
+const TaxesScreen = React.lazy(() => import('../features/worker/profile/TaxesScreen').then(m => ({ default: m.TaxesScreen })));
 const VerificationPendingScreen = React.lazy(() => import('./login/VerificationPendingScreen').then(m => ({ default: m.VerificationPendingScreen })));
 const SettingsScreen = React.lazy(() => import('./settings/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
 const SecurityScreen = React.lazy(() => import('./settings/SecurityScreen').then(m => ({ default: m.SecurityScreen })));
@@ -59,6 +62,9 @@ export const AppRoutes = () => {
         <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute allowedRoles={['worker']}><ProfileScreen /></ProtectedRoute>} />
         <Route path="/applications" element={<ProtectedRoute allowedRoles={['worker']}><ApplicationsScreen /></ProtectedRoute>} />
+        <Route path="/reviews" element={<ProtectedRoute allowedRoles={['worker']}><ReviewsScreen /></ProtectedRoute>} />
+        <Route path="/payments" element={<ProtectedRoute allowedRoles={['worker']}><PaymentsScreen /></ProtectedRoute>} />
+        <Route path="/taxes" element={<ProtectedRoute allowedRoles={['worker']}><TaxesScreen /></ProtectedRoute>} />
         <Route path="/verification" element={<ProtectedRoute><VerificationPendingScreen /></ProtectedRoute>} />
         <Route path="/login" element={<LoginPromptScreen initialMode="login" />} />
         <Route path="/register" element={<LoginPromptScreen initialMode="register" />} />

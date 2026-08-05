@@ -4,6 +4,7 @@ import { apiClient } from '../../../api/client';
 import { Application } from '../../../types';
 import { Language } from '../../../translations';
 import { motion } from 'motion/react';
+import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 interface ProfileReviewsWidgetProps {
   language: Language;
@@ -12,6 +13,7 @@ interface ProfileReviewsWidgetProps {
 export const ProfileReviewsWidget: React.FC<ProfileReviewsWidgetProps> = ({ language }) => {
   const [reviews, setReviews] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { setCurrentScreen } = useCurrentScreen();
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -71,6 +73,12 @@ export const ProfileReviewsWidget: React.FC<ProfileReviewsWidgetProps> = ({ lang
             </span>
           </div>
         </div>
+        <button
+          onClick={() => setCurrentScreen('reviews')}
+          className="text-[10px] font-bold text-brand-primary hover:underline cursor-pointer"
+        >
+          {language === 'uz' ? "Barchasini ko'rish →" : language === 'ru' ? "Показать все →" : "See all →"}
+        </button>
       </div>
 
       <div className="flex flex-col gap-3">

@@ -36,15 +36,48 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
 
       await loginApi(state.regPhone, state.regPassword);
 
+      const { apiClient } = await import('../../api/client');
+      
+      const extendedPayload = {
+        name: state.selectedRole === 'worker' ? `${state.firstName} ${state.lastName}`.trim() : state.companyName,
+        email: state.email || undefined,
+        gender: state.gender || undefined,
+        birthDate: state.birthDay && state.birthMonth && state.birthYear ? `${state.birthYear}-${state.birthMonth.padStart(2, '0')}-${state.birthDay.padStart(2, '0')}` : undefined,
+        passportSeries: state.passportSeries && state.passportNumber ? `${state.passportSeries} ${state.passportNumber}` : undefined,
+        passportJshshir: state.jshshir || undefined,
+        passportDocFront: state.docFileName1 || undefined,
+        passportDocBack: state.docFileName2 || undefined,
+        selfieWithDoc: state.docFileName3 || undefined,
+        avatarUrl: state.profileImage || undefined,
+      };
+
+      try {
+        await apiClient('/users/me', {
+          method: 'PUT',
+          body: JSON.stringify(extendedPayload)
+        });
+      } catch (e) {
+        console.warn('Failed to save extended profile to backend', e);
+      }
+
       const newProfile = {
         id: 'unknown',
         firstName: state.selectedRole === 'worker' ? (state.firstName || 'Ozodbek') : (state.companyName || 'Korzinka.uz'),
         lastName: state.selectedRole === 'worker' ? (state.lastName || 'Salimov') : '',
         selectedRole: state.selectedRole || 'worker',
-        birthDate: state.birthDay && state.birthMonth && state.birthYear ? `${state.birthDay}.${state.birthMonth}.${state.birthYear}` : '19.01.1996',
+        birthDate: state.birthDay && state.birthMonth && state.birthYear ? `${state.birthYear}-${state.birthMonth.padStart(2, '0')}-${state.birthDay.padStart(2, '0')}` : '1996-01-19',
         phone: state.regPhone || '+998 (90) 123-45-67',
+        email: state.email || '',
+        gender: state.gender || 'male',
+        passportSeries: state.passportSeries && state.passportNumber ? `${state.passportSeries} ${state.passportNumber}` : '',
+        pinfl: state.jshshir || '',
         docFileName1: state.docFileName1 || 'passport_front_scan.png',
+        docFileName2: state.docFileName2 || '',
+        docFileName3: state.docFileName3 || '',
         profileImage: state.profileImage || null,
+        isVerified: false,
+        rating: 0,
+        completedJobsCount: 0,
       };
       setUserProfile(newProfile);
       setIsLoggedIn(true);
@@ -76,13 +109,36 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
       let profile = null;
       try {
         const me = await apiClient('/users/me');
+        let fName = me.name || 'Foydalanuvchi';
+        let lName = '';
+        if (me.name && me.name.includes(' ')) {
+          const parts = me.name.split(' ');
+          fName = parts[0];
+          lName = parts.slice(1).join(' ');
+        }
+        
         profile = {
           id: me.id || 'unknown',
-          firstName: me.name || 'Foydalanuvchi',
-          lastName: '',
+          firstName: fName,
+          lastName: lName,
           selectedRole: me.role || 'worker',
           phone: me.phone || state.loginPhone,
           profileImage: me.avatarUrl || null,
+          email: me.email || '',
+          gender: me.gender || '',
+          birthDate: me.birthDate || '',
+          region: me.region || '',
+          profession: me.category || '',
+          aboutMe: me.bio || '',
+          skills: Array.isArray(me.skills) ? me.skills : (me.skills ? [me.skills] : []),
+          passportSeries: me.passportSeries || '',
+          pinfl: me.passportJshshir || '',
+          docFileName1: me.passportDocFront || '',
+          docFileName2: me.passportDocBack || '',
+          docFileName3: me.selfieWithDoc || '',
+          isVerified: me.isVerified || false,
+          rating: me.rating || 0,
+          completedJobsCount: me.completedJobsCount || 0,
         };
       } catch {
         profile = {
@@ -92,6 +148,9 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
           selectedRole: 'worker' as const,
           phone: state.loginPhone,
           profileImage: null,
+          isVerified: false,
+          rating: 0,
+          completedJobsCount: 0,
         };
       }
       
