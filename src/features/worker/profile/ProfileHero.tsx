@@ -11,6 +11,7 @@ interface ProfileHeroProps {
   completedJobsCount: number;
   t: any;
   onEditClick: () => void;
+  region?: string;
 }
 
 export const ProfileHero: React.FC<ProfileHeroProps> = ({
@@ -22,7 +23,8 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
   rating,
   completedJobsCount,
   t,
-  onEditClick
+  onEditClick,
+  region
 }) => {
   return (
     <>
@@ -71,10 +73,12 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
           <h2 className="font-display text-lg font-black text-slate-800 tracking-tight">{profileName}</h2>
           <p className="text-xs text-brand-primary font-bold mt-1 uppercase tracking-wider">{profileRole}</p>
           
-          <div className="flex items-center justify-center gap-1.5 mt-2 text-slate-500 text-[11px] font-semibold">
-            <MapPin size={12} className="text-slate-400" />
-            <span>Toshkent, O'zbekiston</span>
-          </div>
+          {region && (
+            <div className="flex items-center justify-center gap-1.5 mt-2 text-slate-500 text-[11px] font-semibold">
+              <MapPin size={12} className="text-slate-400" />
+              <span>{region}</span>
+            </div>
+          )}
         </div>
       </section>
 

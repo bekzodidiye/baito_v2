@@ -5,6 +5,7 @@ import { ProfileAccordion } from './ProfileAccordion';
 import { ProfileDialogs } from './ProfileDialogs';
 import { ProfileHero } from './ProfileHero';
 import { ProfileWidgets } from './ProfileWidgets';
+import { ProfileAboutWidget } from './ProfileAboutWidget';
 import { ProfileCompletionWidget } from './ProfileCompletionWidget';
 import { ProfileReviewsWidget } from './ProfileReviewsWidget';
 import { showToast } from '../../../utils/toast';
@@ -88,9 +89,13 @@ export const ProfileScreen: React.FC = () => {
             handlePhotoUpload={handlePhotoUpload}
             rating={userProfile?.rating || 0}
             completedJobsCount={userProfile?.completedJobsCount || 0}
+            region={userProfile?.region}
             t={t}
             onEditClick={() => setActiveDialog('edit')}
           />
+
+          {/* Profile About Widget */}
+          <ProfileAboutWidget language={language} />
 
           {/* Profile Completion Widget */}
           <ProfileCompletionWidget 
