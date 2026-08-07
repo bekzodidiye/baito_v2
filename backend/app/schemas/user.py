@@ -40,6 +40,11 @@ class UserUpdate(BaseModel):
     passportDocFront: Optional[str] = None
     passportDocBack: Optional[str] = None
     selfieWithDoc: Optional[str] = None
+    notify_new_jobs: Optional[bool] = None
+    notify_interviews: Optional[bool] = None
+    notify_general: Optional[bool] = None
+    two_factor_enabled: Optional[bool] = None
+    biometrics_enabled: Optional[bool] = None
 
 class UserInDBBase(UserBase):
     id: str
@@ -61,6 +66,11 @@ class UserInDBBase(UserBase):
     selfieWithDoc: Optional[str] = None
     bankCardMask: Optional[str] = None
     sourceApp: Optional[str] = None
+    notify_new_jobs: Optional[bool] = None
+    notify_interviews: Optional[bool] = None
+    notify_general: Optional[bool] = None
+    two_factor_enabled: Optional[bool] = None
+    biometrics_enabled: Optional[bool] = None
 
     class Config:
         from_attributes = True
@@ -70,3 +80,7 @@ class User(UserInDBBase):
 
 class UserInDB(UserInDBBase):
     hashed_password: str
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str

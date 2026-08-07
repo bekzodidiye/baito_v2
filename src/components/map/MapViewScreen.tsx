@@ -71,7 +71,7 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
 
       {/* Map Refreshing / Loading Skeleton Overlay */}
       <AnimatePresence>
-        {(isRefreshing || isMapLoading) && <MapLoadingSkeleton />}
+        {(isRefreshing) && <MapLoadingSkeleton />}
       </AnimatePresence>
 
       {/* Embedded Region/District Selector in Map Box */}

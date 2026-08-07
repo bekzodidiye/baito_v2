@@ -150,7 +150,13 @@ export function useCalendarScreen() {
   const allTodoJobs = jobs?.filter(j => {
     if (!['confirmed', 'todo', 'hired', 'in_progress', 'start_requested'].includes(j.status)) return false;
     const relation = getJobTimeRelation(j, yearFromContext, monthFromContext, dayFromContext);
-    return relation === 'today' || relation === 'past';
+    return relation === 'today';
+  }) || [];
+
+  const allMissedJobs = jobs?.filter(j => {
+    if (!['confirmed', 'todo', 'hired', 'in_progress', 'start_requested'].includes(j.status)) return false;
+    const relation = getJobTimeRelation(j, yearFromContext, monthFromContext, dayFromContext);
+    return relation === 'past';
   }) || [];
 
   const allCompletedJobs = jobs?.filter(j => j.status === 'completed') || [];
@@ -182,6 +188,7 @@ export function useCalendarScreen() {
     allAppliedJobs,
     allConfirmedJobs,
     allTodoJobs,
+    allMissedJobs,
     allCompletedJobs,
     getDayStatus,
     handleDayClick,

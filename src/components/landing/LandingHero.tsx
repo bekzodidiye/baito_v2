@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useJobsData } from "../../context/useJobsData";
-import { LANDING_TEXTS, MOCK_LIVE_SHIFTS } from './LandingData';
+import { LANDING_TEXTS } from './LandingData';
 import { Briefcase, Building2, Search, ArrowRight, Wallet, CheckCircle2, BadgeCheck, MapPin, Clock, Percent } from 'lucide-react';
 import { LandingHeroBackground } from './LandingHeroBackground';
 import { LandingHeroShiftPreview } from './LandingHeroShiftPreview';
@@ -31,8 +31,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
   })), [jobs]);
 
   const displayShifts = useMemo(() => {
-    const list = [...realShifts, ...MOCK_LIVE_SHIFTS].slice(0, 6);
-    return list.length > 0 ? list : MOCK_LIVE_SHIFTS;
+    return realShifts.slice(0, 6);
   }, [realShifts]);
 
   const isFirstRender = useRef(true);

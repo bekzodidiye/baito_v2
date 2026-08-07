@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timee UZB — Maxfiylik Siyosati</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E8295C;--red-light:#FDF0F4;--red-dark:#B01E44;
+  --dark:#1A1A2E;--gray:#555;--lgray:#888;--line:#EEEEEE;
+  --bg:#F7F7F8;--white:#fff;--text:#1A1A2E;--text2:#555;--text3:#888;
+  --radius:10px;--radius-sm:6px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.7}
+a{color:var(--red);text-decoration:none}
+
+.topbar{background:var(--red);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.logo-circle{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+.topbar h1{font-size:16px;font-weight:600;color:#fff;letter-spacing:0.3px}
+.topbar span{font-size:12px;color:rgba(255,255,255,0.75)}
+.version-pill{background:rgba(255,255,255,0.18);color:#fff;font-size:11px;padding:3px 10px;border-radius:20px}
+
+.container{max-width:760px;margin:0 auto;padding:28px 20px 60px}
+
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px}
+.meta-card{background:var(--white);border:0.5px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px}
+.meta-card .label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px}
+.meta-card .value{font-size:13px;color:var(--text);font-weight:500}
+
+.progress-wrap{background:var(--white);border:0.5px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px}
+.progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.progress-top span{font-size:13px;color:var(--text2)}
+.progress-top strong{font-size:13px;color:var(--red);font-weight:600}
+.pbar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.pbar-fill{height:100%;background:var(--red);border-radius:3px;transition:width 0.4s;width:0%}
+
+.section{background:var(--white);border:0.5px solid var(--line);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.sec-head{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none;transition:background 0.15s}
+.sec-head:hover{background:var(--red-light)}
+.sec-num{width:26px;height:26px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-title{font-size:14px;font-weight:500;color:var(--text);flex:1}
+.read-pill{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--line);color:var(--lgray);white-space:nowrap;transition:all 0.2s}
+.read-pill.done{background:#EAF3DE;color:#27500A}
+.chevron{font-size:16px;color:var(--lgray);transition:transform 0.25s;flex-shrink:0}
+.chevron.open{transform:rotate(180deg)}
+
+.sec-body{display:none;padding:0 18px 16px;border-top:0.5px solid var(--line)}
+.sec-body.open{display:block}
+.sec-body p{font-size:14px;color:var(--text2);margin:12px 0 6px;line-height:1.65}
+.sec-body ul{padding-left:0;margin:8px 0}
+.sec-body ul li{list-style:none;padding:5px 0 5px 18px;position:relative;font-size:14px;color:var(--text2);border-bottom:0.5px solid var(--line);line-height:1.5}
+.sec-body ul li:last-child{border-bottom:none}
+.sec-body ul li::before{content:"•";position:absolute;left:4px;color:var(--red);font-size:16px;top:4px}
+.highlight-box{background:var(--red-light);border-left:3px solid var(--red);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 14px;margin:12px 0;font-size:13px;color:var(--text2);line-height:1.6}
+.highlight-box strong{color:var(--red)}
+.sub-title{font-size:13px;font-weight:600;color:var(--text);margin:14px 0 4px;padding-bottom:4px;border-bottom:0.5px solid var(--line)}
+
+.consent-wrap{background:var(--white);border:0.5px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;display:none}
+.consent-header{background:var(--red);padding:16px 20px;text-align:center}
+.consent-header h2{font-size:15px;font-weight:600;color:#fff;margin-bottom:2px}
+.consent-header p{font-size:12px;color:rgba(255,255,255,0.8)}
+.consent-body{padding:16px 20px}
+.consent-intro{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px;padding:10px 14px;background:var(--red-light);border-radius:var(--radius-sm)}
+
+.check-item{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:0.5px solid var(--line)}
+.check-item:last-child{border-bottom:none}
+.check-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--red);cursor:pointer;flex-shrink:0;margin-top:2px}
+.check-item label{font-size:13px;color:var(--text2);line-height:1.5;cursor:pointer}
+.check-item label strong{color:var(--text);font-weight:500}
+
+.btn-wrap{margin-top:4px}
+.btn-confirm{width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.2s;letter-spacing:0.2px}
+.btn-confirm:disabled{opacity:0.3;cursor:not-allowed}
+.btn-confirm:not(:disabled):hover{background:var(--red-dark)}
+.btn-confirm svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+.success-wrap{display:none;background:var(--white);border:0.5px solid var(--line);border-radius:var(--radius);padding:32px 24px;text-align:center}
+.success-icon{width:56px;height:56px;border-radius:50%;background:#EAF3DE;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.success-icon svg{width:28px;height:28px;stroke:#27500A;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.success-wrap h2{font-size:18px;font-weight:600;color:var(--text);margin-bottom:8px}
+.success-wrap p{font-size:14px;color:var(--text2);line-height:1.6;max-width:400px;margin:0 auto 20px}
+.success-date{font-size:12px;color:var(--lgray);margin-top:16px}
+
+.footer{text-align:center;margin-top:32px;font-size:12px;color:var(--lgray);border-top:0.5px solid var(--line);padding-top:20px}
+
+@media(max-width:520px){
+  .meta-grid{grid-template-columns:1fr}
+  .topbar h1{font-size:14px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-circle">Ti</div>
+    <div>
+      <h1>Timee UZB</h1>
+      <span>Maxfiylik Siyosati</span>
+    </div>
+  </div>
+  <span class="version-pill">v1.0 · 2025</span>
+</div>
+
+<div class="container">
+
+  <div class="meta-grid">
+    <div class="meta-card"><div class="label">Platforma</div><div class="value">Timee UZB</div></div>
+    <div class="meta-card"><div class="label">Xizmat turi</div><div class="value">Part-time ish platformasi</div></div>
+    <div class="meta-card"><div class="label">Operatsion hudud</div><div class="value">O'zbekiston Respublikasi</div></div>
+    <div class="meta-card"><div class="label">Kuchga kirish sanasi</div><div class="value">1-yanvar, 2025-yil</div></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-top">
+      <span>Barcha bo'limlarni o'qing, so'ng rozilik bildiring</span>
+      <strong id="prog-txt">0 / 11</strong>
+    </div>
+    <div class="pbar"><div class="pbar-fill" id="pbar"></div></div>
+  </div>
+
+  <div id="sections">
+
+    <div class="section">
+      <div class="sec-head" onclick="toggle(this,0)">
+        <span class="sec-num">1</span>
+        <span class="sec-title">Kirish va umumiy ma'lumot</span>
+        <span class="read-pill" id="rb0">O'qilmadi</span>
+        <span class="chevron">&#8964;</span>
+      </div>
+      <div class="sec-body">
+        <p>Timee UZB platformasiga xush kelibsiz. Ushbu Maxfiylik Siyosati foydalanuvchilarning platformadan foydalanishi chog'ida to'planadigan shaxsiy ma'lumotlar bilan qanday munosabatda bo'lishimizni belgilaydi.</p>
+        <p>Platformamizdan foydalanish orqali siz ushbu siyosatni to'liq o'qib chiqqaningizni va shartlariga rozilik bildirginingizni tasdiqlaysiz. Agar siz ushbu shartlarga rozi bo'lmasangiz, iltimos, platformadan foydalanmang.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head" onclick="toggle(this,1)">
+        <span class="sec-num">2</span>
+        <span class="sec-title">To'planadigan ma'lumotlar</span>
+        <span class="read-pill" id="rb1">O'qilmadi</span>
+        <span class="chevron">&#8964;</span>
+      </div>
+      <div class="sec-body">
+        <div class="sub-title">Shaxsiy identifikatsiya</div>
+        <ul>
+          <li>To'liq ism va familiya</li>
+          <li>Tug'ilgan sana va yosh</li>
+          <li>Fuqarolik</li>
+          <li>Pasport ma'lumotlari (seriya, raqam, amal qilish muddati)</li>
+          <li>Elektron pochta manzili</li>
+          <li>Telefon raqami</li>
+          <li>Yashash manzili</li>
+        </ul>
+        <div class="sub-title">Kasbiy ma'lumotlar</div>
+        <ul>
+          <li>Ta'lim darajasi va o'quv yurtlari</li>
+          <li>Ish tajribasi va ko'nikmalari</li>
+          <li>Sertifikatlar va diplomlar</li>
+          <li>Ko'zlangan ish sohalari va pozitsiyalar</li>
+          <li>Ish vaqti imkoniyatlari</li>
+        </ul>
+        <div class="sub-title">Moliyaviy ma'lumotlar</div>
+        <ul>
+          <li>Bank hisobi ma'lumotlari (ish haqi o'tkazish uchun)</li>
+          <li>Ish haqi tarixi va to'lovlar</li>
+        </ul>
+        <div class="sub-title">Texnik ma'lumotlar</div>
+        <ul>
+          <li>IP manzil va qurilma identifikatori</li>
+          <li>Brauzer turi va operatsion tizim</li>
+          <li>Platformadagi faoliyat logi</li>
+          <li>Joylashuv ma'lumotlari (ruxsat berilganda)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head" onclick="toggle(this,2)">
+        <span class="sec-num">3</span>
+        <span class="sec-title">Ma'lumotlardan foydalanish maqsadlari</span>
+        <span class="read-pill" id="rb2">O'qilmadi</span>
+        <span class="chevron">&#8964;</span>
+      </div>
+      <div class="sec-body">
+        <p>To'plangan ma'lumotlar quyidagi maqsadlarda ishlatiladi:</p>
+        <ul>
+          <li>Platformada foydalanuvchi akkauntini yaratish va boshqarish</li>
+          <li>Ish beruvchilar bilan moslashtirish (matching)</li>
+          <li>Ish beruvchilarga nomzod profili taqdim etish</li>
+          <li>Ish shartnomalarini rasmiylashtirish va yuridik hujjatlar</li>
+          <li>Ish haqi va to'lovlarni amalga oshirish</li>
+          <li>Platforma xavfsizligini ta'minlash va firibgarlikning oldini olish</li>
+          <li>Qonuniy majburiyatlarni bajarish</li>
+          <li>Platformani yaxshilash va foydalanuvchi tajribasini oshirish</li>
+          <li>Muhim xabarlar va yangilanishlar haqida bildirishnomalar yuborish</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head" onclick="toggle(this,3)">
+        <span class="sec-num">4</span>
+        <span class="sec-title">Ma'lumotlarni uchinchi shaxslarga berish</span>
+        <span class="read-pill" id="rb3">O'qilmadi</span>
+        <span class="chevron">&#8964;</span>
+      </div>
+      <div class="sec-body">
+        <div class="sub-title">Ish beruvchilar</div>
+        <p>Siz murojaat qilgan ish beruvchilarga professional ma'lumotlaringiz taqdim etiladi. Bu xizmatning asosiy maqsadidir.</p>
+        <div class="sub-title">Davlat organlari</div>
+        <p>O'zbekiston qonunchiligida nazarda tutilgan hollarda (mehnat, soliq organlari) tegishli ma'lumotlar taqdim etilishi mumkin.</p>
+        <div class="sub-title">Texnik hamkorlar</div>
+        <p>Bulut xizmatlari, to'lov tizimlari kabi xizmat ko'rsatuvchilar cheklangan ma'lumotlarga ega bo'lishi mumkin.</p>
+        <div class="highlight-box"><strong>Kafolat:</strong> Biz ma'lumotlaringizni tijorat maqsadida sotmaymiz va reklamachilar bilan baham ko'rmaymiz.</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head" onclick="toggle(this,4)">
+        <span class="sec-num">5</span>
+        <span class="sec-title">Ma'lumotlarni saqlash va xavfsizlik</span>
+        <span class="read-pill" id="rb4">O'qilmadi</span>
+        <span class="chevron">&#8964;</span>
+      </div>
+      <div class="sec-body">
+        <div class="sub-title">Saqlash muddati</div>
+        <ul>
+          <li>Aktiv foydalanuvchi ma'lumotlari — akkaunt faol bo'lgan davr</li>
+          <li>Ish tarixi va shartnomalar — 5 yil</li>
+          <li>Moliyaviy hujjatlar — 7 yil (soliq qonunchiligiga muvofiq)</li>
+          <li>Texnik loglar — 12 oy</li>
+        </ul>
+        <div class="sub-title">Xavfsizlik choralari</div>
+        <ul>
+          <li>SSL/TLS shifrlash barcha ma'lumot uzatish jarayonlarida</li>
+          <li>AES-256 shifrlash bilan ma'lumotlar bazasida saqlash</li>
+          <li>Ikki bosqichli autentifikatsiya (2FA) imkoniyati</li>
+          <li>Muntazam xavfsizlik auditi</li>
+          <li>Ma'lumotlarga kirish faqat vakolatli xodimlarga cheklangan</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head" onclick="toggle(this,5)">
+        <span class="sec-num">6</span>
+        <span class="sec-title">Foydalanuvchi huquqlari</span>
+        <span class="read-pill" id="rb5">O'qilmadi</span>
+        <span class="chevron">&#8964;</span>
+      </div>
+      <div class="sec-body">
+        <ul>
+          <li>Ma'lumotlaringizga kirish va nusxa olish huquqi</li>
+          <li>Noto'g'ri ma'lumotlarni tuzatishni talab qilish huquqi</li>
+          <li>Ma'lumotlaringizni o'chirish ("unutilish huquqi") — qonuniy majburiyatlar bo'lmagan holda</li>
+          <li>Ma'lumotlarni qayta ishlashni cheklash huquqi</li>
+          <li>Reklama xabarlaridan voz kechish huquqi (har doim)</li>
+          <li>Shikoyat bilan nazorat organiga murojaat qilish huquqi</li>
+        </ul>
+        <div class="highlight-box">Huquqlaringizdan foydalanish uchun: <strong>support@timee-uzb.uz</strong> — 30 kun ichida javob beramiz.</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head" onclick="toggle(this,6)">
+        <span class="sec-num">7</span>
+        <span class="sec-title">Cookie va kuzatish texnologiyalari</span>
+        <span class="read-pill" id="rb6">O'qilmadi</span>
+        <span class="chevron">&#8964;</span>
+      </div>
+      <div class="sec-body">
+        <ul>
+          <li>Zaruriy cookie'lar — platformaning asosiy ishlashi uchun (o'chirib bo'lmaydi)</li>
+          <li>Funksional cookie'lar — sizning sozlamalaringizni eslab qolish uchun</li>
+          <li>Analitik cookie'lar — platformani yaxshilash uchun anonim statistika</li>
+        </ul>
+        <p>Brauzer sozlamalaringiz orqali cookie'larni boshqarishingiz mumkin. Zaruriy cookie'larni o'chirganda platforma to'liq ishlamasligi mumkin.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head" onclick="toggle(this,7)">
+        <span class="sec-num">8</span>
+        <span class="sec-title">Voyaga yetmaganlar maxfiyligi</span>
+        <span class="read-pill" id="rb7">O'qilmadi</span>
+        <span class="chevron">&#8964;</span>
+      </div>
+      <div class="sec-body">
+        <p>Timee UZB xizmati faqat 18 yoshdan oshgan shaxslar uchun mo'ljallangan. Biz bilmagan holda voyaga yetmaganlarning ma'lumotlarini to'plasak, darhol o'chiramiz.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head" onclick="toggle(this,8)">
+        <span class="sec-num">9</span>
+        <span class="sec-title">Siyosatga o'zgartirishlar</span>
+        <span class="read-pill" id="rb8">O'qilmadi</span>
+        <span class="chevron">&#8964;</span>
+      </div>
+      <div class="sec-body">
+        <p>Biz ushbu Maxfiylik Siyosatini vaqti-vaqti bilan yangilab turishimiz mumkin. Muhim o'zgarishlar bo'lganda sizga elektron pochta yoki platforma orqali kamida 30 kun oldin xabar beramiz. Yangilangan siyosat e'lon qilingan sanadan boshlab kuchga kiradi.</p>
+        <p>Xabardorlik qilingandan so'ng platformadan foydalanishni davom ettirsangiz, yangi siyosatga rozilik bildirgan hisoblanasiz.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head" onclick="toggle(this,9)">
+        <span class="sec-num">10</span>
+        <span class="sec-title">Qo'llaniladigan qonunchilik</span>
+        <span class="read-pill" id="rb9">O'qilmadi</span>
+        <span class="chevron">&#8964;</span>
+      </div>
+      <div class="sec-body">
+        <ul>
+          <li>O'zbekiston Respublikasining "Shaxsiy ma'lumotlar to'g'risida"gi Qonuni (2019)</li>
+          <li>O'zbekiston Respublikasining Mehnat Kodeksi</li>
+          <li>O'zbekiston Respublikasining Fuqarolik Kodeksi</li>
+        </ul>
+        <p>Nizolar O'zbekiston Respublikasi sudlarida ko'rib chiqiladi.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head" onclick="toggle(this,10)">
+        <span class="sec-num">11</span>
+        <span class="sec-title">Aloqa va shikoyatlar</span>
+        <span class="read-pill" id="rb10">O'qilmadi</span>
+        <span class="chevron">&#8964;</span>
+      </div>
+      <div class="sec-body">
+        <ul>
+          <li>Elektron pochta: <a href="mailto:support@timee-uzb.uz">support@timee-uzb.uz</a></li>
+          <li>Telegram: <a href="https://t.me/timee_uzb_support">@timee_uzb_support</a></li>
+          <li>Javob vaqti: ish kunlarida 24 soat ichida</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="consent-wrap" id="consent-wrap">
+    <div class="consent-header">
+      <h2>Rozilik bildirish</h2>
+      <p>Barcha bo'limlarni o'qidingiz — endi rozilik bildiring</p>
+    </div>
+    <div class="consent-body">
+      <p class="consent-intro">Men, quyidagi foydalanuvchi, Timee UZB platformasining Maxfiylik Siyosatini to'liq o'qib chiqdim va quyidagilarni tasdiqlyman:</p>
+
+      <div class="check-item">
+        <input type="checkbox" id="c1" onchange="checkAll()">
+        <label for="c1">Ushbu Maxfiylik Siyosatini <strong>to'liq o'qib chiqdim</strong> va tushundim.</label>
+      </div>
+      <div class="check-item">
+        <input type="checkbox" id="c2" onchange="checkAll()">
+        <label for="c2">Shaxsiy, kasbiy va moliyaviy ma'lumotlarimning <strong>yuqorida ko'rsatilgan maqsadlarda</strong> to'planishiga va qayta ishlanishiga roziman.</label>
+      </div>
+      <div class="check-item">
+        <input type="checkbox" id="c3" onchange="checkAll()">
+        <label for="c3">Ma'lumotlarimning <strong>ish beruvchilarga</strong> va qonunda ko'rsatilgan organlarga berilishiga roziman.</label>
+      </div>
+      <div class="check-item">
+        <input type="checkbox" id="c4" onchange="checkAll()">
+        <label for="c4">Roziligimni <strong>istalgan vaqt qaytarib olish</strong> huquqim borligini tushundim.</label>
+      </div>
+      <div class="check-item">
+        <input type="checkbox" id="c5" onchange="checkAll()">
+        <label for="c5"><strong>18 yoshga to'lganligimni</strong> va O'zbekiston fuqarosi ekanligimni tasdiqlayman.</label>
+      </div>
+      <div class="check-item">
+        <input type="checkbox" id="c6" onchange="checkAll()">
+        <label for="c6">Platforma <strong>foydalanish shartlari (Terms of Service)</strong> bilan tanishganligimni va ularga roziligimni bildiraman.</label>
+      </div>
+
+      <div class="btn-wrap" style="margin-top:18px">
+        <button class="btn-confirm" id="btn-confirm" disabled onclick="confirm()">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Roziman va davom etaman
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="success-wrap" id="success-wrap">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2>Rozilik tasdiqlandi!</h2>
+    <p>Siz Timee UZB maxfiylik siyosatini muvaffaqiyatli qabul qildingiz. Akkauntingiz to'liq faollashtirildi.</p>
+    <p class="success-date" id="success-date"></p>
+  </div>
+
+  <div class="footer">
+    &copy; 2025 Timee UZB &nbsp;|&nbsp; Barcha huquqlar himoyalangan &nbsp;|&nbsp; <a href="mailto:support@timee-uzb.uz">support@timee-uzb.uz</a>
+  </div>
+
+</div>
+
+<script>
+var read = new Set();
+var TOTAL = 11;
+
+function toggle(head, idx) {
+  var body = head.nextElementSibling;
+  var chev = head.querySelector('.chevron');
+  var rb = document.getElementById('rb' + idx);
+  var open = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  chev.classList.toggle('open', !open);
+  if (!open && !read.has(idx)) {
+    read.add(idx);
+    rb.textContent = "O'qildi";
+    rb.classList.add('done');
+    updateProgress();
+  }
+}
+
+function updateProgress() {
+  var n = read.size;
+  document.getElementById('pbar').style.width = (n / TOTAL * 100) + '%';
+  document.getElementById('prog-txt').textContent = n + ' / ' + TOTAL;
+  if (n === TOTAL) {
+    document.getElementById('consent-wrap').style.display = 'block';
+    document.getElementById('consent-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+}
+
+function checkAll() {
+  var all = ['c1','c2','c3','c4','c5','c6'].every(function(id){ return document.getElementById(id).checked; });
+  document.getElementById('btn-confirm').disabled = !all;
+}
+
+function confirm() {
+  document.getElementById('sections').style.display = 'none';
+  document.getElementById('consent-wrap').style.display = 'none';
+  document.querySelector('.progress-wrap').style.display = 'none';
+  document.querySelector('.meta-grid').style.display = 'none';
+  var sw = document.getElementById('success-wrap');
+  sw.style.display = 'block';
+  var now = new Date();
+  document.getElementById('success-date').textContent =
+    'Tasdiqlangan sana: ' + now.toLocaleDateString('uz-UZ', {year:'numeric',month:'long',day:'numeric'}) +
+    ' ' + now.toLocaleTimeString('uz-UZ', {hour:'2-digit',minute:'2-digit'});
+}
+</script>
+
+</body>
+</html>

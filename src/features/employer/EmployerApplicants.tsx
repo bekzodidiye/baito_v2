@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
-import { ClipboardCheck } from 'lucide-react';
+import { ClipboardCheck, CheckCircle2 } from 'lucide-react';
 import { EmployerPageHeader } from './EmployerPageHeader';
 import { ApplicantCard } from './components/ApplicantCard';
 
@@ -12,6 +12,15 @@ export const EmployerApplicants: React.FC<EmployerApplicantsProps> = ({ onChatCl
   const { applications, updateApplicationStatus, language } = useEmployer();
   
   const activeApps = applications;
+  const pendingApps = activeApps.filter(app => app.status === 'applied');
+
+  const handleBulkApprove = () => {
+    if (confirm(language === 'uz' ? 'Barcha arizalarni tasdiqlaysizmi?' : language === 'ru' ? 'Подтвердить все заявки?' : 'Approve all applications?')) {
+      pendingApps.forEach(app => {
+        updateApplicationStatus(app.id, 'hired');
+      });
+    }
+  };
 
   return (
     <div className="w-full max-w-6xl mx-auto py-4 px-4 md:px-6 flex flex-col gap-6 pb-24 md:pb-6">
@@ -21,6 +30,18 @@ export const EmployerApplicants: React.FC<EmployerApplicantsProps> = ({ onChatCl
         language={language}
         showPostButton={false}
       />
+
+      {pendingApps.length > 0 && (
+        <div className="flex justify-end mt-[-10px]">
+          <button 
+            onClick={handleBulkApprove}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand-primary text-white text-xs font-bold rounded-lg shadow hover:bg-brand-primary/90 transition-colors"
+          >
+            <CheckCircle2 size={16} />
+            {language === 'uz' ? `Barchasini tasdiqlash (${pendingApps.length})` : language === 'ru' ? `Одобрить все (${pendingApps.length})` : `Approve all (${pendingApps.length})`}
+          </button>
+        </div>
+      )}
 
       {activeApps.length === 0 ? (
         <div className="bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200/60 py-16 px-6 flex flex-col items-center justify-center text-center mt-4">

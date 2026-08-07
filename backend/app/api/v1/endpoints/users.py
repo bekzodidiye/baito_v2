@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
+from app.core import security
 from app.core.security import get_password_hash
 import uuid
 
@@ -110,3 +111,85 @@ def update_user_me(
     db.commit()
     db.refresh(current_user)
     return current_user
+
+@router.put("/me/password")
+def change_password(
+    *,
+    db: Session = Depends(deps.get_db),
+    password_in: schemas.PasswordChange,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Change current user password.
+    """
+    if not security.verify_password(password_in.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Joriy parol xato")
+        
+    current_user.hashed_password = get_password_hash(password_in.new_password)
+    db.add(current_user)
+    db.commit()
+    return {"success": True}
+
+@router.get("/me/sessions", response_model=List[schemas.ActiveSession])
+def read_active_sessions(
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Get current user's active sessions.
+    """
+    from app.models.session import ActiveSession
+    sessions = db.query(ActiveSession).filter(
+        ActiveSession.user_uid == str(current_user.uid or current_user.id),
+        ActiveSession.is_active == True
+    ).order_by(ActiveSession.last_active_at.desc()).all()
+    return sessions
+
+@router.delete("/me/sessions/{session_id}")
+def deactivate_session(
+    session_id: str,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Deactivate a specific session.
+    """
+    from app.models.session import ActiveSession
+    session_record = db.query(ActiveSession).filter(
+        ActiveSession.id == session_id,
+        ActiveSession.user_uid == str(current_user.uid or current_user.id)
+    ).first()
+    
+    if not session_record:
+        raise HTTPException(status_code=404, detail="Sessiya topilmadi")
+        
+    session_record.is_active = False
+    db.commit()
+    return {"success": True}
+
+@router.delete("/me/sessions")
+def deactivate_all_other_sessions(
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Deactivate all sessions EXCEPT the current one.
+    """
+    from app.models.session import ActiveSession
+    current_session_id = getattr(current_user, 'current_session_id', None)
+    
+    query = db.query(ActiveSession).filter(
+        ActiveSession.user_uid == str(current_user.uid or current_user.id),
+        ActiveSession.is_active == True
+    )
+    
+    if current_session_id:
+        query = query.filter(ActiveSession.id != current_session_id)
+        
+    sessions_to_deactivate = query.all()
+    
+    for session_record in sessions_to_deactivate:
+        session_record.is_active = False
+        
+    db.commit()
+    return {"success": True, "deactivated_count": len(sessions_to_deactivate)}

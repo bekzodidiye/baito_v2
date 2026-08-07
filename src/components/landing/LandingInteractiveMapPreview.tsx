@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useJobsData } from "../../context/useJobsData";
-import { LANDING_TEXTS, MOCK_LIVE_SHIFTS } from './LandingData';
+import { LANDING_TEXTS } from './LandingData';
 import { Compass, MapPin, Building2, Clock, ArrowRight, Info, CheckCircle2 } from 'lucide-react';
 import { MapViewScreen } from '../map/MapViewScreen';
 import { motion } from 'motion/react';

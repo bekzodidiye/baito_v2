@@ -1,5 +1,7 @@
 import uuid
+import re
 from typing import Any, Optional
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -13,13 +15,81 @@ class JobCompleteRequest(BaseModel):
 
 router = APIRouter()
 
-def get_job_date(job: Any) -> str:
-    if not job:
-        return ""
-    date_val = job.workDate
-    if not date_val:
-        return ""
-    return str(date_val).split(" ")[0].split("~")[0].strip()
+def get_job_dates_set(job: Any) -> set:
+    if not job or not job.workDate:
+        return set()
+    date_str = str(job.workDate).strip()
+    dates = set()
+    now = datetime.now()
+    
+    if re.fullmatch(r'\d{1,2}', date_str):
+        try:
+            d = datetime(now.year, now.month, int(date_str))
+            dates.add(d.strftime("%Y-%m-%d"))
+        except ValueError:
+            pass
+        return dates
+
+    if ',' in date_str:
+        parts = [p.strip() for p in date_str.split(',') if p.strip()]
+        for p in parts:
+            if re.fullmatch(r'\d{1,2}', p):
+                try:
+                    d = datetime(now.year, now.month, int(p))
+                    dates.add(d.strftime("%Y-%m-%d"))
+                except ValueError:
+                    pass
+            else:
+                try:
+                    dt = datetime.strptime(p, "%Y-%m-%d")
+                    dates.add(dt.strftime("%Y-%m-%d"))
+                except ValueError:
+                    pass
+        return dates
+        
+    if '~' in date_str or (date_str.count('-') == 1):
+        delimiter = '~' if '~' in date_str else '-'
+        parts = [p.strip() for p in date_str.split(delimiter)]
+        if len(parts) == 2:
+            start_str, end_str = parts
+            start_dt, end_dt = None, None
+            
+            if re.fullmatch(r'\d{1,2}', start_str):
+                try:
+                    start_dt = datetime(now.year, now.month, int(start_str))
+                except ValueError:
+                    pass
+            else:
+                try:
+                    start_dt = datetime.strptime(start_str, "%Y-%m-%d")
+                except ValueError:
+                    pass
+                    
+            if re.fullmatch(r'\d{1,2}', end_str) and start_dt:
+                try:
+                    end_dt = datetime(start_dt.year, start_dt.month, int(end_str))
+                except ValueError:
+                    pass
+            else:
+                try:
+                    end_dt = datetime.strptime(end_str, "%Y-%m-%d")
+                except ValueError:
+                    pass
+            
+            if start_dt and end_dt and start_dt <= end_dt:
+                current = start_dt
+                while current <= end_dt:
+                    dates.add(current.strftime("%Y-%m-%d"))
+                    current += timedelta(days=1)
+        return dates
+        
+    try:
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+        dates.add(dt.strftime("%Y-%m-%d"))
+    except ValueError:
+        pass
+    
+    return dates
 
 def _get_job_or_404(db: Session, id: str) -> models.Job:
     job = crud.job.get(db=db, id=id)
@@ -48,35 +118,37 @@ def apply_to_job(
         return {"success": True, "id": existing_app.id, "jobId": existing_app.jobId, "status": existing_app.status}
 
     # Max 2 applications per day, and none at all once a job that day is confirmed.
-    target_date = get_job_date(job)
+    target_dates = get_job_dates_set(job)
     worker_apps = db.query(models.Application).filter(
         models.Application.workerId == current_user.id,
         models.Application.status.in_(['applied', 'hired', 'confirmed', 'in_progress'])
     ).all()
 
-    same_day_count = 0
-    has_confirmed_job = False
-    if target_date and worker_apps:
+    if target_dates and worker_apps:
         app_job_ids = {a.jobId for a in worker_apps}
         app_jobs = db.query(models.Job).filter(models.Job.id.in_(app_job_ids)).all()
         app_job_map = {j.id: j for j in app_jobs}
-        for app in worker_apps:
-            if get_job_date(app_job_map.get(app.jobId)) == target_date:
-                same_day_count += 1
-                if app.status in ['hired', 'confirmed', 'in_progress']:
-                    has_confirmed_job = True
-
-    if has_confirmed_job:
-        raise HTTPException(
-            status_code=400,
-            detail="Siz bu kun uchun allaqachon tasdiqlangan ishga egasiz!"
-        )
-
-    if same_day_count >= 2:
-        raise HTTPException(
-            status_code=400,
-            detail="Bir kunda ko'pi bilan 2 ta ishga ariza topshirishingiz mumkin!"
-        )
+        
+        for t_date in target_dates:
+            same_day_count = 0
+            has_confirmed_job = False
+            for app in worker_apps:
+                app_dates = get_job_dates_set(app_job_map.get(app.jobId))
+                if t_date in app_dates:
+                    same_day_count += 1
+                    if app.status in ['hired', 'confirmed', 'in_progress']:
+                        has_confirmed_job = True
+            
+            if has_confirmed_job:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Siz bu kun uchun allaqachon tasdiqlangan ishga egasiz!"
+                )
+            if same_day_count >= 2:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Bir kunda ko'pi bilan 2 ta ishga ariza topshirishingiz mumkin!"
+                )
 
     db_app = models.Application(id=str(uuid.uuid4()), jobId=id, workerId=current_user.id, status="applied")
     db.add(db_app)
@@ -117,20 +189,22 @@ def confirm_start_job(
         app.status = "in_progress"
         db.add(app)
 
-        # Free the worker's day: drop their other pending applications for the same date.
-        job_date = get_job_date(job)
-        if job_date:
+        # Free the worker's day: drop their other pending applications for the same date(s).
+        job_dates = get_job_dates_set(job)
+        if job_dates:
             other_apps = db.query(models.Application).filter(
                 models.Application.workerId == app.workerId,
                 models.Application.jobId != id,
                 models.Application.status == "applied"
             ).all()
-            other_job_ids = {a.jobId for a in other_apps}
-            other_jobs = db.query(models.Job).filter(models.Job.id.in_(other_job_ids)).all() if other_job_ids else []
-            other_job_map = {j.id: j for j in other_jobs}
-            for other_app in other_apps:
-                if get_job_date(other_job_map.get(other_app.jobId)) == job_date:
-                    db.delete(other_app)
+            if other_apps:
+                other_job_ids = {a.jobId for a in other_apps}
+                other_jobs = db.query(models.Job).filter(models.Job.id.in_(other_job_ids)).all()
+                other_job_map = {j.id: j for j in other_jobs}
+                for other_app in other_apps:
+                    other_app_dates = get_job_dates_set(other_job_map.get(other_app.jobId))
+                    if job_dates.intersection(other_app_dates):
+                        db.delete(other_app)
 
     notif = models.Notification(
         id=str(uuid.uuid4()), userId=job.employerId, title="Ish boshlandi!",

@@ -5,6 +5,8 @@ import { getProfileTranslations } from '../features/worker/profile/ProfileScreen
 import { showToast } from '../utils/toast';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 import { requestWithdrawalApi } from '../api/queries';
+import { apiClient } from '../api/client';
+import { useQuery } from '@tanstack/react-query';
 
 export const useProfileScreen = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
@@ -12,37 +14,51 @@ export const useProfileScreen = () => {
   const { jobs } = useJobsData();
   const [balance, setBalance] = useState('0');
 
-  useEffect(() => {
-    import('../api/client').then(({ apiClient }) => {
-      apiClient('/users/me')
-        .then(data => {
-          if (data && userProfile) {
-            let fName = userProfile.firstName;
-            let lName = userProfile.lastName;
-            if (data.name) {
-              if (data.name.includes(' ')) {
-                const parts = data.name.split(' ');
-                fName = parts[0];
-                lName = parts.slice(1).join(' ');
-              } else {
-                fName = data.name;
-              }
-            }
-            setUserProfile({
-              ...userProfile,
-              firstName: fName,
-              lastName: lName,
-              phone: data.phone || userProfile.phone,
-              selectedRole: (data.role as 'worker' | 'employer') || userProfile.selectedRole,
-              isVerified: data.isVerified ?? userProfile.isVerified,
-              rating: data.rating ?? userProfile.rating,
-              completedJobsCount: data.completedJobsCount ?? userProfile.completedJobsCount,
-            });
-          }
-        })
-        .catch(console.error);
-    });
-  }, []);
+  useQuery({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const data = await apiClient('/users/me');
+      if (data && userProfile) {
+        let fName = userProfile.firstName;
+        let lName = userProfile.lastName;
+        if (data.name) {
+          const [first, ...rest] = data.name.trim().split(/\s+/);
+          fName = first || fName;
+          lName = rest.join(' ') || lName;
+        }
+        setUserProfile({
+          ...userProfile,
+          firstName: fName,
+          lastName: lName,
+          phone: data.phone || userProfile.phone,
+          selectedRole: (data.role as 'worker' | 'employer') || userProfile.selectedRole,
+          profileImage: data.avatarUrl || userProfile.profileImage,
+          email: data.email || userProfile.email,
+          gender: data.gender || userProfile.gender,
+          birthDate: data.birthDate || userProfile.birthDate,
+          region: data.region || userProfile.region,
+          profession: data.category || userProfile.profession,
+          aboutMe: data.bio || userProfile.aboutMe,
+          skills: Array.isArray(data.skills) ? data.skills : (data.skills ? [data.skills] : userProfile.skills),
+          passportSeries: data.passportSeries || userProfile.passportSeries,
+          pinfl: data.passportJshshir || userProfile.pinfl,
+          docFileName1: data.passportDocFront || userProfile.docFileName1,
+          docFileName2: data.passportDocBack || userProfile.docFileName2,
+          docFileName3: data.selfieWithDoc || (userProfile as any).docFileName3,
+          isVerified: data.isVerified ?? userProfile.isVerified,
+          rating: data.rating ?? userProfile.rating,
+          completedJobsCount: data.completedJobsCount ?? userProfile.completedJobsCount,
+          notify_new_jobs: data.notify_new_jobs ?? userProfile.notify_new_jobs,
+          notify_interviews: data.notify_interviews ?? userProfile.notify_interviews,
+          notify_general: data.notify_general ?? userProfile.notify_general,
+          two_factor_enabled: data.two_factor_enabled ?? userProfile.two_factor_enabled,
+          biometrics_enabled: data.biometrics_enabled ?? userProfile.biometrics_enabled,
+        });
+      }
+      return data;
+    },
+    enabled: !!userProfile
+  });
 
   const [isEditing, setIsEditing] = useState(false);
   const [by, bm, bd] = (userProfile?.birthDate || '1996-01-19').split('-');
@@ -167,8 +183,6 @@ export const useProfileScreen = () => {
       docFileName3: userProfile?.docFileName3
     };
     try {
-      const { apiClient } = await import('../api/client');
-      
       const updatePayload = {
         name: `${editForm.firstName} ${editForm.lastName}`.trim(),
         phone: editForm.phone,

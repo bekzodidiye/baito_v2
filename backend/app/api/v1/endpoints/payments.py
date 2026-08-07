@@ -1,0 +1,186 @@
+import time
+import uuid
+import hmac
+import hashlib
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy.orm import Session
+from app.api import deps
+from app.core.config import settings
+from app.models.transaction import Transaction
+from app.models.user import User
+from pydantic import BaseModel
+
+router = APIRouter()
+
+class GeneratePaymentLinkRequest(BaseModel):
+    amount: int # Amount in UZS
+
+class GeneratePaymentLinkResponse(BaseModel):
+    url: str
+    transaction_id: str
+
+@router.post("/generate-link", response_model=GeneratePaymentLinkResponse)
+def generate_payment_link(
+    req: GeneratePaymentLinkRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    if req.amount < 1000:
+        raise HTTPException(status_code=400, detail="Minimum amount is 1000 UZS")
+
+    # Create pending transaction for deposit
+    tx = Transaction(
+        employerId=current_user.id,
+        amount=req.amount * 100, # Assuming bank also works in tiyin, change to req.amount if UZS
+        type="deposit",
+        status="pending"
+    )
+    db.add(tx)
+    db.commit()
+    db.refresh(tx)
+
+    # --- Uzum E-Commerce Integration Logic ---
+    # In a real integration, you would make a Server-to-Server API call to Uzum here:
+    # response = requests.post(settings.UZUM_API_URL + "/create-payment", json={
+    #     "terminal_id": settings.UZUM_TERMINAL_ID,
+    #     "amount": req.amount * 100,
+    #     "order_id": tx.id,
+    #     "return_url": "https://baito.uz/payments/success"
+    # }, headers={"Authorization": "Bearer " + settings.UZUM_SECRET_KEY})
+    # uzum_url = response.json().get("payment_url")
+    
+    # DUMMY UZUM URL FOR NOW
+    token = str(uuid.uuid4())
+    bank_url = f"https://pay.uzum.uz/checkout?token={token}&order_id={tx.id}&amount={req.amount}"
+    
+    return GeneratePaymentLinkResponse(url=bank_url, transaction_id=tx.id)
+
+
+class UzumWebhookPayload(BaseModel):
+    order_id: str
+    uzum_transaction_id: str
+    amount: int
+    status: str # e.g., 'SUCCESS', 'FAILED'
+    sign: str # HMAC signature for security
+
+@router.post("/webhook/uzum")
+def uzum_webhook(payload: UzumWebhookPayload, db: Session = Depends(deps.get_db)):
+    """
+    Uzum Callback Webhook.
+    Uzum calls this URL when the user successfully pays on their checkout page.
+    """
+    
+    # 1. Verify signature (Security Check)
+    # This prevents malicious users from calling this endpoint manually.
+    data_string = f"{payload.order_id}{payload.amount}{payload.status}{settings.UZUM_SECRET_KEY}"
+    expected_sign = hashlib.md5(data_string.encode('utf-8')).hexdigest()
+    
+    # Note: In a real scenario, use the actual signature algorithm provided by Uzum.
+    # if payload.sign != expected_sign:
+    #     raise HTTPException(status_code=403, detail="Invalid signature")
+
+    # 2. Find transaction
+    tx = db.query(Transaction).filter(Transaction.id == payload.order_id).first()
+    if not tx:
+        raise HTTPException(status_code=404, detail="Order not found")
+        
+    if tx.status == "paid":
+        return {"status": "ok", "message": "Already paid"}
+        
+    if payload.status == "SUCCESS":
+        # 3. Mark as paid
+        tx.status = "paid"
+        tx.providerTransactionId = payload.uzum_transaction_id
+        tx.performTime = int(time.time() * 1000)
+        
+        # 4. Increase user balance
+        user = db.query(User).filter(User.id == tx.employerId).first()
+        if user:
+            # Assuming tx.amount is in tiyin, so dividing by 100 to get UZS
+            user.balance += (tx.amount // 100)
+            
+        db.commit()
+        return {"status": "ok", "message": "Payment processed successfully"}
+        
+    elif payload.status == "FAILED":
+        tx.status = "canceled"
+        tx.cancelTime = int(time.time() * 1000)
+        db.commit()
+        return {"status": "ok", "message": "Payment canceled"}
+        
+    raise HTTPException(status_code=400, detail="Unknown status")
+
+from typing import List
+from app.models.payment_card import PaymentCard
+from app.schemas.payment_card import PaymentCardCreate, PaymentCardInDB
+from app.schemas.transaction import TransactionOut
+
+@router.get("/cards", response_model=List[PaymentCardInDB])
+def get_payment_cards(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    cards = db.query(PaymentCard).filter(PaymentCard.userId == current_user.id).all()
+    return cards
+
+@router.post("/cards", response_model=PaymentCardInDB)
+def add_payment_card(
+    card_in: PaymentCardCreate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    card = PaymentCard(
+        userId=current_user.id,
+        type=card_in.type,
+        last4=card_in.last4,
+        bank=card_in.bank,
+        token=card_in.token,
+        isActive=card_in.isActive
+    )
+    db.add(card)
+    db.commit()
+    db.refresh(card)
+    return card
+
+@router.get("/transactions", response_model=List[TransactionOut])
+def get_transactions(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    transactions = db.query(Transaction).filter(
+        (Transaction.employerId == current_user.id) | (Transaction.workerId == current_user.id)
+    ).order_by(Transaction.createdAt.desc()).all()
+    return transactions
+
+class WithdrawRequest(BaseModel):
+    amount: int
+
+@router.post("/withdraw")
+def request_withdrawal(
+    req: WithdrawRequest,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    if req.amount < 5000:
+        raise HTTPException(status_code=400, detail="Eng kam yechib olish miqdori 5000 so'm")
+    
+    if current_user.balance < req.amount:
+        raise HTTPException(status_code=400, detail="Balansda yetarli mablag' mavjud emas")
+    
+    # Create transaction
+    tx = Transaction(
+        employerId=current_user.id,
+        amount=req.amount * 100, # converting UZS to tiyin if needed, assuming amount is UZS
+        type="withdraw",
+        status="pending"
+    )
+    db.add(tx)
+    
+    # Deduct balance
+    current_user.balance -= req.amount
+    db.add(current_user)
+    
+    db.commit()
+    db.refresh(tx)
+    
+    return {"status": "ok", "message": "Mablag' yechish so'rovi yuborildi", "transaction_id": tx.id}

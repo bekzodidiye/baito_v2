@@ -2,6 +2,8 @@ import React from 'react';
 import { Clock, CheckCircle2, AlertCircle, Star } from 'lucide-react';
 import { Job } from '../../../types';
 import { CalendarAccordionItem } from './CalendarAccordionItem';
+import { isJobLate } from './CalendarScreen.utils';
+import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 interface CalendarAccordionProps {
   language: 'uz' | 'ru' | 'en';
@@ -10,6 +12,7 @@ interface CalendarAccordionProps {
   allAppliedJobs: Job[];
   allConfirmedJobs: Job[];
   allTodoJobs: Job[];
+  allMissedJobs: Job[];
   allCompletedJobs: Job[];
   getJobTimeRelation: (job: Job) => 'past' | 'today' | 'future';
   setSelectedJob: (job: Job) => void;
@@ -22,10 +25,17 @@ export const CalendarAccordion: React.FC<CalendarAccordionProps> = ({
   allAppliedJobs,
   allConfirmedJobs,
   allTodoJobs,
+  allMissedJobs,
   allCompletedJobs,
   getJobTimeRelation,
   setSelectedJob
 }) => {
+  const { setCurrentScreen } = useCurrentScreen();
+
+  const handleSearchJobs = () => {
+    setCurrentScreen('jobs');
+  };
+
   return (
     <section className="flex flex-col gap-3">
       {/* Arizadagi ishlar */}
@@ -46,6 +56,14 @@ export const CalendarAccordion: React.FC<CalendarAccordionProps> = ({
             {language === 'ru' ? 'Отправлено' : language === 'en' ? 'Applied' : 'Yuborildi'}
           </span>
         )}
+        emptyCta={
+          <button 
+            onClick={handleSearchJobs}
+            className="px-4 py-1.5 bg-brand-primary text-white text-[11px] font-bold rounded-lg shadow-sm hover:bg-brand-primary/90 transition-colors"
+          >
+            {language === 'ru' ? 'Искать работу →' : language === 'en' ? 'Search jobs →' : 'Ish izlash →'}
+          </button>
+        }
       />
 
       {/* Tasdiqlangan ishlar */}
@@ -67,6 +85,14 @@ export const CalendarAccordion: React.FC<CalendarAccordionProps> = ({
             {language === 'ru' ? 'Подтверждено' : language === 'en' ? 'Confirmed' : 'Tasdiqlandi'}
           </span>
         )}
+        emptyCta={
+          <button 
+            onClick={handleSearchJobs}
+            className="px-4 py-1.5 bg-emerald-500 text-white text-[11px] font-bold rounded-lg shadow-sm hover:bg-emerald-600 transition-colors"
+          >
+            {language === 'ru' ? 'Найти работу →' : language === 'en' ? 'Find work →' : 'Ish topish →'}
+          </button>
+        }
       />
 
       {/* Qilinadigan ish */}
@@ -91,13 +117,44 @@ export const CalendarAccordion: React.FC<CalendarAccordionProps> = ({
               </span>
             );
           }
+          
+          if (isJobLate(job)) {
+            return (
+              <span className="shrink-0 bg-orange-100 text-orange-800 border border-orange-200 font-bold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                <AlertCircle size={10} />
+                {language === 'ru' ? 'Опаздываете' : language === 'en' ? 'Late' : 'Kech qolyapsiz'}
+              </span>
+            );
+          }
+          
           return (
-            <span className="shrink-0 bg-rose-100 text-rose-800 border border-rose-200 font-bold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
-              <AlertCircle size={10} />
-              {language === 'ru' ? 'Готово к началу' : language === 'en' ? 'Ready to start' : 'Boshlashga tayyor'}
+            <span className="shrink-0 bg-rose-100 text-rose-800 border border-rose-200 font-bold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1">
+              <Clock size={10} />
+              {language === 'ru' ? 'Ожидание' : language === 'en' ? 'Waiting' : 'Kutilmoqda'}
             </span>
           );
         }}
+      />
+
+      {/* O'tkazib yuborilgan ishlar */}
+      <CalendarAccordionItem
+        id="missed"
+        activeAccordion={activeAccordion}
+        toggleAccordion={toggleAccordion}
+        count={allMissedJobs.length}
+        title={language === 'ru' ? 'Пропущенные' : language === 'en' ? 'Missed Jobs' : 'O\'tkazib yuborilgan'}
+        badgeClass="bg-gray-500 shadow-[inset_0_1px_2px_rgba(255,255,255,0.45),_inset_0_-1.5px_2.5px_rgba(55,65,81,0.4),_0_2px_6px_rgba(107,114,128,0.3)]"
+        colorClass="bg-gray-50 text-gray-500 border-gray-100/30"
+        emptyIcon={<AlertCircle size={13} className="stroke-[2.5]" />}
+        emptyText={language === 'ru' ? 'Нет пропущенных работ.' : language === 'en' ? 'No missed jobs.' : 'O\'tkazib yuborilgan ishlar mavjud emas.'}
+        jobs={allMissedJobs}
+        setSelectedJob={setSelectedJob}
+        renderBadge={() => (
+          <span className="shrink-0 bg-gray-100 text-gray-800 border border-gray-200 font-bold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1">
+            <AlertCircle size={10} />
+            {language === 'ru' ? 'Пропущено' : language === 'en' ? 'Missed' : 'O\'tkazib yuborildi'}
+          </span>
+        )}
       />
 
       {/* Tugallangan ishlar */}

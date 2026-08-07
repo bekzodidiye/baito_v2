@@ -988,3 +988,7 @@ Bu qoidalar faylini o'qigan AI uchun:
 har doimm githubga push qilib bor
 **Versiya:** 5.0 — Majburiy Protokol + 15 Qadam
 **Muallif:** Suxrob Sadullayev  
+
+## 📋 BIZNES MANTIQ QOIDALARI (MUST REMEMBER)
+- Bir kunda ko'pi bilan 2 ta ishga ariza topshirish mumkin.
+- Agar ishchi bir kunga tasdiqlangan (confirmed/hired/todo) ishga ega bo'lsa, shu kun uchun boshqa barcha arizalari bekor qilinadi (yo'qoladi) va shu kun uchun yangi ariza topshira olmaydi.

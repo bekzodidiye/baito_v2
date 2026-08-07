@@ -12,6 +12,7 @@ const ProfileScreen = React.lazy(() => import('../features/worker/profile/Profil
 const ApplicationsScreen = React.lazy(() => import('../features/worker/applications/ApplicationsScreen').then(m => ({ default: m.ApplicationsScreen })));
 const ReviewsScreen = React.lazy(() => import('../features/worker/profile/ReviewsScreen').then(m => ({ default: m.ReviewsScreen })));
 const PaymentsScreen = React.lazy(() => import('../features/worker/profile/PaymentsScreen').then(m => ({ default: m.PaymentsScreen })));
+const PaymentResult = React.lazy(() => import('../features/worker/profile/PaymentResult').then(m => ({ default: m.PaymentResult })));
 const TaxesScreen = React.lazy(() => import('../features/worker/profile/TaxesScreen').then(m => ({ default: m.TaxesScreen })));
 const VerificationPendingScreen = React.lazy(() => import('./login/VerificationPendingScreen').then(m => ({ default: m.VerificationPendingScreen })));
 const SettingsScreen = React.lazy(() => import('./settings/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
@@ -20,6 +21,7 @@ const HelpScreen = React.lazy(() => import('./settings/HelpScreen').then(m => ({
 const FaqScreen = React.lazy(() => import('./settings/FaqScreen').then(m => ({ default: m.FaqScreen })));
 const QollanmaScreen = React.lazy(() => import('./settings/QollanmaScreen').then(m => ({ default: m.QollanmaScreen })));
 const ShartlarScreen = React.lazy(() => import('./settings/ShartlarScreen').then(m => ({ default: m.ShartlarScreen })));
+const PrivacyScreen = React.lazy(() => import('./settings/PrivacyScreen').then(m => ({ default: m.PrivacyScreen })));
 const SupportChatScreen = React.lazy(() => import('./settings/SupportChatScreen').then(m => ({ default: m.SupportChatScreen })));
 const LoginPromptScreen = React.lazy(() => import('./login/LoginPromptScreen').then(m => ({ default: m.LoginPromptScreen })));
 const EmployerPanel = React.lazy(() => import('../features/employer/EmployerPanel').then(m => ({ default: m.EmployerPanel })));
@@ -36,7 +38,17 @@ import { useApp } from '../context/AppContext';
 
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) => {
   const { isLoggedIn, userProfile } = useApp();
+  
   if (!isLoggedIn) return <Navigate to="/login" replace />;
+  
+  if (isLoggedIn && !userProfile) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-8 min-h-screen bg-slate-50 dark:bg-slate-900">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   if (allowedRoles && !allowedRoles.includes(userProfile?.selectedRole || 'worker')) {
     if (userProfile?.selectedRole === 'employer') return <Navigate to="/employer-dashboard" replace />;
     if (userProfile?.selectedRole === 'admin') return <Navigate to="/admin" replace />;
@@ -64,6 +76,8 @@ export const AppRoutes = () => {
         <Route path="/applications" element={<ProtectedRoute allowedRoles={['worker']}><ApplicationsScreen /></ProtectedRoute>} />
         <Route path="/reviews" element={<ProtectedRoute allowedRoles={['worker']}><ReviewsScreen /></ProtectedRoute>} />
         <Route path="/payments" element={<ProtectedRoute allowedRoles={['worker']}><PaymentsScreen /></ProtectedRoute>} />
+        <Route path="/payments/success" element={<ProtectedRoute allowedRoles={['worker']}><PaymentResult /></ProtectedRoute>} />
+        <Route path="/payments/error" element={<ProtectedRoute allowedRoles={['worker']}><PaymentResult /></ProtectedRoute>} />
         <Route path="/taxes" element={<ProtectedRoute allowedRoles={['worker']}><TaxesScreen /></ProtectedRoute>} />
         <Route path="/verification" element={<ProtectedRoute><VerificationPendingScreen /></ProtectedRoute>} />
         <Route path="/login" element={<LoginPromptScreen initialMode="login" />} />
@@ -74,6 +88,7 @@ export const AppRoutes = () => {
         <Route path="/faq" element={<SettingsLayout><FaqScreen /></SettingsLayout>} />
         <Route path="/guide" element={<SettingsLayout><QollanmaScreen /></SettingsLayout>} />
         <Route path="/terms" element={<SettingsLayout><ShartlarScreen /></SettingsLayout>} />
+        <Route path="/privacy" element={<SettingsLayout><PrivacyScreen /></SettingsLayout>} />
         <Route path="/support-chat" element={<ProtectedRoute><SettingsLayout><SupportChatScreen /></SettingsLayout></ProtectedRoute>} />
         
         {/* Employer routes grouped */}

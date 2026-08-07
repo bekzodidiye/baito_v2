@@ -22,7 +22,7 @@ export const CalendarJobCard: React.FC<CalendarJobCardProps> = ({ job, badge, se
       <div className="flex items-center gap-2 flex-1 min-w-[100px]">
         <p className="text-[11px] text-slate-500 font-medium truncate">{job.company}</p>
         <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0"></span>
-        <p className="text-[10px] text-slate-500 font-medium whitespace-nowrap">{job.time}</p>
+        <p className="text-[10px] text-slate-500 font-medium whitespace-nowrap">{job.workTime}</p>
       </div>
       {job.periodText && (
         <p className="text-[10px] text-slate-500 flex items-center gap-1 shrink-0 font-medium bg-slate-50 px-1.5 py-0.5 rounded">

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, JSON, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base_class import Base
@@ -22,6 +22,7 @@ class Job(Base):
     urgent = Column(Boolean, default=False)
     description = Column(String, nullable=False)
     status = Column(String, nullable=False, default='open')
+    views = Column(Integer, default=0)
     hiredWorkerId = Column(String, ForeignKey("users.id"))
     createdAt = Column(DateTime(timezone=True), server_default=func.now())
     

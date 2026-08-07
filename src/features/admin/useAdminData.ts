@@ -1,29 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../api/client';
 import { AdminStats, AdminUser, AdminJob, AdminTransaction, SystemSettings } from './types';
 import { useApp } from '../../context/AppContext';
 
 export function useAdminData() {
   const { } = useApp();
-  const [loading, setLoading] = useState<boolean>(true);
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [jobs, setJobs] = useState<AdminJob[]>([]);
-  const [transactions, setTransactions] = useState<AdminTransaction[]>([]);
-  const [supportTickets, setSupportTickets] = useState<any[]>([]);
-  const [settings, setSettings] = useState<SystemSettings>({
-    platformFeePercent: 10,
-    minHourlyRate: 15000,
-    maintenanceMode: false,
-    autoApproveJobs: true,
-    autoExpireJobs: true,
-    autoExpireDays: 14,
-    autoDeleteSpamJobs: true,
-  });
+  const queryClient = useQueryClient();
 
-  const fetchAllData = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data, isLoading: loading, refetch: fetchAllData } = useQuery({
+    queryKey: ['adminData'],
+    queryFn: async () => {
       const [sData, uData, jData, tData, tckData, cfgData] = await Promise.all([
         apiClient('/admin/stats').catch(() => null),
         apiClient('/admin/users').catch(() => null),
@@ -32,25 +18,39 @@ export function useAdminData() {
         apiClient('/admin/support-tickets').catch(() => null),
         apiClient('/admin/settings').catch(() => null),
       ]);
-
-      if (sData) setStats(sData);
-      if (Array.isArray(uData)) {
-        setUsers(uData);
-      }
-      if (Array.isArray(jData)) setJobs(jData);
-      if (Array.isArray(tData)) setTransactions(tData);
-      if (Array.isArray(tckData)) setSupportTickets(tckData);
-      if (cfgData) setSettings(cfgData);
-    } catch (err) {
-      console.error('Error fetching admin data:', err);
-    } finally {
-      setLoading(false);
+      return {
+        stats: sData as AdminStats | null,
+        users: (Array.isArray(uData) ? uData : []) as AdminUser[],
+        jobs: (Array.isArray(jData) ? jData : []) as AdminJob[],
+        transactions: (Array.isArray(tData) ? tData : []) as AdminTransaction[],
+        supportTickets: (Array.isArray(tckData) ? tckData : []) as any[],
+        settings: cfgData as SystemSettings || {
+          platformFeePercent: 10,
+          minHourlyRate: 15000,
+          maintenanceMode: false,
+          autoApproveJobs: true,
+          autoExpireJobs: true,
+          autoExpireDays: 14,
+          autoDeleteSpamJobs: true,
+        }
+      };
     }
-  }, []);
+  });
 
-  useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+  const stats = data?.stats || null;
+  const users = data?.users || [];
+  const jobs = data?.jobs || [];
+  const transactions = data?.transactions || [];
+  const supportTickets = data?.supportTickets || [];
+  const settings = data?.settings || {
+    platformFeePercent: 10,
+    minHourlyRate: 15000,
+    maintenanceMode: false,
+    autoApproveJobs: true,
+    autoExpireJobs: true,
+    autoExpireDays: 14,
+    autoDeleteSpamJobs: true,
+  };
 
   const showToast = (msg: string) => {
     (msg);
@@ -127,8 +127,7 @@ export function useAdminData() {
         body: JSON.stringify(newCfg),
       });
       if (res !== undefined) {
-        const data = res;
-        setSettings(data.settings);
+        fetchAllData();
         ("Tizim sozlamalari saqlandi");
       }
     } catch (e) {

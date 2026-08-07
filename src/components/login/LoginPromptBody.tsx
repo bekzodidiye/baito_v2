@@ -162,6 +162,7 @@ export const LoginPromptBody: React.FC<LoginPromptBodyProps> = ({ p }) => {
           handleFinishSubmit={p.handleFinishSubmit}
           t={t}
           isModal={isModal}
+          onOpenPrivacy={() => p.setShowPrivacy(true)}
         />
       )}
     </AnimatePresence>

@@ -46,7 +46,7 @@ export const useEmployer = () => {
         durationLabel: j.durationLabel || '1 kunlik'
       })) as Job[];
     },
-    refetchInterval: 3000,
+    refetchInterval: 30000,
   });
 
   // 3. Fetch Applications
@@ -67,7 +67,7 @@ export const useEmployer = () => {
         appliedDate: a.appliedDate || new Date().toISOString()
       })) as Application[];
     },
-    refetchInterval: 3000,
+    refetchInterval: 30000,
   });
 
   const handleSuccess = (msgUz: string, msgRu: string, msgEn: string) => {

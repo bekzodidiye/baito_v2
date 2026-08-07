@@ -11,7 +11,7 @@ export const EmployerAnalytics: React.FC = () => {
   const today = new Date().toISOString().split('T')[0];
   const todaysApps = applications.filter(a => a.appliedDate && a.appliedDate.startsWith(today)).length;
   
-  const totalViews = postedJobs.length * 45; // Mocked views for now
+  const totalViews = postedJobs.reduce((acc, job) => acc + (job.views || 0), 0);
   
   const filledPositions = applications.filter(a => a.status === 'hired').length;
   const totalNeeded = postedJobs.reduce((acc, job) => acc + parseInt(job.neededWorkers || '1', 10), 0);

@@ -129,25 +129,26 @@ def hire_applicant(
     db.add(app)
 
     # A worker can only hold one job per day: drop their other pending applications
-    # that collide with this job's date.
-    job_date = job.workDate
-    if job_date:
-        clean_date = str(job_date).split(" ")[0].split("~")[0].strip()
+    # that collide with this job's date(s).
+    from app.api.v1.endpoints.job_actions import get_job_dates_set
+    job_dates = get_job_dates_set(job)
+    if job_dates:
         other_apps = db.query(models.Application).filter(
             models.Application.workerId == app.workerId,
             models.Application.id != app.id,
             models.Application.status == "applied"
         ).all()
-        other_job_ids = {a.jobId for a in other_apps}
-        other_jobs = db.query(models.Job).filter(models.Job.id.in_(other_job_ids)).all() if other_job_ids else []
-        other_job_map = {j.id: j for j in other_jobs}
-        for other_app in other_apps:
-            other_j = other_job_map.get(other_app.jobId)
-            if not other_j:
-                continue
-            other_date_val = other_j.workDate
-            if other_date_val and str(other_date_val).split(" ")[0].split("~")[0].strip() == clean_date:
-                db.delete(other_app)
+        if other_apps:
+            other_job_ids = {a.jobId for a in other_apps}
+            other_jobs = db.query(models.Job).filter(models.Job.id.in_(other_job_ids)).all()
+            other_job_map = {j.id: j for j in other_jobs}
+            for other_app in other_apps:
+                other_j = other_job_map.get(other_app.jobId)
+                if not other_j:
+                    continue
+                other_app_dates = get_job_dates_set(other_j)
+                if job_dates.intersection(other_app_dates):
+                    db.delete(other_app)
 
     db.commit()
     db.refresh(app)

@@ -6,28 +6,23 @@ import { useApp } from '../../../context/AppContext';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 import { SummaryCard, ReviewCard, EmptyReviews, ReviewsSkeleton } from './ReviewsScreen.components';
 
+import { useQuery } from '@tanstack/react-query';
+import { fetchWorkerApplicationsApi } from '../../../api/queries';
+
 export const ReviewsScreen: React.FC = () => {
   const { language } = useApp();
   const { setCurrentScreen } = useCurrentScreen();
-  const [reviews, setReviews] = useState<Application[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const data = await apiClient('/applications/worker');
-        if (Array.isArray(data)) {
-          const completed = data.filter(app => app.status === 'completed' && app.rating);
-          setReviews(completed);
-        }
-      } catch {
-        // silently fail
-      } finally {
-        setIsLoading(false);
+  const { data: reviews = [], isLoading } = useQuery({
+    queryKey: ['workerReviews'],
+    queryFn: async () => {
+      const data = await fetchWorkerApplicationsApi();
+      if (Array.isArray(data)) {
+        return data.filter(app => app.status === 'completed' && app.rating);
       }
-    };
-    fetchReviews();
-  }, []);
+      return [];
+    }
+  });
 
   const avgRating = reviews.length > 0
     ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length

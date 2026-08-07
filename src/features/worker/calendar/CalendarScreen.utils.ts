@@ -21,51 +21,139 @@ export const WEEKDAYS_TRANSLATIONS = {
   en: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 };
 
-const getJobDateStr = (job: Job): string => {
-  return job.periodText || job.workDate || '2026-08-05';
+export const getJobDates = (job: Job): Date[] => {
+  let dateStr = job.workDate || job.periodText || '';
+  
+  if (!dateStr) {
+    if (job.status === 'completed' || ['todo', 'in_progress', 'hired', 'start_requested'].includes(job.status) || job.status === 'applied' || job.applied) {
+      if (job.appliedDate) {
+        return [new Date(job.appliedDate)];
+      }
+      if (job.createdAt) {
+        return [new Date(job.createdAt)];
+      }
+      return [new Date()];
+    }
+    return [];
+  }
+  
+  // Clean up any weird spaces
+  dateStr = dateStr.trim();
+
+  // If it's just a single or double digit number, assume it's the day of the current month
+  if (/^\d{1,2}$/.test(dateStr)) {
+    const d = new Date();
+    d.setDate(parseInt(dateStr, 10));
+    return [d];
+  }
+
+  if (dateStr.includes(',')) {
+    return dateStr.split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(s => {
+        if (/^\d{1,2}$/.test(s)) {
+          const d = new Date();
+          d.setDate(parseInt(s, 10));
+          return d;
+        }
+        return new Date(s);
+      })
+      .filter(d => !isNaN(d.getTime()));
+  }
+  
+  if (dateStr.includes('~') || dateStr.includes('-')) {
+    // Check if it's a date range like "10-12" or "10~12" or "2024-05-10"
+    // If it's "YYYY-MM-DD", let Date constructor handle it.
+    // If it's "10-12", it's a range of days in the current month.
+    const isRange = (dateStr.includes('~')) || (/^\d{1,2}\s*-\s*\d{1,2}$/.test(dateStr));
+    
+    if (isRange) {
+      const parts = dateStr.includes('~') ? dateStr.split('~') : dateStr.split('-');
+      const [start, end] = parts.map(s => s.trim());
+      
+      let startDate = new Date(start);
+      if (/^\d{1,2}$/.test(start)) {
+        startDate = new Date();
+        startDate.setDate(parseInt(start, 10));
+      }
+      
+      let endDate = new Date(end);
+      if (/^\d{1,2}$/.test(end)) {
+        endDate = new Date(startDate);
+        endDate.setDate(parseInt(end, 10));
+      } else if (end.length <= 2 && !isNaN(startDate.getTime())) {
+        endDate = new Date(startDate);
+        endDate.setDate(parseInt(end, 10));
+      }
+      
+      if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+        const dates = [];
+        let cur = new Date(startDate);
+        while (cur <= endDate) {
+          dates.push(new Date(cur));
+          cur.setDate(cur.getDate() + 1);
+        }
+        return dates;
+      }
+    }
+  }
+  
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) {
+    return [d];
+  }
+  
+  return [new Date()];
 };
 
 export const isJobInMonth = (job: Job, year: number, month: number): boolean => {
-  const dateStr = getJobDateStr(job);
-  const datePart = dateStr.split(' ')[0];
-  const monthStr = String(month + 1).padStart(2, '0');
-  const prefix = `${year}-${monthStr}-`;
-  return datePart.startsWith(prefix);
+  const dates = getJobDates(job);
+  return dates.some(d => d.getFullYear() === year && d.getMonth() === month);
 };
 
 export const isJobFutureDay = (job: Job, yearFromContext: number, monthFromContext: number, dayFromContext: number): boolean => {
-  const dateStr = getJobDateStr(job).split(' ')[0];
-  const dayStr = dateStr.includes('~') ? dateStr.split('~')[0].split('-')[2] : dateStr.split('-')[2];
-  const jobDay = parseInt(dayStr) || dayFromContext;
+  const dates = getJobDates(job);
+  if (dates.length === 0) return false;
   
-  const parts = dateStr.split('-');
-  const year = parseInt(parts[0]) || yearFromContext;
-  const month = parseInt(parts[1]) || monthFromContext;
+  dates.sort((a,b) => a.getTime() - b.getTime());
+  const firstDay = dates[0];
+  const today = new Date(yearFromContext, monthFromContext - 1, dayFromContext);
   
-  if (year > yearFromContext) return true;
-  if (year < yearFromContext) return false;
-  if (month > monthFromContext) return true;
-  if (month < monthFromContext) return false;
-  return jobDay > dayFromContext;
+  firstDay.setHours(0,0,0,0);
+  today.setHours(0,0,0,0);
+  
+  return firstDay > today;
 };
 
 export const isJobOnDay = (job: Job, day: number, year: number, month: number): boolean => {
-  const dateStr = getJobDateStr(job);
-  const datePart = dateStr.split(' ')[0];
-  const jobYear = parseInt(datePart.split('-')[0], 10);
-  const jobMonth = parseInt(datePart.split('-')[1], 10);
-  
-  if (jobYear !== year || jobMonth - 1 !== month) return false;
+  const dates = getJobDates(job);
+  return dates.some(d => d.getFullYear() === year && d.getMonth() === month && d.getDate() === day);
+};
 
-  if (datePart.includes('~')) {
-    const [start, end] = datePart.split('~');
-    const startDay = parseInt(start.split('-')[2], 10);
-    const endDay = parseInt(end, 10);
-    return day >= startDay && day <= endDay;
-  } else {
-    const jobDay = parseInt(datePart.split('-')[2], 10);
-    return jobDay === day;
+export const isJobLate = (job: Job): boolean => {
+  if (job.status !== 'todo' && job.status !== 'confirmed' && job.status !== 'hired') return false;
+  const timeStr = job.workTime || '';
+  if (!timeStr) return false;
+  
+  const now = new Date();
+  
+  if (!isJobOnDay(job, now.getDate(), now.getFullYear(), now.getMonth())) {
+    return false;
   }
+  
+  const match = timeStr.match(/(\d{1,2}):(\d{2})/);
+  if (!match) return false;
+  
+  const startHour = parseInt(match[1], 10);
+  const startMinute = parseInt(match[2], 10);
+  
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  
+  if (currentHour > startHour) return true;
+  if (currentHour === startHour && currentMinute > startMinute) return true;
+  return false;
 };
 
 export const getJobTimeRelation = (
@@ -74,22 +162,14 @@ export const getJobTimeRelation = (
   monthFromContext: number, 
   dayFromContext: number
 ) => {
-  const dateStr = getJobDateStr(job);
-  const datePart = dateStr.split(' ')[0];
-  const year = parseInt(datePart.split('-')[0], 10);
-  const month = parseInt(datePart.split('-')[1], 10);
-  
-  let startDay = parseInt(datePart.split('-')[2], 10);
-  let endDay = startDay;
-  if (datePart.includes('~')) {
-    startDay = parseInt(datePart.split('~')[0].split('-')[2], 10);
-    endDay = parseInt(datePart.split('~')[1], 10);
-  }
+  const dates = getJobDates(job);
+  if (dates.length === 0) return 'past';
 
-  const todayDate = new Date(yearFromContext, monthFromContext - 1, dayFromContext);
-  const startDate = new Date(year, month - 1, startDay);
-  const endDate = new Date(year, month - 1, endDay);
+  dates.sort((a,b) => a.getTime() - b.getTime());
+  const startDate = dates[0];
+  const endDate = dates[dates.length - 1];
   
+  const todayDate = new Date(yearFromContext, monthFromContext - 1, dayFromContext);
   todayDate.setHours(0,0,0,0);
   startDate.setHours(0,0,0,0);
   endDate.setHours(0,0,0,0);
@@ -104,20 +184,12 @@ export const getJobTimeRelation = (
 };
 
 export const isOverlappingWithActiveJob = (job: Job, allJobs: Job[], yearFromContext: number, monthFromContext: number, dayFromContext: number) => {
-  const dateStr = getJobDateStr(job);
-  const datePart = dateStr.split(' ')[0];
-  const jobYear = parseInt(datePart.split('-')[0], 10);
-  const jobMonth = parseInt(datePart.split('-')[1], 10) - 1; // 0-indexed
-  let startDay = parseInt(datePart.split('-')[2], 10);
-  let endDay = startDay;
-  if (datePart.includes('~')) {
-    startDay = parseInt(datePart.split('~')[0].split('-')[2], 10);
-    endDay = parseInt(datePart.split('~')[1], 10);
-  }
-
+  const dates = getJobDates(job);
+  if (dates.length === 0) return false;
+  
   const activeJobs = allJobs.filter(j => ['confirmed', 'todo', 'completed', 'in_progress', 'hired', 'start_requested'].includes(j.status));
-  for (let d = startDay; d <= endDay; d++) {
-    if (activeJobs.some(aj => isJobOnDay(aj, d, jobYear, jobMonth))) {
+  for (const d of dates) {
+    if (activeJobs.some(aj => isJobOnDay(aj, d.getDate(), d.getFullYear(), d.getMonth()))) {
       return true;
     }
   }
@@ -149,8 +221,9 @@ export const getDayStatusForList = (
     if (jobsOnDay.some(j => j.status === 'completed')) return 'completed';
     if (jobsOnDay.some(j => j.status === 'applied' || j.applied)) return 'applied';
   } else {
-    if (jobsOnDay.some(j => ['confirmed', 'todo', 'in_progress', 'hired', 'start_requested'].includes(j.status))) return 'todo';
+    // Past days
     if (jobsOnDay.some(j => j.status === 'completed')) return 'completed';
+    if (jobsOnDay.some(j => ['confirmed', 'todo', 'in_progress', 'hired', 'start_requested'].includes(j.status))) return 'missed';
     if (jobsOnDay.some(j => j.status === 'applied' || j.applied)) return 'applied';
   }
   

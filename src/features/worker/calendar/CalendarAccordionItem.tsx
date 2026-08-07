@@ -17,6 +17,7 @@ interface CalendarAccordionItemProps {
   jobs: Job[];
   setSelectedJob: (job: Job) => void;
   renderBadge: (job: Job) => React.ReactNode;
+  emptyCta?: React.ReactNode;
 }
 
 export const CalendarAccordionItem: React.FC<CalendarAccordionItemProps> = ({
@@ -32,6 +33,7 @@ export const CalendarAccordionItem: React.FC<CalendarAccordionItemProps> = ({
   jobs,
   setSelectedJob,
   renderBadge,
+  emptyCta,
 }) => {
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.02),_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.03)] transition-all duration-300 overflow-hidden">
@@ -67,9 +69,14 @@ export const CalendarAccordionItem: React.FC<CalendarAccordionItemProps> = ({
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center mb-1 border ${colorClass}`}>
                     {emptyIcon}
                   </div>
-                  <p className="text-[11px] font-semibold text-slate-500 max-w-[220px] leading-normal font-sans">
+                  <p className="text-[11px] font-semibold text-slate-500 max-w-[220px] leading-normal font-sans mb-2">
                     {emptyText}
                   </p>
+                  {emptyCta && (
+                    <div className="mt-1">
+                      {emptyCta}
+                    </div>
+                  )}
                 </div>
               ) : (
                 jobs.map((job) => (

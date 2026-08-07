@@ -2,6 +2,7 @@ import React from 'react';
 import { Calendar } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Job } from '../../../types';
+import { isJobLate } from './CalendarScreen.utils';
 
 interface CalendarDayTooltipProps {
   isFirstTwoRows: boolean;
@@ -12,6 +13,8 @@ interface CalendarDayTooltipProps {
   status: 'applied' | 'confirmed' | 'todo' | 'completed' | 'missed' | null;
   language: 'uz' | 'ru' | 'en';
   setSelectedJob: (job: Job | null) => void;
+  isPast: boolean;
+  isToday: boolean;
 }
 
 export const CalendarDayTooltip: React.FC<CalendarDayTooltipProps> = ({
@@ -22,8 +25,24 @@ export const CalendarDayTooltip: React.FC<CalendarDayTooltipProps> = ({
   tooltipJobs,
   status,
   language,
-  setSelectedJob
+  setSelectedJob,
+  isPast,
+  isToday
 }) => {
+  const getTodoLabel = (job: Job) => {
+    if (isPast) return language === 'ru' ? 'Пропущено' : language === 'en' ? 'Missed' : 'O\'tkazib yuborildi';
+    if (isToday) {
+      if (isJobLate(job)) return language === 'ru' ? 'Опаздываете' : language === 'en' ? 'Late' : 'Kech qolyapsiz';
+      return language === 'ru' ? 'Сегодня' : language === 'en' ? 'Today' : 'Bugun qilinadi';
+    }
+    return language === 'ru' ? 'К выполнению' : language === 'en' ? 'To Do' : 'Qilinadigan ish';
+  };
+
+  const getTodoStyle = (job: Job) => {
+    if (isPast) return 'bg-slate-100 text-slate-600 border-slate-200';
+    if (isToday && isJobLate(job)) return 'bg-orange-100 text-orange-800 border-orange-200';
+    return 'bg-rose-100 text-rose-850 border-rose-200';
+  };
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95, y: isFirstTwoRows ? 5 : -5 }}
@@ -51,7 +70,7 @@ export const CalendarDayTooltip: React.FC<CalendarDayTooltipProps> = ({
               <div className="flex items-center gap-1.5 mt-0.5">
                 <p className="text-[9px] text-brand-text-variant font-medium truncate">{job.company}</p>
                 <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0"></span>
-                <p className="text-[9px] text-brand-text-variant font-medium whitespace-nowrap">{job.time}</p>
+                <p className="text-[9px] text-brand-text-variant font-medium whitespace-nowrap">{job.workTime}</p>
                 {job.periodText && (
                   <>
                     <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0"></span>
@@ -65,8 +84,9 @@ export const CalendarDayTooltip: React.FC<CalendarDayTooltipProps> = ({
             </div>
             {status === 'applied' && <span className="bg-amber-100 text-amber-800 border border-amber-200 font-bold text-[8px] px-1.5 py-0.5 rounded-full shrink-0 shadow-xs">{language === 'ru' ? 'Отправлено' : language === 'en' ? 'Applied' : 'Yuborildi'}</span>}
             {status === 'confirmed' && <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-[8px] px-1.5 py-0.5 rounded-full shrink-0 shadow-xs">{language === 'ru' ? 'Подтверждено' : language === 'en' ? 'Confirmed' : 'Tasdiqlandi'}</span>}
-            {status === 'todo' && <span className="bg-rose-100 text-rose-850 border border-rose-200 font-bold text-[8px] px-1.5 py-0.5 rounded-full shrink-0 shadow-xs">{language === 'ru' ? 'Сегодня' : language === 'en' ? 'To Do' : 'Bugun qilinadi'}</span>}
+            {status === 'todo' && <span className={`border font-bold text-[8px] px-1.5 py-0.5 rounded-full shrink-0 shadow-xs ${getTodoStyle(job)}`}>{getTodoLabel(job)}</span>}
             {status === 'completed' && <span className="bg-indigo-50 text-brand-primary border border-indigo-100 font-bold text-[8px] px-1.5 py-0.5 rounded-full shrink-0 shadow-xs">{language === 'ru' ? 'Завершено' : language === 'en' ? 'Completed' : 'Yakunlandi'}</span>}
+            {status === 'missed' && <span className="bg-gray-100 text-gray-600 border border-gray-200 font-bold text-[8px] px-1.5 py-0.5 rounded-full shrink-0 shadow-xs">{language === 'ru' ? 'Пропущено' : language === 'en' ? 'Missed' : "O'tkazib yuborildi"}</span>}
           </button>
         ))}
         {tooltipJobs.length > 3 && (

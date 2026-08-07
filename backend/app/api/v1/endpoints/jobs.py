@@ -60,6 +60,8 @@ def read_jobs(
         job_dict = schemas.JobWithApplicationStatus.model_validate(job)
         job_dict.status = job_status
         job_dict.applied = bool(app_item)
+        if app_item:
+            job_dict.appliedDate = app_item.appliedDate
         
         # Calculate hired count and vacancies
         vacancies_num = int(job.neededWorkers) if job.neededWorkers and job.neededWorkers.isdigit() else 1
@@ -98,6 +100,22 @@ def create_job(
     db.commit()
     db.refresh(db_job)
     return db_job
+
+@router.post("/{job_id}/view")
+def view_job(
+    job_id: str,
+    db: Session = Depends(deps.get_db)
+):
+    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    # Increment view count
+    job.views = (job.views or 0) + 1
+    db.add(job)
+    db.commit()
+    
+    return {"status": "ok", "views": job.views}
 
 @router.delete("/{id}")
 def delete_job(

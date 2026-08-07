@@ -1,4 +1,6 @@
 import { useApp } from '../../context/AppContext';
+import { registerApi, loginApi } from '../../api/queries';
+import { apiClient } from '../../api/client';
 import { LOCAL_TEXTS } from '../../components/login/LoginPromptScreen.translations';
 import { showToast } from '../../utils/toast';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
@@ -24,7 +26,6 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
     }
 
     try {
-      const { registerApi, loginApi } = await import('../../api/queries');
       const payload = {
         password: state.regPassword,
         name: state.selectedRole === 'worker' ? `${state.firstName} ${state.lastName}` : state.companyName,
@@ -36,8 +37,6 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
 
       await loginApi(state.regPhone, state.regPassword);
 
-      const { apiClient } = await import('../../api/client');
-      
       const extendedPayload = {
         name: state.selectedRole === 'worker' ? `${state.firstName} ${state.lastName}`.trim() : state.companyName,
         email: state.email || undefined,
@@ -102,8 +101,6 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
     }
 
     try {
-      const { loginApi } = await import('../../api/queries');
-      const { apiClient } = await import('../../api/client');
       await loginApi(state.loginPhone, state.loginPassword);
 
       let profile = null;

@@ -41,3 +41,12 @@ class User(Base):
     # Meta / Admin extra
     bankCardMask = Column(String)
     sourceApp = Column(String, default="Organik (Play Store)")
+    
+    # Notification Settings
+    notify_new_jobs = Column(Boolean, default=True)
+    notify_interviews = Column(Boolean, default=True)
+    notify_general = Column(Boolean, default=True)
+    
+    # Security Settings
+    two_factor_enabled = Column(Boolean, default=False)
+    biometrics_enabled = Column(Boolean, default=False)
