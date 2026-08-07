@@ -11,7 +11,10 @@ const NotificationsScreen = React.lazy(() => import('./notifications/Notificatio
 const ProfileScreen = React.lazy(() => import('../features/worker/profile/ProfileScreen').then(m => ({ default: m.ProfileScreen })));
 const ApplicationsScreen = React.lazy(() => import('../features/worker/applications/ApplicationsScreen').then(m => ({ default: m.ApplicationsScreen })));
 const ReviewsScreen = React.lazy(() => import('../features/worker/profile/ReviewsScreen').then(m => ({ default: m.ReviewsScreen })));
-const PaymentsScreen = React.lazy(() => import('../features/worker/profile/PaymentsScreen').then(m => ({ default: m.PaymentsScreen })));
+const PaymentsScreen = React.lazy(() => import('../features/payments/PaymentsScreen').then(m => ({ default: m.PaymentsScreen })));
+const MyCardsScreen = React.lazy(() => import('../features/payments/MyCardsScreen').then(m => ({ default: m.MyCardsScreen })));
+const AddCardScreen = React.lazy(() => import('../features/payments/AddCardScreen').then(m => ({ default: m.AddCardScreen })));
+const TopUpScreen = React.lazy(() => import('../features/payments/TopUpScreen').then(m => ({ default: m.TopUpScreen })));
 const PaymentResult = React.lazy(() => import('../features/worker/profile/PaymentResult').then(m => ({ default: m.PaymentResult })));
 const TaxesScreen = React.lazy(() => import('../features/worker/profile/TaxesScreen').then(m => ({ default: m.TaxesScreen })));
 const VerificationPendingScreen = React.lazy(() => import('./login/VerificationPendingScreen').then(m => ({ default: m.VerificationPendingScreen })));
@@ -75,7 +78,10 @@ export const AppRoutes = () => {
         <Route path="/profile" element={<ProtectedRoute allowedRoles={['worker']}><ProfileScreen /></ProtectedRoute>} />
         <Route path="/applications" element={<ProtectedRoute allowedRoles={['worker']}><ApplicationsScreen /></ProtectedRoute>} />
         <Route path="/reviews" element={<ProtectedRoute allowedRoles={['worker']}><ReviewsScreen /></ProtectedRoute>} />
-        <Route path="/payments" element={<ProtectedRoute allowedRoles={['worker']}><PaymentsScreen /></ProtectedRoute>} />
+        <Route path="/payments" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><PaymentsScreen /></ProtectedRoute>} />
+        <Route path="/payments/my-cards" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><MyCardsScreen /></ProtectedRoute>} />
+        <Route path="/payments/add-card" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><AddCardScreen /></ProtectedRoute>} />
+        <Route path="/payments/top-up" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><TopUpScreen /></ProtectedRoute>} />
         <Route path="/payments/success" element={<ProtectedRoute allowedRoles={['worker']}><PaymentResult /></ProtectedRoute>} />
         <Route path="/payments/error" element={<ProtectedRoute allowedRoles={['worker']}><PaymentResult /></ProtectedRoute>} />
         <Route path="/taxes" element={<ProtectedRoute allowedRoles={['worker']}><TaxesScreen /></ProtectedRoute>} />

@@ -129,6 +129,19 @@ export const addPaymentCardApi = async (data: { type: string, last4: string, ban
   });
 };
 
+export const deletePaymentCardApi = async (cardId: string) => {
+  return await apiClient(`/payments/cards/${cardId}`, {
+    method: 'DELETE'
+  });
+};
+
+export const updatePaymentCardApi = async (cardId: string, data: any) => {
+  return await apiClient(`/payments/cards/${cardId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+};
+
 export const fetchTransactionsApi = async () => {
   return await apiClient('/payments/transactions');
 };

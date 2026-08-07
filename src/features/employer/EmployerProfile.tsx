@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { EmployerPaymentModal } from './EmployerPaymentModal';
 import { useEmployer } from '../../hooks/useEmployer';
 import { apiClient } from '../../api/client';
 import { useApp } from '../../context/AppContext';
@@ -13,7 +12,6 @@ import { EmployerEditProfileModal } from './EmployerEditProfileModal';
 
 export const EmployerProfile: React.FC = () => {
   const { language, balance } = useEmployer();
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { userProfile, logout, setUserProfile } = useApp();
@@ -114,7 +112,7 @@ export const EmployerProfile: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-4">
-        <motion.button onClick={() => setIsPaymentModalOpen(true)} 
+        <motion.button onClick={() => setCurrentScreen('payments')} 
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col items-center sm:flex-row sm:justify-between gap-4 hover:shadow-md hover:border-emerald-200 transition-all cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
@@ -176,7 +174,6 @@ export const EmployerProfile: React.FC = () => {
         </motion.button>
       </div>
       
-      {isPaymentModalOpen && <EmployerPaymentModal onClose={() => setIsPaymentModalOpen(false)} />}
       <EmployerEditProfileModal 
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}

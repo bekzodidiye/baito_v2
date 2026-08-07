@@ -1,0 +1,235 @@
+openapi: 3.0.0
+
+
+info:
+  title: Service template openAPI
+  version: 0.1.0
+  license:
+    name: TODO
+    url: tbd
+  description: |
+    This is service template description, change it
+paths:
+  /v1/challenges:
+    post:
+      description: Create challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChallengeRequest'
+      responses:
+        201:
+          description: Challenge created
+        400:
+          description: Challenge invalid
+        500:
+          description: internal error
+    get:
+      description: List challenges
+      parameters:
+        - in: query
+          name: gameUUIDs
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: friendUUIDs
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: stake_from
+          schema:
+            type: integer
+        - in: query
+          name: stake_to
+          schema:
+            type: integer
+        - in: query
+          name: sort
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeList'
+        400:
+          description: invalid request
+        500:
+          description: internal error
+  /v1/challenges/my:
+    get:
+      description: List challenges
+      parameters:
+        - in: query
+          name: gameUUIDs
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: friendUUIDs
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: stake_from
+          schema:
+            type: integer
+        - in: query
+          name: stake_to
+          schema:
+            type: integer
+        - in: query
+          name: sort
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeList'
+        400:
+          description: invalid request
+        500:
+          description: internal error
+
+  /v1/challenges/{challengeUUID}:
+    get:
+      description: Get challenge
+      parameters:
+        - in: path
+          name: challengeUUID
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Challenge'
+        400:
+          description: invalid request
+        500:
+          description: internal error
+
+  /v1/rules/{rulesUUID}:
+    get:
+      description: Get challenge rules
+      parameters:
+        - in: path
+          name: rulesUUID
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeRules'
+        400:
+          description: invalid request
+        500:
+          description: internal error
+
+components:
+  schemas:
+    CreateChallengeRequest:
+      type: object
+      properties:
+        gameUUID:
+          type: string
+        type:
+          enum:
+            - PUBLIC
+            - PRIVATE
+        availableFor:
+          type: integer
+          description: challenge availability in minutes from current timestamp
+        rulesUUID:
+          type: string
+        pledgeAmount:
+          type: string
+          description: amount of sbarter tokens to pledge
+        handicap:
+          type: integer
+          description: handicap percentage
+          maximum: 50
+    ChallengeRulesList:
+      type: array
+      items:
+        $ref: '#/components/schemas/ChallengeRulesShort'
+    ChallengeRulesShort:
+      type: object
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+    ChallengeRules:
+      type: object
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        content:
+          type: string
+    Challenge:
+      type: object
+      properties:
+        creator:
+          $ref: '#/components/schemas/Gamer'
+        game:
+          $ref: '#/components/schemas/Game'
+        rules:
+          $ref: '#/components/schemas/ChallengeRulesShort'
+        pledge:
+          type: string
+        potential_win:
+          type: string
+    ChallengeList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Challenge'
+    Game:
+      type: object
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        icon:
+          type: string
+    Gamer:
+      type: object
+      properties:
+        uuid:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        avatar:
+          type: string
+servers:
+  - url: /
+    description: Current environment
+
+tags:
+  - name: test
+    description: test
+
+

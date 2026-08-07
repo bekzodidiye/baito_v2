@@ -86,16 +86,28 @@ def update_user_me(
 
     # Phone and email are login identifiers: letting one account take a value
     # another already holds would lock that user out of their own account.
+    # Clean phone number
     new_phone = update_data.get("phone")
+    if new_phone:
+        clean_phone = new_phone.replace(" ", "").replace("-", "").replace("(", "").replace(")", "").replace("+", "")
+        if len(clean_phone) == 9:
+            clean_phone = "+998" + clean_phone
+        elif len(clean_phone) == 12:
+            clean_phone = "+" + clean_phone
+        new_phone = clean_phone
+        update_data["phone"] = new_phone
+
     if new_phone and new_phone != current_user.phone:
         clash = crud.user.get_by_phone(db, phone=new_phone)
         if clash and clash.id != current_user.id:
+            print(f"Phone clash: {new_phone} already taken by {clash.id}")
             raise HTTPException(status_code=400, detail="Bu raqam allaqachon ro'yxatdan o'tgan")
 
     new_email = update_data.get("email")
     if new_email and new_email != current_user.email:
         clash = crud.user.get_by_email(db, email=new_email)
         if clash and clash.id != current_user.id:
+            print(f"Email clash: {new_email} already taken by {clash.id}")
             raise HTTPException(status_code=400, detail="Bu email allaqachon ro'yxatdan o'tgan")
 
     if "password" in update_data and update_data["password"]:

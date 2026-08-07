@@ -10,7 +10,7 @@ export function useCurrentScreen() {
     if (!p) return 'landing';
     if (p === 'jobs' || p === 'jobs') return 'jobs';
     if (p === 'chats') return 'chat';
-    if (['landing', 'calendar', 'messages', 'jobs', 'chat', 'notifications', 'profile', 'reviews', 'applications', 'verification', 'login', 'register', 'settings', 'security', 'help', 'faq', 'guide', 'terms', 'support-chat', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'admin'].includes(p)) {
+    if (['landing', 'calendar', 'messages', 'jobs', 'chat', 'notifications', 'profile', 'reviews', 'applications', 'verification', 'payments', 'login', 'register', 'settings', 'security', 'help', 'faq', 'guide', 'terms', 'support-chat', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'admin'].includes(p)) {
       return p as ScreenType;
     }
     return 'landing';

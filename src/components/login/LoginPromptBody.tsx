@@ -150,6 +150,12 @@ export const LoginPromptBody: React.FC<LoginPromptBodyProps> = ({ p }) => {
           selectedRole={selectedRole}
           regPhone={p.regPhone}
           setRegPhone={p.setRegPhone}
+          regCode={p.regCode}
+          setRegCode={p.setRegCode}
+          isCodeSent={p.isCodeSent}
+          setIsCodeSent={p.setIsCodeSent}
+          isSendingCode={p.isSendingCode}
+          sendVerificationCode={p.handleSendVerificationCode}
           regPassword={p.regPassword}
           setRegPassword={p.setRegPassword}
           regConfirmPassword={p.regConfirmPassword}

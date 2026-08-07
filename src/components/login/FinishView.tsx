@@ -1,5 +1,5 @@
 import React from 'react';
-import { Smartphone, Lock, Eye, EyeOff, Check, ArrowRight } from 'lucide-react';
+import { Smartphone, Lock, Eye, EyeOff, Check, ArrowRight, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 
@@ -11,6 +11,12 @@ interface FinishViewProps {
   setRegPassword: (val: string) => void;
   regConfirmPassword: string;
   setRegConfirmPassword: (val: string) => void;
+  regCode: string;
+  setRegCode: (val: string) => void;
+  isCodeSent: boolean;
+  setIsCodeSent: (val: boolean) => void;
+  isSendingCode: boolean;
+  sendVerificationCode: () => void;
   regShowPassword: boolean;
   setRegShowPassword: (val: boolean) => void;
   agreeTerms: boolean;
@@ -29,6 +35,12 @@ export const FinishView: React.FC<FinishViewProps> = ({
   setRegPassword,
   regConfirmPassword,
   setRegConfirmPassword,
+  regCode,
+  setRegCode,
+  isCodeSent,
+  setIsCodeSent,
+  isSendingCode,
+  sendVerificationCode,
   regShowPassword,
   setRegShowPassword,
   agreeTerms,
@@ -62,9 +74,21 @@ export const FinishView: React.FC<FinishViewProps> = ({
 
         {/* Telefon raqam */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-black text-slate-450 px-1 uppercase tracking-wider">
-            {t.finishPhone}
-          </label>
+          <div className="flex justify-between items-center px-1">
+            <label className="text-[10px] font-black text-slate-450 uppercase tracking-wider">
+              {t.finishPhone}
+            </label>
+            {isCodeSent && (
+              <button
+                type="button"
+                onClick={() => setIsCodeSent(false)}
+                className="text-[10px] font-bold text-brand-primary hover:text-brand-primary/80 transition-colors flex items-center gap-1"
+              >
+                <Edit2 size={12} />
+                Tahrirlash
+              </button>
+            )}
+          </div>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
               <Smartphone size={16} className="stroke-[2.2]" />
@@ -74,11 +98,64 @@ export const FinishView: React.FC<FinishViewProps> = ({
               required
               value={regPhone}
               onChange={(e) => setRegPhone(e.target.value)}
+              disabled={isCodeSent}
               placeholder={t.phonePlaceholder}
-              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-4 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+              className={`w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-24 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs ${isCodeSent ? 'text-slate-400 bg-slate-50 border-transparent cursor-not-allowed' : 'text-slate-755'}`}
             />
+            {!isCodeSent && (
+              <button
+                type="button"
+                onClick={sendVerificationCode}
+                disabled={isSendingCode || regPhone.length < 9}
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-[10px] font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSendingCode ? '...' : (t.sendCode || 'Kodni olish')}
+              </button>
+            )}
+            {isCodeSent && (
+               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500">
+                 <Check size={16} className="stroke-[2.5]" />
+               </div>
+            )}
           </div>
         </div>
+
+        {/* Tasdiqlash kodi */}
+        {isCodeSent && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="space-y-1.5 overflow-hidden"
+          >
+            <label className="text-[10px] font-black text-slate-450 px-1 uppercase tracking-wider">
+              {t.verifyCode || 'Tasdiqlash kodi'}
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                <Lock size={16} className="stroke-[2.2]" />
+              </span>
+              <input
+                type="text"
+                required
+                value={regCode}
+                onChange={(e) => setRegCode(e.target.value)}
+                placeholder="1234"
+                maxLength={6}
+                className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-4 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+              />
+            </div>
+            <div className="flex justify-end pt-1 pr-1">
+               <button
+                 type="button"
+                 onClick={sendVerificationCode}
+                 disabled={isSendingCode}
+                 className="text-[10px] font-bold text-brand-primary hover:text-brand-primary/80 transition-colors disabled:opacity-50"
+               >
+                 {isSendingCode ? '...' : 'Qayta yuborish'}
+               </button>
+            </div>
+          </motion.div>
+        )}
 
         {/* Parol yaratish */}
         <div className="space-y-1.5">

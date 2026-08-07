@@ -2,7 +2,7 @@ import time
 import uuid
 import hmac
 import hashlib
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from app.api import deps
 from app.core.config import settings
@@ -138,6 +138,37 @@ def add_payment_card(
         isActive=card_in.isActive
     )
     db.add(card)
+    db.commit()
+    db.refresh(card)
+    return card
+
+@router.delete("/cards/{card_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_payment_card(
+    card_id: str,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    card = db.query(PaymentCard).filter(PaymentCard.id == card_id, PaymentCard.userId == current_user.id).first()
+    if not card:
+        raise HTTPException(status_code=404, detail="Card not found")
+    db.delete(card)
+    db.commit()
+    return None
+
+@router.put("/cards/{card_id}", response_model=PaymentCardInDB)
+def update_payment_card(
+    card_id: str,
+    card_in: dict,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    card = db.query(PaymentCard).filter(PaymentCard.id == card_id, PaymentCard.userId == current_user.id).first()
+    if not card:
+        raise HTTPException(status_code=404, detail="Card not found")
+    
+    if "isActive" in card_in:
+        card.isActive = card_in["isActive"]
+    
     db.commit()
     db.refresh(card)
     return card
