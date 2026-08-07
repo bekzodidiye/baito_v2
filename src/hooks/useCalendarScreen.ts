@@ -129,9 +129,9 @@ export function useCalendarScreen() {
     return isOnDay;
   }) || [];
 
-  const hasActiveJobInCurrentDay = currentDayJobs.some(j => ['confirmed', 'todo', 'completed'].includes(j.status));
+  const hasActiveJobInCurrentDay = currentDayJobs.some(j => ['confirmed', 'todo', 'completed', 'hired', 'in_progress', 'start_requested'].includes(j.status));
   if (hasActiveJobInCurrentDay) {
-    currentDayJobs = currentDayJobs.filter(j => ['confirmed', 'todo', 'completed'].includes(j.status)).slice(0, 1);
+    currentDayJobs = currentDayJobs.filter(j => ['confirmed', 'todo', 'completed', 'hired', 'in_progress', 'start_requested'].includes(j.status)).slice(0, 1);
   }
 
   const allAppliedJobs = jobs?.filter(j => {
@@ -142,13 +142,13 @@ export function useCalendarScreen() {
   }) || [];
 
   const allConfirmedJobs = jobs?.filter(j => {
-    if (j.status !== 'confirmed' && j.status !== 'todo' && j.status !== 'hired') return false;
+    if (!['confirmed', 'todo', 'hired', 'in_progress', 'start_requested'].includes(j.status)) return false;
     const relation = getJobTimeRelation(j, yearFromContext, monthFromContext, dayFromContext);
     return relation === 'future'; 
   }) || [];
 
   const allTodoJobs = jobs?.filter(j => {
-    if (j.status !== 'confirmed' && j.status !== 'todo' && j.status !== 'hired' && j.status !== 'in_progress' && j.status !== 'start_requested') return false;
+    if (!['confirmed', 'todo', 'hired', 'in_progress', 'start_requested'].includes(j.status)) return false;
     const relation = getJobTimeRelation(j, yearFromContext, monthFromContext, dayFromContext);
     return relation === 'today' || relation === 'past';
   }) || [];

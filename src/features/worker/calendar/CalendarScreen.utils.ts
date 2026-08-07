@@ -115,7 +115,7 @@ export const isOverlappingWithActiveJob = (job: Job, allJobs: Job[], yearFromCon
     endDay = parseInt(datePart.split('~')[1], 10);
   }
 
-  const activeJobs = allJobs.filter(j => ['confirmed', 'todo', 'completed', 'in_progress'].includes(j.status));
+  const activeJobs = allJobs.filter(j => ['confirmed', 'todo', 'completed', 'in_progress', 'hired', 'start_requested'].includes(j.status));
   for (let d = startDay; d <= endDay; d++) {
     if (activeJobs.some(aj => isJobOnDay(aj, d, jobYear, jobMonth))) {
       return true;
@@ -141,15 +141,15 @@ export const getDayStatusForList = (
                    (currentYear === yearFromContext && (currentMonth + 1) === monthFromContext && day > dayFromContext);
   
   if (isToday) {
-    if (jobsOnDay.some(j => j.status === 'confirmed' || j.status === 'todo' || j.status === 'in_progress')) return 'todo';
+    if (jobsOnDay.some(j => ['confirmed', 'todo', 'in_progress', 'hired', 'start_requested'].includes(j.status))) return 'todo';
     if (jobsOnDay.some(j => j.status === 'completed')) return 'completed';
     if (jobsOnDay.some(j => j.status === 'applied' || j.applied)) return 'applied';
   } else if (isFuture) {
-    if (jobsOnDay.some(j => j.status === 'confirmed' || j.status === 'todo' || j.status === 'in_progress')) return 'confirmed';
+    if (jobsOnDay.some(j => ['confirmed', 'todo', 'in_progress', 'hired', 'start_requested'].includes(j.status))) return 'confirmed';
     if (jobsOnDay.some(j => j.status === 'completed')) return 'completed';
     if (jobsOnDay.some(j => j.status === 'applied' || j.applied)) return 'applied';
   } else {
-    if (jobsOnDay.some(j => j.status === 'confirmed' || j.status === 'todo' || j.status === 'in_progress')) return 'todo';
+    if (jobsOnDay.some(j => ['confirmed', 'todo', 'in_progress', 'hired', 'start_requested'].includes(j.status))) return 'todo';
     if (jobsOnDay.some(j => j.status === 'completed')) return 'completed';
     if (jobsOnDay.some(j => j.status === 'applied' || j.applied)) return 'applied';
   }
