@@ -1,18 +1,22 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useJobsData } from "../../context/useJobsData";
 import { LANDING_TEXTS, MOCK_LIVE_SHIFTS } from './LandingData';
 import { Briefcase, Building2, Search, ArrowRight, Wallet, CheckCircle2, BadgeCheck, MapPin, Clock, Percent } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { LandingHeroBackground } from './LandingHeroBackground';
+import { LandingHeroShiftPreview } from './LandingHeroShiftPreview';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface LandingHeroProps {
   onSelectRole: (role: 'worker' | 'employer') => void;
 }
 
 export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
-  const { setCurrentScreen, language, isLoggedIn, jobs, requireAuth } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language, isLoggedIn, requireAuth } = useApp();
+  const { jobs } = useJobsData();
   const [activeTab, setActiveTab] = useState<'worker' | 'employer'>('worker');
   const [searchQuery, setSearchQuery] = useState('');
-  const [shiftIndex, setShiftIndex] = useState(0);
 
   const t = LANDING_TEXTS[language as keyof typeof LANDING_TEXTS] || LANDING_TEXTS.uz;
 
@@ -31,21 +35,11 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
     return list.length > 0 ? list : MOCK_LIVE_SHIFTS;
   }, [realShifts]);
 
-  const currentShift = displayShifts[shiftIndex % displayShifts.length] || displayShifts[0] || MOCK_LIVE_SHIFTS[0];
-
   const isFirstRender = useRef(true);
 
   useEffect(() => {
     isFirstRender.current = false;
   }, []);
-
-  useEffect(() => {
-    if (displayShifts.length === 0) return;
-    const timer = setInterval(() => {
-      setShiftIndex(prev => (prev + 1) % displayShifts.length);
-    }, 7000);
-    return () => clearInterval(timer);
-  }, [displayShifts.length]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,31 +53,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-white to-slate-50/80 text-slate-900 font-sans py-12 lg:py-20 border-b border-slate-200/80 min-h-[calc(100vh-4.5rem)] sm:min-h-[calc(100vh-5rem)] flex flex-col justify-center">
-      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
-        {/* Background photo - authentic active shift workforce atmosphere */}
-        <img 
-          src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=2000&q=80" 
-          alt="Baito active daily shift work atmosphere" 
-          referrerPolicy="no-referrer"
-          className="w-full h-full object-cover opacity-10 filter brightness-105 contrast-105 object-center mix-blend-multiply transition-all duration-500"
-        />
-        {/* Soft brand gradient overlays for seamless light theme blending */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/90 via-white/80 to-sky-50/90" />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-transparent to-slate-50/90" />
-        
-        {/* Subtle geometric dot grid pattern */}
-        <div 
-          className="absolute inset-0 opacity-[0.25]" 
-          style={{
-            backgroundImage: `radial-gradient(#2563EB 0.75px, transparent 0.75px)`,
-            backgroundSize: `24px 24px`
-          }}
-        />
-
-        {/* Ambient glow halos */}
-        <div className="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-blue-200/40 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute top-1/2 right-5 w-[400px] h-[400px] bg-sky-200/40 rounded-full blur-[120px] pointer-events-none" />
-      </div>
+      <LandingHeroBackground />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-2">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
@@ -194,95 +164,12 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
             </div>
           </div>
 
-          {/* Right Column - Shift Preview Card */}
-          <div className="lg:col-span-5 relative">
-            <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 relative overflow-hidden text-slate-900 backdrop-blur-xl">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse" />
-                  <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                    {language === 'ru' ? 'Свежие вакансии' : language === 'en' ? 'Active Daily Shifts' : 'Kunlik smenalar'}
-                  </span>
-                </div>
-                <div className="flex gap-1.5">
-                  {displayShifts.map((_, idx) => (
-                    <button 
-                      key={idx} 
-                      onClick={() => setShiftIndex(idx)} 
-                      className={`h-1.5 rounded-full transition-all cursor-pointer ${shiftIndex === idx ? 'w-6 bg-brand-primary' : 'w-2 bg-slate-200 hover:bg-slate-300'}`} 
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="relative min-h-[350px]">
-                <AnimatePresence mode="wait">
-                  <motion.div 
-                    key={currentShift.id || shiftIndex} 
-                    initial={{ opacity: 0, y: 10, scale: 0.99 }} 
-                    animate={{ opacity: 1, y: 0, scale: 1 }} 
-                    exit={{ opacity: 0, y: -10, scale: 0.99 }} 
-                    transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }} 
-                    className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-5 space-y-4 shadow-sm min-h-[350px] flex flex-col justify-between"
-                  >
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="px-2.5 py-1 rounded-md bg-blue-50 text-brand-primary text-[10px] font-black uppercase border border-blue-200/80">
-                        {currentShift.badge} • Kunlik smena
-                      </span>
-                      <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1 bg-white px-2.5 py-0.5 rounded-full border border-slate-200 shadow-2xs">
-                        ⭐ 4.9 <span className="text-slate-400 font-normal">(120+)</span>
-                      </span>
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-black text-slate-900 leading-snug">{language === 'ru' ? (currentShift as any).titleRu || currentShift.titleUz : currentShift.titleUz}</h3>
-                      <p className="text-xs font-extrabold text-slate-500 flex items-center gap-1.5 mt-1">
-                        <Building2 size={14} className="text-brand-primary shrink-0" />
-                        <span>{currentShift.company}</span>
-                      </p>
-                    </div>
-
-                    <div className="text-base sm:text-lg font-black text-brand-primary pt-2.5 border-t border-slate-200/60 flex items-center justify-between">
-                      <span>{currentShift.pay}</span>
-                      <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">Kunlik to'lov</span>
-                    </div>
-
-                    <div className="space-y-2 text-xs text-slate-600 font-semibold pt-2 border-t border-slate-200/60">
-                      <div className="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-slate-200/80">
-                        <MapPin size={15} className="text-brand-primary shrink-0" />
-                        <span className="leading-tight text-slate-800 font-bold">{currentShift.district}</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-slate-200/80">
-                        <Clock size={15} className="text-sky-600 shrink-0" />
-                        <span className="leading-tight text-slate-800 font-bold">{currentShift.time}</span>
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-200/60 space-y-1.5">
-                      <div className="flex flex-wrap gap-1.5 pt-0.5">
-                        {((currentShift as any).perksUz || ["⚡ Kunlik to'lov", "🛡️ Baito Kafolati", "🍲 Tushlik"]).map((perk: string, i: number) => (
-                          <span key={i} className="text-[10px] font-bold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-md shadow-2xs">{perk}</span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button onClick={() => onSelectRole('worker')} className="w-full py-3 rounded-xl bg-brand-primary hover:bg-blue-700 text-white text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98] shadow-lg shadow-blue-600/20">
-                    <CheckCircle2 size={16} className="text-white shrink-0" />
-                    <span>Ushbu smenaga ariza topshirish</span>
-                  </button>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-              <div className="grid grid-cols-3 gap-2.5 text-center pt-1">
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs"><div className="text-xs font-black text-brand-primary">{t.stat1}</div><div className="text-[10px] font-bold text-slate-600">{t.stat1Label}</div></div>
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs"><div className="text-xs font-black text-emerald-600">{t.stat2}</div><div className="text-[10px] font-bold text-slate-600">{t.stat2Label}</div></div>
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs"><div className="text-xs font-black text-sky-600">{t.stat3}</div><div className="text-[10px] font-bold text-slate-600">{t.stat3Label}</div></div>
-              </div>
-            </div>
-          </div>
+          <LandingHeroShiftPreview 
+            displayShifts={displayShifts} 
+            language={language} 
+            onSelectRole={onSelectRole} 
+            t={t} 
+          />
         </div>
       </div>
     </section>

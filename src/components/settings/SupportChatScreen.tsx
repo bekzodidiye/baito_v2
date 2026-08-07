@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ArrowLeft, Send, User } from 'lucide-react';
 import { Logo } from '../Logo';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface ChatMessage {
   id: string;
@@ -11,7 +12,8 @@ interface ChatMessage {
 }
 
 export const SupportChatScreen: React.FC = () => {
-  const { setCurrentScreen } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',

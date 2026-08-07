@@ -2,6 +2,7 @@ import React from 'react';
 import { AdminJob } from './types';
 import { AlertTriangle, ShieldCheck, ArrowRightLeft, DollarSign, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { showToast } from '../../utils/toast';
 
 interface AdminDisputesProps {
   jobs: AdminJob[];
@@ -9,18 +10,17 @@ interface AdminDisputesProps {
 }
 
 export const AdminDisputes: React.FC<AdminDisputesProps> = ({ jobs, onChangeJobStatus }) => {
-  const { setToastMessage } = useApp();
+  const { } = useApp();
 
   const disputeJobs = jobs.filter((j) => j.status === 'dispute' || j.status === 'in_progress');
 
   const handleResolve = (jobId: string, winner: 'employer' | 'worker') => {
     onChangeJobStatus(jobId, winner === 'worker' ? 'completed' : 'cancelled');
-    setToastMessage(
+    (
       winner === 'worker'
         ? "Nizo hal qilindi: Escrow mablag'i Ishchiga o'tkazildi"
         : "Nizo hal qilindi: Escrow mablag'i Ish beruvchiga qaytarildi"
     );
-    setTimeout(() => setToastMessage(null), 3500);
   };
 
   return (

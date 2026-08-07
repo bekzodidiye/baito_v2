@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useJobsData } from "../../context/useJobsData";
 import { LANDING_TEXTS, MOCK_LIVE_SHIFTS } from './LandingData';
 import { Compass, MapPin, Building2, Clock, ArrowRight, Info, CheckCircle2 } from 'lucide-react';
 import { MapViewScreen } from '../map/MapViewScreen';
 import { motion } from 'motion/react';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface LandingInteractiveMapPreviewProps {
   onSelectRole: (role: 'worker' | 'employer') => void;
 }
 
 export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreviewProps> = ({ onSelectRole }) => {
-  const { setCurrentScreen, language, jobs } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language } = useApp();
+  const { jobs } = useJobsData();
   const [activeShift, setActiveShift] = useState(MOCK_LIVE_SHIFTS[0]);
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   const isFirstRender = useRef(true);

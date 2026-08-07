@@ -2,7 +2,7 @@ export const getProfileTranslations = (language: string) => {
   const t = {
     uz: {
       profileTitle: 'Mening profilim',
-      workerRole: 'Professional Ishchi',
+      workerRole: 'Tajribali Ishchi',
       employerRole: 'Ish Beruvchi',
       jobs: 'Ishlar',
       rating: 'Reyting',
@@ -43,7 +43,7 @@ export const getProfileTranslations = (language: string) => {
     },
     ru: {
       profileTitle: 'Мой профиль',
-      workerRole: 'Профессиональный Работник',
+      workerRole: 'Опытный работник',
       employerRole: 'Работодатель',
       jobs: 'Работы',
       rating: 'Рейтинг',
@@ -84,7 +84,7 @@ export const getProfileTranslations = (language: string) => {
     },
     en: {
       profileTitle: 'My Profile',
-      workerRole: 'Professional Worker',
+      workerRole: 'Experienced Worker',
       employerRole: 'Employer',
       jobs: 'Jobs',
       rating: 'Rating',
@@ -116,7 +116,7 @@ export const getProfileTranslations = (language: string) => {
       withdrawSuccessMsg: 'Request submitted! Money will be credited to your card within 24 hours.',
       requiredFields: 'First and last name cannot be empty!',
       savedSuccess: 'Profile updated successfully!',
-      demoDesc: 'This profile data serves to track your professional performance on Baito.',
+      demoDesc: 'This profile data serves to track your performance on Baito.',
       vigo: 'VIGO v1.0.0',
       activitySec: 'Work Activity',
       settingsSec: 'Settings',

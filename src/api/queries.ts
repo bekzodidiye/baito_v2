@@ -1,56 +1,75 @@
-import { initialJobs, initialChats } from '../mockData';
-import { Job, Chat, Message } from '../types';
+import { apiClient } from './client';
+import { Job, Chat } from '../types';
 
-/* 
-  FRONTEND API STUBS:
-  Backend must implement these endpoints returning matching JSON shapes.
-  Currently using mockData to simulate backend responses.
-*/
-
-// Fetch jobs from backend
-// Backend API expectation: GET /api/jobs -> { jobs: Job[] }
 export const fetchJobs = async (): Promise<Job[]> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  // Try to load from localStorage first to maintain state during dev
-  try {
-    const saved = localStorage.getItem('baito_jobs');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-  } catch (e) {}
-  
-  return initialJobs;
+  return await apiClient('/jobs');
 };
 
-// Fetch chats from backend
-// Backend API expectation: GET /api/chats -> { chats: Chat[] }
-export const fetchChats = async (): Promise<Chat[]> => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  try {
-    const saved = localStorage.getItem('baito_chats');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-  } catch (e) {}
-
-  return initialChats;
+export const fetchChats = async () => {
+  return await apiClient('/chats');
 };
 
-// Update jobs (useful for bookmark/apply actions before backend is ready)
-// Backend API expectation: POST /api/jobs/:id/bookmark, POST /api/jobs/:id/apply
-export const updateJobsStorage = (jobs: Job[]) => {
-  try {
-    localStorage.setItem('baito_jobs', JSON.stringify(jobs));
-  } catch (e) {}
+export const fetchChatMessages = async (chatId: string) => {
+  return await apiClient(`/chats/${chatId}/messages`);
 };
 
-// Update chats (useful for sending messages before backend is ready)
-// Backend API expectation: POST /api/chats/:id/messages
-export const updateChatsStorage = (chats: Chat[]) => {
-  try {
-    localStorage.setItem('baito_chats', JSON.stringify(chats));
-  } catch (e) {}
+export const createChatApi = async (employerId: string, jobId?: string) => {
+  return await apiClient('/chats', {
+    method: 'POST',
+    body: JSON.stringify({ employerId, jobId })
+  });
+};
+
+export const bookmarkJobApi = async (jobId: string) => {
+  return await apiClient(`/jobs/${jobId}/bookmark`, { method: 'POST' });
+};
+
+export const applyToJobApi = async (jobId: string) => {
+  return await apiClient(`/jobs/${jobId}/apply`, { method: 'POST' });
+};
+
+export const requestStartJobApi = async (jobId: string) => {
+  return await apiClient(`/jobs/${jobId}/request-start`, { method: 'POST' });
+};
+
+export const confirmStartJobApi = async (jobId: string) => {
+  return await apiClient(`/jobs/${jobId}/confirm-start`, { method: 'POST' });
+};
+
+export const fetchNotificationsApi = async () => {
+  return await apiClient('/notifications');
+};
+
+export const markAllNotificationsReadApi = async () => {
+  return await apiClient('/notifications/read-all', { method: 'POST' });
+};
+
+// Storage updates are deprecated since we use real backend
+export const updateJobsStorage = (_jobs?: any[]) => {};
+export const updateChatsStorage = (_chats?: any[]) => {};
+
+export const loginApi = async (phone: string, password: string) => {
+  const formData = new URLSearchParams();
+  formData.append('username', phone);
+  formData.append('password', password);
+
+  const response = await fetch('/api/v1/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: formData.toString()
+  });
+
+  if (!response.ok) {
+    throw new Error('Login failed');
+  }
+  return response.json();
+};
+
+export const registerApi = async (data: any) => {
+  return await apiClient('/users', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
 };

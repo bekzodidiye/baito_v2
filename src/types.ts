@@ -3,6 +3,7 @@ export interface Job {
   title: string;
   company: string;
   logoUrl?: string;
+  imageUrl?: string;
   salary: string;
   tags: string[];
   location: string;
@@ -12,7 +13,7 @@ export interface Job {
   urgent: boolean;
   applied: boolean;
   bookmarked: boolean;
-  status: 'applied' | 'confirmed' | 'todo' | 'completed' | 'none' | 'open' | 'in_progress';
+  status: 'applied' | 'confirmed' | 'todo' | 'completed' | 'none' | 'open' | 'in_progress' | 'start_requested' | 'hired';
   description: string;
   hourlyRate?: string;
   transportRate?: string;
@@ -23,6 +24,12 @@ export interface Job {
   hiredCount?: number;
   vacancies?: number;
   addressDetails?: string;
+  workDate?: string;
+  workTime?: string;
+  neededWorkers?: string;
+  responsibilities?: string;
+  requirements?: string;
+  importantNote?: string;
 }
 
 export interface Message {
@@ -60,7 +67,7 @@ export interface Application {
   candidatePhone: string;
   candidateAvatar?: string;
   candidateExperience: string;
-  status: 'applied' | 'approved' | 'rejected' | 'hired' | 'completed';
+  status: 'applied' | 'approved' | 'rejected' | 'hired' | 'completed' | 'start_requested';
   appliedDate: string;
   rating?: number;
 }

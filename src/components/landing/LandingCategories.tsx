@@ -2,13 +2,15 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { LANDING_TEXTS, JOB_CATEGORIES } from './LandingData';
 import { Truck, Utensils, Package, HardHat, ShoppingBag, Briefcase, ArrowRight, Layers } from 'lucide-react';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface LandingCategoriesProps {
   onSelectRole: (role: 'worker' | 'employer') => void;
 }
 
 export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRole }) => {
-  const { setCurrentScreen, language, isLoggedIn, requireAuth, setFilterType } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language, isLoggedIn, requireAuth, setFilterType } = useApp();
   const t = LANDING_TEXTS[language as keyof typeof LANDING_TEXTS] || LANDING_TEXTS.uz;
 
   const getCategoryIcon = (iconName: string) => {

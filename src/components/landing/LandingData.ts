@@ -191,7 +191,7 @@ export const MOCK_LIVE_SHIFTS = [
     badge: 'Tezkor',
     urgent: true,
     descriptionUz: "Avtomobillarni sirtqi va salondan tozalash, kimyoviy ishlov berish va sifatli yuvish ishlarini bajarish.",
-    descriptionRu: "Качественная наружная мойка и чистка салона автомобилей с использованием профессиональной химии.",
+    descriptionRu: "Качественная наружная мойка и чистка салона автомобилей с использованием специальной химии.",
     perksUz: ["💦 Zamonaviy uskunalar", "💸 Ish hajmidan bonus", "🍲 Issiq tushlik"]
   }
 ];

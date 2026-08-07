@@ -1,28 +1,21 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp, getJobDates } from '../context/AppContext';
+import { useJobsData } from "../context/useJobsData";
 import { Job } from '../types';
 import { getTranslatedJob } from '../jobTranslations';
-import { areDistrictNamesEqual, getLatLng, calculateDistance } from '../components/map/mapUtils';
 import { translations, translateRegion } from '../translations';
 import { useUzbekistanGeoJson } from '../components/map/useUzbekistanGeoJson';
-import { getJobCategory } from '../utils/jobCategoryUtils';
+import { useJobSearchFilters } from './useJobSearchFilters';
+import { useCurrentScreen } from '../hooks/useCurrentScreen';
 
 export function useJobSearchScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { districtsGeoJsonData } = useUzbekistanGeoJson();
-  const {
-    jobs: rawJobs,
-    toggleBookmark, 
-    applyToJob,
-    filterLocation,
-    setFilterLocation,
-    setShowRegionSelector,
-    setCurrentScreen,
-    language,
-    activeCalendarDay
-  } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { filterLocation, setFilterLocation, setShowRegionSelector, language, activeCalendarDay } = useApp();
+  const { jobs: rawJobs, toggleBookmark, applyToJob } = useJobsData();
 
   const jobs = useMemo(() => {
     return rawJobs.map(j => getTranslatedJob(j, language));
@@ -35,7 +28,6 @@ export function useJobSearchScreen() {
   const [filterCategory, setFilterCategory] = useState('Barchasi');
   const [sortBy, setSortBy] = useState<'yangilari' | 'maosh' | 'yaqin' | 'mos'>('yangilari');
   
-  // Derive selectedJob from URL param
   const selectedJob = useMemo(() => {
     if (!id) return null;
     return jobs.find(j => j.id === id) || null;
@@ -70,7 +62,6 @@ export function useJobSearchScreen() {
         (error) => {
           console.error('Error getting location:', error);
           setIsRequestingLocation(false);
-          // Fallback location (e.g. Tashkent center) if permission denied
           setUserLocation({ lat: 41.311081, lng: 69.240562 });
           setSortBy('yaqin');
         },
@@ -93,63 +84,16 @@ export function useJobSearchScreen() {
     setVisibleCount(10);
   }, [searchTerm, filterLocation, filterType, filterCategory, sortBy]);
 
-  const filteredJobs = useMemo(() => {
-    return jobs.filter(job => {
-      const matchesSearch =
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesLocation =
-        filterLocation === 'Barchasi' ||
-        (job.rawLocation || job.location).toLowerCase().includes(filterLocation.toLowerCase()) ||
-        areDistrictNamesEqual((job.rawLocation || job.location), filterLocation);
-      const matchesType =
-        filterType === 'Barchasi' ||
-        job.tags.some(tag => tag.toLowerCase() === filterType.toLowerCase());
-
-      const jobCatInfo = getJobCategory(job);
-      const matchesCategory =
-        filterCategory === 'Barchasi' ||
-        job.category === filterCategory ||
-        jobCatInfo.id === filterCategory;
-
-      return matchesSearch && matchesLocation && matchesType && matchesCategory;
-    });
-  }, [jobs, searchTerm, filterLocation, filterType, filterCategory]);
-
-  const sortedJobs = useMemo(() => {
-    let result = [...filteredJobs];
-    
-    // Calculate distances if userLocation is available
-    if (userLocation) {
-      result = result.map(job => {
-        const latLng = getLatLng(job, districtsGeoJsonData);
-        const dist = calculateDistance(userLocation.lat, userLocation.lng, latLng.lat, latLng.lng);
-        return { ...job, distanceKm: dist };
-      });
-    }
-
-    if (sortBy === 'maosh') {
-      result.sort((a, b) => {
-        const aVal = parseInt(a.salary.replace(/[^0-9]/g, '')) || 0;
-        const bVal = parseInt(b.salary.replace(/[^0-9]/g, '')) || 0;
-        return bVal - aVal;
-      });
-    } else if (sortBy === 'yaqin' && userLocation) {
-      result.sort((a, b) => {
-        const aDist = a.distanceKm || 0;
-        const bDist = b.distanceKm || 0;
-        return aDist - bDist;
-      });
-    } else if (sortBy === 'mos') {
-      result.sort((a, b) => {
-        if (a.urgent && !b.urgent) return -1;
-        if (!a.urgent && b.urgent) return 1;
-        return 0;
-      });
-    }
-    return result;
-  }, [filteredJobs, sortBy, userLocation, districtsGeoJsonData]);
+  const { filteredJobs, sortedJobs } = useJobSearchFilters({
+    jobs,
+    searchTerm,
+    filterLocation,
+    filterType,
+    filterCategory,
+    sortBy,
+    userLocation,
+    districtsGeoJsonData
+  });
 
   const activeDesktopJob = selectedJob || sortedJobs[0] || null;
 

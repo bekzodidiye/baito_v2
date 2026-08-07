@@ -3,13 +3,19 @@ import { EmployerPaymentModal } from './EmployerPaymentModal';
 import { useEmployer } from '../../hooks/useEmployer';
 import { useApp } from '../../context/AppContext';
 import { Settings, DollarSign, Building2, Phone, MapPin, Edit3, LogOut, ShieldCheck, HelpCircle } from 'lucide-react';
+import { EmployerProfileInfo } from './EmployerProfileInfo';
 import { motion } from 'motion/react';
 import { EmployerPageHeader } from './EmployerPageHeader';
+import { showToast } from '../../utils/toast';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { EmployerEditProfileModal } from './EmployerEditProfileModal';
 
 export const EmployerProfile: React.FC = () => {
   const { language, balance } = useEmployer();
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const { userProfile, setIsLoggedIn, setUserProfile, setCurrentScreen, setToastMessage } = useApp();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { userProfile, logout, setUserProfile } = useApp();
   
   const companyName = userProfile?.firstName || 'Korzinka.uz';
 
@@ -33,8 +39,7 @@ export const EmployerProfile: React.FC = () => {
               const newName = prompt(language === "uz" ? "Kompaniya nomini kiriting:" : "Введите название компании:", companyName);
               if (newName && newName.trim()) {
                 setUserProfile({ ...userProfile, firstName: newName.trim() });
-                setToastMessage(language === "uz" ? "Profil yangilandi!" : "Профиль обновлен!");
-                setTimeout(() => setToastMessage(null), 3000);
+                showToast(language === "uz" ? "Profil yangilandi!" : "Профиль обновлен!");
               }
             }} 
             className="p-2 text-slate-400 hover:text-brand-primary bg-slate-50 hover:bg-brand-primary/10 rounded-xl transition-colors cursor-pointer outline-none"
@@ -82,10 +87,9 @@ export const EmployerProfile: React.FC = () => {
           onClick={() => {
             if (userProfile) {
               setUserProfile({ ...userProfile, selectedRole: 'worker' });
-              setToastMessage(
+              (
                 language === 'uz' ? "Tizimga Xodim sifatida kirdingiz" : language === 'ru' ? "Вы вошли как Работник" : "You logged in as Worker"
               );
-              setTimeout(() => setToastMessage(null), 3500);
               setCurrentScreen('xarita');
             }
           }}
@@ -133,46 +137,11 @@ export const EmployerProfile: React.FC = () => {
       </div>
 
       {/* Info List */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-        className="bg-white rounded-2xl shadow-xs border border-slate-100 overflow-hidden"
-      >
-        <div className="p-4 sm:p-5 border-b border-slate-50 flex items-center gap-4 hover:bg-slate-50/50 transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
-            <Building2 size={18} />
-          </div>
-          <div className="flex-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-              {language === 'uz' ? "Tashkilot nomi" : language === 'ru' ? "Название организации" : "Organization name"}
-            </p>
-            <p className="text-sm font-black text-slate-800">{companyName} MChJ</p>
-          </div>
-        </div>
-
-        <div className="p-4 sm:p-5 border-b border-slate-50 flex items-center gap-4 hover:bg-slate-50/50 transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
-            <Phone size={18} />
-          </div>
-          <div className="flex-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-              {language === 'uz' ? "Telefon raqam" : language === 'ru' ? "Номер телефона" : "Phone number"}
-            </p>
-            <p className="text-sm font-black text-slate-800">+998 90 123 45 67</p>
-          </div>
-        </div>
-
-        <div className="p-4 sm:p-5 border-b border-slate-50 flex items-center gap-4 hover:bg-slate-50/50 transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
-            <MapPin size={18} />
-          </div>
-          <div className="flex-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-              {language === 'uz' ? "Manzil" : language === 'ru' ? "Адрес" : "Address"}
-            </p>
-            <p className="text-sm font-black text-slate-800">Toshkent sh., Yunusobod t., 14-kvartal</p>
-          </div>
-        </div>
-      </motion.div>
+      <EmployerProfileInfo
+        companyName={companyName}
+        phone={userProfile?.phone || '+998 ** *** ** **'}
+        language={language}
+      />
 
       {/* Support and Logout */}
       <div className="flex flex-col gap-3 mt-2">
@@ -186,14 +155,34 @@ export const EmployerProfile: React.FC = () => {
 
         <motion.button 
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          onClick={() => setIsLoggedIn(false)}
+          onClick={() => logout()}
           className="w-full bg-rose-50 p-4 rounded-2xl border border-rose-100 flex items-center justify-center gap-2 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer outline-none font-bold text-xs"
         >
           <LogOut size={16} className="stroke-[2.5]" />
           <span>{language === 'uz' ? "Tizimdan chiqish" : language === 'ru' ? "Выйти из системы" : "Log out"}</span>
         </motion.button>
       </div>
+      
       {isPaymentModalOpen && <EmployerPaymentModal onClose={() => setIsPaymentModalOpen(false)} />}
+      <EmployerEditProfileModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        language={language}
+        currentName={companyName}
+        currentPhone={userProfile?.phone || ''}
+        onSave={async (name, phone) => {
+          if (userProfile) {
+            setUserProfile({ ...userProfile, firstName: name, phone: phone });
+            // In a real app, this would also call an API
+            const { apiClient } = await import('../../api/client');
+            await apiClient('/users/me', {
+              method: 'PUT',
+              body: JSON.stringify({ name, phone, role: 'employer' })
+            }).catch(console.error);
+          }
+        }}
+      />
+
     </div>
   );
 };

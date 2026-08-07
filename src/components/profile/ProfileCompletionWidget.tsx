@@ -2,13 +2,15 @@ import React from 'react';
 import { Target, ChevronRight, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useApp } from '../../context/AppContext';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface ProfileCompletionWidgetProps {
   language: 'uz' | 'ru' | 'en';
 }
 
 export const ProfileCompletionWidget: React.FC<ProfileCompletionWidgetProps> = ({ language }) => {
-  const { setCurrentScreen } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  
   const missingSections = language === 'uz' 
     ? ['Ish tajribasi', "Ta'lim"] 
     : language === 'ru' 

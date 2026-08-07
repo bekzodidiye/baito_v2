@@ -1,8 +1,11 @@
 import { useApp } from '../context/AppContext';
 import { getTranslations } from '../components/login/VerificationPendingScreen.utils';
+import { showToast } from '../utils/toast';
+import { useCurrentScreen } from '../hooks/useCurrentScreen';
 
 export const useVerificationPending = () => {
-  const { language, setCurrentScreen, setToastMessage, userProfile } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language, userProfile } = useApp();
   const { t, stepT } = getTranslations(language);
 
   const handleDashboardClick = () => {
@@ -14,8 +17,7 @@ export const useVerificationPending = () => {
   };
 
   const handleSupportClick = () => {
-    setToastMessage(t.supportToast);
-    setTimeout(() => setToastMessage(null), 3000);
+    showToast(t.supportToast);
   };
 
   return {

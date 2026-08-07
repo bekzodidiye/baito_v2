@@ -71,7 +71,7 @@ export const jobDataEn2: Record<string, any> = {
     salary: '230,000 UZS / day',
     tags: ["3 days", "Lodging available"],
     location: 'Tashkent reg., Ortachirchiq',
-    description: 'Active guys needed to wash, spin and hang carpets in dryer rooms using professional machinery. Easy to learn, training on the first day.',
+    description: 'Active guys needed to wash, spin and hang carpets in dryer rooms using specialized machinery. Easy to learn, training on the first day.',
     hourlyRate: '28,750 UZS',
     transportRate: 'Lunch provided',
     durationLabel: '3 days'

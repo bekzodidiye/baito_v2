@@ -3,9 +3,10 @@ import { Job, Chat, Message } from '../types';
 export type ScreenType = 'landing' | 'kalendar' | 'qidiruv' | 'xabarlar' | 'xarita' | 'chat' | 'bildirishnomalar' | 'profil' | 'yakunlash' | 'login' | 'register' | 'sozlamalar' | 'xavfsizlik' | 'yordam' | 'faq' | 'qollanma' | 'shartlar' | 'support-chat' | 'employer-dashboard' | 'employer-jobs' | 'employer-applicants' | 'employer-chats' | 'employer-profile' | 'employer-analytics' | 'employer-post' | 'admin';
 
 export interface UserProfile {
+  id: string;
   firstName: string;
   lastName: string;
-  selectedRole: 'worker' | 'employer';
+  selectedRole: 'worker' | 'employer' | 'admin';
   birthDate: string;
   phone: string;
   docFileName1: string;
@@ -13,12 +14,7 @@ export interface UserProfile {
 }
 
 export interface AppContextType {
-  currentScreen: ScreenType;
-  setCurrentScreen: (screen: ScreenType) => void;
-  jobs: Job[];
-  setJobs: React.Dispatch<React.SetStateAction<Job[]>>;
-  chats: Chat[];
-  setChats: React.Dispatch<React.SetStateAction<Chat[]>>;
+
   selectedChatId: string | null;
   setSelectedChatId: (id: string | null) => void;
   employerSelectedChatId: string | null;
@@ -33,10 +29,7 @@ export interface AppContextType {
   setFilterType: (type: string) => void;
   sortBy: 'yangilari' | 'maosh';
   setSortBy: (sort: 'yangilari' | 'maosh') => void;
-  applyToJob: (jobId: string) => boolean;
-  toggleBookmark: (jobId: string) => void;
-  sendMessage: (chatId: string, text: string) => void;
-  addNewMessage: (chatId: string, sender: 'user' | 'recruiter', text: string, hasMap?: boolean, mapLocation?: string) => void;
+
   unreadNotificationsCount: number;
   setUnreadNotificationsCount: React.Dispatch<React.SetStateAction<number>>;
   activeCalendarFilter: 'all' | 'applied' | 'confirmed' | 'todo' | 'completed';
@@ -50,7 +43,7 @@ export interface AppContextType {
   messagesSearchOpen: boolean;
   setMessagesSearchOpen: (open: boolean) => void;
   toastMessage: string | null;
-  setToastMessage: (msg: string | null) => void;
+
   language: 'uz' | 'ru' | 'en';
   setLanguage: (lang: 'uz' | 'ru' | 'en') => void;
   isLoggedIn: boolean;
@@ -61,4 +54,5 @@ export interface AppContextType {
   setHasSeenTour: (seen: boolean) => void;
   requireAuth: (targetScreen?: ScreenType, action?: () => void) => boolean;
   executePendingRedirect: () => boolean;
+  logout: () => void;
 }

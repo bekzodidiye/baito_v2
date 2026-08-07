@@ -54,7 +54,9 @@ export interface AdminTransaction {
   id: string;
   jobId?: string;
   employerId: string;
+  employerName?: string;
   workerId?: string;
+  workerName?: string;
   amount: string;
   platformFee: string;
   type: string;

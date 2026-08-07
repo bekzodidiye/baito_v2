@@ -1,31 +1,32 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { useJobsData } from "../context/useJobsData";
 import { getProfileTranslations } from '../components/profile/ProfileScreen.utils';
+import { showToast } from '../utils/toast';
+import { useCurrentScreen } from '../hooks/useCurrentScreen';
 
 export const useProfileScreen = () => {
-  const { 
-    userProfile, 
-    setUserProfile, 
-    setIsLoggedIn, 
-    setCurrentScreen, 
-    language, 
-    setLanguage, 
-    setToastMessage,
-    jobs
-  } = useApp();
-
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { userProfile, setUserProfile, logout, language, setLanguage } = useApp();
+  const { jobs } = useJobsData();
   const [balance, setBalance] = useState('0');
 
   useEffect(() => {
-    fetch('/api/me', { headers: { 'x-user-role': userProfile?.selectedRole || 'worker' } })
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.balance) {
-          setBalance(data.balance);
-        }
-      })
-      .catch(console.error);
-  }, [userProfile?.selectedRole]);
+    import('../api/client').then(({ apiClient }) => {
+      apiClient('/users/me')
+        .then(data => {
+          if (data && userProfile) {
+            setUserProfile({
+              ...userProfile,
+              firstName: data.name || userProfile.firstName,
+              phone: data.phone || userProfile.phone,
+              selectedRole: (data.role as 'worker' | 'employer') || userProfile.selectedRole,
+            });
+          }
+        })
+        .catch(console.error);
+    });
+  }, []);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedFirstName, setEditedFirstName] = useState(userProfile?.firstName || 'Ozodbek');
@@ -56,8 +57,7 @@ export const useProfileScreen = () => {
   const toggleLanguage = () => {
     const langs: ('uz' | 'ru' | 'en')[] = ['uz', 'ru', 'en'];
     const idx = langs.indexOf(language);
-    const nextLang = langs[(idx + 1) % langs.length];
-    setLanguage(nextLang);
+    setLanguage(langs[(idx + 1) % langs.length]);
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,27 +66,23 @@ export const useProfileScreen = () => {
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result && userProfile) {
-          setUserProfile({
-            ...userProfile,
-            profileImage: event.target.result as string
-          });
-          setToastMessage(language === 'uz' ? "Rasm yangilandi!" : language === 'ru' ? "Фото обновлено!" : "Photo updated!");
-          setTimeout(() => setToastMessage(null), 3000);
+          setUserProfile({ ...userProfile, profileImage: event.target.result as string });
+          showToast(language === 'uz' ? "Rasm yangilandi!" : "Photo updated!");
         }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSaveProfileSubmit = (e: React.FormEvent) => {
+  const handleSaveProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsEditing(true);
     if (!editedFirstName.trim() || !editedLastName.trim()) {
-      setToastMessage(t.requiredFields);
-      setTimeout(() => setToastMessage(null), 3000);
+      showToast(t.requiredFields);
       return;
     }
-
     const updated = {
+      id: userProfile?.id || 'unknown',
       firstName: editedFirstName,
       lastName: editedLastName,
       selectedRole: userProfile?.selectedRole || 'worker',
@@ -95,56 +91,50 @@ export const useProfileScreen = () => {
       docFileName1: userProfile?.docFileName1 || 'passport_front_scan.png',
       profileImage: userProfile?.profileImage || null
     };
-
-    setUserProfile(updated);
-    setIsEditing(false);
-    setActiveDialog('none');
-    setToastMessage(t.savedSuccess);
-    setTimeout(() => setToastMessage(null), 3000);
+    try {
+      const { apiClient } = await import('../api/client');
+      await apiClient('/users/me', {
+        method: 'PUT',
+        body: JSON.stringify({ name: `${editedFirstName} ${editedLastName}`, phone: editedPhone, role: userProfile?.selectedRole || 'worker' })
+      });
+      setUserProfile(updated);
+      setActiveDialog('none');
+      showToast(t.savedSuccess);
+    } catch (err) {
+      console.error(err);
+      showToast(language === 'uz' ? "Xatolik yuz berdi" : "Error occurred");
+    } finally {
+      setIsEditing(false);
+    }
   };
 
   const handleShare = () => {
     const shareText = `Baito platformasidagi profilim: ${profileName} (${profileRole})`;
     if (navigator.share) {
-      navigator.share({
-        title: 'Baito Profil',
-        text: shareText,
-        url: window.location.href,
-      }).catch(err => console.log(err));
+      navigator.share({ title: 'Baito Profil', text: shareText, url: window.location.href }).catch(console.log);
     } else {
       navigator.clipboard.writeText(window.location.href);
-      setToastMessage(t.copied);
-      setTimeout(() => setToastMessage(null), 3000);
+      showToast(t.copied);
     }
   };
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserProfile(null);
-    setToastMessage(t.logoutSuccess);
-    setTimeout(() => setToastMessage(null), 3000);
-    setCurrentScreen('xarita');
+    logout();
+    showToast(t.logoutSuccess);
   };
 
   const toggleRole = () => {
     if (!userProfile) return;
     const nextRole = userProfile.selectedRole === 'employer' ? 'worker' : 'employer';
-    setUserProfile({
-      ...userProfile,
-      selectedRole: nextRole
-    });
-    setToastMessage(
-      language === 'uz' ? `Tizimga ${nextRole === 'employer' ? "Ish beruvchi" : "Xodim"} sifatida kirdingiz` : language === 'ru' ? `You logged in as ${nextRole === 'employer' ? "Employer" : "Worker"}` : `You logged in as ${nextRole === 'employer' ? "Employer" : "Worker"}`
-    );
-    setTimeout(() => setToastMessage(null), 3500);
+    setUserProfile({ ...userProfile, selectedRole: nextRole });
+    showToast(language === 'uz' ? `Tizimga ${nextRole === 'employer' ? "Ish beruvchi" : "Xodim"} sifatida kirdingiz` : `Switched to ${nextRole}`);
     setCurrentScreen(nextRole === 'employer' ? 'employer-dashboard' : 'xarita');
   };
 
   const handleWithdrawSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!withdrawAmount || isNaN(Number(withdrawAmount)) || Number(withdrawAmount) <= 0) {
-      setToastMessage(language === 'uz' ? "To'g'ri miqdor kiriting!" : language === 'ru' ? "Введите корректную сумму!" : "Enter a valid amount!");
-      setTimeout(() => setToastMessage(null), 3000);
+      showToast(language === 'uz' ? "To'g'ri miqdor kiriting!" : "Enter a valid amount!");
       return;
     }
     setWithdrawSuccess(true);
@@ -152,45 +142,18 @@ export const useProfileScreen = () => {
       setActiveDialog('none');
       setWithdrawSuccess(false);
       setWithdrawAmount('');
-      setToastMessage(t.withdrawSuccessMsg);
-      setTimeout(() => setToastMessage(null), 4000);
+      showToast(t.withdrawSuccessMsg);
     }, 1500);
   };
 
   return {
     language,
-    userProfile,
-    setCurrentScreen,
-    setToastMessage,
-    isEditing,
-    setIsEditing,
-    editedFirstName,
-    setEditedFirstName,
-    editedLastName,
-    setEditedLastName,
-    editedPhone,
-    setEditedPhone,
-    fileInputRef,
-    expandedSection,
-    setExpandedSection,
-    activeDialog,
-    setActiveDialog,
-    withdrawAmount,
-    setWithdrawAmount,
-    withdrawSuccess,
-    t,
-    appliedJobsCount,
-    showVerified,
-    profileName,
-    profileRole,
-    profileImage,
-    balance,
-    toggleLanguage,
-    handlePhotoUpload,
-    handleSaveProfileSubmit,
-    handleShare,
-    handleLogout,
-    handleWithdrawSubmit,
-    toggleRole
+    isEditing, userProfile, setCurrentScreen, setIsEditing,
+    editedFirstName, setEditedFirstName, editedLastName, setEditedLastName, editedPhone, setEditedPhone,
+    fileInputRef, expandedSection, setExpandedSection, activeDialog, setActiveDialog,
+    withdrawAmount, setWithdrawAmount, withdrawSuccess, t, appliedJobsCount, showVerified,
+    profileName, profileRole, profileImage, balance, toggleLanguage, handlePhotoUpload,
+    handleSaveProfileSubmit, handleShare, handleLogout, handleWithdrawSubmit, toggleRole
   };
 };
+

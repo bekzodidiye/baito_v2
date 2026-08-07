@@ -3,6 +3,7 @@ import { AdminUser } from './types';
 import { ShieldCheck, FileText, CheckCircle2, XCircle, User, Eye } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { VerificationDetailModal } from './VerificationDetailModal';
+import { showToast } from '../../utils/toast';
 
 interface AdminVerificationsProps {
   users: AdminUser[];
@@ -10,21 +11,18 @@ interface AdminVerificationsProps {
 }
 
 export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, onRefresh }) => {
-  const { setToastMessage } = useApp();
+  const { } = useApp();
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
   const handleVerify = async (userId: string, approve: boolean) => {
     try {
-      const res = await fetch(`/api/admin/users/${userId}/role`, {
+      const { apiClient } = await import('../../api/client');
+      await apiClient(`/admin/users/${userId}/role`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isVerified: approve }),
       });
-      if (res.ok) {
-        setToastMessage(approve ? "Foydalanuvchi va hujjatlari tasdiqlandi" : "Hujjatlar rad etildi");
-        setTimeout(() => setToastMessage(null), 3000);
-        onRefresh();
-      }
+      (approve ? "Foydalanuvchi va hujjatlari tasdiqlandi" : "Hujjatlar rad etildi");
+      onRefresh();
     } catch (e) {
       console.error(e);
     }

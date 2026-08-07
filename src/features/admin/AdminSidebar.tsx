@@ -5,6 +5,7 @@ import {
   Building2, Headphones, BarChart3, FolderTree, ShieldAlert, Ticket, MapPin, BellRing, Bot, Zap, FileText, ShieldCheck,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface AdminSidebarProps {
   activeTab: AdminTab;
@@ -14,7 +15,8 @@ interface AdminSidebarProps {
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab, isOpen, onClose }) => {
-  const { language, setCurrentScreen, userProfile, setUserProfile } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language, userProfile, setUserProfile } = useApp();
 
   const navGroups = [
     {

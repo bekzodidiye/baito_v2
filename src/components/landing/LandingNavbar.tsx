@@ -3,13 +3,15 @@ import { useApp } from '../../context/AppContext';
 import { Logo } from '../Logo';
 import { LanguageSelector } from '../LanguageSelector';
 import { ArrowRight, Menu, X, UserCheck, Building2, Sparkles } from 'lucide-react';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface LandingNavbarProps {
   onSelectRole: (role: 'worker' | 'employer') => void;
 }
 
 export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onSelectRole }) => {
-  const { setCurrentScreen, language, isLoggedIn, userProfile, requireAuth } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language, isLoggedIn, userProfile, requireAuth } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleExploreJobs = () => {

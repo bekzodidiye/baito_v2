@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, ArrowRight, ShieldCheck, Mail, ScanEye, Headphones, Check } from 'lucide-react';
 import { useVerificationPending } from '../../hooks/useVerificationPending';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const VerificationPendingScreen: React.FC = () => {
   const { language, setCurrentScreen, handleDashboardClick, t, stepT, handleSupportClick } = useVerificationPending();
@@ -170,7 +171,7 @@ export const VerificationPendingScreen: React.FC = () => {
           {/* Footer Support Link */}
           <div className="text-center">
             <a
-              href="https://t.me/baito_admin_mock"
+              href="https://t.me/baito_admin"
               target="_blank"
               rel="noreferrer"
               className="font-extrabold hover:underline text-[11px] text-brand-primary flex items-center justify-center gap-1.5"

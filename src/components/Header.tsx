@@ -4,13 +4,15 @@ import { Menu, Map, Bell, Search, LayoutList, ShieldCheck, User, Calendar, Mail,
 import { Logo } from './Logo';
 import { LanguageSelector } from './LanguageSelector';
 import { translations } from '../translations';
+import { useCurrentScreen } from '../hooks/useCurrentScreen';
 
 interface HeaderProps {
   onOpenModal?: (type: 'profile' | 'settings' | 'help' | 'auth') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
-  const { currentScreen, setCurrentScreen, setDrawerOpen, unreadNotificationsCount, messagesSearchOpen, setMessagesSearchOpen, language, isLoggedIn, userProfile, employerSelectedChatId, selectedChatId } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setDrawerOpen, unreadNotificationsCount, messagesSearchOpen, setMessagesSearchOpen, language, isLoggedIn, userProfile, employerSelectedChatId, selectedChatId } = useApp();
   const t = translations[language];
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
 

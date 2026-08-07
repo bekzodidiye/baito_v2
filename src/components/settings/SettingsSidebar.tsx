@@ -1,8 +1,9 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { 
-  Settings, 
+  Settings,
   Lock, 
   HelpCircle, 
   HelpCircle as FaqIcon, 
@@ -14,7 +15,8 @@ import {
 } from 'lucide-react';
 
 export const SettingsSidebar: React.FC = () => {
-  const { currentScreen, setCurrentScreen, language } = useApp();
+  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { language } = useApp();
   const t = translations[language];
 
   const navItems = [

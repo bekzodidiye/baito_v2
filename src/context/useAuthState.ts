@@ -68,7 +68,7 @@ export function useAuthState() {
           else navigate(`/${targetScreen}`);
         }
       });
-      navigate('/login');
+      navigate('/');
       return false;
     }
     
@@ -81,10 +81,20 @@ export function useAuthState() {
     return true;
   }, [isLoggedIn, navigate]);
 
+  const logout = useCallback(() => {
+    localStorage.removeItem('baito_token');
+    localStorage.removeItem('baito_user_profile');
+    localStorage.removeItem('baito_is_logged_in');
+    setUserProfileState(null);
+    setIsLoggedInState(false);
+    navigate('/');
+  }, [navigate]);
+
   return {
     language, setLanguage,
     isLoggedIn, setIsLoggedIn,
     userProfile, setUserProfile,
-    executePendingRedirect, requireAuth
+    executePendingRedirect, requireAuth,
+    logout
   };
 }

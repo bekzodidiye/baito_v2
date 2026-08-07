@@ -12,6 +12,7 @@ import { useJobSearchScreen } from '../../hooks/useJobSearchScreen';
 import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import { SearchSidebar } from './SearchSidebar';
 import { JobSortHeader } from './JobSortHeader';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const JobSearchScreen: React.FC = () => {
   const {

@@ -1,11 +1,13 @@
 import React from 'react';
 import { Wallet, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { showToast } from '../../utils/toast';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface ProfileWidgetsProps {
   t: any;
   language: 'uz' | 'ru' | 'en';
   showVerified: boolean;
-  setToastMessage: (msg: string | null) => void;
+
   setCurrentScreen: (screen: string) => void;
   setActiveDialog: (dialog: 'withdraw' | 'edit' | null) => void;
   balance?: string;
@@ -15,7 +17,6 @@ export const ProfileWidgets: React.FC<ProfileWidgetsProps> = ({
   t,
   language,
   showVerified,
-  setToastMessage,
   setCurrentScreen,
   setActiveDialog,
   balance = '0'
@@ -65,8 +66,7 @@ export const ProfileWidgets: React.FC<ProfileWidgetsProps> = ({
             if (showVerified) {
               setCurrentScreen('yakunlash');
             } else {
-              setToastMessage(language === 'uz' ? "Hujjatlaringizni tasdiqlash uchun tizimga bog'laning." : language === 'ru' ? "Свяжитесь с поддержкой для верификации." : "Contact support for verification.");
-              setTimeout(() => setToastMessage(null), 3000);
+              showToast(language === 'uz' ? "Hujjatlaringizni tasdiqlash uchun tizimga bog'laning." : language === 'ru' ? "Свяжитесь с поддержкой для верификации." : "Contact support for verification.");
             }
           }}
           className="w-full py-2.5 bg-brand-primary text-white hover:bg-brand-primary/95 text-[11px] rounded-xl font-extrabold transition-all shadow-3xs cursor-pointer outline-none"
