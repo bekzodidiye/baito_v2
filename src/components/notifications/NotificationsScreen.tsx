@@ -25,8 +25,16 @@ export const NotificationsScreen: React.FC = () => {
 
   const handleNotificationClick = (id: string) => {
     const item = notifications.find(n => n.id === id);
-    if (item?.type === 'message') {
-      setCurrentScreen('xabarlar');
+    if (!item) return;
+    
+    if (item.type === 'message') {
+      setCurrentScreen('messages');
+    } else if (item.type === 'job') {
+      setCurrentScreen('jobs');
+    } else if (item.type === 'apply') {
+      setCurrentScreen('calendar');
+    } else if (item.type === 'profile') {
+      setCurrentScreen('profile');
     }
   };
 
@@ -34,11 +42,11 @@ export const NotificationsScreen: React.FC = () => {
   const yesterdayNotifications = filteredNotifications.filter(n => n.group === 'yesterday');
 
   return (
-    <div className="flex flex-col gap-5 pb-20 pt-3 md:pt-6 max-w-6xl mx-auto font-sans animate-fade-in w-full px-4">
+    <div className="flex flex-col gap-5 pb-28 pt-3 md:pt-6 max-w-6xl mx-auto font-sans animate-fade-in w-full px-4">
       <div className="flex items-center justify-between bg-white px-5 py-4 rounded-2xl border border-slate-100 shadow-3xs">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setCurrentScreen('kalendar')}
+            onClick={() => setCurrentScreen('calendar')}
             className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-600 transition-colors active:scale-95 cursor-pointer border-0 bg-slate-50"
             title="Orqaga"
           >

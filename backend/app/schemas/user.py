@@ -15,8 +15,22 @@ class UserCreate(UserBase):
     password: str
     name: str
 
-class UserUpdate(UserBase):
+class UserUpdate(BaseModel):
+    """Fields a user may change on their own account.
+
+    Deliberately excludes role, balance, isVerified and isBanned: those are
+    privilege-bearing and only the admin endpoints may set them.
+    """
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    companyName: Optional[str] = None
+    avatarUrl: Optional[str] = None
     password: Optional[str] = None
+    region: Optional[str] = None
+    category: Optional[str] = None
+    bio: Optional[str] = None
+    skills: Optional[list | dict | str] = None
 
 class UserInDBBase(UserBase):
     id: str

@@ -3,18 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import models
 from app.api import deps
-from app.core.security import get_password_hash
-import uuid
 
 router = APIRouter()
 
-def get_admin_user(
-    db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
-) -> models.User:
-    if current_user.role != 'admin':
-        raise HTTPException(status_code=403, detail="Admin huquqi talab etiladi")
-    return current_user
+get_admin_user = deps.get_current_admin
 
 
 @router.get("/users")
@@ -105,29 +97,3 @@ def add_balance(
     user.balance = current + amount
     db.commit()
     return {"success": True, "balance": user.balance}
-
-
-@router.post("/admin-user")
-def create_admin_user(
-    payload: dict,
-    db: Session = Depends(deps.get_db),
-) -> Any:
-    existing = db.query(models.User).filter(models.User.role == 'admin').first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Admin foydalanuvchi allaqachon mavjud")
-    
-    admin = models.User(
-        id=str(uuid.uuid4()),
-        uid=str(uuid.uuid4()),
-        email=payload.get("email", "admin@baito.uz"),
-        hashed_password=get_password_hash(payload.get("password", "admin123")),
-        name=payload.get("name", "Admin"),
-        phone=payload.get("phone", "admin"),
-        role="admin",
-        balance=0,
-        isBanned=False,
-    )
-    db.add(admin)
-    db.commit()
-    db.refresh(admin)
-    return {"success": True, "id": admin.id, "email": admin.email}

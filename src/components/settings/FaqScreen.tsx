@@ -36,7 +36,7 @@ export const FaqScreen: React.FC = () => {
       {/* TopAppBar */}
       <header className="md:hidden flex justify-between items-center px-4 h-16 w-full z-50 bg-brand-surface/90 backdrop-blur-md sticky top-0 border-b border-brand-outline-variant/30">
         <button 
-          onClick={() => setCurrentScreen('yordam')}
+          onClick={() => setCurrentScreen('help')}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low transition-colors"
         >
           <ArrowLeft size={24} className="text-brand-text-variant" />

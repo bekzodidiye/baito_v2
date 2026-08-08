@@ -58,7 +58,7 @@ export const EmployerChatList: React.FC<EmployerChatListProps> = ({
               <input
                 type="text"
                 autoFocus
-                className="w-full h-full pl-3 pr-8 bg-transparent text-sm font-sans focus:outline-none transition-all placeholder:text-slate-400 font-semibold text-slate-800 border-none"
+                className="w-full h-full pl-3 pr-8 bg-transparent text-sm font-sans focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-400 font-semibold text-slate-800 border-none"
                 placeholder={t.searchChatPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

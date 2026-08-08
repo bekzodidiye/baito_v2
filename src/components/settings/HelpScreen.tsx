@@ -12,7 +12,7 @@ export const HelpScreen: React.FC = () => {
       {/* TopAppBar */}
       <header className="md:hidden flex justify-between items-center px-4 h-16 w-full z-50 bg-brand-surface/90 backdrop-blur-md sticky top-0 border-b border-brand-outline-variant/30">
         <button 
-          onClick={() => setCurrentScreen('sozlamalar')}
+          onClick={() => setCurrentScreen('settings')}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low transition-colors"
         >
           <ArrowLeft size={24} className="text-brand-text-variant" />
@@ -89,7 +89,7 @@ export const HelpScreen: React.FC = () => {
               <ChevronRight size={22} className="text-brand-text-variant group-hover:text-brand-primary transition-colors" />
             </button>
 
-            <button onClick={() => setCurrentScreen('qollanma')} className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group border-b border-slate-100">
+            <button onClick={() => setCurrentScreen('guide')} className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group border-b border-slate-100">
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-brand-primary group-hover:text-white group-hover:border-brand-primary group-hover:scale-105 transition-all duration-200">
                   <FileText size={20} className="stroke-[2.2]" />
@@ -101,7 +101,7 @@ export const HelpScreen: React.FC = () => {
               <ChevronRight size={22} className="text-brand-text-variant group-hover:text-brand-primary transition-colors" />
             </button>
             
-            <button onClick={() => setCurrentScreen('shartlar')} className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group">
+            <button onClick={() => setCurrentScreen('terms')} className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group">
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-brand-primary group-hover:text-white group-hover:border-brand-primary group-hover:scale-105 transition-all duration-200">
                   <FileText size={20} className="stroke-[2.2]" />

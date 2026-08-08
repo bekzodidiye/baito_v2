@@ -24,8 +24,8 @@ export const MapBreadcrumbs: React.FC<MapBreadcrumbsProps> = ({
         onClick={handleBreadcrumbBack}
         className="flex items-center justify-center p-1 text-brand-primary hover:bg-slate-100 rounded-lg transition-colors cursor-pointer shrink-0"
         title="Orqaga"
-      >
-        <ArrowLeft size={16} className="stroke-[2.5px]" />
+       aria-label="Orqaga">
+<ArrowLeft size={16} className="stroke-[2.5px]" />
       </button>
       {breadcrumbItems.map((item, index) => {
         const isUzbekistan = item === "O'zbekiston";

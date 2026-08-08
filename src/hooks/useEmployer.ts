@@ -32,9 +32,8 @@ export const useEmployer = () => {
         (me.companyName && j.company === me.companyName) ||
         (me.name && j.company === me.name)
       );
-      const listToReturn = myJobs.length > 0 ? myJobs : jobs;
       // Sort newest first, and active jobs before completed jobs
-      const sorted = [...listToReturn].sort((a: any, b: any) => {
+      const sorted = [...myJobs].sort((a: any, b: any) => {
         if (a.status !== 'completed' && b.status === 'completed') return -1;
         if (a.status === 'completed' && b.status !== 'completed') return 1;
         const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -132,8 +131,11 @@ export const useEmployer = () => {
   });
 
   const completeJobMutation = useMutation({
-    mutationFn: async (jobId: string) => {
-      return apiClient(`/jobs/${jobId}/complete`, { method: 'POST' });
+    mutationFn: async ({ jobId, data }: { jobId: string; data?: { rating?: number; review?: string; bonus?: number } }) => {
+      return apiClient(`/jobs/${jobId}/complete`, { 
+        method: 'POST',
+        body: data ? JSON.stringify(data) : undefined
+      });
     },
     onSuccess: () => {
       handleSuccess("Ish yakunlandi, pul ishchiga o'tkazildi!", "Работа завершена, деньги переведены!", "Job completed, money released!");
@@ -157,7 +159,7 @@ export const useEmployer = () => {
     balance,
     postNewJob: async (data: Partial<Job>) => { await postNewJobMutation.mutateAsync(data); return true; },
     updateApplicationStatus: async (appId: string, status: 'hired' | 'rejected') => updateApplicationMutation.mutate({ appId, status }),
-    completeJob: async (jobId: string) => completeJobMutation.mutate(jobId),
+    completeJob: async (jobId: string, data?: { rating?: number; review?: string; bonus?: number }) => completeJobMutation.mutate({ jobId, data }),
     deleteJob: async (jobId: string) => deleteJobMutation.mutate(jobId),
     language,
     companyName,

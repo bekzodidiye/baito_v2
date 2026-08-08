@@ -1,15 +1,15 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Job } from '../../types';
-import { useApp } from '../../context/AppContext';
-import { getJobDetails } from '../../utils/jobDetailHelpers';
-import { JobDetailsHeader } from '../job-details/JobDetailsHeader';
-import { JobDetailsHero } from '../job-details/JobDetailsHero';
-import { JobDetailsCard } from '../job-details/JobDetailsCard';
-import { JobDetailsLocation } from '../job-details/JobDetailsLocation';
-import { JobDetailsTasks } from '../job-details/JobDetailsTasks';
-import { JobDetailsRequirements } from '../job-details/JobDetailsRequirements';
-import { JobDetailsFooter } from '../job-details/JobDetailsFooter';
+import { Job } from '../../../types';
+import { useApp } from '../../../context/AppContext';
+import { getJobDetails } from '../../../utils/jobDetailHelpers';
+import { JobDetailsHeader } from '../../../components/job-details/JobDetailsHeader';
+import { JobDetailsHero } from '../../../components/job-details/JobDetailsHero';
+import { JobDetailsCard } from '../../../components/job-details/JobDetailsCard';
+import { JobDetailsLocation } from '../../../components/job-details/JobDetailsLocation';
+import { JobDetailsTasks } from '../../../components/job-details/JobDetailsTasks';
+import { JobDetailsRequirements } from '../../../components/job-details/JobDetailsRequirements';
+import { JobDetailsFooter } from '../../../components/job-details/JobDetailsFooter';
 
 interface JobSearchModalDetailProps {
   selectedJob: Job;

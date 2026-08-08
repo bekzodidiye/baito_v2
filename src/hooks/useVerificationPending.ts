@@ -12,7 +12,7 @@ export const useVerificationPending = () => {
     if (userProfile?.selectedRole === 'employer') {
       setCurrentScreen('employer-dashboard');
     } else {
-      setCurrentScreen('xarita');
+      setCurrentScreen('jobs');
     }
   };
 

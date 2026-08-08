@@ -718,6 +718,7 @@ Production Ready: ✅ HA / ⛔ YO'Q / ⚠️ SHARTLI
 | "Prodga tayyor?" | 🚀 DevOps checklist |
 
 ---
+doim har bir ozgarishdan keyin git hubga push qilib bor va xabar berib tur. xato bo'lsa ham albatta xabar ber va tuzatishga harakat qil . shuningdek loyihaga yangi narsa qo'shib bo'lsagina push qil va xabar ber. 
 
 **Tahlil tili:** O'zbek tili (dasturchilar slangi bilan aralashtirilgan)
 **Versiya:** 3.0 — Senior Jamoa Rejimi

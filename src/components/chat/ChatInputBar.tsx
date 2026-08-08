@@ -52,7 +52,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
         <form onSubmit={handleSend} className="flex-1 relative flex items-center">
           <input
             type="text"
-            className="w-full bg-white text-brand-text font-sans rounded-full py-3 px-5 pr-12 shadow-xs border-0 focus:outline-none transition-all placeholder:text-brand-outline text-xs font-semibold h-11"
+            className="w-full bg-white text-brand-text font-sans rounded-full py-3 px-5 pr-12 shadow-xs border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-brand-outline text-xs font-semibold h-11"
             placeholder={t.typeMessage}
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
@@ -80,7 +80,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
         <button
           onClick={() => handleSend()}
           type="button"
-          className="w-11 h-11 flex items-center justify-center rounded-full bg-brand-primary text-white shadow-md hover:shadow-lg active:scale-90 transition-all cursor-pointer shrink-0 border-0 outline-none"
+          className="w-11 h-11 flex items-center justify-center rounded-full bg-brand-primary text-white shadow-md hover:shadow-lg active:scale-90 transition-all cursor-pointer shrink-0 border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           title={t.send}
         >
           <Send size={18} className="translate-x-0.5" />

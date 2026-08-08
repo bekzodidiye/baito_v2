@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
 import { Search, SlidersHorizontal, MapPin, Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useApp } from '../../context/AppContext';
-import { translations, translateRegion } from '../../translations';
-import { CATEGORIES_CONFIG, CATEGORY_FILTERS_LIST } from '../../utils/jobCategoryUtils';
+import { useApp } from '../../../context/AppContext';
+import { translations, translateRegion } from '../../../translations';
+import { CATEGORIES_CONFIG, CATEGORY_FILTERS_LIST } from '../../../utils/jobCategoryUtils';
 import { REGIONS_LIST } from './JobSearchScreen.utils';
 
 interface SearchFilterSectionProps {
@@ -75,7 +75,7 @@ const SearchFilterSectionComponent: React.FC<SearchFilterSectionProps> = ({
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-outline" size={20} />
         <input
           type="text"
-          className="w-full bg-white text-brand-text font-sans rounded-full py-3 pl-12 pr-4 shadow-[inset_0_4px_8px_rgba(0,0,0,0.14),_0_0_12px_rgba(0,0,0,0.04)] border-0 focus:bg-white focus:outline-none transition-all placeholder:text-brand-outline text-sm"
+          className="w-full bg-white text-brand-text font-sans rounded-full py-3 pl-12 pr-4 shadow-[inset_0_4px_8px_rgba(0,0,0,0.14),_0_0_12px_rgba(0,0,0,0.04)] border-0 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-brand-outline text-sm"
           placeholder={t.keywordPlaceholder || "Kasb, kompaniya yoki kalit so'z..."}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -89,7 +89,7 @@ const SearchFilterSectionComponent: React.FC<SearchFilterSectionProps> = ({
         <div ref={scrollContainerRef} className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 w-full flex-nowrap">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all whitespace-nowrap text-xs font-semibold cursor-pointer shrink-0 border-0 outline-none ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all whitespace-nowrap text-xs font-semibold cursor-pointer shrink-0 border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
               showFilters || activeFiltersCount > 0 ? 'bg-brand-primary text-white shadow-xs' : 'bg-white text-brand-text-variant shadow-[inset_0_4px_8px_rgba(0,0,0,0.14),_0_0_12px_rgba(0,0,0,0.04)] hover:bg-slate-50'
             }`}
           >
@@ -107,7 +107,7 @@ const SearchFilterSectionComponent: React.FC<SearchFilterSectionProps> = ({
               key={loc}
               ref={filterLocation === loc ? activeRef : null}
               onClick={() => setFilterLocation(loc)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 border-0 outline-none ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
                 filterLocation === loc ? 'bg-brand-primary text-white shadow-xs' : 'bg-white text-brand-text-variant shadow-[inset_0_4px_8px_rgba(0,0,0,0.14),_0_0_12px_rgba(0,0,0,0.04)] hover:bg-slate-50'
               }`}
             >
@@ -117,7 +117,7 @@ const SearchFilterSectionComponent: React.FC<SearchFilterSectionProps> = ({
 
           <button
             onClick={() => setShowRegionSelector(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-brand-text-variant shadow-[inset_0_4px_8px_rgba(0,0,0,0.14),_0_0_12px_rgba(0,0,0,0.04)] hover:bg-slate-50 text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0 border-0 outline-none"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-brand-text-variant shadow-[inset_0_4px_8px_rgba(0,0,0,0.14),_0_0_12px_rgba(0,0,0,0.04)] hover:bg-slate-50 text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0 border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           >
             <MapPin size={12} className="text-brand-primary" />
             <span>{t.otherRegions || "Boshqa..."}</span>

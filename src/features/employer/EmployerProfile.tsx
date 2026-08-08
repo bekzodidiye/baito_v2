@@ -19,6 +19,14 @@ export const EmployerProfile: React.FC = () => {
   
   const companyName = userProfile?.firstName || 'Korzinka.uz';
 
+  React.useEffect(() => {
+    const handleScrollEvent = (e: Event) => {
+      setIsEditModalOpen(true);
+    };
+    window.addEventListener('scroll-to-profile-section', handleScrollEvent);
+    return () => window.removeEventListener('scroll-to-profile-section', handleScrollEvent);
+  }, []);
+
   return (
     <div className="w-full max-w-6xl mx-auto py-4 px-4 md:px-6 flex flex-col gap-6 pb-24 md:pb-6">
       <EmployerPageHeader 
@@ -42,7 +50,7 @@ export const EmployerProfile: React.FC = () => {
                 showToast(language === "uz" ? "Profil yangilandi!" : "Профиль обновлен!");
               }
             }} 
-            className="p-2 text-slate-400 hover:text-brand-primary bg-slate-50 hover:bg-brand-primary/10 rounded-xl transition-colors cursor-pointer outline-none"
+            className="p-2 text-slate-400 hover:text-brand-primary bg-slate-50 hover:bg-brand-primary/10 rounded-xl transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             title="Tahrirlash"
           >
             <Edit3 size={16} />
@@ -90,10 +98,10 @@ export const EmployerProfile: React.FC = () => {
               (
                 language === 'uz' ? "Tizimga Xodim sifatida kirdingiz" : language === 'ru' ? "Вы вошли как Работник" : "You logged in as Worker"
               );
-              setCurrentScreen('xarita');
+              setCurrentScreen('jobs');
             }
           }}
-          className="w-full py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl font-display font-black text-xs transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer outline-none shadow-sm"
+          className="w-full py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl font-display font-black text-xs transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 shadow-sm"
         >
           {language === 'uz' ? "Xodim rejimiga o'tish" : language === 'ru' ? "Режим работника" : "Worker Mode"}
         </button>
@@ -103,7 +111,7 @@ export const EmployerProfile: React.FC = () => {
       <div className="grid grid-cols-2 gap-4">
         <motion.button onClick={() => setIsPaymentModalOpen(true)} 
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col items-center sm:flex-row sm:justify-between gap-4 hover:shadow-md hover:border-emerald-200 transition-all cursor-pointer group outline-none"
+          className="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col items-center sm:flex-row sm:justify-between gap-4 hover:shadow-md hover:border-emerald-200 transition-all cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
             <DollarSign size={24} className="stroke-[2.5]" />
@@ -118,9 +126,9 @@ export const EmployerProfile: React.FC = () => {
           </div>
         </motion.button>
 
-        <motion.button onClick={() => setCurrentScreen("sozlamalar")}
+        <motion.button onClick={() => setCurrentScreen("settings")}
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-          className="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col items-center sm:flex-row sm:justify-between gap-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group outline-none"
+          className="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col items-center sm:flex-row sm:justify-between gap-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
             <Settings size={24} className="stroke-[2.5]" />
@@ -145,9 +153,9 @@ export const EmployerProfile: React.FC = () => {
 
       {/* Support and Logout */}
       <div className="flex flex-col gap-3 mt-2">
-        <motion.button onClick={() => setCurrentScreen("yordam")}
+        <motion.button onClick={() => setCurrentScreen("help")}
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-          className="w-full bg-white p-4 rounded-2xl shadow-xs border border-slate-100 flex items-center justify-center gap-2 hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer outline-none font-bold text-xs"
+          className="w-full bg-white p-4 rounded-2xl shadow-xs border border-slate-100 flex items-center justify-center gap-2 hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 font-bold text-xs"
         >
           <HelpCircle size={16} className="stroke-[2.5]" />
           <span>{language === 'uz' ? "Qo'llab-quvvatlash xizmati" : language === 'ru' ? "Служба поддержки" : "Support service"}</span>
@@ -156,7 +164,7 @@ export const EmployerProfile: React.FC = () => {
         <motion.button 
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
           onClick={() => logout()}
-          className="w-full bg-rose-50 p-4 rounded-2xl border border-rose-100 flex items-center justify-center gap-2 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer outline-none font-bold text-xs"
+          className="w-full bg-rose-50 p-4 rounded-2xl border border-rose-100 flex items-center justify-center gap-2 hover:bg-rose-100 text-rose-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 font-bold text-xs"
         >
           <LogOut size={16} className="stroke-[2.5]" />
           <span>{language === 'uz' ? "Tizimdan chiqish" : language === 'ru' ? "Выйти из системы" : "Log out"}</span>

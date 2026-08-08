@@ -70,4 +70,6 @@ export interface Application {
   status: 'applied' | 'approved' | 'rejected' | 'hired' | 'completed' | 'start_requested';
   appliedDate: string;
   rating?: number;
+  review?: string;
+  bonus?: number;
 }

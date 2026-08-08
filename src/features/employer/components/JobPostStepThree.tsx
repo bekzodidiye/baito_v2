@@ -17,7 +17,7 @@ interface JobPostStepThreeProps {
 }
 
 export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
-  language, city, setCity, addressLine, setAddressLine
+  language, city, setCity, addressLine, setAddressLine, setCoordinateX, setCoordinateY
 }) => {
   const [currentCoords, setCurrentCoords] = useState(CITY_COORDINATES[city] || CITY_COORDINATES['Toshkent']);
   const [isLocating, setIsLocating] = useState(false);
@@ -44,6 +44,11 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
     }, 350);
     return () => clearTimeout(timer);
   }, [addressLine, city, showDropdown]);
+
+  useEffect(() => {
+    setCoordinateX(currentCoords.lat);
+    setCoordinateY(currentCoords.lon);
+  }, [currentCoords.lat, currentCoords.lon, setCoordinateX, setCoordinateY]);
 
   const handleSelectSuggestion = (sug: AddressSuggestion) => {
     setAddressLine(sug.displayName);
@@ -85,7 +90,7 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
           <MapPin size={14} className="text-brand-primary" />
           {language === 'uz' ? "Shahar / Viloyat *" : "City / Region *"}
         </label>
-        <select className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-extrabold text-slate-800 outline-none focus:ring-2 focus:ring-brand-primary/20" value={city} onChange={(e) => handleCityChange(e.target.value)}>
+        <select className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-extrabold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20" value={city} onChange={(e) => handleCityChange(e.target.value)}>
           {Object.keys(CITY_COORDINATES).map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
@@ -115,7 +120,7 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
           <input
             type="text"
             placeholder={language === 'uz' ? "Masalan: Ibn Sino ko'chasi, 17A" : "e.g. Ibn Sino street, 17A"}
-            className="w-full bg-slate-50 border rounded-xl px-4 py-3 pl-10 text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-brand-primary/20"
+            className="w-full bg-slate-50 border rounded-xl px-4 py-3 pl-10 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"
             value={addressLine}
             onChange={(e) => { setAddressLine(e.target.value); setShowDropdown(true); }}
             onFocus={() => setShowDropdown(true)}

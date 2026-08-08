@@ -57,7 +57,7 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
       if (isModal && onClose) onClose();
       else {
         const hasPreselectedRole = localStorage.getItem('baito_preselected_role');
-        setCurrentScreen(hasPreselectedRole ? 'landing' : 'xarita');
+        setCurrentScreen(hasPreselectedRole ? 'landing' : 'jobs');
       }
     } else if (state.mode === 'profile-info') state.setMode('role-selection');
     else if (state.mode === 'documents') state.setMode('profile-info');
@@ -66,7 +66,7 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
       if (isModal && onClose) onClose();
       else {
         const hasPreselectedRole = localStorage.getItem('baito_preselected_role');
-        setCurrentScreen(hasPreselectedRole ? 'landing' : 'xarita');
+        setCurrentScreen(hasPreselectedRole ? 'landing' : 'jobs');
       }
     }
   };

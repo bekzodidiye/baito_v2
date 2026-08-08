@@ -31,7 +31,7 @@ export const LoginPromptStepper: React.FC<LoginPromptStepperProps> = ({
         <button
           type="button"
           onClick={() => setMode('profile-info')}
-          className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer group outline-none w-20"
+          className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 w-20"
         >
           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shadow-xs transition-all duration-300 ${mode === 'profile-info' ? 'bg-brand-primary text-white scale-110' : 'bg-emerald-500 text-white'}`}>
             {mode === 'profile-info' ? '1' : <Check size={14} className="stroke-[3]" />}
@@ -45,7 +45,7 @@ export const LoginPromptStepper: React.FC<LoginPromptStepperProps> = ({
           onClick={() => {
             if (mode === 'finish' || mode === 'documents') setMode('documents');
           }}
-          className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer group outline-none w-20"
+          className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 w-20"
         >
           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shadow-xs transition-all duration-300 ${mode === 'documents' ? 'bg-brand-primary text-white scale-110' : mode === 'finish' ? 'bg-emerald-500 text-white' : 'border border-slate-200 bg-white text-slate-400'}`}>
             {mode === 'finish' ? <Check size={14} className="stroke-[3]" /> : '2'}
@@ -57,7 +57,7 @@ export const LoginPromptStepper: React.FC<LoginPromptStepperProps> = ({
         <button
           type="button"
           onClick={() => { if (firstName) setMode('finish'); }}
-          className="flex flex-col items-center relative z-10 bg-transparent border-0 outline-none w-20 cursor-pointer"
+          className="flex flex-col items-center relative z-10 bg-transparent border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 w-20 cursor-pointer"
         >
           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shadow-xs transition-all duration-300 ${mode === 'finish' ? 'bg-brand-primary text-white scale-110' : 'border border-slate-200 bg-white text-slate-400'}`}>
             3

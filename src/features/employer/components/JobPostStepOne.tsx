@@ -64,7 +64,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           <Briefcase size={14} className="text-brand-primary" />
           {language === 'uz' ? "Ish / Vazifa nomi *" : "Job Title *"}
         </label>
-        <input type="text" placeholder={language === 'uz' ? "Masalan: Omborda yuk tashuvchi / Kassir" : "e.g. Warehouse Loader"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-brand-primary/20" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input type="text" placeholder={language === 'uz' ? "Masalan: Omborda yuk tashuvchi / Kassir" : "e.g. Warehouse Loader"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20" value={title} onChange={(e) => setTitle(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -96,7 +96,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
         </label>
         <div className="flex flex-wrap gap-2">
           {categories.map(c => (
-            <button key={c.id} type="button" onClick={() => setCategory(c.id)} className={`px-3 py-2 rounded-xl text-xs font-bold border cursor-pointer outline-none ${category === c.id ? 'bg-brand-primary text-white border-brand-primary' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>{c.label}</button>
+            <button key={c.id} type="button" onClick={() => setCategory(c.id)} className={`px-3 py-2 rounded-xl text-xs font-bold border cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${category === c.id ? 'bg-brand-primary text-white border-brand-primary' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>{c.label}</button>
           ))}
         </div>
       </div>
@@ -116,7 +116,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           })}
         </div>
         <div className="flex items-center gap-2 mt-1">
-          <input type="text" placeholder={language === 'uz' ? "Yangi teg qo'shish (#Student, #Bo'shVaqt)..." : "Add custom tag..."} className="flex-1 bg-slate-50 border rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800 outline-none" value={customTag} onChange={(e) => setCustomTag(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddCustomTag(e)} />
+          <input type="text" placeholder={language === 'uz' ? "Yangi teg qo'shish (#Student, #Bo'shVaqt)..." : "Add custom tag..."} className="flex-1 bg-slate-50 border rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={customTag} onChange={(e) => setCustomTag(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddCustomTag(e)} />
           <button type="button" onClick={() => handleAddCustomTag()} className="px-3.5 py-2 bg-brand-primary text-white text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer"><Plus size={14} /> {language === 'uz' ? "Qo'shish" : "Add"}</button>
         </div>
       </div>
@@ -126,7 +126,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           <Building size={14} className="text-brand-primary" />
           {language === 'uz' ? "Tashkilot nomi" : "Company Name"}
         </label>
-        <input type="text" placeholder="e.g. Murod Buildings" className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 outline-none" value={company} onChange={(e) => setCompany(e.target.value)} />
+        <input type="text" placeholder="e.g. Murod Buildings" className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={company} onChange={(e) => setCompany(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -134,7 +134,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           <ClipboardList size={14} className="text-brand-primary" />
           {language === 'uz' ? "Ish vazifalari *" : "Job Responsibilities *"}
         </label>
-        <textarea rows={3} placeholder={language === 'uz' ? "1. Yuklarni tushirish va joylash..." : "1. Unloading goods"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 outline-none resize-none" value={responsibilities} onChange={(e) => setResponsibilities(e.target.value)} />
+        <textarea rows={3} placeholder={language === 'uz' ? "1. Yuklarni tushirish va joylash..." : "1. Unloading goods"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={responsibilities} onChange={(e) => setResponsibilities(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -142,7 +142,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           <FileText size={14} className="text-brand-primary" />
           {language === 'uz' ? "Qo'shimcha ma'lumot" : "Additional Description"}
         </label>
-        <textarea rows={2} placeholder={language === 'uz' ? "Ish sharoitlari haqida..." : "General info..."} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 outline-none resize-none" value={description} onChange={(e) => setDescription(e.target.value)} />
+        <textarea rows={2} placeholder={language === 'uz' ? "Ish sharoitlari haqida..." : "General info..."} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
     </motion.div>
   );

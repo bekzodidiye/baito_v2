@@ -46,17 +46,17 @@ export const WorkerDocsSection: React.FC<WorkerDocsSectionProps> = (props) => {
       <div className="grid grid-cols-12 gap-3">
         <div className="col-span-4 space-y-1">
           <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block px-1">{t.series}</label>
-          <input type="text" required maxLength={2} value={passportSeries} onChange={(e) => setPassportSeries(e.target.value.toUpperCase())} placeholder="AB" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3 text-xs font-black text-center outline-none focus:border-brand-primary" />
+          <input type="text" required maxLength={2} value={passportSeries} onChange={(e) => setPassportSeries(e.target.value.toUpperCase())} placeholder="AB" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3 text-xs font-black text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary" />
         </div>
         <div className="col-span-8 space-y-1">
           <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block px-1">{t.passportNumber}</label>
-          <input type="text" required maxLength={7} value={passportNumber} onChange={(e) => setPassportNumber(e.target.value.replace(/\D/g, ''))} placeholder="1234567" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3 text-xs font-bold outline-none focus:border-brand-primary" />
+          <input type="text" required maxLength={7} value={passportNumber} onChange={(e) => setPassportNumber(e.target.value.replace(/\D/g, ''))} placeholder="1234567" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary" />
         </div>
       </div>
 
       <div className="space-y-1">
         <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block px-1">{t.jshshir}</label>
-        <input type="text" required maxLength={14} value={jshshir} onChange={(e) => setJshshir(e.target.value.replace(/\D/g, ''))} placeholder="12345678901234" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3 text-xs font-bold outline-none focus:border-brand-primary" />
+        <input type="text" required maxLength={14} value={jshshir} onChange={(e) => setJshshir(e.target.value.replace(/\D/g, ''))} placeholder="12345678901234" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary" />
       </div>
 
       <div className="space-y-2 pt-1">

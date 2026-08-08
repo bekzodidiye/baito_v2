@@ -64,7 +64,7 @@ export const SupportChatScreen: React.FC = () => {
       {/* TopAppBar */}
       <header className="md:hidden sticky top-0 z-30 flex justify-between items-center px-4 h-16 w-full bg-white/90 backdrop-blur-md shadow-2xs shrink-0 border-b border-slate-100">
         <button 
-          onClick={() => setCurrentScreen('yordam')}
+          onClick={() => setCurrentScreen('help')}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low transition-colors cursor-pointer"
         >
           <ArrowLeft size={24} className="text-brand-text-variant" />
@@ -79,7 +79,7 @@ export const SupportChatScreen: React.FC = () => {
       </header>
 
       {/* Chat Messages */}
-      <main className="md:pt-8 flex-1 overflow-y-auto p-4 space-y-4 w-full pb-20">
+      <main className="md:pt-8 flex-1 overflow-y-auto p-4 space-y-4 w-full pb-28">
         {messages.map((msg) => (
           <div 
             key={msg.id} 
@@ -109,7 +109,7 @@ export const SupportChatScreen: React.FC = () => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Xabar yozing..." 
-              className="bg-transparent border-none outline-none w-full text-[14px] text-brand-text placeholder:text-brand-text-variant"
+              className="bg-transparent border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 w-full text-[14px] text-brand-text placeholder:text-brand-text-variant"
             />
           </div>
           <button 

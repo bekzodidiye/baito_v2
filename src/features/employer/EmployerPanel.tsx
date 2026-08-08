@@ -159,7 +159,7 @@ export const EmployerPanel: React.FC = () => {
                 <button
                   key={item.id}
                   onClick={() => setCurrentScreen(item.id as any)}
-                  className="flex flex-col items-center justify-center flex-1 h-full relative focus:outline-none select-none active:scale-95 transition-transform"
+                  className="flex flex-col items-center justify-center flex-1 h-full relative focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 select-none active:scale-95 transition-transform"
                 >
                   <motion.div
                     animate={{ y: active ? 3 : 0 }}

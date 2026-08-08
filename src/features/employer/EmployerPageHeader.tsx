@@ -29,7 +29,7 @@ export const EmployerPageHeader: React.FC<EmployerPageHeaderProps> = ({
       {showPostButton && onPostJobClick && (
         <button
           onClick={onPostJobClick}
-          className="px-4 py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-display font-black text-xs rounded-xl shadow-[0_4px_14px_rgba(0,6,102,0.18)] transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer outline-none self-start md:self-auto shrink-0"
+          className="px-4 py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-display font-black text-xs rounded-xl shadow-[0_4px_14px_rgba(0,6,102,0.18)] transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 self-start md:self-auto shrink-0"
         >
           <Plus size={15} className="stroke-[2.5]" />
           <span>{language === 'uz' ? "Yangi e'lon joylash" : language === 'ru' ? "Создать объявление" : "Post new job"}</span>

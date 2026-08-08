@@ -37,10 +37,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   };
 
   const workerNav: NavItem[] = [
-    { id: 'qidiruv', label: t.jobSearch, icon: Map, screen: 'xarita' as ScreenType, active: currentScreen === 'qidiruv' || currentScreen === 'xarita' },
-    { id: 'kalendar', label: t.calendar, icon: Calendar, screen: 'kalendar' as ScreenType, active: currentScreen === 'kalendar' },
-    { id: 'xabarlar', label: t.messages, icon: Mail, screen: 'xabarlar' as ScreenType, active: currentScreen === 'xabarlar' || currentScreen === 'chat' },
-    { id: 'bildirishnomalar', label: language === 'uz' ? "Bildirishnomalar" : language === 'ru' ? "Уведомления" : "Notifications", icon: Bell, screen: 'bildirishnomalar' as ScreenType, active: currentScreen === 'bildirishnomalar', badge: unreadNotificationsCount },
+    { id: 'jobs', label: t.jobSearch, icon: Map, screen: 'jobs' as ScreenType, active: currentScreen === 'jobs' },
+    { id: 'calendar', label: t.calendar, icon: Calendar, screen: 'calendar' as ScreenType, active: currentScreen === 'calendar' },
+    { id: 'messages', label: t.messages, icon: Mail, screen: 'messages' as ScreenType, active: currentScreen === 'messages' || currentScreen === 'chat' },
+    { id: 'notifications', label: language === 'uz' ? "Bildirishnomalar" : language === 'ru' ? "Уведомления" : "Notifications", icon: Bell, screen: 'notifications' as ScreenType, active: currentScreen === 'notifications', badge: unreadNotificationsCount },
   ];
 
   const employerNav: NavItem[] = [
@@ -56,7 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   return (
     <aside className="hidden md:flex flex-col w-64 shrink-0 bg-white border-r border-slate-200/80 min-h-screen sticky top-0 h-screen overflow-y-auto z-40 select-none">
       <div className="p-4 flex items-center justify-between border-b border-slate-100">
-        <div onClick={() => setCurrentScreen(isEmployer ? 'employer-dashboard' : 'xarita')} className="cursor-pointer group flex items-center">
+        <div onClick={() => setCurrentScreen(isEmployer ? 'employer-dashboard' : 'jobs')} className="cursor-pointer group flex items-center">
           <Logo sizeClassName="text-xl" className="group-hover:scale-[1.02] transition-transform origin-left duration-300" />
         </div>
         <LanguageSelector align="right" />
@@ -101,9 +101,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
             <nav className="space-y-1">
               {isLoggedIn ? (
                 <button
-                  onClick={() => setCurrentScreen(isEmployer ? 'employer-profile' : 'profil')}
+                  onClick={() => setCurrentScreen(isEmployer ? 'employer-profile' : 'profile')}
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-[13px] transition-all duration-200 cursor-pointer ${
-                    currentScreen === 'profil' || currentScreen === 'employer-profile' ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/15' : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                    currentScreen === 'profile' || currentScreen === 'employer-profile' ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/15' : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -125,9 +125,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
               )}
 
               <button
-                onClick={() => setCurrentScreen('sozlamalar')}
+                onClick={() => setCurrentScreen('settings')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-[13px] transition-all duration-200 cursor-pointer ${
-                  currentScreen === 'sozlamalar' || currentScreen === 'xavfsizlik' ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/15' : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                  currentScreen === 'settings' || currentScreen === 'security' ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/15' : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -149,9 +149,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
               </button>
 
               <button
-                onClick={() => setCurrentScreen('yordam')}
+                onClick={() => setCurrentScreen('help')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-[13px] transition-all duration-200 cursor-pointer ${
-                  currentScreen === 'yordam' || currentScreen === 'faq' || currentScreen === 'qollanma' || currentScreen === 'shartlar' || currentScreen === 'support-chat' ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/15' : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                  currentScreen === 'help' || currentScreen === 'faq' || currentScreen === 'guide' || currentScreen === 'terms' || currentScreen === 'support-chat' ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/15' : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -168,8 +168,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
             <button
               onClick={handleLogout}
               className="w-full flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl font-bold text-xs text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border border-rose-200/60"
-            >
-              <LogOut size={16} />
+             aria-label="Chiqish">
+<LogOut size={16} />
               <span>{t.logout}</span>
             </button>
           )}

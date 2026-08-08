@@ -60,7 +60,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
             placeholder="Sarlavha, kompaniya yoki manzil..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"
           />
         </div>
 
@@ -105,7 +105,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                     <select
                       value={j.status}
                       onChange={(e) => onChangeJobStatus(j.id, e.target.value)}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-extrabold uppercase tracking-wider mb-2 border cursor-pointer focus:outline-none ${
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-extrabold uppercase tracking-wider mb-2 border cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
                         j.status === 'open'
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           : j.status === 'in_progress'

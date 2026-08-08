@@ -94,7 +94,7 @@ export const AdminAuditLogs: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Admin nomi, amal yoki nishon bo'yicha qidiruv..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-indigo-500 transition"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-indigo-500 transition"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -102,7 +102,7 @@ export const AdminAuditLogs: React.FC = () => {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as any)}
-            className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 font-medium focus:outline-none"
+            className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           >
             <option value="all">Barcha Rollar</option>
             <option value="Super Admin">Super Admin</option>

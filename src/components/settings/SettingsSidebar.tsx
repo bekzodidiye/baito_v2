@@ -24,12 +24,12 @@ export const SettingsSidebar: React.FC = () => {
       section: language === 'uz' ? 'SOZLAMALAR' : language === 'ru' ? 'НАСТРОЙКИ' : 'SETTINGS',
       items: [
         {
-          id: 'sozlamalar',
+          id: 'settings',
           label: language === 'uz' ? 'Umumiy sozlamalar' : language === 'ru' ? 'Общие настройки' : 'General Settings',
           icon: Settings,
         },
         {
-          id: 'xavfsizlik',
+          id: 'security',
           label: language === 'uz' ? 'Xavfsizlik & Kirish' : language === 'ru' ? 'Безопасность' : 'Security & Login',
           icon: Lock,
         },
@@ -39,7 +39,7 @@ export const SettingsSidebar: React.FC = () => {
       section: language === 'uz' ? "YORDAM & SHARTLAR" : language === 'ru' ? 'ПОМОЩЬ И УСЛОВИЯ' : 'HELP & TERMS',
       items: [
         {
-          id: 'yordam',
+          id: 'help',
           label: language === 'uz' ? 'Yordam markazi' : language === 'ru' ? 'Центр помощи' : 'Help Center',
           icon: HelpCircle,
         },
@@ -49,12 +49,12 @@ export const SettingsSidebar: React.FC = () => {
           icon: FaqIcon,
         },
         {
-          id: 'qollanma',
+          id: 'guide',
           label: language === 'uz' ? 'Foydalanish qo\'llanmasi' : language === 'ru' ? 'Руководство' : 'User Guide',
           icon: BookOpen,
         },
         {
-          id: 'shartlar',
+          id: 'terms',
           label: language === 'uz' ? 'Foydalanish shartlari' : language === 'ru' ? 'Условия использования' : 'Terms of Service',
           icon: FileText,
         },
@@ -71,7 +71,7 @@ export const SettingsSidebar: React.FC = () => {
     <aside id="settings-internal-sidebar" className="hidden md:flex flex-col w-72 shrink-0 bg-white border-r border-slate-200/80 p-5 font-sans overflow-y-auto h-full">
       <div className="mb-6 px-2 space-y-3">
         <button
-          onClick={() => setCurrentScreen('xarita')}
+          onClick={() => setCurrentScreen('jobs')}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-slate-600 hover:text-brand-primary hover:bg-slate-100/80 font-semibold text-xs transition-colors cursor-pointer border border-slate-200/80"
         >
           <ArrowLeft size={14} />

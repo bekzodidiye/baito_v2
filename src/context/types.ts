@@ -1,6 +1,6 @@
 import { Job, Chat, Message } from '../types';
 
-export type ScreenType = 'landing' | 'kalendar' | 'qidiruv' | 'xabarlar' | 'xarita' | 'chat' | 'bildirishnomalar' | 'profil' | 'yakunlash' | 'login' | 'register' | 'sozlamalar' | 'xavfsizlik' | 'yordam' | 'faq' | 'qollanma' | 'shartlar' | 'support-chat' | 'employer-dashboard' | 'employer-jobs' | 'employer-applicants' | 'employer-chats' | 'employer-profile' | 'employer-analytics' | 'employer-post' | 'admin';
+export type ScreenType = 'landing' | 'calendar' | 'jobs' | 'messages' | 'jobs' | 'chat' | 'notifications' | 'profile' | 'verification' | 'login' | 'register' | 'settings' | 'security' | 'help' | 'faq' | 'guide' | 'terms' | 'support-chat' | 'employer-dashboard' | 'employer-jobs' | 'employer-applicants' | 'employer-chats' | 'employer-profile' | 'employer-analytics' | 'employer-post' | 'admin';
 
 export interface UserProfile {
   id: string;
@@ -42,7 +42,6 @@ export interface AppContextType {
   setMapFocusedJobId: (id: string | null) => void;
   messagesSearchOpen: boolean;
   setMessagesSearchOpen: (open: boolean) => void;
-  toastMessage: string | null;
 
   language: 'uz' | 'ru' | 'en';
   setLanguage: (lang: 'uz' | 'ru' | 'en') => void;

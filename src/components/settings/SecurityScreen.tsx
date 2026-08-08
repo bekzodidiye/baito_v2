@@ -53,7 +53,7 @@ export const SecurityScreen: React.FC = () => {
       {/* Top Navigation Bar */}
       <header className="md:hidden sticky top-0 w-full bg-brand-surface z-20 flex justify-between items-center px-5 py-4 border-b border-brand-outline-variant shadow-2xs">
         <button 
-          onClick={() => setCurrentScreen('sozlamalar')}
+          onClick={() => setCurrentScreen('settings')}
           className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-brand-surface-low transition-colors active:scale-95 cursor-pointer"
         >
           <ArrowLeft className="text-brand-primary" />
@@ -71,7 +71,7 @@ export const SecurityScreen: React.FC = () => {
             placeholder="Xavfsizlik bo'limlaridan izlash..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none"
+            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           />
         </div>
       )}

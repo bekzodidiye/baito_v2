@@ -48,7 +48,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
             value={newCatName}
             onChange={(e) => setNewCatName(e.target.value)}
             placeholder="Masalan: Mebel Yig'ish"
-            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-blue-500"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">

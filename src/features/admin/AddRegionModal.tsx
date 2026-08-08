@@ -49,7 +49,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Masalan: Buxoro viloyati"
-            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-red-500"
+            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-red-500"
           />
         </div>
 

@@ -30,7 +30,7 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
       onOpenOnMap();
     } else {
       setMapFocusedJobId(selectedJob.id);
-      setCurrentScreen('xarita');
+      setCurrentScreen('jobs');
     }
   };
 

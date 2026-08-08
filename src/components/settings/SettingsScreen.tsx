@@ -19,7 +19,7 @@ export const SettingsScreen: React.FC = () => {
       {/* TopAppBar */}
       <header className="md:hidden flex justify-between items-center px-4 h-16 w-full z-50 bg-brand-surface/90 backdrop-blur-md sticky top-0">
         <button 
-          onClick={() => setCurrentScreen('xarita')}
+          onClick={() => setCurrentScreen('jobs')}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low transition-colors"
         >
           <ArrowLeft size={24} className="text-brand-text-variant" />
@@ -38,7 +38,7 @@ export const SettingsScreen: React.FC = () => {
           <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">Hisob</h2>
           <div className="bg-brand-surface-lowest rounded-3xl shadow-[0_4px_20px_rgba(0,6,102,0.05),0_1px_3px_rgba(0,6,102,0.02)] overflow-hidden">
             <button 
-              onClick={() => setCurrentScreen('xavfsizlik')}
+              onClick={() => setCurrentScreen('security')}
               className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group"
             >
               <div className="flex items-center gap-4">
@@ -171,7 +171,7 @@ export const SettingsScreen: React.FC = () => {
             </div>
 
             <button 
-              onClick={() => setCurrentScreen('yordam')}
+              onClick={() => setCurrentScreen('help')}
               className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group md:hidden"
             >
               <div className="flex items-center gap-4">

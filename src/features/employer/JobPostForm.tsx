@@ -143,7 +143,7 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
           <button
             onClick={step < 3 ? handleNext : handleSubmit}
             disabled={isSubmitting}
-            className="flex-1 py-4 bg-brand-primary hover:bg-brand-primary/95 disabled:bg-brand-primary/60 disabled:cursor-not-allowed text-white font-display font-black text-sm rounded-xl shadow-[0_4px_14px_rgba(0,6,102,0.18)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer outline-none border-none"
+            className="flex-1 py-4 bg-brand-primary hover:bg-brand-primary/95 disabled:bg-brand-primary/60 disabled:cursor-not-allowed text-white font-display font-black text-sm rounded-xl shadow-[0_4px_14px_rgba(0,6,102,0.18)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 border-none"
           >
             {isSubmitting ? (
               <>

@@ -3,12 +3,13 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { SettingsLayout } from './settings/SettingsLayout';
 
 const LandingScreen = React.lazy(() => import('./landing/LandingScreen').then(m => ({ default: m.LandingScreen })));
-const JobSearchScreen = React.lazy(() => import('./search/JobSearchScreen').then(m => ({ default: m.JobSearchScreen })));
-const CalendarScreen = React.lazy(() => import('./calendar/CalendarScreen').then(m => ({ default: m.CalendarScreen })));
+const JobSearchScreen = React.lazy(() => import('../features/worker/search/JobSearchScreen').then(m => ({ default: m.JobSearchScreen })));
+const CalendarScreen = React.lazy(() => import('../features/worker/calendar/CalendarScreen').then(m => ({ default: m.CalendarScreen })));
 const MessagesScreen = React.lazy(() => import('./messages/MessagesScreen').then(m => ({ default: m.MessagesScreen })));
 const ChatScreen = React.lazy(() => import('./chat/ChatScreen').then(m => ({ default: m.ChatScreen })));
 const NotificationsScreen = React.lazy(() => import('./notifications/NotificationsScreen').then(m => ({ default: m.NotificationsScreen })));
-const ProfileScreen = React.lazy(() => import('./profile/ProfileScreen').then(m => ({ default: m.ProfileScreen })));
+const ProfileScreen = React.lazy(() => import('../features/worker/profile/ProfileScreen').then(m => ({ default: m.ProfileScreen })));
+const ApplicationsScreen = React.lazy(() => import('../features/worker/applications/ApplicationsScreen').then(m => ({ default: m.ApplicationsScreen })));
 const VerificationPendingScreen = React.lazy(() => import('./login/VerificationPendingScreen').then(m => ({ default: m.VerificationPendingScreen })));
 const SettingsScreen = React.lazy(() => import('./settings/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
 const SecurityScreen = React.lazy(() => import('./settings/SecurityScreen').then(m => ({ default: m.SecurityScreen })));
@@ -19,6 +20,7 @@ const ShartlarScreen = React.lazy(() => import('./settings/ShartlarScreen').then
 const SupportChatScreen = React.lazy(() => import('./settings/SupportChatScreen').then(m => ({ default: m.SupportChatScreen })));
 const LoginPromptScreen = React.lazy(() => import('./login/LoginPromptScreen').then(m => ({ default: m.LoginPromptScreen })));
 const EmployerPanel = React.lazy(() => import('../features/employer/EmployerPanel').then(m => ({ default: m.EmployerPanel })));
+const NotFoundScreen = React.lazy(() => import('./NotFoundScreen').then(m => ({ default: m.NotFoundScreen })));
 const AdminPanel = React.lazy(() => import('../features/admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
 
 const SuspenseFallback = () => (
@@ -35,7 +37,7 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   if (allowedRoles && !allowedRoles.includes(userProfile?.selectedRole || 'worker')) {
     if (userProfile?.selectedRole === 'employer') return <Navigate to="/employer-dashboard" replace />;
     if (userProfile?.selectedRole === 'admin') return <Navigate to="/admin" replace />;
-    return <Navigate to="/xarita" replace />;
+    return <Navigate to="/jobs" replace />;
   }
   return <>{children}</>;
 };
@@ -45,29 +47,27 @@ export const AppRoutes = () => {
     <Suspense fallback={<SuspenseFallback />}>
       <Routes>
         <Route path="/" element={<LandingScreen />} />
-        <Route path="/landing" element={<LandingScreen />} />
-        
-        {/* Worker routes */}
-        <Route path="/qidiruv" element={<ProtectedRoute allowedRoles={['worker']}><JobSearchScreen /></ProtectedRoute>} />
+                {/* Worker routes */}
+        <Route path="/jobs" element={<ProtectedRoute allowedRoles={['worker']}><JobSearchScreen /></ProtectedRoute>} />
         <Route path="/jobs/:id" element={<ProtectedRoute allowedRoles={['worker']}><JobSearchScreen /></ProtectedRoute>} />
-        <Route path="/kalendar" element={<ProtectedRoute allowedRoles={['worker']}><CalendarScreen /></ProtectedRoute>} />
-        <Route path="/xarita" element={<ProtectedRoute allowedRoles={['worker']}><Navigate to="/qidiruv" replace /></ProtectedRoute>} />
+        <Route path="/calendar" element={<ProtectedRoute allowedRoles={['worker']}><CalendarScreen /></ProtectedRoute>} />
 
         {/* Shared logged in routes */}
-        <Route path="/xabarlar" element={<ProtectedRoute><MessagesScreen /></ProtectedRoute>} />
+        <Route path="/messages" element={<ProtectedRoute><MessagesScreen /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><ChatScreen /></ProtectedRoute>} />
         <Route path="/chats/:id" element={<ProtectedRoute><ChatScreen /></ProtectedRoute>} />
-        <Route path="/bildirishnomalar" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
-        <Route path="/profil" element={<ProtectedRoute allowedRoles={['worker']}><ProfileScreen /></ProtectedRoute>} />
-        <Route path="/yakunlash" element={<ProtectedRoute><VerificationPendingScreen /></ProtectedRoute>} />
-        <Route path="/login" element={<LoginPromptScreen />} />
-        <Route path="/register" element={<LoginPromptScreen />} />
-        <Route path="/sozlamalar" element={<ProtectedRoute><SettingsLayout><SettingsScreen /></SettingsLayout></ProtectedRoute>} />
-        <Route path="/xavfsizlik" element={<ProtectedRoute><SettingsLayout><SecurityScreen /></SettingsLayout></ProtectedRoute>} />
-        <Route path="/yordam" element={<ProtectedRoute><SettingsLayout><HelpScreen /></SettingsLayout></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute allowedRoles={['worker']}><ProfileScreen /></ProtectedRoute>} />
+        <Route path="/applications" element={<ProtectedRoute allowedRoles={['worker']}><ApplicationsScreen /></ProtectedRoute>} />
+        <Route path="/verification" element={<ProtectedRoute><VerificationPendingScreen /></ProtectedRoute>} />
+        <Route path="/login" element={<LoginPromptScreen initialMode="login" />} />
+        <Route path="/register" element={<LoginPromptScreen initialMode="register" />} />
+        <Route path="/settings" element={<ProtectedRoute><SettingsLayout><SettingsScreen /></SettingsLayout></ProtectedRoute>} />
+        <Route path="/security" element={<ProtectedRoute><SettingsLayout><SecurityScreen /></SettingsLayout></ProtectedRoute>} />
+        <Route path="/help" element={<ProtectedRoute><SettingsLayout><HelpScreen /></SettingsLayout></ProtectedRoute>} />
         <Route path="/faq" element={<SettingsLayout><FaqScreen /></SettingsLayout>} />
-        <Route path="/qollanma" element={<SettingsLayout><QollanmaScreen /></SettingsLayout>} />
-        <Route path="/shartlar" element={<SettingsLayout><ShartlarScreen /></SettingsLayout>} />
+        <Route path="/guide" element={<SettingsLayout><QollanmaScreen /></SettingsLayout>} />
+        <Route path="/terms" element={<SettingsLayout><ShartlarScreen /></SettingsLayout>} />
         <Route path="/support-chat" element={<ProtectedRoute><SettingsLayout><SupportChatScreen /></SettingsLayout></ProtectedRoute>} />
         
         {/* Employer routes grouped */}
@@ -81,7 +81,7 @@ export const AppRoutes = () => {
         
         {/* Admin */}
         <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminPanel /></ProtectedRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundScreen />} />
       </Routes>
     </Suspense>
   );

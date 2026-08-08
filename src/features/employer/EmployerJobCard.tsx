@@ -71,7 +71,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
               onDelete(job.id);
             }}
             title={language === 'uz' ? "O'chirish" : language === 'ru' ? "Удалить" : "Delete"}
-            className="absolute top-3 right-3 p-1.5 rounded-full bg-slate-900/50 hover:bg-rose-600 text-white backdrop-blur-md transition-all cursor-pointer outline-none"
+            className="absolute top-3 right-3 p-1.5 rounded-full bg-slate-900/50 hover:bg-rose-600 text-white backdrop-blur-md transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           >
             <Trash2 size={14} />
           </button>

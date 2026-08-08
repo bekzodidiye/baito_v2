@@ -1,13 +1,14 @@
 import React from 'react';
 import { ArrowLeft, LogOut } from 'lucide-react';
-import { useProfileScreen } from '../../hooks/useProfileScreen';
+import { useProfileScreen } from '../../../hooks/useProfileScreen';
 import { ProfileAccordion } from './ProfileAccordion';
 import { ProfileDialogs } from './ProfileDialogs';
 import { ProfileHero } from './ProfileHero';
 import { ProfileWidgets } from './ProfileWidgets';
 import { ProfileCompletionWidget } from './ProfileCompletionWidget';
-import { showToast } from '../../utils/toast';
-import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { ProfileReviewsWidget } from './ProfileReviewsWidget';
+import { showToast } from '../../../utils/toast';
+import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 export const ProfileScreen: React.FC = () => {
   const {
@@ -44,14 +45,22 @@ export const ProfileScreen: React.FC = () => {
     toggleRole
   } = useProfileScreen();
 
+  React.useEffect(() => {
+    const handleScrollEvent = (e: Event) => {
+      setActiveDialog('edit');
+    };
+    window.addEventListener('scroll-to-profile-section', handleScrollEvent);
+    return () => window.removeEventListener('scroll-to-profile-section', handleScrollEvent);
+  }, [setActiveDialog]);
+
   return (
-    <div className="w-full max-w-6xl mx-auto py-4 px-4 md:px-6 pb-20 md:pb-6 flex flex-col relative">
+    <div className="w-full max-w-6xl mx-auto py-4 px-4 md:px-6 pb-28 md:pb-6 flex flex-col relative">
       {/* TopAppBar Custom for screen integration consistency */}
       <header className="w-full flex justify-between items-center mb-6 shrink-0">
         <div className="flex items-center gap-2">
           <button 
-            onClick={() => setCurrentScreen('xarita')}
-            className="p-2 hover:bg-slate-50 transition-colors rounded-full text-slate-700 cursor-pointer outline-none"
+            onClick={() => setCurrentScreen('jobs')}
+            className="p-2 hover:bg-slate-50 transition-colors rounded-full text-slate-700 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           >
             <ArrowLeft size={18} className="stroke-[2.5]" />
           </button>
@@ -78,6 +87,9 @@ export const ProfileScreen: React.FC = () => {
           {/* Profile Completion Widget */}
           <ProfileCompletionWidget language={language} />
 
+          {/* Profile Reviews Widget */}
+          <ProfileReviewsWidget language={language} />
+
           {/* Toggle Role Widget */}
           <section className="bg-slate-900 text-white rounded-2xl p-4.5 border border-slate-800 shadow-sm flex flex-col gap-2.5 shrink-0">
             <div className="flex items-center justify-between">
@@ -95,7 +107,7 @@ export const ProfileScreen: React.FC = () => {
             </div>
             <button
               onClick={toggleRole}
-              className="w-full py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl font-display font-black text-xs transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer outline-none shadow-sm"
+              className="w-full py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl font-display font-black text-xs transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 shadow-sm"
             >
               {userProfile?.selectedRole === 'employer'
                 ? (language === 'uz' ? "Xodim rejimiga o'tish" : language === 'ru' ? "Режим работника" : "Worker Mode")
@@ -132,9 +144,9 @@ export const ProfileScreen: React.FC = () => {
           <div className="w-full pt-1">
             <button 
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-3.5 text-rose-600 hover:text-rose-700 font-display font-black text-xs bg-white hover:bg-rose-50/50 transition-all rounded-xl border border-rose-100 cursor-pointer outline-none active:scale-98 shadow-2xs"
-            >
-              <LogOut size={14} className="stroke-[2.5]" />
+              className="w-full flex items-center justify-center gap-2 py-3.5 text-rose-600 hover:text-rose-700 font-display font-black text-xs bg-white hover:bg-rose-50/50 transition-all rounded-xl border border-rose-100 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-98 shadow-2xs"
+             aria-label="Chiqish">
+<LogOut size={14} className="stroke-[2.5]" />
               <span>{t.logout}</span>
             </button>
           </div>

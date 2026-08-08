@@ -1,59 +1,25 @@
 const API_BASE_URL = '/api/v1';
 
-const autoRelogin = async (): Promise<string | null> => {
+// The session lives in httpOnly cookies the browser attaches automatically —
+// JavaScript never reads or stores a token.
+const refreshSession = async (): Promise<boolean> => {
   try {
-    const profile = localStorage.getItem('baito_user_profile');
-    let role = 'worker';
-    if (profile) {
-      try {
-        const parsed = JSON.parse(profile);
-        if (parsed?.selectedRole) role = parsed.selectedRole;
-      } catch (e) {}
-    }
-
-    const isEmployerRoute = typeof window !== 'undefined' && window.location.pathname.includes('/employer');
-    if (isEmployerRoute) {
-      role = 'employer';
-    }
-
-    const phone = role === 'employer' ? '+998901234567' : '+998909876543';
-    const password = role === 'employer' ? 'employer123' : 'worker123';
-
-    const formData = new URLSearchParams();
-    formData.append('username', phone);
-    formData.append('password', password);
-
-    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: formData.toString(),
+      credentials: 'include',
     });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.access_token) {
-        localStorage.setItem('baito_token', data.access_token);
-        return data.access_token;
-      }
-    }
-  } catch (e) {}
-  return null;
+    return res.ok;
+  } catch {
+    return false;
+  }
 };
 
 export const apiClient = async (endpoint: string, options: RequestInit = {}, isRetry = false): Promise<any> => {
-  const defaultHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  const token = localStorage.getItem('baito_token');
-  if (token) {
-    defaultHeaders['Authorization'] = `Bearer ${token}`;
-  }
-
   const config: RequestInit = {
     ...options,
+    credentials: 'include',
     headers: {
-      ...defaultHeaders,
+      'Content-Type': 'application/json',
       ...options.headers,
     },
   };
@@ -62,20 +28,22 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}, isR
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    const errorDetail = error.detail || '';
+    const errorDetail = typeof error.detail === 'string' 
+      ? error.detail 
+      : Array.isArray(error.detail) 
+        ? error.detail.map((e: any) => e.msg).join(', ')
+        : '';
 
-    // Handle stale, invalid, or forbidden token with automatic silent re-login
-    if (!isRetry && (response.status === 401 || response.status === 403 || response.status === 404 || errorDetail.includes('User not found') || errorDetail.includes('credentials') || errorDetail.includes('employer'))) {
-      localStorage.removeItem('baito_token');
-      const newToken = await autoRelogin();
-      if (newToken) {
+    if (!isRetry && response.status === 401) {
+      if (await refreshSession()) {
         return apiClient(endpoint, options, true);
       }
+      window.dispatchEvent(new Event('auth:unauthorized'));
     }
 
-    throw new Error(errorDetail || `API request failed with status ${response.status}`);
+    throw new Error(errorDetail || `So'rov bajarilmadi (${response.status})`);
   }
 
   if (response.status === 204) return null;
-  return response.json();
+  return response.json().catch(() => ({}));
 };

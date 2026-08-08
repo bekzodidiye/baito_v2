@@ -34,7 +34,7 @@ export const LanguageSelector: React.FC<{ align?: 'left' | 'right' }> = ({ align
       {/* Active Selection Button (Styled like the requested image) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl border border-slate-200 hover:border-slate-300 text-[11px] font-bold text-brand-primary bg-white hover:bg-slate-50/50 transition-all duration-200 cursor-pointer shadow-[0_1px_3px_rgba(0,0,0,0.01)] active:scale-95 outline-none focus:ring-2 focus:ring-brand-primary/10"
+        className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl border border-slate-200 hover:border-slate-300 text-[11px] font-bold text-brand-primary bg-white hover:bg-slate-50/50 transition-all duration-200 cursor-pointer shadow-[0_1px_3px_rgba(0,0,0,0.01)] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/10"
         type="button"
         id="language-selector-btn"
         data-allow-guest="true"

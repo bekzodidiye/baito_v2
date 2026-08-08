@@ -10,7 +10,7 @@ import {
   getJobTimeRelation, 
   isOverlappingWithActiveJob, 
   getDayStatusForList
-} from '../components/calendar/CalendarScreen.utils';
+} from '../features/worker/calendar/CalendarScreen.utils';
 
 export function useCalendarScreen() {
   const { activeCalendarFilter, setActiveCalendarFilter, language, activeCalendarDay } = useApp();

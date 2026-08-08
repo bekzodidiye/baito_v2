@@ -13,7 +13,7 @@ import { MenuModals } from './components/MenuModals';
 import { OnboardingTour } from './components/OnboardingTour';
 import { GatedLockScreen } from './components/GatedLockScreen';
 import { SettingsLayout } from './components/settings/SettingsLayout';
-import { motion, AnimatePresence } from 'motion/react';
+import { MotionConfig } from 'motion/react';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 
 import { AppRoutes } from './components/AppRoutes';
@@ -28,7 +28,7 @@ function AppContent() {
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
 
   useEffect(() => {
-    if (currentScreen === 'xarita') {
+    if (currentScreen === 'jobs') {
       setHasOpenedMap(true);
     }
 
@@ -60,22 +60,23 @@ function AppContent() {
   
   const handleOpenModal = (type: 'profile' | 'settings' | 'help' | 'auth') => {
     if (type === 'auth') setCurrentScreen('login');
-    else if (type === 'settings') { setActiveModal(null); setCurrentScreen('sozlamalar'); }
-    else if (type === 'help') { setActiveModal(null); setCurrentScreen('yordam'); }
+    else if (type === 'settings') { setActiveModal(null); setCurrentScreen('settings'); }
+    else if (type === 'help') { setActiveModal(null); setCurrentScreen('help'); }
     else setActiveModal(type);
   };
 
-  const isSettingsOrHelp = ['sozlamalar', 'xavfsizlik', 'yordam', 'faq', 'qollanma', 'shartlar', 'support-chat'].includes(currentScreen);
-  const showNavigation = currentScreen !== 'admin' && currentScreen !== 'yakunlash' && currentScreen !== 'login' && currentScreen !== 'register' && currentScreen !== 'landing' && !currentScreen.startsWith('employer-') && !isSettingsOrHelp;
+  const isSettingsOrHelp = ['settings', 'security', 'help', 'faq', 'guide', 'terms', 'support-chat'].includes(currentScreen);
+  const showNavigation = currentScreen !== 'admin' && currentScreen !== 'verification' && currentScreen !== 'login' && currentScreen !== 'register' && currentScreen !== 'landing' && !currentScreen.startsWith('employer-') && !isSettingsOrHelp;
 
-  const shouldMountMap = hasOpenedMap || currentScreen === 'xarita';
+  const shouldMountMap = hasOpenedMap || currentScreen === 'jobs';
 
   return (
     <div className={`flex flex-col md:flex-row bg-brand-background text-brand-text antialiased font-sans selection:bg-brand-primary-container selection:text-white ${
-      currentScreen === 'admin' || (currentScreen.startsWith('employer-') && currentScreen !== 'employer-post') || currentScreen === 'xabarlar' || currentScreen === 'chat'
+      currentScreen === 'admin' || (currentScreen.startsWith('employer-') && currentScreen !== 'employer-post') || currentScreen === 'messages' || currentScreen === 'chat'
         ? 'h-screen overflow-hidden'
         : 'min-h-screen'
     }`}>
+      <a href="#main-content" className="skip-link">Asosiy kontentga o'tish</a>
       <ToastContainer />
 
       {/* Desktop Permanent Sidebar */}
@@ -89,17 +90,17 @@ function AppContent() {
         {showNavigation && <Drawer onOpenModal={handleOpenModal} />}
 
         {/* Main Content Layout */}
-        <main className={`flex-1 w-full min-w-0 ${['landing', 'admin', 'xarita', 'xabarlar', 'chat', 'yakunlash', 'login', 'sozlamalar', 'xavfsizlik', 'yordam', 'faq', 'qollanma', 'shartlar', 'support-chat', 'profil', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'qidiruv'].includes(currentScreen) ? 'max-w-none px-0 md:px-0' : 'max-w-7xl mx-auto px-4 md:px-6'}`}>
+        <main id="main-content" tabIndex={-1} className={`flex-1 w-full min-w-0 ${['landing', 'admin', 'jobs', 'messages', 'chat', 'verification', 'login', 'settings', 'security', 'help', 'faq', 'guide', 'terms', 'support-chat', 'profile', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'jobs'].includes(currentScreen) ? 'max-w-none px-0 md:px-0' : 'max-w-7xl mx-auto px-4 md:px-6'}`}>
           <ErrorBoundary key={currentScreen}>
             {/* If not logged in, and trying to access a protected screen, redirect to landing */}
-            {!isLoggedIn && !['landing', 'login', 'register', 'faq', 'shartlar', 'yordam', 'qollanma'].includes(currentScreen) ? (
+            {!isLoggedIn && !['landing', 'login', 'register', 'faq', 'terms', 'help', 'guide'].includes(currentScreen) ? (
               <Navigate to="/" replace />
             ) : (
               <>
-                {currentScreen !== 'xarita' && <AppRoutes />}
+                {currentScreen !== 'jobs' && <AppRoutes />}
                 
                 {/* Persistently mounted map to avoid Leaflet re-initialization overhead */}
-                <div className={currentScreen === 'xarita' ? 'block' : 'hidden'}>
+                <div className={currentScreen === 'jobs' ? 'block' : 'hidden'}>
                   <MapViewScreen />
                 </div>
               </>
@@ -112,7 +113,7 @@ function AppContent() {
       </div>
 
       {/* Region selector fallback overlay for non-map screens */}
-      {currentScreen !== 'xarita' && currentScreen !== 'landing' && <RegionSelector />}
+      {currentScreen !== 'jobs' && currentScreen !== 'landing' && <RegionSelector />}
 
       {/* Menu item modal views */}
       <MenuModals isOpen={activeModal !== null} onClose={() => setActiveModal(null)} type={activeModal} />
@@ -126,9 +127,13 @@ function AppContent() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <AppProvider>
-        <AppContent />
-      </AppProvider>
+      {/* reducedMotion="user" makes every motion.* component in the tree honor
+          prefers-reduced-motion automatically, no per-component opt-in needed. */}
+      <MotionConfig reducedMotion="user">
+        <AppProvider>
+          <AppContent />
+        </AppProvider>
+      </MotionConfig>
     </ErrorBoundary>
   );
 }

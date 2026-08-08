@@ -1,8 +1,8 @@
 import React, { memo } from 'react';
 import { Search, MapPin, Loader2, Tag } from 'lucide-react';
 import { REGIONS_LIST, getRegionDisplayName } from './JobSearchScreen.utils';
-import { Language } from '../../translations';
-import { CATEGORIES_CONFIG, CATEGORY_FILTERS_LIST } from '../../utils/jobCategoryUtils';
+import { Language } from '../../../translations';
+import { CATEGORIES_CONFIG, CATEGORY_FILTERS_LIST } from '../../../utils/jobCategoryUtils';
 
 interface SearchSidebarProps {
   t: any;
@@ -37,7 +37,7 @@ const SearchSidebarComponent: React.FC<SearchSidebarProps> = ({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input
             type="text"
-            className="w-full bg-slate-50 hover:bg-slate-100/70 text-xs font-sans rounded-xl py-2.5 pl-9 pr-3 border border-transparent focus:border-brand-primary/30 focus:bg-white focus:outline-none transition-all placeholder:text-slate-400"
+            className="w-full bg-slate-50 hover:bg-slate-100/70 text-xs font-sans rounded-xl py-2.5 pl-9 pr-3 border border-transparent focus:border-brand-primary/30 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-400"
             placeholder={t.keywordPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}

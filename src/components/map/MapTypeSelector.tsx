@@ -3,8 +3,8 @@ import { Map, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface MapTypeSelectorProps {
-  mapType: 'xarita' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro';
-  setMapType: (type: 'xarita' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro') => void;
+  mapType: 'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro';
+  setMapType: (type: 'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro') => void;
 }
 
 export const MapTypeSelector: React.FC<MapTypeSelectorProps> = ({
@@ -15,7 +15,7 @@ export const MapTypeSelector: React.FC<MapTypeSelectorProps> = ({
 
   const toggleMapType = () => {
     if (isHybrid) {
-      setMapType('xarita');
+      setMapType('jobs');
     } else {
       setMapType('gibrid');
     }

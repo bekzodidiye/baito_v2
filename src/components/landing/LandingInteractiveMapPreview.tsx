@@ -15,7 +15,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { language } = useApp();
   const { jobs } = useJobsData();
-  const [activeShift, setActiveShift] = useState(MOCK_LIVE_SHIFTS[0]);
+  const [activeShift, setActiveShift] = useState<any>(null);
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   const isFirstRender = useRef(true);
 
@@ -30,19 +30,17 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
       const jobId = (e as CustomEvent).detail;
       if (!jobId) return;
       
-      let targetShift = MOCK_LIVE_SHIFTS.find(s => s.id === jobId);
-      if (!targetShift) {
-        const foundJob = jobs.find(j => j.id === jobId);
-        if (foundJob) {
-          targetShift = {
-            id: foundJob.id, titleUz: foundJob.title, titleRu: foundJob.title, company: foundJob.company, district: foundJob.location,
-            pay: foundJob.salary || "280,000 so'm/smena", payNum: 280000, time: foundJob.time || "09:00 - 18:00 (8 soat)", category: 'general',
-            lat: 0, lng: 0, badge: foundJob.urgent ? 'Tezkor' : 'Aktiv', urgent: foundJob.urgent || false,
-            descriptionUz: foundJob.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
-            descriptionRu: foundJob.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
-            perksUz: ["⚡ Kunlik to'lov", "🛡️ Baito Kafolati", "🍲 Tushlik ta'minlanadi"]
-          };
-        }
+      let targetShift = null;
+      const foundJob = jobs.find(j => j.id === jobId);
+      if (foundJob) {
+        targetShift = {
+          id: foundJob.id, titleUz: foundJob.title, titleRu: foundJob.title, company: foundJob.company, district: foundJob.location,
+          pay: foundJob.salary || "280,000 so'm/smena", payNum: 280000, time: foundJob.time || "09:00 - 18:00 (8 soat)", category: 'general',
+          lat: 0, lng: 0, badge: foundJob.urgent ? 'Tezkor' : 'Aktiv', urgent: foundJob.urgent || false,
+          descriptionUz: foundJob.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
+          descriptionRu: foundJob.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
+          perksUz: ["⚡ Kunlik to'lov", "🛡️ Baito Kafolati", "🍲 Tushlik ta'minlanadi"]
+        };
       }
 
       if (targetShift) {
@@ -65,8 +63,14 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
         descriptionRu: j.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
         perksUz: ["⚡ Kunlik to'lov", "🛡️ Baito Kafolati", "🍲 Tushlik ta'minlanadi"]
       }));
-      const allShifts = [...realShifts, ...MOCK_LIVE_SHIFTS].slice(0, 6);
-      setActiveShift(prev => allShifts[(allShifts.findIndex(s => s.id === prev.id) + 1) % allShifts.length]);
+      const allShifts = realShifts.slice(0, 6);
+      if (allShifts.length > 0) {
+        setActiveShift((prev: any) => {
+          if (!prev) return allShifts[0];
+          const idx = allShifts.findIndex(s => s.id === prev.id);
+          return allShifts[(idx + 1) % allShifts.length];
+        });
+      }
     }, 10000);
     return () => clearInterval(timer);
   }, [jobs]);
@@ -102,6 +106,11 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
           {/* Right Column: Selected Job Details Sidebar */}
           <div className="lg:col-span-4 bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-4 sm:p-5 flex flex-col justify-between shadow-xl h-[480px] sm:h-[530px] overflow-hidden w-full">
             {/* Header & Scrollable Job Card Details */}
+            {!activeShift ? (
+              <div className="flex-1 flex items-center justify-center text-slate-400 text-sm font-medium">
+                Smenalar yuklanmoqda...
+              </div>
+            ) : (
             <div className="flex-1 min-h-0 flex flex-col space-y-3 overflow-y-auto pr-1 no-scrollbar">
               <div className="flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-1.5 text-brand-primary text-xs font-black">
@@ -170,6 +179,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
               </motion.div>
             </div>
 
+            )}
             {/* Fixed CTA Button at the very bottom */}
             <div className="pt-3 border-t border-slate-200/80 bg-white shrink-0 mt-auto">
               <button

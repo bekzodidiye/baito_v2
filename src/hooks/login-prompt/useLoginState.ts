@@ -2,14 +2,17 @@ import { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
-export const useLoginState = (isModal: boolean) => {
+export const useLoginState = (isModal: boolean, initialMode?: 'login' | 'register') => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  
+
 
   // Navigation mode: 'role-selection' | 'profile-info' | 'documents' | 'finish' | 'login'
   const [mode, setModeState] = useState<'role-selection' | 'profile-info' | 'documents' | 'finish' | 'login'>(() => {
     if (currentScreen === 'register') return 'role-selection';
     if (currentScreen === 'login') return 'login';
+    // As a modal there is no route to read, so the caller's intent decides.
+    if (initialMode === 'register') return 'role-selection';
+    if (initialMode === 'login') return 'login';
     try {
       const savedRole = localStorage.getItem('baito_preselected_role');
       if (savedRole === 'worker' || savedRole === 'employer') {

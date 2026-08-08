@@ -62,10 +62,10 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({ embedded = false
         <header className="sticky top-0 z-20 bg-white border-b border-slate-100 flex justify-between items-center px-3.5 py-2.5 shrink-0">
           <button 
             onClick={handleBackClick}
-            className="text-brand-text-variant hover:bg-brand-surface-low p-1.5 rounded-full flex items-center justify-center cursor-pointer outline-none transition-colors"
+            className="text-brand-text-variant hover:bg-brand-surface-low p-1.5 rounded-full flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-colors"
             title={language === 'ru' ? 'Назад' : language === 'en' ? 'Back' : 'Orqaga'}
-          >
-            <ArrowLeft size={18} />
+           aria-label="Orqaga">
+<ArrowLeft size={18} />
           </button>
           <div className="flex-1 text-center mx-2 truncate">
             <h1 className="font-display text-xs sm:text-sm font-bold text-brand-primary truncate">

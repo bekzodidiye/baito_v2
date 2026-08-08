@@ -40,6 +40,10 @@ export const fetchNotificationsApi = async () => {
   return await apiClient('/notifications');
 };
 
+export const fetchWorkerApplicationsApi = async () => {
+  return await apiClient('/applications/worker');
+};
+
 export const markAllNotificationsReadApi = async () => {
   return await apiClient('/notifications/read-all', { method: 'POST' });
 };
@@ -55,6 +59,7 @@ export const loginApi = async (phone: string, password: string) => {
 
   const response = await fetch('/api/v1/auth/login', {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
@@ -62,9 +67,14 @@ export const loginApi = async (phone: string, password: string) => {
   });
 
   if (!response.ok) {
-    throw new Error('Login failed');
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || 'Telefon raqam yoki parol xato');
   }
   return response.json();
+};
+
+export const logoutApi = async () => {
+  await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
 };
 
 export const registerApi = async (data: any) => {
@@ -72,4 +82,8 @@ export const registerApi = async (data: any) => {
     method: 'POST',
     body: JSON.stringify(data)
   });
+};
+
+export const requestWithdrawalApi = async (amount: number) => {
+  return await apiClient('/withdraw', { method: 'POST', body: JSON.stringify({ amount }) });
 };

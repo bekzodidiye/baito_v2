@@ -10,3 +10,5 @@ class Application(Base):
     status = Column(String, nullable=False, default='applied')
     appliedDate = Column(DateTime(timezone=True), server_default=func.now())
     rating = Column(Integer)
+    review = Column(String)
+    bonus = Column(Integer, default=0)

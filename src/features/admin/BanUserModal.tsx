@@ -43,7 +43,7 @@ export const BanUserModal: React.FC<BanUserModalProps> = ({
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800 focus:outline-none"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             >
               <option value="Qoidabuzarlik">Platforma qoidalarini buzish</option>
               <option value="Spam / Reklama">Spam yoki ruxsatsiz reklama</option>
@@ -60,7 +60,7 @@ export const BanUserModal: React.FC<BanUserModalProps> = ({
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               placeholder="Bloklanish sababini batafsilroq yozing..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium text-slate-800 focus:outline-none resize-none"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none"
               required
             />
           </div>

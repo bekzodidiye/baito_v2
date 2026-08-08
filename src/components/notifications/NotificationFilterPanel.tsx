@@ -51,7 +51,7 @@ export const NotificationFilterPanel: React.FC<NotificationFilterPanelProps> = (
         {unreadCount > 0 && (
           <button
             onClick={handleMarkAllRead}
-            className="w-full mt-1 py-2.5 px-3 bg-brand-primary/5 hover:bg-brand-primary/10 text-brand-primary font-bold text-xs rounded-xl flex items-center justify-center gap-2 border border-brand-primary/10 transition-all cursor-pointer outline-none active:scale-[0.98]"
+            className="w-full mt-1 py-2.5 px-3 bg-brand-primary/5 hover:bg-brand-primary/10 text-brand-primary font-bold text-xs rounded-xl flex items-center justify-center gap-2 border border-brand-primary/10 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-[0.98]"
           >
             <CheckCheck size={16} className="stroke-[2.5]" />
             <span>{t.markAllAsRead || "Hammasini o'qilgan qilish"}</span>

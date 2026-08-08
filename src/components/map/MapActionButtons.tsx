@@ -10,8 +10,8 @@ interface MapActionButtonsProps {
   handleResetMap: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
-  mapType?: 'xarita' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro';
-  setMapType?: (type: 'xarita' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro') => void;
+  mapType?: 'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro';
+  setMapType?: (type: 'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro') => void;
 }
 
 export const MapActionButtons: React.FC<MapActionButtonsProps> = ({

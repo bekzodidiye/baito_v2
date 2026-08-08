@@ -6,6 +6,24 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { createTileLayers, MapType } from './mapTileLayers';
 import { createClusterIcon } from './clusterIconFunction';
 
+// Leaflet's canvas renderer repaints on a queued animation frame. When a map
+// unmounts between the frame being queued and it running, the canvas and its
+// 2d context are already gone and _clear()/_update() throw on a dead handle.
+// Guarding the prototype once covers every renderer instance, including the
+// per-pane ones Leaflet creates lazily and never exposes.
+const canvasProto = (L as any).Canvas?.prototype;
+if (canvasProto && !canvasProto.__baitoTeardownGuard) {
+  for (const method of ['_redraw', '_update', '_clear', '_draw', '_updatePaths']) {
+    const original = canvasProto[method];
+    if (typeof original !== 'function') continue;
+    canvasProto[method] = function (...args: any[]) {
+      if (!this._ctx || !this._container) return;
+      return original.apply(this, args);
+    };
+  }
+  canvasProto.__baitoTeardownGuard = true;
+}
+
 interface UseMapSetupProps {
   isPanelExpanded: boolean;
   isViloyatDashboard: boolean;
@@ -102,13 +120,31 @@ export const useMapSetup = ({
 
     // Initial resize invalidations to prevent blank map issues on mount
     map.invalidateSize();
-    setTimeout(() => map.invalidateSize(), 200);
-    setTimeout(() => map.invalidateSize(), 600);
+    const invalidate1 = setTimeout(() => map.invalidateSize(), 200);
+    const invalidate2 = setTimeout(() => map.invalidateSize(), 600);
 
     return () => {
       clearTimeout(timer);
+      clearTimeout(invalidate1);
+      clearTimeout(invalidate2);
       setIsMapReady(false);
       if (mapInstanceRef.current) {
+        // Cancel any in-flight pan/zoom animation first: its next frame would
+        // reach for a container that remove() has already torn down, which
+        // throws "_leaflet_pos of undefined".
+        mapInstanceRef.current.stop();
+
+        // Drain the layer groups before removing the map. The cluster group
+        // adds markers on a chunked timer; left running, those chunks keep
+        // drawing into a map that is on its way out.
+        for (const ref of [markerGroupRef, regionsGroupRef, userGroupRef, labelsGroupRef]) {
+          try {
+            ref.current?.clearLayers();
+          } catch {
+            /* group already torn down */
+          }
+        }
+
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
         markerGroupRef.current = null;

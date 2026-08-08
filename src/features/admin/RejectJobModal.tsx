@@ -43,7 +43,7 @@ export const RejectJobModal: React.FC<RejectJobModalProps> = ({
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800 focus:outline-none"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             >
               <option value="Noto'g'ri kategoriya">Noto'g'ri kategoriya tanlangan</option>
               <option value="Narx ko'rsatilmagan">Narx noto'g'ri yoki ko'rsatilmagan</option>
@@ -60,7 +60,7 @@ export const RejectJobModal: React.FC<RejectJobModalProps> = ({
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Iltimos, e'lonni qayta tahrirlashingiz uchun sababni yozing..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium text-slate-800 focus:outline-none resize-none"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none"
               required
             />
           </div>

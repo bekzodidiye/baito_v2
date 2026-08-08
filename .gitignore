@@ -6,3 +6,18 @@ coverage/
 *.log
 .env*
 !.env.example
+firebase-applet-config.json
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Patch / merge leftovers
+*.orig
+*.rej
+*.patch

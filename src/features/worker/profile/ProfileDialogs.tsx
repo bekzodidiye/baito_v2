@@ -87,7 +87,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                     placeholder="Masalan: 100000"
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-3 pl-14 pr-4 text-xs font-bold outline-none focus:ring-1 focus:ring-brand-primary transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-3 pl-14 pr-4 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-1 focus:ring-brand-primary transition-all"
                   />
                 </div>
 
@@ -128,7 +128,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                     value={editedFirstName}
                     onChange={(e) => setEditedFirstName(e.target.value)}
                     disabled={isEditing}
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold outline-none text-slate-800"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 text-slate-800"
                   />
                 </div>
 
@@ -140,7 +140,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                     value={editedLastName}
                     onChange={(e) => setEditedLastName(e.target.value)}
                     disabled={isEditing}
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold outline-none text-slate-800"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 text-slate-800"
                   />
                 </div>
 
@@ -152,7 +152,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                     value={editedPhone}
                     onChange={(e) => setEditedPhone(e.target.value)}
                     disabled={isEditing}
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold outline-none text-slate-800"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 text-slate-800"
                   />
                 </div>
 

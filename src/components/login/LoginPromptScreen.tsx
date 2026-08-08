@@ -8,13 +8,15 @@ import { LoginPromptBody } from './LoginPromptBody';
 interface LoginPromptScreenProps {
   isModal?: boolean;
   onClose?: () => void;
+  initialMode?: 'login' | 'register';
 }
 
 export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = ({ 
   isModal = false, 
-  onClose 
+  onClose, 
+  initialMode 
 }) => {
-  const p = useLoginPrompt({ isModal, onClose });
+  const p = useLoginPrompt({ isModal, onClose, initialMode });
   const { mode, setMode, handleBack, t } = p;
 
   return (

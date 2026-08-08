@@ -72,7 +72,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
               value={regPhone}
               onChange={(e) => setRegPhone(e.target.value)}
               placeholder={t.phonePlaceholder}
-              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-4 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-4 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
             />
           </div>
         </div>
@@ -92,7 +92,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
               value={regPassword}
               onChange={(e) => setRegPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-11 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-11 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
             />
             <button
               type="button"
@@ -119,7 +119,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
               value={regConfirmPassword}
               onChange={(e) => setRegConfirmPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-11 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-11 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
             />
             <button
               type="button"

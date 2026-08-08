@@ -13,8 +13,8 @@ export const VerificationPendingScreen: React.FC = () => {
       <header className="w-full shrink-0 bg-white border-b border-slate-200 z-40 flex justify-between items-center px-4 h-16 shadow-3xs rounded-t-[20px] md:rounded-t-[24px]">
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => setCurrentScreen('profil')}
-            className="p-2 hover:bg-slate-50 transition-colors rounded-full text-brand-navy cursor-pointer outline-none active:scale-95"
+            onClick={() => setCurrentScreen('profile')}
+            className="p-2 hover:bg-slate-50 transition-colors rounded-full text-brand-navy cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-95"
           >
             <ArrowLeft size={18} className="stroke-[2.5]" />
           </button>
@@ -28,8 +28,8 @@ export const VerificationPendingScreen: React.FC = () => {
           {/* Step 1 */}
           <button 
             type="button"
-            onClick={() => setCurrentScreen('profil')}
-            className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer outline-none group"
+            onClick={() => setCurrentScreen('profile')}
+            className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 group"
           >
             <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-xs shadow-sm transition-all duration-300 group-hover:scale-105">
               <Check size={14} className="stroke-[3]" />
@@ -42,8 +42,8 @@ export const VerificationPendingScreen: React.FC = () => {
           {/* Step 2 */}
           <button 
             type="button"
-            onClick={() => setCurrentScreen('profil')}
-            className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer outline-none group"
+            onClick={() => setCurrentScreen('profile')}
+            className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 group"
           >
             <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-xs shadow-sm transition-all duration-300 group-hover:scale-105">
               <Check size={14} className="stroke-[3]" />
@@ -162,7 +162,7 @@ export const VerificationPendingScreen: React.FC = () => {
         <div className="flex flex-col gap-3 max-w-[288px] mx-auto">
           <button 
             onClick={handleDashboardClick}
-            className="w-full h-[50px] bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl flex items-center justify-center gap-2 font-display font-black text-xs active:scale-[0.98] transition-transform shadow-[0_8px_25px_rgba(0,6,102,0.18)] cursor-pointer border-none outline-none"
+            className="w-full h-[50px] bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl flex items-center justify-center gap-2 font-display font-black text-xs active:scale-[0.98] transition-transform shadow-[0_8px_25px_rgba(0,6,102,0.18)] cursor-pointer border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           >
             <span>{t.btnDashboard}</span>
             <ArrowRight size={15} className="stroke-[2.5]" />

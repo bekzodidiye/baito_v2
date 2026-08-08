@@ -82,7 +82,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
 
   const handleSwitchRole = (mode: 'worker' | 'employer') => {
     if (userProfile) setUserProfile({ ...userProfile, selectedRole: mode });
-    setCurrentScreen(mode === 'worker' ? 'xarita' : 'employer-dashboard');
+    setCurrentScreen(mode === 'worker' ? 'jobs' : 'employer-dashboard');
   };
 
   return (

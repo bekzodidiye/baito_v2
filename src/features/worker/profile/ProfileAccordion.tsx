@@ -1,8 +1,8 @@
 import React from 'react';
-import { Briefcase, ChevronRight, History, MessageSquare, Award, Coins, FileText } from 'lucide-react';
+import { Briefcase, ChevronRight, History, MessageSquare, Award, Coins, FileText, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { showToast } from '../../utils/toast';
-import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { showToast } from '../../../utils/toast';
+import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 interface ProfileAccordionProps {
   expandedSection: 'activity' | 'settings' | 'help' | null;
@@ -31,8 +31,8 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
       {/* 2. Sozlamalar Accordion (Direct Link) */}
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
         <button 
-          onClick={() => { setCurrentScreen('sozlamalar'); (null); }}
-          className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer outline-none"
+          onClick={() => { setCurrentScreen('settings'); (null); }}
+          className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           <div className="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
@@ -45,8 +45,8 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
       {/* 3. Yordam Accordion (Direct Link) */}
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
         <button 
-          onClick={() => { setCurrentScreen('yordam'); (null); }}
-          className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer outline-none"
+          onClick={() => { setCurrentScreen('help'); (null); }}
+          className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           <div className="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
@@ -59,7 +59,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
         <button 
           onClick={() => setExpandedSection(expandedSection === 'activity' ? null : 'activity')}
-          className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer outline-none"
+          className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           <div className="flex items-center gap-2">
             <Briefcase size={15} className="text-brand-primary stroke-[2.2]" />
@@ -78,12 +78,23 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
             >
               <div className="divide-y divide-slate-100">
                 <div 
-                  onClick={() => { setCurrentScreen('kalendar'); (null); }}
+                  onClick={() => { setCurrentScreen('calendar'); (null); }}
                   className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <History size={14} className="text-slate-400" />
                     <span className="text-xs font-semibold text-slate-700">{t.pastJobs}</span>
+                  </div>
+                  <ChevronRight size={14} className="text-slate-350" />
+                </div>
+
+                <div 
+                  onClick={() => { setCurrentScreen('applications'); (null); }}
+                  className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <ClipboardList size={14} className="text-slate-400" />
+                    <span className="text-xs font-semibold text-slate-700">{language === 'uz' ? 'Arizalar tarixi' : language === 'ru' ? 'История заявок' : 'Applications'}</span>
                   </div>
                   <ChevronRight size={14} className="text-slate-350" />
                 </div>
@@ -127,7 +138,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
 
                 <div 
                   onClick={() => {
-                    showToast(language === 'uz' ? "Hujjatlar yuklanmoqda..." : language === 'ru' ? "Загрузка налоговых документов..." : "Loading tax documents...");
+                    showToast(language === 'uz' ? "Tez kunda..." : language === 'ru' ? "Скоро..." : "Coming soon...");
                   }}
                   className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
                 >

@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useJobsData } from "../context/useJobsData";
-import { getProfileTranslations } from '../components/profile/ProfileScreen.utils';
+import { getProfileTranslations } from '../features/worker/profile/ProfileScreen.utils';
 import { showToast } from '../utils/toast';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
+import { requestWithdrawalApi } from '../api/queries';
 
 export const useProfileScreen = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
@@ -128,22 +129,29 @@ export const useProfileScreen = () => {
     const nextRole = userProfile.selectedRole === 'employer' ? 'worker' : 'employer';
     setUserProfile({ ...userProfile, selectedRole: nextRole });
     showToast(language === 'uz' ? `Tizimga ${nextRole === 'employer' ? "Ish beruvchi" : "Xodim"} sifatida kirdingiz` : `Switched to ${nextRole}`);
-    setCurrentScreen(nextRole === 'employer' ? 'employer-dashboard' : 'xarita');
+    setCurrentScreen(nextRole === 'employer' ? 'employer-dashboard' : 'jobs');
   };
 
-  const handleWithdrawSubmit = (e: React.FormEvent) => {
+  const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!withdrawAmount || isNaN(Number(withdrawAmount)) || Number(withdrawAmount) <= 0) {
       showToast(language === 'uz' ? "To'g'ri miqdor kiriting!" : "Enter a valid amount!");
       return;
     }
-    setWithdrawSuccess(true);
-    setTimeout(() => {
-      setActiveDialog('none');
-      setWithdrawSuccess(false);
-      setWithdrawAmount('');
-      showToast(t.withdrawSuccessMsg);
-    }, 1500);
+    
+    try {
+      await requestWithdrawalApi(Number(withdrawAmount));
+      setWithdrawSuccess(true);
+      setTimeout(() => {
+        setWithdrawSuccess(false);
+        setActiveDialog('none');
+        setWithdrawAmount('');
+        showToast(t.withdrawSuccessMsg);
+      }, 2500);
+    } catch (err) {
+      console.error(err);
+      showToast(language === 'uz' ? "Xatolik yuz berdi" : "Error occurred");
+    }
   };
 
   return {

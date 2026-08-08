@@ -42,7 +42,7 @@ export const RoleSelectionView: React.FC<RoleSelectionViewProps> = ({
         <button
           type="button"
           onClick={() => setSelectedRole('worker')}
-          className={`w-full text-left p-4 rounded-xl border transition-all duration-200 cursor-pointer flex items-start gap-3.5 relative outline-none ${
+          className={`w-full text-left p-4 rounded-xl border transition-all duration-200 cursor-pointer flex items-start gap-3.5 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
             selectedRole === 'worker'
               ? 'border-[#000666] bg-blue-50/60 shadow-xs'
               : 'border-slate-200 bg-white hover:border-slate-300'
@@ -72,7 +72,7 @@ export const RoleSelectionView: React.FC<RoleSelectionViewProps> = ({
         <button
           type="button"
           onClick={() => setSelectedRole('employer')}
-          className={`w-full text-left p-4 rounded-xl border transition-all duration-200 cursor-pointer flex items-start gap-3.5 relative outline-none ${
+          className={`w-full text-left p-4 rounded-xl border transition-all duration-200 cursor-pointer flex items-start gap-3.5 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
             selectedRole === 'employer'
               ? 'border-emerald-500 bg-emerald-50/60 shadow-xs'
               : 'border-slate-200 bg-white hover:border-slate-300'
@@ -112,7 +112,7 @@ export const RoleSelectionView: React.FC<RoleSelectionViewProps> = ({
         <button
           disabled={!selectedRole}
           onClick={handleRoleContinue}
-          className={`w-full py-3.5 px-6 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border-0 outline-none active:scale-[0.99] ${
+          className={`w-full py-3.5 px-6 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-[0.99] ${
             selectedRole
               ? 'bg-[#000666] hover:bg-[#000444] text-white shadow-md cursor-pointer'
               : 'bg-slate-200 text-slate-400 cursor-not-allowed'
