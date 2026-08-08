@@ -78,7 +78,7 @@ export const useEmployer = () => {
   };
 
   const handleError = (e: any) => {
-    ("Xato: " + e.message);
+    showToast(`Xato: ${e.message}`, 'error');
   };
 
   // Mutations
