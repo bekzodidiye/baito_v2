@@ -2,9 +2,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { safeGetItem, safeSetItem } from './utils';
 import { UserProfile, ScreenType } from './types';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useAuthState() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   const [language, setLanguageState] = useState<'uz' | 'ru' | 'en'>(() => {
     const cached = safeGetItem('baito_language');
@@ -94,19 +96,21 @@ export function useAuthState() {
     const { logoutApi } = await import('../api/queries');
     await logoutApi();
     clearSession();
+    queryClient.clear();
     navigate('/');
-  }, [clearSession, navigate]);
+  }, [clearSession, navigate, queryClient]);
 
   // The server can invalidate the session cookie at any time; when apiClient
   // detects that, drop the cached profile so the UI stops pretending we're in.
   useEffect(() => {
     const handleUnauthorized = () => {
       clearSession();
+      queryClient.clear();
       navigate('/login');
     };
     window.addEventListener('auth:unauthorized', handleUnauthorized);
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
-  }, [clearSession, navigate]);
+  }, [clearSession, navigate, queryClient]);
 
   return {
     language, setLanguage,
