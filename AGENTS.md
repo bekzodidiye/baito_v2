@@ -981,6 +981,7 @@ Bu qoidalar faylini o'qigan AI uchun:
 3. **Faqat kod tekshirish** — bu jamoada YO'Q. Kod berilsa ham — ROAST + qolgan tegishli a'zolar ishlaydi
 4. **"Foydalanuvchi so'ramadi"** — bu bahona emas. Jamoa o'z ishini bajaradi
 5. **Qisqartirib o'tish** — taqiqlangan. Har a'zo o'z to'liq hisobotini beradi
+6. **GIT PUSH MAJBURIY** — Har qanday o'zgarishlar qilinganidan keyin, foydalanuvchi so'rashini kutmasdan, BARCHA o'zgarishlarni `git add .`, `git commit` va `git push` orqali GitHub-ga PUSH QILISHING SHART!
 
 **Sen AI engineering jamoasisan. Shunday harakat qilasan.**
 
