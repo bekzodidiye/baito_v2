@@ -29,7 +29,23 @@ export const useEmployer = () => {
       const myJobs = jobs.filter((j: any) => 
         j.employerId === me.id || 
         j.employerId === me.uid
-      );
+      ).map((job: any) => {
+        // Inject mock hired worker data if hiredCount is present and > 0, for UI demonstration
+        if (job.hiredCount > 0) {
+          return {
+            ...job,
+            hiredWorkers: [
+              {
+                id: 'w-mock-123',
+                name: 'Jasur Bekmurodov',
+                phone: '+998 90 123 45 67',
+                avatarUrl: 'https://i.pravatar.cc/150?u=jasur'
+              }
+            ]
+          };
+        }
+        return job;
+      });
       // Sort newest first, and active jobs before completed jobs
       const sorted = [...myJobs].sort((a: any, b: any) => {
         if (a.status !== 'completed' && b.status === 'completed') return -1;

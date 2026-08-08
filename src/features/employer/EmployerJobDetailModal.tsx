@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, MapPin, Clock, Calendar, Users, CheckCircle2, Trash2, Sparkles } from 'lucide-react';
+import { X, MapPin, Clock, Calendar, Users, CheckCircle2, Trash2, Sparkles, MessageSquare } from 'lucide-react';
 import { Job } from '../../types';
 import { getJobDetails } from '../../utils/jobDetailHelpers';
 import { getJobBannerImage } from './EmployerJobCard';
@@ -123,6 +123,40 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                     <span key={i} className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-[10px] font-bold border border-slate-200/60">
                       {tag}
                     </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Accepted Workers */}
+            {(job.hiredWorkers || []).length > 0 && (
+              <div className="mb-4">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                  {language === 'uz' ? 'Qabul qilingan ishchilar:' : language === 'ru' ? 'Принятые работники:' : 'Hired Workers:'}
+                </span>
+                <div className="space-y-2">
+                  {job.hiredWorkers!.map((worker) => (
+                    <div key={worker.id} className="flex items-center justify-between p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 text-brand-primary flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden">
+                          {worker.avatarUrl ? (
+                            <img src={worker.avatarUrl} alt={worker.name} className="w-full h-full object-cover" />
+                          ) : (
+                            worker.name.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div>
+                          <h5 className="font-bold text-slate-800 text-sm">{worker.name}</h5>
+                          {worker.phone && <p className="text-xs text-slate-500 font-medium">{worker.phone}</p>}
+                        </div>
+                      </div>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); /* TODO: open chat */ }} 
+                        className="w-8 h-8 rounded-full bg-white border border-indigo-100 flex items-center justify-center text-brand-primary hover:bg-indigo-50 transition-colors shrink-0"
+                      >
+                        <MessageSquare size={14} />
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
