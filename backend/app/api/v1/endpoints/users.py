@@ -58,13 +58,16 @@ def create_user(
     # Auto-generate uid if not provided
     uid = user_in.uid if user_in.uid else str(uuid.uuid4())
     
+    # Prevent privilege escalation: public registration can only create 'worker' or 'employer'
+    assigned_role = user_in.role if user_in.role in ("worker", "employer") else "worker"
+    
     db_obj = models.User(
         email=user_in.email,
         hashed_password=get_password_hash(user_in.password),
         name=user_in.name,
         uid=uid,
         phone=user_in.phone,
-        role=user_in.role or 'worker',
+        role=assigned_role,
         companyName=user_in.companyName,
     )
     db.add(db_obj)

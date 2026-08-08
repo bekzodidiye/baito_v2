@@ -25,4 +25,7 @@ mcp.json
 cookies.txt
 cookies2.txt
 cookies3.txt
+token.txt
+token*.txt
 .aider*
+

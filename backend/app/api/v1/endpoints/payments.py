@@ -72,12 +72,11 @@ def uzum_webhook(payload: UzumWebhookPayload, db: Session = Depends(deps.get_db)
     
     # 1. Verify signature (Security Check)
     # This prevents malicious users from calling this endpoint manually.
-    data_string = f"{payload.order_id}{payload.amount}{payload.status}{settings.UZUM_SECRET_KEY}"
-    expected_sign = hashlib.md5(data_string.encode('utf-8')).hexdigest()
-    
-    # Note: In a real scenario, use the actual signature algorithm provided by Uzum.
-    # if payload.sign != expected_sign:
-    #     raise HTTPException(status_code=403, detail="Invalid signature")
+    if settings.UZUM_SECRET_KEY:
+        data_string = f"{payload.order_id}{payload.amount}{payload.status}{settings.UZUM_SECRET_KEY}"
+        expected_sign = hashlib.md5(data_string.encode('utf-8')).hexdigest()
+        if not hmac.compare_digest(payload.sign or "", expected_sign):
+            raise HTTPException(status_code=403, detail="Invalid signature")
 
     # 2. Find transaction
     tx = db.query(Transaction).filter(Transaction.id == payload.order_id).first()
@@ -195,21 +194,22 @@ def request_withdrawal(
     if req.amount < 5000:
         raise HTTPException(status_code=400, detail="Eng kam yechib olish miqdori 5000 so'm")
     
-    if current_user.balance < req.amount:
+    user = db.query(User).filter(User.id == current_user.id).first()
+    if not user or user.balance < req.amount:
         raise HTTPException(status_code=400, detail="Balansda yetarli mablag' mavjud emas")
     
     # Create transaction
     tx = Transaction(
-        employerId=current_user.id,
+        employerId=user.id,
         amount=req.amount * 100, # converting UZS to tiyin if needed, assuming amount is UZS
         type="withdraw",
         status="pending"
     )
     db.add(tx)
     
-    # Deduct balance
-    current_user.balance -= req.amount
-    db.add(current_user)
+    # Deduct balance safely
+    user.balance -= req.amount
+    db.add(user)
     
     db.commit()
     db.refresh(tx)

@@ -65,8 +65,8 @@ def get_chats(
             "workerId": c.workerId,
             "employerId": c.employerId,
             "createdAt": c.createdAt,
-            "otherUserName": other_user.firstName if other_user else "Foydalanuvchi",
-            "otherUserAvatar": None,
+            "otherUserName": other_user.name if other_user and other_user.name else "Foydalanuvchi",
+            "otherUserAvatar": other_user.avatarUrl if other_user else None,
             "lastMessage": last_message.text if last_message else "",
             "lastMessageTime": last_message.createdAt if last_message else c.createdAt,
         }
