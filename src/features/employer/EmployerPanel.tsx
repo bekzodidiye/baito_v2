@@ -8,13 +8,13 @@ import { EmployerChats } from './EmployerChats';
 import { EmployerProfile } from './EmployerProfile';
 import { JobPostForm } from './JobPostForm';
 import { EmployerAnalytics } from './EmployerAnalytics';
-import { Briefcase, FileText, MessageSquare, PlusCircle, LayoutDashboard, User, BarChart2 } from 'lucide-react';
+import { Briefcase, FileText, MessageSquare, PlusCircle, LayoutDashboard, User, BarChart2, LogOut } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const EmployerPanel: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, employerSelectedChatId } = useApp();
+  const { language, employerSelectedChatId, logout } = useApp();
   const [targetCandidate, setTargetCandidate] = useState<string | null>(null);
 
   const handleApplicantsChat = (candidateName: string) => {
@@ -130,14 +130,14 @@ export const EmployerPanel: React.FC = () => {
           })}
         </nav>
 
-        {/* Post Job Button */}
+        {/* Logout Button */}
         <div className="p-3 border-t border-slate-100">
           <button
-            onClick={() => setCurrentScreen('employer-post')}
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-brand-primary text-white text-xs font-bold rounded-xl hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
+            onClick={() => logout()}
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 transition-colors cursor-pointer text-xs font-bold rounded-xl shadow-xs"
           >
-            <PlusCircle size={14} />
-            <span>{language === 'uz' ? "E'lon qo'shish" : language === 'ru' ? 'Добавить' : 'Post job'}</span>
+            <LogOut size={14} className="stroke-[2.5]" />
+            <span>{language === 'uz' ? "Tizimdan chiqish" : language === 'ru' ? "Выйти из системы" : "Log out"}</span>
           </button>
         </div>
       </aside>
