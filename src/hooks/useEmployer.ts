@@ -108,6 +108,7 @@ export const useEmployer = () => {
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employer-jobs'] });
       handleSuccess("Yangi ish e'loni muvaffaqiyatli joylashtirildi!", "Новое объявление успешно опубликовано!", "New job post published successfully!");
     },
     onError: handleError
@@ -119,6 +120,8 @@ export const useEmployer = () => {
       return apiClient(endpoint, { method: 'POST' });
     },
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['employer-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['employer-applications'] });
       if (variables.status === 'hired') {
         handleSuccess("Ishchi yollandi! Summa ushlab qolindi.", "Работник нанят! Сумма удержана.", "Worker hired! Amount held in escrow.");
       } else {
@@ -136,6 +139,7 @@ export const useEmployer = () => {
       });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employer-jobs'] });
       handleSuccess("Ish yakunlandi, pul ishchiga o'tkazildi!", "Работа завершена, деньги переведены!", "Job completed, money released!");
     },
     onError: handleError
@@ -146,6 +150,7 @@ export const useEmployer = () => {
       return apiClient(`/jobs/${jobId}`, { method: 'DELETE' });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employer-jobs'] });
       handleSuccess("E'lon o'chirildi!", "Объявление удалено!", "Job post deleted!");
     },
     onError: handleError
