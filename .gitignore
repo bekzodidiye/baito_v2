@@ -22,10 +22,15 @@ venv/
 *.rej
 *.patch
 mcp.json
+.mcp.json
 cookies.txt
 cookies2.txt
 cookies3.txt
 token.txt
 token*.txt
 .aider*
+.vite/
+.agents/scratch/
+test_*.py
+scratch_*.py
 

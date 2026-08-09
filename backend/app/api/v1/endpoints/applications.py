@@ -106,6 +106,13 @@ def get_employer_applications(
             "workerId": app.workerId,
             "workerName": worker.name if worker else "Ishchi",
             "workerPhone": worker.phone if worker else "+998 90 *** ** **",
+            "workerAvatar": worker.avatarUrl if worker else None,
+            "workerRating": worker.rating if worker else 5.0,
+            "workerCompletedJobs": worker.completedJobsCount if worker else 0,
+            "workerBirthDate": worker.birthDate if worker else None,
+            "workerGender": worker.gender if worker else None,
+            "workerSkills": worker.skills if worker else [],
+            "workerBio": worker.bio if worker else None,
             "status": app.status,
             "appliedDate": str(app.appliedDate) if app.appliedDate else None
         })

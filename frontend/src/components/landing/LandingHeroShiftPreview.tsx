@@ -7,6 +7,7 @@ interface LandingHeroShiftPreviewProps {
   displayShifts: any[];
   language: string;
   onSelectRole: (role: 'worker' | 'employer') => void;
+  isLoading?: boolean;
   t: any;
 }
 
@@ -14,6 +15,7 @@ export const LandingHeroShiftPreview: React.FC<LandingHeroShiftPreviewProps> = (
   displayShifts, 
   language, 
   onSelectRole,
+  isLoading,
   t
 }) => {
   const [shiftIndex, setShiftIndex] = useState(0);
@@ -51,13 +53,45 @@ export const LandingHeroShiftPreview: React.FC<LandingHeroShiftPreviewProps> = (
 
         <div className="relative min-h-[350px]">
           <AnimatePresence mode="wait">
-            {currentShift ? (
+            {isLoading ? (
+              <motion.div 
+                key="loading" 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }} 
+                className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-5 space-y-4 shadow-sm min-h-[350px] flex flex-col justify-between animate-pulse"
+              >
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div className="h-6 w-24 bg-slate-200 rounded-md"></div>
+                    <div className="h-6 w-16 bg-slate-200 rounded-full"></div>
+                  </div>
+                  <div>
+                    <div className="h-6 w-3/4 bg-slate-200 rounded-md mb-2"></div>
+                    <div className="h-4 w-1/2 bg-slate-200 rounded-md"></div>
+                  </div>
+                  <div className="pt-2.5 border-t border-slate-200/60 flex items-center justify-between">
+                    <div className="h-6 w-32 bg-slate-200 rounded-md"></div>
+                    <div className="h-5 w-20 bg-slate-200 rounded-md"></div>
+                  </div>
+                  <div className="space-y-2 pt-2 border-t border-slate-200/60">
+                    <div className="h-10 w-full bg-slate-200 rounded-xl"></div>
+                    <div className="h-10 w-full bg-slate-200 rounded-xl"></div>
+                  </div>
+                  <div className="pt-2 border-t border-slate-200/60 space-y-1.5 flex gap-1.5">
+                     <div className="h-5 w-16 bg-slate-200 rounded-md"></div>
+                     <div className="h-5 w-20 bg-slate-200 rounded-md"></div>
+                     <div className="h-5 w-14 bg-slate-200 rounded-md"></div>
+                  </div>
+                </div>
+                <div className="h-10 w-full bg-slate-200 rounded-xl"></div>
+              </motion.div>
+            ) : currentShift ? (
               <motion.div 
                 key={currentShift.id || shiftIndex} 
                 initial={{ opacity: 0, y: 10, scale: 0.99 }} 
                 animate={{ opacity: 1, y: 0, scale: 1 }} 
                 exit={{ opacity: 0, y: -10, scale: 0.99 }} 
-                transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }} 
                 className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-5 space-y-4 shadow-sm min-h-[350px] flex flex-col justify-between"
               >
                 <div className="space-y-3">

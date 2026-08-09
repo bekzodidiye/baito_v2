@@ -53,8 +53,9 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
   }, [jobs]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      if (!jobs || jobs.length === 0) return;
+    if (!jobs || jobs.length === 0) return;
+    
+    const updateActiveShift = () => {
       const realShifts = jobs.map(j => ({
         id: j.id, titleUz: j.title, titleRu: j.title, company: j.company, district: j.location,
         pay: j.salary || "280,000 so'm/smena", payNum: 280000, time: j.time || "09:00 - 18:00 (8 soat)", category: 'general',
@@ -71,7 +72,11 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
           return allShifts[(idx + 1) % allShifts.length];
         });
       }
-    }, 10000);
+    };
+
+    updateActiveShift(); // Birinchi marta darhol chaqirish
+    const timer = setInterval(updateActiveShift, 10000);
+    
     return () => clearInterval(timer);
   }, [jobs]);
 
@@ -107,8 +112,45 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
           <div className="lg:col-span-4 bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-4 sm:p-5 flex flex-col justify-between shadow-xl h-[480px] sm:h-[530px] overflow-hidden w-full">
             {/* Header & Scrollable Job Card Details */}
             {!activeShift ? (
-              <div className="flex-1 flex items-center justify-center text-slate-400 text-sm font-medium">
-                Smenalar yuklanmoqda...
+              <div className="flex-1 min-h-0 flex flex-col space-y-3 pr-1 no-scrollbar overflow-hidden">
+                <div className="flex items-center justify-between shrink-0 mb-1">
+                  <div className="h-4 w-32 bg-slate-200 rounded-md animate-pulse"></div>
+                  <div className="h-4 w-16 bg-slate-200 rounded-full animate-pulse"></div>
+                </div>
+                
+                <div className="space-y-3 bg-slate-50/80 border border-slate-200/80 p-3.5 sm:p-4 rounded-2xl animate-pulse shadow-2xs">
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-2">
+                      <div className="h-4 w-32 bg-slate-200 rounded"></div>
+                      <div className="h-4 w-16 bg-slate-200 rounded-full"></div>
+                    </div>
+                    <div className="h-5 sm:h-6 w-3/4 bg-slate-200 rounded-md mb-2"></div>
+                    <div className="h-4 w-1/2 bg-slate-200 rounded-md"></div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                    <div className="h-6 w-24 bg-slate-200 rounded-md"></div>
+                    <div className="h-5 w-20 bg-slate-200 rounded-md"></div>
+                  </div>
+
+                  <div className="space-y-2 pt-2 border-t border-slate-200/60">
+                    <div className="h-8 w-full bg-slate-200 rounded-xl"></div>
+                    <div className="h-8 w-full bg-slate-200 rounded-xl"></div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200/60 space-y-2">
+                    <div className="h-3 w-32 bg-slate-200 rounded-md"></div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <div className="h-5 w-16 bg-slate-200 rounded-md"></div>
+                      <div className="h-5 w-24 bg-slate-200 rounded-md"></div>
+                      <div className="h-5 w-14 bg-slate-200 rounded-md"></div>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-2 mt-1">
+                    <div className="h-8 w-full bg-slate-200 rounded-xl"></div>
+                  </div>
+                </div>
               </div>
             ) : (
             <div className="flex-1 min-h-0 flex flex-col space-y-3 overflow-y-auto pr-1 no-scrollbar">

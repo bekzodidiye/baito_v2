@@ -14,9 +14,9 @@ from app.core.limiter import limiter
 
 router = APIRouter()
 
-# Temporary in-memory store for SMS verification codes.
-# In a real app, this should be in Redis.
-sms_verification_codes = {}
+import json
+from app.redis_client import redis_client
+from app.tasks import send_sms_task
 
 class SendSMSRequest(BaseModel):
     phone: str
@@ -43,58 +43,28 @@ async def send_verification_sms(
     import secrets
     code = f"{secrets.SystemRandom().randint(100000, 999999)}"
     
-    # Save to memory with 5-minute expiration and max attempt count
-    import time
-    sms_verification_codes[payload.phone] = {
-        "code": code,
-        "expires_at": time.time() + 300,
-        "attempts": 0
-    }
+    # Save to Redis with 5-minute expiration
+    import json
+    redis_client.setex(
+        f"sms_code:{payload.phone}",
+        300,
+        json.dumps({"code": code, "attempts": 0})
+    )
     
-    # Simulate saving to DB or cache
-    # In a real app, save to Redis or DB with expiration
     print("\n" + "="*50)
     print(f"🚀 SMS VERIFICATION CODE FOR {payload.phone}: {code}")
     print("="*50 + "\n")
         
     try:
-        async with httpx.AsyncClient() as client:
-            # 1. Authenticate with TextUp
-            login_res = await client.post("https://api-auth.textup.uz/v1/login", json={
-                "email": settings.TEXTUP_EMAIL,
-                "password": settings.TEXTUP_PASSWORD
-            })
-            if login_res.status_code == 200:
-                token_data = login_res.json()
-                access_token = token_data.get("accessToken")
-                user_id = token_data.get("user", {}).get("id")
-                
-                # 2. Send SMS using sms-api.textup.uz/v1/send
-                sms_payload = {
-                    "message": f"Baito ilovasiga kirish uchun tasdiqlash kodi: {code}",
-                    "userId": user_id,
-                    "name": "Baito Verification",
-                    "templateId": "f885a2db-85e9-4d51-9c92-fe260fb7af59",
-                    "recipients": [payload.phone]
-                }
-                
-                sms_res = await client.post(
-                    "https://sms-api.textup.uz/v1/send",
-                    headers={"Authorization": f"Bearer {access_token}"},
-                    json=sms_payload
-                )
-                
-                if sms_res.status_code in (200, 201):
-                    return {"success": True, "message": "SMS sent"}
-                else:
-                    print(f"⚠️ TextUp SMS send failed: {sms_res.text}")
-                    return {"success": True, "message": "SMS sent (simulated)"}
-            else:
-                # Fallback: still log the code so user can test
-                print(f"⚠️ Failed to authenticate with Textup.uz: {login_res.text}")
-                return {"success": True, "message": "SMS sent (simulated)"}
+        # Trigger Celery task
+        try:
+            send_sms_task.delay(payload.phone, code)
+        except Exception as e:
+            print(f"⚠️ Celery delay failed ({e}), falling back to synchronous.")
+            send_sms_task(payload.phone, code)
+        return {"success": True, "message": "SMS sent"}
     except Exception as e:
-        print(f"⚠️ SMS sending error: {e}. Code logged above.")
+        print(f"⚠️ Celery task error: {e}. Code logged above.")
         return {"success": True, "message": "SMS sent (simulated)"}
 
 @router.post("/verify-sms")
@@ -103,31 +73,31 @@ async def verify_sms(request: Request, payload: VerifySMSRequest) -> Any:
     """
     Verify the SMS code sent to the user.
     """
-    import time
-    stored_entry = sms_verification_codes.get(payload.phone)
-    if not stored_entry:
+    stored_entry_str = redis_client.get(f"sms_code:{payload.phone}")
+    if not stored_entry_str:
         raise HTTPException(status_code=400, detail="Tasdiqlash kodi topilmadi yoki muddati o'tgan")
     
-    # Check format (new dict structure or backward compatible string)
-    if isinstance(stored_entry, dict):
-        if time.time() > stored_entry.get("expires_at", 0):
-            sms_verification_codes.pop(payload.phone, None)
-            raise HTTPException(status_code=400, detail="Tasdiqlash kodi muddati o'tgan")
+    import json
+    stored_entry = json.loads(stored_entry_str)
+    
+    stored_entry["attempts"] = stored_entry.get("attempts", 0) + 1
+    if stored_entry["attempts"] > 5:
+        redis_client.delete(f"sms_code:{payload.phone}")
+        raise HTTPException(status_code=429, detail="Ko'p noto'g'ri urinishlar. Iltimos, yangi kod so'rang")
         
-        stored_entry["attempts"] = stored_entry.get("attempts", 0) + 1
-        if stored_entry["attempts"] > 5:
-            sms_verification_codes.pop(payload.phone, None)
-            raise HTTPException(status_code=429, detail="Ko'p noto'g'ri urinishlar. Iltimos, yangi kod so'rang")
-        
-        stored_code = stored_entry.get("code")
-    else:
-        stored_code = stored_entry
+    stored_code = stored_entry.get("code")
 
     if stored_code != payload.code:
+        # update attempts
+        redis_client.setex(
+            f"sms_code:{payload.phone}",
+            300, # reset timer roughly
+            json.dumps(stored_entry)
+        )
         raise HTTPException(status_code=400, detail="Tasdiqlash kodi xato")
         
     # Code is valid, remove it from memory so it can't be reused
-    sms_verification_codes.pop(payload.phone, None)
+    redis_client.delete(f"sms_code:{payload.phone}")
     return {"success": True, "message": "Kodi tasdiqlandi"}
 
 def _set_auth_cookies(response: Response, subject: str, sid: str = None) -> None:

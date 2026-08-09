@@ -20,6 +20,19 @@ class Settings(BaseSettings):
 
     SQL_HOST: str = os.getenv("DATABASE_URL", "sqlite:///./baito_new.db")
 
+    # Redis & Celery
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+    # Sentry (Monitoring)
+    SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")
+
+    # AWS S3 / MinIO Configuration
+    AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID", "minioadmin")
+    AWS_SECRET_ACCESS_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY", "minioadmin")
+    AWS_REGION: str = os.getenv("AWS_REGION", "us-east-1")
+    AWS_BUCKET_NAME: str = os.getenv("AWS_BUCKET_NAME", "baito-bucket")
+    AWS_ENDPOINT_URL: str = os.getenv("AWS_ENDPOINT_URL", "http://localhost:9000") # for MinIO
+
     CORS_ORIGINS_RAW: str = os.getenv("CORS_ORIGINS", "")
 
     # Uzum E-Commerce Integration

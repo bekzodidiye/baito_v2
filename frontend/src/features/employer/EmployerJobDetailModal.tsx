@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, MapPin, Clock, Calendar, Users, CheckCircle2, Trash2, Sparkles, MessageSquare } from 'lucide-react';
+import { X, MapPin, Clock, Calendar, Users, CheckCircle2, Trash2, Sparkles, PhoneCall, ChevronRight, Briefcase } from 'lucide-react';
 import { Job } from '../../types';
 import { getJobDetails } from '../../utils/jobDetailHelpers';
 import { getJobBannerImage } from './EmployerJobCard';
@@ -32,95 +32,122 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/40 backdrop-blur-sm">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 12 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 12 }}
-          className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-lg max-h-[88vh] flex flex-col overflow-hidden relative"
+          initial={{ opacity: 0, y: 100 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 100 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="bg-white rounded-t-[32px] sm:rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] sm:max-h-[85vh] flex flex-col overflow-hidden relative"
         >
-          {/* Header Image Banner */}
-          <div className="relative h-48 w-full shrink-0 overflow-hidden bg-slate-900">
+          {/* Header Banner */}
+          <div className="relative h-44 sm:h-52 w-full shrink-0 overflow-hidden bg-slate-900">
             <img
               src={bannerUrl}
               alt={job.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover opacity-80"
+              loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-slate-950/20" />
-
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
+            
             {/* Top Bar inside Banner */}
             <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
-              <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-white bg-slate-900/70 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
-                <Sparkles size={11} className="text-amber-300" />
-                {job.company || 'Baito Company'}
-              </span>
-
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-900 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
+                  <Sparkles size={12} className="text-amber-500" />
+                  {job.company || 'Baito Company'}
+                </span>
+                {job.status === 'in_progress' && (
+                   <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100/95 backdrop-blur-md px-2.5 py-1.5 rounded-full shadow-sm">
+                     Jarayonda
+                   </span>
+                )}
+              </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-full bg-slate-900/70 hover:bg-slate-900 text-white/90 hover:text-white backdrop-blur-md transition-all cursor-pointer border border-white/20"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md transition-all cursor-pointer border border-white/10"
               >
-                <X size={18} />
+                <X size={16} strokeWidth={2.5} />
               </button>
             </div>
 
             {/* Bottom Title inside Banner */}
             <div className="absolute bottom-4 left-5 right-5 z-10">
-              <h2 className="text-xl font-black text-white leading-tight drop-shadow-md">
+              <h2 className="text-xl sm:text-2xl font-black text-white leading-tight drop-shadow-lg">
                 {job.title}
               </h2>
             </div>
           </div>
 
           {/* Body Content */}
-          <div className="p-6 overflow-y-auto space-y-5 flex-1 text-xs">
-            {/* Grid Stats */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
-                  {language === 'uz' ? 'Ish haqi' : language === 'ru' ? 'Зарплата' : 'Salary'}
-                </span>
-                <span className="text-base font-black text-emerald-600">{job.salary}</span>
+          <div className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1 text-sm bg-slate-50/50">
+            
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+                  <span className="text-emerald-600 font-bold text-lg">💰</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                    {language === 'uz' ? 'Ish haqi' : language === 'ru' ? 'Зарплата' : 'Salary'}
+                  </span>
+                  <span className="text-sm font-black text-slate-900">{job.salary}</span>
+                </div>
               </div>
 
-              <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
-                  {language === 'uz' ? 'Vakansiya / Qabul' : language === 'ru' ? 'Принято' : 'Hired'}
-                </span>
-                <span className="text-base font-black text-slate-800 flex items-center gap-1.5">
-                  <Users size={15} className="text-brand-primary stroke-[2.5]" /> {hired} / {vac}
-                </span>
+              <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                  <Users size={18} className="text-blue-600" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                    {language === 'uz' ? 'Qabul' : language === 'ru' ? 'Принято' : 'Hired'}
+                  </span>
+                  <span className="text-sm font-black text-slate-900">
+                    {hired} <span className="text-slate-400 font-semibold">/ {vac}</span>
+                  </span>
+                </div>
               </div>
 
-              <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
-                  {language === 'uz' ? 'Joylashuv' : language === 'ru' ? 'Локация' : 'Location'}
-                </span>
-                <span className="text-xs font-extrabold text-slate-700 truncate flex items-center gap-1">
-                  <MapPin size={13} className="text-slate-400 shrink-0" />
-                  <span className="truncate">{job.rawLocation || job.location}</span>
-                </span>
+              <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 col-span-2 sm:col-span-1">
+                <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
+                  <MapPin size={18} className="text-orange-500" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                    {language === 'uz' ? 'Joylashuv' : language === 'ru' ? 'Локация' : 'Location'}
+                  </span>
+                  <span className="text-xs font-bold text-slate-800 truncate block">
+                    {job.rawLocation || job.location}
+                  </span>
+                </div>
               </div>
 
-              <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
-                  {language === 'uz' ? 'Sana / Vaqt' : language === 'ru' ? 'Дата / Время' : 'Date / Time'}
-                </span>
-                <span className="text-xs font-extrabold text-slate-700 flex items-center gap-1">
-                  <Calendar size={13} className="text-slate-400 shrink-0" />
-                  <span>{job.workDate || '2026-08-05'}</span>
-                </span>
+              <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 col-span-2 sm:col-span-1">
+                <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center shrink-0">
+                  <Calendar size={18} className="text-purple-600" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                    {language === 'uz' ? 'Sana / Vaqt' : language === 'ru' ? 'Дата / Время' : 'Date / Time'}
+                  </span>
+                  <span className="text-xs font-bold text-slate-800">
+                    {job.workDate || '2026-08-05'}
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Tags */}
             {(job.tags || []).length > 0 && (
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
-                  {language === 'uz' ? 'Teglar:' : language === 'ru' ? 'Теги:' : 'Tags:'}
+                <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 block mb-2.5 pl-1">
+                  {language === 'uz' ? 'Teglar' : language === 'ru' ? 'Теги' : 'Tags'}
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {job.tags.map((tag, i) => (
-                    <span key={i} className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-[10px] font-bold border border-slate-200/60">
+                    <span key={i} className="px-3 py-1.5 bg-white text-slate-600 rounded-xl text-[11px] font-bold border border-slate-200/80 shadow-sm">
                       {tag}
                     </span>
                   ))}
@@ -130,15 +157,15 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
 
             {/* Accepted Workers */}
             {(job.hiredWorkers || []).length > 0 && (
-              <div className="mb-4">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-                  {language === 'uz' ? 'Qabul qilingan ishchilar:' : language === 'ru' ? 'Принятые работники:' : 'Hired Workers:'}
+              <div>
+                <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 block mb-2.5 pl-1">
+                  {language === 'uz' ? 'Qabul qilingan ishchilar' : language === 'ru' ? 'Принятые работники' : 'Hired Workers'}
                 </span>
                 <div className="space-y-2">
                   {job.hiredWorkers!.map((worker) => (
-                    <div key={worker.id} className="flex items-center justify-between p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl">
+                    <div key={worker.id} className="flex items-center justify-between p-3.5 bg-white border border-slate-100 shadow-sm rounded-2xl">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-100 text-brand-primary flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden">
+                        <div className="w-11 h-11 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-400 text-sm shrink-0 overflow-hidden">
                           {worker.avatarUrl ? (
                             <img src={worker.avatarUrl} alt={worker.name} className="w-full h-full object-cover" />
                           ) : (
@@ -146,16 +173,17 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                           )}
                         </div>
                         <div>
-                          <h5 className="font-bold text-slate-800 text-sm">{worker.name}</h5>
-                          {worker.phone && <p className="text-xs text-slate-500 font-medium">{worker.phone}</p>}
+                          <h5 className="font-bold text-slate-900 text-sm">{worker.name}</h5>
+                          {worker.phone && <p className="text-xs text-slate-500 font-semibold mt-0.5">{worker.phone}</p>}
                         </div>
                       </div>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); /* TODO: open chat */ }} 
-                        className="w-8 h-8 rounded-full bg-white border border-indigo-100 flex items-center justify-center text-brand-primary hover:bg-indigo-50 transition-colors shrink-0"
+                      <a 
+                        href={`tel:${worker.phone || ''}`}
+                        onClick={(e) => { e.stopPropagation(); }} 
+                        className="w-10 h-10 rounded-full bg-green-50 border border-green-100 flex items-center justify-center text-green-600 hover:bg-green-100 transition-colors shrink-0 cursor-pointer"
                       >
-                        <MessageSquare size={14} />
-                      </button>
+                        <PhoneCall size={16} />
+                      </a>
                     </div>
                   ))}
                 </div>
@@ -163,68 +191,73 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
             )}
 
             {/* Responsibilities */}
-            <div className="bg-slate-50/60 p-4 rounded-2xl border border-slate-100">
-              <h4 className="font-extrabold text-slate-900 text-xs mb-2">
-                {language === 'uz' ? 'Vazifalar:' : language === 'ru' ? 'Обязанности:' : 'Responsibilities:'}
-              </h4>
-              <ul className="space-y-1.5 text-slate-600 font-medium">
-                {tasks.map((task, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="w-3.5 h-3.5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5 font-bold text-[9px]">
-                      ✓
-                    </span>
-                    <span className="leading-relaxed">{task}</span>
-                  </li>
-                ))}
-              </ul>
+            <div>
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 block mb-2.5 pl-1">
+                {language === 'uz' ? 'Vazifalar' : language === 'ru' ? 'Обязанности' : 'Responsibilities'}
+              </span>
+              <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                <ul className="space-y-3">
+                  {tasks.map((task, idx) => (
+                    <li key={idx} className="flex items-start gap-3">
+                      <CheckCircle2 size={18} className="text-brand-primary shrink-0 mt-0.5" />
+                      <span className="text-slate-700 font-medium text-sm leading-relaxed">{task}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             {/* Requirements */}
-            <div className="bg-slate-50/60 p-4 rounded-2xl border border-slate-100">
-              <h4 className="font-extrabold text-slate-900 text-xs mb-2">
-                {language === 'uz' ? 'Talablar:' : language === 'ru' ? 'Требования:' : 'Requirements:'}
-              </h4>
-              <ul className="space-y-1.5 text-slate-600 font-medium">
-                {requirements.map((req, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="w-3.5 h-3.5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 mt-0.5 font-bold text-[9px]">
-                      •
-                    </span>
-                    <span className="leading-relaxed">{req}</span>
-                  </li>
-                ))}
-              </ul>
+            <div>
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 block mb-2.5 pl-1">
+                {language === 'uz' ? 'Talablar' : language === 'ru' ? 'Требования' : 'Requirements'}
+              </span>
+              <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                <ul className="space-y-3">
+                  {requirements.map((req, idx) => (
+                    <li key={idx} className="flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-2 shrink-0"></div>
+                      <span className="text-slate-700 font-medium text-sm leading-relaxed">{req}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
+            
+            {/* Extra padding at the bottom for scroll breathing room */}
+            <div className="h-4"></div>
           </div>
 
           {/* Footer Actions */}
-          <div className="p-4 px-6 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-3">
-            {job.status === 'in_progress' && onComplete && (
-              <button
-                onClick={() => { onComplete(job.id); onClose(); }}
-                className="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
-              >
-                <CheckCircle2 size={15} />
-                {language === 'uz' ? 'Ishni yakunlash' : language === 'ru' ? 'Завершить работу' : 'Complete job'}
-              </button>
-            )}
-
-            {job.status === 'open' && onDelete && (
-              <button
-                onClick={() => { onDelete(job.id); onClose(); }}
-                className="py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer"
-              >
-                <Trash2 size={15} />
-                {language === 'uz' ? "O'chirish" : language === 'ru' ? 'Удалить' : 'Delete'}
-              </button>
-            )}
-
+          <div className="p-4 sm:p-5 border-t border-slate-100 bg-white flex flex-col-reverse sm:flex-row items-center gap-3 shrink-0">
             <button
               onClick={onClose}
-              className="py-2.5 px-5 bg-brand-primary hover:bg-brand-primary/90 text-white font-bold rounded-xl text-xs transition-all cursor-pointer ml-auto"
+              className="w-full sm:w-auto py-3.5 px-6 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold rounded-xl text-sm transition-all cursor-pointer"
             >
               {language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
             </button>
+            
+            <div className="flex-1 flex gap-3 w-full sm:w-auto">
+              {job.status === 'open' && onDelete && (
+                <button
+                  onClick={() => { onDelete(job.id); onClose(); }}
+                  className="w-full sm:w-auto py-3.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer border border-rose-100"
+                >
+                  <Trash2 size={16} />
+                  <span className="hidden sm:inline">{language === 'uz' ? "O'chirish" : language === 'ru' ? 'Удалить' : 'Delete'}</span>
+                </button>
+              )}
+
+              {job.status === 'in_progress' && onComplete && (
+                <button
+                  onClick={() => { onComplete(job.id); onClose(); }}
+                  className="flex-1 py-3.5 px-6 bg-brand-primary hover:bg-blue-700 text-white font-black rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all cursor-pointer active:scale-[0.98]"
+                >
+                  {language === 'uz' ? 'Ishni yakunlash' : language === 'ru' ? 'Завершить работу' : 'Complete job'}
+                  <ChevronRight size={18} />
+                </button>
+              )}
+            </div>
           </div>
         </motion.div>
       </div>

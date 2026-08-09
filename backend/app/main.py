@@ -11,6 +11,14 @@ from app.core.limiter import limiter
 from app.db.base import Base
 from app.db.session import engine, SessionLocal
 from app.db.init_db import init_db
+import sentry_sdk
+
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+    )
 
 # Create tables
 Base.metadata.create_all(bind=engine)
