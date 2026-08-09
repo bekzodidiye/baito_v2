@@ -2,6 +2,12 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 
+class HiredWorkerInfo(BaseModel):
+    id: str
+    name: str
+    phone: Optional[str] = None
+    avatarUrl: Optional[str] = None
+
 class JobBase(BaseModel):
     title: str
     company: str
@@ -55,3 +61,4 @@ class JobWithApplicationStatus(Job):
     hiredCount: int = 0
     vacancies: int = 1
     appliedDate: Optional[datetime] = None
+    hiredWorkers: Optional[List[HiredWorkerInfo]] = []
