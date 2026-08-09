@@ -1,68 +1,44 @@
 import React, { useState } from 'react';
 import { CategoryItem } from './types';
+import { useAdminData } from './useAdminData';
+import { apiClient } from '../../api/client';
 import { FolderTree, Plus, Trash2, Percent, Briefcase, Users, Search } from 'lucide-react';
 import { AddCategoryModal } from './AddCategoryModal';
 
-const INITIAL_CATEGORIES: CategoryItem[] = [
-  {
-    id: 'cat-1',
-    name: 'Santexnika va Quvurlar',
-    icon: '🔧',
-    description: 'Suv quvurlari, kranlar, smesitel va kanalizatsiya ta\'mirlash',
-    commissionPercent: 5,
-    skills: ['Truba almashtirish', 'Kran o\'rnatish', 'Batakay tozalash', 'Nasos ta\'mirlash'],
-    activeWorkersCount: 142,
-    activeJobsCount: 28,
-  },
-  {
-    id: 'cat-2',
-    name: 'Elektrik va Montaj',
-    icon: '⚡',
-    description: 'Qandillar, rozetka va elektr shitlarni montaj qilish',
-    commissionPercent: 5,
-    skills: ['Rozetka montaj', 'Avtomat shit', 'Lyustra ilish', 'Kabel tortish'],
-    activeWorkersCount: 198,
-    activeJobsCount: 45,
-  },
-  {
-    id: 'cat-3',
-    name: 'Qurilish va G\'isht terish',
-    icon: '🧱',
-    description: 'Devor ko\'tarish, suvoqchilik, beton quvish va poydevor',
-    commissionPercent: 4,
-    skills: ['G\'isht terish', 'Suvoqchilik', 'Laminat yotqizish', 'Kafel yopishtirish'],
-    activeWorkersCount: 310,
-    activeJobsCount: 62,
-  },
-  {
-    id: 'cat-4',
-    name: 'Yuk tashish va Mebel',
-    icon: '📦',
-    description: 'Mebel yig\'ish, yuk ortish va ko\'chishga yordam berish',
-    commissionPercent: 6,
-    skills: ['Yuk ortish', 'Mebel yig\'ish', 'Avto yuk tashish', 'Pianino ko\'chirish'],
-    activeWorkersCount: 215,
-    activeJobsCount: 39,
-  },
-];
+
 
 export const AdminCategories: React.FC = () => {
-  const [categories, setCategories] = useState<CategoryItem[]>(INITIAL_CATEGORIES);
+  const { categories, refresh, loading } = useAdminData();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
 
   const filtered = categories.filter((c) =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.description.toLowerCase().includes(searchTerm.toLowerCase())
+    c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddCategory = (item: CategoryItem) => {
-    setCategories([item, ...categories]);
+  const handleAddCategory = async (item: CategoryItem) => {
+    try {
+      await apiClient('/admin/categories', {
+        method: 'POST',
+        body: JSON.stringify(item)
+      });
+      refresh();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (confirm(`"${name}" kategoriyasini o'chirishni tasdiqlaysizmi?`)) {
-      setCategories(categories.filter((c) => c.id !== id));
+      try {
+        await apiClient(`/admin/categories/${id}`, {
+          method: 'DELETE'
+        });
+        refresh();
+      } catch (e) {
+        console.error(e);
+      }
     }
   };
 

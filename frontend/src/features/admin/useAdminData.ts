@@ -10,13 +10,17 @@ export function useAdminData() {
   const { data, isLoading: loading, refetch: fetchAllData } = useQuery({
     queryKey: ['adminData'],
     queryFn: async () => {
-      const [sData, uData, jData, tData, tckData, cfgData] = await Promise.all([
+      const [sData, uData, jData, tData, tckData, cfgData, catData, regData, promoData, dispData] = await Promise.all([
         apiClient('/admin/stats').catch(() => null),
         apiClient('/admin/users').catch(() => null),
         apiClient('/admin/jobs').catch(() => null),
         apiClient('/admin/transactions').catch(() => null),
         apiClient('/admin/support-tickets').catch(() => null),
         apiClient('/admin/settings').catch(() => null),
+        apiClient('/admin/categories').catch(() => null),
+        apiClient('/admin/regions').catch(() => null),
+        apiClient('/admin/promotions').catch(() => null),
+        apiClient('/admin/disputes').catch(() => null),
       ]);
       return {
         stats: sData as AdminStats | null,
@@ -24,6 +28,10 @@ export function useAdminData() {
         jobs: (Array.isArray(jData) ? jData : []) as AdminJob[],
         transactions: (Array.isArray(tData) ? tData : []) as AdminTransaction[],
         supportTickets: (Array.isArray(tckData) ? tckData : []) as any[],
+        categories: (Array.isArray(catData) ? catData : []) as any[],
+        regions: (Array.isArray(regData) ? regData : []) as any[],
+        promotions: (Array.isArray(promoData) ? promoData : []) as any[],
+        disputes: (Array.isArray(dispData) ? dispData : []) as any[],
         settings: cfgData as SystemSettings || {
           platformFeePercent: 10,
           minHourlyRate: 15000,
@@ -42,6 +50,10 @@ export function useAdminData() {
   const jobs = data?.jobs || [];
   const transactions = data?.transactions || [];
   const supportTickets = data?.supportTickets || [];
+  const categories = data?.categories || [];
+  const regions = data?.regions || [];
+  const promotions = data?.promotions || [];
+  const disputes = data?.disputes || [];
   const settings = data?.settings || {
     platformFeePercent: 10,
     minHourlyRate: 15000,
@@ -156,6 +168,10 @@ export function useAdminData() {
     jobs,
     transactions,
     supportTickets,
+    categories,
+    regions,
+    promotions,
+    disputes,
     settings,
     refresh: fetchAllData,
     addBalance,

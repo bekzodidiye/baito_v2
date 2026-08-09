@@ -17,6 +17,17 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
   const [autoDeleteSpam, setAutoDeleteSpam] = useState(settings.autoDeleteSpamJobs ?? true);
   const [saved, setSaved] = useState(false);
 
+  React.useEffect(() => {
+    if (settings) {
+      setFee(settings.platformFeePercent?.toString() || '10');
+      setMinRate(settings.minHourlyRate?.toString() || '15000');
+      setMaint(settings.maintenanceMode ?? false);
+      setAutoApprove(settings.autoApproveJobs ?? true);
+      setAutoExpire(settings.autoExpireJobs ?? true);
+      setAutoDeleteSpam(settings.autoDeleteSpamJobs ?? true);
+    }
+  }, [settings]);
+
   const [adminUsers, setAdminUsers] = useState([
     { id: 'ADM-1', name: 'Super Admin Bekzod', email: 'admin@baito.uz', role: 'Super Admin', status: 'Faol' },
     { id: 'ADM-2', name: 'Moderator Sardor', email: 'moderator@baito.uz', role: 'Moderator Admin', status: 'Faol' },

@@ -145,6 +145,19 @@ export interface RegionConfig {
   isActive: boolean;
 }
 
+export interface AdminDispute {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  employerId: string;
+  employerName: string;
+  workerId: string;
+  workerName: string;
+  reason: string;
+  status: string;
+  adminNotes?: string;
+}
+
 export interface NotificationTemplate {
   id: string;
   title: string;

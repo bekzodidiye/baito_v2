@@ -60,7 +60,12 @@ export const useEmployer = () => {
         candidateName: a.workerName || 'Ishchi',
         candidatePhone: a.workerPhone || '+998 90 987 65 43',
         candidateAvatar: a.workerAvatar || null,
-        candidateExperience: 'Baito tasdiqlangan foydalanuvchisi',
+        candidateExperience: a.workerBio || 'Baito tasdiqlangan foydalanuvchisi',
+        workerRating: a.workerRating,
+        workerCompletedJobs: a.workerCompletedJobs,
+        workerBirthDate: a.workerBirthDate,
+        workerGender: a.workerGender,
+        workerSkills: a.workerSkills,
         status: a.status,
         appliedDate: a.appliedDate || new Date().toISOString()
       })) as Application[];
