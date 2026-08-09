@@ -63,19 +63,19 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-3xl shadow-2xl border w-full max-w-2xl overflow-hidden">
-          <div className="p-4 px-6 bg-gradient-to-r from-purple-50 to-indigo-50 border-b flex items-center justify-between">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-3xl shadow-2xl border w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="p-4 px-6 bg-gradient-to-r from-purple-50 to-indigo-50 border-b flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 bg-brand-primary text-white text-[10px] font-black uppercase rounded-full">{selectedDates.length} KUNLIK ISH</span>
               <span className="text-xs font-black text-slate-800 flex items-center gap-2">
                 <CalendarIcon size={15} className="text-brand-primary" /> {selectedDates.length} ta kun | <Clock size={15} className="text-brand-primary" /> {String(startHour).padStart(2, '0')}:{String(startMin).padStart(2, '0')} - {String(endHour).padStart(2, '0')}:{String(endMin).padStart(2, '0')}
               </span>
             </div>
-            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-200 text-slate-400 cursor-pointer"><X size={18} /></button>
+            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-200 text-slate-400 cursor-pointer shrink-0 ml-2"><X size={18} /></button>
           </div>
 
-          <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-12 gap-6 overflow-y-auto">
             <div className="md:col-span-7 flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <button onClick={() => setCurrMonth(m => (m === 0 ? 11 : m - 1))} className="p-1.5 rounded-xl hover:bg-slate-100 cursor-pointer"><ChevronLeft size={18} /></button>
@@ -119,7 +119,7 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
                 </div>
               </div>
 
-              <button onClick={handleDone} className="mt-5 w-full py-3.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-black text-xs rounded-2xl shadow-md cursor-pointer">Saqlash</button>
+              <button onClick={handleDone} className="mt-6 md:mt-5 w-full py-3.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-black text-xs rounded-2xl shadow-md cursor-pointer shrink-0">Saqlash</button>
             </div>
           </div>
         </motion.div>
