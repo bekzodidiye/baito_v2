@@ -26,15 +26,18 @@ class VerifySMSRequest(BaseModel):
     phone: str
     code: str
 
+from fastapi import BackgroundTasks
+
 @router.post("/send-sms")
 @limiter.limit("3/minute")
 async def send_verification_sms(
     request: Request,
     payload: SendSMSRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(deps.get_db)
 ) -> Any:
     """
-    Send verification SMS using textup.uz API.
+    Send verification SMS using textup.uz API via Celery or non-blocking background task.
     """
     if not settings.TEXTUP_EMAIL or not settings.TEXTUP_PASSWORD:
         return {"success": True, "message": "SMS simulated (no credentials)"}
@@ -55,17 +58,13 @@ async def send_verification_sms(
     print(f"🚀 SMS VERIFICATION CODE FOR {payload.phone}: {code}")
     print("="*50 + "\n")
         
+    # Trigger Celery task or non-blocking FastAPI BackgroundTask fallback
     try:
-        # Trigger Celery task
-        try:
-            send_sms_task.delay(payload.phone, code)
-        except Exception as e:
-            print(f"⚠️ Celery delay failed ({e}), falling back to synchronous.")
-            send_sms_task(payload.phone, code)
-        return {"success": True, "message": "SMS sent"}
+        send_sms_task.delay(payload.phone, code)
     except Exception as e:
-        print(f"⚠️ Celery task error: {e}. Code logged above.")
-        return {"success": True, "message": "SMS sent (simulated)"}
+        background_tasks.add_task(send_sms_task, payload.phone, code)
+        
+    return {"success": True, "message": "SMS yuborildi"}
 
 @router.post("/verify-sms")
 @limiter.limit("5/minute")

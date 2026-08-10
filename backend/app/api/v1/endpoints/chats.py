@@ -17,6 +17,8 @@ def _get_participant_chat(db: Session, chat_id: str, user: models.User) -> model
         raise HTTPException(status_code=403, detail="Bu suhbatga kirish huquqingiz yo'q")
     return chat
 
+from app.redis_client import redis_client
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: dict[str, list[WebSocket]] = {}
@@ -35,9 +37,22 @@ class ConnectionManager:
                 del self.active_connections[chat_id]
 
     async def broadcast_to_chat(self, message: dict, chat_id: str):
+        # 1. Publish to Redis channel for multi-worker/multi-pod cluster sync
+        try:
+            redis_client.publish(f"chat:{chat_id}", json.dumps(message))
+        except Exception:
+            pass
+            
+        # 2. Direct broadcast to local node connections
         if chat_id in self.active_connections:
+            dead_connections = []
             for connection in self.active_connections[chat_id]:
-                await connection.send_json(message)
+                try:
+                    await connection.send_json(message)
+                except Exception:
+                    dead_connections.append(connection)
+            for dead in dead_connections:
+                self.disconnect(dead, chat_id)
 
 manager = ConnectionManager()
 

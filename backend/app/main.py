@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -11,14 +11,16 @@ from app.core.limiter import limiter
 from app.db.base import Base
 from app.db.session import engine, SessionLocal
 from app.db.init_db import init_db
-import sentry_sdk
-
 if settings.SENTRY_DSN:
-    sentry_sdk.init(
-        dsn=settings.SENTRY_DSN,
-        traces_sample_rate=1.0,
-        profiles_sample_rate=1.0,
-    )
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=settings.SENTRY_DSN,
+            traces_sample_rate=1.0,
+            profiles_sample_rate=1.0,
+        )
+    except ImportError:
+        print("sentry_sdk not installed, skipping Sentry initialization.")
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -84,7 +86,36 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(api_router, prefix="/api")
 
+from sqlalchemy import text
+from app.redis_client import redis_client
+
 @app.get("/api/health")
 @app.get("/api/v1/health")
-def health_check():
-    return {"status": "ok", "version": settings.VERSION}
+def health_check(response: Response):
+    health_status = {
+        "status": "ok",
+        "version": settings.VERSION,
+        "database": "unknown",
+        "redis": "unknown",
+    }
+    
+    # 1. Probe Database
+    try:
+        with SessionLocal() as db:
+            db.execute(text("SELECT 1"))
+            health_status["database"] = "connected"
+    except Exception as e:
+        health_status["database"] = f"unhealthy ({str(e)})"
+        health_status["status"] = "degraded"
+        response.status_code = 503
+
+    # 2. Probe Redis
+    try:
+        redis_client.ping()
+        health_status["redis"] = "connected"
+    except Exception as e:
+        health_status["redis"] = f"unhealthy ({str(e)})"
+        if health_status["status"] == "ok":
+            health_status["status"] = "degraded"
+
+    return health_status
