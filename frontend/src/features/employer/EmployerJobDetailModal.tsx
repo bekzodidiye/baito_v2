@@ -72,7 +72,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
             </div>
 
             {/* Bottom Title inside Banner */}
-            <div className="absolute bottom-4 left-5 right-5 z-10">
+            <div className="absolute bottom-10 left-5 right-5 z-10">
               <h2 className="text-xl sm:text-2xl font-black text-white leading-tight drop-shadow-lg">
                 {job.title}
               </h2>
@@ -80,7 +80,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
           </div>
 
           {/* Body Content */}
-          <div className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1 text-sm bg-slate-50/50">
+          <div className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1 text-sm bg-slate-50 relative z-20 rounded-t-[32px] -mt-6">
             
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
