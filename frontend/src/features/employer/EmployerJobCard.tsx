@@ -44,21 +44,21 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={() => onSelect(job)}
-      className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-brand-primary/40 hover:shadow-xl transition-all duration-200 group cursor-pointer relative"
+      className="bg-white rounded-[24px] overflow-hidden flex flex-col justify-between shadow-[0_4px_24px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-slate-100 transition-all duration-300 group cursor-pointer"
     >
       {/* Image Banner */}
-      <div className="relative h-36 w-full overflow-hidden bg-slate-100">
+      <div className="relative h-[150px] w-full overflow-hidden bg-slate-100 shrink-0">
         <img
           src={bannerUrl}
           alt={job.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent" />
 
         {/* Company Pill */}
-        <div className="absolute top-3 left-3">
-          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-white bg-slate-900/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 shadow-xs">
-            <Sparkles size={10} className="text-amber-300" />
+        <div className="absolute top-4 left-4">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-white bg-emerald-500 px-3 py-1.5 rounded-lg shadow-sm">
+            <Sparkles size={12} className="text-white" />
             {job.company || 'Baito'}
           </span>
         </div>
@@ -71,51 +71,49 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
               onDelete(job.id);
             }}
             title={language === 'uz' ? "O'chirish" : language === 'ru' ? "Удалить" : "Delete"}
-            className="absolute top-3 right-3 p-1.5 rounded-full bg-slate-900/50 hover:bg-rose-600 text-white backdrop-blur-md transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/90 hover:bg-rose-500 hover:text-white text-slate-700 shadow-sm flex items-center justify-center transition-all cursor-pointer focus:outline-none"
           >
-            <Trash2 size={14} />
+            <Trash2 size={16} />
           </button>
         )}
-
-        {/* Title over banner gradient */}
-        <div className="absolute bottom-7 left-4 right-4">
-          <h3 className="font-display font-black text-[15px] text-white line-clamp-1 leading-snug drop-shadow-md">
-            {job.title}
-          </h3>
-        </div>
       </div>
 
-      {/* Card Content Overlapping Image */}
-      <div className="bg-white relative z-20 rounded-t-[24px] -mt-5 p-4 flex-1 flex flex-col justify-between">
+      {/* Card Content Below Image */}
+      <div className="p-5 flex-1 flex flex-col justify-between relative z-10 bg-white rounded-t-[24px] -mt-4">
         <div>
+          {/* Title */}
+          <h3 className="font-black text-[18px] text-[#1A1A40] line-clamp-2 leading-tight mb-2">
+            {job.title}
+          </h3>
+
           {/* Salary */}
-          <div className="flex items-baseline justify-between">
-            <span className="text-base font-black text-emerald-600 tracking-tight">
+          <div className="flex items-end gap-1.5 mb-4">
+            <span className="text-[22px] font-black text-emerald-600 leading-none">
               {job.salary}
             </span>
           </div>
 
           {/* Location & Date Info */}
-          <div className="mt-2 space-y-1 text-slate-500 text-[11px] font-medium">
-            <div className="flex items-center gap-1.5">
-              <MapPin size={12} className="text-slate-400 shrink-0 stroke-[2]" />
-              <span className="truncate">{job.rawLocation || job.location}</span>
+          <div className="space-y-2 mb-5">
+            <div className="flex items-center gap-2 text-slate-500">
+              <MapPin size={16} className="text-emerald-500 shrink-0" strokeWidth={2.5} />
+              <span className="text-[14px] font-semibold truncate">{job.rawLocation || job.location}</span>
             </div>
             {job.workDate && (
-              <div className="flex items-center gap-1.5">
-                <Calendar size={12} className="text-slate-400 shrink-0 stroke-[2]" />
-                <span>{job.workDate}</span>
+              <div className="flex items-center gap-2 text-slate-500">
+                <Calendar size={16} className="text-emerald-500 shrink-0" strokeWidth={2.5} />
+                <span className="text-[14px] font-semibold">{job.workDate}</span>
               </div>
             )}
           </div>
 
           {/* Tags */}
           {(job.tags || []).length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2.5">
+            <div className="flex flex-wrap gap-2 mb-5">
               {(job.tags || []).slice(0, 3).map((tag, idx) => (
                 <span
                   key={idx}
-                  className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-bold rounded-md border border-slate-200/50"
+                  className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-md"
                 >
                   {tag}
                 </span>
@@ -124,42 +122,45 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
           )}
         </div>
 
-        {/* Footer Status Bar */}
-        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-          {/* Status Pill */}
-          {job.status === 'completed' ? (
-            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[10px] font-bold flex items-center gap-1">
-              <CheckCircle2 size={12} />
-              {language === 'uz' ? "Yopildi" : language === 'ru' ? "Завершено" : "Closed"}
-            </span>
-          ) : job.status === 'in_progress' || job.status === 'start_requested' ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onComplete(job.id);
-              }}
-              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold shadow-xs transition-all cursor-pointer flex items-center gap-1"
-            >
-              <CheckCircle2 size={12} />
-              {language === 'uz' ? "Yakunlash" : language === 'ru' ? "Завершить" : "Complete"}
-            </button>
-          ) : job.status === 'confirmed' ? (
-            <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/60 text-[10px] font-bold flex items-center gap-1">
-              <CheckCircle2 size={12} />
-              {language === 'uz' ? "Ishchi olindi" : language === 'ru' ? "Работник нанят" : "Worker Hired"}
-            </span>
-          ) : (
-            <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60 text-[10px] font-bold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-              {language === 'uz' ? "Arizalar kutilyapti" : "Прием заявок"}
-            </span>
-          )}
+        {/* Footer Actions */}
+        <div className="flex items-center justify-between gap-3 pt-2">
+          {/* Status Button / Pill */}
+          <div className="flex-1">
+            {job.status === 'completed' ? (
+              <span className="w-full py-2.5 rounded-xl bg-slate-100 text-slate-600 text-[13px] font-bold flex items-center justify-center gap-1.5">
+                <CheckCircle2 size={16} />
+                {language === 'uz' ? "Yopildi" : language === 'ru' ? "Завершено" : "Closed"}
+              </span>
+            ) : job.status === 'in_progress' || job.status === 'start_requested' ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onComplete(job.id);
+                }}
+                className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-[13px] font-black shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <CheckCircle2 size={16} />
+                {language === 'uz' ? "Yakunlash" : language === 'ru' ? "Завершить" : "Complete"}
+              </button>
+            ) : job.status === 'confirmed' ? (
+              <span className="w-full py-2.5 rounded-xl bg-amber-500 text-white text-[13px] font-black flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(245,158,11,0.3)]">
+                <CheckCircle2 size={16} />
+                {language === 'uz' ? "Ishchi olindi" : language === 'ru' ? "Работник нанят" : "Worker Hired"}
+              </span>
+            ) : (
+              <span className="w-full py-2.5 rounded-xl bg-blue-50 text-blue-600 text-[13px] font-bold flex items-center justify-center gap-1.5 border border-blue-100">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                {language === 'uz' ? "Kutilyapti" : "Ожидание"}
+              </span>
+            )}
+          </div>
 
           {/* Workers Counter */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-extrabold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/60 flex items-center gap-1">
-              <Users size={11} className="text-brand-primary" /> {hired}/{vac}
-            </span>
+          <div className="flex items-center justify-center shrink-0 w-[52px] h-[44px] bg-slate-50 border border-slate-100 rounded-xl">
+            <div className="flex flex-col items-center justify-center">
+              <Users size={14} className="text-slate-400 mb-0.5" />
+              <span className="text-[11px] font-black text-slate-700 leading-none">{hired}/{vac}</span>
+            </div>
           </div>
         </div>
       </div>
