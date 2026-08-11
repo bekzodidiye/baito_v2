@@ -143,7 +143,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
                 {language === 'uz' ? "Yakunlash" : language === 'ru' ? "Завершить" : "Complete"}
               </button>
             ) : job.status === 'confirmed' ? (
-              <span className="w-full py-2.5 rounded-xl bg-amber-500 text-white text-[13px] font-black flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(245,158,11,0.3)]">
+              <span className="w-full py-2.5 rounded-xl bg-brand-primary text-white text-[13px] font-black flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(0,6,102,0.3)]">
                 <CheckCircle2 size={16} />
                 {language === 'uz' ? "Ishchi olindi" : language === 'ru' ? "Работник нанят" : "Worker Hired"}
               </span>
