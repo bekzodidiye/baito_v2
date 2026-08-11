@@ -1,14 +1,15 @@
 import React from 'react';
-import { Target, ChevronRight, AlertCircle } from 'lucide-react';
+import { Target, ChevronRight, AlertCircle, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useApp } from '../../../context/AppContext';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 interface ProfileCompletionWidgetProps {
   language: 'uz' | 'ru' | 'en';
+  setActiveDialog: (dialog: 'withdraw' | 'edit' | 'none') => void;
 }
 
-export const ProfileCompletionWidget: React.FC<ProfileCompletionWidgetProps> = ({ language }) => {
+export const ProfileCompletionWidget: React.FC<ProfileCompletionWidgetProps> = ({ language, setActiveDialog }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   
   
@@ -81,7 +82,7 @@ export const ProfileCompletionWidget: React.FC<ProfileCompletionWidgetProps> = (
       {progress < 100 && missingSections.length > 0 && (
         <div className="mt-1 flex items-start gap-2 bg-amber-50 text-amber-700 p-2.5 rounded-xl border border-amber-100/50">
           <AlertCircle size={14} className="mt-0.5 shrink-0" />
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 w-full">
             <p className="text-[10px] font-semibold leading-tight">
               {language === 'uz' ? 'Profilni 100% qilish uchun quyidagilarni to\'ldiring:' : language === 'ru' ? 'Для 100% профиля заполните:' : 'To complete your profile, add:'}
             </p>
@@ -97,6 +98,13 @@ export const ProfileCompletionWidget: React.FC<ProfileCompletionWidgetProps> = (
                 </span>
               )}
             </div>
+            <button 
+              onClick={() => setActiveDialog('edit')}
+              className="mt-1 text-[10px] font-bold bg-amber-200/60 hover:bg-amber-300 text-amber-900 px-3 py-1.5 rounded-lg transition-colors w-full sm:w-fit flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <Edit2 size={12} className="stroke-[2.5]" />
+              {language === 'uz' ? 'To\'ldirish' : language === 'ru' ? 'Заполнить' : 'Complete'}
+            </button>
           </div>
         </div>
       )}

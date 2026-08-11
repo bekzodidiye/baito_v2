@@ -93,7 +93,10 @@ export const ProfileScreen: React.FC = () => {
           />
 
           {/* Profile Completion Widget */}
-          <ProfileCompletionWidget language={language} />
+          <ProfileCompletionWidget 
+            language={language} 
+            setActiveDialog={setActiveDialog}
+          />
 
           {/* Profile Reviews Widget */}
           <ProfileReviewsWidget language={language} />
