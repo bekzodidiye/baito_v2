@@ -57,8 +57,8 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
 
         {/* Company Pill */}
         <div className="absolute top-3 left-3">
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm">
-            <Sparkles size={12} className="text-emerald-500" />
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-brand-primary bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm">
+            <Sparkles size={12} className="text-brand-primary" />
             {job.company || 'Baito'}
           </span>
         </div>
@@ -88,7 +88,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
 
           {/* Salary */}
           <div className="flex items-end gap-1.5 mb-4">
-            <span className="text-[22px] font-black text-emerald-600 leading-none">
+            <span className="text-[22px] font-black text-brand-primary leading-none">
               {job.salary}
             </span>
           </div>
@@ -96,12 +96,12 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
           {/* Location & Date Info */}
           <div className="space-y-2 mb-5">
             <div className="flex items-center gap-2 text-slate-500">
-              <MapPin size={16} className="text-emerald-500 shrink-0" strokeWidth={2.5} />
+              <MapPin size={16} className="text-brand-primary shrink-0" strokeWidth={2.5} />
               <span className="text-[14px] font-semibold truncate">{job.rawLocation || job.location}</span>
             </div>
             {job.workDate && (
               <div className="flex items-center gap-2 text-slate-500">
-                <Calendar size={16} className="text-emerald-500 shrink-0" strokeWidth={2.5} />
+                <Calendar size={16} className="text-brand-primary shrink-0" strokeWidth={2.5} />
                 <span className="text-[14px] font-semibold">{job.workDate}</span>
               </div>
             )}
@@ -113,7 +113,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
               {(job.tags || []).slice(0, 3).map((tag, idx) => (
                 <span
                   key={idx}
-                  className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-md"
+                  className="px-2.5 py-1 bg-brand-primary/10 text-brand-primary text-[11px] font-bold rounded-md"
                 >
                   {tag}
                 </span>
