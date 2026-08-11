@@ -19,9 +19,12 @@ export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, o
       const { apiClient } = await import('../../api/client');
       await apiClient(`/admin/users/${userId}/role`, {
         method: 'PATCH',
-        body: JSON.stringify({ isVerified: approve }),
+        body: JSON.stringify({ 
+          isVerified: approve,
+          clearDocs: !approve
+        }),
       });
-      (approve ? "Foydalanuvchi va hujjatlari tasdiqlandi" : "Hujjatlar rad etildi");
+      showToast(approve ? "Foydalanuvchi va hujjatlari tasdiqlandi" : "Hujjatlar rad etildi");
       onRefresh();
     } catch (e) {
       console.error(e);
@@ -41,12 +44,12 @@ export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, o
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {users.length === 0 ? (
+        {users.filter(u => !u.isVerified && (u.passportDocFront || u.passportSeries)).length === 0 ? (
           <div className="col-span-full bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-400 font-semibold">
             Verifikatsiya so'rovlari mavjud emas
           </div>
         ) : (
-          users.map((u) => (
+          users.filter(u => !u.isVerified && (u.passportDocFront || u.passportSeries)).map((u) => (
             <div
               key={u.id}
               className="bg-white p-5 rounded-2xl border border-slate-200/80 hover:border-blue-300 transition-all shadow-xs flex flex-col justify-between gap-4"

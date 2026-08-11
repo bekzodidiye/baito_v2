@@ -78,6 +78,22 @@ def change_role(
         user.role = payload["role"]
     if "isVerified" in payload:
         user.isVerified = payload["isVerified"]
+        
+        # Create notification
+        notif = models.Notification(
+            userId=user.id,
+            title="Verifikatsiya holati",
+            message="Sizning shaxsingiz va hujjatlaringiz tasdiqlandi!" if user.isVerified else "Hujjatlaringiz rad etildi, iltimos qaytadan to'g'ri hujjatlarni yuklang.",
+            type="system"
+        )
+        db.add(notif)
+        
+    if payload.get("clearDocs"):
+        user.passportDocFront = None
+        user.passportDocBack = None
+        user.selfieWithDoc = None
+        user.passportSeries = None
+        user.passportJshshir = None
     db.commit()
     return {"success": True, "role": user.role, "isVerified": user.isVerified}
 

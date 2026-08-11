@@ -54,17 +54,21 @@ export const createCachedTileLayer = (urlTemplate: string, options: L.TileLayerO
   return new CachedTileLayer(urlTemplate, options);
 };
 
-// Reusable instantiated TileLayer cache per MapType
-const baseLayerCache = new Map<MapType, L.TileLayer>();
-const labelLayerCache = new Map<MapType, L.TileLayer>();
+// TileLayer instances are cached per map, never globally: a Leaflet layer can
+// only belong to one map at a time. Handing the same instance to a second map
+// silently unregisters it from the first, which then reports getMaxZoom() as
+// Infinity and hangs leaflet.markercluster in an endless loop. The tile images
+// themselves stay shared through tileMemoryCache, which is where the win is.
+const layerCacheByMap = new WeakMap<L.Map, Map<MapType, { baseLayer: L.TileLayer; labelLayer: L.TileLayer | null }>>();
 
 export const createTileLayers = (mapType: MapType, map: L.Map) => {
-  if (baseLayerCache.has(mapType)) {
-    return {
-      baseLayer: baseLayerCache.get(mapType)!,
-      labelLayer: labelLayerCache.get(mapType) || null,
-    };
+  let mapCache = layerCacheByMap.get(map);
+  if (!mapCache) {
+    mapCache = new Map();
+    layerCacheByMap.set(map, mapCache);
   }
+  const cached = mapCache.get(mapType);
+  if (cached) return cached;
 
   let baseLayer: L.TileLayer;
   let labelLayer: L.TileLayer | null = null;
@@ -145,11 +149,9 @@ export const createTileLayers = (mapType: MapType, map: L.Map) => {
     labelLayer.on('tileerror', tileErrorFallback);
   }
 
-  baseLayerCache.set(mapType, baseLayer);
-  if (labelLayer) {
-    labelLayerCache.set(mapType, labelLayer);
-  }
+  const layers = { baseLayer, labelLayer };
+  mapCache.set(mapType, layers);
 
-  return { baseLayer, labelLayer };
+  return layers;
 };
 

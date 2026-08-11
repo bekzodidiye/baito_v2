@@ -1,6 +1,6 @@
 import { Job, Chat, Message } from '../types';
 
-export type ScreenType = 'landing' | 'calendar' | 'jobs' | 'messages' | 'jobs' | 'chat' | 'notifications' | 'profile' | 'verification' | 'login' | 'register' | 'settings' | 'security' | 'help' | 'faq' | 'guide' | 'terms' | 'support-chat' | 'employer-dashboard' | 'employer-jobs' | 'employer-applicants' | 'employer-chats' | 'employer-profile' | 'employer-analytics' | 'employer-post' | 'admin';
+export type ScreenType = 'landing' | 'calendar' | 'jobs' | 'messages' | 'jobs' | 'chat' | 'notifications' | 'profile' | 'reviews' | 'applications' | 'verification' | 'payments' | 'login' | 'register' | 'settings' | 'security' | 'help' | 'faq' | 'guide' | 'terms' | 'support-chat' | 'employer-dashboard' | 'employer-jobs' | 'employer-applicants' | 'employer-chats' | 'employer-profile' | 'employer-analytics' | 'employer-post' | 'admin';
 
 export interface UserProfile {
   id: string;
@@ -9,8 +9,21 @@ export interface UserProfile {
   selectedRole: 'worker' | 'employer' | 'admin';
   birthDate: string;
   phone: string;
+  isVerified?: boolean;
   docFileName1: string;
+  docFileName2?: string;
+  docFileName3?: string;
   profileImage: string | null;
+  email?: string;
+  region?: string;
+  profession?: string;
+  aboutMe?: string;
+  skills?: string[];
+  gender?: 'male' | 'female' | '';
+  passportSeries?: string;
+  pinfl?: string;
+  rating?: number;
+  completedJobsCount?: number;
 }
 
 export interface AppContextType {

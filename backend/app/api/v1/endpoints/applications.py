@@ -56,7 +56,8 @@ def get_worker_applications(
             "appliedDate": str(app.appliedDate) if app.appliedDate else None,
             "rating": app.rating,
             "review": app.review,
-            "bonus": app.bonus
+            "bonus": app.bonus,
+            "earnedAmount": int(''.join(filter(str.isdigit, job.salary))) + (app.bonus or 0) if job.salary and any(c.isdigit() for c in job.salary) else (app.bonus or 0)
         })
 
     result.sort(key=lambda x: x.get("appliedDate") or "", reverse=True)

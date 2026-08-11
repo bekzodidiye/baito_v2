@@ -22,6 +22,8 @@ class User(Base):
     createdAt = Column(DateTime(timezone=True), server_default=func.now())
     
     # Extended Profile Fields
+    birthDate = Column(String)
+    gender = Column(String)
     region = Column(String)
     category = Column(String)
     bio = Column(Text)

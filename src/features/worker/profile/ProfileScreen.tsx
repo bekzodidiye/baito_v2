@@ -27,6 +27,7 @@ export const ProfileScreen: React.FC = () => {
     t,
     appliedJobsCount,
     showVerified,
+    isVerifiedUser,
     profileName,
     profileRole,
     profileImage,
@@ -36,18 +37,24 @@ export const ProfileScreen: React.FC = () => {
     handleSaveProfileSubmit,
     handleLogout,
     handleWithdrawSubmit,
-    editedFirstName,
-    setEditedFirstName,
-    editedLastName,
-    setEditedLastName,
-    editedPhone,
-    setEditedPhone,
+    editForm,
+    setEditForm,
     toggleRole
   } = useProfileScreen();
 
   React.useEffect(() => {
     const handleScrollEvent = (e: Event) => {
       setActiveDialog('edit');
+      const detail = (e as CustomEvent).detail;
+      if (detail) {
+        setTimeout(() => {
+          const el = document.getElementById(`input-${detail}`);
+          if (el) {
+            el.focus();
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 400); // Wait for modal animation to complete
+      }
     };
     window.addEventListener('scroll-to-profile-section', handleScrollEvent);
     return () => window.removeEventListener('scroll-to-profile-section', handleScrollEvent);
@@ -79,7 +86,8 @@ export const ProfileScreen: React.FC = () => {
             profileImage={profileImage}
             fileInputRef={fileInputRef}
             handlePhotoUpload={handlePhotoUpload}
-            appliedJobsCount={appliedJobsCount}
+            rating={userProfile?.rating || 0}
+            completedJobsCount={userProfile?.completedJobsCount || 0}
             t={t}
             onEditClick={() => setActiveDialog('edit')}
           />
@@ -124,6 +132,7 @@ export const ProfileScreen: React.FC = () => {
             t={t}
             language={language}
             showVerified={showVerified}
+            isVerifiedUser={isVerifiedUser}
             setCurrentScreen={setCurrentScreen}
             setActiveDialog={setActiveDialog}
             balance={balance}
@@ -163,12 +172,8 @@ export const ProfileScreen: React.FC = () => {
         setWithdrawAmount={setWithdrawAmount}
         withdrawSuccess={withdrawSuccess}
         handleWithdrawSubmit={handleWithdrawSubmit}
-        editedFirstName={editedFirstName}
-        setEditedFirstName={setEditedFirstName}
-        editedLastName={editedLastName}
-        setEditedLastName={setEditedLastName}
-        editedPhone={editedPhone}
-        setEditedPhone={setEditedPhone}
+        editForm={editForm}
+        setEditForm={setEditForm}
         handleSaveProfileSubmit={handleSaveProfileSubmit}
         isEditing={isEditing}
       />

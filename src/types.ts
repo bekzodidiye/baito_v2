@@ -63,6 +63,7 @@ export interface Application {
   id: string;
   jobId: string;
   jobTitle: string;
+  jobCompany?: string;
   candidateName: string;
   candidatePhone: string;
   candidateAvatar?: string;
@@ -72,4 +73,5 @@ export interface Application {
   rating?: number;
   review?: string;
   bonus?: number;
+  earnedAmount?: number;
 }

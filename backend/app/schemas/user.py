@@ -9,6 +9,8 @@ class UserBase(BaseModel):
     role: Optional[str] = 'worker'
     companyName: Optional[str] = None
     avatarUrl: Optional[str] = None
+    birthDate: Optional[str] = None
+    gender: Optional[str] = None
 
 class UserCreate(UserBase):
     uid: Optional[str] = None
@@ -31,6 +33,13 @@ class UserUpdate(BaseModel):
     category: Optional[str] = None
     bio: Optional[str] = None
     skills: Optional[list | dict | str] = None
+    birthDate: Optional[str] = None
+    gender: Optional[str] = None
+    passportSeries: Optional[str] = None
+    passportJshshir: Optional[str] = None
+    passportDocFront: Optional[str] = None
+    passportDocBack: Optional[str] = None
+    selfieWithDoc: Optional[str] = None
 
 class UserInDBBase(UserBase):
     id: str
