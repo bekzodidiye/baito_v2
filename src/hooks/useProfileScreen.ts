@@ -161,7 +161,11 @@ export const useProfileScreen = () => {
       aboutMe: editForm.aboutMe,
       skills: editForm.skills.split(',').map((s: string) => s.trim()).filter(Boolean),
       passportSeries: `${editForm.passportSeries} ${editForm.passportNumber}`.trim(),
-      pinfl: editForm.pinfl
+      pinfl: editForm.pinfl,
+      isVerified: userProfile?.isVerified || false,
+      rating: userProfile?.rating || 0,
+      completedJobsCount: userProfile?.completedJobsCount || 0,
+      docFileName3: userProfile?.docFileName3
     };
     try {
       const { apiClient } = await import('../api/client');
