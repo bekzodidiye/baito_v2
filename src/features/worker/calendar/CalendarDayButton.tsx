@@ -98,7 +98,7 @@ export const CalendarDayButton: React.FC<CalendarDayButtonProps> = ({
   if (status === 'completed') {
     oneJob = filteredJobs.find(j => j.status === 'completed');
   } else if (status === 'todo' || status === 'confirmed') {
-    oneJob = filteredJobs.find(j => j.status === 'confirmed' || j.status === 'todo' || j.status === 'in_progress');
+    oneJob = filteredJobs.find(j => ['confirmed', 'todo', 'in_progress', 'hired', 'start_requested'].includes(j.status));
   } else if (status === 'applied') {
     oneJob = filteredJobs.find(j => j.status === 'applied' || j.applied);
   }
