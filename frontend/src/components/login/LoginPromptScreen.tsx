@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useLoginPrompt } from '../../hooks/useLoginPrompt';
 import { LoginPromptHeader } from './LoginPromptHeader';
 import { LoginPromptStepper } from './LoginPromptStepper';
 import { LoginPromptFooter } from './LoginPromptFooter';
 import { LoginPromptBody } from './LoginPromptBody';
-import { PrivacyScreen } from '../settings/PrivacyScreen';
+
+const PrivacyScreen = React.lazy(() => import('../settings/PrivacyScreen').then(m => ({ default: m.PrivacyScreen })));
 
 interface LoginPromptScreenProps {
   isModal?: boolean;
@@ -28,7 +29,7 @@ export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = ({
         isModal
           ? 'w-full h-full bg-white'
           : 'fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md p-3 sm:p-6 flex items-center justify-center overflow-y-auto'
-      } font-sans text-slate-900`}
+      } font-sans text-slate-755`}
     >
       <div
         className={`w-full flex flex-col overflow-hidden relative bg-white/95 backdrop-blur-xl mx-auto ${
@@ -79,13 +80,15 @@ export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = ({
 
       {p.showPrivacy && (
         <div className="absolute inset-0 z-50 bg-white flex flex-col h-full w-full">
-          <PrivacyScreen 
-            onBack={() => p.setShowPrivacy(false)} 
-            onConfirm={() => {
-              p.setShowPrivacy(false);
-              p.setAgreeTerms(true);
-            }}
-          />
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><div className="animate-spin w-8 h-8 rounded-full border-2 border-brand-primary border-t-transparent" /></div>}>
+            <PrivacyScreen 
+              onBack={() => p.setShowPrivacy(false)} 
+              onConfirm={() => {
+                p.setShowPrivacy(false);
+                p.setAgreeTerms(true);
+              }}
+            />
+          </Suspense>
         </div>
       )}
     </div>

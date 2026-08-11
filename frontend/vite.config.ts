@@ -33,9 +33,11 @@ export default defineConfig(() => {
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
+            query: ['@tanstack/react-query'],
             map: ['leaflet', 'react-leaflet'],
             motion: ['motion/react', 'framer-motion'],
-            ui: ['lucide-react']
+            ui: ['lucide-react'],
+            state: ['zustand']
           },
         },
       },

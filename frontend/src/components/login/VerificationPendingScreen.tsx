@@ -8,9 +8,9 @@ export const VerificationPendingScreen: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 bg-brand-background md:p-6 lg:p-8 flex items-center justify-center font-sans overflow-hidden">
-      <div className="w-full h-full flex flex-col overflow-hidden relative bg-white mx-auto max-w-md md:h-[85vh] md:max-h-[850px] md:rounded-[24px] md:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] md:border md:border-slate-200/50">
+      <div className="w-full h-full flex flex-col overflow-hidden relative bg-white mx-auto max-w-md md:h-[85vh] md:max-h-[850px] md:rounded-[24px] md:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] md:border md:border-slate-200/80/50">
       {/* Top Navigation */}
-      <header className="w-full shrink-0 bg-white border-b border-slate-200 z-40 flex justify-between items-center px-4 h-16 shadow-3xs rounded-t-[20px] md:rounded-t-[24px]">
+      <header className="w-full shrink-0 bg-white border-b border-slate-200/80 z-40 flex justify-between items-center px-4 h-16 shadow-3xs rounded-t-[20px] md:rounded-t-[24px]">
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setCurrentScreen('profile')}
@@ -31,13 +31,13 @@ export const VerificationPendingScreen: React.FC = () => {
             onClick={() => setCurrentScreen('profile')}
             className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 group"
           >
-            <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-xs shadow-sm transition-all duration-300 group-hover:scale-105">
+            <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-black text-xs shadow-3xs transition-all duration-300 group-hover:scale-105">
               <Check size={14} className="stroke-[3]" />
             </div>
-            <span className="text-[9px] font-black tracking-wider mt-2.5 text-emerald-600 uppercase">{stepT.step1}</span>
+            <span className="text-[9px] font-black tracking-wider mt-2.5 text-brand-primary uppercase">{stepT.step1}</span>
           </button>
           {/* Line 1-2 */}
-          <div className="flex-1 h-0.5 mx-2 -mt-6 relative z-0 bg-emerald-500 transition-colors duration-300"></div>
+          <div className="flex-1 h-0.5 mx-2 -mt-6 relative z-0 bg-brand-primary transition-colors duration-300"></div>
           
           {/* Step 2 */}
           <button 
@@ -45,20 +45,20 @@ export const VerificationPendingScreen: React.FC = () => {
             onClick={() => setCurrentScreen('profile')}
             className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 group"
           >
-            <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-xs shadow-sm transition-all duration-300 group-hover:scale-105">
+            <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-black text-xs shadow-3xs transition-all duration-300 group-hover:scale-105">
               <Check size={14} className="stroke-[3]" />
             </div>
-            <span className="text-[9px] font-black tracking-wider mt-2.5 text-emerald-600 uppercase">{stepT.step2}</span>
+            <span className="text-[9px] font-black tracking-wider mt-2.5 text-brand-primary uppercase">{stepT.step2}</span>
           </button>
           {/* Line 2-3 */}
-          <div className="flex-1 h-0.5 mx-2 -mt-6 relative z-0 bg-emerald-500 transition-colors duration-300"></div>
+          <div className="flex-1 h-0.5 mx-2 -mt-6 relative z-0 bg-brand-primary transition-colors duration-300"></div>
           
           {/* Step 3 */}
           <div className="flex flex-col items-center relative z-10">
-            <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-xs shadow-sm transition-all duration-300">
+            <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-black text-xs shadow-3xs transition-all duration-300">
               <Check size={14} className="stroke-[3]" />
             </div>
-            <span className="text-[9px] font-black tracking-wider mt-2.5 text-emerald-600 uppercase">{stepT.step3}</span>
+            <span className="text-[9px] font-black tracking-wider mt-2.5 text-brand-primary uppercase">{stepT.step3}</span>
           </div>
         </div>
       </div>
@@ -80,7 +80,7 @@ export const VerificationPendingScreen: React.FC = () => {
             
             <div className="flex items-center gap-4 relative z-10 text-left">
               {/* Premium Animated Biometric ID Card Container */}
-              <div className="relative w-20 h-14 bg-slate-50 border border-slate-200/80 rounded-lg p-2 flex flex-col justify-between overflow-hidden shrink-0 shadow-inner">
+              <div className="relative w-20 h-14 bg-slate-50 border border-slate-200/80/80 rounded-lg p-2 flex flex-col justify-between overflow-hidden shrink-0 shadow-inner">
                 {/* Horizontal Neon Laser Scanner Line */}
                 <div className="absolute left-0 right-0 h-[2px] bg-brand-primary shadow-[0_0_8px_var(--color-brand-primary)] opacity-80 animate-scan-laser"></div>
                 
@@ -101,7 +101,7 @@ export const VerificationPendingScreen: React.FC = () => {
               {/* Status information right next to it */}
               <div className="flex-grow min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-display font-black text-brand-navy text-[13px] tracking-tight leading-none">
+                  <span className="font-display font-black text-brand-navy text-xs tracking-tight leading-none">
                     {t.verifying}
                   </span>
                   <span className="text-[8px] text-brand-primary font-black uppercase tracking-widest bg-brand-primary/5 px-2 py-0.5 rounded-full leading-none animate-pulse">
@@ -115,7 +115,7 @@ export const VerificationPendingScreen: React.FC = () => {
             </div>
 
             {/* Micro progress line at the very bottom border of the card */}
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-100 overflow-hidden">
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-50 overflow-hidden">
               <div className="h-full bg-brand-primary w-1/3 rounded-full animate-pulse-slow"></div>
             </div>
           </div>
@@ -139,7 +139,7 @@ export const VerificationPendingScreen: React.FC = () => {
               <h3 className="text-xs font-black text-brand-navy leading-snug">{t.docCardTitle}</h3>
               <p className="text-[10px] font-semibold text-slate-400 mt-0.5">{t.docCardSub}</p>
             </div>
-            <div className="px-3 py-1 rounded-full bg-slate-100 text-brand-navy text-[9px] font-black uppercase tracking-wider">
+            <div className="px-3 py-1 rounded-full bg-slate-50 text-brand-navy text-[9px] font-black uppercase tracking-wider">
               {t.pendingBadge}
             </div>
           </div>

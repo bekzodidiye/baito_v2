@@ -1,3 +1,5 @@
+from app.core.config import settings
+
 try:
     from celery import Celery
     celery_app = Celery(

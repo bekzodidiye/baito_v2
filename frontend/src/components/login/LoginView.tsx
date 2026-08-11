@@ -40,7 +40,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
       className="space-y-6"
     >
       <div className="text-center pt-2 w-full mx-auto">
-        <h1 className="text-xl sm:text-2xl font-black text-emerald-600 tracking-tight mb-2">
+        <h1 className="text-xl sm:text-2xl font-black text-brand-primary tracking-tight mb-2">
           {t.loginTitle || 'Tizimga kirish'}
         </h1>
         <p className="text-xs text-slate-500 font-medium leading-relaxed">
@@ -70,7 +70,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               value={loginPhone}
               onChange={(e) => setLoginPhone(e.target.value)}
               placeholder={t.phonePlaceholder || '+998 (90) 123-45-67'}
-              className="w-full bg-slate-50/50 border border-slate-200 hover:border-slate-300 rounded-[12px] py-3.5 pl-11 pr-4 text-[13px] font-semibold focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-all placeholder:text-slate-400 shadow-sm text-slate-900"
+              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-4 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
             />
           </div>
         </div>
@@ -90,7 +90,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               value={loginPassword}
               onChange={(e) => setLoginPassword(e.target.value)}
               placeholder={t.passwordPlaceholder || 'Parolingizni kiriting'}
-              className="w-full bg-slate-50/50 border border-slate-200 hover:border-slate-300 rounded-[12px] py-3.5 pl-11 pr-11 text-[13px] font-semibold focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-all placeholder:text-slate-400 shadow-sm text-slate-900"
+              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-11 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
             />
             <button
               type="button"
@@ -106,7 +106,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
         <button
           type="button"
           onClick={(e) => handleLoginSubmit(e)}
-          className="w-full mt-4 py-3.5 px-6 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white rounded-[16px] text-[13px] font-bold transition-all flex items-center justify-center gap-1.5 border-0 shadow-lg shadow-emerald-500/20 cursor-pointer"
+          className="w-full mt-4 py-3 px-6 bg-brand-primary hover:bg-brand-primary active:scale-[0.98] text-white rounded-[16px] text-xs font-bold transition-all flex items-center justify-center gap-1.5 border-0 shadow-lg shadow-brand-primary/20 cursor-pointer"
         >
           <span>{t.loginBtn || 'Kirish'}</span>
           <Check size={16} className="stroke-[2.5]" />
@@ -119,7 +119,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <button
               type="button"
               onClick={() => setMode('role-selection')}
-              className="text-emerald-600 hover:underline font-bold bg-transparent border-0 p-0 cursor-pointer ml-1"
+              className="text-brand-primary hover:underline font-bold bg-transparent border-0 p-0 cursor-pointer ml-1"
             >
               {t.regTitle || "Ro'yxatdan o'tish"}
             </button>

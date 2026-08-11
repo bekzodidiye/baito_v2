@@ -84,11 +84,11 @@ export const ProfileInfoView: React.FC<ProfileInfoViewProps> = (props) => {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">{t.name}</label>
-            <input type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Aziz" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+            <input type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Aziz" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">{t.surname}</label>
-            <input type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Aliyev" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+            <input type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Aliyev" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
           </div>
         </div>
 
@@ -104,10 +104,10 @@ export const ProfileInfoView: React.FC<ProfileInfoViewProps> = (props) => {
         <div className="space-y-1">
           <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">{t.gender}</label>
           <div className="grid grid-cols-2 gap-4">
-            <button type="button" onClick={() => setGender('male')} className={`flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl border font-bold text-xs cursor-pointer ${gender === 'male' ? 'border-brand-primary bg-brand-primary/5 text-brand-primary' : 'border-slate-200 bg-white text-slate-600'}`}>
+            <button type="button" onClick={() => setGender('male')} className={`flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl border font-bold text-xs cursor-pointer ${gender === 'male' ? 'border-brand-primary bg-brand-primary/5 text-brand-primary' : 'border-slate-200/80 bg-white text-slate-600'}`}>
               <span>👨🏻</span><span>{t.male}</span>
             </button>
-            <button type="button" onClick={() => setGender('female')} className={`flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl border font-bold text-xs cursor-pointer ${gender === 'female' ? 'border-brand-primary bg-brand-primary/5 text-brand-primary' : 'border-slate-200 bg-white text-slate-600'}`}>
+            <button type="button" onClick={() => setGender('female')} className={`flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl border font-bold text-xs cursor-pointer ${gender === 'female' ? 'border-brand-primary bg-brand-primary/5 text-brand-primary' : 'border-slate-200/80 bg-white text-slate-600'}`}>
               <span>👩🏻</span><span>{t.female}</span>
             </button>
           </div>
@@ -115,7 +115,7 @@ export const ProfileInfoView: React.FC<ProfileInfoViewProps> = (props) => {
 
         <div className="space-y-1">
           <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">{t.email}</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="aziz@example.com" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="aziz@example.com" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
         </div>
       </form>
     </motion.div>

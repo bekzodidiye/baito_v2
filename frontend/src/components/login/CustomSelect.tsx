@@ -30,7 +30,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, opt
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full bg-white border ${isOpen ? 'border-brand-primary ring-1 ring-brand-primary' : 'border-slate-200/80 hover:border-slate-300'} rounded-xl py-2.5 pl-3.5 pr-8 text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all cursor-pointer shadow-3xs flex items-center justify-between`}
+        className={`w-full bg-white border ${isOpen ? 'border-brand-primary ring-1 ring-brand-primary' : 'border-slate-200/80/80 hover:border-slate-300'} rounded-xl py-2.5 pl-3.5 pr-8 text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all cursor-pointer shadow-3xs flex items-center justify-between`}
       >
         <span className={`block truncate ${selectedOption ? 'text-slate-800' : 'text-slate-400'}`}>
           {selectedOption ? selectedOption.label : placeholder}
