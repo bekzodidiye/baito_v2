@@ -204,16 +204,8 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                           </div>
                           <div>
                             <h5 className="font-bold text-[#1A1A40] text-[15px]">{worker.name}</h5>
-                            {worker.phone && <p className="text-[13px] text-slate-500 font-semibold mt-0.5">{worker.phone}</p>}
                           </div>
                         </div>
-                        <a 
-                          href={`tel:${worker.phone || ''}`}
-                          onClick={(e) => { e.stopPropagation(); }} 
-                          className="w-11 h-11 rounded-full bg-green-50 border border-green-100 flex items-center justify-center text-green-600 hover:bg-green-100 transition-colors shrink-0 cursor-pointer"
-                        >
-                          <PhoneCall size={18} strokeWidth={2.5} />
-                        </a>
                       </div>
                     ))}
                   </div>
