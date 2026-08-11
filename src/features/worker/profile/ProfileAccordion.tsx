@@ -27,35 +27,6 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
   return (
     <div className="flex flex-col gap-4 shrink-0">
       {/* 1. Ish Faoliyati Accordion */}
-      
-      {/* 2. Sozlamalar Accordion (Direct Link) */}
-      <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
-        <button 
-          onClick={() => { setCurrentScreen('settings'); (null); }}
-          className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-        >
-          <div className="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-            <span className="font-display font-black text-xs text-slate-800 uppercase tracking-wider">{language === 'uz' ? 'Sozlamalar' : language === 'ru' ? 'Настройки' : "Settings"}</span>
-          </div>
-          <ChevronRight size={16} className="text-slate-400" />
-        </button>
-      </div>
-      
-      {/* 3. Yordam Accordion (Direct Link) */}
-      <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
-        <button 
-          onClick={() => { setCurrentScreen('help'); (null); }}
-          className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-        >
-          <div className="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            <span className="font-display font-black text-xs text-slate-800 uppercase tracking-wider">{language === 'uz' ? 'Yordam' : language === 'ru' ? 'Помощь' : "Help"}</span>
-          </div>
-          <ChevronRight size={16} className="text-slate-400" />
-        </button>
-      </div>
-
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
         <button 
           onClick={() => setExpandedSection(expandedSection === 'activity' ? null : 'activity')}
@@ -141,6 +112,34 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+
+      {/* 2. Sozlamalar Accordion (Direct Link) */}
+      <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
+        <button 
+          onClick={() => { setCurrentScreen('settings'); (null); }}
+          className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+        >
+          <div className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <span className="font-display font-black text-xs text-slate-800 uppercase tracking-wider">{language === 'uz' ? 'Sozlamalar' : language === 'ru' ? 'Настройки' : "Settings"}</span>
+          </div>
+          <ChevronRight size={16} className="text-slate-400" />
+        </button>
+      </div>
+      
+      {/* 3. Yordam Accordion (Direct Link) */}
+      <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
+        <button 
+          onClick={() => { setCurrentScreen('help'); (null); }}
+          className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+        >
+          <div className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span className="font-display font-black text-xs text-slate-800 uppercase tracking-wider">{language === 'uz' ? 'Yordam' : language === 'ru' ? 'Помощь' : "Help"}</span>
+          </div>
+          <ChevronRight size={16} className="text-slate-400" />
+        </button>
       </div>
     </div>
   );
