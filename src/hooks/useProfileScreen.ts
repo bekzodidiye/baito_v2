@@ -28,7 +28,6 @@ export const useProfileScreen = () => {
                 fName = data.name;
               }
             }
-            
             setUserProfile({
               ...userProfile,
               firstName: fName,
@@ -188,12 +187,31 @@ export const useProfileScreen = () => {
         avatarUrl: editForm.profileImage || undefined,
       };
 
-      await apiClient('/users/me', {
+      const responseData = await apiClient('/users/me', {
         method: 'PUT',
         body: JSON.stringify(updatePayload)
       });
 
-      setUserProfile(updated);
+      let fName = responseData?.name || updated.firstName;
+      let lName = updated.lastName;
+      if (responseData?.name && responseData.name.includes(' ')) {
+        const parts = responseData.name.split(' ');
+        fName = parts[0];
+        lName = parts.slice(1).join(' ');
+      } else if (responseData?.name) {
+        fName = responseData.name;
+        lName = '';
+      }
+
+      setUserProfile({
+        ...updated,
+        firstName: fName,
+        lastName: lName,
+        isVerified: responseData?.isVerified ?? updated.isVerified,
+        rating: responseData?.rating ?? updated.rating,
+        completedJobsCount: responseData?.completedJobsCount ?? updated.completedJobsCount
+      });
+
       setActiveDialog('none');
       showToast(t.savedSuccess);
     } catch (err) {
