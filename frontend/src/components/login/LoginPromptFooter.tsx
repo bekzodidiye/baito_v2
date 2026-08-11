@@ -28,17 +28,17 @@ export const LoginPromptFooter: React.FC<LoginPromptFooterProps> = ({
             <button
               type="button"
               onClick={() => handleProfileSubmit()}
-              className="w-full py-3.5 px-6 bg-[#000666] hover:bg-[#000444] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border-0 shadow-md cursor-pointer active:scale-98"
+              className="w-full py-3.5 px-6 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[16px] text-[13px] font-bold transition-all flex items-center justify-center gap-2 border-0 shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95"
             >
               <span>{t.davomEtish}</span>
-              <ArrowRight size={15} className="stroke-[2.5]" />
+              <ArrowRight size={16} className="stroke-[2.5]" />
             </button>
             <div className="text-center">
               <a
                 href="https://t.me/baito_admin"
                 target="_blank"
                 rel="noreferrer"
-                className="font-extrabold hover:underline text-[11px] text-[#000666] flex items-center justify-center gap-1.5"
+                className="font-extrabold hover:underline text-[11px] text-emerald-600 flex items-center justify-center gap-1.5"
               >
                 <HeadphonesIcon size={14} className="stroke-[2.2]" />
                 <span>{t.adminConnect}</span>
@@ -52,17 +52,17 @@ export const LoginPromptFooter: React.FC<LoginPromptFooterProps> = ({
             <button
               type="button"
               onClick={() => handleDocumentsSubmit()}
-              className="w-full py-3.5 px-6 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border-0 bg-[#000666] hover:bg-[#000444] text-white shadow-md cursor-pointer active:scale-98"
+              className="w-full py-3.5 px-6 rounded-[16px] text-[13px] font-bold transition-all flex items-center justify-center gap-2 border-0 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95"
             >
               <span>{t.davomEtish}</span>
-              <ArrowRight size={15} className="stroke-[2.5]" />
+              <ArrowRight size={16} className="stroke-[2.5]" />
             </button>
             <div className="text-center">
               <a
                 href="https://t.me/baito_admin"
                 target="_blank"
                 rel="noreferrer"
-                className="font-extrabold hover:underline text-[11px] text-[#000666] flex items-center justify-center gap-1.5"
+                className="font-extrabold hover:underline text-[11px] text-emerald-600 flex items-center justify-center gap-1.5"
               >
                 <HeadphonesIcon size={14} className="stroke-[2.2]" />
                 <span>{t.adminConnect}</span>
@@ -76,7 +76,7 @@ export const LoginPromptFooter: React.FC<LoginPromptFooterProps> = ({
             <button
               type="button"
               onClick={() => handleFinishSubmit()}
-              className="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border-0 shadow-md cursor-pointer active:scale-98"
+              className="w-full py-3.5 px-6 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[16px] text-[13px] font-bold transition-all flex items-center justify-center gap-2 border-0 shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95"
             >
               <span>{t.finishButton}</span>
               <Check size={16} className="stroke-[2.5]" />
