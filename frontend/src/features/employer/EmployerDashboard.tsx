@@ -77,26 +77,31 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         </button>
 
         {/* Date Picker */}
-        <div className="bg-white rounded-[24px] p-2 shadow-xs border border-slate-100 flex items-center gap-1 overflow-x-auto scrollbar-hide snap-x">
-          {dates.map((d) => (
-            <button
-              key={d.index}
-              onClick={() => setSelectedDate(d.index)}
-              className={`snap-center flex flex-col items-center justify-center min-w-[64px] h-[76px] rounded-[18px] transition-all cursor-pointer shrink-0 relative ${
-                selectedDate === d.index 
-                  ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20 scale-100' 
-                  : 'bg-transparent text-slate-700 hover:bg-slate-50 scale-[0.98] hover:scale-100'
-              }`}
-            >
-              <span className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${selectedDate === d.index ? 'text-white/90' : 'text-slate-400'}`}>
-                {d.isToday ? (language === 'uz' ? 'Bugun' : 'Сегодня') : d.dayStr}
-              </span>
-              <span className="font-display font-black text-xl">{d.dateNum}</span>
-              {d.isToday && selectedDate !== d.index && (
-                <div className="absolute bottom-2 w-1.5 h-1.5 bg-brand-primary rounded-full"></div>
-              )}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 pt-1 scrollbar-hide snap-x">
+          {dates.map((d) => {
+            const isActive = selectedDate === d.index;
+            return (
+              <button
+                key={d.index}
+                onClick={() => setSelectedDate(d.index)}
+                className={`snap-center flex flex-col items-center justify-center min-w-[68px] h-[80px] rounded-[22px] transition-all cursor-pointer shrink-0 relative ${
+                  isActive 
+                    ? 'bg-brand-primary text-white shadow-[0_8px_16px_rgba(0,6,102,0.24)] scale-100' 
+                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100 scale-[0.98]'
+                }`}
+              >
+                <span className={`text-[11px] font-bold uppercase tracking-wider mb-1 ${isActive ? 'text-white/90' : 'text-slate-400'}`}>
+                  {d.isToday ? (language === 'uz' ? 'Bugun' : 'Сегодня') : d.dayStr}
+                </span>
+                <span className={`font-display font-black text-2xl leading-none ${isActive ? 'text-white' : 'text-slate-800'}`}>
+                  {d.dateNum}
+                </span>
+                {d.isToday && !isActive && (
+                  <div className="absolute bottom-1.5 w-1.5 h-1.5 bg-brand-primary rounded-full"></div>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Jobs List */}
