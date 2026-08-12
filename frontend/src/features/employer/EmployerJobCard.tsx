@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { MapPin, CheckCircle2, Trash2, Users, Calendar, Sparkles } from 'lucide-react';
 import { Job } from '../../types';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 interface EmployerJobCardProps {
   job: Job;
@@ -34,6 +35,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
   onComplete,
   onDelete,
 }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const hired = Number(job.hiredCount ?? 0);
   const vac = Number(job.vacancies ?? (job.neededWorkers ? parseInt(job.neededWorkers) : 1));
   const bannerUrl = getJobBannerImage(job);
@@ -68,10 +70,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              const confirmMsg = language === 'uz' ? "Rostdan ham ushbu e'lonni o'chirmoqchimisiz?" : language === 'ru' ? "Вы действительно хотите удалить эту вакансию?" : "Are you sure you want to delete this job?";
-              if (window.confirm(confirmMsg)) {
-                onDelete(job.id);
-              }
+              setShowDeleteConfirm(true);
             }}
             title={language === 'uz' ? "O'chirish" : language === 'ru' ? "Удалить" : "Delete"}
             className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 hover:bg-rose-500 hover:text-white text-slate-700 shadow-sm flex items-center justify-center transition-all cursor-pointer focus:outline-none"
@@ -167,6 +166,16 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
           </div>
         </div>
       </div>
+      
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title={language === 'uz' ? "O'chirishni tasdiqlash" : language === 'ru' ? "Подтвердите удаление" : "Confirm deletion"}
+        message={language === 'uz' ? "Rostdan ham ushbu e'lonni o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi." : language === 'ru' ? "Вы действительно хотите удалить эту вакансию? Это действие нельзя отменить." : "Are you sure you want to delete this job? This action cannot be undone."}
+        confirmText={language === 'uz' ? "O'chirish" : language === 'ru' ? "Удалить" : "Delete"}
+        cancelText={language === 'uz' ? "Bekor qilish" : language === 'ru' ? "Отмена" : "Cancel"}
+        onConfirm={() => onDelete(job.id)}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </motion.div>
   );
 };
