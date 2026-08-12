@@ -32,7 +32,7 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
         <div className="flex justify-between items-start mb-6">
           <div>
             <h1 className="font-display text-2xl md:text-3xl font-black">
-              {language === 'uz' ? "Bugungi ishlar" : language === 'ru' ? "Сегодняшние работы" : "Today's Jobs"}
+              {language === 'uz' ? "Boshqaruv paneli" : language === 'ru' ? "Панель управления" : "Dashboard"}
             </h1>
             <p className="text-white/70 text-xs md:text-sm font-medium mt-1">
               {language === 'uz' ? "Umumiy statistika va faol e'lonlar" : language === 'ru' ? "Общая статистика и активные объявления" : "General statistics and active jobs"}
