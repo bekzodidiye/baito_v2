@@ -62,6 +62,21 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
                 {language === 'uz' ? "Rad etildi" : language === 'ru' ? "Отклонен" : "Rejected"}
               </span>
             )}
+            {app.status === 'completed' && (
+              <span className="shrink-0 bg-blue-50 text-blue-600 text-[9px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md ml-2 border border-blue-100/50">
+                {language === 'uz' ? "Tugallangan" : language === 'ru' ? "Завершено" : "Completed"}
+              </span>
+            )}
+            {app.status === 'in_progress' && (
+              <span className="shrink-0 bg-amber-50 text-amber-600 text-[9px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md ml-2 border border-amber-100/50">
+                {language === 'uz' ? "Jarayonda" : language === 'ru' ? "В процессе" : "In Progress"}
+              </span>
+            )}
+            {app.status === 'cancelled' && (
+              <span className="shrink-0 bg-slate-100 text-slate-500 text-[9px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md ml-2 border border-slate-200">
+                {language === 'uz' ? "Bekor qilingan" : language === 'ru' ? "Отменено" : "Cancelled"}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-[11px] text-slate-500 font-medium">
