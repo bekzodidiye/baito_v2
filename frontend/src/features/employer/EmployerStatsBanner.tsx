@@ -11,6 +11,7 @@ interface EmployerStatsBannerProps {
   onViewAllJobsClick: () => void;
   onViewApplicantsClick: () => void;
   onPostJobClick: () => void;
+  onViewAnalyticsClick: () => void;
 }
 
 export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
 import { Briefcase, History } from 'lucide-react';
+import { motion } from 'motion/react';
 import { EmployerPageHeader } from './EmployerPageHeader';
 import { EmployerJobDetailModal } from './EmployerJobDetailModal';
 import { EmployerJobCard } from './EmployerJobCard';
@@ -24,9 +25,30 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
     }
   };
 
-  const activeJobs = postedJobs.filter(j => j.status !== 'completed');
-  const historyJobs = postedJobs.filter(j => j.status === 'completed');
+  const [visibleCount, setVisibleCount] = useState(12);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  const activeJobs = useMemo(() => postedJobs.filter(j => j.status !== 'completed'), [postedJobs]);
+  const historyJobs = useMemo(() => postedJobs.filter(j => j.status === 'completed'), [postedJobs]);
   const displayJobs = activeTab === 'active' ? activeJobs : historyJobs;
+
+  useEffect(() => {
+    setVisibleCount(12); // Reset visible count when switching tabs or jobs change significantly
+  }, [activeTab, displayJobs.length]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && visibleCount < displayJobs.length) {
+        setVisibleCount(prev => prev + 12);
+      }
+    }, { threshold: 0.1 });
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [visibleCount, displayJobs.length]);
 
   return (
     <div className="w-full max-w-6xl mx-auto py-4 px-4 md:px-6 flex flex-col gap-6 pb-6">
@@ -38,7 +60,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
       />
 
       {/* Tabs */}
-      <div className="flex p-1 bg-slate-100/80 rounded-xl w-full max-w-sm">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex p-1 bg-slate-100/80 rounded-xl w-full max-w-sm">
         <button
           onClick={() => setActiveTab('active')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
@@ -67,9 +89,10 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
             {historyJobs.length}
           </span>
         </button>
-      </div>
+      </motion.div>
 
       {/* Job Grid */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
       {displayJobs.length === 0 ? (
         <div className="bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200/60 py-16 px-6 flex flex-col items-center justify-center text-center mt-4">
           {activeTab === 'active' ? (
@@ -99,19 +122,28 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-2">
-          {displayJobs.map(job => (
-            <EmployerJobCard
-              key={job.id}
-              job={job}
-              language={language}
-              onSelect={setSelectedJob}
-              onComplete={(id) => setJobToComplete(job)}
-              onDelete={deleteJob}
-            />
-          ))}
+        <div className="flex flex-col gap-4 mt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {displayJobs.slice(0, visibleCount).map(job => (
+              <EmployerJobCard
+                key={job.id}
+                job={job}
+                language={language}
+                onSelect={setSelectedJob}
+                onComplete={(id) => setJobToComplete(job)}
+                onDelete={deleteJob}
+              />
+            ))}
+          </div>
+          {/* Intersection Observer target */}
+          {visibleCount < displayJobs.length && (
+            <div ref={loadMoreRef} className="w-full h-20 flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
         </div>
       )}
+      </motion.div>
 
       {/* Detailed Modal */}
       <EmployerJobDetailModal
