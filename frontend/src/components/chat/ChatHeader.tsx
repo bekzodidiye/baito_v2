@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Phone, MoreVertical, Trash2, ShieldAlert } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface ChatHeaderProps {
@@ -18,12 +18,6 @@ interface ChatHeaderProps {
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({ activeChat, t, setCurrentScreen }) => {
-  const [showMenu, setShowMenu] = useState(false);
-
-  const handleCall = () => {
-    window.location.href = 'tel:+998901234567';
-  };
-
   return (
     <header className="sticky top-0 w-full z-30 bg-white shadow-2xs border-b border-slate-100">
       <div className="w-full max-w-5xl mx-auto flex justify-between items-center px-4 h-16">
@@ -63,25 +57,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ activeChat, t, setCurren
           </div>
         </div>
 
-        <div className="flex items-center gap-1 relative">
-          <button onClick={handleCall} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low text-brand-text-variant cursor-pointer transition-colors" title="Qo'ng'iroq qilish">
-            <Phone size={18} />
-          </button>
-          <button onClick={() => setShowMenu(!showMenu)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low text-brand-text-variant cursor-pointer transition-colors" title="Qo'shimcha">
-            <MoreVertical size={18} />
-          </button>
 
-          {showMenu && (
-            <div className="absolute right-0 top-12 bg-white border border-slate-200 rounded-xl shadow-lg p-2 w-44 z-50 text-xs font-bold space-y-1">
-              <button onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("global-toast", { detail: "Chat tarixi tozalandi" })); }} className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-lg flex items-center gap-2 text-slate-700 cursor-pointer">
-                <Trash2 size={14} /> Chatni tozalash
-              </button>
-              <button onClick={() => { setShowMenu(false); window.dispatchEvent(new CustomEvent("global-toast", { detail: "Shikoyat yuborildi" })); }} className="w-full text-left px-3 py-2 hover:bg-slate-50 rounded-lg flex items-center gap-2 text-red-600 cursor-pointer">
-                <ShieldAlert size={14} /> Shikoyat qilish
-              </button>
-            </div>
-          )}
-        </div>
       </div>
     </header>
   );

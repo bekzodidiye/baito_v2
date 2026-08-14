@@ -28,9 +28,9 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}, isR
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    const errorDetail = typeof error.detail === 'string' 
-      ? error.detail 
-      : Array.isArray(error.detail) 
+    const errorDetail = typeof error.detail === 'string'
+      ? error.detail
+      : Array.isArray(error.detail)
         ? error.detail.map((e: any) => e.msg).join(', ')
         : '';
 

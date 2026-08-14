@@ -6,6 +6,7 @@ import { AdminSidebar } from './AdminSidebar';
 import { AdminOverview } from './AdminOverview';
 import { AdminUsers } from './AdminUsers';
 import { AdminJobs } from './AdminJobs';
+import { AdminDailyJobs } from './AdminDailyJobs';
 import { AdminVerifications } from './AdminVerifications';
 import { AdminTransactions } from './AdminTransactions';
 import { AdminDisputes } from './AdminDisputes';
@@ -47,6 +48,7 @@ export const AdminPanel: React.FC = () => {
     changeRole,
     toggleBan,
     changeJobStatus,
+    changeJobWorker,
     deleteJob,
     updateSettings,
     sendBroadcast,
@@ -90,6 +92,19 @@ export const AdminPanel: React.FC = () => {
               jobs={jobs}
               onChangeJobStatus={changeJobStatus}
               onDeleteJob={deleteJob}
+            />
+          )}
+
+          {activeTab === 'daily_jobs' && (
+            <AdminDailyJobs
+              jobs={jobs}
+              users={users}
+              onChangeJobStatus={changeJobStatus}
+              onChangeJobWorker={changeJobWorker}
+              onDeleteJob={deleteJob}
+              onAddBalance={addBalance}
+              onChangeRole={changeRole}
+              onToggleBan={toggleBan}
             />
           )}
 

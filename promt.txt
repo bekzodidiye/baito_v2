@@ -1,0 +1,356 @@
+Frontend loyihasini React Native mobil ilovasiga migratsiya qilish uchun senior prompt
+
+Quyidagi topshiriqni senior React Native architect va full-stack mobile developer sifatida bajaring.
+
+Asosiy maqsad
+
+Mavjud repository ichidagi tayyor frontend loyihani chuqur tahlil qiling va uning funksional imkoniyatlari, biznes mantiqi, sahifalari, navigatsiyasi, dizayni, API integratsiyalari hamda foydalanuvchi oqimlarini saqlagan holda to‘liq mobil ilovaga aylantiring.
+
+Barcha mobil kodlar alohida mobile/ papkasi ichida yozilishi kerak. Mavjud frontend kodlarini buzmaslik, o‘chirmaslik yoki keraksiz ravishda o‘zgartirmaslik shart. Agar mavjud mobile/ papkasi bo‘lsa, uning ichidagi kodni avval audit qiling va mavjud ishlaydigan qismlarni asossiz almashtirmang.
+
+Ishni boshlashdan oldingi majburiy tahlil
+
+Ishni darhol kod yozishdan boshlamang. Avval repository’ni to‘liq tekshiring va quyidagilarni aniqlang:
+
+1.
+Mavjud frontend frameworki, dependency’lari, build command’lari va project structure’ini aniqlang.
+
+2.
+Barcha route va sahifalarni ro‘yxatga oling.
+
+3.
+Har bir sahifadagi komponentlar, formalar, modal oynalar, drawer’lar, dropdown’lar, jadval va interaktiv elementlarni aniqlang.
+
+4.
+API endpoint’lar, request/response formatlari, authentication, authorization, token saqlash va error handling mexanizmlarini toping.
+
+5.
+Global state, local state, caching, loading, empty state va optimistic update’larni aniqlang.
+
+6.
+Rasm, icon, logo, font, ranglar, spacing, typography va boshqa design token’larni aniqlang.
+
+7.
+Web’ga xos funksiyalarni mobil ekvivalentga qanday almashtirish kerakligini belgilang. Masalan: hover — press state, browser storage — secure storage, file input — image/document picker, table — responsive card/list, sidebar — drawer yoki bottom tab, web modal — mobile bottom sheet/modal.
+
+8.
+Ishlayotgan frontendning asosiy user flow’larini belgilang va migratsiyadan keyin ularning barchasi saqlanishini ta’minlang.
+
+Tahlil yakunida qisqa migration plan yozing. Unda quyidagilar bo‘lsin: aniqlangan sahifalar, navigatsiya modeli, state management, API qatlami, authentication oqimi, qayta ishlatiladigan komponentlar, risklar va implementatsiya bosqichlari.
+
+Texnologik talablar
+
+Agar repository yoki foydalanuvchi tomonidan boshqa talab berilmagan bo‘lsa, quyidagi stack’dan foydalaning:
+
+Qism
+Talab
+Framework
+React Native + Expo + TypeScript
+Navigation
+Expo Router yoki React Navigation; mavjud loyiha tuzilmasiga eng mosini tanlang
+Styling
+NativeWind yoki izchil StyleSheet arxitekturasi; aralash va tartibsiz styling ishlatmang
+Server state
+Tanlangan API qatlamiga mos ravishda TanStack Query yoki yaxshi tashkil qilingan service layer
+Global state
+Zarur bo‘lsa Zustand; ortiqcha global state yaratmang
+Forms
+React Hook Form va Zod yoki loyiha uchun mos validatsiya vositasi
+Secure storage
+Token va maxfiy ma’lumotlar uchun Expo SecureStore
+Icons
+Platformaga mos, bir xil icon library
+Testing
+Jest, React Native Testing Library va zarur bo‘lsa end-to-end testlar
+Code quality
+ESLint, Prettier, strict TypeScript va toza import tartibi
+
+
+
+
+Mavjud dependency yoki backend contract’ni sabab­siz almashtirmang. Yangi package o‘rnatishdan oldin uning nima uchun kerakligini tekshiring va dependency’larni minimal saqlang.
+
+Papkalar arxitekturasi
+
+mobile/ papkasi ichida maintainable va scale qilinadigan arxitektura yarating. Masalan:
+
+Plain Text
+
+
+mobile/
+├── app/ yoki src/navigation/
+├── assets/
+├── components/
+│   ├── common/
+│   ├── forms/
+│   └── layout/
+├── features/
+│   ├── auth/
+│   ├── home/
+│   └── [feature-nomlari]/
+├── services/
+│   ├── api/
+│   ├── auth/
+│   └── storage/
+├── store/
+├── hooks/
+├── lib/
+├── constants/
+├── theme/
+├── types/
+├── utils/
+├── tests/
+├── app.json yoki app.config.ts
+├── package.json
+├── tsconfig.json
+└── README.md
+
+
+
+Feature’lar bir-biridan mantiqan ajratilsin. Katta komponentlar kichik, qayta ishlatiladigan komponentlarga bo‘linsin. Business logic’ni UI component ichiga aralashtirmang.
+
+UI va UX talablari
+
+Mobil ilova mavjud frontend dizaynini imkon qadar aniq saqlashi, lekin mobil platforma qoidalariga moslashtirilishi kerak. Faqat ekran rasmini ko‘chirmang; mobil interaction va usability’ni professional darajada qayta loyihalang.
+
+Quyidagilar majburiy:
+
+•
+iOS va Android ekran o‘lchamlari hamda safe area’larni qo‘llab-quvvatlash;
+
+•
+responsive layout va orientation’ni hisobga olish;
+
+•
+keyboard ochilganda formalar yopilib qolmasligi;
+
+•
+loading, skeleton, empty, error va retry holatlari;
+
+•
+pull-to-refresh va infinite scroll zarur bo‘lgan joylarda;
+
+•
+touch target’lar yetarli kattalikda bo‘lishi;
+
+•
+accessibility label, role, contrast va screen reader qo‘llab-quvvatlashi;
+
+•
+dark mode faqat mavjud frontendda yoki talabda bo‘lsa, aks holda theme arxitekturasini kengaytirishga tayyor holatda saqlash;
+
+•
+network xatolari, offline holat va sekin internet uchun tushunarli feedback;
+
+•
+navigation back behavior va unsaved form warning;
+
+•
+toast, alert, confirmation dialog va bottom sheet’lardan izchil foydalanish;
+
+•
+katta listlarda FlatList yoki FlashList kabi performance’ga mos yechimlar.
+
+Web-specific elementlarni React Native komponentlariga to‘g‘ri almashtiring. div, span, button, input, img, CSS hover, browser-only API yoki DOM API’larni to‘g‘ridan-to‘g‘ri ko‘chirmang.
+
+Authentication va API
+
+Mavjud authentication oqimini saqlang. Login, register, logout, refresh token, session restore, protected route, expired token va unauthorized response holatlarini to‘liq implement qiling.
+
+API qatlamida:
+
+1.
+Barcha endpoint’larni yagona service layer orqali boshqaring.
+
+2.
+Request va response uchun TypeScript type’lar yozing.
+
+3.
+Loading, success, validation error, server error va network error holatlarini ajrating.
+
+4.
+Tokenni xavfsiz storage’da saqlang; oddiy AsyncStorage’da maxfiy token saqlamang.
+
+5.
+API URL va muhitga bog‘liq sozlamalarni .env orqali boshqaring.
+
+6.
+Existing backend contract’ni o‘zgartirmang.
+
+7.
+Mock data faqat development yoki test uchun ishlatilsin; production flow’da yashirin mock qoldirmang.
+
+8.
+Maxfiy kalitlar, tokenlar va credential’larni source code’ga yozmang.
+
+Implementatsiya tartibi
+
+Quyidagi tartibda ishlang:
+
+1. Audit va rejalashtirish
+
+Repository’ni o‘qing, mavjud frontendni ishga tushiring, screenshot yoki mavjud UI’ni tekshiring, sahifalar va funksiyalar inventarini tuzing. Noaniq yoki yetishmayotgan qismlarni taxmin bilan yashirmang; ularni TODO va README.mdda belgilang.
+
+2. Mobil project setup
+
+mobile/ ichida React Native project’ni sozlang. TypeScript strict mode, lint, format, environment config, aliases, navigation, theme va umumiy error boundary’ni konfiguratsiya qiling.
+
+3. Design system
+
+Ranglar, font size’lar, spacing, radius, shadow, button variantlari, input variantlari, typography va umumiy layout komponentlarini markazlashtiring. Har bir sahifa o‘zicha tasodifiy rang yoki spacing ishlatmasin.
+
+4. Navigation
+
+Barcha sahifalar uchun navigation tree yarating. Authenticated va unauthenticated stack’larni ajrating. Tab, stack, drawer, modal va deep-link oqimlarini mavjud frontendga mos ravishda implement qiling.
+
+5. Reusable components
+
+Button, TextInput, Select, Header, Screen, Card, Avatar, Loader, EmptyState, ErrorState, Modal, BottomSheet, ListItem va boshqa takrorlanuvchi elementlarni umumiy komponent sifatida yarating.
+
+6. Feature migration
+
+Sahifalarni biznes ahamiyati va user flow bo‘yicha bosqichma-bosqich ko‘chiring. Har bir sahifa uchun UI, state, API, validation, loading, error, empty state va navigation to‘liq ishlasin. Faqat placeholder ekranlar bilan topshiriqni yakunlangan deb hisoblamang.
+
+7. Integratsiya
+
+Real API, authentication, asset’lar va environment sozlamalarini ulang. Frontenddagi mavjud ma’lumotlar oqimi bilan solishtirib, mobil versiyada request parametrlari yoki response mapping buzilmaganini tekshiring.
+
+8. Test va audit
+
+Barcha asosiy flow’larni test qiling: app ochilishi, login, logout, session restore, navigation, form validation, API success/error, list loading, refresh, back navigation, modal yopilishi, keyboard behavior va accessibility. TypeScript, lint, test va build command’larini ishga tushiring.
+
+Sifat mezonlari
+
+Quyidagilar bajarilmaguncha ishni tugallangan deb hisoblamang:
+
+•
+mobile/ ichida mustaqil ishga tushadigan loyiha mavjud.
+
+•
+Mavjud frontenddagi barcha muhim sahifalar va user flow’lar mobil versiyada mavjud.
+
+•
+Barcha muhim API integratsiyalari real service layer orqali ishlaydi.
+
+•
+Authentication va protected navigation to‘liq ishlaydi.
+
+•
+UI responsive, platformaga mos va design jihatdan izchil.
+
+•
+any faqat mutlaqo zarur joyda va izoh bilan ishlatilgan.
+
+•
+Console error, warning, keraksiz log va dead code qolmagan.
+
+•
+Loading, error, empty va retry holatlari mavjud.
+
+•
+Accessibility va performance asosiy darajada tekshirilgan.
+
+•
+Existing frontend buzilmagan.
+
+•
+npm install yoki pnpm install, npm run lint, npm run test va npx expo start ishlaydi.
+
+•
+Android va iOS uchun build risklari README’da ko‘rsatilgan.
+
+Yakuniy hisobot
+
+Ish yakunida quyidagilarni taqdim qiling:
+
+1.
+O‘zgartirilgan va yaratilgan fayllar ro‘yxati.
+
+2.
+Har bir ko‘chirilgan sahifa va feature’ning holati.
+
+3.
+Ishlatilgan dependency’lar va ularning sababi.
+
+4.
+Ishga tushirish command’lari.
+
+5.
+Environment variable’lar ro‘yxati; qiymatlarni oshkor qilmang.
+
+6.
+Test natijalari.
+
+7.
+Qolgan TODO, limitation va texnik qarzlar.
+
+8.
+Android va iOS build qilish bo‘yicha aniq yo‘riqnoma.
+
+9.
+Agar biror funksiya aniq ko‘rinmagan yoki mavjud frontendda to‘liq bo‘lmagan bo‘lsa, uni taxminan yashirmasdan alohida belgilang.
+
+Muhim qoidalar
+
+•
+Avval tahlil qiling, keyin kod yozing.
+
+•
+Mavjud frontend kodini ko‘rmasdan taxminiy implementation qilmang.
+
+•
+Mobil ilova uchun web CSS yoki DOM’ni ko‘chirmang.
+
+•
+Ishlayotgan funksiyalarni olib tashlamang.
+
+•
+Har bir o‘zgarish minimal, tushunarli va izohlanadigan bo‘lsin.
+
+•
+Har bir bosqichdan keyin loyihani ishga tushirib tekshiring.
+
+•
+Xatoni yashirmang; root cause’ni topib tuzating.
+
+•
+Placeholder, fake API yoki “keyin qilinadi” yondashuvi bilan yakunlamang.
+
+•
+Kod production’ga tayyor, xavfsiz, test qilinadigan va kengaytiriladigan bo‘lishi kerak.
+
+Endi repository’ni audit qilishdan boshlang. Avval migration plan va aniqlangan muammolarni ko‘rsating, shundan keyin mobile/ papkasida implementatsiyani boshlang. Har bir yirik bosqich tugagach, bajarilgan ishlar va tekshiruv natijalarini qisqa qayd eting.
+
+
+
+
+AI agentga berishdan oldin to‘ldiriladigan ma’lumotlar
+
+Quyidagi joylarni loyiha ma’lumotlari bilan to‘ldirish prompt natijasini ancha yaxshilaydi:
+
+Maydon
+Qiymat
+Mobil loyiha nomi
+[loyiha nomi]
+Expo yoki bare React Native
+[Expo / Bare RN]
+Backend/API URL
+[API URL yoki mavjud config fayli]
+Authentication turi
+[JWT / OAuth / boshqa]
+Target platformalar
+[Android / iOS / ikkalasi]
+Minimum OS versiyasi
+[Android API / iOS version]
+Design reference
+[Figma URL yoki mavjud frontend]
+Ishga tushirish command’i
+[npm / pnpm / yarn]
+Qo‘shimcha talablar
+[push notification, camera, maps, payments va boshqalar]
+
+
+
+
+Tavsiya: ushbu promptni Cursor, Claude Code, Windsurf yoki boshqa coding agent’ga repository root papkasida yuboring. Agentga avval tahlil va migration plan chiqarishni, keyin esa tasdiqlangan yoki aniq reja asosida kodlashni buyuring.
+

@@ -43,9 +43,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (activeTab === 'employer') {
-      try { localStorage.setItem('baito_preselected_role', 'employer'); } catch(e){}
+      try { localStorage.setItem('baito_preselected_role', 'employer'); } catch (e) { }
     } else {
-      try { localStorage.setItem('baito_preselected_role', 'worker'); } catch(e){}
+      try { localStorage.setItem('baito_preselected_role', 'worker'); } catch (e) { }
     }
     setCurrentScreen('login');
   };
@@ -59,16 +59,16 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             {/* Role Switcher Toggle */}
             <div className="inline-flex p-1.5 rounded-2xl bg-white border border-slate-200 shadow-md backdrop-blur-md" data-allow-guest="true">
-              <button 
-                onClick={() => setActiveTab('worker')} 
-                data-allow-guest="true" 
+              <button
+                onClick={() => setActiveTab('worker')}
+                data-allow-guest="true"
                 className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${activeTab === 'worker' ? 'bg-brand-primary text-white shadow-md shadow-blue-600/25' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
               >
                 <Briefcase size={15} /><span>Ish izlovchi</span>
               </button>
-              <button 
-                onClick={() => setActiveTab('employer')} 
-                data-allow-guest="true" 
+              <button
+                onClick={() => setActiveTab('employer')}
+                data-allow-guest="true"
                 className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${activeTab === 'employer' ? 'bg-brand-primary text-white shadow-md shadow-blue-600/25' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
               >
                 <Building2 size={15} /><span>Ish beruvchi</span>
@@ -86,8 +86,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              {activeTab === 'worker' 
-                ? "Baito — uyingizga yaqin smenalarni topish, soatbay ishlash va smena oxirida kafolatlangan kunlik maosh olish xizmati." 
+              {activeTab === 'worker'
+                ? "Baito — uyingizga yaqin smenalarni topish, soatbay ishlash va smena oxirida kafolatlangan kunlik maosh olish xizmati."
                 : "Aktiv e'lon bering, nomzodlar bilan chat orqali muloqot qiling va tekshirilgan ID profilli xodimlarni zudlik bilan tanlang."}
             </p>
 
@@ -96,18 +96,18 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
               <form onSubmit={handleSearch} className="bg-white border border-slate-200/90 p-2 rounded-2xl shadow-xl backdrop-blur-md flex flex-col sm:flex-row gap-2" data-allow-guest="true">
                 <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl flex-1 border border-slate-200/80 text-slate-900 focus-within:border-brand-primary/60 transition-colors">
                   <Search size={19} className="text-brand-primary shrink-0" />
-                  <input 
-                    type="text" 
-                    value={searchQuery} 
-                    onChange={(e) => setSearchQuery(e.target.value)} 
-                    placeholder={activeTab === 'worker' ? "Kuryer, kassir, ofitsiant..." : "Aktiv lavozim qidirish..."} 
-                    className="w-full text-xs sm:text-sm font-bold bg-transparent text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 placeholder:text-slate-400" 
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={activeTab === 'worker' ? "Kuryer, kassir, ofitsiant..." : "Aktiv lavozim qidirish..."}
+                    className="w-full text-xs sm:text-sm font-bold bg-transparent text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 placeholder:text-slate-400"
                   />
                 </div>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   data-allow-guest="true"
-                  onClick={(e) => { 
+                  onClick={(e) => {
                     e.preventDefault();
                     if (activeTab === 'worker') {
                       const mapSection = document.getElementById('map-preview');
@@ -119,7 +119,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
                     } else {
                       handleSearch(e);
                     }
-                  }} 
+                  }}
                   className="px-6 py-3.5 rounded-xl font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0 bg-brand-primary hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30 active:scale-[0.98]"
                 >
                   <span>{activeTab === 'worker' ? "Ishlarni ko'rish" : "E'lon berish"}</span><ArrowRight size={16} />
@@ -127,8 +127,8 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
               </form>
 
               {activeTab === 'worker' ? (
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   data-allow-guest="true"
                   onClick={() => {
                     const mapSection = document.getElementById('map-preview');
@@ -137,16 +137,16 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
                       const y = mapSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
                       window.scrollTo({ top: y, behavior: 'smooth' });
                     }
-                  }} 
+                  }}
                   className="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 hover:text-brand-primary font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
                 >
                   <MapPin size={16} className="text-brand-primary" />
                   <span>Xaritadan izlash</span>
                 </button>
               ) : (
-                <button 
-                  type="button" 
-                  onClick={() => { try { localStorage.setItem('baito_preselected_role', 'employer'); } catch(e){} setCurrentScreen('register'); }} 
+                <button
+                  type="button"
+                  onClick={() => { try { localStorage.setItem('baito_preselected_role', 'employer'); } catch (e) { } setCurrentScreen('register'); }}
                   className="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 hover:text-brand-primary font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
                 >
                   <Building2 size={16} className="text-brand-primary" />
@@ -163,12 +163,12 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
             </div>
           </div>
 
-          <LandingHeroShiftPreview 
-            displayShifts={displayShifts} 
+          <LandingHeroShiftPreview
+            displayShifts={displayShifts}
             isLoading={isLoading}
-            language={language} 
-            onSelectRole={onSelectRole} 
-            t={t} 
+            language={language}
+            onSelectRole={onSelectRole}
+            t={t}
           />
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, SquarePen, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { ChatListItem } from './ChatListItem';
 import { Chat } from '../../types';
 
@@ -9,7 +9,6 @@ interface ChatListPanelProps {
   onChatClick: (id: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  onComposeClick: () => void;
   t: any;
 }
 
@@ -19,7 +18,6 @@ export const ChatListPanel: React.FC<ChatListPanelProps> = ({
   onChatClick,
   searchQuery,
   setSearchQuery,
-  onComposeClick,
   t
 }) => {
   return (
@@ -44,14 +42,6 @@ export const ChatListPanel: React.FC<ChatListPanelProps> = ({
             </button>
           )}
         </div>
-
-        <button
-          onClick={onComposeClick}
-          className="w-9 h-9 rounded-full bg-slate-100 hover:bg-brand-primary/10 text-slate-600 hover:text-brand-primary flex items-center justify-center transition-colors cursor-pointer shrink-0 border-none"
-          title={t.writeNewMessage || "Yangi xabar"}
-        >
-          <SquarePen size={17} />
-        </button>
       </div>
 
       {/* Chat Contacts Scrollable List */}

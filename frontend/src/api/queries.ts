@@ -79,8 +79,8 @@ export const logoutAllOtherSessionsApi = async () => {
 };
 
 // Storage updates are deprecated since we use real backend
-export const updateJobsStorage = (_jobs?: any[]) => {};
-export const updateChatsStorage = (_chats?: any[]) => {};
+export const updateJobsStorage = (_jobs?: any[]) => { };
+export const updateChatsStorage = (_chats?: any[]) => { };
 
 export const loginApi = async (phone: string, password: string) => {
   const formData = new URLSearchParams();
@@ -104,7 +104,7 @@ export const loginApi = async (phone: string, password: string) => {
 };
 
 export const logoutApi = async () => {
-  await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+  await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => { });
 };
 
 export const registerApi = async (data: any) => {

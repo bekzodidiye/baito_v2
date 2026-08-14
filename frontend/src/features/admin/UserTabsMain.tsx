@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AdminUser } from './types';
-import { Phone, Mail, MapPin, EyeOff, Eye, Briefcase } from 'lucide-react';
+import { Phone, Mail, MapPin, EyeOff, Eye, MonitorSmartphone, Target, CreditCard, Sparkles } from 'lucide-react';
 import { UserDocumentsSection } from './UserDocumentsSection';
 
 interface UserTabsMainProps {
@@ -13,32 +13,95 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
 
   if (activeTab === 1) {
     return (
-      <div className="space-y-3 text-xs">
-        <div className="grid sm:grid-cols-2 gap-3 text-slate-700 bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
-          <div className="flex items-center gap-2"><Phone size={14} className="text-slate-400" /><span>Tel: <strong className="text-slate-900">{user.phone || '+998 90 123 45 67'}</strong> (Tasdiqlangan)</span></div>
-          <div className="flex items-center gap-2"><Mail size={14} className="text-slate-400" /><span>Email: <strong className="text-slate-900">{user.email || 'user@baito.uz'}</strong></span></div>
-          <div className="flex items-center gap-2"><MapPin size={14} className="text-slate-400" /><span>Viloyat: <strong className="text-slate-900">{user.region || 'Toshkent shahri'}</strong></span></div>
-          <div className="flex items-center gap-2"><span>Qurilma: <strong className="text-slate-900">Android 14 (App v2.1)</strong></span></div>
-          <div className="flex items-center gap-2"><span>Manba: <strong className="text-slate-900">Organik (Play Store)</strong></span></div>
-          <div className="flex items-center gap-2"><span>Bank karta: <strong className="text-slate-900">8600 **** **** 4321</strong></span></div>
+      <div className="space-y-4">
+        {/* Personal Info Grid */}
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div className="flex items-center gap-3 bg-white p-4 rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50">
+            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+              <Phone size={18} />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">Telefon raqam</span>
+              <div className="text-[13px] font-black text-slate-900">{user.phone || '+998 90 123 45 67'}</div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 bg-white p-4 rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50">
+            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 shrink-0">
+              <Mail size={18} />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">Email manzil</span>
+              <div className="text-[13px] font-bold text-slate-900">{user.email || 'Kiritilmagan'}</div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 bg-white p-4 rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50">
+            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 shrink-0">
+              <MapPin size={18} />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">Viloyat</span>
+              <div className="text-[13px] font-bold text-slate-900">{user.region || 'Kiritilmagan'}</div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 bg-white p-4 rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50">
+            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 shrink-0">
+              <MonitorSmartphone size={18} />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">Qurilma</span>
+              <div className="text-[13px] font-bold text-slate-900">{(!user.sourceApp || user.sourceApp === 'Web') ? 'Web (Brauzer)' : 'Mobil qurilma'}</div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 bg-white p-4 rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50">
+            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 shrink-0">
+              <Target size={18} />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">Manba</span>
+              <div className="text-[13px] font-bold text-slate-900">{(!user.sourceApp || user.sourceApp === 'Web') ? 'Veb sayt' : user.sourceApp}</div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 bg-white p-4 rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50">
+            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 shrink-0">
+              <CreditCard size={18} />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">Bank karta</span>
+              <div className="text-[13px] font-bold text-slate-900 font-mono">{user.bankCardMask || 'Kiritilmagan'}</div>
+            </div>
+          </div>
         </div>
 
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+        {/* Company Name (Employer only) */}
+        {user.role === 'employer' && (
+          <div className="p-5 bg-white rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50">
+            <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">Kompaniya Nomi:</span>
+            <strong className="text-[15px] font-black text-slate-900">{user.companyName || 'Kiritilmagan'}</strong>
+          </div>
+        )}
+
+        <div className="p-5 bg-white rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50 flex items-center justify-between">
           <div>
-            <span className="text-slate-400 font-bold block text-[10px] uppercase">Pasport / ID karta:</span>
-            <strong className="text-sm font-mono text-slate-900">
-              {showPassport ? 'AD 8291048' : 'AD ********'}
+            <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">Pasport / ID karta seriyasi:</span>
+            <strong className="text-[15px] font-black text-slate-900 font-mono tracking-widest">
+              {showPassport ? (user.passportSeries || 'Kiritilmagan') : (user.passportSeries ? user.passportSeries.substring(0,2) + ' ********' : 'Kiritilmagan')}
             </strong>
           </div>
           <button
             onClick={() => setShowPassport(!showPassport)}
-            className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 flex items-center gap-1 cursor-pointer"
+            className="px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl font-bold text-slate-600 flex items-center gap-2 cursor-pointer transition-colors border border-slate-200"
           >
-            {showPassport ? <EyeOff size={14} /> : <Eye size={14} />}
-            <span>{showPassport ? 'Yashirish' : 'Ko\'rish'}</span>
+            {showPassport ? <EyeOff size={16} /> : <Eye size={16} />}
+            <span className="text-xs">{showPassport ? 'Yashirish' : 'Ko\'rish'}</span>
           </button>
         </div>
 
+        {/* Passport images */}
         <UserDocumentsSection user={user} />
       </div>
     );
@@ -46,21 +109,48 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
 
   if (activeTab === 2) {
     return (
-      <div className="space-y-3 text-xs">
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
-          <div className="font-bold text-slate-900">Kasb & Mutaxassislik: <span className="text-blue-600 font-extrabold">{user.category || 'Qurilish Ustasi'}</span></div>
+      <div className="space-y-4">
+        <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50 p-5 space-y-5">
           <div>
-            <span className="text-slate-500 font-bold block mb-1">Ko'nikmalar:</span>
-            <div className="flex flex-wrap gap-1.5">
-              {(user.skills || ['Santexnika', 'Elektrik', 'Gipsokarton', 'Plitka']).map((s, i) => (
-                <span key={i} className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-700">{s}</span>
-              ))}
+            <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">Kasb & Mutaxassislik</span>
+            <div className="text-[15px] font-black text-brand-primary">{user.category || 'Qurilish Ustasi'}</div>
+          </div>
+          
+          <div>
+            <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-2">Ko'nikmalar</span>
+            {(!user.skills || user.skills.length === 0) ? (
+               <div className="text-sm text-slate-500 font-medium">Kiritilmagan</div>
+            ) : (
+               <div className="flex flex-wrap gap-2">
+                 {user.skills.map((s, i) => (
+                   <span key={i} className="px-3 py-1.5 bg-blue-50/50 text-blue-700 border border-blue-100 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                     <Sparkles size={12} className="text-blue-500" />
+                     {s}
+                   </span>
+                 ))}
+               </div>
+            )}
+          </div>
+          
+          <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-4">
+            <div>
+              <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">Tugatilgan ishlar</span>
+              <div className="text-[13px] font-bold text-slate-900">{user.completedJobsCount || 0} ta</div>
+            </div>
+            <div>
+              <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">Reyting</span>
+              <div className="text-[13px] font-bold text-slate-900">⭐ {user.rating?.toFixed(1) || '0.0'}</div>
             </div>
           </div>
-          <div className="pt-2 border-t border-slate-200 text-slate-700">
-            <span className="font-bold">Tajriba:</span> 5+ yil | <span className="font-bold">Narx oralig'i:</span> 150,000 - 300,000 UZS / kun
-          </div>
-          {user.bio && <p className="p-3 bg-white rounded-xl border border-slate-200 font-medium text-slate-700">{user.bio}</p>}
+          
+          {user.bio && (
+            <div className="pt-4 border-t border-slate-100">
+              <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-2">O'zi haqida</span>
+              <p className="p-4 bg-slate-50 rounded-2xl text-[13px] leading-relaxed text-slate-700 font-medium">
+                {user.bio}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );

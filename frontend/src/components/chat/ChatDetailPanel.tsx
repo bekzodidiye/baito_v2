@@ -4,12 +4,15 @@ import { ChatHeader } from './ChatHeader';
 import { ChatInputBar } from './ChatInputBar';
 import { Chat } from '../../types';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import type { AttachedFileData } from '../../hooks/useChatScreen';
 
 interface ChatDetailPanelProps {
   activeChat: Chat | null;
   t: any;
   inputText: string;
   setInputText: (text: string) => void;
+  attachedFile: AttachedFileData | null;
+  setAttachedFile: (file: AttachedFileData | null) => void;
   isTyping: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   handleSend: (e?: React.FormEvent) => void;
@@ -22,6 +25,8 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
   t,
   inputText,
   setInputText,
+  attachedFile,
+  setAttachedFile,
   isTyping,
   messagesEndRef,
   handleSend,
@@ -98,7 +103,43 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
                       : 'bg-white text-slate-900 rounded-bl-xs border border-slate-200/70'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                  {(() => {
+                    // New format: [Img:<blobUrl>] optional text
+                    const imgMatch = msg.text.match(/^\[Img:(.*?)\]\s*(.*)$/);
+                    if (imgMatch) {
+                      return (
+                        <div className="flex flex-col gap-1.5">
+                          <div className="rounded-xl overflow-hidden shadow-sm border border-black/5 bg-slate-100 max-w-[240px]">
+                            <img 
+                              src={imgMatch[1]} 
+                              alt="Rasm" 
+                              className="w-full h-auto object-cover rounded-xl"
+                              style={{ maxHeight: '280px' }}
+                            />
+                          </div>
+                          {imgMatch[2] && (
+                            <p className="whitespace-pre-wrap leading-relaxed">{imgMatch[2]}</p>
+                          )}
+                        </div>
+                      );
+                    }
+                    // Legacy format: [Fayl: name] optional text
+                    const faylMatch = msg.text.match(/^\[Fayl:\s*(.*?)\]\s*(.*)$/);
+                    if (faylMatch) {
+                      return (
+                        <div className="flex flex-col gap-1.5">
+                          <div className="rounded-xl overflow-hidden shadow-sm border border-black/5 bg-slate-100 max-w-[240px] p-6 flex flex-col items-center justify-center gap-2">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                            <span className="text-[10px] font-semibold opacity-70">Fayl</span>
+                          </div>
+                          {faylMatch[2] && (
+                            <p className="whitespace-pre-wrap leading-relaxed">{faylMatch[2]}</p>
+                          )}
+                        </div>
+                      );
+                    }
+                    return <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>;
+                  })()}
 
                   {/* Optional Map Location Snippet */}
                   {msg.hasMap && (
@@ -149,6 +190,8 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
       <ChatInputBar
         inputText={inputText}
         setInputText={setInputText}
+        attachedFile={attachedFile}
+        setAttachedFile={setAttachedFile}
         handleSend={handleSend}
         t={t}
       />

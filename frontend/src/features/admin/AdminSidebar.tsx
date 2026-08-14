@@ -26,6 +26,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
       items: [
         { id: 'overview' as AdminTab, labelUz: 'Umumiy Statistika', labelRu: 'Общая статистика', labelEn: 'Overview Stats', icon: LayoutDashboard },
         { id: 'users' as AdminTab, labelUz: 'Foydalanuvchilar', labelRu: 'Пользователи', labelEn: 'Users & Roles', icon: Users },
+        { id: 'daily_jobs' as AdminTab, labelUz: 'Ishlar', labelRu: 'Ежедневные работы', labelEn: 'Daily Jobs', icon: Briefcase },
         { id: 'jobs' as AdminTab, labelUz: 'E\'lonlar va Vakansiyalar', labelRu: 'Объявления и вакансии', labelEn: 'Jobs & Moderation', icon: Briefcase, badge: '12' },
         { id: 'categories' as AdminTab, labelUz: 'Kategoriyalar', labelRu: 'Категории', labelEn: 'Categories', icon: FolderTree },
       ],

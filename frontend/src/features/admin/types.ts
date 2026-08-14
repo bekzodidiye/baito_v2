@@ -20,7 +20,7 @@ export interface AdminUser {
   role: 'worker' | 'employer' | 'admin';
   companyName?: string;
   avatarUrl?: string;
-  balance?: string;
+  balance?: string | number;
   createdAt?: string;
   isVerified?: boolean;
   isBanned?: boolean;
@@ -35,6 +35,48 @@ export interface AdminUser {
   passportDocFront?: string;
   passportDocBack?: string;
   selfieWithDoc?: string;
+  bankCardMask?: string;
+  sourceApp?: string;
+  adminNotes?: { text: string; date: string }[];
+}
+
+export interface AdminUserSession {
+  ip?: string;
+  device?: string;
+  location?: string;
+  date?: string;
+}
+
+export interface AdminUserTransaction {
+  id: string;
+  amount: number;
+  type: string;
+  status: string;
+  createdAt?: string;
+}
+
+export interface AdminUserOrder {
+  id: string;
+  title: string;
+  date?: string;
+  amount?: number;
+  status: string;
+  employerName?: string;
+}
+
+export interface AdminUserReview {
+  rating: number;
+  review: string;
+  date?: string;
+  author: string;
+}
+
+export interface AdminUserDetailResponse {
+  user: AdminUser;
+  sessions: AdminUserSession[];
+  transactions: AdminUserTransaction[];
+  orders: AdminUserOrder[];
+  reviews: AdminUserReview[];
 }
 
 export interface AdminJob {
@@ -42,12 +84,75 @@ export interface AdminJob {
   title: string;
   company: string;
   employerId: string;
+  employerName?: string;
   salary: string;
   location: string;
   description: string;
-  status: 'open' | 'in_progress' | 'completed' | 'cancelled' | 'dispute';
+  status: 'open' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'dispute';
   durationLabel?: string;
   createdAt?: string;
+  workDate?: string;
+  workTime?: string;
+  workerId?: string;
+  workerName?: string;
+  category?: string;
+  responsibilities?: string;
+  requirements?: string;
+  importantNote?: string;
+  neededWorkers?: string;
+  hourlyRate?: string;
+  transportRate?: string;
+  tags?: any;
+  urgent?: boolean;
+  logoUrl?: string;
+  imageUrl?: string;
+  salaryCurrency?: string;
+  views?: number;
+  rawLocation?: string;
+  coordinateX?: number;
+  coordinateY?: number;
+}
+
+export interface AdminJobApplication {
+  id: string;
+  workerId: string;
+  workerName: string;
+  workerPhone?: string;
+  workerAvatar?: string;
+  status: string;
+  appliedDate?: string;
+  rating?: number;
+  review?: string;
+  bonus?: number;
+}
+
+export interface AdminJobTransaction {
+  id: string;
+  type: string;
+  status: string;
+  amount: number;
+  platformFee: number;
+  employerName: string;
+  workerName: string;
+  createdAt?: string;
+  providerTransactionId?: string;
+  performTime?: number;
+  cancelTime?: number;
+}
+
+export interface AdminTimelineEvent {
+  event: string;
+  label: string;
+  date?: string;
+  icon: string;
+}
+
+export interface AdminJobDetailResponse {
+  job: AdminJob & { employerPhone?: string };
+  hiredWorker: AdminJobApplication | null;
+  applications: AdminJobApplication[];
+  transactions: AdminJobTransaction[];
+  timeline: AdminTimelineEvent[];
 }
 
 export interface AdminTransaction {
@@ -170,6 +275,7 @@ export interface NotificationTemplate {
 export type AdminTab =
   | 'overview'
   | 'users'
+  | 'daily_jobs'
   | 'jobs'
   | 'verifications'
   | 'disputes'

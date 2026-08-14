@@ -28,7 +28,43 @@ export const EmployerChatMessageBubble: React.FC<EmployerChatMessageBubbleProps>
       )}
       <div className="flex flex-col gap-0.5">
         <div className={`p-3.5 rounded-2xl text-xs font-semibold leading-relaxed ${isRecruiter ? 'bg-brand-primary text-white rounded-br-none shadow-[inset_0_4px_8px_rgba(0,0,0,0.25),_inset_0_1px_3px_rgba(0,0,0,0.12),_0_4px_12px_rgba(26,35,126,0.25)]' : 'bg-white text-brand-text rounded-bl-none border border-brand-outline-variant/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.03),_0_2px_6px_rgba(0,0,0,0.04)]'}`}>
-          <p>{msg.text}</p>
+          {(() => {
+            // New format: [Img:<blobUrl>] optional text
+            const imgMatch = msg.text.match(/^\[Img:(.*?)\]\s*(.*)$/);
+            if (imgMatch) {
+              return (
+                <div className="flex flex-col gap-1.5">
+                  <div className="rounded-xl overflow-hidden shadow-sm border border-black/5 bg-slate-100 max-w-[240px]">
+                    <img 
+                      src={imgMatch[1]} 
+                      alt="Rasm" 
+                      className="w-full h-auto object-cover rounded-xl"
+                      style={{ maxHeight: '280px' }}
+                    />
+                  </div>
+                  {imgMatch[2] && (
+                    <p className="whitespace-pre-wrap leading-relaxed">{imgMatch[2]}</p>
+                  )}
+                </div>
+              );
+            }
+            // Legacy format: [Fayl: name] optional text
+            const faylMatch = msg.text.match(/^\[Fayl:\s*(.*?)\]\s*(.*)$/);
+            if (faylMatch) {
+              return (
+                <div className="flex flex-col gap-1.5">
+                  <div className="rounded-xl overflow-hidden shadow-sm border border-black/5 bg-slate-100 max-w-[240px] p-6 flex flex-col items-center justify-center gap-2">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span className="text-[10px] font-semibold opacity-70">Fayl</span>
+                  </div>
+                  {faylMatch[2] && (
+                    <p className="whitespace-pre-wrap leading-relaxed">{faylMatch[2]}</p>
+                  )}
+                </div>
+              );
+            }
+            return <p>{msg.text}</p>;
+          })()}
           
           {msg.hasMap && (
             <div className="mt-3 rounded-xl overflow-hidden border border-slate-100 bg-white shadow-xs group max-w-sm">

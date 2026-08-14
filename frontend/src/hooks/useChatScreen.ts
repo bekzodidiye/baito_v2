@@ -6,6 +6,11 @@ import { getTranslatedChat } from '../chatTranslations';
 import { translations } from '../translations';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 
+export interface AttachedFileData {
+  name: string;
+  previewUrl: string; // blob: URL from createObjectURL
+}
+
 export function useChatScreen() {
   const { id: selectedChatId } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -13,6 +18,7 @@ export function useChatScreen() {
   const { language } = useApp();
   const { chats, sendMessage, setActiveChatId } = useChatsData(language);
   const [inputText, setInputText] = useState('');
+  const [attachedFile, setAttachedFile] = useState<AttachedFileData | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const t = translations[language];
@@ -36,10 +42,17 @@ export function useChatScreen() {
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeChat || !inputText.trim()) return;
+    if (!activeChat || (!inputText.trim() && !attachedFile)) return;
 
-    sendMessage(activeChat.id, inputText);
+    let textToSend = inputText;
+    if (attachedFile) {
+      // Embed the blob URL so the bubble can render the actual image
+      textToSend = `[Img:${attachedFile.previewUrl}]` + (textToSend ? ` ${textToSend}` : '');
+    }
+
+    sendMessage(activeChat.id, textToSend);
     setInputText('');
+    setAttachedFile(null);
     setIsTyping(true);
     setTimeout(() => setIsTyping(false), 2400);
   };
@@ -53,6 +66,8 @@ export function useChatScreen() {
     setCurrentScreen,
     inputText,
     setInputText,
+    attachedFile,
+    setAttachedFile,
     isTyping,
     setIsTyping,
     messagesEndRef,

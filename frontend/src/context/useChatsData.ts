@@ -1,108 +1,76 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchChats, fetchChatMessages } from '../api/queries';
 import { Chat, Message } from '../types';
-import { useCallback, useRef, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useApp } from './AppContext';
 
 export function useChatsData(language: 'uz' | 'ru' | 'en') {
   const { userProfile, isLoggedIn } = useApp();
 
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
-  const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>({});
+  
+  const initialSupportMessage = language === 'uz' ? 'Assalomu alaykum! Baito yordam markaziga xush kelibsiz. Sizga qanday yordam bera olaman?' : language === 'ru' ? 'Здравствуйте! Добро пожаловать в центр поддержки Baito. Чем могу помочь?' : 'Hello! Welcome to Baito Support. How can I help you?';
+  const supportName = language === 'uz' ? 'Yordam markazi' : language === 'ru' ? 'Служба поддержки' : 'Support Center';
 
-  const { data: chats = [], refetch } = useQuery({
-    queryKey: ['chats'],
-    queryFn: async () => {
-      const data = await fetchChats();
-      return data.map((c: any) => ({
-        id: c.id,
-        jobId: c.jobId,
-        companyName: c.otherUserName || 'Kompaniya',
-        companyLogo: c.otherUserAvatar || '',
-        lastMessage: c.lastMessage || 'Chat boshlandi',
-        lastMessageTime: c.lastMessageTime ? new Date(c.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-        messages: [],
-        unreadCount: 0
-      }));
-    },
-    initialData: [],
-    refetchInterval: false,
-    enabled: isLoggedIn,
+  const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>({
+    'support_session': [
+      {
+        id: 'msg_0',
+        sender: 'recruiter', // Support acts as the recruiter
+        text: initialSupportMessage,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }
+    ]
   });
 
-  // When activeChatId changes, fetch messages and connect WS
-  useEffect(() => {
-    if (!activeChatId || !userProfile?.id) return;
-    
-    let isMounted = true;
-    
-    const loadAndConnect = async () => {
-      try {
-        const msgs = await fetchChatMessages(activeChatId);
-        if (isMounted) {
-          const mapped: Message[] = msgs.map((m: any) => ({
-            id: m.id,
-            sender: m.senderId === userProfile.id ? 'user' : 'recruiter',
-            text: m.text,
-            time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            hasMap: m.hasMap,
-            mapLocation: m.mapLocation
-          }));
-          setMessagesMap(prev => ({ ...prev, [activeChatId]: mapped }));
-        }
-
-        if (wsRef.current) wsRef.current.close();
-        
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${wsProtocol}//${window.location.host}/api/v1/chats/ws/${activeChatId}`;
-        const ws = new WebSocket(wsUrl);
-        ws.onmessage = (event) => {
-          const m = JSON.parse(event.data);
-          const newMsg: Message = {
-            id: m.id,
-            sender: m.senderId === userProfile.id ? 'user' : 'recruiter',
-            text: m.text,
-            time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            hasMap: m.hasMap,
-            mapLocation: m.mapLocation
-          };
-          setMessagesMap(prev => {
-            const existing = prev[activeChatId] || [];
-            if (existing.find(x => x.id === newMsg.id)) return prev;
-            return { ...prev, [activeChatId]: [...existing, newMsg] };
-          });
-        };
-        wsRef.current = ws;
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    loadAndConnect();
-
-    return () => {
-      isMounted = false;
-      if (wsRef.current) wsRef.current.close();
-    };
-  }, [activeChatId, userProfile?.id]);
+  const chats: Chat[] = [
+    {
+      id: 'support_session',
+      companyName: supportName,
+      logoUrl: '',
+      recruiterName: supportName,
+      recruiterAvatar: '',
+      lastMessageTime: messagesMap['support_session']?.slice(-1)[0]?.time || '',
+      unreadCount: 0,
+      online: true,
+      messages: messagesMap['support_session'] || []
+    }
+  ];
 
   const sendMessage = useCallback((chatId: string, text: string) => {
     if (!text.trim() || !userProfile?.id) return;
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        text: text.trim(),
-        hasMap: false
-      }));
-    }
-  }, [userProfile?.id]);
+    
+    // Add user message locally
+    const newMsg: Message = {
+      id: `msg_${Date.now()}`,
+      sender: 'user',
+      text: text.trim(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setMessagesMap(prev => {
+      const existing = prev[chatId] || [];
+      return { ...prev, [chatId]: [...existing, newMsg] };
+    });
+
+    // Mock a reply after 2 seconds
+    setTimeout(() => {
+      const replyMsg: Message = {
+        id: `msg_${Date.now() + 1}`,
+        sender: 'recruiter',
+        text: language === 'uz' ? 'Sizning xabaringiz qabul qilindi. Operator tez orada javob beradi.' : language === 'ru' ? 'Ваше сообщение получено. Оператор скоро ответит.' : 'Your message has been received. An operator will reply soon.',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      
+      setMessagesMap(prev => {
+        const existing = prev[chatId] || [];
+        return { ...prev, [chatId]: [...existing, replyMsg] };
+      });
+    }, 2000);
+
+  }, [userProfile?.id, language]);
   
   const setChats = (updater: any) => {}; 
   const addNewMessage = () => {}; 
 
-  const chatsWithMessages = chats.map((c: any) => ({
-    ...c,
-    messages: messagesMap[c.id] || []
-  }));
-
-  return { chats: chatsWithMessages as Chat[], setChats, sendMessage, addNewMessage, setActiveChatId };
+  return { chats, setChats, sendMessage, addNewMessage, setActiveChatId };
 }

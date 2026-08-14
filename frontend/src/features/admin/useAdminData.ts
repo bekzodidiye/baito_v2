@@ -118,6 +118,20 @@ export function useAdminData() {
     }
   };
 
+  const changeJobWorker = async (jobId: string, workerId: string | null) => {
+    try {
+      const res = await apiClient(`/admin/jobs/${jobId}/worker`, {
+        method: 'PATCH',
+        body: JSON.stringify({ workerId }),
+      });
+      if (res !== undefined) {
+        fetchAllData();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const deleteJob = async (jobId: string) => {
     try {
       const res = await apiClient(`/admin/jobs/${jobId}`, {
@@ -178,6 +192,7 @@ export function useAdminData() {
     changeRole,
     toggleBan,
     changeJobStatus,
+    changeJobWorker,
     deleteJob,
     updateSettings,
     sendBroadcast,

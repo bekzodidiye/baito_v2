@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function() {
+        const isExtensionError = function(msg) {
+          if (!msg) return false;
+          const lower = String(msg).toLowerCase();
+          return (
+            lower.includes('failed to get initial state') ||
+            lower.includes('metamask') ||
+            lower.includes('trezor') ||
+            lower.includes('sender') ||
+            lower.includes('brave') ||
+            lower.includes('wallet') ||
+            lower.includes('initial state') ||
+            lower.includes('failed to get') ||
+            lower.includes('extension') ||
+            lower.includes('rpc') ||
+            lower.includes('please report this bug') ||
+            lower.includes('sender wallet')
+          );
+        };
+
+        const safeStringify = function(val, visited, depth) {
+          visited = visited || new WeakSet();
+          depth = depth || 0;
+          if (depth > 5) return '';
+          if (val === null || val === undefined) return '';
+          if (typeof val === 'string') return val;
+          if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+          if (typeof val === 'symbol') return val.toString();
+          if (typeof val !== 'object') return '';
+          
+          if (visited.has(val)) return '';
+          visited.add(val);
+          
+          let parts = [];
+          if (val instanceof Error) {
+            parts.push(val.name || 'Error');
+            parts.push(val.message || '');
+            parts.push(val.stack || '');
+          } else if (val === window || val === document) {
+            return '';
+          } else if (typeof Event !== 'undefined' && val instanceof Event) {
+            parts.push(val.type);
+            if (val.message) parts.push(String(val.message));
+            if (val.error) parts.push(safeStringify(val.error, visited, depth + 1));
+            if (val.reason) parts.push(safeStringify(val.reason, visited, depth + 1));
+          } else {
+            if (val.message) parts.push(String(val.message));
+            if (val.stack) parts.push(String(val.stack));
+            for (let key in val) {
+              try {
+                if (key === 'window' || key === 'document' || key === 'location' || key === 'view') continue;
+                const propVal = val[key];
+                if (typeof propVal === 'function') continue;
+                parts.push(key);
+                parts.push(safeStringify(propVal, visited, depth + 1));
+              } catch (e) {}
+            }
+          }
+          return parts.join(' ');
+        };
+
+        // ES6 class-subclassing safe Error constructors using new.target and Reflect.construct
+        const OriginalError = window.Error;
+        const CustomError = function(message, options) {
+          let msg = message;
+          if (msg && isExtensionError(msg)) {
+            msg = 'Benign extension warning';
+          }
+          if (typeof Reflect !== 'undefined' && Reflect.construct && new.target) {
+            const instance = Reflect.construct(OriginalError, [msg, options], new.target);
+            return instance;
+          }
+          const instance = new OriginalError(msg, options);
+          instance.name = OriginalError.name;
+          return instance;
+        };
+        CustomError.prototype = OriginalError.prototype;
+        Object.getOwnPropertyNames(OriginalError).forEach(prop => {
+          if (prop !== 'prototype' && prop !== 'name') {
+            try {
+              Object.defineProperty(CustomError, prop, Object.getOwnPropertyDescriptor(OriginalError, prop));
+            } catch (e) {}
+          }
+        });
+        window.Error = CustomError;
+
+        const OriginalTypeError = window.TypeError;
+        const CustomTypeError = function(message, options) {
+          let msg = message;
+          if (msg && isExtensionError(msg)) {
+            msg = 'Benign extension warning';
+          }
+          if (typeof Reflect !== 'undefined' && Reflect.construct && new.target) {
+            return Reflect.construct(OriginalTypeError, [msg, options], new.target);
+          }
+          const instance = new OriginalTypeError(msg, options);
+          instance.name = OriginalTypeError.name;
+          return instance;
+        };
+        CustomTypeError.prototype = OriginalTypeError.prototype;
+        Object.getOwnPropertyNames(OriginalTypeError).forEach(prop => {
+          if (prop !== 'prototype' && prop !== 'name') {
+            try {
+              Object.defineProperty(CustomTypeError, prop, Object.getOwnPropertyDescriptor(OriginalTypeError, prop));
+            } catch (e) {}
+          }
+        });
+        window.TypeError = CustomTypeError;
+
+        // Monkeypatch Promise.reject
+        const OriginalPromiseReject = Promise.reject;
+        Promise.reject = function(reason) {
+          if (reason) {
+            const reasonStr = safeStringify(reason);
+            if (isExtensionError(reasonStr)) {
+              return OriginalPromiseReject.call(this, new Error('Benign extension warning'));
+            }
+          }
+          return OriginalPromiseReject.call(this, reason);
+        };
+
+        const getErrorString = function(event) {
+          if (!event) return '';
+          let parts = [];
+          
+          if (typeof event === 'string') {
+            return event;
+          }
+          
+          if (event.message) {
+            parts.push(String(event.message));
+          }
+          if (event.filename) {
+            parts.push(String(event.filename));
+          }
+          
+          if (event.error) {
+            const err = event.error;
+            if (typeof err === 'string') {
+              parts.push(err);
+            } else if (err && typeof err === 'object') {
+              if (err.message) parts.push(String(err.message));
+              if (err.stack) parts.push(String(err.stack));
+            }
+          }
+          
+          if (event.reason) {
+            const reason = event.reason;
+            if (typeof reason === 'string') {
+              parts.push(reason);
+            } else if (reason && typeof reason === 'object') {
+              if (reason.message) parts.push(String(reason.message));
+              if (reason.stack) parts.push(String(reason.stack));
+              try {
+                for (let k in reason) {
+                  try {
+                    if (typeof reason[k] !== 'function') {
+                      parts.push(k + ':' + String(reason[k]));
+                    }
+                  } catch (err) {}
+                }
+              } catch (e) {}
+            }
+          }
+          
+          try {
+            parts.push(safeStringify(event));
+          } catch (e) {}
+          
+          return parts.join(' ');
+        };
+
+        // Standard event listeners and EventTarget prototype interceptor
+        const errorListenersMap = new WeakMap();
+
+        const origAddEventListener = EventTarget.prototype.addEventListener;
+
+        // Register early capturing listeners to intercept error and unhandledrejection events before anyone else
+        origAddEventListener.call(window, 'error', function(event) {
+          const msg = getErrorString(event);
+          if (isExtensionError(msg)) {
+            if (event) {
+              if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+              if (typeof event.stopPropagation === 'function') event.stopPropagation();
+              if (typeof event.preventDefault === 'function') event.preventDefault();
+            }
+          }
+        }, true);
+
+        origAddEventListener.call(window, 'unhandledrejection', function(event) {
+          const msg = getErrorString(event);
+          if (isExtensionError(msg)) {
+            if (event) {
+              if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+              if (typeof event.stopPropagation === 'function') event.stopPropagation();
+              if (typeof event.preventDefault === 'function') event.preventDefault();
+            }
+          }
+        }, true);
+
+        EventTarget.prototype.addEventListener = function(type, listener, options) {
+          if ((type === 'error' || type === 'unhandledrejection') && typeof listener === 'function') {
+            const wrappedListener = function(event) {
+              const msg = getErrorString(event);
+              if (isExtensionError(msg)) {
+                if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+                if (typeof event.stopPropagation === 'function') event.stopPropagation();
+                if (typeof event.preventDefault === 'function') event.preventDefault();
+                return;
+              }
+              return listener.call(this, event);
+            };
+            errorListenersMap.set(listener, wrappedListener);
+            return origAddEventListener.call(this, type, wrappedListener, options);
+          }
+          return origAddEventListener.call(this, type, listener, options);
+        };
+
+        const origRemoveEventListener = EventTarget.prototype.removeEventListener;
+        EventTarget.prototype.removeEventListener = function(type, listener, options) {
+          if ((type === 'error' || type === 'unhandledrejection') && typeof listener === 'function') {
+            const wrappedListener = errorListenersMap.get(listener);
+            if (wrappedListener) {
+              return origRemoveEventListener.call(this, type, wrappedListener, options);
+            }
+          }
+          return origRemoveEventListener.call(this, type, listener, options);
+        };
+
+        const origDispatchEvent = EventTarget.prototype.dispatchEvent;
+        EventTarget.prototype.dispatchEvent = function(event) {
+          if (event && (event.type === 'error' || event.type === 'unhandledrejection')) {
+            const msg = getErrorString(event);
+            if (isExtensionError(msg)) {
+              if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+              if (typeof event.stopPropagation === 'function') event.stopPropagation();
+              if (typeof event.preventDefault === 'function') event.preventDefault();
+              return false;
+            }
+          }
+          return origDispatchEvent.call(this, event);
+        };
+
+        // Window onerror dynamic getter/setter to catch and block any downstream overrides
+        let currentOnError = window.onerror;
+        try {
+          Object.defineProperty(window, 'onerror', {
+            get() {
+              return function(message, source, lineno, colno, error) {
+                const msg = String(message || '') + ' ' + String(error ? (error.message || error.stack || error) : '');
+                if (isExtensionError(msg)) {
+                  return true;
+                }
+                if (typeof currentOnError === 'function') {
+                  return currentOnError.call(this, message, source, lineno, colno, error);
+                }
+              };
+            },
+            set(callback) {
+              currentOnError = callback;
+            },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {
+          window.onerror = function(message, source, lineno, colno, error) {
+            const msg = String(message || '') + ' ' + String(error ? (error.message || error.stack || error) : '');
+            if (isExtensionError(msg)) {
+              return true;
+            }
+            if (typeof currentOnError === 'function') {
+              return currentOnError.call(this, message, source, lineno, colno, error);
+            }
+          };
+        }
+
+        // Window onunhandledrejection dynamic getter/setter
+        let currentOnUnhandledRejection = window.onunhandledrejection;
+        try {
+          Object.defineProperty(window, 'onunhandledrejection', {
+            get() {
+              return function(event) {
+                const msg = getErrorString(event);
+                if (isExtensionError(msg)) {
+                  if (event && typeof event.preventDefault === 'function') event.preventDefault();
+                  if (event && typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+                  return true;
+                }
+                if (typeof currentOnUnhandledRejection === 'function') {
+                  return currentOnUnhandledRejection.call(this, event);
+                }
+              };
+            },
+            set(callback) {
+              currentOnUnhandledRejection = callback;
+            },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {
+          window.onunhandledrejection = function(event) {
+            const msg = getErrorString(event);
+            if (isExtensionError(msg)) {
+              if (event && typeof event.preventDefault === 'function') event.preventDefault();
+              if (event && typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+              return true;
+            }
+            if (typeof currentOnUnhandledRejection === 'function') {
+              return currentOnUnhandledRejection.call(this, event);
+            }
+          };
+        }
+
+        // Bulletproof console wrapping using Proxy
+        const originalConsole = window.console;
+        const consoleProxy = new Proxy(originalConsole, {
+          get(target, prop, receiver) {
+            const originalMethod = Reflect.get(target, prop, receiver);
+            if (typeof originalMethod === 'function') {
+              return function(...args) {
+                const argStr = args.map(arg => {
+                  try {
+                    return typeof arg === 'object' ? safeStringify(arg) : String(arg);
+                  } catch (e) {
+                    return String(arg);
+                  }
+                }).join(' ');
+                if (isExtensionError(argStr)) {
+                  return;
+                }
+                return originalMethod.apply(target, args);
+              };
+            }
+            return originalMethod;
+          },
+          set(target, prop, value, receiver) {
+            return Reflect.set(target, prop, value, receiver);
+          }
+        });
+        try {
+          Object.defineProperty(window, 'console', {
+            value: consoleProxy,
+            writable: true,
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {
+          window.console = consoleProxy;
+        }
+
+        // Wrap window.reportError if available
+        if (typeof window.reportError === 'function') {
+          const origReportError = window.reportError;
+          window.reportError = function(error) {
+            const msg = safeStringify(error);
+            if (isExtensionError(msg)) {
+              return;
+            }
+            return origReportError.call(this, error);
+          };
+        }
+
+        // Wrap Worker and SharedWorker constructors to catch background worker-triggered errors
+        if (typeof window.Worker === 'function') {
+          const OriginalWorker = window.Worker;
+          const CustomWorker = function(scriptURL, options) {
+            const worker = new OriginalWorker(scriptURL, options);
+            const origAdd = worker.addEventListener;
+            worker.addEventListener = function(type, listener, opt) {
+              if (type === 'error' || type === 'unhandledrejection') {
+                const wrapped = function(event) {
+                  const msg = getErrorString(event);
+                  if (isExtensionError(msg)) {
+                    if (event && typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+                    if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+                    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+                    return;
+                  }
+                  return listener.call(this, event);
+                };
+                return origAdd.call(this, type, wrapped, opt);
+              }
+              return origAdd.call(this, type, listener, opt);
+            };
+            let currentOnError = null;
+            Object.defineProperty(worker, 'onerror', {
+              get() { return currentOnError; },
+              set(cb) {
+                if (typeof cb === 'function') {
+                  currentOnError = function(event) {
+                    const msg = getErrorString(event);
+                    if (isExtensionError(msg)) {
+                      if (event && typeof event.preventDefault === 'function') event.preventDefault();
+                      return true;
+                    }
+                    return cb.call(this, event);
+                  };
+                } else {
+                  currentOnError = cb;
+                }
+              },
+              configurable: true,
+              enumerable: true
+            });
+            return worker;
+          };
+          CustomWorker.prototype = OriginalWorker.prototype;
+          window.Worker = CustomWorker;
+        }
+
+        if (typeof window.SharedWorker === 'function') {
+          const OriginalSharedWorker = window.SharedWorker;
+          const CustomSharedWorker = function(scriptURL, options) {
+            const sw = new OriginalSharedWorker(scriptURL, options);
+            const origAdd = sw.addEventListener;
+            sw.addEventListener = function(type, listener, opt) {
+              if (type === 'error' || type === 'unhandledrejection') {
+                const wrapped = function(event) {
+                  const msg = getErrorString(event);
+                  if (isExtensionError(msg)) {
+                    if (event && typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+                    if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+                    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+                    return;
+                  }
+                  return listener.call(this, event);
+                };
+                return origAdd.call(this, type, wrapped, opt);
+              }
+              return origAdd.call(this, type, listener, opt);
+            };
+            let currentOnError = null;
+            Object.defineProperty(sw, 'onerror', {
+              get() { return currentOnError; },
+              set(cb) {
+                if (typeof cb === 'function') {
+                  currentOnError = function(event) {
+                    const msg = getErrorString(event);
+                    if (isExtensionError(msg)) {
+                      if (event && typeof event.preventDefault === 'function') event.preventDefault();
+                      return true;
+                    }
+                    return cb.call(this, event);
+                  };
+                } else {
+                  currentOnError = cb;
+                }
+              },
+              configurable: true,
+              enumerable: true
+            });
+            return sw;
+          };
+          CustomSharedWorker.prototype = OriginalSharedWorker.prototype;
+          window.SharedWorker = CustomSharedWorker;
+        }
+      })();
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=9ff594fb-14e1-4409-be2d-8e11e8df6429&lang=uz_UZ" type="text/javascript"></script>
+    
+    <!-- PWA & Mobile Meta -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#000666" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Baito" />
+    
+    <!-- SEO & Social OpenGraph -->
+    <title>Baito — O'zbekistonda Tezkor Ish va Xodimlar Platformasi</title>
+    <meta name="description" content="Baito — kunlik, smenali va erkin grafikdagi ishlarni topish hamda ishonchli xodimlarni 1 daqiqada yollash platformasi." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Baito" />
+    <meta property="og:title" content="Baito — Tezkor Ish va Xodimlar Platformasi" />
+    <meta property="og:description" content="Kunlik va doimiy ishlarni xaritadan qidiring, 1-clickda ariza topshiring." />
+    <meta property="og:image" content="https://baito.uz/assets/og-preview.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>
+

@@ -121,28 +121,23 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                 </div>
               </div>
 
-              {/* 2x2 Grid Stats */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                {/* Date */}
-                <div className="p-3.5 border border-slate-200/80 rounded-[16px] flex flex-col gap-1.5 bg-white">
-                  <div className="flex items-center gap-1.5 text-slate-400">
-                    <Calendar size={18} strokeWidth={2.2} />
-                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Sana' : 'Дата'}</span>
-                  </div>
-                  <div className="text-[15px] font-black text-[#1A1A40]">{job.workDate || '2026-08-22'}</div>
-                </div>
-                
-                {/* Time */}
-                <div className="p-3.5 border border-slate-200/80 rounded-[16px] flex flex-col gap-1.5 bg-white">
-                  <div className="flex items-center gap-1.5 text-slate-400">
-                    <Clock size={18} strokeWidth={2.2} />
-                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Vaqt' : 'Время'}</span>
-                  </div>
-                  <div className="text-[15px] font-black text-[#1A1A40]">
-                    {(job as any).startTime || '09:00'} - {(job as any).endTime || '18:00'}
-                  </div>
-                </div>
+              {/* Location */}
+              <div className="p-4 border border-slate-200/80 rounded-[16px] flex items-center gap-3 bg-white mb-4">
+                 <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
+                    <MapPin size={20} className="text-orange-500" strokeWidth={2.2} />
+                 </div>
+                 <div className="min-w-0">
+                    <span className="text-[12px] font-semibold text-slate-400 block mb-0.5">
+                      {language === 'uz' ? 'Joylashuv' : 'Локация'}
+                    </span>
+                    <span className="text-[14px] font-bold text-[#1A1A40] truncate block">
+                      {job.rawLocation || job.location}
+                    </span>
+                 </div>
+              </div>
 
+              {/* 2x2 Grid Stats (Salary and Hourly) */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 {/* Salary */}
                 <div className="p-3.5 border border-slate-200/80 rounded-[16px] flex flex-col gap-1.5 bg-white">
                   <div className="flex items-center gap-1.5 text-slate-400">
@@ -164,28 +159,27 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                 </div>
               </div>
 
-              {/* Transport */}
-              <div className="p-4 border border-slate-200/80 rounded-[16px] flex items-center justify-between bg-slate-50 mb-6">
-                <div className="flex items-center gap-2.5 text-[#1A1A40] font-semibold text-[14px]">
-                  <Truck size={20} strokeWidth={2.2} /> 
-                  {language === 'uz' ? 'Transport xarajati' : 'Транспорт'}
+              {/* 2x2 Grid Stats (Date and Time) */}
+              <div className="grid grid-cols-2 gap-3 mb-8">
+                {/* Date */}
+                <div className="p-3.5 border border-slate-200/80 rounded-[16px] flex flex-col gap-1.5 bg-white">
+                  <div className="flex items-center gap-1.5 text-slate-400">
+                    <Calendar size={18} strokeWidth={2.2} />
+                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Sana' : 'Дата'}</span>
+                  </div>
+                  <div className="text-[15px] font-black text-[#1A1A40]">{job.workDate || '2026-08-22'}</div>
                 </div>
-                <div className="font-black text-[#1A1A40]">Yo'q</div>
-              </div>
-
-              {/* Location */}
-              <div className="p-4 border border-slate-200/80 rounded-[16px] flex items-center gap-3 bg-white mb-8">
-                 <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
-                    <MapPin size={20} className="text-orange-500" strokeWidth={2.2} />
-                 </div>
-                 <div className="min-w-0">
-                    <span className="text-[12px] font-semibold text-slate-400 block mb-0.5">
-                      {language === 'uz' ? 'Joylashuv' : 'Локация'}
-                    </span>
-                    <span className="text-[14px] font-bold text-[#1A1A40] truncate block">
-                      {job.rawLocation || job.location}
-                    </span>
-                 </div>
+                
+                {/* Time */}
+                <div className="p-3.5 border border-slate-200/80 rounded-[16px] flex flex-col gap-1.5 bg-white">
+                  <div className="flex items-center gap-1.5 text-slate-400">
+                    <Clock size={18} strokeWidth={2.2} />
+                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Vaqt' : 'Время'}</span>
+                  </div>
+                  <div className="text-[15px] font-black text-[#1A1A40]">
+                    {job.workTime || '09:00 - 18:00'}
+                  </div>
+                </div>
               </div>
 
               {/* Accepted Workers */}

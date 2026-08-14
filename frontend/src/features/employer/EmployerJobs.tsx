@@ -29,7 +29,15 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const openJobs = useMemo(() => postedJobs.filter(j => j.status === 'open'), [postedJobs]);
-  const activeJobs = useMemo(() => postedJobs.filter(j => ['confirmed', 'in_progress', 'start_requested'].includes(j.status)), [postedJobs]);
+  const activeJobs = useMemo(() => {
+    return postedJobs
+      .filter(j => ['confirmed', 'in_progress', 'start_requested'].includes(j.status))
+      .sort((a, b) => {
+        if (a.status === 'start_requested' && b.status !== 'start_requested') return -1;
+        if (b.status === 'start_requested' && a.status !== 'start_requested') return 1;
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      });
+  }, [postedJobs]);
   const historyJobs = useMemo(() => postedJobs.filter(j => ['completed', 'cancelled', 'closed'].includes(j.status)), [postedJobs]);
   
   const displayJobs = activeTab === 'open' ? openJobs : activeTab === 'active' ? activeJobs : historyJobs;
@@ -65,43 +73,43 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex p-1.5 bg-slate-100/80 rounded-2xl w-full max-w-xl mx-auto mt-2 mb-2 relative z-10">
         <button
           onClick={() => setActiveTab('open')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
+          className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-2 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
             activeTab === 'open' 
               ? 'bg-white text-brand-primary shadow-sm' 
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
           }`}
         >
-          <Clock size={16} className={activeTab === 'open' ? 'stroke-[2.5]' : ''} />
-          <span>{language === 'uz' ? "Kutilmoqda" : language === 'ru' ? "Ожидают" : "Pending"}</span>
-          <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'open' ? 'bg-brand-primary/10 text-brand-primary' : 'bg-slate-200 text-slate-500'}`}>
+          <Clock size={16} className={`shrink-0 ${activeTab === 'open' ? 'stroke-[2.5]' : ''}`} />
+          <span className="truncate">{language === 'uz' ? "Ochiq" : language === 'ru' ? "Открытые" : "Open"}</span>
+          <span className={`ml-0.5 sm:ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'open' ? 'bg-brand-primary/10 text-brand-primary' : 'bg-slate-200 text-slate-500'}`}>
             {openJobs.length}
           </span>
         </button>
         <button
           onClick={() => setActiveTab('active')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
+          className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-2 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
             activeTab === 'active' 
               ? 'bg-white text-emerald-600 shadow-sm' 
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
           }`}
         >
-          <Briefcase size={16} className={activeTab === 'active' ? 'stroke-[2.5]' : ''} />
-          <span>{language === 'uz' ? "Jarayonda" : language === 'ru' ? "В процессе" : "Active"}</span>
-          <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-200 text-slate-500'}`}>
+          <Briefcase size={16} className={`shrink-0 ${activeTab === 'active' ? 'stroke-[2.5]' : ''}`} />
+          <span className="truncate">{language === 'uz' ? "Jarayonda" : language === 'ru' ? "В процессе" : "Active"}</span>
+          <span className={`ml-0.5 sm:ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-200 text-slate-500'}`}>
             {activeJobs.length}
           </span>
         </button>
         <button
           onClick={() => setActiveTab('history')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
+          className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-2 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
             activeTab === 'history' 
               ? 'bg-white text-slate-800 shadow-sm' 
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
           }`}
         >
-          <History size={16} className={activeTab === 'history' ? 'stroke-[2.5]' : ''} />
-          <span>{language === 'uz' ? "Tarix" : language === 'ru' ? "История" : "History"}</span>
-          <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'history' ? 'bg-slate-100 text-slate-800' : 'bg-slate-200 text-slate-500'}`}>
+          <History size={16} className={`shrink-0 ${activeTab === 'history' ? 'stroke-[2.5]' : ''}`} />
+          <span className="truncate">{language === 'uz' ? "Tarix" : language === 'ru' ? "История" : "History"}</span>
+          <span className={`ml-0.5 sm:ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'history' ? 'bg-slate-100 text-slate-800' : 'bg-slate-200 text-slate-500'}`}>
             {historyJobs.length}
           </span>
         </button>

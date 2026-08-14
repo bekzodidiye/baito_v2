@@ -145,15 +145,6 @@ export const EmployerChatList: React.FC<EmployerChatListProps> = ({
           {t.archivedConversations}
         </p>
       </div>
-
-      {/* Floating Action Button */}
-      <button
-        onClick={onComposeClick}
-        className="fixed bottom-20 right-4 w-14 h-14 rounded-full bg-brand-primary hover:bg-brand-primary/90 text-white shadow-lg shadow-brand-primary/20 flex items-center justify-center active:scale-90 transition-all z-40 cursor-pointer border-none"
-        title={t.writeNewMessage}
-      >
-        <SquarePen size={22} />
-      </button>
     </div>
   );
 };

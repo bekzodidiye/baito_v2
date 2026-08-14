@@ -11,9 +11,6 @@ export function useMessagesScreen() {
   const { chats, setChats } = useChatsData(language);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [composeOpen, setComposeOpen] = useState(false);
-  const [composeCompany, setComposeCompany] = useState('');
-  const [composeMessage, setComposeMessage] = useState('');
   const t = translations[language];
 
   const safeChats = Array.isArray(chats) ? chats.filter(Boolean) : [];
@@ -44,38 +41,6 @@ export function useMessagesScreen() {
     }
   };
 
-  const handleComposeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!composeCompany || !composeMessage) return;
-
-    const timeNow = new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
-    const newChatId = 'c_' + Date.now();
-    const newChat = {
-      id: newChatId,
-      companyName: composeCompany,
-      recruiterName: language === 'ru' ? 'Ответственный сотрудник' : language === 'en' ? 'Responsible manager' : 'Mas\'ul xodim',
-      logoUrl: undefined,
-      recruiterAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-      online: true,
-      unreadCount: 0,
-      lastMessageTime: timeNow,
-      messages: [
-        {
-          id: 'm1',
-          sender: 'user' as const,
-          text: composeMessage,
-          time: timeNow
-        }
-      ]
-    };
-
-    setChats(prev => [newChat, ...prev]);
-    setComposeOpen(false);
-    setComposeCompany('');
-    setComposeMessage('');
-    navigate(`/chats/${newChatId}`);
-  };
-
   return {
     language,
     t,
@@ -84,14 +49,7 @@ export function useMessagesScreen() {
     setMessagesSearchOpen,
     searchQuery,
     setSearchQuery,
-    composeOpen,
-    setComposeOpen,
-    composeCompany,
-    setComposeCompany,
-    composeMessage,
-    setComposeMessage,
     filteredChats,
-    handleChatClick,
-    handleComposeSubmit
+    handleChatClick
   };
 }

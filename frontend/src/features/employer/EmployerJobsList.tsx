@@ -45,7 +45,7 @@ export const EmployerJobsList: React.FC<EmployerJobsListProps> = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {postedJobs.slice(0, 3).map(job => (
+        {postedJobs.map(job => (
           <EmployerJobCard
             key={job.id}
             job={job}
