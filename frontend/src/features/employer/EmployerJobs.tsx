@@ -62,7 +62,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
       />
 
       {/* Tabs */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex p-1.5 bg-slate-100/80 rounded-2xl w-full max-w-xl mx-auto mt-[-10px] relative z-10">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex p-1.5 bg-slate-100/80 rounded-2xl w-full max-w-xl mx-auto mt-2 mb-2 relative z-10">
         <button
           onClick={() => setActiveTab('open')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
