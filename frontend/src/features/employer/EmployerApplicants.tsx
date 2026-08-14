@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
-import { ClipboardCheck, CheckCircle2, Search } from 'lucide-react';
-import { motion } from 'motion/react';
+import { ClipboardCheck, CheckCircle2, Search, Inbox, Briefcase, History } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { EmployerPageHeader } from './EmployerPageHeader';
 import { ApplicantCard } from './components/ApplicantCard';
 
@@ -11,9 +11,13 @@ interface EmployerApplicantsProps {
 
 export const EmployerApplicants: React.FC<EmployerApplicantsProps> = ({ onChatClick }) => {
   const { applications, updateApplicationStatus, language } = useEmployer();
+  const [activeTab, setActiveTab] = useState<'pending' | 'active' | 'history'>('pending');
   
-  const activeApps = applications;
-  const pendingApps = activeApps.filter(app => app.status === 'applied');
+  const pendingApps = applications.filter(app => app.status === 'applied' || app.status === 'start_requested');
+  const activeWorkers = applications.filter(app => app.status === 'hired' || app.status === 'in_progress');
+  const historyApps = applications.filter(app => app.status === 'completed' || app.status === 'rejected' || app.status === 'cancelled');
+
+  const displayedApps = activeTab === 'pending' ? pendingApps : activeTab === 'active' ? activeWorkers : historyApps;
 
   const handleBulkApprove = () => {
     if (confirm(language === 'uz' ? 'Barcha arizalarni tasdiqlaysizmi?' : language === 'ru' ? 'Подтвердить все заявки?' : 'Approve all applications?')) {
@@ -32,7 +36,42 @@ export const EmployerApplicants: React.FC<EmployerApplicantsProps> = ({ onChatCl
         showPostButton={false}
       />
 
-      {pendingApps.length > 0 && (
+      {/* Tabs */}
+      <div className="flex bg-slate-100/80 p-1.5 rounded-2xl w-full max-w-xl mx-auto mt-[-10px] relative z-10">
+        <button
+          onClick={() => setActiveTab('pending')}
+          className={`flex-1 py-2.5 px-4 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${activeTab === 'pending' ? 'bg-white text-brand-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <Inbox size={16} className={activeTab === 'pending' ? 'stroke-[2.5]' : ''} />
+          {language === 'uz' ? "Yangi" : language === 'ru' ? "Новые" : "New"}
+          {pendingApps.length > 0 && (
+            <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'pending' ? 'bg-brand-primary/10 text-brand-primary' : 'bg-slate-200 text-slate-500'}`}>
+              {pendingApps.length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('active')}
+          className={`flex-1 py-2.5 px-4 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${activeTab === 'active' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <Briefcase size={16} className={activeTab === 'active' ? 'stroke-[2.5]' : ''} />
+          {language === 'uz' ? "Jarayonda" : language === 'ru' ? "В процессе" : "Active"}
+          {activeWorkers.length > 0 && (
+            <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-200 text-slate-500'}`}>
+              {activeWorkers.length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`flex-1 py-2.5 px-4 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${activeTab === 'history' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <History size={16} className={activeTab === 'history' ? 'stroke-[2.5]' : ''} />
+          {language === 'uz' ? "Tarix" : language === 'ru' ? "История" : "History"}
+        </button>
+      </div>
+
+      {activeTab === 'pending' && pendingApps.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex justify-end mt-[-10px]">
           <button 
             onClick={handleBulkApprove}
@@ -44,38 +83,56 @@ export const EmployerApplicants: React.FC<EmployerApplicantsProps> = ({ onChatCl
         </motion.div>
       )}
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-      {activeApps.length === 0 ? (
-        <div className="bg-gradient-to-b from-slate-50 to-white rounded-3xl border border-slate-100 py-20 px-6 flex flex-col items-center justify-center text-center mt-4 shadow-[inset_0_2px_10px_rgba(0,0,0,0.01)]">
-          <div className="w-20 h-20 bg-blue-50/80 rounded-full flex items-center justify-center mb-6 shadow-sm border border-blue-100/50 relative">
-            <div className="absolute inset-0 bg-brand-primary/5 rounded-full animate-ping opacity-75"></div>
-            <ClipboardCheck size={36} className="text-brand-primary stroke-[1.5] relative z-10" />
-          </div>
-          <h3 className="text-xl font-display font-black text-slate-800 mb-2">
-            {language === 'uz' ? "Hozircha arizalar yo'q" : language === 'ru' ? "Пока нет поданных заявок" : "No applications yet"}
-          </h3>
-          <p className="text-sm text-slate-500 font-medium max-w-[320px] leading-relaxed">
-            {language === 'uz' ? "Yangi ishchilar ariza topshirishi bilan ular shu yerda paydo bo'ladi. E'lonlaringiz faolligiga ishonch hosil qiling." : language === 'ru' ? "Как только работники подадут заявки, они отобразятся здесь. Убедитесь, что ваши объявления активны." : "As soon as workers apply, they will appear here. Ensure your jobs are active."}
-          </p>
-          <button className="mt-8 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors flex items-center gap-2">
-            <Search size={16} />
-            {language === 'uz' ? "Boshqa ishchilarni qidirish" : language === 'ru' ? "Искать других работников" : "Search other workers"}
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-2">
-          {activeApps.map((app) => (
-            <ApplicantCard
-              key={app.id}
-              app={app}
-              language={language}
-              updateApplicationStatus={updateApplicationStatus}
-              onChatClick={onChatClick}
-            />
-          ))}
-        </div>
-      )}
-      </motion.div>
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          {displayedApps.length === 0 ? (
+            <div className="bg-gradient-to-b from-slate-50 to-white rounded-3xl border border-slate-100 py-20 px-6 flex flex-col items-center justify-center text-center mt-4 shadow-[inset_0_2px_10px_rgba(0,0,0,0.01)]">
+              <div className="w-20 h-20 bg-blue-50/80 rounded-full flex items-center justify-center mb-6 shadow-sm border border-blue-100/50 relative">
+                <div className="absolute inset-0 bg-brand-primary/5 rounded-full animate-ping opacity-75"></div>
+                <ClipboardCheck size={36} className="text-brand-primary stroke-[1.5] relative z-10" />
+              </div>
+              <h3 className="text-xl font-display font-black text-slate-800 mb-2">
+                {activeTab === 'pending' 
+                  ? (language === 'uz' ? "Hozircha yangi arizalar yo'q" : language === 'ru' ? "Пока нет новых заявок" : "No new applications yet")
+                  : activeTab === 'active'
+                  ? (language === 'uz' ? "Jarayondagi ishchilar yo'q" : language === 'ru' ? "Нет активных работников" : "No active workers")
+                  : (language === 'uz' ? "Tarix bo'sh" : language === 'ru' ? "История пуста" : "History is empty")
+                }
+              </h3>
+              <p className="text-sm text-slate-500 font-medium max-w-[320px] leading-relaxed">
+                {activeTab === 'pending' 
+                  ? (language === 'uz' ? "Yangi ishchilar ariza topshirishi bilan ular shu yerda paydo bo'ladi." : language === 'ru' ? "Как только работники подадут заявки, они отобразятся здесь." : "As soon as workers apply, they will appear here.")
+                  : (language === 'uz' ? "Siz tasdiqlagan yoki jarayondagi ishlar shu yerda chiqadi." : language === 'ru' ? "Одобренные вами заявки появятся здесь." : "Your approved applications will appear here.")
+                }
+              </p>
+              {activeTab === 'pending' && (
+                <button className="mt-8 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors flex items-center gap-2">
+                  <Search size={16} />
+                  {language === 'uz' ? "Boshqa ishchilarni qidirish" : language === 'ru' ? "Искать других работников" : "Search other workers"}
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-2">
+              {displayedApps.map((app) => (
+                <ApplicantCard
+                  key={app.id}
+                  app={app}
+                  language={language}
+                  updateApplicationStatus={updateApplicationStatus}
+                  onChatClick={onChatClick}
+                />
+              ))}
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
