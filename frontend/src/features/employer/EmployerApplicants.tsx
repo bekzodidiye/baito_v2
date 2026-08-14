@@ -13,8 +13,8 @@ export const EmployerApplicants: React.FC<EmployerApplicantsProps> = ({ onChatCl
   const { applications, updateApplicationStatus, language } = useEmployer();
   const [activeTab, setActiveTab] = useState<'pending' | 'active' | 'history'>('pending');
   
-  const pendingApps = applications.filter(app => app.status === 'applied' || app.status === 'start_requested');
-  const activeWorkers = applications.filter(app => app.status === 'hired' || app.status === 'in_progress');
+  const pendingApps = applications.filter(app => app.status === 'applied');
+  const activeWorkers = applications.filter(app => app.status === 'hired' || app.status === 'in_progress' || app.status === 'start_requested' || app.status === 'confirmed');
   const historyApps = applications.filter(app => app.status === 'completed' || app.status === 'rejected' || app.status === 'cancelled');
 
   const displayedApps = activeTab === 'pending' ? pendingApps : activeTab === 'active' ? activeWorkers : historyApps;
@@ -111,12 +111,7 @@ export const EmployerApplicants: React.FC<EmployerApplicantsProps> = ({ onChatCl
                   : (language === 'uz' ? "Siz tasdiqlagan yoki jarayondagi ishlar shu yerda chiqadi." : language === 'ru' ? "Одобренные вами заявки появятся здесь." : "Your approved applications will appear here.")
                 }
               </p>
-              {activeTab === 'pending' && (
-                <button className="mt-8 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors flex items-center gap-2">
-                  <Search size={16} />
-                  {language === 'uz' ? "Boshqa ishchilarni qidirish" : language === 'ru' ? "Искать других работников" : "Search other workers"}
-                </button>
-              )}
+
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-2">
