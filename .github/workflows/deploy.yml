@@ -9,16 +9,22 @@ jobs:
     name: 🔄 Auto Deploy on Server
     runs-on: self-hosted
     steps:
-      - name: 📥 Pull latest code in project directory and redeploy
+      - name: 📥 Sync repository and start containers
         run: |
-          echo "📂 Navigating to project directory..."
-          cd /home/scarygun/IntellexGroup/Baito
+          mkdir -p /home/scarygun/IntellexGroup
+          cd /home/scarygun/IntellexGroup
 
-          echo "📥 Pulling latest code from GitHub..."
+          if [ ! -d "/home/scarygun/IntellexGroup/Baito/.git" ]; then
+            echo "📦 First time setup: Cloning repository via SSH..."
+            git clone git@github.com:bekzodidiye/baito-v3-.git Baito
+          fi
+
+          cd /home/scarygun/IntellexGroup/Baito
+          echo "📥 Pulling latest code..."
           git fetch origin main
           git reset --hard origin/main
 
-          echo "🐳 Rebuilding and updating Docker containers..."
+          echo "🐳 Starting Docker containers..."
           docker compose up -d --build --remove-orphans
 
-          echo "✅ Deployment completed successfully!"
+          echo "✅ Deployed successfully!"
