@@ -1,8 +1,8 @@
 import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { SettingsLayout } from './settings/SettingsLayout';
+import { useApp } from '../context/AppContext';
 
-const LandingScreen = React.lazy(() => import('./landing/LandingScreen').then(m => ({ default: m.LandingScreen })));
 const JobSearchScreen = React.lazy(() => import('../features/worker/search/JobSearchScreen').then(m => ({ default: m.JobSearchScreen })));
 const CalendarScreen = React.lazy(() => import('../features/worker/calendar/CalendarScreen').then(m => ({ default: m.CalendarScreen })));
 const MessagesScreen = React.lazy(() => import('./messages/MessagesScreen').then(m => ({ default: m.MessagesScreen })));
@@ -37,8 +37,6 @@ const SuspenseFallback = () => (
   </div>
 );
 
-import { useApp } from '../context/AppContext';
-
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) => {
   const { isLoggedIn, userProfile } = useApp();
   
@@ -60,12 +58,22 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   return <>{children}</>;
 };
 
+const RootRedirect = () => {
+  const { isLoggedIn, userProfile } = useApp();
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (userProfile?.selectedRole === 'employer') return <Navigate to="/employer-dashboard" replace />;
+  if (userProfile?.selectedRole === 'admin') return <Navigate to="/admin" replace />;
+  return <Navigate to="/jobs" replace />;
+};
+
 export const AppRoutes = () => {
   return (
     <Suspense fallback={<SuspenseFallback />}>
       <Routes>
-        <Route path="/" element={<LandingScreen />} />
-                {/* Worker routes */}
+        {/* Root entry point - Native Mobile Apps redirect directly to main feed / login */}
+        <Route path="/" element={<RootRedirect />} />
+        
+        {/* Worker routes */}
         <Route path="/jobs" element={<ProtectedRoute allowedRoles={['worker']}><JobSearchScreen /></ProtectedRoute>} />
         <Route path="/jobs/:id" element={<ProtectedRoute allowedRoles={['worker']}><JobSearchScreen /></ProtectedRoute>} />
         <Route path="/calendar" element={<ProtectedRoute allowedRoles={['worker']}><CalendarScreen /></ProtectedRoute>} />

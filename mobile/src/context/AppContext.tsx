@@ -34,16 +34,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setPendingRedirect(() => () => {
         if (action) action();
         else if (targetScreen) {
-          if (targetScreen === 'landing') navigate('/');
+          if (targetScreen === 'landing' || targetScreen === 'jobs') navigate('/jobs');
           else navigate(`/${targetScreen}`);
         }
       });
-      navigate('/');
+      navigate('/login');
       return false;
     }
 
     if (targetScreen) {
-      if (targetScreen === 'landing') navigate('/');
+      if (targetScreen === 'landing' || targetScreen === 'jobs') navigate('/jobs');
       else navigate(`/${targetScreen}`);
     } else if (action) {
       action();
@@ -55,7 +55,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await logoutApi();
     authState.clearSession();
     queryClient.clear();
-    navigate('/');
+    navigate('/login');
   }, [authState, navigate, queryClient]);
 
   useEffect(() => {
