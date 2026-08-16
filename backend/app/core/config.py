@@ -58,8 +58,8 @@ class Settings(BaseSettings):
         if self.CORS_ORIGINS_RAW:
             return [o.strip() for o in self.CORS_ORIGINS_RAW.split(",") if o.strip()]
         if self.is_production:
-            return ["https://baito.uz"]
-        return ["http://localhost:5173", "http://localhost:3000", "https://baito.uz"]
+            return ["https://baito.uz", "https://scarygun.tail365b27.ts.net"]
+        return ["http://localhost:5173", "http://localhost:3000", "https://baito.uz", "https://scarygun.tail365b27.ts.net"]
 
     @property
     def cookie_secure(self) -> bool:
