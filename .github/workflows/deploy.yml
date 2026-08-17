@@ -13,6 +13,7 @@ jobs:
         run: |
           cd /home/scarygun/IntellexGroup/Baito
           git config --global --add safe.directory /home/scarygun/IntellexGroup/Baito || true
+          export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no"
           echo "📥 Pulling latest code..."
           git fetch origin main
           git reset --hard origin/main
