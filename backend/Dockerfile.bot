@@ -1,7 +1,8 @@
+
 FROM python:3.11-alpine
 
-# Install PostgreSQL client for pg_dump
-RUN apk add --no-cache postgresql-client
+# Install PostgreSQL client, bash & gzip
+RUN apk add --no-cache postgresql-client bash gzip
 
 WORKDIR /app
 
