@@ -6,6 +6,7 @@ import { Language } from '../../translations';
 import { getJobCategory } from '../../utils/jobCategoryUtils';
 import { JobMarkerPopup } from './JobMarkerPopup';
 import { useUserLocationMarker } from './useUserLocationMarker';
+import { createRoot } from 'react-dom/client';
 
 interface UseJobMarkersProps {
   mapInstanceRef: React.MutableRefObject<L.Map | null>;
@@ -92,7 +93,7 @@ export const useJobMarkers = ({
         : `<div class="marker-logo-placeholder bg-slate-100 text-slate-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>`;
 
       const jobHtml = `
-        <div class="flex flex-col items-center justify-center cursor-pointer select-none transition-transform duration-200 ease-out origin-bottom hover:scale-110" style="width: 44px; height: 42px;">
+        <div tabindex="0" role="button" aria-label="${job.title}" class="flex flex-col items-center justify-center cursor-pointer select-none transition-transform duration-200 ease-out origin-bottom hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 rounded-sm" style="width: 44px; height: 42px;">
           <div class="relative flex items-center justify-center rounded-full bg-white shadow-sm" style="width: 26px !important; height: 26px !important; border: 2.5px solid ${borderColor};">
             ${logoHtml}
             <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white shadow-xs" style="background-color: ${category.hexColor};"></span>
@@ -119,8 +120,7 @@ export const useJobMarkers = ({
         offset: [0, -15]
       });
 
-      marker.on('popupopen', async () => {
-        const { createRoot } = await import('react-dom/client');
+      marker.on('popupopen', () => {
         let root = activeRootsRef.current.get(job.id);
         if (!root) {
           root = createRoot(popupNode);

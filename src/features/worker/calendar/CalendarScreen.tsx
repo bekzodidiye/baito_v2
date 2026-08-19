@@ -31,6 +31,7 @@ export const CalendarScreen: React.FC = () => {
     allAppliedJobs,
     allConfirmedJobs,
     allTodoJobs,
+    allMissedJobs,
     allCompletedJobs,
     getDayStatus,
     handleDayClick,
@@ -84,6 +85,7 @@ export const CalendarScreen: React.FC = () => {
               allAppliedJobs={allAppliedJobs}
               allConfirmedJobs={allConfirmedJobs}
               allTodoJobs={allTodoJobs}
+              allMissedJobs={allMissedJobs}
               allCompletedJobs={allCompletedJobs}
               getJobTimeRelation={getJobRelation}
               setSelectedJob={setSelectedJob}

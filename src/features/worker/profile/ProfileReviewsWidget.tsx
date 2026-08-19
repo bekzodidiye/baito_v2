@@ -10,27 +10,22 @@ interface ProfileReviewsWidgetProps {
   language: Language;
 }
 
+import { useQuery } from '@tanstack/react-query';
+import { fetchWorkerApplicationsApi } from '../../../api/queries';
+
 export const ProfileReviewsWidget: React.FC<ProfileReviewsWidgetProps> = ({ language }) => {
-  const [reviews, setReviews] = useState<Application[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { setCurrentScreen } = useCurrentScreen();
 
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const data = await apiClient('/applications/worker');
-        if (Array.isArray(data)) {
-          const completedWithReview = data.filter(app => app.status === 'completed' && app.rating);
-          setReviews(completedWithReview);
-        }
-      } catch (err) {
-        console.error('Failed to fetch reviews:', err);
-      } finally {
-        setIsLoading(false);
+  const { data: reviews = [], isLoading } = useQuery({
+    queryKey: ['workerReviews'],
+    queryFn: async () => {
+      const data = await fetchWorkerApplicationsApi();
+      if (Array.isArray(data)) {
+        return data.filter(app => app.status === 'completed' && app.rating);
       }
-    };
-    fetchReviews();
-  }, []);
+      return [];
+    }
+  });
 
   if (isLoading) {
     return (

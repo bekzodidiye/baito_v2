@@ -22,6 +22,11 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS_RAW: str = os.getenv("CORS_ORIGINS", "")
 
+    # Uzum E-Commerce Integration
+    UZUM_TERMINAL_ID: str = os.getenv("UZUM_TERMINAL_ID", "test_terminal_id")
+    UZUM_SECRET_KEY: str = os.getenv("UZUM_SECRET_KEY", "test_secret_key")
+    UZUM_API_URL: str = os.getenv("UZUM_API_URL", "https://api.uzum.uz/epos/v1")
+
     class Config:
         env_file = "../.env"
         case_sensitive = True

@@ -3,36 +3,60 @@ import { ArrowLeft, Plus, CreditCard, ArrowUpRight, ArrowDownLeft, Landmark, Zap
 import { useApp } from '../../../context/AppContext';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 import { translations } from '../../../translations';
-
-// Mock Data
-const INITIAL_CARDS = [
-  { id: 1, type: 'uzcard', last4: '4321', bank: 'NBU', balance: '1 250 000' },
-  { id: 2, type: 'humo', last4: '8899', bank: 'Kapitalbank', balance: '400 000' }
-];
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchPaymentCardsApi, addPaymentCardApi, fetchTransactionsApi, requestWithdrawalApi } from '../../../api/queries';
+import { useAuthStore } from '../../../store/useAuthStore';
 
 const QUICK_AMOUNTS = [50000, 100000, 200000, 'MAX'];
-
-const TRANSACTIONS = [
-  { id: 1, type: 'deposit', amount: 150000, date: 'Bugun, 14:30', title: 'Ish haqi: Uyni tozalash', status: 'success' },
-  { id: 2, type: 'withdraw', amount: 50000, date: 'Kecha, 09:15', title: 'Kartaga yechish (Uzcard *4321)', status: 'success' },
-  { id: 3, type: 'deposit', amount: 85000, date: '12-Avgust', title: 'Ish haqi: Yuk tashish', status: 'success' },
-  { id: 4, type: 'withdraw', amount: 200000, date: '10-Avgust', title: 'Kartaga yechish (Humo *8899)', status: 'pending' },
-];
 
 export const PaymentsScreen: React.FC = () => {
   const { setCurrentScreen } = useCurrentScreen();
   const { language } = useApp();
+  const user = useAuthStore(state => state.userProfile);
   const t = translations[language];
+  const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<'withdraw' | 'history'>('withdraw');
-  const [savedCards, setSavedCards] = useState(INITIAL_CARDS);
-  const [selectedCard, setSelectedCard] = useState<number | null>(INITIAL_CARDS[0].id);
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [withdrawAmount, setWithdrawAmount] = useState<string>('');
   
   // Add Card Modal State
   const [isAddCardOpen, setIsAddCardOpen] = useState(false);
   const [newCardNumber, setNewCardNumber] = useState('');
   const [newCardExp, setNewCardExp] = useState('');
+
+  const { data: savedCards = [] } = useQuery({
+    queryKey: ['paymentCards'],
+    queryFn: fetchPaymentCardsApi,
+  });
+
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: fetchTransactionsApi,
+  });
+
+  const addCardMutation = useMutation({
+    mutationFn: addPaymentCardApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['paymentCards'] });
+      setIsAddCardOpen(false);
+      setNewCardNumber('');
+      setNewCardExp('');
+    }
+  });
+
+  const withdrawMutation = useMutation({
+    mutationFn: requestWithdrawalApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      setWithdrawAmount('');
+      alert(language === 'uz' ? 'Mablag\' yechish so\'rovi yuborildi' : 'Запрос на вывод отправлен');
+    },
+    onError: (err: any) => {
+      alert(err.message || 'Xatolik yuz berdi');
+    }
+  });
 
   const formatMoney = (amount: number | string) => {
     return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -43,22 +67,11 @@ export const PaymentsScreen: React.FC = () => {
     if (newCardNumber.length >= 16) {
       const type = newCardNumber.startsWith('8600') ? 'uzcard' : 'humo';
       const last4 = newCardNumber.slice(-4);
-      const newCard = {
-        id: Date.now(),
-        type,
-        last4,
-        bank: 'Yangi Karta',
-        balance: '0'
-      };
-      setSavedCards([...savedCards, newCard]);
-      setSelectedCard(newCard.id);
-      setIsAddCardOpen(false);
-      setNewCardNumber('');
-      setNewCardExp('');
+      addCardMutation.mutate({ type, last4, bank: 'Bank' });
     }
   };
 
-  const currentBalance = 345000;
+  const currentBalance = user?.balance || 0;
 
   return (
     <div className="w-full max-w-4xl mx-auto pb-28 md:pb-6 flex flex-col min-h-screen bg-slate-50 relative">
@@ -132,17 +145,17 @@ export const PaymentsScreen: React.FC = () => {
               </h3>
               
               <div className="flex flex-col gap-3">
-                {savedCards.map(card => (
+                {savedCards.map((card: any) => (
                   <div 
                     key={card.id}
-                    onClick={() => setSelectedCard(card.id)}
+                    onClick={() => setSelectedCardId(card.id)}
                     className={`p-4 rounded-xl border-2 flex items-center gap-4 cursor-pointer transition-colors ${
-                      selectedCard === card.id 
+                      selectedCardId === card.id 
                       ? 'border-brand-primary bg-blue-50/50' 
                       : 'border-slate-200 bg-white hover:border-slate-300'
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedCard === card.id ? 'bg-brand-primary text-white' : 'bg-slate-100 text-slate-500'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedCardId === card.id ? 'bg-brand-primary text-white' : 'bg-slate-100 text-slate-500'}`}>
                       <CreditCard size={18} />
                     </div>
                     <div className="flex-1">
@@ -152,7 +165,7 @@ export const PaymentsScreen: React.FC = () => {
                       </p>
                       <p className="text-[11px] text-slate-500 font-medium">{card.bank}</p>
                     </div>
-                    {selectedCard === card.id && <CheckCircle2 size={20} className="text-brand-primary" />}
+                    {selectedCardId === card.id && <CheckCircle2 size={20} className="text-brand-primary" />}
                   </div>
                 ))}
 
@@ -195,10 +208,11 @@ export const PaymentsScreen: React.FC = () => {
               </div>
 
               <button 
-                disabled={!withdrawAmount || Number(withdrawAmount) > currentBalance || Number(withdrawAmount) < 10000}
+                disabled={!withdrawAmount || Number(withdrawAmount) < 1000 || !selectedCardId || withdrawMutation.isPending}
+                onClick={() => withdrawMutation.mutate(Number(withdrawAmount))}
                 className="w-full py-3.5 bg-brand-primary text-white rounded-xl font-bold hover:bg-brand-primary/95 disabled:bg-slate-300 transition-colors flex items-center justify-center gap-2"
               >
-                {language === 'uz' ? "Pulni ko'chirish" : 'Перевести'}
+                {withdrawMutation.isPending ? 'Kuting...' : (language === 'uz' ? "Kartaga yechish" : 'Вывести на карту')}
               </button>
             </div>
           </div>
@@ -207,7 +221,7 @@ export const PaymentsScreen: React.FC = () => {
         {/* History Section */}
         {activeTab === 'history' && (
           <div className="flex flex-col gap-3 animate-in fade-in duration-300 pb-8">
-            {TRANSACTIONS.map(tx => (
+            {transactions.map((tx: any) => (
               <div key={tx.id} className="bg-white rounded-xl p-4 border border-slate-200 flex items-center gap-4">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                   tx.type === 'deposit' 
@@ -218,9 +232,9 @@ export const PaymentsScreen: React.FC = () => {
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-slate-800 text-sm truncate">{tx.title}</h4>
+                  <h4 className="font-bold text-slate-800 text-sm truncate">{tx.type === 'deposit' ? 'Balans to\'ldirish' : 'Pul yechish'}</h4>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[11px] text-slate-500">{tx.date}</span>
+                    <span className="text-[11px] text-slate-500">{new Date(tx.createdAt).toLocaleString()}</span>
                     {tx.status === 'pending' && (
                       <span className="px-1.5 py-0.5 rounded-sm text-[9px] font-bold uppercase bg-amber-100 text-amber-700">
                         {language === 'uz' ? 'Kutilmoqda' : 'Pending'}
@@ -229,15 +243,19 @@ export const PaymentsScreen: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="text-right shrink-0">
-                  <p className={`font-display font-bold text-sm ${
-                    tx.type === 'deposit' ? 'text-emerald-500' : 'text-slate-800'
-                  }`}>
+                <div className="text-right">
+                  <p className={`font-bold text-sm ${tx.type === 'deposit' ? 'text-emerald-600' : 'text-slate-800'}`}>
                     {tx.type === 'deposit' ? '+' : '-'}{formatMoney(tx.amount)}
                   </p>
+                  <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase">UZS</p>
                 </div>
               </div>
             ))}
+            {transactions.length === 0 && (
+              <div className="text-center py-10">
+                <p className="text-slate-500 text-sm">Tranzaksiyalar yo'q</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -245,67 +263,56 @@ export const PaymentsScreen: React.FC = () => {
 
       {/* Add Card Modal */}
       {isAddCardOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsAddCardOpen(false)} />
-          <div className="bg-white w-full sm:w-[400px] rounded-t-3xl sm:rounded-3xl p-6 relative z-10 animate-in slide-in-from-bottom-8 sm:slide-in-from-bottom-4">
-            <button 
-              onClick={() => setIsAddCardOpen(false)}
-              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"
-            >
-              <X size={16} />
-            </button>
-            
-            <h2 className="font-display font-bold text-xl text-slate-800 mb-6">
-              {language === 'uz' ? 'Yangi karta qo\'shish' : 'Добавление карты'}
-            </h2>
-            
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-md rounded-[24px] p-6 shadow-xl animate-in slide-in-from-bottom-8">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-display font-bold text-lg text-slate-800">
+                {language === 'uz' ? 'Yangi karta qo\'shish' : 'Добавить карту'}
+              </h3>
+              <button 
+                onClick={() => setIsAddCardOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
             <form onSubmit={handleAddCard} className="flex flex-col gap-4">
               <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase mb-1.5 block">
-                  {language === 'uz' ? 'Karta raqami' : 'Номер карты'}
+                <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">
+                  Karta raqami
                 </label>
                 <input 
                   type="text" 
                   value={newCardNumber}
-                  onChange={(e) => setNewCardNumber(e.target.value.replace(/\D/g, '').slice(0, 16))}
-                  placeholder="8600 0000 0000 0000"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-800 focus:outline-none focus:border-brand-primary"
-                  required
-                  minLength={16}
+                  onChange={(e) => setNewCardNumber(e.target.value)}
+                  placeholder="8600 1234 5678 9012"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase mb-1.5 block">
-                  {language === 'uz' ? 'Amal qilish muddati' : 'Срок действия'}
+                <label className="text-xs font-bold text-slate-500 uppercase mb-1.5 block">
+                  Amal qilish muddati
                 </label>
                 <input 
                   type="text" 
                   value={newCardExp}
-                  onChange={(e) => {
-                    let val = e.target.value.replace(/\D/g, '').slice(0, 4);
-                    if (val.length > 2) val = val.slice(0,2) + '/' + val.slice(2);
-                    setNewCardExp(val);
-                  }}
+                  onChange={(e) => setNewCardExp(e.target.value)}
                   placeholder="MM/YY"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-800 focus:outline-none focus:border-brand-primary"
-                  required
-                  minLength={5}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
                 />
               </div>
               <button 
+                disabled={addCardMutation.isPending}
                 type="submit"
-                disabled={newCardNumber.length < 16 || newCardExp.length < 5}
-                className="w-full py-3.5 bg-brand-primary text-white rounded-xl font-bold hover:bg-brand-primary/95 disabled:bg-slate-300 transition-colors mt-2"
+                className="w-full py-3.5 mt-2 bg-brand-primary text-white rounded-xl font-bold hover:bg-brand-primary/95 transition-colors disabled:bg-slate-300"
               >
-                {language === 'uz' ? 'Saqlash' : 'Сохранить'}
+                {addCardMutation.isPending ? 'Kuting...' : (language === 'uz' ? "Qo'shish" : 'Добавить')}
               </button>
             </form>
           </div>
         </div>
       )}
-
     </div>
   );
 };
-
-export default PaymentsScreen;

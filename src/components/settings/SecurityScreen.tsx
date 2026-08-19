@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { ArrowLeft, ChevronRight, Search, Shield, Lock, ShieldCheck, Fingerprint, Smartphone, Monitor, Tablet, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Search, Shield, Lock, ShieldCheck, Fingerprint, Smartphone, Monitor, Tablet, ShieldAlert, Loader2 } from 'lucide-react';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { fetchActiveSessionsApi, logoutSessionApi, logoutAllOtherSessionsApi, changePasswordApi, updateUserProfileApi } from '../../api/queries';
+import { useAuthStore } from '../../store/useAuthStore';
 export const SecurityScreen: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { userProfile, setUserProfile } = useApp();
   
-  
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
-  const [biometricsEnabled, setBiometricsEnabled] = useState(true);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(userProfile?.two_factor_enabled ?? false);
+  const [biometricsEnabled, setBiometricsEnabled] = useState(userProfile?.biometrics_enabled ?? false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,36 +19,86 @@ export const SecurityScreen: React.FC = () => {
   const [passData, setPassData] = useState({ current: '', newPass: '', confirm: '' });
   const [passSuccess, setPassSuccess] = useState(false);
 
-  const [activeSessions, setActiveSessions] = useState([
-    { id: 'dev-1', type: 'phone', name: 'iPhone 14 Pro', location: "Toshkent, O'zbekiston • Hozir faol", current: true },
-    { id: 'dev-2', type: 'pc', name: 'Windows PC • Chrome', location: '2 soat oldin • Samarkand', current: false },
-    { id: 'dev-3', type: 'tablet', name: 'iPad Air', location: 'Kecha, 18:42 • Toshkent', current: false },
-  ]);
+  const [activeSessions, setActiveSessions] = useState<any[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
 
-  const handleLogoutSession = (id: string) => {
-    setActiveSessions(activeSessions.filter(s => s.id !== id));
-    window.dispatchEvent(new CustomEvent("global-toast", { detail: "Qurilmadan chiqildi" }));
+  const loadSessions = async () => {
+    try {
+      setLoadingSessions(true);
+      const sessions = await fetchActiveSessionsApi();
+      setActiveSessions(sessions);
+    } catch (error) {
+      console.error("Failed to load sessions:", error);
+    } finally {
+      setLoadingSessions(false);
+    }
   };
 
-  const handleLogoutAllOther = () => {
-    setActiveSessions(activeSessions.filter(s => s.current));
-    window.dispatchEvent(new CustomEvent("global-toast", { detail: "Barcha boshqa qurilmalardan chiqildi!" }));
+  useEffect(() => {
+    loadSessions();
+  }, []);
+
+  const handleLogoutSession = async (id: string) => {
+    try {
+      await logoutSessionApi(id);
+      setActiveSessions(activeSessions.filter(s => s.id !== id));
+      window.dispatchEvent(new CustomEvent("global-toast", { detail: "Qurilmadan chiqildi" }));
+    } catch (error) {
+      console.error("Failed to logout session:", error);
+    }
   };
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleLogoutAllOther = async () => {
+    try {
+      const res = await logoutAllOtherSessionsApi();
+      if (res.success) {
+        // Reload sessions to get the remaining one
+        await loadSessions();
+        window.dispatchEvent(new CustomEvent("global-toast", { detail: "Barcha boshqa qurilmalardan chiqildi!" }));
+      }
+    } catch (error) {
+      console.error("Failed to logout all other sessions:", error);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!passData.current || !passData.newPass) return;
     if (passData.newPass !== passData.confirm) {
       window.dispatchEvent(new CustomEvent("global-toast", { detail: "Yangi parollar mos kelmadi" }));
       return;
     }
-    setPassSuccess(true);
-    setTimeout(() => {
-      setShowPasswordModal(false);
-      setPassSuccess(false);
-      setPassData({ current: '', newPass: '', confirm: '' });
-      window.dispatchEvent(new CustomEvent("global-toast", { detail: "Parol muvaffaqiyatli o'zgartirildi" }));
-    }, 1000);
+    
+    try {
+      await changePasswordApi({ current_password: passData.current, new_password: passData.newPass });
+      setPassSuccess(true);
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setPassSuccess(false);
+        setPassData({ current: '', newPass: '', confirm: '' });
+        window.dispatchEvent(new CustomEvent("global-toast", { detail: "Parol muvaffaqiyatli o'zgartirildi" }));
+      }, 1000);
+    } catch (error: any) {
+      console.error("Failed to change password:", error);
+      window.dispatchEvent(new CustomEvent("global-toast", { detail: error.message || "Xatolik yuz berdi" }));
+    }
+  };
+
+  const handleToggleSetting = async (key: 'two_factor_enabled' | 'biometrics_enabled', value: boolean, setter: (val: boolean) => void) => {
+    setter(value);
+    setIsUpdating(true);
+    try {
+      await updateUserProfileApi({ [key]: value });
+      if (userProfile) {
+        setUserProfile({ ...userProfile, [key]: value });
+      }
+    } catch (error) {
+      console.error(`Failed to update ${key}:`, error);
+      setter(!value); // Revert on failure
+      window.dispatchEvent(new CustomEvent("global-toast", { detail: "Saqlashda xatolik yuz berdi" }));
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -114,8 +167,9 @@ export const SecurityScreen: React.FC = () => {
                 <p className="text-[13px] text-brand-text-variant">{twoFactorEnabled ? 'Yoqilgan' : 'O\'chirilgan'}</p>
               </div>
               <button 
-                className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${twoFactorEnabled ? 'bg-brand-primary' : 'bg-slate-300'}`}
-                onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
+                className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${twoFactorEnabled ? 'bg-brand-primary' : 'bg-slate-300'} ${isUpdating ? 'opacity-50' : ''}`}
+                onClick={() => handleToggleSetting('two_factor_enabled', !twoFactorEnabled, setTwoFactorEnabled)}
+                disabled={isUpdating}
               >
                 <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-0.5 transition-all ${twoFactorEnabled ? 'right-0.5' : 'left-0.5'}`} />
               </button>
@@ -132,8 +186,9 @@ export const SecurityScreen: React.FC = () => {
                 <p className="text-[13px] text-brand-text-variant">{biometricsEnabled ? 'Face ID / Barmoq izi' : 'O\'chirilgan'}</p>
               </div>
               <button 
-                className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${biometricsEnabled ? 'bg-brand-primary' : 'bg-slate-300'}`}
-                onClick={() => setBiometricsEnabled(!biometricsEnabled)}
+                className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${biometricsEnabled ? 'bg-brand-primary' : 'bg-slate-300'} ${isUpdating ? 'opacity-50' : ''}`}
+                onClick={() => handleToggleSetting('biometrics_enabled', !biometricsEnabled, setBiometricsEnabled)}
+                disabled={isUpdating}
               >
                 <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-0.5 transition-all ${biometricsEnabled ? 'right-0.5' : 'left-0.5'}`} />
               </button>
@@ -148,25 +203,59 @@ export const SecurityScreen: React.FC = () => {
             <span className="bg-brand-primary-container text-white text-[10px] px-2 py-0.5 rounded-full font-bold">{activeSessions.length} TA QURILMA</span>
           </div>
           <div className="bg-brand-surface-lowest rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
-            {activeSessions.map((session, idx) => (
-              <React.Fragment key={session.id}>
-                {idx > 0 && <div className="h-px bg-slate-100 ml-[72px]" />}
-                <div className="flex items-center p-4">
-                  <div className="w-10 h-10 bg-brand-surface-low rounded-xl flex items-center justify-center mr-4 shrink-0">
-                    {session.type === 'phone' ? <Smartphone className="text-slate-600" size={20} /> : session.type === 'pc' ? <Monitor className="text-slate-600" size={20} /> : <Tablet className="text-slate-600" size={20} />}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-[15px] font-semibold text-brand-text">{session.name}</h3>
-                    <p className="text-[13px] text-brand-text-variant">{session.location}</p>
-                  </div>
-                  {session.current ? (
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  ) : (
-                    <button onClick={() => handleLogoutSession(session.id)} className="text-red-600 text-[13px] font-bold hover:underline cursor-pointer">Chiqish</button>
-                  )}
+              {loadingSessions ? (
+                <div className="flex justify-center p-6">
+                  <Loader2 className="animate-spin text-brand-primary" />
                 </div>
-              </React.Fragment>
-            ))}
+              ) : activeSessions.length === 0 ? (
+                <div className="p-6 text-center text-brand-text-variant text-sm">
+                  Hech qanday faol sessiya topilmadi.
+                </div>
+              ) : (
+                activeSessions.map((session, index) => {
+                  const isCurrent = index === 0; // The first one returned by order_by(last_active_at) is likely current, or we just highlight the most recent
+                  // Basic mapping for icons based on device name
+                  const deviceNameStr = (session.device_name || '').toLowerCase();
+                  let Icon = Smartphone;
+                  if (deviceNameStr.includes('pc') || deviceNameStr.includes('windows') || deviceNameStr.includes('mac') || deviceNameStr.includes('linux')) Icon = Monitor;
+                  else if (deviceNameStr.includes('ipad') || deviceNameStr.includes('tablet')) Icon = Tablet;
+                  
+                  // Format last_active
+                  const lastActiveDate = new Date(session.last_active_at);
+                  const formattedTime = lastActiveDate.toLocaleString('uz-UZ', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+                  return (
+                    <React.Fragment key={session.id}>
+                      {index > 0 && <div className="h-px bg-slate-100 ml-[72px]" />}
+                      <div className="p-4 flex items-center justify-between hover:bg-brand-surface-low transition-colors group">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-brand-primary-container/10 flex items-center justify-center shrink-0 border border-brand-primary/10">
+                            <Icon size={20} className="text-brand-primary" />
+                          </div>
+                          <div>
+                            <p className="text-[15px] font-semibold text-brand-text flex items-center gap-2">
+                              {session.device_name || 'Noma\'lum qurilma'}
+                              {isCurrent && <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>}
+                            </p>
+                            <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium flex items-center gap-1.5">
+                              {isCurrent ? 'Hozir faol' : formattedTime} • {session.ip_address || 'Noma\'lum IP'}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {!isCurrent && (
+                          <button 
+                            onClick={() => handleLogoutSession(session.id)}
+                            className="px-3 py-1.5 rounded-lg text-[13px] font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          >
+                            Chiqish
+                          </button>
+                        )}
+                      </div>
+                    </React.Fragment>
+                  );
+                })
+              )}
           </div>
         </div>
 

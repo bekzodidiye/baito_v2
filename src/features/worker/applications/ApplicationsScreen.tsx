@@ -6,33 +6,22 @@ import { translations } from '../../../translations';
 import { fetchWorkerApplicationsApi } from '../../../api/queries';
 import { ApplicationCard } from './ApplicationCard';
 
+import { useQuery } from '@tanstack/react-query';
+
 export const ApplicationsScreen: React.FC = () => {
   const { setCurrentScreen } = useCurrentScreen();
   const { language } = useApp();
   const t = translations[language];
-
-  const [applications, setApplications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   
   // Tab state
   const [activeTab, setActiveTab] = useState<'all' | 'applied' | 'hired' | 'rejected'>('all');
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchWorkerApplicationsApi();
-        setApplications(data);
-      } catch (err) {
-        console.error('Failed to fetch applications:', err);
-        setError(language === 'uz' ? 'Arizalarni yuklashda xatolik yuz berdi' : language === 'ru' ? 'Ошибка загрузки заявок' : 'Failed to load applications');
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, [language]);
+  const { data: applications = [], isLoading: loading, error: queryError, refetch } = useQuery({
+    queryKey: ['workerApplications'],
+    queryFn: fetchWorkerApplicationsApi,
+  });
+
+  const error = queryError ? (language === 'uz' ? 'Arizalarni yuklashda xatolik yuz berdi' : language === 'ru' ? 'Ошибка загрузки заявок' : 'Failed to load applications') : null;
 
   const handleCardClick = (jobId: string) => {
     // Navigate to job details screen if you have one, or handle click
@@ -138,11 +127,7 @@ export const ApplicationsScreen: React.FC = () => {
               <p className="text-slate-700 font-bold mb-1">Oops!</p>
               <p className="text-slate-500 font-medium text-sm mb-6">{error}</p>
               <button 
-                onClick={() => {
-                  setLoading(true);
-                  setError(null);
-                  fetchWorkerApplicationsApi().then(setApplications).catch(() => setError('Error')).finally(() => setLoading(false));
-                }}
+                onClick={() => refetch()}
                 className="w-full py-3 bg-rose-500 text-white rounded-xl text-sm font-bold shadow-md shadow-rose-500/20 hover:bg-rose-600 transition-colors active:scale-[0.98]"
               >
                 {language === 'uz' ? 'Qayta urinish' : language === 'ru' ? 'Повторить' : 'Retry'}

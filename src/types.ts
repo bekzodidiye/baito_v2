@@ -23,6 +23,7 @@ export interface Job {
   category?: string;
   hiredCount?: number;
   vacancies?: number;
+  views?: number;
   addressDetails?: string;
   workDate?: string;
   workTime?: string;
@@ -30,6 +31,8 @@ export interface Job {
   responsibilities?: string;
   requirements?: string;
   importantNote?: string;
+  createdAt?: string;
+  appliedDate?: string;
 }
 
 export interface Message {

@@ -23,6 +23,7 @@ class JobBase(BaseModel):
     requirements: Optional[str] = None
     importantNote: Optional[str] = None
     rawLocation: Optional[str] = None
+    views: Optional[int] = 0
     coordinateX: Optional[float] = None
     coordinateY: Optional[float] = None
 
@@ -53,3 +54,4 @@ class JobWithApplicationStatus(Job):
     applied: bool = False
     hiredCount: int = 0
     vacancies: int = 1
+    appliedDate: Optional[datetime] = None

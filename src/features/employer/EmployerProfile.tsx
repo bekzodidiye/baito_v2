@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { EmployerPaymentModal } from './EmployerPaymentModal';
 import { useEmployer } from '../../hooks/useEmployer';
+import { apiClient } from '../../api/client';
 import { useApp } from '../../context/AppContext';
 import { Settings, DollarSign, Building2, Phone, MapPin, Edit3, LogOut, ShieldCheck, HelpCircle } from 'lucide-react';
 import { EmployerProfileInfo } from './EmployerProfileInfo';
@@ -43,10 +44,14 @@ export const EmployerProfile: React.FC = () => {
       >
         <div className="absolute top-4 right-4">
           <button 
-            onClick={() => {
+            onClick={async () => {
               const newName = prompt(language === "uz" ? "Kompaniya nomini kiriting:" : "Введите название компании:", companyName);
               if (newName && newName.trim()) {
                 setUserProfile({ ...userProfile, firstName: newName.trim() });
+                await apiClient('/users/me', {
+                  method: 'PUT',
+                  body: JSON.stringify({ name: newName.trim() })
+                }).catch(console.error);
                 showToast(language === "uz" ? "Profil yangilandi!" : "Профиль обновлен!");
               }
             }} 
@@ -182,7 +187,6 @@ export const EmployerProfile: React.FC = () => {
           if (userProfile) {
             setUserProfile({ ...userProfile, firstName: name, phone: phone });
             // In a real app, this would also call an API
-            const { apiClient } = await import('../../api/client');
             await apiClient('/users/me', {
               method: 'PUT',
               body: JSON.stringify({ name, phone, role: 'employer' })

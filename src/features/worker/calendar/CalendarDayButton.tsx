@@ -124,6 +124,8 @@ export const CalendarDayButton: React.FC<CalendarDayButtonProps> = ({
     tooltipColor = 'text-rose-600';
   } else if (status === 'completed') {
     tooltipColor = 'text-brand-primary';
+  } else if (status === 'missed') {
+    tooltipColor = 'text-gray-500';
   }
 
   const isFirstTwoRows = Math.floor(slotIndex / 7) <= 1;
@@ -154,6 +156,8 @@ export const CalendarDayButton: React.FC<CalendarDayButtonProps> = ({
             status={status}
             language={language}
             setSelectedJob={setSelectedJob}
+            isPast={currentYear < yearFromContext || (currentYear === yearFromContext && currentMonth < monthFromContext) || (currentYear === yearFromContext && currentMonth === monthFromContext && day < dayFromContext)}
+            isToday={isToday}
           />
         )}
       </AnimatePresence>

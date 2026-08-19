@@ -5,14 +5,16 @@ from sqlalchemy.orm import Session
 from app import crud
 from app.api import deps
 from app.core import security
+from app.models.session import ActiveSession
+from datetime import datetime, timezone
 from app.core.config import settings
 from app.core.limiter import limiter
 
 router = APIRouter()
 
-def _set_auth_cookies(response: Response, subject: str) -> None:
-    access = security.create_access_token(subject)
-    refresh = security.create_refresh_token(subject)
+def _set_auth_cookies(response: Response, subject: str, sid: str = None) -> None:
+    access = security.create_access_token(subject, sid=sid)
+    refresh = security.create_refresh_token(subject, sid=sid)
     common = {
         "httponly": True,
         "secure": settings.cookie_secure,
@@ -65,8 +67,38 @@ def login(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Hisobingiz bloklangan"
         )
+        
+    user_agent = request.headers.get("user-agent", "Unknown Device")
+    ip_address = request.client.host if request.client else "Unknown IP"
+    
+    # Simple device name mapping
+    device_name = "Unknown Device"
+    if "iPhone" in user_agent:
+        device_name = "iPhone"
+    elif "iPad" in user_agent:
+        device_name = "iPad"
+    elif "Android" in user_agent:
+        device_name = "Android Device"
+    elif "Windows" in user_agent:
+        device_name = "Windows PC"
+    elif "Mac" in user_agent:
+        device_name = "Mac"
+    elif "Linux" in user_agent:
+        device_name = "Linux PC"
+    else:
+        device_name = user_agent[:30]
 
-    _set_auth_cookies(response, str(user.uid or user.id))
+    session_record = ActiveSession(
+        user_uid=str(user.uid or user.id),
+        device_name=device_name,
+        ip_address=ip_address,
+        location="Unknown Location",
+    )
+    db.add(session_record)
+    db.commit()
+    db.refresh(session_record)
+
+    _set_auth_cookies(response, str(user.uid or user.id), sid=session_record.id)
     return {"success": True, "role": user.role}
 
 @router.post("/refresh")
@@ -92,11 +124,36 @@ def refresh(
     if not user or user.isBanned:
         _clear_auth_cookies(response)
         raise HTTPException(status_code=401, detail="Sessiya bekor qilingan")
+        
+    if token_data.sid:
+        session_record = db.query(ActiveSession).filter(ActiveSession.id == token_data.sid).first()
+        if session_record and session_record.is_active:
+            session_record.last_active_at = datetime.now(timezone.utc)
+            db.commit()
+        else:
+            _clear_auth_cookies(response)
+            raise HTTPException(status_code=401, detail="Sessiya yaroqsiz")
 
-    _set_auth_cookies(response, str(user.uid or user.id))
+    _set_auth_cookies(response, str(user.uid or user.id), sid=token_data.sid)
     return {"success": True}
 
 @router.post("/logout")
-def logout(response: Response) -> Any:
+def logout(
+    request: Request,
+    response: Response,
+    db: Session = Depends(deps.get_db)
+) -> Any:
+    """
+    Clear httpOnly session cookies and deactivate current session.
+    """
+    token = deps.get_access_token(request)
+    if token:
+        token_data = deps._decode(token, "access")
+        if token_data and token_data.sid:
+            session_record = db.query(ActiveSession).filter(ActiveSession.id == token_data.sid).first()
+            if session_record:
+                session_record.is_active = False
+                db.commit()
+                
     _clear_auth_cookies(response)
     return {"success": True}

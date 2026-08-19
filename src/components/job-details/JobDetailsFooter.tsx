@@ -4,6 +4,7 @@ import { Job } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { showToast } from '../../utils/toast';
+import { confirmStartJobApi } from '../../api/queries';
 
 interface JobDetailsFooterProps {
   selectedJob: Job;
@@ -21,15 +22,22 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
   const [isStartedLocal, setIsStartedLocal] = useState<boolean>(
     selectedJob.status === 'in_progress' || selectedJob.status === 'start_requested'
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setIsStartedLocal(selectedJob.status === 'in_progress' || selectedJob.status === 'start_requested');
   }, [selectedJob.status]);
 
   const handleApply = async () => {
-    const success = await applyToJob(selectedJob.id);
-    if (success && onApplied) {
-      (onApplied as any)('applied');
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const success = await applyToJob(selectedJob.id);
+      if (success && onApplied) {
+        (onApplied as any)('applied');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -42,6 +50,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
           return (
             <button
               disabled
+              aria-label="Ish muvaffaqiyatli yakunlandi"
               className="flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-md bg-brand-primary opacity-90 cursor-not-allowed flex items-center justify-center gap-2"
             >
               <CheckCircle2 size={18} />
@@ -52,6 +61,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
           return (
             <button
               disabled
+              aria-label="Ish boshlandi"
               className="flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-md bg-emerald-600 opacity-90 cursor-not-allowed flex items-center justify-center gap-2"
             >
               <CheckCircle2 size={18} />
@@ -62,16 +72,23 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
           return (
             <button
               onClick={async () => {
-                setIsStartedLocal(true);
-                selectedJob.status = 'in_progress';
-                ("Ish boshlandi!");
+                if (isSubmitting) return;
+                setIsSubmitting(true);
                 try {
-                  const { confirmStartJobApi } = await import('../../api/queries');
-                  await confirmStartJobApi(selectedJob.id);
-                } catch (e) {}
-                if (onApplied) (onApplied as any)('in_progress');
+                  setIsStartedLocal(true);
+                  selectedJob.status = 'in_progress';
+                  const success = await confirmStartJobApi(selectedJob.id);
+                  if (success && onApplied) (onApplied as any)('in_progress');
+                } catch (e) {
+                  setIsStartedLocal(false);
+                  selectedJob.status = 'hired'; // Revert back
+                } finally {
+                  setIsSubmitting(false);
+                }
               }}
-              className="flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-lg shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              disabled={isSubmitting}
+              aria-label="Ishni boshlash"
+              className={`flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-lg transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'bg-emerald-400 cursor-not-allowed' : 'shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] cursor-pointer'}`}
             >
               <PlayCircle size={18} />
               {t.startJob || "Ishni boshlash"}
@@ -81,6 +98,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
           return (
             <button
               disabled
+              aria-label="Ariza topshirilgan"
               className="flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-md bg-amber-600 opacity-90 cursor-not-allowed flex items-center justify-center gap-2"
             >
               <Send size={18} />
@@ -91,7 +109,9 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
           return (
             <button
               onClick={handleApply}
-              className="flex-1 bg-brand-primary hover:bg-brand-primary/90 text-white h-13 sm:h-14 rounded-xl text-sm font-black shadow-lg shadow-brand-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+              disabled={isSubmitting}
+              aria-label="Ushbu ishga ariza topshirish"
+              className={`flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-black shadow-lg transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'bg-brand-primary/50 cursor-not-allowed' : 'bg-brand-primary hover:bg-brand-primary/90 shadow-brand-primary/20 active:scale-[0.98] cursor-pointer'}`}
             >
               <Send size={18} />
               {t.applyNow || "Ariza topshirish"}

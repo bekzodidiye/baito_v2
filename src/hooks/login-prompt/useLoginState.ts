@@ -89,6 +89,7 @@ export const useLoginState = (isModal: boolean, initialMode?: 'login' | 'registe
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [regShowPassword, setRegShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   // Login states
   const [loginPhone, setLoginPhone] = useState('');
@@ -165,6 +166,7 @@ export const useLoginState = (isModal: boolean, initialMode?: 'login' | 'registe
     regConfirmPassword, setRegConfirmPassword,
     regShowPassword, setRegShowPassword,
     agreeTerms, setAgreeTerms,
+    showPrivacy, setShowPrivacy,
     loginPhone, setLoginPhone,
     loginPassword, setLoginPassword,
     showPassword, setShowPassword,

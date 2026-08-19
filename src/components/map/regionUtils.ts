@@ -42,20 +42,27 @@ export const getRegionStats = (regionId: string) => {
 };
 
 export const mapFeatureToRegionId = (adm1En: string): string => {
+  if (!adm1En) return "";
+  
+  // The new GeoJSON already provides exact IDs like "Andijon", "Farg'ona"
+  const exactMatch = UZBEKISTAN_REGIONS.find(r => r.id === adm1En);
+  if (exactMatch) return exactMatch.id;
+
+  // Fallback for old geojson or English names just in case
   const name = adm1En.toLowerCase();
-  if (name.includes('karakalpakstan')) return "Qoraqalpog'iston";
-  if (name.includes('khorezm')) return "Xorazm";
+  if (name.includes('karakalpakstan') || name.includes('qoraqalpog')) return "Qoraqalpog'iston";
+  if (name.includes('khorezm') || name.includes('xorazm')) return "Xorazm";
   if (name.includes('navoi')) return "Navoiy";
-  if (name.includes('bukhara')) return "Buxoro";
-  if (name.includes('samarkand')) return "Samarqand";
-  if (name.includes('kashkadarya')) return "Qashqadaryo";
-  if (name.includes('surkhandarya')) return "Surxondaryo";
-  if (name.includes('jizzakh')) return "Jizzax";
-  if (name.includes('syrdarya')) return "Sirdaryo";
-  if (name.includes('tashkent')) return "Toshkent";
+  if (name.includes('bukhara') || name.includes('buxoro')) return "Buxoro";
+  if (name.includes('samarkand') || name.includes('samarqand')) return "Samarqand";
+  if (name.includes('kashkadarya') || name.includes('qashqadaryo')) return "Qashqadaryo";
+  if (name.includes('surkhandarya') || name.includes('surxondaryo')) return "Surxondaryo";
+  if (name.includes('jizzakh') || name.includes('jizzax')) return "Jizzax";
+  if (name.includes('syrdarya') || name.includes('sirdaryo')) return "Sirdaryo";
+  if (name.includes('tashkent') || name.includes('toshkent')) return "Toshkent";
   if (name.includes('namangan')) return "Namangan";
-  if (name.includes('fergana')) return "Farg'ona";
-  if (name.includes('andijan')) return "Andijon";
+  if (name.includes('fergana') || name.includes('farg')) return "Farg'ona";
+  if (name.includes('andijan') || name.includes('andijon')) return "Andijon";
   return "";
 };
 

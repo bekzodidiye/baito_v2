@@ -46,11 +46,24 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Sessiya muddati tugagan yoki yaroqsiz",
         )
+    if token_data.sid:
+        session_record = db.query(models.ActiveSession).filter(models.ActiveSession.id == token_data.sid).first()
+        if not session_record or not session_record.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Sessiya bekor qilingan",
+            )
+            
     user = crud.user.get_by_uid(db, uid=token_data.sub)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Foydalanuvchi topilmadi")
     if user.isBanned:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Hisobingiz bloklangan")
+    
+    # Optional: Attach session_id to user object for reference
+    if token_data.sid:
+        setattr(user, 'current_session_id', token_data.sid)
+        
     return user
 
 def get_current_active_user(
@@ -67,9 +80,19 @@ def get_current_user_optional(
     token_data = _decode(token, "access")
     if not token_data:
         return None
+        
+    if token_data.sid:
+        session_record = db.query(models.ActiveSession).filter(models.ActiveSession.id == token_data.sid).first()
+        if not session_record or not session_record.is_active:
+            return None
+            
     user = crud.user.get_by_uid(db, uid=token_data.sub)
     if not user or user.isBanned:
         return None
+        
+    if token_data.sid:
+        setattr(user, 'current_session_id', token_data.sid)
+        
     return user
 
 def get_current_employer(

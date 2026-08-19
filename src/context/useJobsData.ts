@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchJobs, bookmarkJobApi, applyToJobApi } from '../api/queries';
+import { fetchJobs, bookmarkJobApi, applyToJobApi, requestStartJobApi, confirmStartJobApi } from '../api/queries';
 
 import { Job } from '../types';
 import { useCallback } from 'react';
@@ -13,7 +13,7 @@ export function useJobsData() {
       const res = await fetchJobs();
       return Array.isArray(res) ? res : [];
     },
-    refetchInterval: 3000,
+    refetchInterval: 30000,
     staleTime: 1000,
   });
 
@@ -63,7 +63,6 @@ export function useJobsData() {
 
   const requestStartJob = useCallback(async (jobId: string) => {
     try {
-      const { requestStartJobApi } = await import('../api/queries');
       await requestStartJobApi(jobId);
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       queryClient.invalidateQueries({ queryKey: ['employer-jobs'] });
@@ -84,7 +83,6 @@ export function useJobsData() {
       return job;
     }));
     try {
-      const { confirmStartJobApi } = await import('../api/queries');
       await confirmStartJobApi(jobId);
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       queryClient.invalidateQueries({ queryKey: ['employer-jobs'] });

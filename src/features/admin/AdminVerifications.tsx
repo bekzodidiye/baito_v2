@@ -4,6 +4,7 @@ import { ShieldCheck, FileText, CheckCircle2, XCircle, User, Eye } from 'lucide-
 import { useApp } from '../../context/AppContext';
 import { VerificationDetailModal } from './VerificationDetailModal';
 import { showToast } from '../../utils/toast';
+import { apiClient } from '../../api/client';
 
 interface AdminVerificationsProps {
   users: AdminUser[];
@@ -16,7 +17,6 @@ export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, o
 
   const handleVerify = async (userId: string, approve: boolean) => {
     try {
-      const { apiClient } = await import('../../api/client');
       await apiClient(`/admin/users/${userId}/role`, {
         method: 'PATCH',
         body: JSON.stringify({ 

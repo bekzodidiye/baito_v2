@@ -44,8 +44,38 @@ export const fetchWorkerApplicationsApi = async () => {
   return await apiClient('/applications/worker');
 };
 
+export const fetchUserProfileApi = async () => {
+  return await apiClient('/users/me');
+};
+
+export const updateUserProfileApi = async (data: any) => {
+  return await apiClient('/users/me', {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+};
+
+export const changePasswordApi = async (data: { current_password: string; new_password: string }) => {
+  return await apiClient('/users/me/password', {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+};
+
 export const markAllNotificationsReadApi = async () => {
   return await apiClient('/notifications/read-all', { method: 'POST' });
+};
+
+export const fetchActiveSessionsApi = async () => {
+  return await apiClient('/users/me/sessions');
+};
+
+export const logoutSessionApi = async (sessionId: string) => {
+  return await apiClient(`/users/me/sessions/${sessionId}`, { method: 'DELETE' });
+};
+
+export const logoutAllOtherSessionsApi = async () => {
+  return await apiClient('/users/me/sessions', { method: 'DELETE' });
 };
 
 // Storage updates are deprecated since we use real backend
@@ -85,5 +115,24 @@ export const registerApi = async (data: any) => {
 };
 
 export const requestWithdrawalApi = async (amount: number) => {
-  return await apiClient('/withdraw', { method: 'POST', body: JSON.stringify({ amount }) });
+  return await apiClient('/payments/withdraw', { method: 'POST', body: JSON.stringify({ amount }) });
+};
+
+export const fetchPaymentCardsApi = async () => {
+  return await apiClient('/payments/cards');
+};
+
+export const addPaymentCardApi = async (data: { type: string, last4: string, bank: string }) => {
+  return await apiClient('/payments/cards', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const fetchTransactionsApi = async () => {
+  return await apiClient('/payments/transactions');
+};
+
+export const incrementJobViewApi = async (jobId: string) => {
+  return await apiClient(`/jobs/${jobId}/view`, { method: 'POST' });
 };

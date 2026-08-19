@@ -24,6 +24,18 @@ function AppContent() {
   const { isLoggedIn, userProfile, requireAuth } = useApp();
   const [hasOpenedMap, setHasOpenedMap] = useState(false);
   const [activeModal, setActiveModal] = useState<'profile' | 'settings' | 'help' | 'auth' | null>(null);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
 
@@ -32,28 +44,14 @@ function AppContent() {
       setHasOpenedMap(true);
     }
 
-    // Scroll window and all inner scrollable containers to top when navigating to any page
-    const resetAllScrolls = () => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-
-      const scrollables = document.querySelectorAll<HTMLElement>(
-        'main, [class*="overflow-y-auto"], [class*="overflow-auto"], #settings-layout-wrapper > div'
-      );
-      scrollables.forEach((el) => {
-        el.scrollTop = 0;
-      });
-    };
-
-    resetAllScrolls();
-    const rafId = requestAnimationFrame(resetAllScrolls);
-    const timeoutId = setTimeout(resetAllScrolls, 60);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      clearTimeout(timeoutId);
-    };
+    // Scroll window to top when navigating
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    
+    // Also scroll the main container if it has independent scrolling
+    const mainContent = document.querySelector('main');
+    if (mainContent) {
+      mainContent.scrollTop = 0;
+    }
   }, [currentScreen]);
 
 
@@ -73,7 +71,7 @@ function AppContent() {
 
   // The map is only reachable while logged in, so tie it to the session: on
   // logout it unmounts instead of idling, hidden, behind the landing page.
-  const shouldMountMap = isLoggedIn && (hasOpenedMap || currentScreen === 'jobs');
+  const shouldMountMap = isLoggedIn && !isEmployer && (hasOpenedMap || currentScreen === 'jobs');
 
   return (
     <div className={`flex flex-col md:flex-row bg-brand-background text-brand-text antialiased font-sans selection:bg-brand-primary-container selection:text-white ${
@@ -83,6 +81,12 @@ function AppContent() {
     }`}>
       <a href="#main-content" className="skip-link">Asosiy kontentga o'tish</a>
       <ToastContainer />
+      {isOffline && (
+        <div className="bg-red-500 text-white text-center py-2 px-4 text-sm font-semibold z-[9999] fixed top-0 w-full flex items-center justify-center gap-2">
+          <AlertCircle size={16} />
+          Internet tarmog'iga ulanish yo'q. Iltimos, aloqani tekshiring!
+        </div>
+      )}
 
       {/* Desktop Permanent Sidebar */}
       {showNavigation && <Sidebar onOpenModal={handleOpenModal} />}
@@ -100,7 +104,13 @@ function AppContent() {
               the user navigates away. Only route content belongs in here. */}
           <ErrorBoundary key={currentScreen}>
             {/* If not logged in, and trying to access a protected screen, redirect to landing */}
-            {isAuthGatedScreen ? <Navigate to="/" replace /> : currentScreen !== 'jobs' && <AppRoutes />}
+            {isAuthGatedScreen ? (
+              <Navigate to="/" replace />
+            ) : isEmployer && currentScreen === 'jobs' ? (
+              <Navigate to="/employer-dashboard" replace />
+            ) : (
+              currentScreen !== 'jobs' && <AppRoutes />
+            )}
           </ErrorBoundary>
 
           {/* Persistently mounted map to avoid Leaflet re-initialization overhead.

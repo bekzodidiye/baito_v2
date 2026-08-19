@@ -3,23 +3,22 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchNotificationsApi, markAllNotificationsReadApi } from '../../api/queries';
 import { NotificationItemData } from './NotificationItem';
 import { NotificationCategory } from './NotificationFilterPanel';
-import { INITIAL_NOTIFICATIONS } from './Notifications.data';
 
 export const useNotificationsData = (
   activeCategory: NotificationCategory,
   setUnreadNotificationsCount: (count: number) => void
 ) => {
-  const { data: apiNotifs = [] } = useQuery({
+  const { data: apiNotifs = [], refetch } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
       const res = await fetchNotificationsApi();
       return Array.isArray(res) ? res : [];
     },
-    refetchInterval: 3000,
+    refetchInterval: 30000,
   });
 
   const notifications: NotificationItemData[] = useMemo(() => {
-    if (!apiNotifs || apiNotifs.length === 0) return INITIAL_NOTIFICATIONS;
+    if (!apiNotifs || apiNotifs.length === 0) return [];
     return apiNotifs.map((n: any) => ({
       id: n.id,
       titleUz: n.title,

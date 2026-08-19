@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, X, Star, MessageSquare, Briefcase, MapPin, Clock, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
+import { confirmStartJobApi } from '../../../api/queries';
 
 interface ApplicantCardProps {
   app: any;
@@ -106,7 +107,6 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
         {app.status === 'start_requested' ? (
           <button
             onClick={async () => {
-              const { confirmStartJobApi } = await import('../../../api/queries');
               await confirmStartJobApi(app.jobId);
               window.location.reload();
             }}

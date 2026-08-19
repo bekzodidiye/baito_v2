@@ -4,6 +4,7 @@ import { LoginPromptHeader } from './LoginPromptHeader';
 import { LoginPromptStepper } from './LoginPromptStepper';
 import { LoginPromptFooter } from './LoginPromptFooter';
 import { LoginPromptBody } from './LoginPromptBody';
+import { PrivacyScreen } from '../settings/PrivacyScreen';
 
 interface LoginPromptScreenProps {
   isModal?: boolean;
@@ -75,6 +76,18 @@ export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = ({
           t={t}
         />
       </div>
+
+      {p.showPrivacy && (
+        <div className="absolute inset-0 z-50 bg-white flex flex-col h-full w-full">
+          <PrivacyScreen 
+            onBack={() => p.setShowPrivacy(false)} 
+            onConfirm={() => {
+              p.setShowPrivacy(false);
+              p.setAgreeTerms(true);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

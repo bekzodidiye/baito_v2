@@ -24,6 +24,12 @@ export interface UserProfile {
   pinfl?: string;
   rating?: number;
   completedJobsCount?: number;
+  balance?: number;
+  notify_new_jobs?: boolean;
+  notify_interviews?: boolean;
+  notify_general?: boolean;
+  two_factor_enabled?: boolean;
+  biometrics_enabled?: boolean;
 }
 
 export interface AppContextType {

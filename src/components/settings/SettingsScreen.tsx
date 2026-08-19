@@ -1,18 +1,36 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
-import { ArrowLeft, Lock, Globe, Bell, Info, HelpCircle, ChevronRight, Trash2, Briefcase, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Lock, Globe, Bell, Info, HelpCircle, ChevronRight, Briefcase, MessageSquare, Loader2 } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { updateUserProfileApi } from '../../api/queries';
 
 export const SettingsScreen: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, setLanguage } = useApp();
+  const { language, setLanguage, userProfile, setUserProfile } = useApp();
   const t = translations[language];
   const tMenu = (t as any).menu || {};
 
-  const [newJobsNotifications, setNewJobsNotifications] = useState(true);
-  const [interviewNotifications, setInterviewNotifications] = useState(true);
-  const [generalNotifications, setGeneralNotifications] = useState(true);
+  const [newJobsNotifications, setNewJobsNotifications] = useState(userProfile?.notify_new_jobs ?? true);
+  const [interviewNotifications, setInterviewNotifications] = useState(userProfile?.notify_interviews ?? true);
+  const [generalNotifications, setGeneralNotifications] = useState(userProfile?.notify_general ?? true);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleToggle = async (key: 'notify_new_jobs' | 'notify_interviews' | 'notify_general', value: boolean, setter: (val: boolean) => void) => {
+    setter(value);
+    setIsUpdating(true);
+    try {
+      await updateUserProfileApi({ [key]: value });
+      if (userProfile) {
+        setUserProfile({ ...userProfile, [key]: value });
+      }
+    } catch (error) {
+      console.error('Failed to update settings:', error);
+      setter(!value); // Revert on failure
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col h-full w-full bg-brand-surface">
@@ -27,7 +45,9 @@ export const SettingsScreen: React.FC = () => {
         <h1 className="text-[18px] font-semibold text-brand-primary absolute left-1/2 transform -translate-x-1/2">
           {tMenu.settings || 'Sozlamalar'}
         </h1>
-        <div className="w-10 h-10"></div> {/* Placeholder for balance */}
+        <div className="w-10 h-10 flex items-center justify-center">
+          {isUpdating && <Loader2 size={20} className="animate-spin text-brand-primary" />}
+        </div>
       </header>
 
       {/* Main Content Canvas */}
@@ -95,7 +115,8 @@ export const SettingsScreen: React.FC = () => {
             
             <button 
               className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group border-b border-slate-100"
-              onClick={() => setNewJobsNotifications(!newJobsNotifications)}
+              onClick={() => handleToggle('notify_new_jobs', !newJobsNotifications, setNewJobsNotifications)}
+              disabled={isUpdating}
             >
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-brand-primary group-hover:text-white group-hover:border-brand-primary group-hover:scale-105 transition-all duration-200">
@@ -114,7 +135,8 @@ export const SettingsScreen: React.FC = () => {
 
             <button 
               className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group border-b border-slate-100"
-              onClick={() => setInterviewNotifications(!interviewNotifications)}
+              onClick={() => handleToggle('notify_interviews', !interviewNotifications, setInterviewNotifications)}
+              disabled={isUpdating}
             >
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-brand-primary group-hover:text-white group-hover:border-brand-primary group-hover:scale-105 transition-all duration-200">
@@ -133,7 +155,8 @@ export const SettingsScreen: React.FC = () => {
 
             <button 
               className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group"
-              onClick={() => setGeneralNotifications(!generalNotifications)}
+              onClick={() => handleToggle('notify_general', !generalNotifications, setGeneralNotifications)}
+              disabled={isUpdating}
             >
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-brand-primary group-hover:text-white group-hover:border-brand-primary group-hover:scale-105 transition-all duration-200">

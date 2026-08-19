@@ -1,6 +1,7 @@
 import React from 'react';
 import { Smartphone, Lock, Eye, EyeOff, Check, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
 
 interface FinishViewProps {
   selectedRole?: 'worker' | 'employer' | null;
@@ -18,6 +19,7 @@ interface FinishViewProps {
   handleFinishSubmit: (e: React.FormEvent) => void;
   t: any;
   isModal: boolean;
+  onOpenPrivacy?: () => void;
 }
 
 export const FinishView: React.FC<FinishViewProps> = ({
@@ -35,6 +37,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
   handleFinishSubmit,
   t,
   isModal,
+  onOpenPrivacy,
 }) => {
   return (
     <motion.div
@@ -132,11 +135,11 @@ export const FinishView: React.FC<FinishViewProps> = ({
         </div>
 
         {/* Terms and conditions checkbox */}
-        <label className="flex items-start gap-3 pt-2 cursor-pointer group">
+        <div className="flex items-start gap-3 pt-2 group">
           <input
             type="checkbox"
             checked={agreeTerms}
-            onChange={(e) => setAgreeTerms(e.target.checked)}
+            readOnly
             className="hidden"
           />
           <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all shrink-0 mt-0.5 ${
@@ -146,10 +149,21 @@ export const FinishView: React.FC<FinishViewProps> = ({
           }`}>
             {agreeTerms && <Check size={12} className="stroke-[3]" />}
           </div>
-          <span className="text-[11px] font-bold text-slate-500 leading-normal select-none group-hover:text-slate-700 transition-colors">
+          <div className="text-[11px] font-bold text-slate-500 leading-normal select-none">
             {t.finishAgree}
-          </span>
-        </label>
+            {' '}
+            <button 
+              type="button"
+              onClick={onOpenPrivacy}
+              className="text-brand-primary underline ml-1 hover:text-brand-primary/80 transition-colors"
+            >
+              (Maxfiylik Siyosati)
+            </button>
+            {!agreeTerms && (
+               <div className="text-red-500 text-[10px] mt-1 font-medium">Royxatdan o'tish uchun maxfiylik siyosati bilan tanishib, tasdiqlang.</div>
+            )}
+          </div>
+        </div>
 
       </form>
     </motion.div>

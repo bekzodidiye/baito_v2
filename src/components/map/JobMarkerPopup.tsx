@@ -10,13 +10,13 @@ interface JobMarkerPopupProps {
   closePopup: () => void;
 }
 
-export const JobMarkerPopup: React.FC<JobMarkerPopupProps> = ({
+export const JobMarkerPopup = React.memo(({
   job,
   category,
   categoryName,
   setSelectedJob,
   closePopup
-}) => {
+}: JobMarkerPopupProps) => {
   return (
     <div className="font-sans text-left min-w-[180px] max-w-[240px]">
       <div className="flex items-center gap-1.5 mb-1.5">
@@ -29,7 +29,7 @@ export const JobMarkerPopup: React.FC<JobMarkerPopupProps> = ({
       <div className="flex items-center gap-2 mb-1.5">
         <p className="text-[10px] text-brand-text-variant font-semibold truncate">{job.company}</p>
         <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0"></span>
-        <p className="text-[9px] text-brand-text-variant font-medium whitespace-nowrap">{job.time}</p>
+        <p className="text-[9px] text-brand-text-variant font-medium whitespace-nowrap">{job.workTime}</p>
       </div>
       <div className="flex items-center gap-1 text-[9px] text-brand-text-variant/80 border-t border-brand-surface-low pt-1.5">
         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -46,4 +46,4 @@ export const JobMarkerPopup: React.FC<JobMarkerPopupProps> = ({
       </button>
     </div>
   );
-};
+});
