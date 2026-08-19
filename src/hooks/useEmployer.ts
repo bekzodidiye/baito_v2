@@ -28,9 +28,7 @@ export const useEmployer = () => {
       if (!me) return jobs as Job[];
       const myJobs = jobs.filter((j: any) => 
         j.employerId === me.id || 
-        j.employerId === me.uid || 
-        (me.companyName && j.company === me.companyName) ||
-        (me.name && j.company === me.name)
+        j.employerId === me.uid
       );
       // Sort newest first, and active jobs before completed jobs
       const sorted = [...myJobs].sort((a: any, b: any) => {

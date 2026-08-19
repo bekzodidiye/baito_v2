@@ -15,11 +15,19 @@ def read_jobs(
     current_user: Optional[models.User] = Depends(deps.get_current_user_optional),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),
+    employer_id: Optional[str] = None,
 ) -> Any:
     """
     Retrieve jobs. If user is logged in, attach their application status.
     """
-    jobs = db.query(models.Job).order_by(models.Job.createdAt.desc()).offset(skip).limit(limit).all()
+    query = db.query(models.Job)
+    
+    if employer_id:
+        query = query.filter(models.Job.employerId == employer_id)
+    elif current_user and current_user.role == 'employer':
+        query = query.filter(models.Job.employerId == current_user.id)
+        
+    jobs = query.order_by(models.Job.createdAt.desc()).offset(skip).limit(limit).all()
     if not jobs:
         return []
 
