@@ -52,7 +52,7 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
     isLocating,
     distanceToSelectedJob,
     handleCalculateDistance,
-    getDisplayedJobs,
+    displayedJobs,
     handleRefresh,
     handleJobSelect,
     handleLocationAction,
@@ -95,7 +95,7 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
           isPanelExpanded={isPanelExpanded}
           setIsPanelExpanded={setIsPanelExpanded}
           activeCluster={activeCluster}
-          displayedJobs={getDisplayedJobs()}
+          displayedJobs={displayedJobs}
           selectedJob={selectedJob}
           handleJobSelect={handleJobSelect}
           toggleBookmark={toggleBookmark}
