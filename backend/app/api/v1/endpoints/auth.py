@@ -99,7 +99,7 @@ async def verify_sms(request: Request, payload: VerifySMSRequest) -> Any:
     redis_client.delete(f"sms_code:{payload.phone}")
     return {"success": True, "message": "Kodi tasdiqlandi"}
 
-def _set_auth_cookies(response: Response, subject: str, sid: str = None) -> None:
+def _set_auth_cookies(response: Response, subject: str, sid: str = None) -> tuple[str, str]:
     access = security.create_access_token(subject, sid=sid)
     refresh = security.create_refresh_token(subject, sid=sid)
     common = {
@@ -120,6 +120,7 @@ def _set_auth_cookies(response: Response, subject: str, sid: str = None) -> None
         max_age=settings.REFRESH_TOKEN_EXPIRE_MINUTES * 60,
         **common,
     )
+    return access, refresh
 
 def _clear_auth_cookies(response: Response) -> None:
     for name in (settings.ACCESS_COOKIE_NAME, settings.REFRESH_COOKIE_NAME):
@@ -140,7 +141,7 @@ def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> Any:
     """
-    Authenticate and set httpOnly session cookies. No token is returned to JavaScript.
+    Authenticate and set httpOnly session cookies. Also returns tokens for mobile/API clients.
     """
     user = crud.user.authenticate(
         db, email=form_data.username, password=form_data.password
@@ -185,8 +186,14 @@ def login(
     db.commit()
     db.refresh(session_record)
 
-    _set_auth_cookies(response, str(user.uid or user.id), sid=session_record.id)
-    return {"success": True, "role": user.role}
+    access_token, refresh_token = _set_auth_cookies(response, str(user.uid or user.id), sid=session_record.id)
+    return {
+        "success": True,
+        "role": user.role,
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+    }
 
 @router.post("/refresh")
 @limiter.limit("120/minute")
@@ -196,7 +203,7 @@ def refresh(
     db: Session = Depends(deps.get_db),
 ) -> Any:
     """
-    Exchange a valid, unexpired refresh cookie for a fresh session.
+    Exchange a valid, unexpired refresh cookie/header for a fresh session.
     """
     token = deps.get_refresh_token(request)
     if not token:
@@ -221,8 +228,13 @@ def refresh(
             _clear_auth_cookies(response)
             raise HTTPException(status_code=401, detail="Sessiya yaroqsiz")
 
-    _set_auth_cookies(response, str(user.uid or user.id), sid=token_data.sid)
-    return {"success": True}
+    access_token, refresh_token = _set_auth_cookies(response, str(user.uid or user.id), sid=token_data.sid)
+    return {
+        "success": True,
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+    }
 
 @router.post("/logout")
 def logout(

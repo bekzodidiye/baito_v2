@@ -33,21 +33,49 @@ export const setStoredToken = (token: string | null): void => {
   }
 };
 
+export const getStoredRefreshToken = (): string | null => {
+  try {
+    return localStorage.getItem('baito_refresh_token');
+  } catch {
+    return null;
+  }
+};
+
+export const setStoredRefreshToken = (token: string | null): void => {
+  try {
+    if (token) {
+      localStorage.setItem('baito_refresh_token', token);
+    } else {
+      localStorage.removeItem('baito_refresh_token');
+    }
+  } catch {
+    // Ignore storage errors
+  }
+};
+
 // Session refresh using cookie or refresh token
 const refreshSession = async (): Promise<boolean> => {
   try {
     const baseUrl = getApiBaseUrl();
+    const refreshToken = getStoredRefreshToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (refreshToken) {
+      headers['X-Refresh-Token'] = refreshToken;
+    }
     const res = await fetch(`${baseUrl}/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      }
+      headers,
     });
     if (res.ok) {
       const data = await res.json().catch(() => ({}));
       if (data.access_token) {
         setStoredToken(data.access_token);
+      }
+      if (data.refresh_token) {
+        setStoredRefreshToken(data.refresh_token);
       }
       return true;
     }

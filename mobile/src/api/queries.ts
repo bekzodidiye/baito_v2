@@ -1,4 +1,4 @@
-import { apiClient, getApiBaseUrl, setStoredToken } from './client';
+import { apiClient, getApiBaseUrl, setStoredToken, setStoredRefreshToken } from './client';
 import { Job, Chat } from '../types';
 
 // Jobs API
@@ -158,11 +158,15 @@ export const loginApi = async (phone: string, password: string) => {
   if (data.access_token) {
     setStoredToken(data.access_token);
   }
+  if (data.refresh_token) {
+    setStoredRefreshToken(data.refresh_token);
+  }
   return data;
 };
 
 export const logoutApi = async () => {
   setStoredToken(null);
+  setStoredRefreshToken(null);
   const baseUrl = getApiBaseUrl();
   await fetch(`${baseUrl}/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
 };
