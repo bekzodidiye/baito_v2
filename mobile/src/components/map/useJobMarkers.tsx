@@ -110,7 +110,7 @@ export const useJobMarkers = ({
         className: `custom-job-marker-${job.id}`,
         iconSize: [44, 42],
         iconAnchor: [22, 21],
-        popupAnchor: [0, -12]
+        popupAnchor: [0, -28]
       });
 
       const marker = L.marker([coords.lat, coords.lng], { icon: jobIcon });
