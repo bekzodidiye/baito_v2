@@ -110,7 +110,7 @@ export const useJobMarkers = ({
         className: `custom-job-marker-${job.id}`,
         iconSize: [44, 42],
         iconAnchor: [22, 21],
-        popupAnchor: [0, -22]
+        popupAnchor: [0, -12]
       });
 
       const marker = L.marker([coords.lat, coords.lng], { icon: jobIcon });
@@ -118,7 +118,7 @@ export const useJobMarkers = ({
       const popupNode = document.createElement('div');
       marker.bindPopup(popupNode, {
         closeButton: false,
-        offset: [0, -18],
+        offset: [0, 0],
         autoPan: true,
         autoPanPadding: [20, 20]
       });

@@ -121,7 +121,7 @@ body {
 
 /* Custom Leaflet Popup Styling */
 .leaflet-popup {
-  margin-bottom: 6px !important;
+  margin-bottom: 0px !important;
 }
 
 .leaflet-popup-content-wrapper {
@@ -141,6 +141,7 @@ body {
 
 .leaflet-popup-tip-container {
   overflow: visible !important;
+  margin-top: 0px !important;
 }
 
 .leaflet-popup-tip {
