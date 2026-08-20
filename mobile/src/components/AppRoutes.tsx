@@ -67,6 +67,7 @@ const RootRedirect = () => {
 };
 
 export const AppRoutes = () => {
+  const { isLoggedIn } = useApp();
   return (
     <Suspense fallback={<SuspenseFallback />}>
       <Routes>
@@ -93,9 +94,8 @@ export const AppRoutes = () => {
         <Route path="/payments/success" element={<ProtectedRoute allowedRoles={['worker']}><PaymentResult /></ProtectedRoute>} />
         <Route path="/payments/error" element={<ProtectedRoute allowedRoles={['worker']}><PaymentResult /></ProtectedRoute>} />
         <Route path="/taxes" element={<ProtectedRoute allowedRoles={['worker']}><TaxesScreen /></ProtectedRoute>} />
-        <Route path="/verification" element={<ProtectedRoute><VerificationPendingScreen /></ProtectedRoute>} />
-        <Route path="/login" element={<LoginPromptScreen initialMode="login" />} />
-        <Route path="/register" element={<LoginPromptScreen initialMode="register" />} />
+        <Route path="/login" element={isLoggedIn ? <RootRedirect /> : <LoginPromptScreen initialMode="login" />} />
+        <Route path="/register" element={isLoggedIn ? <RootRedirect /> : <LoginPromptScreen initialMode="register" />} />
         <Route path="/settings" element={<ProtectedRoute><SettingsLayout><SettingsScreen /></SettingsLayout></ProtectedRoute>} />
         <Route path="/security" element={<ProtectedRoute><SettingsLayout><SecurityScreen /></SettingsLayout></ProtectedRoute>} />
         <Route path="/help" element={<ProtectedRoute><SettingsLayout><HelpScreen /></SettingsLayout></ProtectedRoute>} />
