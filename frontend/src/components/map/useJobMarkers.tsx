@@ -109,7 +109,8 @@ export const useJobMarkers = ({
         html: jobHtml,
         className: `custom-job-marker-${job.id}`,
         iconSize: [44, 42],
-        iconAnchor: [22, 21]
+        iconAnchor: [22, 21],
+        popupAnchor: [0, -22]
       });
 
       const marker = L.marker([coords.lat, coords.lng], { icon: jobIcon });
@@ -117,7 +118,9 @@ export const useJobMarkers = ({
       const popupNode = document.createElement('div');
       marker.bindPopup(popupNode, {
         closeButton: false,
-        offset: [0, -15]
+        offset: [0, -18],
+        autoPan: true,
+        autoPanPadding: [20, 20]
       });
 
       marker.on('popupopen', () => {
@@ -136,6 +139,15 @@ export const useJobMarkers = ({
             closePopup={() => marker.closePopup()}
           />
         );
+
+        // Immediate and next-frame update to guarantee the popup is positioned dead center right on top of the pin
+        marker.getPopup()?.update();
+        requestAnimationFrame(() => {
+          marker.getPopup()?.update();
+        });
+        setTimeout(() => {
+          marker.getPopup()?.update();
+        }, 30);
       });
 
       marker.on('popupclose', () => {
