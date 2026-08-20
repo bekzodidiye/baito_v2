@@ -1,0 +1,484 @@
+[8/21/26 12:44 AM] gemini: ```html
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchCar 3D Arena Battle</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050505;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .hud-panel {
+            background: rgba(10, 15, 30, 0.75);
+            border: 2px solid #00f0ff;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+            border-radius: 10px;
+            padding: 15px;
+            color: #fff;
+            backdrop-filter: blur(5px);
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #00f0ff;
+            text-shadow: 0 0 8px #00f0ff;
+            margin: 0 0 5px 0;
+        }
+
+        .bar-container {
+            width: 250px;
+            height: 20px;
+            background: #111;
+            border: 1px solid #444;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #ff0055, #ff5500);
+            transition: width 0.1s ease;
+        }
+
+        .boost-fill {
+            background: linear-gradient(90deg, #0088ff, #00f0ff);
+        }
+
+        #controls-hint {
+            color: #aaa;
+            font-size: 14px;
+            text-align: center;
+            background: rgba(0,0,0,0.6);
+            padding: 10px;
+            border-radius: 8px;
+            align-self: center;
+        }
+
+        .speedometer {
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 10px #00f0ff;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="ui-layer">
+        <div class="hud-panel">
+            <h1 class="header-title">WatchCar: Bluewill</h1>
+            <div>Sog'liq:</div>
+            <div class="bar-container">
+                <div id="health-bar" class="bar-fill"></div>
+            </div>
+            <div style="margin-top: 10px;">Tezlanish (BOOST):</div>
+            <div class="bar-container">
+                <div id="boost-bar" class="bar-fill boost-fill"></div>
+            </div>
+        </div>
+
+        <div id="controls-hint">
+            <b>Boshqaruv:</b> Strelkalar / WASD — Yurish va burilish | <b>SPACE</b> — Nitro Tezlanish
+        </div>
+
+        <div class="hud-panel" style="align-self: flex-end;">
+            <div>TEZLIK</div>
+            <div id="speed-display" class="speedometer">0 <span style="font-size: 16px;">KM/H</span></div>
+        </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer;
+        let playerCar, enemyCar;
+        let keys = {};
+        let speed = 0;
+        let maxSpeed = 1.2;
+        let acceleration = 0.02;
+        let friction = 0.96;
+        let steeringAngle = 0;
+        let health = 100;
+        let boost = 100;
+        let particles = [];
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0d1a);
+            scene.fog =
+[8/21/26 12:44 AM] gemini: new THREE.FogExp2(0x0a0d1a, 0.015);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            container.appendChild(renderer.domElement);
+
+            setupLighting();
+            createArena();
+
+            playerCar = createWatchCar(0x0066ff, 0x00f0ff);
+            playerCar.position.set(0, 0, 0);
+            scene.add(playerCar);
+
+            enemyCar = createWatchCar(0xcc0000, 0xff5500);
+            enemyCar.position.set(0, 0, -30);
+            scene.add(enemyCar);
+
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('keydown', (e) => keyse.code = true);
+            window.addEventListener('keyup', (e) => keyse.code = false);
+
+            animate();
+        }
+
+        function setupLighting() {
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            dirLight.position.set(50, 80, 50);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            dirLight.shadow.camera.near = 0.5;
+            dirLight.shadow.camera.far = 200;
+            const d = 60;
+            dirLight.shadow.camera.left = -d;
+            dirLight.shadow.camera.right = d;
+            dirLight.shadow.camera.top = d;
+            dirLight.shadow.camera.bottom = -d;
+            scene.add(dirLight);
+
+            const pointLight = new THREE.PointLight(0x00f0ff, 2, 100);
+            pointLight.position.set(0, 20, 0);
+            scene.add(pointLight);
+        }
+
+        function createArena() {
+            const gridHelper = new THREE.GridHelper(200, 50, 0x00f0ff, 0x112244);
+            gridHelper.position.y = 0.01;
+            scene.add(gridHelper);
+
+            const floorGeo = new THREE.PlaneGeometry(200, 200);
+            const floorMat = new THREE.MeshStandardMaterial({
+                color: 0x080b14,
+                roughness: 0.2,
+                metalness: 0.8
+            });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            const wallMat = new THREE.MeshStandardMaterial({
+                color: 0x00f0ff,
+                emissive: 0x00f0ff,
+                emissiveIntensity: 0.5,
+                roughness: 0.1
+            });
+
+            const wallGeo = new THREE.BoxGeometry(200, 6, 2);
+            
+            const wallN = new THREE.Mesh(wallGeo, wallMat);
+            wallN.position.set(0, 3, -100);
+            scene.add(wallN);
+
+            const wallS = new THREE.Mesh(wallGeo, wallMat);
+            wallS.position.set(0, 3, 100);
+            scene.add(wallS);
+
+            const wallE = new THREE.Mesh(wallGeo, wallMat);
+            wallE.rotation.y = Math.PI / 2;
+            wallE.position.set(100, 3, 0);
+            scene.add(wallE);
+
+            const wallW = new THREE.Mesh(wallGeo, wallMat);
+            wallW.rotation.y = Math.PI / 2;
+            wallW.position.set(-100, 3, 0);
+            scene.add(wallW);
+        }
+
+        function createWatchCar(primaryColor, accentColor) {
+            const carGroup = new THREE.Group();
+
+            const bodyMaterial = new THREE.MeshStandardMaterial({
+                color: primaryColor,
+                metalness: 0.9,
+                roughness: 0.2,
+                envMapIn
+[8/21/26 12:44 AM] gemini: tensity: 1.0
+            });
+
+            const accentMaterial = new THREE.MeshStandardMaterial({
+                color: accentColor,
+                emissive: accentColor,
+                emissiveIntensity: 0.8,
+                metalness: 0.5,
+                roughness: 0.2
+            });
+
+            const glassMaterial = new THREE.MeshPhysicalMaterial({
+                color: 0x111111,
+                metalness: 0.1,
+                roughness: 0.1,
+                transmission: 0.6,
+                transparent: true
+            });
+
+            const wheelMaterial = new THREE.MeshStandardMaterial({
+                color: 0x111111,
+                roughness: 0.5
+            });
+
+            const mainBodyGeo = new THREE.BoxGeometry(2.2, 0.8, 4.5);
+            const mainBody = new THREE.Mesh(mainBodyGeo, bodyMaterial);
+            mainBody.position.y = 0.7;
+            mainBody.castShadow = true;
+            carGroup.add(mainBody);
+
+            const cabinGeo = new THREE.BoxGeometry(1.8, 0.6, 2.2);
+            const cabin = new THREE.Mesh(cabinGeo, glassMaterial);
+            cabin.position.set(0, 1.2, -0.2);
+            cabin.castShadow = true;
+            carGroup.add(cabin);
+
+            const bumperGeo = new THREE.BoxGeometry(2.4, 0.3, 0.8);
+            const bumper = new THREE.Mesh(bumperGeo, accentMaterial);
+            bumper.position.set(0, 0.4, 2.2);
+            bumper.castShadow = true;
+            carGroup.add(bumper);
+
+            const wingGeo = new THREE.BoxGeometry(2.2, 0.1, 0.6);
+            const wing = new THREE.Mesh(wingGeo, bodyMaterial);
+            wing.position.set(0, 1.5, -2.1);
+            carGroup.add(wing);
+
+            const wingSupportGeo = new THREE.BoxGeometry(0.2, 0.4, 0.2);
+            const wingSupp1 = new THREE.Mesh(wingSupportGeo, accentMaterial);
+            wingSupp1.position.set(-0.8, 1.3, -2.1);
+            carGroup.add(wingSupp1);
+            const wingSupp2 = wingSupp1.clone();
+            wingSupp2.position.x = 0.8;
+            carGroup.add(wingSupp2);
+
+            const headlightGeo = new THREE.BoxGeometry(0.5, 0.15, 0.1);
+            const headlightLeft = new THREE.Mesh(headlightGeo, accentMaterial);
+            headlightLeft.position.set(-0.8, 0.7, 2.26);
+            carGroup.add(headlightLeft);
+
+            const headlightRight = headlightLeft.clone();
+            headlightRight.position.x = 0.8;
+            carGroup.add(headlightRight);
+
+            const spotLightL = new THREE.SpotLight(accentColor, 2, 20, Math.PI / 6, 0.5);
+            spotLightL.position.set(-0.8, 0.7, 2.3);
+            spotLightL.target.position.set(-0.8, 0, 10);
+            carGroup.add(spotLightL);
+            carGroup.add(spotLightL.target);
+
+            const spotLightR = spotLightL.clone();
+            spotLightR.position.x = 0.8;
+            spotLightR.target.position.set(0.8, 0, 10);
+            carGroup.add(spotLightR);
+            carGroup.add(spotLightR.target);
+
+            const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 24);
+            wheelGeo.rotateZ(Math.PI / 2);
+
+            const createWheel = (x, z) => {
+                const wheelMesh = new THREE.Mesh(wheelGeo, wheelMaterial);
+                wheelMesh.position.set(x, 0.5, z);
+                wheelMesh.castShadow = true;
+
+                const rimGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.42, 12);
+                rimGeo.rotateZ(Math.PI / 2);
+                const rim = new THREE.Mesh(rimGeo, accentMaterial);
+                wheelMesh.add(rim);
+
+                return wheelMesh;
+            };
+
+            carGroup.wheels = {
+                fl: createWheel(-1.2, 1.4),
+                fr: createWheel(1.2, 1.4),
+                rl: createWheel(-1.2, -1.4),
+                rr: createWheel(1.2, -1.4)
+            };
+
+            carGroup.add(carGroup.wheels.fl);
+            carGroup.add(carGroup.wheels.fr);
+            carGroup.add(carGroup.wheels.rl);
+            carGroup.add(carGroup.wheels.rr);
+
+            return carGroup;
+[8/21/26 12:44 AM] gemini: }
+
+        function createSparks(pos) {
+            for (let i = 0; i < 15; i++) {
+                const geo = new THREE.SphereGeometry(0.08, 8, 8);
+                const mat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+                const p = new THREE.Mesh(geo, mat);
+                p.position.copy(pos);
+                
+                p.velocity = new THREE.Vector3(
+                    (Math.random() - 0.5)  0.5,
+                    Math.random()  0.3 + 0.1,
+                    (Math.random() - 0.5)  0.5
+                );
+                p.life = 1.0;
+                
+                scene.add(p);
+                particles.push(p);
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.position.add(p.velocity);
+                p.life -= 0.04;
+                p.scale.multiplyScalar(0.92);
+                
+                if (p.life <= 0) {
+                    scene.remove(p);
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function updatePhysics() {
+            let isBoosting = false;
+
+            if (keys['Space'] && boost > 0) {
+                isBoosting = true;
+                boost -= 0.8;
+                maxSpeed = 2.0;
+                acceleration = 0.05;
+                createSparks(playerCar.position.clone().add(new THREE.Vector3(0, 0.5, -2)));
+            } else {
+                maxSpeed = 1.2;
+                acceleration = 0.02;
+                if (boost < 100) boost += 0.2;
+            }
+
+            if (keys['ArrowUp'] || keys['KeyW']) {
+                if (speed < maxSpeed) speed += acceleration;
+            } else if (keys['ArrowDown'] || keys['KeyS']) {
+                if (speed > -maxSpeed / 2) speed -= acceleration;
+            } else {
+                speed = friction;
+            }
+
+            const turnSpeed = 0.04  (speed / maxSpeed);
+            if (keys['ArrowLeft'] || keys['KeyA']) {
+                playerCar.rotation.y += turnSpeed;
+                steeringAngle = 0.3;
+            } else if (keys['ArrowRight'] || keys['KeyD']) {
+                playerCar.rotation.y -= turnSpeed;
+                steeringAngle = -0.3;
+            } else {
+                steeringAngle = 0;
+            }
+
+            playerCar.wheels.fl.rotation.y = steeringAngle;
+            playerCar.wheels.fr.rotation.y = steeringAngle;
+            
+            const wheelRot = speed  0.5;
+            playerCar.wheels.fl.rotation.x += wheelRot;
+            playerCar.wheels.fr.rotation.x += wheelRot;
+            playerCar.wheels.rl.rotation.x += wheelRot;
+            playerCar.wheels.rr.rotation.x += wheelRot;
+
+            playerCar.translateZ(speed);
+
+            const bound = 95;
+            if (Math.abs(playerCar.position.x) > bound || Math.abs(playerCar.position.z) > bound) {
+                speed = -speed  0.5;
+                health -= 2;
+                createSparks(playerCar.position);
+            }
+
+            enemyCar.rotation.y += 0.01;
+            enemyCar.translateZ(0.3);
+
+            const dist = playerCar.position.distanceTo(enemyCar.position);
+            if (dist < 3.5) {
+                speed = -speed  0.8;
+                health -= 5;
+                createSparks(playerCar.position.clone().add(enemyCar.position).multiplyScalar(0.5));
+            }
+
+            document.getElementById('speed-display').innerText = ${Math.round(Math.abs(speed) * 120)} KM/H;
+            document.getElementById('health-bar').style.width = ${Math.max(0, health)}%;
+            document.getElementById('boost-bar').style.width = ${Math.max(0, boost)}%;
+        }
+
+        function updateCamera() {
+            const relativeCameraOffset = new THREE.Vector3(0, 5, -12);
+            const cameraOffset = relativeCameraOffset.applyMatrix4(playerCar.matrixWorld);
+
+            camera.position.lerp(cameraOffset, 0.1);
+            camera.lookAt(p
+[8/21/26 12:44 AM] gemini: layerCar.position.clone().add(new THREE.Vector3(0, 1.5, 0)));
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            updatePhysics();
+            updateParticles();
+            updateCamera();
+
+            renderer.render(scene, camera);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
+```  

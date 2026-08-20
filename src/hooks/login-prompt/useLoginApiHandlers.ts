@@ -24,8 +24,20 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
       showToast(t.errorTerms);
       return;
     }
+    // Code validation
+    if (!state.regCode || state.regCode.length < 4) {
+      showToast(language === 'uz' ? "Tasdiqlash kodini kiriting!" : "Введите код подтверждения!");
+      return;
+    }
 
     try {
+      // Step 1: Verify the SMS code
+      await apiClient('/auth/verify-sms', {
+        method: 'POST',
+        body: JSON.stringify({ phone: state.regPhone, code: state.regCode })
+      });
+      
+      // Step 2: Register the user
       const payload = {
         password: state.regPassword,
         name: state.selectedRole === 'worker' ? `${state.firstName} ${state.lastName}` : state.companyName,
@@ -169,5 +181,25 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
     }
   };
 
-  return { handleFinishSubmit, handleLoginSubmit };
+  const handleSendVerificationCode = async () => {
+    if (!state.regPhone || state.regPhone.length < 9) {
+      showToast(language === 'uz' ? "Telefon raqamni to'g'ri kiriting!" : "Введите правильный номер телефона!");
+      return;
+    }
+    state.setIsSendingCode(true);
+    try {
+      await apiClient('/auth/send-sms', {
+        method: 'POST',
+        body: JSON.stringify({ phone: state.regPhone })
+      });
+      state.setIsCodeSent(true);
+      showToast(language === 'uz' ? "Tasdiqlash kodi telefoningizga yuborildi!" : "Код подтверждения отправлен на ваш телефон!");
+    } catch (err) {
+      showToast(language === 'uz' ? "Kodni yuborishda xatolik yuz berdi" : "Ошибка при отправке кода");
+    } finally {
+      state.setIsSendingCode(false);
+    }
+  };
+
+  return { handleFinishSubmit, handleLoginSubmit, handleSendVerificationCode };
 };

@@ -9,7 +9,7 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
   const { language } = useApp();
   const t = LOCAL_TEXTS[language as 'uz' | 'ru' | 'en'] || LOCAL_TEXTS.uz;
   
-  const { handleFinishSubmit, handleLoginSubmit } = useLoginApiHandlers(state, isModal, onClose);
+  const { handleFinishSubmit, handleLoginSubmit, handleSendVerificationCode } = useLoginApiHandlers(state, isModal, onClose);
 
   // File picker handlers
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,6 +132,7 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
     handleProfileSubmit,
     handleDocumentsSubmit,
     handleFinishSubmit,
-    handleLoginSubmit
+    handleLoginSubmit,
+    handleSendVerificationCode
   };
 };

@@ -27,9 +27,14 @@ class Settings(BaseSettings):
     UZUM_SECRET_KEY: str = os.getenv("UZUM_SECRET_KEY", "test_secret_key")
     UZUM_API_URL: str = os.getenv("UZUM_API_URL", "https://api.uzum.uz/epos/v1")
 
+    # TextUp SMS Integration
+    TEXTUP_EMAIL: str = os.getenv("TEXTUP_EMAIL", "")
+    TEXTUP_PASSWORD: str = os.getenv("TEXTUP_PASSWORD", "")
+
     class Config:
-        env_file = "../.env"
+        env_file = ".env"
         case_sensitive = True
+        extra = "ignore"
 
     @property
     def is_production(self) -> bool:
