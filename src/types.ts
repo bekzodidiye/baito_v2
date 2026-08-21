@@ -23,6 +23,12 @@ export interface Job {
   category?: string;
   hiredCount?: number;
   vacancies?: number;
+  hiredWorkers?: {
+    id: string;
+    name: string;
+    phone?: string;
+    avatarUrl?: string;
+  }[];
   views?: number;
   addressDetails?: string;
   workDate?: string;
