@@ -1,15 +1,12 @@
 #!/bin/bash
 # ==========================================
-# Baito Local Backup Sync (DevOps 3-2-1 Rule)
+# Baito Auto Local Backup Sync (DevOps 3-2-1)
 # ==========================================
-# Bu skript AWS S3 dan eng so'nggi backuplarni 
-# kompyuteringizga tortib keladi va faqat 
-# oxirgi 5 ta faylni saqlaydi.
+# Botdan olingan yoki serverdagi barcha yangi
+# backuplarni darhol noutbukka yuklaydi va 
+# ekranga desktop bildirishnoma chiqaradi.
 
 LOCAL_BACKUP_DIR="$HOME/baito_local_backups"
-ENV_FILE="$(dirname "$0")/backend/.env"
-
-# Server MinIO / S3 ma'lumotlari
 AWS_ENDPOINT_URL="http://100.109.46.108:9000"
 AWS_ACCESS_KEY_ID="minioadmin"
 AWS_SECRET_ACCESS_KEY="minioadmin"
@@ -21,16 +18,28 @@ export AWS_SECRET_ACCESS_KEY
 export AWS_DEFAULT_REGION
 
 mkdir -p "$LOCAL_BACKUP_DIR"
-cd "$LOCAL_BACKUP_DIR" || exit
+cd "$LOCAL_BACKUP_DIR" || exit 1
 
-echo "MinIO / S3 dan so'nggi backuplar tortilmoqda..."
-# Serverdagi MinIO dan barcha .sql.gz fayllarni mahalliy papkaga sinxronizatsiya qilish
-aws --endpoint-url "$AWS_ENDPOINT_URL" s3 sync "$S3_BUCKET_PATH" . --exclude "*" --include "*.sql.gz"
+# Server bilan aloqani tezkor tekshirish (1 soniya timeout)
+if ! curl -s --connect-timeout 2 http://100.109.46.108:9000/minio/health/live > /dev/null; then
+    # Server o'chiq yoki tarmoq yo'q bo'lsa indamay chiqib ketadi
+    exit 0
+fi
 
-echo "Eski backuplar tozalanmoqda (Faqat 5 ta eng yangisi qoladi)..."
-# Fayllarni vaqti bo'yicha saralab, 5 tadan eskisini o'chirib tashlaydi
+# Yangi fayllarni yuklab olish
+SYNC_OUTPUT=$(aws --endpoint-url "$AWS_ENDPOINT_URL" s3 sync "$S3_BUCKET_PATH" . --exclude "*" --include "*.sql.gz" 2>&1)
+
+# Agar yangi fayl yuklangan bo'lsa:
+if echo "$SYNC_OUTPUT" | grep -q "download:"; then
+    NEW_FILE=$(echo "$SYNC_OUTPUT" | grep "download:" | head -n 1 | awk '{print $NF}')
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] 🚀 Yangi zaxira yuklandi: $NEW_FILE"
+    
+    # Linux Desktop Notification (Ekrandagi xabar)
+    if command -v notify-send >/dev/null 2>&1; then
+        notify-send "📦 Baito Yangi Zaxira!" "Yangi zaxira noutbukingizga saqlandi: $NEW_FILE" -u normal -t 5000 2>/dev/null || true
+    fi
+fi
+
+# Faqat eng so'nggi 5 ta faylni saqlash (eskilarini tozalash)
 ls -tp | grep -v '/$' | tail -n +6 | xargs -I {} rm -f -- {} 2>/dev/null || true
-
-echo "✅ Lokal backup muvaffaqiyatli yakunlandi! Papka: $LOCAL_BACKUP_DIR"
-ls -lh "$LOCAL_BACKUP_DIR"
 
