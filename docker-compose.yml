@@ -147,14 +147,15 @@ services:
         condition: service_healthy
     volumes:
       - ./backups:/app/backups
+      - ./backend/scripts/backup_bot.py:/app/backup_bot.py:ro
     env_file:
       - path: ./backend/.env
         required: false
     environment:
       - TZ=Asia/Tashkent
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
-      - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-8353860449:AAEyDNlIDPyChViJAsgyhq7oDCQ11RT9dBM}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-5678281376}
+      - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID:-}
       - POSTGRES_USER=${POSTGRES_USER:-user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
       - POSTGRES_DB=${POSTGRES_DB:-baito}
