@@ -40,14 +40,36 @@ def read_jobs(
             models.Application.jobId.in_(job_ids),
         ).all()
 
-    # One grouped count instead of a COUNT query per job.
-    hired_rows = db.query(
-        models.Application.jobId, func.count(models.Application.id)
-    ).filter(
+    # Fetch all hired applications for the retrieved jobs to get worker details
+    hired_apps = db.query(models.Application).filter(
         models.Application.jobId.in_(job_ids),
         models.Application.status.in_(HIRED_STATUSES),
-    ).group_by(models.Application.jobId).all()
-    hired_counts = {job_id: count for job_id, count in hired_rows}
+    ).all()
+
+    # One grouped count instead of a COUNT query per job.
+    hired_counts = {}
+    job_hired_workers = {}
+    if hired_apps:
+        # Group counts
+        for app in hired_apps:
+            hired_counts[app.jobId] = hired_counts.get(app.jobId, 0) + 1
+        
+        # Fetch worker info
+        hired_worker_ids = list(set([app.workerId for app in hired_apps]))
+        hired_users = db.query(models.User).filter(models.User.id.in_(hired_worker_ids)).all()
+        user_map = {user.id: user for user in hired_users}
+
+        for app in hired_apps:
+            user = user_map.get(app.workerId)
+            if user:
+                if app.jobId not in job_hired_workers:
+                    job_hired_workers[app.jobId] = []
+                job_hired_workers[app.jobId].append({
+                    "id": user.id,
+                    "name": user.fullName or "Foydalanuvchi",
+                    "phone": user.phone,
+                    "avatarUrl": user.avatarUrl
+                })
 
     result = []
     for job in jobs:
@@ -77,6 +99,7 @@ def read_jobs(
 
         job_dict.hiredCount = hired_cnt
         job_dict.vacancies = vacancies_num
+        job_dict.hiredWorkers = job_hired_workers.get(job.id, [])
 
         # Check if job is filled or completed
         is_filled = (hired_cnt >= vacancies_num) or (job.status in ['completed', 'in_progress'])
