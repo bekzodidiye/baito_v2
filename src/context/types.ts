@@ -1,6 +1,6 @@
 import { Job, Chat, Message } from '../types';
 
-export type ScreenType = 'landing' | 'calendar' | 'jobs' | 'messages' | 'jobs' | 'chat' | 'notifications' | 'profile' | 'reviews' | 'applications' | 'verification' | 'payments' | 'login' | 'register' | 'settings' | 'security' | 'help' | 'faq' | 'guide' | 'terms' | 'support-chat' | 'employer-dashboard' | 'employer-jobs' | 'employer-applicants' | 'employer-chats' | 'employer-profile' | 'employer-analytics' | 'employer-post' | 'admin';
+export type ScreenType = 'landing' | 'calendar' | 'jobs' | 'messages' | 'chat' | 'notifications' | 'profile' | 'reviews' | 'applications' | 'verification' | 'payments' | 'login' | 'register' | 'settings' | 'security' | 'help' | 'faq' | 'guide' | 'terms' | 'support-chat' | 'employer-dashboard' | 'employer-jobs' | 'employer-applicants' | 'employer-chats' | 'employer-profile' | 'employer-analytics' | 'employer-post' | 'admin';
 
 export interface UserProfile {
   id: string;

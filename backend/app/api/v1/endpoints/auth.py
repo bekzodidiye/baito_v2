@@ -39,12 +39,17 @@ async def send_verification_sms(
     if not settings.TEXTUP_EMAIL or not settings.TEXTUP_PASSWORD:
         return {"success": True, "message": "SMS simulated (no credentials)"}
 
-    # Generate a random 6-digit code
-    import random
-    code = f"{random.randint(100000, 999999)}"
+    # Generate a cryptographically secure 6-digit code
+    import secrets
+    code = f"{secrets.SystemRandom().randint(100000, 999999)}"
     
-    # Save to memory (simulated cache)
-    sms_verification_codes[payload.phone] = code
+    # Save to memory with 5-minute expiration and max attempt count
+    import time
+    sms_verification_codes[payload.phone] = {
+        "code": code,
+        "expires_at": time.time() + 300,
+        "attempts": 0
+    }
     
     # Simulate saving to DB or cache
     # In a real app, save to Redis or DB with expiration
@@ -93,14 +98,31 @@ async def send_verification_sms(
         return {"success": True, "message": "SMS sent (simulated)"}
 
 @router.post("/verify-sms")
-async def verify_sms(payload: VerifySMSRequest) -> Any:
+@limiter.limit("5/minute")
+async def verify_sms(request: Request, payload: VerifySMSRequest) -> Any:
     """
     Verify the SMS code sent to the user.
     """
-    stored_code = sms_verification_codes.get(payload.phone)
-    if not stored_code:
+    import time
+    stored_entry = sms_verification_codes.get(payload.phone)
+    if not stored_entry:
         raise HTTPException(status_code=400, detail="Tasdiqlash kodi topilmadi yoki muddati o'tgan")
+    
+    # Check format (new dict structure or backward compatible string)
+    if isinstance(stored_entry, dict):
+        if time.time() > stored_entry.get("expires_at", 0):
+            sms_verification_codes.pop(payload.phone, None)
+            raise HTTPException(status_code=400, detail="Tasdiqlash kodi muddati o'tgan")
         
+        stored_entry["attempts"] = stored_entry.get("attempts", 0) + 1
+        if stored_entry["attempts"] > 5:
+            sms_verification_codes.pop(payload.phone, None)
+            raise HTTPException(status_code=429, detail="Ko'p noto'g'ri urinishlar. Iltimos, yangi kod so'rang")
+        
+        stored_code = stored_entry.get("code")
+    else:
+        stored_code = stored_entry
+
     if stored_code != payload.code:
         raise HTTPException(status_code=400, detail="Tasdiqlash kodi xato")
         
