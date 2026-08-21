@@ -17,6 +17,7 @@ MAX_BACKUPS_TO_KEEP = 5
 # --- Configuration ---
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+TELEGRAM_CHANNEL_ID = os.getenv("TELEGRAM_CHANNEL_ID")
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "minioadmin")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "minioadmin")
@@ -30,7 +31,31 @@ POSTGRES_DB = os.getenv("POSTGRES_DB", "baito")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST", "db")
 
 BACKUPS_DIR = "/app/backups"
+CHANNEL_CONFIG_FILE = "/app/backups/channel_id.txt"
 os.makedirs(BACKUPS_DIR, exist_ok=True)
+
+def get_channel_id():
+    ch = os.getenv("TELEGRAM_CHANNEL_ID")
+    if ch:
+        return ch
+    if os.path.exists(CHANNEL_CONFIG_FILE):
+        try:
+            with open(CHANNEL_CONFIG_FILE, "r") as f:
+                saved = f.read().strip()
+                if saved:
+                    return saved
+        except Exception:
+            pass
+    return None
+
+def set_channel_id(new_id):
+    try:
+        with open(CHANNEL_CONFIG_FILE, "w") as f:
+            f.write(str(new_id).strip())
+        return True
+    except Exception as e:
+        print(f"Kanal ID saqlashda xatolik: {e}")
+        return False
 
 if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
     print("TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set")
@@ -271,6 +296,54 @@ def handle_status_cmd(message):
     if not is_authorized(message): return
     send_status_message(message.chat.id)
 
+# --- Channel Detection & Configuration Handlers ---
+@bot.channel_post_handler(func=lambda msg: True)
+def handle_channel_post(message):
+    set_channel_id(message.chat.id)
+    print(f"✅ Kanal aniqlandi va saqlandi: {message.chat.id} ({getattr(message.chat, 'title', '')})")
+
+@bot.my_chat_member_handler()
+def handle_bot_membership(event):
+    if event.chat.type in ['channel', 'supergroup', 'group']:
+        set_channel_id(event.chat.id)
+        print(f"✅ Bot kanalga qo'shildi: {event.chat.id} ({getattr(event.chat, 'title', '')})")
+        try:
+            bot.send_message(
+                TELEGRAM_CHAT_ID,
+                f"📢 *Baito Backup Kanalga Ulandi!*\n\nKanal: *{getattr(event.chat, 'title', '')}*\nID: `{event.chat.id}`\n\nEndi barcha yangi bazaviy zaxiralar ushbu kanalga ham avtomatik yuboriladi ✅",
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
+
+@bot.message_handler(commands=['setchannel'])
+def handle_set_channel(message):
+    if not is_authorized(message): return
+    parts = message.text.split()
+    if len(parts) > 1:
+        ch_id = parts[1].strip()
+        set_channel_id(ch_id)
+        bot.reply_to(message, f"✅ Kanal ID muvaffaqiyatli saqlandi: `{ch_id}`\nBarcha yangi zaxiralar ushbu kanalga ham yuboriladi.", parse_mode="Markdown")
+    else:
+        bot.reply_to(
+            message,
+            "ℹ️ *Kanalni ulash uchun:*\n1. Botni kanalingizga **Admin** qilib qo'shing.\n2. Kanaldan biror xabarni shu botga **Forward** qiling yoki `/setchannel -100xxxxxxxxxx` yuboring.",
+            parse_mode="Markdown"
+        )
+
+@bot.message_handler(func=lambda msg: msg.forward_from_chat is not None)
+def handle_forwarded_channel_msg(message):
+    if not is_authorized(message): return
+    if message.forward_from_chat.type in ['channel', 'supergroup']:
+        ch_id = message.forward_from_chat.id
+        ch_title = message.forward_from_chat.title
+        set_channel_id(ch_id)
+        bot.reply_to(
+            message,
+            f"✅ *Kanal Muvaffaqiyatli Ulandi!*\n\n📢 Kanal nomi: *{ch_title}*\n🆔 Kanal ID: `{ch_id}`\n\nEndi barcha yangi bazaviy zaxiralar avtomatik ravishda ushbu kanalga ham yuboriladi 🚀",
+            parse_mode="Markdown"
+        )
+
 # --- Button Text Router ---
 @bot.message_handler(func=lambda msg: True)
 def handle_menu_buttons(message):
@@ -336,7 +409,7 @@ def run_backup_operation(chat_id):
         # 2. Cleanup old backups beyond the last 5 on disk and in MinIO
         cleanup_old_backups()
 
-        # 3. Send the actual backup file directly to Telegram chat
+        # 3. Send the actual backup file directly to Telegram Admin chat
         with open(backup_file_path, 'rb') as doc_file:
             caption = (
                 f"✅ *PostgreSQL Zaxira Nusxasi Tayyor!*\n\n"
@@ -347,6 +420,16 @@ def run_backup_operation(chat_id):
                 f"🧹 Xotira: Faqat eng so'nggi {MAX_BACKUPS_TO_KEEP} ta zaxira saqlanmoqda"
             )
             bot.send_document(chat_id, doc_file, caption=caption, parse_mode="Markdown")
+
+        # 4. If channel ID is set, send to channel as well
+        ch_id = get_channel_id()
+        if ch_id and str(ch_id) != str(chat_id):
+            try:
+                with open(backup_file_path, 'rb') as doc_file:
+                    bot.send_document(ch_id, doc_file, caption=caption, parse_mode="Markdown")
+                print(f"✅ Zaxira fayli kanalga ({ch_id}) yuborildi.")
+            except Exception as ch_err:
+                print(f"⚠️ Kanalga ({ch_id}) yuborishda xatolik: {ch_err}")
             
         bot.delete_message(chat_id, status_msg.message_id)
         
