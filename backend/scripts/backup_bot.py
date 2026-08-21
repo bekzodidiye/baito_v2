@@ -3,6 +3,7 @@ import sys
 import time
 import shutil
 import subprocess
+import threading
 from datetime import datetime, timezone, timedelta
 import telebot
 from telebot import types
@@ -331,12 +332,28 @@ def handle_set_channel(message):
             parse_mode="Markdown"
         )
 
+@bot.message_handler(commands=['channel'])
+def handle_channel_cmd(message):
+    if not is_authorized(message): return
+    ch_id = get_channel_id()
+    if ch_id:
+        bot.reply_to(message, f"📢 *Ulangan Kanal Holati:*\n\n🆔 Kanal ID: `{ch_id}`\n✅ Barcha yangi zaxiralar ushbu kanalga yuborilmoqda.", parse_mode="Markdown")
+    else:
+        bot.reply_to(
+            message,
+            "📢 *Kanal hali ulanmagan!*\n\n"
+            "Ulashingiz uchun:\n"
+            "1. Botni kanalingizga **Administrator (Admin)** qilib qo'shing (*Xabarlar yuborish ruxsati bilan*).\n"
+            "2. Kanaldan birorta xabarni shu botga **Forward (Yo'naltirish)** qiling yoki `/setchannel -100xxxxxxxxxx` yuboring.",
+            parse_mode="Markdown"
+        )
+
 @bot.message_handler(func=lambda msg: msg.forward_from_chat is not None)
 def handle_forwarded_channel_msg(message):
     if not is_authorized(message): return
     if message.forward_from_chat.type in ['channel', 'supergroup']:
         ch_id = message.forward_from_chat.id
-        ch_title = message.forward_from_chat.title
+        ch_title = message.forward_from_chat.title or "Kanal"
         set_channel_id(ch_id)
         bot.reply_to(
             message,
@@ -600,14 +617,33 @@ def register_bot_commands():
             telebot.types.BotCommand("backup", "⚡ Zudlik bilan yangi zaxira olish"),
             telebot.types.BotCommand("list", "📦 Zaxiralar ro'yxatini ko'rish"),
             telebot.types.BotCommand("status", "📊 Baza va tizim holati"),
+            telebot.types.BotCommand("channel", "📢 Ulangan kanal holati"),
             telebot.types.BotCommand("help", "ℹ️ Yordam va qo'llanma"),
         ])
         print("✅ Telegram bot menyu buyruqlari muvaffaqiyatli ro'yxatdan o'tkazildi.")
     except Exception as e:
         print(f"⚠️ Bot buyruqlarini ro'yxatdan o'tkazishda ogohlantirish: {e}")
 
+def scheduled_backup_worker():
+    """Server orqa fonida har 6 soatda avtomatik zaxira oladi va yuboradi."""
+    time.sleep(30)  # Ishga tushgandan 30s keyin
+    while True:
+        try:
+            print("⏰ [Avtomatik Zaxira]: Rejalashtirilgan 6 soatlik zaxira olish boshlanmoqda...")
+            run_backup_operation(TELEGRAM_CHAT_ID)
+        except Exception as e:
+            print(f"Scheduled backup xatolik: {e}")
+        # Har 6 soatda (6 * 3600 soniya)
+        time.sleep(6 * 3600)
+
 if __name__ == "__main__":
     print("Starting Baito Backup & System Bot (Full Interactive Menu Mode)...")
     ensure_bucket()
     register_bot_commands()
+    
+    # Start auto-backup thread in background
+    scheduler_thread = threading.Thread(target=scheduled_backup_worker, daemon=True)
+    scheduler_thread.start()
+    print("✅ 6 soatlik avtomatik zaxira xizmati ishga tushirildi.")
+    
     bot.infinity_polling()
