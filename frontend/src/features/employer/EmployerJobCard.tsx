@@ -132,7 +132,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
               <CheckCircle2 size={12} />
               {language === 'uz' ? "Yopildi" : language === 'ru' ? "Завершено" : "Closed"}
             </span>
-          ) : job.status === 'in_progress' ? (
+          ) : job.status === 'in_progress' || job.status === 'start_requested' ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -143,6 +143,11 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
               <CheckCircle2 size={12} />
               {language === 'uz' ? "Yakunlash" : language === 'ru' ? "Завершить" : "Complete"}
             </button>
+          ) : job.status === 'confirmed' ? (
+            <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/60 text-[10px] font-bold flex items-center gap-1">
+              <CheckCircle2 size={12} />
+              {language === 'uz' ? "Ishchi olindi" : language === 'ru' ? "Работник нанят" : "Worker Hired"}
+            </span>
           ) : (
             <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60 text-[10px] font-bold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />

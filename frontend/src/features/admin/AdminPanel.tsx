@@ -98,7 +98,7 @@ export const AdminPanel: React.FC = () => {
           )}
 
           {activeTab === 'disputes' && (
-            <AdminDisputes jobs={jobs} onChangeJobStatus={changeJobStatus} />
+            <AdminDisputes />
           )}
 
           {activeTab === 'transactions' && (

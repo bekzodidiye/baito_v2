@@ -1,54 +1,38 @@
 import React, { useState } from 'react';
 import { PromoCode } from './types';
+import { useAdminData } from './useAdminData';
+import { apiClient } from '../../api/client';
 import { Ticket, Plus, Calendar } from 'lucide-react';
 import { AddPromoModal } from './AddPromoModal';
 
-const INITIAL_PROMOS: PromoCode[] = [
-  {
-    id: 'promo-1',
-    code: 'BAITO2026',
-    discountType: 'percentage',
-    amount: 10,
-    usageCount: 420,
-    maxUsage: 1000,
-    expiresAt: '2026-12-31',
-    isActive: true,
-    forNewUsersOnly: false,
-  },
-  {
-    id: 'promo-2',
-    code: 'YANGISHCHI',
-    discountType: 'fixed',
-    amount: 15000,
-    usageCount: 88,
-    maxUsage: 200,
-    expiresAt: '2026-08-15',
-    isActive: true,
-    forNewUsersOnly: true,
-  },
-  {
-    id: 'promo-3',
-    code: 'PROMO_SUMMER',
-    discountType: 'percentage',
-    amount: 15,
-    usageCount: 500,
-    maxUsage: 500,
-    expiresAt: '2026-06-30',
-    isActive: false,
-    forNewUsersOnly: false,
-  },
-];
+
 
 export const AdminPromotions: React.FC = () => {
-  const [promos, setPromos] = useState<PromoCode[]>(INITIAL_PROMOS);
+  const { promotions: promos, refresh } = useAdminData();
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const handleAddPromo = (newPromo: PromoCode) => {
-    setPromos([newPromo, ...promos]);
+  const handleAddPromo = async (newPromo: PromoCode) => {
+    try {
+      await apiClient('/admin/promotions', {
+        method: 'POST',
+        body: JSON.stringify(newPromo)
+      });
+      refresh();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const toggleStatus = (id: string) => {
-    setPromos(promos.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p)));
+  const toggleStatus = async (id: string, currentStatus?: boolean) => {
+    try {
+      await apiClient(`/admin/promotions/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isActive: !currentStatus })
+      });
+      refresh();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
@@ -82,7 +66,7 @@ export const AdminPromotions: React.FC = () => {
                 {p.code}
               </span>
               <button
-                onClick={() => toggleStatus(p.id)}
+                onClick={() => toggleStatus(p.id, p.isActive)}
                 className={`px-2.5 py-1 text-[10px] font-bold rounded-full transition cursor-pointer ${
                   p.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
                 }`}

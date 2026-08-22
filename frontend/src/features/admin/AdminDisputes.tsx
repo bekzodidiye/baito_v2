@@ -1,26 +1,36 @@
-import React from 'react';
-import { AdminJob } from './types';
+import React, { useState } from 'react';
+import { AdminDispute, AdminJob } from './types';
 import { AlertTriangle, ShieldCheck, ArrowRightLeft, DollarSign, CheckCircle2 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import { showToast } from '../../utils/toast';
+import { useAdminData } from './useAdminData';
+import { apiClient } from '../../api/client';
 
-interface AdminDisputesProps {
-  jobs: AdminJob[];
-  onChangeJobStatus: (jobId: string, status: string) => void;
-}
+export const AdminDisputes: React.FC = () => {
+  const { disputes, jobs, refresh } = useAdminData();
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
 
-export const AdminDisputes: React.FC<AdminDisputesProps> = ({ jobs, onChangeJobStatus }) => {
-  const { } = useApp();
+  const disputeJobs = disputes.filter(d => d.status === 'open' || d.status === 'in_progress');
 
-  const disputeJobs = jobs.filter((j) => j.status === 'dispute' || j.status === 'in_progress');
-
-  const handleResolve = (jobId: string, winner: 'employer' | 'worker') => {
-    onChangeJobStatus(jobId, winner === 'worker' ? 'completed' : 'cancelled');
-    (
-      winner === 'worker'
-        ? "Nizo hal qilindi: Escrow mablag'i Ishchiga o'tkazildi"
-        : "Nizo hal qilindi: Escrow mablag'i Ish beruvchiga qaytarildi"
-    );
+  const handleResolve = async (disputeId: string, jobId: string, winner: 'employer' | 'worker') => {
+    setResolvingId(disputeId);
+    try {
+      await apiClient(`/admin/jobs/${jobId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: winner === 'worker' ? 'completed' : 'cancelled' })
+      });
+      await apiClient(`/admin/disputes/${disputeId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'resolved', adminNotes: `Resolved in favor of ${winner}` })
+      });
+      refresh();
+      (
+        winner === 'worker'
+          ? "Nizo hal qilindi: Escrow mablag'i Ishchiga o'tkazildi"
+          : "Nizo hal qilindi: Escrow mablag'i Ish beruvchiga qaytarildi"
+      );
+    } catch(e) {
+      console.error(e);
+    }
+    setResolvingId(null);
   };
 
   return (
@@ -53,12 +63,12 @@ export const AdminDisputes: React.FC<AdminDisputesProps> = ({ jobs, onChangeJobS
                   </span>
                   <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
                     <DollarSign size={13} />
-                    {(parseFloat(j.salary || '0')).toLocaleString('uz-UZ')} UZS
+                    {jobs.find(job => job.id === j.jobId)?.salary || 'N/A'}
                   </span>
                 </div>
 
-                <h3 className="font-extrabold text-slate-900 text-base">{j.title}</h3>
-                <p className="text-xs text-slate-500 mt-1 font-medium">{j.company} • {j.location}</p>
+                <h3 className="font-extrabold text-slate-900 text-base">{j.jobTitle}</h3>
+                <p className="text-xs text-slate-500 mt-1 font-medium">{j.employerName} • {j.workerName}</p>
 
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 mt-3 text-xs text-slate-700 font-medium space-y-1">
                   <div className="font-bold text-slate-900 flex items-center gap-1">
@@ -66,21 +76,23 @@ export const AdminDisputes: React.FC<AdminDisputesProps> = ({ jobs, onChangeJobS
                     Shikoyat mazmuni:
                   </div>
                   <p className="text-slate-600 text-[11px] leading-relaxed">
-                    "Ish topshirilgan muddatda sifatli bajarilmadi / ish beruvchi to'lovni tasdiqlamayapti"
+                    {j.reason || "Ish topshirilgan muddatda sifatli bajarilmadi / ish beruvchi to'lovni tasdiqlamayapti"}
                   </p>
                 </div>
               </div>
 
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                 <button
-                  onClick={() => handleResolve(j.id, 'employer')}
-                  className="flex-1 py-2 px-3 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-xl transition-colors cursor-pointer text-center"
+                  onClick={() => handleResolve(j.id, j.jobId, 'employer')}
+                  disabled={resolvingId === j.id}
+                  className="flex-1 py-2 px-3 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-xl transition-colors cursor-pointer text-center disabled:opacity-50"
                 >
                   Ish beruvchiga qaytarish
                 </button>
                 <button
-                  onClick={() => handleResolve(j.id, 'worker')}
-                  className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1"
+                  onClick={() => handleResolve(j.id, j.jobId, 'worker')}
+                  disabled={resolvingId === j.id}
+                  className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50"
                 >
                   <CheckCircle2 size={14} />
                   Ishchiga to'lash

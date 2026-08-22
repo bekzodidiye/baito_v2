@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Star, EyeOff, Snowflake, Trash2, CreditCard, X, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Plus, Star, EyeOff, Snowflake, Trash2, CreditCard, X, AlertTriangle, Info, CheckCircle2, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
@@ -16,6 +16,7 @@ export const MyCardsScreen: React.FC = () => {
   const user = useAuthStore(state => state.userProfile);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; type: 'delete' | 'freeze'; cardId: string | null; isActive?: boolean }>({ isOpen: false, type: 'delete', cardId: null });
+  const [infoModal, setInfoModal] = useState<{ isOpen: boolean; card: any | null }>({ isOpen: false, card: null });
 
   const { data: savedCards = [] } = useQuery({
     queryKey: ['paymentCards'],
@@ -187,48 +188,29 @@ export const MyCardsScreen: React.FC = () => {
         
         {/* Quick Actions (only show if there's a primary card) */}
         {primaryCard && (
-          <div className="flex justify-between items-center px-2">
+          <div className="flex justify-center gap-6 items-center px-2">
+            <button 
+              onClick={() => {
+                setInfoModal({ isOpen: true, card: primaryCard });
+              }}
+              className="flex flex-col items-center gap-2 group cursor-pointer"
+            >
+              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-800 shadow-sm group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors group-active:scale-95">
+                <Info className="w-7 h-7" />
+              </div>
+              <span className="text-[13px] font-bold text-slate-600">Ma'lumotlar</span>
+            </button>
+
             <button 
               onClick={() => {
                 window.dispatchEvent(new CustomEvent('global-toast', { detail: { message: "Asosiy karta qilib belgilandi", type: 'success' } }));
               }}
               className="flex flex-col items-center gap-2 group cursor-pointer"
             >
-              <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-800 shadow-sm group-hover:bg-amber-50 group-hover:text-amber-500 transition-colors group-active:scale-95">
-                <Star className="w-6 h-6" />
+              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-800 shadow-sm group-hover:bg-amber-50 group-hover:text-amber-500 transition-colors group-active:scale-95">
+                <Star className="w-7 h-7" />
               </div>
-              <span className="text-[12px] font-bold text-slate-600">Asosiy qilish</span>
-            </button>
-            
-            <button 
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('global-toast', { detail: { message: "Karta yashirildi (faqat sizga ko'rinmaydi)", type: 'success' } }));
-              }}
-              className="flex flex-col items-center gap-2 group cursor-pointer"
-            >
-              <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-800 shadow-sm group-hover:bg-slate-200 transition-colors group-active:scale-95">
-                <EyeOff className="w-6 h-6" />
-              </div>
-              <span className="text-[12px] font-bold text-slate-600">Yashirish</span>
-            </button>
-            
-            <button 
-              onClick={() => {
-                setConfirmModal({ isOpen: true, type: 'freeze', cardId: primaryCard.id, isActive: primaryCard.isActive });
-              }}
-              className="flex flex-col items-center gap-2 group cursor-pointer"
-              disabled={updateCardMutation.isPending}
-            >
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-sm transition-colors group-active:scale-95 ${
-                primaryCard.isActive === false 
-                  ? 'bg-blue-100 text-blue-600 group-hover:bg-blue-200' 
-                  : 'bg-slate-100 text-slate-800 group-hover:bg-slate-200'
-              }`}>
-                <Snowflake className={`w-6 h-6 ${primaryCard.isActive === false ? 'animate-pulse' : ''}`} />
-              </div>
-              <span className={`text-[12px] font-bold ${primaryCard.isActive === false ? 'text-blue-600' : 'text-slate-600'}`}>
-                {primaryCard.isActive === false ? 'Faollashtirish' : 'Muzlatish'}
-              </span>
+              <span className="text-[13px] font-bold text-slate-600">Asosiy qilish</span>
             </button>
             
             <button 
@@ -238,10 +220,10 @@ export const MyCardsScreen: React.FC = () => {
               disabled={deleteCardMutation.isPending}
               className="flex flex-col items-center gap-2 group cursor-pointer"
             >
-              <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-red-600 shadow-sm group-hover:bg-red-100 transition-colors group-active:scale-95">
-                <Trash2 className="w-6 h-6" />
+              <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center text-red-600 shadow-sm group-hover:bg-red-100 transition-colors group-active:scale-95">
+                <Trash2 className="w-7 h-7" />
               </div>
-              <span className="text-[12px] font-bold text-red-600">O'chirish</span>
+              <span className="text-[13px] font-bold text-red-600">O'chirish</span>
             </button>
           </div>
         )}
@@ -289,6 +271,78 @@ export const MyCardsScreen: React.FC = () => {
           </p>
         </div>
       </main>
+
+      {/* Card Info Modal */}
+      <AnimatePresence>
+        {infoModal.isOpen && infoModal.card && (
+          <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 sm:p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setInfoModal({ isOpen: false, card: null })}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-[4px]"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative bg-white w-full max-w-sm rounded-[24px] shadow-2xl overflow-hidden flex flex-col z-10"
+            >
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-slate-800">Karta ma'lumotlari</h3>
+                  <button 
+                    onClick={() => setInfoModal({ isOpen: false, card: null })}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-3 border-b border-slate-100">
+                    <span className="text-slate-500 font-medium text-sm">Bank nomi</span>
+                    <span className="text-slate-800 font-bold capitalize">{infoModal.card.bank || infoModal.card.type || infoModal.card.cardType || 'Karta'}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center py-3 border-b border-slate-100">
+                    <span className="text-slate-500 font-medium text-sm">Karta egasi</span>
+                    <span className="text-slate-800 font-bold uppercase">{infoModal.card.cardholderName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Foydalanuvchi'}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-3 border-b border-slate-100">
+                    <span className="text-slate-500 font-medium text-sm">Karta raqami</span>
+                    <span className="text-slate-800 font-mono font-bold tracking-wider">**** **** **** {infoModal.card.last4}</span>
+                  </div>
+                  
+                  {infoModal.card.expiry && (
+                    <div className="flex justify-between items-center py-3 border-b border-slate-100">
+                      <span className="text-slate-500 font-medium text-sm">Amal qilish muddati</span>
+                      <span className="text-slate-800 font-mono font-bold">{infoModal.card.expiry}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center py-3 border-b border-slate-100">
+                    <span className="text-slate-500 font-medium text-sm">Holati</span>
+                    <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
+                      <CheckCircle2 size={14} className="stroke-[2.5]" />
+                      <span className="text-xs font-bold uppercase">Faol</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setInfoModal({ isOpen: false, card: null })}
+                  className="w-full mt-8 py-3.5 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 active:scale-95 transition-all shadow-lg shadow-slate-800/20"
+                >
+                  Yopish
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Confirmation Modal */}
       <AnimatePresence>

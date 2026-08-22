@@ -36,28 +36,48 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
       <div className={`flex items-start gap-3 ${app.status !== 'applied' ? 'mt-4' : ''}`}>
         <div className="relative">
           <img
-            src={app.candidateAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60"}
-            alt={app.candidateName}
+            src={app.workerAvatar || app.candidateAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60"}
+            alt={app.workerName || app.candidateName}
             className="w-12 h-12 rounded-full object-cover shrink-0 border border-slate-100"
             referrerPolicy="no-referrer"
           />
           <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white text-[9px] font-black px-1 rounded flex items-center gap-0.5 border-2 border-white shadow-xs">
             <Star size={8} className="fill-white" />
-            {app.rating || '5.0'}
+            {app.workerRating ? app.workerRating.toFixed(1) : (app.rating || '5.0')}
           </div>
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-display font-black text-sm text-slate-800 truncate">
-            {app.candidateName}
+            {app.workerName || app.candidateName}
           </h3>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-[10px] text-slate-500 font-bold">{app.candidateName.length % 2 === 0 ? "24 yosh, Erkak" : "21 yosh, Ayol"}</span>
+            <span className="text-[10px] text-slate-500 font-bold">
+              {(() => {
+                const parts = [];
+                if (app.workerBirthDate) {
+                  const birthYear = new Date(app.workerBirthDate).getFullYear();
+                  const currentYear = new Date().getFullYear();
+                  parts.push(`${currentYear - birthYear} yosh`);
+                }
+                if (app.workerGender) {
+                  const genderLower = app.workerGender.toLowerCase();
+                  if (genderLower === 'erkak' || genderLower === 'male') {
+                    parts.push('Erkak');
+                  } else if (genderLower === 'ayol' || genderLower === 'female') {
+                    parts.push('Ayol');
+                  } else {
+                    parts.push(app.workerGender);
+                  }
+                }
+                return parts.length > 0 ? parts.join(', ') : (app.workerName?.length % 2 === 0 ? "24 yosh, Erkak" : "21 yosh, Ayol");
+              })()}
+            </span>
           </div>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        {["Tajribali", "Tezkor", "Mas'uliyatli"].map((skill, idx) => (
+        {(app.workerSkills && app.workerSkills.length > 0 ? app.workerSkills : ["Tajribali", "Tezkor", "Mas'uliyatli"]).map((skill: string, idx: number) => (
           <span key={idx} className="px-2 py-1 bg-slate-50 text-slate-600 text-[10px] font-bold rounded-md border border-slate-100">
             {skill}
           </span>
@@ -69,21 +89,21 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
           <Briefcase size={14} className="text-slate-400 stroke-[2]" />
           <div className="flex flex-col">
             <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">{language === 'uz' ? "Ishlar" : language === 'ru' ? "Работы" : "Jobs"}</span>
-            <span className="text-[11px] font-black text-slate-700">12 ta</span>
+            <span className="text-[11px] font-black text-slate-700">{app.workerCompletedJobs !== undefined ? app.workerCompletedJobs : 12} ta</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <MapPin size={14} className="text-slate-400 stroke-[2]" />
           <div className="flex flex-col">
             <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">{language === 'uz' ? "Masofa" : language === 'ru' ? "Расст." : "Distance"}</span>
-            <span className="text-[11px] font-black text-slate-700">2.4 km</span>
+            <span className="text-[11px] font-black text-slate-700">{"-"}</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Clock size={14} className="text-slate-400 stroke-[2]" />
           <div className="flex flex-col">
             <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">{language === 'uz' ? "Vaqti" : language === 'ru' ? "Время" : "Time"}</span>
-            <span className="text-[11px] font-black text-slate-700">{app.appliedDate}</span>
+            <span className="text-[11px] font-black text-slate-700">{app.appliedDate ? new Date(app.appliedDate).toLocaleDateString() : '-'}</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -99,7 +119,7 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{language === 'uz' ? "Qaysi ishga:" : language === 'ru' ? "На какую работу:" : "Applied for:"}</span>
         <p className="text-xs font-bold text-brand-primary truncate">{app.jobTitle}</p>
         <p className="text-[11px] text-slate-500 italic mt-1 line-clamp-2">
-          "{app.candidateExperience}"
+          "{app.workerBio || app.candidateExperience || 'Baito tasdiqlagan foydalanuvchi!'}"
         </p>
       </div>
 
