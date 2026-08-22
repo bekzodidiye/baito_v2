@@ -28,18 +28,22 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   const avgFillRate = 85;
 
   // Date picker state
-  const [selectedDate, setSelectedDate] = useState<number>(0);
-  const dates = Array.from({ length: 6 }).map((_, i) => {
+  const TOTAL_DAYS = 15;
+  const PAST_DAYS = 7;
+  const [selectedDate, setSelectedDate] = useState<number>(PAST_DAYS);
+  const dates = Array.from({ length: TOTAL_DAYS }).map((_, i) => {
     const d = new Date();
-    d.setDate(d.getDate() + i);
+    d.setDate(d.getDate() - PAST_DAYS + i);
     const localYYYYMMDD = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const isToday = i === PAST_DAYS;
     return {
       dayStr: language === 'uz' 
         ? ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan'][d.getDay()]
         : ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'][d.getDay()],
       dateNum: d.getDate(),
       index: i,
-      fullDateStr: localYYYYMMDD
+      fullDateStr: localYYYYMMDD,
+      isToday
     };
   });
 
@@ -73,21 +77,24 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         </button>
 
         {/* Date Picker */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="bg-white rounded-[24px] p-2 shadow-xs border border-slate-100 flex items-center gap-1 overflow-x-auto scrollbar-hide snap-x">
           {dates.map((d) => (
             <button
               key={d.index}
               onClick={() => setSelectedDate(d.index)}
-              className={`flex flex-col items-center justify-center min-w-[64px] h-[72px] rounded-2xl border transition-all cursor-pointer shrink-0 ${
+              className={`snap-center flex flex-col items-center justify-center min-w-[64px] h-[76px] rounded-[18px] transition-all cursor-pointer shrink-0 relative ${
                 selectedDate === d.index 
-                  ? 'bg-brand-primary text-white border-brand-primary shadow-md' 
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-brand-primary/40'
+                  ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20 scale-100' 
+                  : 'bg-transparent text-slate-700 hover:bg-slate-50 scale-[0.98] hover:scale-100'
               }`}
             >
-              <span className={`text-[10px] font-bold uppercase tracking-wider ${selectedDate === d.index ? 'text-white/80' : 'text-slate-400'}`}>
-                {d.dayStr}
+              <span className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${selectedDate === d.index ? 'text-white/90' : 'text-slate-400'}`}>
+                {d.isToday ? (language === 'uz' ? 'Bugun' : 'Сегодня') : d.dayStr}
               </span>
-              <span className="font-display font-black text-xl mt-0.5">{d.dateNum}</span>
+              <span className="font-display font-black text-xl">{d.dateNum}</span>
+              {d.isToday && selectedDate !== d.index && (
+                <div className="absolute bottom-2 w-1.5 h-1.5 bg-brand-primary rounded-full"></div>
+              )}
             </button>
           ))}
         </div>
