@@ -27,16 +27,16 @@ export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = ({
       className={`${
         isModal
           ? 'w-full h-full bg-white'
-          : 'fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm p-3 sm:p-6 flex items-center justify-center overflow-y-auto'
+          : 'fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md p-3 sm:p-6 flex items-center justify-center overflow-y-auto'
       } font-sans text-slate-900`}
     >
       <div
-        className={`w-full flex flex-col overflow-hidden relative bg-white mx-auto ${
+        className={`w-full flex flex-col overflow-hidden relative bg-white/95 backdrop-blur-xl mx-auto ${
           isModal
-            ? 'h-full rounded-[20px]'
+            ? 'h-full rounded-[24px]'
             : mode === 'login'
-            ? 'max-w-[390px] sm:max-w-[410px] my-auto rounded-2xl md:rounded-3xl shadow-2xl border border-slate-100/80 min-h-[440px]'
-            : 'max-w-[450px] sm:max-w-[480px] my-auto rounded-2xl md:rounded-3xl shadow-2xl border border-slate-100/80 min-h-[480px]'
+            ? 'max-w-[390px] sm:max-w-[410px] my-auto rounded-[32px] shadow-[0_16px_48px_rgba(0,0,0,0.2)] border border-white/50 min-h-[440px]'
+            : 'max-w-[450px] sm:max-w-[480px] my-auto rounded-[32px] shadow-[0_16px_48px_rgba(0,0,0,0.2)] border border-white/50 min-h-[480px]'
         }`}
       >
         <LoginPromptHeader
