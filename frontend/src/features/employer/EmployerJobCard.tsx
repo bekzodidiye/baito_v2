@@ -137,7 +137,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
                   e.stopPropagation();
                   onComplete(job.id);
                 }}
-                className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-[13px] font-black shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white text-[13px] font-black shadow-[0_4px_12px_rgba(0,6,102,0.3)] transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <CheckCircle2 size={16} />
                 {language === 'uz' ? "Yakunlash" : language === 'ru' ? "Завершить" : "Complete"}

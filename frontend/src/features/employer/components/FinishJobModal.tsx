@@ -145,7 +145,7 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
             <button
               type="submit"
               form="finish-job-form"
-              className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-sm shadow-md transition-all active:scale-98 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+              className="w-full py-3 bg-brand-primary hover:bg-brand-primary/90 text-white font-black rounded-xl text-sm shadow-[0_4px_12px_rgba(0,6,102,0.3)] transition-all active:scale-98 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             >
               {language === 'uz' ? 'Yakunlash va Tasdiqlash' : language === 'ru' ? 'Завершить и Подтвердить' : 'Complete and Confirm'}
             </button>
