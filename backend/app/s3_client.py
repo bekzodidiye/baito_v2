@@ -1,18 +1,33 @@
-import boto3
-from botocore.exceptions import ClientError
-from app.core.config import settings
 import logging
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+try:
+    import boto3
+    from botocore.exceptions import ClientError
+    HAS_BOTO3 = True
+except ImportError:
+    HAS_BOTO3 = False
+    ClientError = Exception
+
+class MockS3Client:
+    def upload_fileobj(self, file_obj, bucket, filename, ExtraArgs=None):
+        logger.info(f"[MockS3] Uploaded file {filename} to bucket {bucket}")
+        return True
+    def head_bucket(self, Bucket):
+        return True
+
 def get_s3_client():
-    return boto3.client(
-        's3',
-        endpoint_url=settings.AWS_ENDPOINT_URL if settings.AWS_ENDPOINT_URL else None,
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name=settings.AWS_REGION
-    )
+    if HAS_BOTO3:
+        return boto3.client(
+            's3',
+            endpoint_url=settings.AWS_ENDPOINT_URL if settings.AWS_ENDPOINT_URL else None,
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_REGION
+        )
+    return MockS3Client()
 
 def create_bucket_if_not_exists(bucket_name: str):
     s3 = get_s3_client()

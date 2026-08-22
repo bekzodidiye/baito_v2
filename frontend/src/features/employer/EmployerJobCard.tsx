@@ -44,21 +44,21 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={() => onSelect(job)}
-      className="bg-white rounded-[24px] overflow-hidden flex flex-col justify-between shadow-[0_4px_24px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-slate-100 transition-all duration-300 group cursor-pointer"
+      className="bg-white rounded-[24px] p-4 flex flex-col justify-between shadow-[0_4px_24px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-slate-100 transition-all duration-300 group cursor-pointer"
     >
       {/* Image Banner */}
-      <div className="relative h-[150px] w-full overflow-hidden bg-slate-100 shrink-0">
+      <div className="relative h-[160px] w-full rounded-[16px] overflow-hidden bg-slate-100 shrink-0 mb-4">
         <img
           src={bannerUrl}
           alt={job.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent" />
 
         {/* Company Pill */}
-        <div className="absolute top-4 left-4">
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-white bg-emerald-500 px-3 py-1.5 rounded-lg shadow-sm">
-            <Sparkles size={12} className="text-white" />
+        <div className="absolute top-3 left-3">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-sm">
+            <Sparkles size={12} className="text-emerald-500" />
             {job.company || 'Baito'}
           </span>
         </div>
@@ -71,7 +71,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
               onDelete(job.id);
             }}
             title={language === 'uz' ? "O'chirish" : language === 'ru' ? "Удалить" : "Delete"}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/90 hover:bg-rose-500 hover:text-white text-slate-700 shadow-sm flex items-center justify-center transition-all cursor-pointer focus:outline-none"
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 hover:bg-rose-500 hover:text-white text-slate-700 shadow-sm flex items-center justify-center transition-all cursor-pointer focus:outline-none"
           >
             <Trash2 size={16} />
           </button>
@@ -79,7 +79,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
       </div>
 
       {/* Card Content Below Image */}
-      <div className="p-5 flex-1 flex flex-col justify-between relative z-10 bg-white rounded-t-[24px] -mt-4">
+      <div className="flex-1 flex flex-col justify-between">
         <div>
           {/* Title */}
           <h3 className="font-black text-[18px] text-[#1A1A40] line-clamp-2 leading-tight mb-2">

@@ -18,6 +18,10 @@ class MockRedis:
         return item["value"]
     def delete(self, name):
         self.store.pop(name, None)
+    def publish(self, channel, message):
+        return 0
+    def ping(self):
+        return True
 
 try:
     redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)

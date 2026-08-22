@@ -74,12 +74,18 @@ def uzum_webhook(payload: UzumWebhookPayload, db: Session = Depends(deps.get_db)
     # This prevents malicious users from calling this endpoint manually.
     if settings.UZUM_SECRET_KEY:
         data_string = f"{payload.order_id}{payload.amount}{payload.status}{settings.UZUM_SECRET_KEY}"
-        expected_sign = hashlib.md5(data_string.encode('utf-8')).hexdigest()
-        if not hmac.compare_digest(payload.sign or "", expected_sign):
+        expected_sign = hmac.new(
+            settings.UZUM_SECRET_KEY.encode('utf-8'),
+            data_string.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+        # Fallback to md5 comparison if legacy signature matches, but enforce hmac compare
+        legacy_sign = hashlib.md5(data_string.encode('utf-8')).hexdigest()
+        if not (hmac.compare_digest(payload.sign or "", expected_sign) or hmac.compare_digest(payload.sign or "", legacy_sign)):
             raise HTTPException(status_code=403, detail="Invalid signature")
 
-    # 2. Find transaction
-    tx = db.query(Transaction).filter(Transaction.id == payload.order_id).first()
+    # 2. Find transaction with lock
+    tx = db.query(Transaction).filter(Transaction.id == payload.order_id).with_for_update().first()
     if not tx:
         raise HTTPException(status_code=404, detail="Order not found")
         
@@ -92,11 +98,12 @@ def uzum_webhook(payload: UzumWebhookPayload, db: Session = Depends(deps.get_db)
         tx.providerTransactionId = payload.uzum_transaction_id
         tx.performTime = int(time.time() * 1000)
         
-        # 4. Increase user balance
-        user = db.query(User).filter(User.id == tx.employerId).first()
+        # 4. Increase user balance atomically with lock
+        user = db.query(User).filter(User.id == tx.employerId).with_for_update().first()
         if user:
-            # Assuming tx.amount is in tiyin, so dividing by 100 to get UZS
-            user.balance += (tx.amount // 100)
+            # tx.amount is in tiyin, converting to UZS
+            user.balance = (user.balance or 0) + (tx.amount // 100)
+            db.add(user)
             
         db.commit()
         return {"status": "ok", "message": "Payment processed successfully"}
@@ -193,25 +200,33 @@ def request_withdrawal(
 ):
     if req.amount < 5000:
         raise HTTPException(status_code=400, detail="Eng kam yechib olish miqdori 5000 so'm")
+    if req.amount > 50_000_000:
+        raise HTTPException(status_code=400, detail="Bir martalik yechib olish cheklovi 50,000,000 so'm")
     
-    user = db.query(User).filter(User.id == current_user.id).first()
-    if not user or user.balance < req.amount:
+    # Lock the user row to prevent race conditions / double spending
+    user = db.query(User).filter(User.id == current_user.id).with_for_update().first()
+    if not user or (user.balance or 0) < req.amount:
         raise HTTPException(status_code=400, detail="Balansda yetarli mablag' mavjud emas")
+    if user.isBanned:
+        raise HTTPException(status_code=403, detail="Hisobingiz cheklangan, mablag' yechish mumkin emas")
     
-    # Create transaction
-    tx = Transaction(
-        employerId=user.id,
-        amount=req.amount * 100, # converting UZS to tiyin if needed, assuming amount is UZS
-        type="withdraw",
-        status="pending"
-    )
-    db.add(tx)
-    
-    # Deduct balance safely
-    user.balance -= req.amount
-    db.add(user)
-    
-    db.commit()
-    db.refresh(tx)
-    
-    return {"status": "ok", "message": "Mablag' yechish so'rovi yuborildi", "transaction_id": tx.id}
+    try:
+        # Create transaction
+        tx = Transaction(
+            employerId=user.id,
+            amount=req.amount * 100, # converting UZS to tiyin
+            type="withdraw",
+            status="pending"
+        )
+        db.add(tx)
+        
+        # Deduct balance atomically
+        user.balance = (user.balance or 0) - req.amount
+        db.add(user)
+        
+        db.commit()
+        db.refresh(tx)
+        return {"status": "ok", "message": "Mablag' yechish so'rovi yuborildi", "transaction_id": tx.id}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Tranzaksiyani amalga oshirishda xatolik: {str(e)}")
