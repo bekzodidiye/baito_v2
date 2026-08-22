@@ -26,20 +26,25 @@ if ! curl -s --connect-timeout 2 http://100.109.46.108:9000/minio/health/live > 
     exit 0
 fi
 
-# Yangi fayllarni yuklab olish (va serverdan o'chirilganlarini lokalda ham tozalash)
+# 1. Baza zaxiralarini sinxronizatsiya qilish (va serverdan o'chirilganlarini lokalda ham tozalash)
 SYNC_OUTPUT=$(aws --endpoint-url "$AWS_ENDPOINT_URL" s3 sync "$S3_BUCKET_PATH" . --exclude "*" --include "*.sql.gz" --delete 2>&1)
 
-# Agar yangi fayl yuklangan bo'lsa:
+# Agar yangi baza zaxirasi yuklangan bo'lsa:
 if echo "$SYNC_OUTPUT" | grep -q "download:"; then
     NEW_FILE=$(echo "$SYNC_OUTPUT" | grep "download:" | head -n 1 | awk '{print $NF}')
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] 🚀 Yangi zaxira yuklandi: $NEW_FILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] 🚀 Yangi baza zaxirasi yuklandi: $NEW_FILE"
     
     # Linux Desktop Notification (Ekrandagi xabar)
     if command -v notify-send >/dev/null 2>&1; then
-        notify-send "📦 Baito Yangi Zaxira!" "Yangi zaxira noutbukingizga saqlandi: $NEW_FILE" -u normal -t 5000 2>/dev/null || true
+        notify-send "📦 Baito Yangi Baza Zaxirasi!" "Yangi zaxira noutbukingizga saqlandi: $NEW_FILE" -u normal -t 5000 2>/dev/null || true
     fi
 fi
 
-# Faqat eng so'nggi 5 ta faylni saqlash (eskilarini tozalash)
+# 2. Rasmlar va Media fayllarni Incremental (Faqat yangilarini) sinxronizatsiya qilish
+MEDIA_DIR="$LOCAL_BACKUP_DIR/media"
+mkdir -p "$MEDIA_DIR"
+aws --endpoint-url "$AWS_ENDPOINT_URL" s3 sync "s3://baito-bucket/" "$MEDIA_DIR" --exclude "backups/*" --only-show-errors 2>/dev/null || true
+
+# 3. Faqat eng so'nggi 5 ta baza faylini saqlash (eskilarini tozalash)
 ls -tp | grep -v '/$' | tail -n +6 | xargs -I {} rm -f -- {} 2>/dev/null || true
 

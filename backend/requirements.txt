@@ -13,5 +13,6 @@ psycopg2-binary==2.9.9
 redis==5.0.4
 celery==5.4.0
 boto3==1.34.101
+Pillow==10.3.0
 sentry-sdk[fastapi]==2.2.1
 python-multipart==0.0.9
