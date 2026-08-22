@@ -68,7 +68,10 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onDelete(job.id);
+              const confirmMsg = language === 'uz' ? "Rostdan ham ushbu e'lonni o'chirmoqchimisiz?" : language === 'ru' ? "Вы действительно хотите удалить эту вакансию?" : "Are you sure you want to delete this job?";
+              if (window.confirm(confirmMsg)) {
+                onDelete(job.id);
+              }
             }}
             title={language === 'uz' ? "O'chirish" : language === 'ru' ? "Удалить" : "Delete"}
             className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 hover:bg-rose-500 hover:text-white text-slate-700 shadow-sm flex items-center justify-center transition-all cursor-pointer focus:outline-none"

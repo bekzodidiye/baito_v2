@@ -255,7 +255,13 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
               {job.status === 'open' && onDelete ? (
                 <>
                   <button
-                    onClick={() => { onDelete(job.id); onClose(); }}
+                    onClick={() => { 
+                      const confirmMsg = language === 'uz' ? "Rostdan ham ushbu e'lonni o'chirmoqchimisiz?" : language === 'ru' ? "Вы действительно хотите удалить эту вакансию?" : "Are you sure you want to delete this job?";
+                      if (window.confirm(confirmMsg)) {
+                        onDelete(job.id); 
+                        onClose(); 
+                      }
+                    }}
                     className="flex-1 py-4 px-4 bg-rose-50 text-rose-600 font-bold rounded-xl text-[15px] flex items-center justify-center gap-2 cursor-pointer border border-rose-100 active:scale-[0.98] transition-all"
                   >
                     <Trash2 size={20} />
