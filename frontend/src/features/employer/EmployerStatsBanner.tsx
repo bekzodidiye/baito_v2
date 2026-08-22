@@ -17,6 +17,7 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
   language,
   activeJobsCount,
   pendingApplicantsCount,
+  totalViews,
   avgFillRate,
   onViewAnalyticsClick,
   onViewAllJobsClick,
