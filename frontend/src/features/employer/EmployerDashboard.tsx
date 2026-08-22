@@ -78,20 +78,12 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         onViewAnalyticsClick={onViewAnalyticsClick}
         onViewAllJobsClick={onViewAllJobsClick}
         onViewApplicantsClick={onViewApplicantsClick}
+        onPostJobClick={onPostJobClick}
       />
 
-      <div className="px-4 md:px-6 flex flex-col gap-6">
-        {/* Action Button */}
-        <button
-          onClick={onPostJobClick}
-          className="w-full md:w-auto md:self-start py-3.5 px-6 bg-brand-primary hover:bg-brand-primary/95 text-white font-display font-black text-sm rounded-xl shadow-[0_4px_14px_rgba(0,6,102,0.18)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-        >
-          <Plus size={18} className="stroke-[2.5]" />
-          <span>{language === 'uz' ? "Yangi ish yaratish" : language === 'ru' ? "Создать объявление" : "Post new job"}</span>
-        </button>
-
+      <div className="flex flex-col gap-6">
         {/* Date Picker */}
-        <div ref={scrollContainerRef} className="flex items-center gap-2 overflow-x-auto pb-4 pt-1 scrollbar-hide snap-x px-2">
+        <div ref={scrollContainerRef} className="flex items-center gap-2 overflow-x-auto pb-4 pt-1 scrollbar-hide snap-x px-4 md:px-6">
           {dates.map((d) => {
             const isActive = selectedDate === d.index;
             return (
@@ -119,11 +111,13 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         </div>
 
         {/* Jobs List */}
-        <EmployerJobsList 
-          language={language}
-          postedJobs={filteredJobs}
-          onViewAllJobsClick={onViewAllJobsClick}
-        />
+        <div className="px-4 md:px-6">
+          <EmployerJobsList 
+            language={language}
+            postedJobs={filteredJobs}
+            onViewAllJobsClick={onViewAllJobsClick}
+          />
+        </div>
       </div>
     </div>
   );

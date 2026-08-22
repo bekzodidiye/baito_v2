@@ -8,20 +8,20 @@ interface EmployerStatsBannerProps {
   pendingApplicantsCount: number;
   totalViews: number;
   avgFillRate: number;
-  onViewAnalyticsClick?: () => void;
   onViewAllJobsClick: () => void;
   onViewApplicantsClick: () => void;
+  onPostJobClick: () => void;
 }
 
 export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
   language,
   activeJobsCount,
   pendingApplicantsCount,
-  totalViews,
   avgFillRate,
   onViewAnalyticsClick,
   onViewAllJobsClick,
-  onViewApplicantsClick
+  onViewApplicantsClick,
+  onPostJobClick
 }) => {
   return (
     <div className="bg-gradient-to-br from-brand-primary to-brand-primary-container md:rounded-[32px] rounded-b-[24px] px-4 md:px-8 pt-6 pb-8 relative overflow-hidden text-white shadow-lg">
@@ -90,6 +90,14 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
             <p className="text-2xl md:text-3xl font-black">{avgFillRate}%</p>
           </div>
         </div>
+
+        <button
+          onClick={onPostJobClick}
+          className="mt-6 w-full py-4 bg-white text-brand-primary hover:bg-slate-50 font-display font-black text-[15px] rounded-2xl shadow-[0_8px_16px_rgba(0,0,0,0.1)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          {language === 'uz' ? "Yangi ish yaratish" : language === 'ru' ? "Создать объявление" : "Post new job"}
+        </button>
       </div>
     </div>
   );
