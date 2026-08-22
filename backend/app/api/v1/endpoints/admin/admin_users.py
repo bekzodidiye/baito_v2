@@ -126,7 +126,7 @@ def get_user_detail(
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
 
     # Get sessions
-    sessions = db.query(models.session.ActiveSession).filter(models.session.ActiveSession.user_uid == user.uid).all()
+    sessions = db.query(models.ActiveSession).filter(models.ActiveSession.user_uid == (user.uid or user.id)).all()
     sessions_list = []
     for s in sessions:
         sessions_list.append({

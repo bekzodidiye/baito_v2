@@ -10,20 +10,32 @@ interface UserTabsExtraProps {
 }
 
 export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab, onAddBalance }) => {
-  const { user, sessions, transactions, orders, reviews } = detail;
+  const user = detail?.user || { id: '', name: 'Foydalanuvchi', role: 'worker', balance: 0, adminNotes: [] };
+  const sessions = detail?.sessions || [];
+  const transactions = detail?.transactions || [];
+  const orders = detail?.orders || [];
+  const reviews = detail?.reviews || [];
+
   const { token } = useApp();
   const API = import.meta.env.VITE_API_URL || '';
   
   const [showTopUp, setShowTopUp] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState('');
-  const [notes, setNotes] = useState<{ text: string; date: string }[]>(user.adminNotes || []);
+  const [notes, setNotes] = useState<{ text: string; date: string }[]>(user?.adminNotes || []);
   const [newNote, setNewNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Sync notes when detail changes
+  React.useEffect(() => {
+    if (user?.adminNotes) {
+      setNotes(user.adminNotes);
+    }
+  }, [user?.adminNotes]);
 
   const handleTopUpSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const num = parseFloat(topUpAmount);
-    if (!isNaN(num) && num > 0) {
+    if (!isNaN(num) && num > 0 && user?.id) {
       onAddBalance(user.id, num);
       setShowTopUp(false);
     }
@@ -31,7 +43,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
 
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newNote.trim() || isSubmitting) return;
+    if (!newNote.trim() || isSubmitting || !user?.id) return;
 
     setIsSubmitting(true);
     try {
@@ -232,7 +244,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-[13px] text-slate-900">{r.author}</span>
                       <span className="px-2.5 py-0.5 bg-yellow-100 text-yellow-700 text-[11px] font-black rounded-lg flex items-center gap-1 border border-yellow-200">
-                        ⭐ {r.rating.toFixed(1)}
+                        ⭐ {Number(r.rating || 0).toFixed(1)}
                       </span>
                     </div>
                     <span className="text-slate-400 text-[11px] font-bold">{r.date ? formatDate(r.date) : ''}</span>
