@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Share2, MoreVertical, Clock, Users, Calendar, MapPin, CheckCircle2, Trash2, PhoneCall, ChevronRight, Truck, Zap } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Calendar, MapPin, CheckCircle2, Trash2, PhoneCall, ChevronRight, Truck, Zap } from 'lucide-react';
 import { Job } from '../../types';
 import { getJobDetails } from '../../utils/jobDetailHelpers';
 import { getJobBannerImage } from './EmployerJobCard';
@@ -44,7 +44,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
           className="bg-white rounded-t-[24px] sm:rounded-3xl shadow-2xl w-full max-w-xl max-h-[96vh] sm:max-h-[85vh] flex flex-col overflow-hidden relative"
         >
-          {/* Top White Header */}
+            {/* Top White Header */}
           <div className="flex items-center justify-between px-5 py-4 bg-white z-10 shrink-0">
             <div className="flex items-center gap-3">
               <button 
@@ -57,10 +57,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                 {language === 'uz' ? 'Ish tafsilotlari' : language === 'ru' ? 'Детали работы' : 'Job details'}
               </h2>
             </div>
-            <div className="flex items-center gap-4 text-slate-500">
-              <button className="hover:text-slate-900 transition-colors cursor-pointer"><Share2 size={20} strokeWidth={2} /></button>
-              <button className="hover:text-slate-900 transition-colors cursor-pointer"><MoreVertical size={20} strokeWidth={2} /></button>
-            </div>
+            {/* Action buttons removed as requested */}
           </div>
 
           {/* Scrollable Area */}
