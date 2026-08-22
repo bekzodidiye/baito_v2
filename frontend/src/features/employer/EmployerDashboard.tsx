@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
 import { Plus } from 'lucide-react';
 import { EmployerStatsBanner } from './EmployerStatsBanner';
@@ -47,6 +47,20 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
     };
   });
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      const activeElement = scrollContainerRef.current.children[selectedDate] as HTMLElement;
+      if (activeElement) {
+        // A slight timeout ensures the DOM is fully painted before scrolling
+        setTimeout(() => {
+          activeElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }, 100);
+      }
+    }
+  }, []); // Run once on mount
+
   // Filter jobs by selected date
   const selectedFullDateStr = dates[selectedDate].fullDateStr;
   const filteredJobs = postedJobs.filter(job => job.workDate === selectedFullDateStr);
@@ -77,7 +91,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
         </button>
 
         {/* Date Picker */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 pt-1 scrollbar-hide snap-x">
+        <div ref={scrollContainerRef} className="flex items-center gap-2 overflow-x-auto pb-4 pt-1 scrollbar-hide snap-x px-2">
           {dates.map((d) => {
             const isActive = selectedDate === d.index;
             return (
