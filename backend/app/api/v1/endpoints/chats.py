@@ -51,13 +51,36 @@ def get_chats(
         or_(models.Chat.workerId == current_user.id, models.Chat.employerId == current_user.id)
     ).all()
     
+    # Collect IDs for bulk fetching
+    other_user_ids = []
+    chat_ids = []
+    for c in chats:
+        other_user_id = c.employerId if current_user.id == c.workerId else c.workerId
+        other_user_ids.append(other_user_id)
+        chat_ids.append(c.id)
+
+    # Bulk fetch users
+    other_users = []
+    if other_user_ids:
+        other_users = db.query(models.User).filter(models.User.id.in_(list(set(other_user_ids)))).all()
+    user_map = {u.id: u for u in other_users}
+
+    # Bulk fetch last messages for all these chats
+    last_messages = {}
+    if chat_ids:
+        # Fetch messages for these chats, ordered by time
+        all_messages = db.query(models.Message).filter(models.Message.chatId.in_(chat_ids)).order_by(models.Message.createdAt.desc()).all()
+        # They are ordered by desc, so the first one we encounter for a chat is the last message
+        for msg in all_messages:
+            if msg.chatId not in last_messages:
+                last_messages[msg.chatId] = msg
+
     # Enrich the chat objects for the frontend
     enriched = []
     for c in chats:
         other_user_id = c.employerId if current_user.id == c.workerId else c.workerId
-        other_user = db.query(models.User).filter(models.User.id == other_user_id).first()
-        
-        last_message = db.query(models.Message).filter(models.Message.chatId == c.id).order_by(models.Message.createdAt.desc()).first()
+        other_user = user_map.get(other_user_id)
+        last_message = last_messages.get(c.id)
         
         c_dict = {
             "id": c.id,
@@ -135,16 +158,22 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str, db: Session = D
             map_location = message_data.get("mapLocation", "")
 
             # senderId comes from the session, never from the client payload.
-            new_msg = models.Message(
-                chatId=chat_id,
-                senderId=user.id,
-                text=text,
-                hasMap=has_map,
-                mapLocation=map_location
-            )
-            db.add(new_msg)
-            db.commit()
-            db.refresh(new_msg)
+            from starlette.concurrency import run_in_threadpool
+            
+            def save_message():
+                new_msg = models.Message(
+                    chatId=chat_id,
+                    senderId=user.id,
+                    text=text,
+                    hasMap=has_map,
+                    mapLocation=map_location
+                )
+                db.add(new_msg)
+                db.commit()
+                db.refresh(new_msg)
+                return new_msg
+                
+            new_msg = await run_in_threadpool(save_message)
 
             # Broadcast
             msg_dict = {

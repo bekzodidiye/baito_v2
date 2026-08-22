@@ -7,7 +7,7 @@ import { useCallback } from 'react';
 export function useJobsData() {
   const queryClient = useQueryClient();
 
-  const { data: jobs = [] } = useQuery({
+  const { data: jobs = [], isLoading } = useQuery({
     queryKey: ['jobs'],
     queryFn: async () => {
       const res = await fetchJobs();
@@ -95,5 +95,5 @@ export function useJobsData() {
     }
   }, [setJobs, queryClient]);
 
-  return { jobs, setJobs, toggleBookmark, applyToJob, requestStartJob, confirmStartJob };
+  return { jobs, isLoading, setJobs, toggleBookmark, applyToJob, requestStartJob, confirmStartJob };
 }

@@ -14,7 +14,7 @@ interface LandingHeroProps {
 export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { language, isLoggedIn, requireAuth } = useApp();
-  const { jobs } = useJobsData();
+  const { jobs, isLoading } = useJobsData();
   const [activeTab, setActiveTab] = useState<'worker' | 'employer'>('worker');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -165,6 +165,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
 
           <LandingHeroShiftPreview 
             displayShifts={displayShifts} 
+            isLoading={isLoading}
             language={language} 
             onSelectRole={onSelectRole} 
             t={t} 

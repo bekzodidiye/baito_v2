@@ -64,12 +64,14 @@ def read_jobs(
             if user:
                 if app.jobId not in job_hired_workers:
                     job_hired_workers[app.jobId] = []
-                job_hired_workers[app.jobId].append({
-                    "id": user.id,
-                    "name": user.fullName or "Foydalanuvchi",
-                    "phone": user.phone,
-                    "avatarUrl": user.avatarUrl
-                })
+                    
+                from app.schemas.job import HiredWorkerInfo
+                job_hired_workers[app.jobId].append(HiredWorkerInfo(
+                    id=user.id,
+                    name=user.name or "Foydalanuvchi",
+                    phone=user.phone,
+                    avatarUrl=user.avatarUrl
+                ))
 
     result = []
     for job in jobs:

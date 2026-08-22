@@ -9,3 +9,9 @@ passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
 python-multipart==0.0.9
 slowapi==0.1.10
+psycopg2-binary==2.9.9
+redis==5.0.4
+celery==5.4.0
+boto3==1.34.101
+sentry-sdk[fastapi]==2.2.1
+python-multipart==0.0.9
