@@ -78,15 +78,15 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
         )}
 
         {/* Title over banner gradient */}
-        <div className="absolute bottom-2.5 left-3 right-3">
-          <h3 className="font-display font-black text-sm text-white line-clamp-1 leading-snug drop-shadow-sm">
+        <div className="absolute bottom-7 left-4 right-4">
+          <h3 className="font-display font-black text-[15px] text-white line-clamp-1 leading-snug drop-shadow-md">
             {job.title}
           </h3>
         </div>
       </div>
 
-      {/* Card Content */}
-      <div className="p-4 flex-1 flex flex-col justify-between">
+      {/* Card Content Overlapping Image */}
+      <div className="bg-white relative z-20 rounded-t-[24px] -mt-5 p-4 flex-1 flex flex-col justify-between">
         <div>
           {/* Salary */}
           <div className="flex items-baseline justify-between">
