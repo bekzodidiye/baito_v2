@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Clock, Users, Calendar, MapPin, CheckCircle2, Trash2, PhoneCall, ChevronRight, Truck, Zap } from 'lucide-react';
 import { Job } from '../../types';
 import { getJobDetails } from '../../utils/jobDetailHelpers';
 import { getJobBannerImage } from './EmployerJobCard';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 interface EmployerJobDetailModalProps {
   job: Job | null;
@@ -20,6 +21,8 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
   onComplete,
   onDelete,
 }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
   if (!job) return null;
 
   const fallback = getJobDetails(job.title, language);
@@ -255,13 +258,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
               {job.status === 'open' && onDelete ? (
                 <>
                   <button
-                    onClick={() => { 
-                      const confirmMsg = language === 'uz' ? "Rostdan ham ushbu e'lonni o'chirmoqchimisiz?" : language === 'ru' ? "Вы действительно хотите удалить эту вакансию?" : "Are you sure you want to delete this job?";
-                      if (window.confirm(confirmMsg)) {
-                        onDelete(job.id); 
-                        onClose(); 
-                      }
-                    }}
+                    onClick={() => setShowDeleteConfirm(true)}
                     className="flex-1 py-4 px-4 bg-rose-50 text-rose-600 font-bold rounded-xl text-[15px] flex items-center justify-center gap-2 cursor-pointer border border-rose-100 active:scale-[0.98] transition-all"
                   >
                     <Trash2 size={20} />
@@ -302,6 +299,16 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
           </div>
         </motion.div>
       </div>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title={language === 'uz' ? "O'chirishni tasdiqlash" : language === 'ru' ? "Подтвердите удаление" : "Confirm deletion"}
+        message={language === 'uz' ? "Rostdan ham ushbu e'lonni o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi." : language === 'ru' ? "Вы действительно хотите удалить эту вакансию? Это действие нельзя отменить." : "Are you sure you want to delete this job? This action cannot be undone."}
+        confirmText={language === 'uz' ? "O'chirish" : language === 'ru' ? "Удалить" : "Delete"}
+        cancelText={language === 'uz' ? "Bekor qilish" : language === 'ru' ? "Отмена" : "Cancel"}
+        onConfirm={() => { onDelete?.(job.id); onClose(); }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </AnimatePresence>
   );
 };
