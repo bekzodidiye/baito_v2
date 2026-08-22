@@ -60,6 +60,16 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   return <>{children}</>;
 };
 
+const AuthGuestRoute = ({ mode }: { mode: 'login' | 'register' }) => {
+  const { isLoggedIn, userProfile } = useApp();
+  if (isLoggedIn) {
+    if (userProfile?.selectedRole === 'employer') return <Navigate to="/employer-dashboard" replace />;
+    if (userProfile?.selectedRole === 'admin') return <Navigate to="/admin" replace />;
+    return <Navigate to="/jobs" replace />;
+  }
+  return <LoginPromptScreen initialMode={mode} />;
+};
+
 export const AppRoutes = () => {
   return (
     <Suspense fallback={<SuspenseFallback />}>
@@ -86,8 +96,8 @@ export const AppRoutes = () => {
         <Route path="/payments/error" element={<ProtectedRoute allowedRoles={['worker']}><PaymentResult /></ProtectedRoute>} />
         <Route path="/taxes" element={<ProtectedRoute allowedRoles={['worker']}><TaxesScreen /></ProtectedRoute>} />
         <Route path="/verification" element={<ProtectedRoute><VerificationPendingScreen /></ProtectedRoute>} />
-        <Route path="/login" element={isLoggedIn ? <RootRedirect /> : <LoginPromptScreen initialMode="login" />} />
-        <Route path="/register" element={isLoggedIn ? <RootRedirect /> : <LoginPromptScreen initialMode="register" />} />
+        <Route path="/login" element={<AuthGuestRoute mode="login" />} />
+        <Route path="/register" element={<AuthGuestRoute mode="register" />} />
         <Route path="/settings" element={<ProtectedRoute><SettingsLayout><SettingsScreen /></SettingsLayout></ProtectedRoute>} />
         <Route path="/security" element={<ProtectedRoute><SettingsLayout><SecurityScreen /></SettingsLayout></ProtectedRoute>} />
         <Route path="/help" element={<ProtectedRoute><SettingsLayout><HelpScreen /></SettingsLayout></ProtectedRoute>} />
