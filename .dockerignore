@@ -1,0 +1,13 @@
+.git
+.gitignore
+node_modules
+dist
+.env
+.env.*
+backend/.env
+backups
+baito_local_backups
+*.apk
+*.log
+playwright-report
+test-results
