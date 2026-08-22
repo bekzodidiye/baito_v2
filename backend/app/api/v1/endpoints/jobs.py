@@ -7,7 +7,40 @@ from app.api import deps
 
 router = APIRouter()
 
+from app.services.ai_matcher import AIMatchmaker
+from app.services.geo_service import GeoSpatialService
+from app.services.spam_detector import SpamFraudDetector
+
 HIRED_STATUSES = ['hired', 'confirmed', 'completed', 'in_progress', 'start_requested']
+
+@router.get("/recommended")
+def get_recommended_jobs(
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+    limit: int = Query(20, ge=1, le=50)
+) -> Any:
+    """
+    AI-powered Smart Matchmaking Job Recommendations for the logged-in worker.
+    """
+    active_jobs = db.query(models.Job).filter(models.Job.status == "active").order_by(models.Job.createdAt.desc()).limit(100).all()
+    if not active_jobs:
+        return []
+    
+    ranked = AIMatchmaker.rank_jobs_for_worker(current_user, active_jobs)
+    return ranked[:limit]
+
+@router.get("/nearby")
+def get_nearby_jobs(
+    lat: float = Query(..., ge=-90.0, le=90.0),
+    lng: float = Query(..., ge=-180.0, le=180.0),
+    radius_km: float = Query(10.0, ge=0.5, le=100.0),
+    db: Session = Depends(deps.get_db)
+) -> Any:
+    """
+    Geo-Spatial Nearby Jobs within a specified radius (km) with commute estimates.
+    """
+    jobs = db.query(models.Job).filter(models.Job.status == "active").all()
+    return GeoSpatialService.filter_jobs_by_radius(lat, lng, jobs, radius_km)
 
 @router.get("", response_model=List[schemas.JobWithApplicationStatus])
 def read_jobs(

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
 import { ClipboardCheck, CheckCircle2 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { EmployerPageHeader } from './EmployerPageHeader';
 import { ApplicantCard } from './components/ApplicantCard';
 
@@ -32,7 +33,7 @@ export const EmployerApplicants: React.FC<EmployerApplicantsProps> = ({ onChatCl
       />
 
       {pendingApps.length > 0 && (
-        <div className="flex justify-end mt-[-10px]">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex justify-end mt-[-10px]">
           <button 
             onClick={handleBulkApprove}
             className="flex items-center gap-1.5 px-4 py-2 bg-brand-primary text-white text-xs font-bold rounded-lg shadow hover:bg-brand-primary/90 transition-colors"
@@ -40,9 +41,10 @@ export const EmployerApplicants: React.FC<EmployerApplicantsProps> = ({ onChatCl
             <CheckCircle2 size={16} />
             {language === 'uz' ? `Barchasini tasdiqlash (${pendingApps.length})` : language === 'ru' ? `Одобрить все (${pendingApps.length})` : `Approve all (${pendingApps.length})`}
           </button>
-        </div>
+        </motion.div>
       )}
 
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
       {activeApps.length === 0 ? (
         <div className="bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200/60 py-16 px-6 flex flex-col items-center justify-center text-center mt-4">
           <ClipboardCheck size={40} className="text-slate-300 stroke-[1.5] mb-4" />
@@ -66,6 +68,7 @@ export const EmployerApplicants: React.FC<EmployerApplicantsProps> = ({ onChatCl
           ))}
         </div>
       )}
+      </motion.div>
     </div>
   );
 };

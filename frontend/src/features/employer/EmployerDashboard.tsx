@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
 import { Plus } from 'lucide-react';
+import { motion } from 'motion/react';
 import { EmployerStatsBanner } from './EmployerStatsBanner';
 import { EmployerJobsList } from './EmployerJobsList';
 
@@ -28,8 +29,8 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   const avgFillRate = 85;
 
   // Date picker state
-  const TOTAL_DAYS = 15;
-  const PAST_DAYS = 7;
+  const TOTAL_DAYS = 37;
+  const PAST_DAYS = 30;
   const [selectedDate, setSelectedDate] = useState<number>(PAST_DAYS);
   const dates = Array.from({ length: TOTAL_DAYS }).map((_, i) => {
     const d = new Date();
@@ -69,19 +70,21 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
     <div className="w-full max-w-6xl mx-auto flex flex-col gap-6 pb-6">
       
       {/* Top Banner & Stats */}
-      <EmployerStatsBanner 
-        language={language}
-        activeJobsCount={activeJobsCount}
-        pendingApplicantsCount={pendingApplicantsCount}
-        totalViews={totalViews}
-        avgFillRate={avgFillRate}
-        onViewAnalyticsClick={onViewAnalyticsClick}
-        onViewAllJobsClick={onViewAllJobsClick}
-        onViewApplicantsClick={onViewApplicantsClick}
-        onPostJobClick={onPostJobClick}
-      />
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        <EmployerStatsBanner 
+          language={language}
+          activeJobsCount={activeJobsCount}
+          pendingApplicantsCount={pendingApplicantsCount}
+          totalViews={totalViews}
+          avgFillRate={avgFillRate}
+          onViewAnalyticsClick={onViewAnalyticsClick}
+          onViewAllJobsClick={onViewAllJobsClick}
+          onViewApplicantsClick={onViewApplicantsClick}
+          onPostJobClick={onPostJobClick}
+        />
+      </motion.div>
 
-      <div className="flex flex-col gap-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="flex flex-col gap-6">
         {/* Date Picker */}
         <div ref={scrollContainerRef} className="flex items-center gap-2 overflow-x-auto pb-4 pt-1 scrollbar-hide snap-x px-4 md:px-6">
           {dates.map((d) => {
@@ -118,7 +121,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
             onViewAllJobsClick={onViewAllJobsClick}
           />
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -1,0 +1,17 @@
+{
+  "short_name": "Baito",
+  "name": "Baito — Ish va Xodimlar Platformasi",
+  "description": "O'zbekistonda tezkor ish topish va malakali xodimlarni yollash platformasi",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#000666",
+  "background_color": "#f8fafc",
+  "orientation": "portrait"
+}

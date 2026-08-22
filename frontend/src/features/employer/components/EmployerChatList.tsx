@@ -80,7 +80,10 @@ export const EmployerChatList: React.FC<EmployerChatListProps> = ({
       </AnimatePresence>
 
       {/* Chat List */}
-      <div className="flex flex-col bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03),_0_1px_3px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.05)] transition-all duration-300 overflow-hidden">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        className="flex flex-col bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.03),_0_1px_3px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.05)] transition-all duration-300 overflow-hidden"
+      >
         {filteredChats.map((chat, idx) => {
           const messages = Array.isArray(chat.messages) ? chat.messages : [];
           const lastMsg = messages[messages.length - 1];
@@ -134,7 +137,7 @@ export const EmployerChatList: React.FC<EmployerChatListProps> = ({
             <p className="font-display font-bold text-sm">{t.noConversations}</p>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Empty state tip */}
       <div className="mt-4 text-center">

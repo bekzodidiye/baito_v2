@@ -461,14 +461,36 @@
           window.SharedWorker = CustomSharedWorker;
         }
       })();
-    </script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://api-maps.yandex.ru/2.1/?apikey=9ff594fb-14e1-4409-be2d-8e11e8df6429&lang=uz_UZ" type="text/javascript"></script>
-    <title>Baito - Ish qidirish</title>
+    
+    <!-- PWA & Mobile Meta -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#000666" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Baito" />
+    
+    <!-- SEO & Social OpenGraph -->
+    <title>Baito — O'zbekistonda Tezkor Ish va Xodimlar Platformasi</title>
+    <meta name="description" content="Baito — kunlik, smenali va erkin grafikdagi ishlarni topish hamda ishonchli xodimlarni 1 daqiqada yollash platformasi." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Baito" />
+    <meta property="og:title" content="Baito — Tezkor Ish va Xodimlar Platformasi" />
+    <meta property="og:description" content="Kunlik va doimiy ishlarni xaritadan qidiring, 1-clickda ariza topshiring." />
+    <meta property="og:image" content="https://baito.uz/assets/og-preview.png" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>
 
