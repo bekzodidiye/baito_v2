@@ -57,7 +57,7 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
           placeholder="Perfect Jobs MCHJ"
-          className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 px-4 text-xs font-bold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+          className="w-full bg-white border border-slate-200/80/80 hover:border-slate-300 rounded-xl py-3 px-4 text-xs font-bold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
         />
       </div>
 
@@ -73,7 +73,7 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           value={stir}
           onChange={(e) => setStir(e.target.value.replace(/\D/g, ''))}
           placeholder="123456789"
-          className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 px-4 text-xs font-bold tracking-widest focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+          className="w-full bg-white border border-slate-200/80/80 hover:border-slate-300 rounded-xl py-3 px-4 text-xs font-bold tracking-widest focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
         />
       </div>
 
@@ -94,10 +94,10 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           onClick={triggerDoc1Select}
           className={`border border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 relative group overflow-hidden ${
             docFileName1 
-              ? 'border-emerald-500 bg-emerald-50/10' 
+              ? 'border-brand-primary bg-brand-primary/10' 
               : isDragging1 
                 ? 'border-brand-primary bg-indigo-50/20' 
-                : 'border-slate-200 hover:border-slate-300 bg-white hover:shadow-3xs'
+                : 'border-slate-200/80 hover:border-slate-300 bg-white hover:shadow-3xs'
           }`}
         >
           <input
@@ -109,11 +109,11 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           />
           {docFileName1 ? (
             <div className="space-y-2">
-              <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto shadow-3xs">
+              <div className="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center mx-auto shadow-3xs">
                 <Check size={20} className="stroke-[2.5]" />
               </div>
               <p className="text-xs font-bold text-slate-755 line-clamp-1 px-4">{docFileName1}</p>
-              <span className="inline-block text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="inline-block text-[10px] font-bold text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
                 {t.uploaded}
               </span>
             </div>
@@ -148,10 +148,10 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           onClick={triggerDoc2Select}
           className={`border border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 relative group overflow-hidden ${
             docFileName2 
-              ? 'border-emerald-500 bg-emerald-50/10' 
+              ? 'border-brand-primary bg-brand-primary/10' 
               : isDragging2 
                 ? 'border-brand-primary bg-indigo-50/20' 
-                : 'border-slate-200 hover:border-slate-300 bg-white hover:shadow-3xs'
+                : 'border-slate-200/80 hover:border-slate-300 bg-white hover:shadow-3xs'
           }`}
         >
           <input
@@ -163,11 +163,11 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           />
           {docFileName2 ? (
             <div className="space-y-2">
-              <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto shadow-3xs">
+              <div className="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center mx-auto shadow-3xs">
                 <Check size={20} className="stroke-[2.5]" />
               </div>
               <p className="text-xs font-bold text-slate-755 line-clamp-1 px-4">{docFileName2}</p>
-              <span className="inline-block text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="inline-block text-[10px] font-bold text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
                 {t.uploaded}
               </span>
             </div>

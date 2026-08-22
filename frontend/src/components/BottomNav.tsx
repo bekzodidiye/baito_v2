@@ -37,7 +37,9 @@ export const BottomNav: React.FC = () => {
   ];
 
   return (
-    <nav className={`fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-white/95 backdrop-blur-md pb-safe h-16 md:hidden border-t border-slate-100/80 ${
+    <nav 
+      aria-label="Asosiy navigatsiya"
+      className={`fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-white/95 backdrop-blur-md pb-[env(safe-area-inset-bottom,0px)] h-16 md:hidden border-t border-slate-100/80 ${
       isMapScreen ? 'shadow-[0_-2px_10px_rgba(0,0,0,0.02)]' : 'shadow-[0_-4px_24px_rgba(0,0,0,0.04)]'
     }`}>
       <div className="flex justify-between items-center w-full max-w-sm mx-auto px-4 h-full relative">
@@ -49,6 +51,8 @@ export const BottomNav: React.FC = () => {
             <button
               key={item.id}
               onClick={() => handleNavClick(item.screen)}
+              aria-label={item.label}
+              aria-current={active ? 'page' : undefined}
               className="flex flex-col items-center justify-center flex-1 h-full relative focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 select-none active:scale-95 transition-transform"
             >
               <motion.div

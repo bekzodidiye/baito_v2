@@ -98,12 +98,25 @@ def uzum_webhook(payload: UzumWebhookPayload, db: Session = Depends(deps.get_db)
         tx.providerTransactionId = payload.uzum_transaction_id
         tx.performTime = int(time.time() * 1000)
         
-        # 4. Increase user balance atomically with lock
+        # 4. Increase user balance atomically with lock and record ledger entry
         user = db.query(User).filter(User.id == tx.employerId).with_for_update().first()
         if user:
-            # tx.amount is in tiyin, converting to UZS
-            user.balance = (user.balance or 0) + (tx.amount // 100)
+            amount_uzs = tx.amount // 100
+            user.balance = (user.balance or 0) + amount_uzs
             db.add(user)
+            
+            # Record audit ledger entry
+            from app.models.audit_ledger import AuditLedger
+            ledger = AuditLedger(
+                userId=user.id,
+                amountDelta=amount_uzs,
+                balanceAfter=user.balance,
+                entryType="deposit",
+                referenceType="transaction",
+                referenceId=tx.id,
+                description=f"Uzum orqali hisob to'ldirildi ({amount_uzs} so'm)"
+            )
+            db.add(ledger)
             
         db.commit()
         return {"status": "ok", "message": "Payment processed successfully"}
@@ -223,6 +236,19 @@ def request_withdrawal(
         # Deduct balance atomically
         user.balance = (user.balance or 0) - req.amount
         db.add(user)
+        
+        # Log to AuditLedger
+        from app.models.audit_ledger import AuditLedger
+        ledger = AuditLedger(
+            userId=user.id,
+            amountDelta=-req.amount,
+            balanceAfter=user.balance,
+            entryType="payout",
+            referenceType="transaction",
+            referenceId=tx.id,
+            description=f"Kartaga mablag' yechish so'rovi ({req.amount} so'm)"
+        )
+        db.add(ledger)
         
         db.commit()
         db.refresh(tx)

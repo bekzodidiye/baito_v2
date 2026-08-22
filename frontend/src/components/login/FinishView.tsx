@@ -82,7 +82,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
               <button
                 type="button"
                 onClick={() => setIsCodeSent(false)}
-                className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
+                className="text-[10px] font-bold text-brand-primary hover:text-brand-primary transition-colors flex items-center gap-1"
               >
                 <Edit2 size={12} />
                 Tahrirlash
@@ -100,20 +100,20 @@ export const FinishView: React.FC<FinishViewProps> = ({
               onChange={(e) => setRegPhone(e.target.value)}
               disabled={isCodeSent}
               placeholder={t.phonePlaceholder}
-              className={`w-full bg-slate-50/50 border border-slate-200 hover:border-slate-300 rounded-[12px] py-3.5 pl-11 pr-24 text-[13px] font-semibold focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-all placeholder:text-slate-400 shadow-sm ${isCodeSent ? 'text-slate-400 bg-slate-100 border-transparent cursor-not-allowed' : 'text-slate-900'}`}
+              className={`w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-24 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs ${isCodeSent ? 'text-slate-400 bg-slate-50 border-transparent cursor-not-allowed' : 'text-slate-755'}`}
             />
             {!isCodeSent && (
               <button
                 type="button"
                 onClick={sendVerificationCode}
                 disabled={isSendingCode || regPhone.length < 9}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 text-[11px] font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-[11px] font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSendingCode ? '...' : (t.sendCode || 'Kodni olish')}
               </button>
             )}
             {isCodeSent && (
-               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500">
+               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-primary">
                  <Check size={16} className="stroke-[2.5]" />
                </div>
             )}
@@ -141,7 +141,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
                 onChange={(e) => setRegCode(e.target.value)}
                 placeholder="1234"
                 maxLength={6}
-                className="w-full bg-slate-50/50 border border-slate-200 hover:border-slate-300 rounded-[12px] py-3.5 pl-11 pr-4 text-[13px] font-semibold focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-all placeholder:text-slate-400 shadow-sm text-slate-900"
+                className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-4 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
               />
             </div>
             <div className="flex justify-end pt-1 pr-1">
@@ -149,7 +149,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
                  type="button"
                  onClick={sendVerificationCode}
                  disabled={isSendingCode}
-                 className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors disabled:opacity-50"
+                 className="text-[10px] font-bold text-brand-primary hover:text-brand-primary transition-colors disabled:opacity-50"
                >
                  {isSendingCode ? '...' : 'Qayta yuborish'}
                </button>
@@ -172,7 +172,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
               value={regPassword}
               onChange={(e) => setRegPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-slate-50/50 border border-slate-200 hover:border-slate-300 rounded-[12px] py-3.5 pl-11 pr-11 text-[13px] font-semibold focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-all placeholder:text-slate-400 shadow-sm text-slate-900"
+              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-11 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
             />
             <button
               type="button"
@@ -199,7 +199,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
               value={regConfirmPassword}
               onChange={(e) => setRegConfirmPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-slate-50/50 border border-slate-200 hover:border-slate-300 rounded-[12px] py-3.5 pl-11 pr-11 text-[13px] font-semibold focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-all placeholder:text-slate-400 shadow-sm text-slate-900"
+              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-11 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
             />
             <button
               type="button"

@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Shield, HelpCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { LoginPromptScreen } from './login/LoginPromptScreen';
 import { MODAL_TRANSLATIONS } from './menu/MenuTranslations';
 import { ProfileContent } from './menu/ProfileContent';
 import { SettingsContent } from './menu/SettingsContent';
 import { HelpContent } from './menu/HelpContent';
+
+const LoginPromptScreen = React.lazy(() => import('./login/LoginPromptScreen').then(m => ({ default: m.LoginPromptScreen })));
 
 interface MenuModalProps {
   isOpen: boolean;
@@ -44,7 +45,9 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
         >
           {type === 'auth' ? (
             <div className="flex-1 h-full min-h-0 flex flex-col overflow-hidden">
-              <LoginPromptScreen isModal onClose={onClose} />
+              <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><div className="animate-spin w-8 h-8 rounded-full border-2 border-brand-primary border-t-transparent" /></div>}>
+                <LoginPromptScreen isModal onClose={onClose} />
+              </Suspense>
             </div>
           ) : (
             <>
