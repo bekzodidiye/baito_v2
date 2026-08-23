@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
-import { Briefcase, History } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Briefcase, History, Clock } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { EmployerPageHeader } from './EmployerPageHeader';
 import { EmployerJobDetailModal } from './EmployerJobDetailModal';
 import { EmployerJobCard } from './EmployerJobCard';
@@ -14,7 +14,7 @@ interface EmployerJobsProps {
 
 export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) => {
   const { postedJobs, language, completeJob, deleteJob } = useEmployer();
-  const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
+  const [activeTab, setActiveTab] = useState<'open' | 'active' | 'history'>('open');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobToComplete, setJobToComplete] = useState<Job | null>(null);
 
@@ -28,12 +28,14 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
   const [visibleCount, setVisibleCount] = useState(12);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const activeJobs = useMemo(() => postedJobs.filter(j => j.status !== 'completed'), [postedJobs]);
-  const historyJobs = useMemo(() => postedJobs.filter(j => j.status === 'completed'), [postedJobs]);
-  const displayJobs = activeTab === 'active' ? activeJobs : historyJobs;
+  const openJobs = useMemo(() => postedJobs.filter(j => j.status === 'open'), [postedJobs]);
+  const activeJobs = useMemo(() => postedJobs.filter(j => ['confirmed', 'in_progress', 'start_requested'].includes(j.status)), [postedJobs]);
+  const historyJobs = useMemo(() => postedJobs.filter(j => ['completed', 'cancelled', 'closed'].includes(j.status)), [postedJobs]);
+  
+  const displayJobs = activeTab === 'open' ? openJobs : activeTab === 'active' ? activeJobs : historyJobs;
 
   useEffect(() => {
-    setVisibleCount(12); // Reset visible count when switching tabs or jobs change significantly
+    setVisibleCount(12);
   }, [activeTab, displayJobs.length]);
 
   useEffect(() => {
@@ -60,90 +62,118 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
       />
 
       {/* Tabs */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex p-1 bg-slate-100/80 rounded-xl w-full max-w-sm">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex p-1.5 bg-slate-100/80 rounded-2xl w-full max-w-xl mx-auto mt-[-10px] relative z-10">
         <button
-          onClick={() => setActiveTab('active')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
-            activeTab === 'active' 
+          onClick={() => setActiveTab('open')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
+            activeTab === 'open' 
               ? 'bg-white text-brand-primary shadow-sm' 
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
           }`}
         >
-          <Briefcase size={14} className="stroke-[2.5]" />
-          <span>{language === 'uz' ? "Faol ishlar" : language === 'ru' ? "Активные" : "Active Jobs"}</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${activeTab === 'active' ? 'bg-brand-primary/10 text-brand-primary' : 'bg-slate-200 text-slate-500'}`}>
+          <Clock size={16} className={activeTab === 'open' ? 'stroke-[2.5]' : ''} />
+          <span>{language === 'uz' ? "Kutilmoqda" : language === 'ru' ? "Ожидают" : "Pending"}</span>
+          <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'open' ? 'bg-brand-primary/10 text-brand-primary' : 'bg-slate-200 text-slate-500'}`}>
+            {openJobs.length}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('active')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
+            activeTab === 'active' 
+              ? 'bg-white text-emerald-600 shadow-sm' 
+              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+          }`}
+        >
+          <Briefcase size={16} className={activeTab === 'active' ? 'stroke-[2.5]' : ''} />
+          <span>{language === 'uz' ? "Jarayonda" : language === 'ru' ? "В процессе" : "Active"}</span>
+          <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-200 text-slate-500'}`}>
             {activeJobs.length}
           </span>
         </button>
         <button
           onClick={() => setActiveTab('history')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
             activeTab === 'history' 
-              ? 'bg-white text-brand-primary shadow-sm' 
+              ? 'bg-white text-slate-800 shadow-sm' 
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
           }`}
         >
-          <History size={14} className="stroke-[2.5]" />
+          <History size={16} className={activeTab === 'history' ? 'stroke-[2.5]' : ''} />
           <span>{language === 'uz' ? "Tarix" : language === 'ru' ? "История" : "History"}</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${activeTab === 'history' ? 'bg-brand-primary/10 text-brand-primary' : 'bg-slate-200 text-slate-500'}`}>
+          <span className={`px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'history' ? 'bg-slate-100 text-slate-800' : 'bg-slate-200 text-slate-500'}`}>
             {historyJobs.length}
           </span>
         </button>
       </motion.div>
 
       {/* Job Grid */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-      {displayJobs.length === 0 ? (
-        <div className="bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200/60 py-16 px-6 flex flex-col items-center justify-center text-center mt-4">
-          {activeTab === 'active' ? (
-            <Briefcase size={40} className="text-slate-300 stroke-[1.5] mb-4" />
-          ) : (
-            <History size={40} className="text-slate-300 stroke-[1.5] mb-4" />
-          )}
-          <p className="text-sm font-extrabold text-slate-600">
-            {activeTab === 'active' 
-              ? (language === 'uz' ? "Faol ishlar yo'q" : language === 'ru' ? "Нет активных работ" : "No active jobs")
-              : (language === 'uz' ? "Tarix bo'sh" : language === 'ru' ? "История пуста" : "History is empty")
-            }
-          </p>
-          <p className="text-[11px] text-slate-400 font-medium max-w-[260px] mt-2 leading-relaxed">
-            {activeTab === 'active'
-              ? (language === 'uz' ? "Hozircha hech qanday faol e'loningiz yo'q. Yangi ish yarating." : language === 'ru' ? "У вас пока нет активных объявлений. Создайте новую работу." : "You have no active jobs yet. Post a new job.")
-              : (language === 'uz' ? "Yakunlangan ishlaringiz shu yerda ko'rinadi." : language === 'ru' ? "Завершенные работы будут отображаться здесь." : "Completed jobs will appear here.")
-            }
-          </p>
-          {activeTab === 'active' && (
-            <button
-              onClick={onPostJobClick}
-              className="mt-5 px-5 py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-bold text-xs rounded-xl shadow-[0_4px_14px_rgba(0,6,102,0.18)] transition-all cursor-pointer"
-            >
-              {language === 'uz' ? "Birinchi e'lonni yaratish" : language === 'ru' ? "Создать первое объявление" : "Create first job post"}
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4 mt-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {displayJobs.slice(0, visibleCount).map(job => (
-              <EmployerJobCard
-                key={job.id}
-                job={job}
-                language={language}
-                onSelect={setSelectedJob}
-                onComplete={(id) => setJobToComplete(job)}
-                onDelete={deleteJob}
-              />
-            ))}
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+        {displayJobs.length === 0 ? (
+          <div className="bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200/60 py-16 px-6 flex flex-col items-center justify-center text-center mt-4">
+            {activeTab === 'open' ? (
+              <Clock size={40} className="text-slate-300 stroke-[1.5] mb-4" />
+            ) : activeTab === 'active' ? (
+              <Briefcase size={40} className="text-slate-300 stroke-[1.5] mb-4" />
+            ) : (
+              <History size={40} className="text-slate-300 stroke-[1.5] mb-4" />
+            )}
+            <p className="text-sm font-extrabold text-slate-600">
+              {activeTab === 'open' 
+                ? (language === 'uz' ? "Ishchilar kutilayotgan ishlar yo'q" : language === 'ru' ? "Нет работ, ожидающих работников" : "No pending jobs")
+                : activeTab === 'active'
+                ? (language === 'uz' ? "Jarayondagi ishlar yo'q" : language === 'ru' ? "Нет работ в процессе" : "No active jobs")
+                : (language === 'uz' ? "Tarix bo'sh" : language === 'ru' ? "История пуста" : "History is empty")
+              }
+            </p>
+            <p className="text-[11px] text-slate-400 font-medium max-w-[260px] mt-2 leading-relaxed">
+              {activeTab === 'open'
+                ? (language === 'uz' ? "Siz yaratgan e'lonlaringiz shu yerda ko'rinadi." : language === 'ru' ? "Ваши новые объявления будут отображаться здесь." : "Your open jobs will appear here.")
+                : activeTab === 'active'
+                ? (language === 'uz' ? "Siz ishchilar bilan kelishgan ishlar shu yerda bo'ladi." : language === 'ru' ? "Работы, на которые вы наняли людей, будут здесь." : "Jobs with hired workers will appear here.")
+                : (language === 'uz' ? "Yakunlangan ishlaringiz shu yerda ko'rinadi." : language === 'ru' ? "Завершенные работы будут отображаться здесь." : "Completed jobs will appear here.")
+              }
+            </p>
+            {activeTab === 'open' && (
+              <button
+                onClick={onPostJobClick}
+                className="mt-5 px-5 py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-bold text-xs rounded-xl shadow-[0_4px_14px_rgba(0,6,102,0.18)] transition-all cursor-pointer"
+              >
+                {language === 'uz' ? "Yangi e'lon yaratish" : language === 'ru' ? "Создать новое объявление" : "Create new job"}
+              </button>
+            )}
           </div>
-          {/* Intersection Observer target */}
-          {visibleCount < displayJobs.length && (
-            <div ref={loadMoreRef} className="w-full h-20 flex items-center justify-center">
-              <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <div className="flex flex-col gap-4 mt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {displayJobs.slice(0, visibleCount).map(job => (
+                <EmployerJobCard
+                  key={job.id}
+                  job={job}
+                  language={language}
+                  onSelect={setSelectedJob}
+                  onComplete={(id) => setJobToComplete(job)}
+                  onDelete={deleteJob}
+                />
+              ))}
             </div>
-          )}
-        </div>
-      )}
-      </motion.div>
+            {/* Intersection Observer target */}
+            {visibleCount < displayJobs.length && (
+              <div ref={loadMoreRef} className="w-full h-20 flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+        )}
+        </motion.div>
+      </AnimatePresence>
 
       {/* Detailed Modal */}
       <EmployerJobDetailModal
