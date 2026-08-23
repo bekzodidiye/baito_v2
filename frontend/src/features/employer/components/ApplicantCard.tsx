@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, X, Star, MessageSquare, Briefcase, MapPin, Clock, CheckCircle } from 'lucide-react';
+import { Check, X, Star, Briefcase, MapPin, Clock, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { confirmStartJobApi } from '../../../api/queries';
 
@@ -43,7 +43,7 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
           </div>
           <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-0.5 border-2 border-white shadow-sm">
             <Star size={10} className="fill-white" />
-            {app.workerRating ? app.workerRating.toFixed(1) : (app.rating || '5.0')}
+            {app.workerRating ? app.workerRating.toFixed(1) : (app.rating || '0.0')}
           </div>
         </div>
         
@@ -83,7 +83,7 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
                     parts.push(app.workerGender);
                   }
                 }
-                return parts.length > 0 ? parts.join(', ') : (app.workerName?.length % 2 === 0 ? "24 yosh, Erkak" : "21 yosh, Ayol");
+                return parts.length > 0 ? parts.join(', ') : '-';
               })()}
             </span>
           </div>
@@ -91,13 +91,15 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
       </div>
 
       {/* Skills */}
-      <div className="flex flex-wrap gap-1.5">
-        {(app.workerSkills && app.workerSkills.length > 0 ? app.workerSkills : ["Tajribali", "Tezkor", "Mas'uliyatli"]).map((skill: string, idx: number) => (
-          <span key={idx} className="px-2.5 py-1 bg-brand-primary/5 text-brand-primary text-[10px] font-bold rounded-lg border border-brand-primary/10">
-            {skill}
-          </span>
-        ))}
-      </div>
+      {app.workerSkills && app.workerSkills.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {app.workerSkills.map((skill: string, idx: number) => (
+            <span key={idx} className="px-2.5 py-1 bg-brand-primary/5 text-brand-primary text-[10px] font-bold rounded-lg border border-brand-primary/10">
+              {skill}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-2 bg-gradient-to-br from-slate-50 to-white p-3.5 rounded-2xl border border-slate-100 shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)]">
@@ -107,7 +109,7 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
           </div>
           <div className="flex flex-col">
             <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">{language === 'uz' ? "Ishlar" : language === 'ru' ? "Работы" : "Jobs"}</span>
-            <span className="text-xs font-black text-slate-700">{app.workerCompletedJobs !== undefined ? app.workerCompletedJobs : 12} ta</span>
+            <span className="text-xs font-black text-slate-700">{app.workerCompletedJobs || 0} ta</span>
           </div>
         </div>
         <div className="flex items-center gap-2.5">
@@ -116,7 +118,7 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
           </div>
           <div className="flex flex-col">
             <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">{language === 'uz' ? "Masofa" : language === 'ru' ? "Расст." : "Distance"}</span>
-            <span className="text-xs font-black text-slate-700">{"-"}</span>
+            <span className="text-xs font-black text-slate-700">{app.distance || '-'}</span>
           </div>
         </div>
         <div className="flex items-center gap-2.5">
@@ -134,7 +136,7 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
           </div>
           <div className="flex flex-col">
             <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">{language === 'uz' ? "Holat" : language === 'ru' ? "Статус" : "Status"}</span>
-            <span className="text-xs font-black text-emerald-600">{language === 'uz' ? "Band emas" : language === 'ru' ? "Свободен" : "Available"}</span>
+            <span className="text-xs font-black text-emerald-600">{app.workerStatus || '-'}</span>
           </div>
         </div>
       </div>
@@ -145,58 +147,47 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
         <div className="flex flex-col gap-0.5">
           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{language === 'uz' ? "Ariza topshirilgan ish:" : language === 'ru' ? "Заявка на работу:" : "Applied for:"}</span>
           <p className="text-xs font-bold text-slate-800 line-clamp-1">{app.jobTitle}</p>
-          <p className="text-[11px] text-slate-500 italic mt-0.5 line-clamp-1">
-            "{app.workerBio || app.candidateExperience || 'Baito tasdiqlagan foydalanuvchi!'}"
-          </p>
+          {(app.workerBio || app.candidateExperience) && (
+            <p className="text-[11px] text-slate-500 italic mt-0.5 line-clamp-2">
+              {app.workerBio || app.candidateExperience}
+            </p>
+          )}
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="mt-1 flex gap-2">
-        {app.status === 'start_requested' ? (
-          <button
-            onClick={async () => {
-              await confirmStartJobApi(app.jobId);
-              window.location.reload();
-            }}
-            className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow-[0_4px_12px_rgba(245,158,11,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer animate-pulse"
-          >
-            <Check size={16} className="stroke-[3]" />
-            <span>{language === 'uz' ? "Ishni boshlashni tasdiqlash" : language === 'ru' ? "Подтвердить начало работы" : "Confirm Start Job"}</span>
-          </button>
-        ) : app.status === 'applied' ? (
-          <>
+      {(app.status === 'start_requested' || app.status === 'applied') && (
+        <div className="mt-1 flex gap-2">
+          {app.status === 'start_requested' ? (
             <button
-              onClick={() => updateApplicationStatus(app.id, 'hired')}
-              className="flex-1 py-3 bg-gradient-to-r from-brand-primary to-blue-600 hover:from-brand-primary/90 hover:to-blue-600/90 text-white rounded-xl text-xs font-bold shadow-[0_4px_12px_rgba(0,6,102,0.15)] hover:shadow-[0_6px_16px_rgba(0,6,102,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              onClick={async () => {
+                await confirmStartJobApi(app.jobId);
+                window.location.reload();
+              }}
+              className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow-[0_4px_12px_rgba(245,158,11,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer animate-pulse"
             >
-              <Check size={16} className="stroke-[2.5]" />
-              <span>{language === 'uz' ? "Qabul qilish" : language === 'ru' ? "Одобрить" : "Approve"}</span>
+              <Check size={16} className="stroke-[3]" />
+              <span>{language === 'uz' ? "Ishni boshlashni tasdiqlash" : language === 'ru' ? "Подтвердить начало работы" : "Confirm Start Job"}</span>
             </button>
-            <button
-              onClick={() => updateApplicationStatus(app.id, 'rejected')}
-              className="w-12 h-11 bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-500 rounded-xl transition-all active:scale-95 flex items-center justify-center cursor-pointer flex-shrink-0"
-            >
-              <X size={18} className="stroke-[2.5]" />
-            </button>
-          </>
-        ) : app.status === 'hired' ? (
-          <button
-            onClick={() => onChatClick(app.candidateName)}
-            className="w-full py-3 bg-brand-primary/5 hover:bg-brand-primary/10 text-brand-primary rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer border border-brand-primary/10"
-          >
-            <MessageSquare size={16} className="stroke-[2.5]" />
-            <span>{language === 'uz' ? "Ishchi bilan bog'lanish" : language === 'ru' ? "Связаться с работником" : "Contact Worker"}</span>
-          </button>
-        ) : (
-          <button
-            disabled
-            className="w-full py-3 bg-slate-50 text-slate-400 rounded-xl text-xs font-bold cursor-not-allowed border border-slate-100"
-          >
-            {language === 'uz' ? "Rad etilgan" : language === 'ru' ? "Отклонено" : "Rejected"}
-          </button>
-        )}
-      </div>
+          ) : (
+            <>
+              <button
+                onClick={() => updateApplicationStatus(app.id, 'hired')}
+                className="flex-1 py-3 bg-gradient-to-r from-brand-primary to-blue-600 hover:from-brand-primary/90 hover:to-blue-600/90 text-white rounded-xl text-xs font-bold shadow-[0_4px_12px_rgba(0,6,102,0.15)] hover:shadow-[0_6px_16px_rgba(0,6,102,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Check size={16} className="stroke-[2.5]" />
+                <span>{language === 'uz' ? "Qabul qilish" : language === 'ru' ? "Одобрить" : "Approve"}</span>
+              </button>
+              <button
+                onClick={() => updateApplicationStatus(app.id, 'rejected')}
+                className="w-12 h-11 bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-500 rounded-xl transition-all active:scale-95 flex items-center justify-center cursor-pointer flex-shrink-0"
+              >
+                <X size={18} className="stroke-[2.5]" />
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 };
