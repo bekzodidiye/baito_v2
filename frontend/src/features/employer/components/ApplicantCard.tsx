@@ -27,8 +27,7 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
       className={`bg-white rounded-3xl p-5 flex flex-col gap-5 relative overflow-hidden transition-all duration-300 shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgb(0,0,0,0.06)] border ${isHired ? 'border-emerald-100' : isRejected ? 'border-rose-100' : 'border-slate-100/80'}`}
     >
       {/* Dynamic Top Gradient Bar for Status */}
-      {isHired && <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-500" />}
-      {isRejected && <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-rose-400 to-rose-500" />}
+      {/* Removed per user request */}
 
       {/* Header Info */}
       <div className={`flex items-start gap-4 ${isHired || isRejected ? 'mt-2' : ''}`}>
