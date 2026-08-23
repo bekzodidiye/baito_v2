@@ -44,6 +44,26 @@ export const fetchWorkerApplicationsApi = async () => {
   return await apiClient('/applications/worker');
 };
 
+export const uploadFileApi = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const token = localStorage.getItem('access_token') || localStorage.getItem('baito_token') || '';
+  const API = import.meta.env.VITE_API_URL || '';
+  const response = await fetch(`${API}/api/v1/upload/`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || 'Fayl yuklashda xatolik yuz berdi');
+  }
+
+  const data = await response.json();
+  return data.url;
+};
+
 export const fetchUserProfileApi = async () => {
   return await apiClient('/users/me');
 };

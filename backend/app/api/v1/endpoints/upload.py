@@ -105,11 +105,8 @@ async def upload_file(
             ExtraArgs=extra_args
         )
         
-        # Return URL
-        if settings.AWS_ENDPOINT_URL:
-            url = f"{settings.AWS_ENDPOINT_URL}/{settings.AWS_BUCKET_NAME}/{filename}"
-        else:
-            url = f"https://{settings.AWS_BUCKET_NAME}.s3.{settings.AWS_REGION}.amazonaws.com/{filename}"
+        # Return URL (relative URL for seamless Nginx proxy compatibility across all environments)
+        url = f"/{settings.AWS_BUCKET_NAME}/{filename}"
             
         return {
             "success": True, 

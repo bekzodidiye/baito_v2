@@ -4,7 +4,7 @@ import { useJobsData } from "../context/useJobsData";
 import { getProfileTranslations } from '../features/worker/profile/ProfileScreen.utils';
 import { showToast } from '../utils/toast';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
-import { requestWithdrawalApi } from '../api/queries';
+import { requestWithdrawalApi, uploadFileApi } from '../api/queries';
 import { apiClient } from '../api/client';
 import { useQuery } from '@tanstack/react-query';
 
@@ -138,17 +138,31 @@ export const useProfileScreen = () => {
     setLanguage(langs[(idx + 1) % langs.length]);
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (file && userProfile) {
+      // 1. Instant local preview
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result && userProfile) {
           setUserProfile({ ...userProfile, profileImage: event.target.result as string });
-          showToast(language === 'uz' ? "Rasm yangilandi!" : "Photo updated!");
         }
       };
       reader.readAsDataURL(file);
+
+      // 2. Upload to MinIO S3 and save to user profile
+      try {
+        const uploadedUrl = await uploadFileApi(file);
+        await apiClient('/users/me', {
+          method: 'PUT',
+          body: JSON.stringify({ avatarUrl: uploadedUrl })
+        });
+        setUserProfile({ ...userProfile, profileImage: uploadedUrl });
+        showToast(language === 'uz' ? "Rasm muvaffaqiyatli saqlandi!" : "Photo saved successfully!");
+      } catch (err) {
+        console.error('Avatar upload failed:', err);
+        showToast(language === 'uz' ? "Rasm yuklashda xatolik yuz berdi" : "Failed to upload photo");
+      }
     }
   };
 

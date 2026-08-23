@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { Briefcase, Building, FileText, ClipboardList, Image as ImageIcon, Upload, X, Tag as TagIcon, Plus } from 'lucide-react';
+import { uploadFileApi } from '../../../api/queries';
 
 interface Category {
   id: string;
@@ -34,12 +35,21 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [customTag, setCustomTag] = useState('');
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && setImageUrl) {
+      // 1. Instant local preview
       const reader = new FileReader();
       reader.onloadend = () => reader.result && setImageUrl(reader.result.toString());
       reader.readAsDataURL(file);
+
+      // 2. Upload to MinIO S3
+      try {
+        const uploadedUrl = await uploadFileApi(file);
+        setImageUrl(uploadedUrl);
+      } catch (err) {
+        console.error('Job image upload to MinIO failed:', err);
+      }
     }
   };
 
