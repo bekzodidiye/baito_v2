@@ -103,6 +103,8 @@ export const useEmployer = () => {
           hourlyRate: newJobData.hourlyRate || '',
           transportRate: newJobData.transportRate || '',
           category: newJobData.category || 'retail',
+          imageUrl: newJobData.imageUrl || undefined,
+          logoUrl: newJobData.logoUrl || newJobData.imageUrl || undefined,
           responsibilities: newJobData.responsibilities || newJobData.description || '',
           requirements: newJobData.requirements || '',
           importantNote: newJobData.importantNote || '',
