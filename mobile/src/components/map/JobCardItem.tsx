@@ -63,8 +63,8 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
           
           <div className="flex gap-3">
             <div className="w-8 h-8 rounded-lg bg-slate-50 shadow-xs flex items-center justify-center overflow-hidden shrink-0 border border-slate-100/90">
-              {job.logoUrl ? (
-                <img src={job.logoUrl} alt={job.company} className="w-full h-full object-cover" />
+              {job.imageUrl || job.logoUrl ? (
+                <img src={job.imageUrl || job.logoUrl} alt={job.company} className="w-full h-full object-cover" />
               ) : (
                 <Briefcase size={14} className="text-slate-400" />
               )}
