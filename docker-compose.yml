@@ -210,9 +210,12 @@ services:
         required: false
     environment:
       - TZ=Asia/Tashkent
-      # The bot token used to be committed here as a default value.
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN is required}
-      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:?TELEGRAM_CHAT_ID is required}
+      # The bot token used to be committed here as a default value. It is now
+      # supplied only from .env — and left OPTIONAL on purpose: backup_bot.py
+      # exits on its own when it is missing, so an absent token stops the
+      # backup bot rather than blocking the whole stack from starting.
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
       - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID:-}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

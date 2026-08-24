@@ -134,7 +134,11 @@ if settings.is_production:
             "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are required in production."
         )
     if settings.AWS_SECRET_ACCESS_KEY == "minioadmin":
-        raise RuntimeError("Refusing to start with the default MinIO password in production.")
+        raise RuntimeError(
+            "Refusing to start with the default MinIO password in production. "
+            "Set MINIO_ROOT_USER and MINIO_ROOT_PASSWORD in .env, then restart "
+            "the minio service so it picks up the new credentials."
+        )
     if settings.SEED_DEMO_DATA:
         raise RuntimeError("SEED_DEMO_DATA cannot be enabled in production.")
 
