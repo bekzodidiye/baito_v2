@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiClient } from '../../api/client';
 import { AdminUserDetailResponse } from './types';
 import { PlusCircle, Wallet, History, AlertCircle, FileText, Send, CheckCircle, Clock, XCircle, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -16,8 +17,6 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
   const orders = detail?.orders || [];
   const reviews = detail?.reviews || [];
 
-  const token = localStorage.getItem('access_token') || localStorage.getItem('baito_token') || '';
-  const API = import.meta.env.VITE_API_URL || '';
   
   const [showTopUp, setShowTopUp] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState('');
@@ -47,15 +46,10 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
 
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${API}/api/v1/admin/users/${user.id}/notes`, {
+      const data = await apiClient(`/admin/users/${user.id}/notes`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({ text: newNote.trim() })
       });
-      const data = await res.json();
       if (data.success) {
         setNotes(data.notes);
         setNewNote('');

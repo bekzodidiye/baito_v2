@@ -1,7 +1,20 @@
+# Secrets have no defaults in this file. Every ${VAR:?...} below refuses to
+# start the stack unless the value is present in .env — the previous version
+# shipped a working JWT signing key, a live Telegram bot token and the
+# passwords "password" / "minioadmin" as fallbacks, all of them committed.
+#
+# Backing services bind to 127.0.0.1 only. Publishing Postgres and MinIO on
+# 0.0.0.0 exposed them to every host on the LAN and the tailnet.
+
 networks:
   baito_net:
     driver: bridge
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "5"
 
 services:
   db:
@@ -10,24 +23,20 @@ services:
     networks:
       - baito_net
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: ${POSTGRES_DB:-baito}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-baito}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-baito}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "5"
+    logging: *default-logging
 
   redis:
     image: redis:7-alpine
@@ -41,11 +50,7 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "5"
+    logging: *default-logging
 
   minio:
     image: minio/minio:latest
@@ -53,24 +58,39 @@ services:
     networks:
       - baito_net
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     volumes:
       - minio_data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "mc", "ready", "local"]
       interval: 15s
       timeout: 5s
       retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "5"
+    logging: *default-logging
+
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: alembic upgrade head
+    restart: "no"
+    networks:
+      - baito_net
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-baito}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+    logging: *default-logging
 
   backend:
     build:
@@ -84,32 +104,38 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       - TZ=Asia/Tashkent
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-baito}
+      # Without this the app ran in development mode in production: /docs was
+      # served publicly, cookies lost Secure/SameSite=strict and HSTS was off.
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-baito}
       - REDIS_URL=redis://redis:6379/0
       - AWS_ENDPOINT_URL=http://minio:9000
-      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER:-minioadmin}
-      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
-      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
       - AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-baito-bucket}
+      - CORS_ORIGINS=${CORS_ORIGINS:-}
       - TEXTUP_EMAIL=${TEXTUP_EMAIL:-}
       - TEXTUP_PASSWORD=${TEXTUP_PASSWORD:-}
+      - UZUM_TERMINAL_ID=${UZUM_TERMINAL_ID:-}
+      - UZUM_SECRET_KEY=${UZUM_SECRET_KEY:-}
+      - UZUM_API_URL=${UZUM_API_URL:-https://api.uzum.uz/epos/v1}
       - SENTRY_DSN=${SENTRY_DSN:-}
-      - SECRET_KEY=${SECRET_KEY:-baito_secret_jwt_key_2026}
-    ports:
-      - "8000:8000"
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+    # Reachable through the frontend's nginx proxy; not published to the host.
+    expose:
+      - "8000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 15s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "5"
+    logging: *default-logging
 
   celery_worker:
     build:
@@ -126,16 +152,45 @@ services:
         condition: service_healthy
     environment:
       - TZ=Asia/Tashkent
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-baito}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-baito}
       - REDIS_URL=redis://redis:6379/0
+      - AWS_ENDPOINT_URL=http://minio:9000
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
       - TEXTUP_EMAIL=${TEXTUP_EMAIL:-}
       - TEXTUP_PASSWORD=${TEXTUP_PASSWORD:-}
-      - SECRET_KEY=${SECRET_KEY:-baito_secret_jwt_key_2026}
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "5"
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.celery_app inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging: *default-logging
+
+  # Scheduler for the periodic tasks (job expiry, idempotency-key cleanup).
+  # There was no beat service at all, so nothing scheduled ever ran.
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A app.celery_app beat --loglevel=info
+    restart: unless-stopped
+    networks:
+      - baito_net
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - TZ=Asia/Tashkent
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-baito}
+      - REDIS_URL=redis://redis:6379/0
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+    logging: *default-logging
 
   backup_bot:
     build:
@@ -155,23 +210,20 @@ services:
         required: false
     environment:
       - TZ=Asia/Tashkent
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-8353860449:AAEyDNlIDPyChViJAsgyhq7oDCQ11RT9dBM}
-      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-5678281376}
+      # The bot token used to be committed here as a default value.
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN is required}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:?TELEGRAM_CHAT_ID is required}
       - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID:-}
-      - POSTGRES_USER=${POSTGRES_USER:-user}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB:-baito}
       - POSTGRES_HOST=db
       - AWS_ENDPOINT_URL=http://minio:9000
-      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER:-minioadmin}
-      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
-      - AWS_REGION=us-east-1
-      - S3_BUCKET_PATH=s3://baito-bucket/backups/
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "5"
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - S3_BUCKET_PATH=s3://${BACKUP_BUCKET_NAME:-baito-backups}/
+    logging: *default-logging
 
   frontend:
     build:
@@ -181,18 +233,13 @@ services:
     networks:
       - baito_net
     ports:
-      - "3000:80"
+      - "${FRONTEND_BIND:-127.0.0.1}:3000:80"
     depends_on:
       backend:
         condition: service_healthy
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "5"
+    logging: *default-logging
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
-

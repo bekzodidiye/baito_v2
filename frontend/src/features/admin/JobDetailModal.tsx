@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { apiClient } from '../../api/client';
 import { 
   ArrowLeft, 
   Clock, 
@@ -83,7 +84,6 @@ const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
 ];
 
 export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) => {
-  const token = localStorage.getItem('access_token') || localStorage.getItem('baito_token') || '';
   const [activeTab, setActiveTab] = useState<TabKey>('info');
   const [detail, setDetail] = useState<AdminJobDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -91,14 +91,13 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) 
   useEffect(() => {
     if (!job) return;
     setLoading(true);
-    fetch(`${API}/api/v1/admin/jobs/${job.id}/detail`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.json())
+    // Same fix as UserDetailModal: use the session cookie, and stop parsing
+    // error responses as if they were data.
+    apiClient(`/admin/jobs/${job.id}/detail`)
       .then(data => setDetail(data))
       .catch(() => setDetail(null))
       .finally(() => setLoading(false));
-  }, [job?.id, token]);
+  }, [job?.id]);
 
   if (!job) return null;
 

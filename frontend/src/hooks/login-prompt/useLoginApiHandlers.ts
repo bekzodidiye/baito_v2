@@ -1,5 +1,5 @@
 import { useApp } from '../../context/AppContext';
-import { registerApi, loginApi } from '../../api/queries';
+import { registerApi, loginApi, verifySmsApi } from '../../api/queries';
 import { apiClient } from '../../api/client';
 import { LOCAL_TEXTS } from '../../components/login/LoginPromptScreen.translations';
 import { showToast } from '../../utils/toast';
@@ -31,20 +31,22 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
     }
 
     try {
-      // Step 1: Verify the SMS code
-      await apiClient('/auth/verify-sms', {
-        method: 'POST',
-        body: JSON.stringify({ phone: state.regPhone, code: state.regCode })
-      });
-      
+      // Step 1: Verify the SMS code. The response carries a single-use token
+      // that proves this phone number was verified; registration now requires
+      // it, so the two steps can no longer be decoupled.
+      const verification = await verifySmsApi(state.regPhone, state.regCode);
+
       // Step 2: Register the user
       const payload = {
         password: state.regPassword,
-        name: state.selectedRole === 'worker' ? `${state.firstName} ${state.lastName}` : state.companyName,
+        name: state.selectedRole === 'worker'
+          ? `${state.firstName} ${state.lastName}`.trim()
+          : state.companyName,
         phone: state.regPhone,
         role: state.selectedRole || 'worker',
+        verification_token: verification?.verification_token,
       };
-      
+
       await registerApi(payload);
 
       await loginApi(state.regPhone, state.regPassword);
@@ -73,16 +75,16 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
 
       const newProfile = {
         id: 'unknown',
-        firstName: state.selectedRole === 'worker' ? (state.firstName || 'Ozodbek') : (state.companyName || 'Korzinka.uz'),
-        lastName: state.selectedRole === 'worker' ? (state.lastName || 'Salimov') : '',
+        firstName: state.selectedRole === 'worker' ? (state.firstName || '') : (state.companyName || ''),
+        lastName: state.selectedRole === 'worker' ? (state.lastName || '') : '',
         selectedRole: state.selectedRole || 'worker',
-        birthDate: state.birthDay && state.birthMonth && state.birthYear ? `${state.birthYear}-${state.birthMonth.padStart(2, '0')}-${state.birthDay.padStart(2, '0')}` : '1996-01-19',
-        phone: state.regPhone || '+998 (90) 123-45-67',
+        birthDate: state.birthDay && state.birthMonth && state.birthYear ? `${state.birthYear}-${state.birthMonth.padStart(2, '0')}-${state.birthDay.padStart(2, '0')}` : '',
+        phone: state.regPhone || '',
         email: state.email || '',
-        gender: state.gender || 'male',
+        gender: state.gender || '',
         passportSeries: state.passportSeries && state.passportNumber ? `${state.passportSeries} ${state.passportNumber}` : '',
         pinfl: state.jshshir || '',
-        docFileName1: state.docFileName1 || 'passport_front_scan.png',
+        docFileName1: state.docFileName1 || '',
         docFileName2: state.docFileName2 || '',
         docFileName3: state.docFileName3 || '',
         profileImage: state.profileImage || null,

@@ -25,5 +25,11 @@ ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--timeout-keep-alive", "30"]
+# --proxy-headers makes uvicorn honour X-Forwarded-For from nginx. Without it
+# request.client.host is always the proxy address, which broke per-client rate
+# limiting (everyone shared one bucket) and made every logged IP identical.
+CMD ["uvicorn", "app.main:app", \
+     "--host", "0.0.0.0", "--port", "8000", \
+     "--workers", "2", "--timeout-keep-alive", "30", \
+     "--proxy-headers", "--forwarded-allow-ips", "*"]
 

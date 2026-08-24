@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Loader2,
 } from 'lucide-react';
+import { apiClient } from '../../api/client';
 import { useApp } from '../../context/AppContext';
 import { BanUserModal } from './BanUserModal';
 import { UserTabsMain } from './UserTabsMain';
@@ -40,23 +41,14 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   
   const [detail, setDetail] = useState<AdminUserDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const token = localStorage.getItem('access_token') || localStorage.getItem('baito_token') || '';
-  
-  const API = import.meta.env.VITE_API_URL || '';
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
 
-    fetch(`${API}/api/v1/admin/users/${initialUser.id}/detail`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-        return res.json();
-      })
+    // Auth travels in the httpOnly session cookie; the old Bearer token was
+    // read from a localStorage key that is never written, so this always 401'd.
+    apiClient(`/admin/users/${initialUser.id}/detail`)
       .then((data: AdminUserDetailResponse) => {
         if (isMounted) {
           if (data && data.user) {
@@ -91,7 +83,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [initialUser.id, token, API]);
+  }, [initialUser.id]);
 
   const user = detail?.user || initialUser;
 

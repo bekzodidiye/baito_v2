@@ -45,7 +45,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
 
       // 2. Upload to MinIO S3
       try {
-        const uploadedUrl = await uploadFileApi(file);
+        const uploadedUrl = await uploadFileApi(file, 'job');
         setImageUrl(uploadedUrl);
       } catch (err) {
         console.error('Job image upload to MinIO failed:', err);

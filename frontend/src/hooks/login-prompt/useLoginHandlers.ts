@@ -18,7 +18,7 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
     if (file) {
       state.setProfileImage(URL.createObjectURL(file));
       try {
-        const uploadedUrl = await uploadFileApi(file);
+        const uploadedUrl = await uploadFileApi(file, 'avatar');
         state.setProfileImage(uploadedUrl);
       } catch (err) {
         console.error('Avatar upload failed:', err);
@@ -36,7 +36,7 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
     if (file) {
       state.setDocFileName1(file.name);
       try {
-        const uploadedUrl = await uploadFileApi(file);
+        const uploadedUrl = await uploadFileApi(file, 'document');
         state.setDocFileName1(uploadedUrl);
       } catch (err) {
         console.error('Doc1 upload failed:', err);
@@ -48,7 +48,7 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
     if (file) {
       state.setDocFileName2(file.name);
       try {
-        const uploadedUrl = await uploadFileApi(file);
+        const uploadedUrl = await uploadFileApi(file, 'document');
         state.setDocFileName2(uploadedUrl);
       } catch (err) {
         console.error('Doc2 upload failed:', err);
@@ -60,7 +60,7 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
     if (file) {
       state.setDocFileName3(file.name);
       try {
-        const uploadedUrl = await uploadFileApi(file);
+        const uploadedUrl = await uploadFileApi(file, 'document');
         state.setDocFileName3(uploadedUrl);
       } catch (err) {
         console.error('Doc3 upload failed:', err);
@@ -68,8 +68,10 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
     }
   };
 
-  // Demo autofill
+  // Demo autofill — development only. This writes plausible-looking passport
+  // details that would otherwise be submitted to the verification queue.
   const triggerDemoDocsAll = () => {
+    if (import.meta.env.PROD) return;
     if (state.selectedRole === 'worker') {
       state.setPassportSeries('AB');
       state.setPassportNumber('1234567');

@@ -38,7 +38,7 @@ export function useCalendarScreen() {
   const jobs = rawJobs.map(j => getTranslatedJob(j, language));
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: Event) => {
       if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
         setActiveTooltipDay(null);
       }

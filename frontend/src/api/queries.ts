@@ -14,9 +14,21 @@ export const fetchChatMessages = async (chatId: string) => {
 };
 
 export const createChatApi = async (employerId: string, jobId?: string) => {
+  // workerId is derived from the session server-side.
   return await apiClient('/chats', {
     method: 'POST',
     body: JSON.stringify({ employerId, jobId })
+  });
+};
+
+export const sendChatMessageApi = async (
+  chatId: string,
+  payload: { text: string; hasMap?: boolean; mapLocation?: string },
+) => {
+  // HTTP fallback for when the WebSocket cannot connect.
+  return await apiClient(`/chats/${chatId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
   });
 };
 
@@ -44,23 +56,21 @@ export const fetchWorkerApplicationsApi = async () => {
   return await apiClient('/applications/worker');
 };
 
-export const uploadFileApi = async (file: File): Promise<string> => {
+export type UploadPurpose = 'avatar' | 'job' | 'logo' | 'document';
+
+export const uploadFileApi = async (
+  file: File,
+  purpose: UploadPurpose = 'document',
+): Promise<string> => {
+  // Auth is the httpOnly session cookie. The previous version read an
+  // 'access_token' key from localStorage that nothing ever writes and omitted
+  // credentials entirely, so every upload came back 401.
   const formData = new FormData();
   formData.append('file', file);
-  const token = localStorage.getItem('access_token') || localStorage.getItem('baito_token') || '';
-  const API = import.meta.env.VITE_API_URL || '';
-  const response = await fetch(`${API}/api/v1/upload/`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: formData,
-  });
+  // Decides who may read the file back: identity documents stay private.
+  formData.append('purpose', purpose);
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || 'Fayl yuklashda xatolik yuz berdi');
-  }
-
-  const data = await response.json();
+  const data = await apiClient('/upload/', { method: 'POST', body: formData });
   return data.url;
 };
 
@@ -134,8 +144,20 @@ export const registerApi = async (data: any) => {
   });
 };
 
+export const verifySmsApi = async (phone: string, code: string) => {
+  // Returns a single-use verification_token that registerApi must pass along.
+  return await apiClient('/auth/verify-sms', {
+    method: 'POST',
+    body: JSON.stringify({ phone, code }),
+  });
+};
+
 export const requestWithdrawalApi = async (amount: number) => {
-  return await apiClient('/payments/withdraw', { method: 'POST', body: JSON.stringify({ amount }) });
+  return await apiClient('/payments/withdraw', {
+    method: 'POST',
+    headers: { 'Idempotency-Key': crypto.randomUUID() },
+    body: JSON.stringify({ amount }),
+  });
 };
 
 export const fetchPaymentCardsApi = async () => {

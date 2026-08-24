@@ -1,4 +1,5 @@
 import React from 'react';
+import type { ScreenType } from '../../../context/types';
 import { Briefcase, ChevronRight, History, MessageSquare, Award, Coins, FileText, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { showToast } from '../../../utils/toast';
@@ -9,7 +10,7 @@ interface ProfileAccordionProps {
   setExpandedSection: (sec: 'activity' | 'settings' | 'help' | null) => void;
   t: any;
   language: string;
-  setCurrentScreen: (screen: string) => void;
+  setCurrentScreen: (screen: ScreenType) => void;
 
   setActiveDialog: (dialog: 'withdraw' | 'edit' | 'none') => void;
   toggleLanguage: () => void;

@@ -1,103 +1,136 @@
+import json
+import logging
+import secrets
+from datetime import datetime, timezone
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+
 from app import crud
 from app.api import deps
 from app.core import security
-from app.models.session import ActiveSession
-from pydantic import BaseModel
-import httpx
-from datetime import datetime, timezone
 from app.core.config import settings
 from app.core.limiter import limiter
-
-router = APIRouter()
-
-import json
+from app.core.phone import (
+    SMS_CODE_KEY,
+    is_valid_uz_phone,
+    issue_verification_grant,
+    normalize_phone,
+)
+from app.models.session import ActiveSession
 from app.redis_client import redis_client
 from app.tasks import send_sms_task
 
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
+
 class SendSMSRequest(BaseModel):
-    phone: str
+    phone: str = Field(min_length=7, max_length=20)
+
 
 class VerifySMSRequest(BaseModel):
-    
-    phone: str
-    code: str
+    phone: str = Field(min_length=7, max_length=20)
+    code: str = Field(min_length=4, max_length=8)
 
-from fastapi import BackgroundTasks
+
+def _require_valid_phone(raw: str) -> str:
+    phone = normalize_phone(raw)
+    if not is_valid_uz_phone(phone):
+        raise HTTPException(status_code=400, detail="Telefon raqam formati noto'g'ri")
+    return phone
+
 
 @router.post("/send-sms")
 @limiter.limit("3/minute")
+@limiter.limit("10/hour")
 async def send_verification_sms(
     request: Request,
     payload: SendSMSRequest,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(deps.get_db)
 ) -> Any:
-    """
-    Send verification SMS using textup.uz API via Celery or non-blocking background task.
-    """
-    if not settings.TEXTUP_EMAIL or not settings.TEXTUP_PASSWORD:
-        return {"success": True, "message": "SMS simulated (no credentials)"}
+    """Send a verification SMS via TextUp, through Celery when it is available."""
+    phone = _require_valid_phone(payload.phone)
 
-    # Generate a cryptographically secure 6-digit code
-    import secrets
     code = f"{secrets.SystemRandom().randint(100000, 999999)}"
-    
-    # Save to Redis with 5-minute expiration
-    import json
+
     redis_client.setex(
-        f"sms_code:{payload.phone}",
-        300,
-        json.dumps({"code": code, "attempts": 0})
+        SMS_CODE_KEY.format(phone=phone),
+        settings.SMS_CODE_TTL_SECONDS,
+        json.dumps({"code": code, "attempts": 0}),
     )
-    
-    print("\n" + "="*50)
-    print(f"🚀 SMS VERIFICATION CODE FOR {payload.phone}: {code}")
-    print("="*50 + "\n")
-        
-    # Trigger Celery task or non-blocking FastAPI BackgroundTask fallback
-    try:
-        send_sms_task.delay(payload.phone, code)
-    except Exception as e:
-        background_tasks.add_task(send_sms_task, payload.phone, code)
-        
-    return {"success": True, "message": "SMS yuborildi"}
+
+    # The code is a credential: it is never logged and never printed.
+    credentials_present = bool(settings.TEXTUP_EMAIL and settings.TEXTUP_PASSWORD)
+    if credentials_present:
+        try:
+            send_sms_task.delay(phone, code)
+        except Exception as e:
+            logger.warning("Celery unavailable, sending SMS inline: %s", e)
+            background_tasks.add_task(send_sms_task, phone, code)
+        return {"success": True, "message": "SMS yuborildi"}
+
+    # Development without an SMS gateway. The code is still stored, so the
+    # rest of the signup flow behaves exactly as it does in production.
+    logger.info("SMS gateway not configured; verification code was not sent.")
+    body: dict[str, Any] = {"success": True, "message": "SMS yuborildi (dev rejimi)"}
+    if not settings.is_production and settings.SMS_DEV_ECHO_CODE:
+        body["dev_code"] = code
+    return body
+
 
 @router.post("/verify-sms")
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 async def verify_sms(request: Request, payload: VerifySMSRequest) -> Any:
+    """Check the SMS code and hand back a short-lived proof of ownership.
+
+    That proof is what ``POST /users`` requires; without it, registration can
+    no longer claim an unverified phone number.
     """
-    Verify the SMS code sent to the user.
-    """
-    stored_entry_str = redis_client.get(f"sms_code:{payload.phone}")
+    phone = _require_valid_phone(payload.phone)
+    key = SMS_CODE_KEY.format(phone=phone)
+
+    stored_entry_str = redis_client.get(key)
     if not stored_entry_str:
         raise HTTPException(status_code=400, detail="Tasdiqlash kodi topilmadi yoki muddati o'tgan")
-    
-    import json
-    stored_entry = json.loads(stored_entry_str)
-    
-    stored_entry["attempts"] = stored_entry.get("attempts", 0) + 1
-    if stored_entry["attempts"] > 5:
-        redis_client.delete(f"sms_code:{payload.phone}")
-        raise HTTPException(status_code=429, detail="Ko'p noto'g'ri urinishlar. Iltimos, yangi kod so'rang")
-        
-    stored_code = stored_entry.get("code")
 
-    if stored_code != payload.code:
-        # update attempts
-        redis_client.setex(
-            f"sms_code:{payload.phone}",
-            300, # reset timer roughly
-            json.dumps(stored_entry)
+    try:
+        stored_entry = json.loads(stored_entry_str)
+    except (TypeError, ValueError):
+        redis_client.delete(key)
+        raise HTTPException(status_code=400, detail="Tasdiqlash kodi yaroqsiz, yangi kod so'rang")
+
+    attempts = int(stored_entry.get("attempts", 0)) + 1
+    if attempts > settings.SMS_MAX_ATTEMPTS:
+        redis_client.delete(key)
+        raise HTTPException(
+            status_code=429,
+            detail="Ko'p noto'g'ri urinishlar. Iltimos, yangi kod so'rang",
         )
+
+    stored_code = str(stored_entry.get("code", ""))
+    if not secrets.compare_digest(stored_code, payload.code):
+        stored_entry["attempts"] = attempts
+        # Preserve the ORIGINAL expiry: re-setting a full TTL on every wrong
+        # guess used to give an attacker an indefinite window.
+        remaining = redis_client.ttl(key)
+        if not isinstance(remaining, int) or remaining <= 0:
+            remaining = 60
+        redis_client.setex(key, remaining, json.dumps(stored_entry))
         raise HTTPException(status_code=400, detail="Tasdiqlash kodi xato")
-        
-    # Code is valid, remove it from memory so it can't be reused
-    redis_client.delete(f"sms_code:{payload.phone}")
-    return {"success": True, "message": "Kodi tasdiqlandi"}
+
+    redis_client.delete(key)
+    token = issue_verification_grant(phone)
+    return {
+        "success": True,
+        "message": "Kod tasdiqlandi",
+        "phone": phone,
+        "verification_token": token,
+    }
+
 
 def _set_auth_cookies(response: Response, subject: str, sid: str = None) -> tuple[str, str]:
     access = security.create_access_token(subject, sid=sid)
@@ -122,6 +155,7 @@ def _set_auth_cookies(response: Response, subject: str, sid: str = None) -> tupl
     )
     return access, refresh
 
+
 def _clear_auth_cookies(response: Response) -> None:
     for name in (settings.ACCESS_COOKIE_NAME, settings.REFRESH_COOKIE_NAME):
         response.delete_cookie(
@@ -132,17 +166,31 @@ def _clear_auth_cookies(response: Response) -> None:
             samesite=settings.cookie_samesite,
         )
 
+
+def _device_name(user_agent: str) -> str:
+    for needle, label in (
+        ("iPhone", "iPhone"),
+        ("iPad", "iPad"),
+        ("Android", "Android Device"),
+        ("Windows", "Windows PC"),
+        ("Mac", "Mac"),
+        ("Linux", "Linux PC"),
+    ):
+        if needle in user_agent:
+            return label
+    return (user_agent or "Unknown Device")[:30]
+
+
 @router.post("/login")
 @limiter.limit("5/minute")
+@limiter.limit("30/hour")
 def login(
     request: Request,
     response: Response,
     db: Session = Depends(deps.get_db),
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> Any:
-    """
-    Authenticate and set httpOnly session cookies. Also returns tokens for mobile/API clients.
-    """
+    """Authenticate and set httpOnly session cookies."""
     user = crud.user.authenticate(
         db, email=form_data.username, password=form_data.password
     )
@@ -155,38 +203,20 @@ def login(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Hisobingiz bloklangan"
         )
-        
-    user_agent = request.headers.get("user-agent", "Unknown Device")
-    ip_address = request.client.host if request.client else "Unknown IP"
-    
-    # Simple device name mapping
-    device_name = "Unknown Device"
-    if "iPhone" in user_agent:
-        device_name = "iPhone"
-    elif "iPad" in user_agent:
-        device_name = "iPad"
-    elif "Android" in user_agent:
-        device_name = "Android Device"
-    elif "Windows" in user_agent:
-        device_name = "Windows PC"
-    elif "Mac" in user_agent:
-        device_name = "Mac"
-    elif "Linux" in user_agent:
-        device_name = "Linux PC"
-    else:
-        device_name = user_agent[:30]
 
     session_record = ActiveSession(
         user_uid=str(user.uid or user.id),
-        device_name=device_name,
-        ip_address=ip_address,
+        device_name=_device_name(request.headers.get("user-agent", "")),
+        ip_address=request.client.host if request.client else None,
         location="Unknown Location",
     )
     db.add(session_record)
     db.commit()
     db.refresh(session_record)
 
-    access_token, refresh_token = _set_auth_cookies(response, str(user.uid or user.id), sid=session_record.id)
+    access_token, refresh_token = _set_auth_cookies(
+        response, str(user.uid or user.id), sid=session_record.id
+    )
     return {
         "success": True,
         "role": user.role,
@@ -195,6 +225,7 @@ def login(
         "token_type": "bearer",
     }
 
+
 @router.post("/refresh")
 @limiter.limit("120/minute")
 def refresh(
@@ -202,8 +233,11 @@ def refresh(
     response: Response,
     db: Session = Depends(deps.get_db),
 ) -> Any:
-    """
-    Exchange a valid, unexpired refresh cookie/header for a fresh session.
+    """Exchange a valid refresh token for a fresh pair.
+
+    A refresh token is only accepted while its session row is still active, so
+    logging out (or revoking a session) immediately kills the whole chain — the
+    previous version let an old refresh token live for its full 7 days.
     """
     token = deps.get_refresh_token(request)
     if not token:
@@ -218,17 +252,26 @@ def refresh(
     if not user or user.isBanned:
         _clear_auth_cookies(response)
         raise HTTPException(status_code=401, detail="Sessiya bekor qilingan")
-        
-    if token_data.sid:
-        session_record = db.query(ActiveSession).filter(ActiveSession.id == token_data.sid).first()
-        if session_record and session_record.is_active:
-            session_record.last_active_at = datetime.now(timezone.utc)
-            db.commit()
-        else:
-            _clear_auth_cookies(response)
-            raise HTTPException(status_code=401, detail="Sessiya yaroqsiz")
 
-    access_token, refresh_token = _set_auth_cookies(response, str(user.uid or user.id), sid=token_data.sid)
+    # Every token issued by /login carries a sid. A refresh token without one
+    # predates session tracking and is no longer honoured.
+    if not token_data.sid:
+        _clear_auth_cookies(response)
+        raise HTTPException(status_code=401, detail="Sessiya yaroqsiz, qayta kiring")
+
+    session_record = (
+        db.query(ActiveSession).filter(ActiveSession.id == token_data.sid).first()
+    )
+    if not session_record or not session_record.is_active:
+        _clear_auth_cookies(response)
+        raise HTTPException(status_code=401, detail="Sessiya yaroqsiz")
+
+    session_record.last_active_at = datetime.now(timezone.utc)
+    db.commit()
+
+    access_token, refresh_token = _set_auth_cookies(
+        response, str(user.uid or user.id), sid=token_data.sid
+    )
     return {
         "success": True,
         "access_token": access_token,
@@ -236,23 +279,24 @@ def refresh(
         "token_type": "bearer",
     }
 
+
 @router.post("/logout")
 def logout(
     request: Request,
     response: Response,
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
 ) -> Any:
-    """
-    Clear httpOnly session cookies and deactivate current session.
-    """
-    token = deps.get_access_token(request)
+    """Clear session cookies and deactivate the current session."""
+    token = deps.get_access_token(request) or deps.get_refresh_token(request)
     if token:
-        token_data = deps._decode(token, "access")
+        token_data = deps._decode(token, "access") or deps._decode(token, "refresh")
         if token_data and token_data.sid:
-            session_record = db.query(ActiveSession).filter(ActiveSession.id == token_data.sid).first()
+            session_record = (
+                db.query(ActiveSession).filter(ActiveSession.id == token_data.sid).first()
+            )
             if session_record:
                 session_record.is_active = False
                 db.commit()
-                
+
     _clear_auth_cookies(response)
     return {"success": True}

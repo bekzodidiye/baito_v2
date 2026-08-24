@@ -114,7 +114,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
 
                             // Upload to MinIO S3
                             try {
-                              const uploadedUrl = await uploadFileApi(file);
+                              const uploadedUrl = await uploadFileApi(file, 'avatar');
                               setEditForm((prev: any) => ({ ...prev, profileImage: uploadedUrl }));
                             } catch (err) {
                               console.error('Avatar upload to MinIO failed:', err);

@@ -1,4 +1,5 @@
 import React from 'react';
+import type { ScreenType } from '../../../context/types';
 import { Wallet, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { showToast } from '../../../utils/toast';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
@@ -9,7 +10,7 @@ interface ProfileWidgetsProps {
   showVerified: boolean;
   isVerifiedUser?: boolean;
 
-  setCurrentScreen: (screen: string) => void;
+  setCurrentScreen: (screen: ScreenType) => void;
   setActiveDialog: (dialog: 'withdraw' | 'edit' | null) => void;
   balance?: string;
 }

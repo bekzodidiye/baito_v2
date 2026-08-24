@@ -1,72 +1,86 @@
+import uuid
 from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
+
 from app import crud, models, schemas
 from app.api import deps
 from app.core import security
+from app.core.config import settings
+from app.core.limiter import limiter
+from app.core.phone import consume_verification_grant, is_valid_uz_phone, normalize_phone
 from app.core.security import get_password_hash
-import uuid
+from app.models.session import ActiveSession
 
 router = APIRouter()
 
+
+def _deactivate_other_sessions(db: Session, user: models.User, keep_session_id: str | None) -> int:
+    """Revoke every session except the caller's own."""
+    query = db.query(ActiveSession).filter(
+        ActiveSession.user_uid == str(user.uid or user.id),
+        ActiveSession.is_active == True,  # noqa: E712 — SQL boolean, not Python
+    )
+    if keep_session_id:
+        query = query.filter(ActiveSession.id != keep_session_id)
+    sessions = query.all()
+    for record in sessions:
+        record.is_active = False
+    return len(sessions)
+
+
 @router.get("/me", response_model=schemas.User)
 def read_user_me(
-    db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    """
-    Get current user.
-    """
+    """Get current user."""
     return current_user
 
+
 @router.post("", response_model=schemas.User)
+@limiter.limit("5/hour")
+@limiter.limit("3/minute")
 def create_user(
+    request: Request,
     *,
     db: Session = Depends(deps.get_db),
     user_in: schemas.UserCreate,
 ) -> Any:
-    """
-    Create new user. Frontend sends phone as email for login.
-    Auto-generates uid if not provided.
-    """
-    # Check if user already exists by email/phone
-    if user_in.email:
-        existing = crud.user.get_by_email(db, email=user_in.email)
-        if existing:
-            raise HTTPException(
-                status_code=400,
-                detail="Bu email allaqachon ro'yxatdan o'tgan",
-            )
-    # Clean phone number to standardize format
-    clean_phone = user_in.phone
-    if clean_phone:
-        clean_phone = clean_phone.replace(" ", "").replace("-", "").replace("(", "").replace(")", "").replace("+", "")
-        if len(clean_phone) == 9:
-            clean_phone = "+998" + clean_phone
-        elif len(clean_phone) == 12:
-            clean_phone = "+" + clean_phone
-        user_in.phone = clean_phone
+    """Register a new account.
 
-    if user_in.phone:
-        existing = crud.user.get_by_phone(db, phone=user_in.phone)
-        if existing:
-            raise HTTPException(
-                status_code=400,
-                detail="Bu raqam allaqachon ro'yxatdan o'tgan",
-            )
-    
-    # Auto-generate uid if not provided
-    uid = user_in.uid if user_in.uid else str(uuid.uuid4())
-    
-    # Prevent privilege escalation: public registration can only create 'worker' or 'employer'
+    Requires the ``verification_token`` handed out by ``/auth/verify-sms`` for
+    this exact phone number. Previously the two endpoints were unrelated, so a
+    direct call here could register any number, including someone else's.
+    """
+    phone = normalize_phone(user_in.phone)
+    if not is_valid_uz_phone(phone):
+        raise HTTPException(status_code=400, detail="Telefon raqam formati noto'g'ri")
+    user_in.phone = phone
+
+    if not consume_verification_grant(phone, user_in.verification_token):
+        raise HTTPException(
+            status_code=400,
+            detail="Telefon raqam tasdiqlanmagan. Iltimos, SMS kodni qaytadan kiriting.",
+        )
+
+    if user_in.email:
+        if crud.user.get_by_email(db, email=user_in.email):
+            raise HTTPException(status_code=400, detail="Bu email allaqachon ro'yxatdan o'tgan")
+
+    if crud.user.get_by_phone(db, phone=phone):
+        raise HTTPException(status_code=400, detail="Bu raqam allaqachon ro'yxatdan o'tgan")
+
+    # Prevent privilege escalation: public registration can only create
+    # 'worker' or 'employer'.
     assigned_role = user_in.role if user_in.role in ("worker", "employer") else "worker"
-    
+
     db_obj = models.User(
         email=user_in.email,
         hashed_password=get_password_hash(user_in.password),
         name=user_in.name,
-        uid=uid,
-        phone=user_in.phone,
+        uid=user_in.uid if user_in.uid else str(uuid.uuid4()),
+        phone=phone,
         role=assigned_role,
         companyName=user_in.companyName,
     )
@@ -75,6 +89,7 @@ def create_user(
     db.refresh(db_obj)
     return db_obj
 
+
 @router.put("/me", response_model=schemas.User)
 def update_user_me(
     *,
@@ -82,50 +97,54 @@ def update_user_me(
     user_in: schemas.UserUpdate,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    """
-    Update current user profile.
-    """
+    """Update current user profile."""
     update_data = user_in.model_dump(exclude_unset=True)
 
     # Phone and email are login identifiers: letting one account take a value
     # another already holds would lock that user out of their own account.
-    # Clean phone number
     new_phone = update_data.get("phone")
     if new_phone:
-        clean_phone = new_phone.replace(" ", "").replace("-", "").replace("(", "").replace(")", "").replace("+", "")
-        if len(clean_phone) == 9:
-            clean_phone = "+998" + clean_phone
-        elif len(clean_phone) == 12:
-            clean_phone = "+" + clean_phone
-        new_phone = clean_phone
+        new_phone = normalize_phone(new_phone)
+        if not is_valid_uz_phone(new_phone):
+            raise HTTPException(status_code=400, detail="Telefon raqam formati noto'g'ri")
         update_data["phone"] = new_phone
 
-    if new_phone and new_phone != current_user.phone:
-        clash = crud.user.get_by_phone(db, phone=new_phone)
-        if clash and clash.id != current_user.id:
-            print(f"Phone clash: {new_phone} already taken by {clash.id}")
-            raise HTTPException(status_code=400, detail="Bu raqam allaqachon ro'yxatdan o'tgan")
+        if new_phone != current_user.phone:
+            clash = crud.user.get_by_phone(db, phone=new_phone)
+            if clash and clash.id != current_user.id:
+                raise HTTPException(status_code=400, detail="Bu raqam allaqachon ro'yxatdan o'tgan")
 
     new_email = update_data.get("email")
     if new_email and new_email != current_user.email:
         clash = crud.user.get_by_email(db, email=new_email)
         if clash and clash.id != current_user.id:
-            print(f"Email clash: {new_email} already taken by {clash.id}")
             raise HTTPException(status_code=400, detail="Bu email allaqachon ro'yxatdan o'tgan")
 
-    if "password" in update_data and update_data["password"]:
-        hashed_password = get_password_hash(update_data["password"])
-        del update_data["password"]
-        update_data["hashed_password"] = hashed_password
+    password_changed = False
+    if update_data.get("password"):
+        update_data["hashed_password"] = get_password_hash(update_data["password"])
+        password_changed = True
+    update_data.pop("password", None)
 
+    # Re-uploading identity documents invalidates the previous approval.
+    document_fields = {"passportSeries", "passportJshshir", "passportDocFront",
+                       "passportDocBack", "selfieWithDoc"}
+    if document_fields & set(update_data) and current_user.isVerified:
+        current_user.isVerified = False
 
     for field, value in update_data.items():
         setattr(current_user, field, value)
-        
+
+    if password_changed:
+        _deactivate_other_sessions(
+            db, current_user, getattr(current_user, "current_session_id", None)
+        )
+
     db.add(current_user)
     db.commit()
     db.refresh(current_user)
     return current_user
+
 
 @router.put("/me/password")
 def change_password(
@@ -134,31 +153,43 @@ def change_password(
     password_in: schemas.PasswordChange,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    """
-    Change current user password.
+    """Change the current user's password and log every other device out.
+
+    Leaving other sessions alive meant that changing a password after a
+    compromise did not actually evict the attacker.
     """
     if not security.verify_password(password_in.current_password, current_user.hashed_password):
         raise HTTPException(status_code=400, detail="Joriy parol xato")
-        
+
+    if password_in.new_password == password_in.current_password:
+        raise HTTPException(status_code=400, detail="Yangi parol eskisidan farq qilishi kerak")
+
     current_user.hashed_password = get_password_hash(password_in.new_password)
     db.add(current_user)
+
+    revoked = _deactivate_other_sessions(
+        db, current_user, getattr(current_user, "current_session_id", None)
+    )
     db.commit()
-    return {"success": True}
+    return {"success": True, "revoked_sessions": revoked}
+
 
 @router.get("/me/sessions", response_model=List[schemas.ActiveSession])
 def read_active_sessions(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    """
-    Get current user's active sessions.
-    """
-    from app.models.session import ActiveSession
-    sessions = db.query(ActiveSession).filter(
-        ActiveSession.user_uid == str(current_user.uid or current_user.id),
-        ActiveSession.is_active == True
-    ).order_by(ActiveSession.last_active_at.desc()).all()
-    return sessions
+    """Get current user's active sessions."""
+    return (
+        db.query(ActiveSession)
+        .filter(
+            ActiveSession.user_uid == str(current_user.uid or current_user.id),
+            ActiveSession.is_active == True,  # noqa: E712
+        )
+        .order_by(ActiveSession.last_active_at.desc())
+        .all()
+    )
+
 
 @router.delete("/me/sessions/{session_id}")
 def deactivate_session(
@@ -166,45 +197,32 @@ def deactivate_session(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    """
-    Deactivate a specific session.
-    """
-    from app.models.session import ActiveSession
-    session_record = db.query(ActiveSession).filter(
-        ActiveSession.id == session_id,
-        ActiveSession.user_uid == str(current_user.uid or current_user.id)
-    ).first()
-    
+    """Deactivate a specific session."""
+    session_record = (
+        db.query(ActiveSession)
+        .filter(
+            ActiveSession.id == session_id,
+            ActiveSession.user_uid == str(current_user.uid or current_user.id),
+        )
+        .first()
+    )
+
     if not session_record:
         raise HTTPException(status_code=404, detail="Sessiya topilmadi")
-        
+
     session_record.is_active = False
     db.commit()
     return {"success": True}
+
 
 @router.delete("/me/sessions")
 def deactivate_all_other_sessions(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    """
-    Deactivate all sessions EXCEPT the current one.
-    """
-    from app.models.session import ActiveSession
-    current_session_id = getattr(current_user, 'current_session_id', None)
-    
-    query = db.query(ActiveSession).filter(
-        ActiveSession.user_uid == str(current_user.uid or current_user.id),
-        ActiveSession.is_active == True
+    """Deactivate all sessions EXCEPT the current one."""
+    count = _deactivate_other_sessions(
+        db, current_user, getattr(current_user, "current_session_id", None)
     )
-    
-    if current_session_id:
-        query = query.filter(ActiveSession.id != current_session_id)
-        
-    sessions_to_deactivate = query.all()
-    
-    for session_record in sessions_to_deactivate:
-        session_record.is_active = False
-        
     db.commit()
-    return {"success": True, "deactivated_count": len(sessions_to_deactivate)}
+    return {"success": True, "deactivated_count": count}

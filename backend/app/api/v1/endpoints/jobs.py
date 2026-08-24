@@ -1,46 +1,101 @@
+import logging
 from typing import Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
+
 from app import crud, models, schemas
 from app.api import deps
-
-router = APIRouter()
-
+from app.core.limiter import limiter
+from app.models.job import JobStatus
+from app.redis_client import redis_client
 from app.services.ai_matcher import AIMatchmaker
 from app.services.geo_service import GeoSpatialService
 from app.services.spam_detector import SpamFraudDetector
 
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
 HIRED_STATUSES = ['hired', 'confirmed', 'completed', 'in_progress', 'start_requested']
+
+# One counted view per viewer per job per hour.
+VIEW_DEDUPE_TTL_SECONDS = 3600
+
+
+def _vacancies(job: models.Job) -> int:
+    raw = (job.neededWorkers or "1").strip()
+    return int(raw) if raw.isdigit() and int(raw) > 0 else 1
+
 
 @router.get("/recommended")
 def get_recommended_jobs(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
-    limit: int = Query(20, ge=1, le=50)
+    limit: int = Query(20, ge=1, le=50),
 ) -> Any:
-    """
-    AI-powered Smart Matchmaking Job Recommendations for the logged-in worker.
-    """
-    active_jobs = db.query(models.Job).filter(models.Job.status == "active").order_by(models.Job.createdAt.desc()).limit(100).all()
+    """AI-assisted job recommendations for the logged-in worker."""
+    active_jobs = (
+        db.query(models.Job)
+        .filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
+        .order_by(models.Job.createdAt.desc())
+        .limit(100)
+        .all()
+    )
     if not active_jobs:
         return []
-    
-    ranked = AIMatchmaker.rank_jobs_for_worker(current_user, active_jobs)
-    return ranked[:limit]
+
+    ranked = AIMatchmaker.rank_jobs_for_worker(current_user, active_jobs)[:limit]
+    # Same serialisation problem as /nearby: the matcher returns ORM objects.
+    return [
+        {**item, "job": schemas.Job.model_validate(item["job"])}
+        for item in ranked
+    ]
+
 
 @router.get("/nearby")
 def get_nearby_jobs(
     lat: float = Query(..., ge=-90.0, le=90.0),
     lng: float = Query(..., ge=-180.0, le=180.0),
     radius_km: float = Query(10.0, ge=0.5, le=100.0),
-    db: Session = Depends(deps.get_db)
+    limit: int = Query(100, ge=1, le=200),
+    db: Session = Depends(deps.get_db),
 ) -> Any:
+    """Jobs within a radius, with commute estimates.
+
+    A coarse bounding box is applied in SQL first so the whole jobs table is no
+    longer pulled into memory on every map pan.
     """
-    Geo-Spatial Nearby Jobs within a specified radius (km) with commute estimates.
-    """
-    jobs = db.query(models.Job).filter(models.Job.status == "active").all()
-    return GeoSpatialService.filter_jobs_by_radius(lat, lng, jobs, radius_km)
+    # NOTE: despite the names, coordinateX holds LATITUDE and coordinateY holds
+    # LONGITUDE — that is what the job-posting form writes and what
+    # GeoSpatialService reads.
+    #
+    # 1 degree of latitude is ~111 km everywhere; longitude shrinks with
+    # latitude, but a fixed generous factor is enough for a pre-filter because
+    # the exact distance is computed afterwards.
+    lat_delta = radius_km / 111.0
+    lng_delta = radius_km / 40.0
+
+    jobs = (
+        db.query(models.Job)
+        .filter(
+            models.Job.status.in_(JobStatus.OPEN_STATUSES),
+            models.Job.coordinateX.isnot(None),
+            models.Job.coordinateY.isnot(None),
+            models.Job.coordinateX.between(lat - lat_delta, lat + lat_delta),
+            models.Job.coordinateY.between(lng - lng_delta, lng + lng_delta),
+        )
+        .limit(1000)
+        .all()
+    )
+
+    matches = GeoSpatialService.filter_jobs_by_radius(lat, lng, jobs, radius_km)[:limit]
+    # The service hands back ORM instances nested in a dict, which FastAPI
+    # cannot serialise — this endpoint used to 500 on any non-empty result.
+    return [
+        {**m, "job": schemas.Job.model_validate(m["job"])}
+        for m in matches
+    ]
+
 
 @router.get("", response_model=List[schemas.JobWithApplicationStatus])
 def read_jobs(
@@ -50,16 +105,24 @@ def read_jobs(
     limit: int = Query(100, ge=1, le=200),
     employer_id: Optional[str] = None,
 ) -> Any:
-    """
-    Retrieve jobs. If user is logged in, attach their application status.
-    """
+    """Retrieve jobs. If the caller is logged in, attach their application status."""
     query = db.query(models.Job)
-    
+
+    is_admin = bool(current_user and current_user.role == 'admin')
+    is_employer = bool(current_user and current_user.role == 'employer')
+
     if employer_id:
+        # Browsing another employer's full posting history — including their
+        # closed and cancelled jobs — is not public information.
+        if not (is_admin or (current_user and employer_id in (current_user.id, current_user.uid))):
+            raise HTTPException(status_code=403, detail="Bu ma'lumotni ko'rish huquqingiz yo'q")
         query = query.filter(models.Job.employerId == employer_id)
-    elif current_user and current_user.role == 'employer':
+    elif is_employer:
         query = query.filter(models.Job.employerId == current_user.id)
-        
+    elif not is_admin:
+        # Job seekers only ever see live postings.
+        query = query.filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
+
     jobs = query.order_by(models.Job.createdAt.desc()).offset(skip).limit(limit).all()
     if not jobs:
         return []
@@ -68,52 +131,68 @@ def read_jobs(
 
     worker_apps = []
     if current_user:
-        worker_apps = db.query(models.Application).filter(
-            models.Application.workerId == current_user.id,
+        worker_apps = (
+            db.query(models.Application)
+            .filter(
+                models.Application.workerId == current_user.id,
+                models.Application.jobId.in_(job_ids),
+            )
+            .all()
+        )
+
+    hired_apps = (
+        db.query(models.Application)
+        .filter(
             models.Application.jobId.in_(job_ids),
-        ).all()
+            models.Application.status.in_(HIRED_STATUSES),
+        )
+        .all()
+    )
 
-    # Fetch all hired applications for the retrieved jobs to get worker details
-    hired_apps = db.query(models.Application).filter(
-        models.Application.jobId.in_(job_ids),
-        models.Application.status.in_(HIRED_STATUSES),
-    ).all()
-
-    # One grouped count instead of a COUNT query per job.
-    hired_counts = {}
-    job_hired_workers = {}
+    hired_counts: dict[str, int] = {}
+    job_hired_workers: dict[str, list] = {}
     if hired_apps:
-        # Group counts
         for app in hired_apps:
             hired_counts[app.jobId] = hired_counts.get(app.jobId, 0) + 1
-        
-        # Fetch worker info
-        hired_worker_ids = list(set([app.workerId for app in hired_apps]))
-        hired_users = db.query(models.User).filter(models.User.id.in_(hired_worker_ids)).all()
+
+        hired_worker_ids = list({app.workerId for app in hired_apps})
+        hired_users = (
+            db.query(models.User).filter(models.User.id.in_(hired_worker_ids)).all()
+        )
         user_map = {user.id: user for user in hired_users}
+
+        from app.schemas.job import HiredWorkerInfo
+
+        employer_job_ids = {j.id for j in jobs if j.employerId in
+                            ((current_user.id, current_user.uid) if current_user else ())}
 
         for app in hired_apps:
             user = user_map.get(app.workerId)
-            if user:
-                if app.jobId not in job_hired_workers:
-                    job_hired_workers[app.jobId] = []
-                    
-                from app.schemas.job import HiredWorkerInfo
-                job_hired_workers[app.jobId].append(HiredWorkerInfo(
-                    id=user.id,
-                    name=user.name or "Foydalanuvchi",
-                    phone=user.phone,
-                    avatarUrl=user.avatarUrl
-                ))
+            if not user:
+                continue
+            # A hired worker's phone number is contact detail for the employer
+            # who hired them (and for the worker themselves), not something to
+            # hand to every anonymous visitor browsing the job board.
+            may_see_phone = bool(
+                is_admin
+                or app.jobId in employer_job_ids
+                or (current_user and current_user.id == user.id)
+            )
+            job_hired_workers.setdefault(app.jobId, []).append(HiredWorkerInfo(
+                id=user.id,
+                name=user.name or "Foydalanuvchi",
+                phone=user.phone if may_see_phone else None,
+                avatarUrl=user.avatarUrl,
+            ))
 
     result = []
     for job in jobs:
         app_item = next((a for a in worker_apps if a.jobId == job.id), None)
         job_status = job.status
         if app_item:
-            if app_item.status == 'in_progress' or job.status == 'in_progress':
+            if app_item.status == 'in_progress' or job.status == JobStatus.IN_PROGRESS:
                 job_status = 'in_progress'
-            elif app_item.status == 'completed' or job.status == 'completed':
+            elif app_item.status == 'completed' or job.status == JobStatus.COMPLETED:
                 job_status = 'completed'
             elif app_item.status == 'start_requested' or job.status == 'start_requested':
                 job_status = 'start_requested'
@@ -121,67 +200,185 @@ def read_jobs(
                 job_status = 'hired'
             elif app_item.status == 'applied':
                 job_status = 'applied'
-                
+
         job_dict = schemas.JobWithApplicationStatus.model_validate(job)
         job_dict.status = job_status
         job_dict.applied = bool(app_item)
         if app_item:
             job_dict.appliedDate = app_item.appliedDate
-        
-        # Calculate hired count and vacancies
-        vacancies_num = int(job.neededWorkers) if job.neededWorkers and job.neededWorkers.isdigit() else 1
+
+        vacancies_num = _vacancies(job)
         hired_cnt = hired_counts.get(job.id, 0)
 
         job_dict.hiredCount = hired_cnt
         job_dict.vacancies = vacancies_num
         job_dict.hiredWorkers = job_hired_workers.get(job.id, [])
 
-        # Check if job is filled or completed
-        is_filled = (hired_cnt >= vacancies_num) or (job.status in ['completed', 'in_progress'])
-        
-        # Hide filled jobs from workers who haven't applied
-        if not (current_user and current_user.role in ['employer', 'admin']):
+        is_filled = (hired_cnt >= vacancies_num) or (
+            job.status in (JobStatus.COMPLETED, JobStatus.IN_PROGRESS)
+        )
+
+        if not (is_admin or is_employer):
             if is_filled and not app_item:
                 continue
 
         result.append(job_dict)
-        
+
     return result
 
+
 @router.post("", response_model=schemas.Job)
+@limiter.limit("20/hour")
 def create_job(
+    request: Request,
     *,
     db: Session = Depends(deps.get_db),
     job_in: schemas.JobCreate,
     current_user: models.User = Depends(deps.get_current_employer),
 ) -> Any:
-    """
-    Create new job.
-    """
+    """Create a new job posting, screening it for fraud first."""
+    verdict = SpamFraudDetector.analyze_job_posting(
+        job_in.title, job_in.description, job_in.salary
+    )
+    if verdict["is_spam"]:
+        logger.warning(
+            "Rejected suspicious job posting from %s: %s", current_user.id, verdict["flags"]
+        )
+        raise HTTPException(
+            status_code=400,
+            detail="E'lon shubhali deb topildi: " + "; ".join(verdict["flags"]),
+        )
+
     job_in_dict = job_in.model_dump()
+    # Never take these from the request body.
+    job_in_dict.pop("views", None)
     job_in_dict["employerId"] = current_user.id
-    
+    job_in_dict["status"] = JobStatus.OPEN
+    job_in_dict["views"] = 0
+
     db_job = models.Job(**job_in_dict)
     db.add(db_job)
     db.commit()
     db.refresh(db_job)
     return db_job
 
-@router.post("/{job_id}/view")
-def view_job(
+
+@router.get("/{job_id}", response_model=schemas.Job)
+def read_job(
     job_id: str,
-    db: Session = Depends(deps.get_db)
+    db: Session = Depends(deps.get_db),
+    current_user: Optional[models.User] = Depends(deps.get_current_user_optional),
+) -> Any:
+    """Fetch a single job."""
+    job = crud.job.get(db=db, id=job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
+
+    is_owner = bool(current_user and job.employerId in (current_user.id, current_user.uid))
+    is_admin = bool(current_user and current_user.role == 'admin')
+    if job.status in JobStatus.CLOSED_STATUSES and not (is_owner or is_admin):
+        raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
+
+    return job
+
+
+@router.put("/{job_id}", response_model=schemas.Job)
+def update_job(
+    job_id: str,
+    job_in: schemas.JobUpdate,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_employer),
+) -> Any:
+    """Edit a posting.
+
+    There was no update route at all, so fixing a typo meant deleting the job
+    and losing every application attached to it.
+    """
+    job = crud.job.get(db=db, id=job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
+
+    is_admin = current_user.role == 'admin'
+    if not is_admin and job.employerId not in (current_user.id, current_user.uid):
+        raise HTTPException(status_code=403, detail="Bu e'lonni tahrirlash huquqingiz yo'q")
+
+    if job.status in JobStatus.CLOSED_STATUSES and not is_admin:
+        raise HTTPException(status_code=400, detail="Yakunlangan e'lonni tahrirlab bo'lmaydi")
+
+    update_data = job_in.model_dump(exclude_unset=True)
+    update_data.pop("views", None)
+
+    # Only an admin may move a job between lifecycle states directly.
+    requested_status = update_data.pop("status", None)
+    if requested_status is not None:
+        if not is_admin:
+            raise HTTPException(status_code=403, detail="Holatni faqat administrator o'zgartiradi")
+        if requested_status not in (
+            JobStatus.OPEN, JobStatus.CONFIRMED, JobStatus.IN_PROGRESS,
+            JobStatus.COMPLETED, JobStatus.CANCELLED,
+        ):
+            raise HTTPException(status_code=400, detail="Noma'lum holat")
+        job.status = requested_status
+
+    if {"title", "description", "salary"} & set(update_data):
+        verdict = SpamFraudDetector.analyze_job_posting(
+            update_data.get("title", job.title),
+            update_data.get("description", job.description),
+            update_data.get("salary", job.salary),
+        )
+        if verdict["is_spam"]:
+            raise HTTPException(
+                status_code=400,
+                detail="E'lon shubhali deb topildi: " + "; ".join(verdict["flags"]),
+            )
+
+    for field, value in update_data.items():
+        setattr(job, field, value)
+
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+    return job
+
+
+@router.post("/{job_id}/view")
+@limiter.limit("60/minute")
+def view_job(
+    request: Request,
+    job_id: str,
+    db: Session = Depends(deps.get_db),
+    current_user: Optional[models.User] = Depends(deps.get_current_user_optional),
 ):
+    """Count a job view, at most once per viewer per hour.
+
+    This was previously unauthenticated, unlimited and undeduplicated: a loop
+    could inflate the counter indefinitely and write to the database on every
+    request.
+    """
     job = db.query(models.Job).filter(models.Job.id == job_id).first()
     if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    
-    # Increment view count
+        raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
+
+    viewer = current_user.id if current_user else (
+        request.client.host if request.client else "anonymous"
+    )
+    dedupe_key = f"job_view:{job_id}:{viewer}"
+
+    try:
+        already_counted = redis_client.get(dedupe_key) is not None
+        if not already_counted:
+            redis_client.setex(dedupe_key, VIEW_DEDUPE_TTL_SECONDS, "1")
+    except Exception:
+        already_counted = False
+
+    if already_counted:
+        return {"status": "ok", "views": job.views or 0, "counted": False}
+
     job.views = (job.views or 0) + 1
     db.add(job)
     db.commit()
-    
-    return {"status": "ok", "views": job.views}
+    return {"status": "ok", "views": job.views, "counted": True}
+
 
 @router.delete("/{id}")
 def delete_job(
@@ -190,8 +387,11 @@ def delete_job(
     id: str,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    """
-    Delete a job.
+    """Cancel a job posting.
+
+    A hard delete used to remove the row and its applications outright, leaving
+    chats, bookmarks, notifications and transactions pointing at a job id that
+    no longer existed — and telling the affected workers nothing.
     """
     job = crud.job.get(db=db, id=id)
     if not job:
@@ -199,6 +399,32 @@ def delete_job(
     if job.employerId not in (current_user.id, current_user.uid) and current_user.role != 'admin':
         raise HTTPException(status_code=403, detail="Bu e'lonni o'chirish huquqingiz yo'q")
 
-    db.query(models.Application).filter(models.Application.jobId == id).delete()
-    crud.job.remove(db=db, id=id)
-    return {"success": True}
+    if job.status == JobStatus.IN_PROGRESS:
+        raise HTTPException(
+            status_code=400,
+            detail="Boshlangan ishni bekor qilib bo'lmaydi, avval uni yakunlang",
+        )
+
+    affected = (
+        db.query(models.Application)
+        .filter(
+            models.Application.jobId == id,
+            models.Application.status.notin_(['rejected', 'cancelled', 'completed']),
+        )
+        .all()
+    )
+    for app in affected:
+        app.status = 'cancelled'
+        db.add(app)
+        db.add(models.Notification(
+            userId=app.workerId,
+            title="Ish e'loni bekor qilindi",
+            message=f"'{job.title}' e'loni ish beruvchi tomonidan bekor qilindi.",
+            type="system",
+            relatedJobId=job.id,
+        ))
+
+    job.status = JobStatus.CANCELLED
+    db.add(job)
+    db.commit()
+    return {"success": True, "status": JobStatus.CANCELLED, "notified": len(affected)}

@@ -119,15 +119,18 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
           <div>
             <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-2">Ko'nikmalar</span>
             {(() => {
+              // skills is declared as string[] but the API may still hand back
+              // a JSON string or a comma-separated list, so widen it here.
+              const rawSkills: unknown = user.skills;
               let skillsList: string[] = [];
-              if (Array.isArray(user.skills)) {
-                skillsList = user.skills;
-              } else if (typeof user.skills === 'string') {
+              if (Array.isArray(rawSkills)) {
+                skillsList = rawSkills.filter((s): s is string => typeof s === 'string');
+              } else if (typeof rawSkills === 'string') {
                 try {
-                  const parsed = JSON.parse(user.skills);
-                  skillsList = Array.isArray(parsed) ? parsed : [user.skills];
+                  const parsed = JSON.parse(rawSkills);
+                  skillsList = Array.isArray(parsed) ? parsed : [rawSkills];
                 } catch {
-                  skillsList = user.skills.split(',').map((s) => s.trim()).filter(Boolean);
+                  skillsList = rawSkills.split(',').map((s) => s.trim()).filter(Boolean);
                 }
               }
 

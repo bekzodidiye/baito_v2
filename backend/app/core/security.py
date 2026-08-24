@@ -31,5 +31,5 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     pwd_bytes = password.encode('utf-8')[:72]
-    salt = bcrypt.gensalt()
+    salt = bcrypt.gensalt(rounds=settings.BCRYPT_ROUNDS)
     return bcrypt.hashpw(pwd_bytes, salt).decode('utf-8')

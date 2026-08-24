@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../../api/client';
+import { apiClient, unwrapList } from '../../api/client';
 import { AdminStats, AdminUser, AdminJob, AdminTransaction, SystemSettings } from './types';
 import { useApp } from '../../context/AppContext';
 
@@ -24,14 +24,14 @@ export function useAdminData() {
       ]);
       return {
         stats: sData as AdminStats | null,
-        users: (Array.isArray(uData) ? uData : []) as AdminUser[],
-        jobs: (Array.isArray(jData) ? jData : []) as AdminJob[],
-        transactions: (Array.isArray(tData) ? tData : []) as AdminTransaction[],
-        supportTickets: (Array.isArray(tckData) ? tckData : []) as any[],
-        categories: (Array.isArray(catData) ? catData : []) as any[],
-        regions: (Array.isArray(regData) ? regData : []) as any[],
-        promotions: (Array.isArray(promoData) ? promoData : []) as any[],
-        disputes: (Array.isArray(dispData) ? dispData : []) as any[],
+        users: unwrapList<AdminUser>(uData),
+        jobs: unwrapList<AdminJob>(jData),
+        transactions: unwrapList<AdminTransaction>(tData),
+        supportTickets: unwrapList<any>(tckData),
+        categories: unwrapList<any>(catData),
+        regions: unwrapList<any>(regData),
+        promotions: unwrapList<any>(promoData),
+        disputes: unwrapList<any>(dispData),
         settings: cfgData as SystemSettings || {
           platformFeePercent: 10,
           minHourlyRate: 15000,

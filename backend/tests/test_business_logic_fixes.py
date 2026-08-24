@@ -1,0 +1,436 @@
+"""Regression tests for the functional and business-logic findings."""
+
+from datetime import date
+
+from app.core.money import salary_to_uzs
+from app.db.session import SessionLocal
+from app.models import Application, Job, User
+from app.models.job import JobStatus
+
+from .conftest import login, make_job, make_user
+
+
+# ── Job status vocabulary ──────────────────────────────────────────────────
+
+def test_recommended_jobs_are_not_always_empty(client):
+    """These endpoints filtered on 'active', which nothing ever wrote."""
+    employer = make_user(role="employer", phone="+998911111111")
+    make_job(employer.id, title="Kassir")
+
+    worker = make_user(role="worker", phone="+998911111112")
+    login(client, worker)
+
+    resp = client.get("/api/v1/jobs/recommended")
+    assert resp.status_code == 200
+    assert len(resp.json()) == 1
+
+
+def test_nearby_jobs_are_not_always_empty(client):
+    employer = make_user(role="employer", phone="+998911111113")
+    # coordinateX is latitude, coordinateY is longitude.
+    make_job(employer.id, coordinateX=41.31, coordinateY=69.24)
+
+    resp = client.get("/api/v1/jobs/nearby?lat=41.31&lng=69.24&radius_km=10")
+    assert resp.status_code == 200
+    assert len(resp.json()) == 1
+
+
+def test_closed_jobs_are_hidden_from_job_seekers(client):
+    employer = make_user(role="employer", phone="+998911111114")
+    make_job(employer.id, status=JobStatus.CANCELLED, title="Bekor qilingan")
+    make_job(employer.id, status=JobStatus.OPEN, title="Ochiq")
+
+    titles = [j["title"] for j in client.get("/api/v1/jobs").json()]
+    assert "Ochiq" in titles
+    assert "Bekor qilingan" not in titles
+
+
+# ── Applications and hiring ────────────────────────────────────────────────
+
+def test_cannot_apply_to_a_cancelled_job(client):
+    employer = make_user(role="employer", phone="+998911111115")
+    job = make_job(employer.id, status=JobStatus.CANCELLED)
+    worker = make_user(role="worker", phone="+998911111116")
+    login(client, worker)
+
+    resp = client.post(f"/api/v1/jobs/{job.id}/apply")
+    assert resp.status_code == 400
+
+
+def test_hiring_respects_the_vacancy_count(client):
+    employer = make_user(role="employer", phone="+998911111117", balance=10_000_000)
+    job = make_job(employer.id, neededWorkers="1", salary="250000")
+
+    w1 = make_user(role="worker", phone="+998911111118")
+    w2 = make_user(role="worker", phone="+998911111119")
+    with SessionLocal() as db:
+        a1 = Application(jobId=job.id, workerId=w1.id, status="applied")
+        a2 = Application(jobId=job.id, workerId=w2.id, status="applied")
+        db.add_all([a1, a2])
+        db.commit()
+        a1_id, a2_id = a1.id, a2.id
+
+    login(client, employer)
+    assert client.post(f"/api/v1/applications/{a1_id}/hire").status_code == 200
+    second = client.post(f"/api/v1/applications/{a2_id}/hire")
+    assert second.status_code == 400
+    assert "to'lgan" in second.json()["detail"]
+
+
+def test_hiring_holds_the_wage_in_escrow(client):
+    employer = make_user(role="employer", phone="+998911111120", balance=1_000_000)
+    job = make_job(employer.id, salary="250 000 so'm / kun")
+    worker = make_user(role="worker", phone="+998911111121")
+    with SessionLocal() as db:
+        app = Application(jobId=job.id, workerId=worker.id, status="applied")
+        db.add(app)
+        db.commit()
+        app_id = app.id
+
+    login(client, employer)
+    resp = client.post(f"/api/v1/applications/{app_id}/hire")
+    assert resp.status_code == 200
+    assert resp.json()["escrow_held"] is True
+
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == employer.id).first().balance == 750_000
+
+
+def test_rejected_applicant_is_notified(client):
+    from app.models import Notification
+
+    employer = make_user(role="employer", phone="+998911111122")
+    job = make_job(employer.id)
+    worker = make_user(role="worker", phone="+998911111123")
+    with SessionLocal() as db:
+        app = Application(jobId=job.id, workerId=worker.id, status="applied")
+        db.add(app)
+        db.commit()
+        app_id = app.id
+
+    login(client, employer)
+    assert client.post(f"/api/v1/applications/{app_id}/reject").status_code == 200
+
+    with SessionLocal() as db:
+        assert db.query(Notification).filter(Notification.userId == worker.id).count() == 1
+
+
+def test_applicant_phone_is_masked_until_hired(client):
+    employer = make_user(role="employer", phone="+998911111124")
+    job = make_job(employer.id)
+    worker = make_user(role="worker", phone="+998911111125")
+    with SessionLocal() as db:
+        db.add(Application(jobId=job.id, workerId=worker.id, status="applied"))
+        db.commit()
+
+    login(client, employer)
+    rows = client.get("/api/v1/applications/employer").json()
+    assert rows[0]["contactUnlocked"] is False
+    assert rows[0]["workerPhone"] != worker.phone
+
+
+# ── Start / complete lifecycle ─────────────────────────────────────────────
+
+def _hire(db, job_id, worker_id, status="hired"):
+    app = Application(jobId=job_id, workerId=worker_id, status=status)
+    db.add(app)
+    db.commit()
+    return app.id
+
+
+def test_worker_cannot_start_a_job_alone(client):
+    employer = make_user(role="employer", phone="+998911111126")
+    job = make_job(employer.id)
+    worker = make_user(role="worker", phone="+998911111127")
+    with SessionLocal() as db:
+        _hire(db, job.id, worker.id)
+
+    login(client, worker)
+    resp = client.post(f"/api/v1/jobs/{job.id}/request-start")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "start_requested"
+
+    with SessionLocal() as db:
+        assert db.query(Job).filter(Job.id == job.id).first().status != JobStatus.IN_PROGRESS
+
+    # Only the employer can confirm.
+    assert client.post(f"/api/v1/jobs/{job.id}/confirm-start").status_code == 403
+
+
+def test_completing_a_job_that_never_started_is_refused(client):
+    employer = make_user(role="employer", phone="+998911111128")
+    job = make_job(employer.id)
+    worker = make_user(role="worker", phone="+998911111129")
+    with SessionLocal() as db:
+        _hire(db, job.id, worker.id)
+
+    login(client, employer)
+    resp = client.post(f"/api/v1/jobs/{job.id}/complete", json={"rating": 5})
+    assert resp.status_code == 400
+
+
+def test_completion_pays_the_worker_and_updates_their_profile(client):
+    employer = make_user(role="employer", phone="+998911111130", balance=1_000_000)
+    job = make_job(employer.id, salary="250000")
+    worker = make_user(role="worker", phone="+998911111131", balance=0)
+
+    with SessionLocal() as db:
+        app = Application(jobId=job.id, workerId=worker.id, status="applied")
+        db.add(app)
+        db.commit()
+        app_id = app.id
+
+    login(client, employer)
+    client.post(f"/api/v1/applications/{app_id}/hire")
+    client.post(f"/api/v1/jobs/{job.id}/confirm-start")
+
+    resp = client.post(f"/api/v1/jobs/{job.id}/complete", json={"rating": 5, "review": "Zo'r"})
+    assert resp.status_code == 200
+    assert resp.json()["paid_workers"] == 1
+
+    with SessionLocal() as db:
+        w = db.query(User).filter(User.id == worker.id).first()
+        # 250 000 minus the 10% platform fee.
+        assert w.balance == 225_000
+        assert w.completedJobsCount == 1
+        assert w.rating == 5.0
+
+
+def test_completing_twice_is_refused(client):
+    employer = make_user(role="employer", phone="+998911111132", balance=1_000_000)
+    job = make_job(employer.id, salary="250000")
+    worker = make_user(role="worker", phone="+998911111133")
+    with SessionLocal() as db:
+        app = Application(jobId=job.id, workerId=worker.id, status="applied")
+        db.add(app)
+        db.commit()
+        app_id = app.id
+
+    login(client, employer)
+    client.post(f"/api/v1/applications/{app_id}/hire")
+    client.post(f"/api/v1/jobs/{job.id}/confirm-start")
+    assert client.post(f"/api/v1/jobs/{job.id}/complete", json={"rating": 5}).status_code == 200
+    assert client.post(f"/api/v1/jobs/{job.id}/complete", json={"rating": 1}).status_code == 400
+
+
+def test_rating_outside_one_to_five_is_refused(client):
+    employer = make_user(role="employer", phone="+998911111134")
+    job = make_job(employer.id)
+    login(client, employer)
+    resp = client.post(f"/api/v1/jobs/{job.id}/complete", json={"rating": 99})
+    assert resp.status_code == 422
+
+
+# ── Chat ───────────────────────────────────────────────────────────────────
+
+def test_worker_can_open_a_chat_without_sending_worker_id(client):
+    """The web client only sends employerId/jobId; this used to 422."""
+    employer = make_user(role="employer", phone="+998911111135")
+    job = make_job(employer.id)
+    worker = make_user(role="worker", phone="+998911111136")
+    login(client, worker)
+
+    resp = client.post("/api/v1/chats", json={"employerId": employer.id, "jobId": job.id})
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["workerId"] == worker.id
+
+
+def test_chat_messages_can_be_sent_over_http(client):
+    employer = make_user(role="employer", phone="+998911111137")
+    worker = make_user(role="worker", phone="+998911111138")
+    login(client, worker)
+    chat_id = client.post("/api/v1/chats", json={"employerId": employer.id}).json()["id"]
+
+    resp = client.post(f"/api/v1/chats/{chat_id}/messages", json={"text": "Salom"})
+    assert resp.status_code == 200
+    assert resp.json()["senderId"] == worker.id
+
+    assert client.post(f"/api/v1/chats/{chat_id}/messages", json={"text": ""}).status_code == 422
+    assert client.post(
+        f"/api/v1/chats/{chat_id}/messages", json={"text": "x" * 5000}
+    ).status_code == 422
+
+
+def test_outsider_cannot_read_a_chat(client):
+    employer = make_user(role="employer", phone="+998911111139")
+    worker = make_user(role="worker", phone="+998911111140")
+    login(client, worker)
+    chat_id = client.post("/api/v1/chats", json={"employerId": employer.id}).json()["id"]
+
+    outsider = make_user(role="worker", phone="+998911111141")
+    login(client, outsider)
+    assert client.get(f"/api/v1/chats/{chat_id}/messages").status_code == 403
+
+
+# ── Salary parsing ─────────────────────────────────────────────────────────
+
+def test_salary_ranges_no_longer_concatenate_every_digit():
+    assert salary_to_uzs("1 500 000 - 2 000 000") == 1_500_000
+    assert salary_to_uzs("250 000 so'm / kun") == 250_000
+    assert salary_to_uzs("250,000") == 250_000
+    assert salary_to_uzs("kelishilgan holda") == 0
+    assert salary_to_uzs(None) == 0
+
+
+# ── Date parsing ───────────────────────────────────────────────────────────
+
+def test_bare_day_number_rolls_into_next_month_when_already_past():
+    from app.api.v1.endpoints.job_actions import get_job_dates_set
+
+    class FakeJob:
+        workDate = "1"
+
+    today = date.today()
+    parsed = get_job_dates_set(FakeJob())
+    assert len(parsed) == 1
+    resolved = date.fromisoformat(next(iter(parsed)))
+    assert resolved >= date(today.year, today.month, 1)
+    if today.day > 1:
+        assert resolved > today or resolved.month != today.month
+
+
+def test_iso_date_is_not_mistaken_for_a_range():
+    from app.api.v1.endpoints.job_actions import get_job_dates_set
+
+    class FakeJob:
+        workDate = "2026-09-15"
+
+    assert get_job_dates_set(FakeJob()) == {"2026-09-15"}
+
+
+# ── Job editing ────────────────────────────────────────────────────────────
+
+def test_employer_can_edit_their_own_posting(client):
+    employer = make_user(role="employer", phone="+998911111142")
+    job = make_job(employer.id, title="Eski sarlavha")
+    login(client, employer)
+
+    resp = client.put(f"/api/v1/jobs/{job.id}", json={"title": "Yangi sarlavha"})
+    assert resp.status_code == 200
+    assert resp.json()["title"] == "Yangi sarlavha"
+
+
+def test_employer_cannot_edit_someone_elses_posting(client):
+    owner = make_user(role="employer", phone="+998911111143")
+    job = make_job(owner.id)
+    intruder = make_user(role="employer", phone="+998911111144")
+    login(client, intruder)
+
+    assert client.put(f"/api/v1/jobs/{job.id}", json={"title": "Buzildi"}).status_code == 403
+
+
+def test_deleting_a_job_cancels_it_and_notifies_applicants(client):
+    from app.models import Notification
+
+    employer = make_user(role="employer", phone="+998911111145")
+    job = make_job(employer.id)
+    worker = make_user(role="worker", phone="+998911111146")
+    with SessionLocal() as db:
+        db.add(Application(jobId=job.id, workerId=worker.id, status="applied"))
+        db.commit()
+
+    login(client, employer)
+    assert client.delete(f"/api/v1/jobs/{job.id}").status_code == 200
+
+    with SessionLocal() as db:
+        # The row still exists, so chats and transactions keep resolving.
+        assert db.query(Job).filter(Job.id == job.id).first().status == JobStatus.CANCELLED
+        assert db.query(Notification).filter(Notification.userId == worker.id).count() == 1
+
+
+# ── Spam screening ─────────────────────────────────────────────────────────
+
+def test_scam_posting_is_rejected(client):
+    employer = make_user(role="employer", phone="+998911111147")
+    login(client, employer)
+
+    resp = client.post("/api/v1/jobs", json={
+        "title": "Tez daromad 1000$",
+        "company": "X", "salary": "999000000", "location": "Toshkent",
+        "description": "Oldindan to'lov qiling va karta raqam yuboring, kripto investitsiya",
+    })
+    assert resp.status_code == 400
+
+
+# ── Admin ──────────────────────────────────────────────────────────────────
+
+def test_admin_balance_change_writes_a_ledger_entry_and_audit_log(client):
+    from app.models import AdminAuditLog, AuditLedger
+
+    admin = make_user(role="admin", phone="+998911111148")
+    target = make_user(role="worker", phone="+998911111149", balance=0)
+    login(client, admin)
+
+    resp = client.post(f"/api/v1/admin/users/{target.id}/balance",
+                       json={"amount": 50_000, "reason": "Qo'llab-quvvatlash to'lovi"})
+    assert resp.status_code == 200
+
+    with SessionLocal() as db:
+        assert db.query(AuditLedger).filter(AuditLedger.userId == target.id).count() == 1
+        assert db.query(AdminAuditLog).filter(AdminAuditLog.action == "user.balance").count() == 1
+
+
+def test_admin_balance_change_requires_a_reason(client):
+    admin = make_user(role="admin", phone="+998911111150")
+    target = make_user(role="worker", phone="+998911111151")
+    login(client, admin)
+
+    assert client.post(
+        f"/api/v1/admin/users/{target.id}/balance", json={"amount": 50_000}
+    ).status_code == 422
+
+
+def test_admin_settings_are_persisted(client):
+    admin = make_user(role="admin", phone="+998911111152")
+    login(client, admin)
+
+    client.post("/api/v1/admin/settings", json={"platformFeePercent": 15})
+    assert client.get("/api/v1/admin/settings").json()["platformFeePercent"] == 15
+
+
+def test_broadcast_actually_creates_notifications(client):
+    from app.models import Notification
+
+    admin = make_user(role="admin", phone="+998911111153")
+    make_user(role="worker", phone="+998911111154")
+    make_user(role="worker", phone="+998911111155")
+    login(client, admin)
+
+    resp = client.post("/api/v1/admin/broadcast", json={
+        "title": "Yangilik", "message": "Test xabari", "targetRole": "worker",
+    })
+    assert resp.status_code == 200
+    assert resp.json()["recipients"] == 2
+
+    with SessionLocal() as db:
+        assert db.query(Notification).filter(Notification.title == "Yangilik").count() == 2
+
+
+def test_last_admin_cannot_be_demoted(client):
+    admin = make_user(role="admin", phone="+998911111156")
+    login(client, admin)
+
+    resp = client.patch(f"/api/v1/admin/users/{admin.id}/role", json={"role": "worker"})
+    assert resp.status_code == 400
+
+
+def test_banning_a_user_revokes_their_sessions(client):
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from .conftest import TEST_PASSWORD
+
+    admin = make_user(role="admin", phone="+998911111157")
+    victim = make_user(role="worker", phone="+998911111158")
+
+    with TestClient(app) as victim_client:
+        victim_client.post("/api/v1/auth/login",
+                           data={"username": victim.phone, "password": TEST_PASSWORD})
+        assert victim_client.get("/api/v1/users/me").status_code == 200
+
+        login(client, admin)
+        resp = client.patch(f"/api/v1/admin/users/{victim.id}/ban",
+                            json={"isBanned": True, "reason": "Spam"})
+        assert resp.status_code == 200
+        assert resp.json()["revoked_sessions"] >= 1
+
+        assert victim_client.get("/api/v1/users/me").status_code in (401, 403)

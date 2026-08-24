@@ -152,7 +152,7 @@ export const useProfileScreen = () => {
 
       // 2. Upload to MinIO S3 and save to user profile
       try {
-        const uploadedUrl = await uploadFileApi(file);
+        const uploadedUrl = await uploadFileApi(file, 'avatar');
         await apiClient('/users/me', {
           method: 'PUT',
           body: JSON.stringify({ avatarUrl: uploadedUrl })
@@ -180,7 +180,7 @@ export const useProfileScreen = () => {
       selectedRole: userProfile?.selectedRole || 'worker',
       birthDate: `${editForm.birthYear}-${editForm.birthMonth.padStart(2, '0')}-${editForm.birthDay.padStart(2, '0')}`,
       phone: editForm.phone,
-      docFileName1: editForm.docFileName1 || userProfile?.docFileName1 || 'passport_front_scan.png',
+      docFileName1: editForm.docFileName1 || userProfile?.docFileName1 || '',
       docFileName2: editForm.docFileName2 || userProfile?.docFileName2,
       profileImage: editForm.profileImage || userProfile?.profileImage || null,
       email: editForm.email,

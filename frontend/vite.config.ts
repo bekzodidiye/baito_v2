@@ -35,7 +35,7 @@ export default defineConfig(() => {
             vendor: ['react', 'react-dom', 'react-router-dom'],
             query: ['@tanstack/react-query'],
             map: ['leaflet', 'react-leaflet'],
-            motion: ['motion/react', 'framer-motion'],
+            motion: ['motion/react'],
             ui: ['lucide-react'],
             state: ['zustand']
           },

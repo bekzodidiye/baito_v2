@@ -54,7 +54,7 @@ export const createDistrictOnEachFeature = (
     }
   });
   
-  layer.on('mouseover', function () {
+  layer.on('mouseover', function (this: L.Path) {
     const currentFilter = filterLocRef.current;
     const isRegionFilt = UZBEKISTAN_REGIONS.some(r => 
       currentFilter.toLowerCase() === r.id.toLowerCase() ||
@@ -63,14 +63,14 @@ export const createDistrictOnEachFeature = (
     const isSelected = !isRegionFilt && areDistrictNamesEqual(currentFilter, tumanName);
     
     if (!isSelected) {
-      (this as L.Path).setStyle({
+      this.setStyle({
         fillOpacity: 0.32,
         weight: 2.0
       });
     }
   });
   
-  layer.on('mouseout', function () {
+  layer.on('mouseout', function (this: L.Path) {
     const currentFilter = filterLocRef.current;
     const isRegionFilt = UZBEKISTAN_REGIONS.some(r => 
       currentFilter.toLowerCase() === r.id.toLowerCase() ||
@@ -95,7 +95,7 @@ export const createDistrictOnEachFeature = (
       }
     }
     
-    (this as L.Path).setStyle({
+    this.setStyle({
       fillOpacity: fillOpacity,
       weight: weight,
       opacity: opacity

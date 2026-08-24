@@ -1,10 +1,14 @@
+import logging
+
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
+
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.exceptions import sqlalchemy_exception_handler, generic_exception_handler
@@ -12,26 +16,23 @@ from app.core.limiter import limiter
 from app.db.base import Base
 from app.db.session import engine, SessionLocal
 from app.db.init_db import init_db
+from app.redis_client import redis_client, redis_is_mock
+from app.s3_client import create_bucket_if_not_exists
+
+logger = logging.getLogger(__name__)
+
 if settings.SENTRY_DSN:
     try:
         import sentry_sdk
         sentry_sdk.init(
             dsn=settings.SENTRY_DSN,
-            traces_sample_rate=1.0,
-            profiles_sample_rate=1.0,
+            traces_sample_rate=0.2,
+            profiles_sample_rate=0.2,
+            environment=settings.ENVIRONMENT,
+            send_default_pii=False,
         )
     except ImportError:
-        print("sentry_sdk not installed, skipping Sentry initialization.")
-
-# Create tables
-Base.metadata.create_all(bind=engine)
-
-# Seed initial data if needed
-try:
-    with SessionLocal() as db:
-        init_db(db)
-except Exception as e:
-    print(f"Warning DB seed error: {e}")
+        logger.warning("sentry_sdk not installed, skipping Sentry initialization.")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -40,6 +41,30 @@ app = FastAPI(
     docs_url=None if settings.is_production else "/docs",
     redoc_url=None,
 )
+
+
+@app.on_event("startup")
+def on_startup() -> None:
+    """Prepare storage and schema.
+
+    In production the schema is owned by Alembic (``alembic upgrade head`` runs
+    as part of deployment); calling ``create_all`` there would quietly diverge
+    from the migration history, so it is limited to development.
+    """
+    if not settings.is_production:
+        Base.metadata.create_all(bind=engine)
+
+    try:
+        create_bucket_if_not_exists(settings.AWS_BUCKET_NAME)
+    except Exception as e:
+        logger.warning("Could not prepare the media bucket: %s", e)
+
+    try:
+        with SessionLocal() as db:
+            init_db(db)
+    except Exception as e:
+        logger.warning("Demo data seeding skipped: %s", e)
+
 
 # Rate limiting
 app.state.limiter = limiter
@@ -51,17 +76,16 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_exception_handler(SQLAlchemyError, sqlalchemy_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
+# The API only ever returns JSON, so it needs no script/style sources at all.
+# The HTML shell is served by nginx, which sets its own (looser) policy.
 CSP = (
-    "default-src 'self'; "
-    "script-src 'self'; "
-    "style-src 'self' 'unsafe-inline'; "
-    "img-src 'self' data: blob: https:; "
-    "font-src 'self' data:; "
-    "connect-src 'self' https: wss:; "
+    "default-src 'none'; "
+    "img-src 'self' data: blob:; "
     "frame-ancestors 'none'; "
-    "base-uri 'self'; "
-    "form-action 'self'"
+    "base-uri 'none'; "
+    "form-action 'none'"
 )
+
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
@@ -71,53 +95,66 @@ async def security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "geolocation=(self), camera=(), microphone=()"
+    # Media responses carry their own caching rules; everything else is
+    # per-user data that must never land in a shared cache.
+    response.headers.setdefault("Cache-Control", "no-store")
     if settings.is_production:
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
+
 
 # CORS — credentials are cookies now, so the origin list must stay explicit.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Refresh-Token", "Idempotency-Key"],
 )
 
 # Include router for both /api/v1 and /api for full frontend compatibility
 app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(api_router, prefix="/api")
 
-from sqlalchemy import text
-from app.redis_client import redis_client
 
 @app.get("/api/health")
 @app.get("/api/v1/health")
 def health_check(response: Response):
+    """Liveness/readiness probe.
+
+    Failure details are logged, never returned — the old version echoed the
+    raw driver exception, which includes the database connection string.
+    """
     health_status = {
         "status": "ok",
         "version": settings.VERSION,
         "database": "unknown",
         "redis": "unknown",
     }
-    
-    # 1. Probe Database
+
     try:
         with SessionLocal() as db:
             db.execute(text("SELECT 1"))
-            health_status["database"] = "connected"
+        health_status["database"] = "connected"
     except Exception as e:
-        health_status["database"] = f"unhealthy ({str(e)})"
+        logger.error("Health check: database unhealthy: %s", e)
+        health_status["database"] = "unhealthy"
         health_status["status"] = "degraded"
         response.status_code = 503
 
-    # 2. Probe Redis
-    try:
-        redis_client.ping()
-        health_status["redis"] = "connected"
-    except Exception as e:
-        health_status["redis"] = f"unhealthy ({str(e)})"
+    if redis_is_mock():
+        # An in-process stand-in is not a working Redis; say so.
+        health_status["redis"] = "unavailable (in-memory fallback)"
         if health_status["status"] == "ok":
             health_status["status"] = "degraded"
+    else:
+        try:
+            redis_client.ping()
+            health_status["redis"] = "connected"
+        except Exception as e:
+            logger.error("Health check: redis unhealthy: %s", e)
+            health_status["redis"] = "unhealthy"
+            if health_status["status"] == "ok":
+                health_status["status"] = "degraded"
 
     return health_status
