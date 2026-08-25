@@ -135,7 +135,14 @@ jobs:
     name: 🚀 4. Production Deploy
     needs: [test-backend, test-frontend, validate-docker]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # The server has no public address — it is only reachable inside the
+    # tailnet — so deployment has to run on the box itself. That makes the
+    # self-hosted runner a hard dependency.
     runs-on: self-hosted
+    # Without this a job simply queues forever when no runner is available.
+    # The runner was down for over 15 hours and nothing surfaced it: the
+    # workflow showed no failure, deploys just silently stopped happening.
+    timeout-minutes: 30
     steps:
       - name: 📥 Checkout Code on Server
         uses: actions/checkout@v4
