@@ -63,16 +63,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       fetchUserProfileApi()
         .then(data => {
             if (data) {
-              const cached = safeGetItem('baito_user_profile');
               let currentRole = (data as any).role || 'worker';
-              if (cached) {
-                try {
-                  const parsed = JSON.parse(cached);
-                  if (parsed.selectedRole) {
-                    currentRole = parsed.selectedRole;
-                  }
-                } catch(e) {}
-              }
               
               let fName = '';
               let lName = '';

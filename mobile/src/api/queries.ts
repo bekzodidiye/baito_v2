@@ -103,6 +103,26 @@ export const markAllNotificationsReadApi = async () => {
   return await apiClient('/notifications/read-all', { method: 'POST' });
 };
 
+export const uploadFileApi = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const token = (typeof localStorage !== 'undefined' ? localStorage.getItem('baito_access_token') : '') || '';
+  const baseUrl = getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/upload/`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || 'Fayl yuklashda xatolik yuz berdi');
+  }
+
+  const data = await response.json();
+  return data.url;
+};
+
 // User & Profile API
 export const fetchUserProfileApi = async () => {
   return await apiClient('/users/me');
