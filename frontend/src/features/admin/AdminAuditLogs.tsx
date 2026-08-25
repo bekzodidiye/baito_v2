@@ -1,66 +1,90 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient, unwrapList } from '../../api/client';
 import { AdminLog } from './types';
 import { ShieldAlert, Search, Filter, Download, UserCheck, Ban, Trash2, CheckCircle2 } from 'lucide-react';
 
-const INITIAL_LOGS: AdminLog[] = [
-  {
-    id: 'log-1',
-    adminName: 'Sardor Rahim (Super Admin)',
-    role: 'Super Admin',
-    action: 'Foydalanuvchini Ban Qildi',
-    target: 'Alisher Qodirov (+998 90 123 45 67)',
-    ipAddress: '213.230.12.98',
-    details: 'Spam e\'lon joylagani va firibgarlik gumoni sababli 30 kunga ban berildi.',
-    timestamp: 'Bugun, 14:32',
-  },
-  {
-    id: 'log-2',
-    adminName: 'Malika Y. (Moderator)',
-    role: 'Moderator',
-    action: 'Pasport Tasdiqlandi',
-    target: 'Javohir Tursunov (ID: #USR-9921)',
-    ipAddress: '178.218.201.44',
-    details: 'Pasport rasmlari va selfie mos keldi. Verified status berildi.',
-    timestamp: 'Bugun, 12:15',
-  },
-  {
-    id: 'log-3',
-    adminName: 'Sardor Rahim (Super Admin)',
-    role: 'Super Admin',
-    action: 'E\'lon Rad Etildi va O\'chirildi',
-    target: 'E\'lon: "Tezkor boyib ketish vakansiyasi"',
-    ipAddress: '213.230.12.98',
-    details: 'Qoidabuzar e\'lon o\'chirildi va ish beruvchiga ogohlantirish yuborildi.',
-    timestamp: 'Kecha, 18:45',
-  },
-  {
-    id: 'log-4',
-    adminName: 'Otabek M. (Moliya Nazoratchi)',
-    role: 'Moderator',
-    action: 'Escrow Pulini Yechish (Dispute Resolve)',
-    target: 'Nizo #DISP-402',
-    ipAddress: '84.54.80.12',
-    details: '70% ishchiga, 30% ish beruvchiga qaytarish bo\'yicha qaror chiqarildi.',
-    timestamp: '22-Iyul, 09:20',
-  },
-];
+// Human labels for the action slugs the backend records.
+const ACTION_LABELS: Record<string, string> = {
+  'user.ban': 'Foydalanuvchini bloklandi',
+  'user.unban': 'Blokdan chiqarildi',
+  'user.update': "Rol/verifikatsiya o'zgartirildi",
+  'user.balance': "Balans o'zgartirildi",
+  'user.note': "Izoh qo'shildi",
+  'job.status': "E'lon holati o'zgartirildi",
+  'job.worker': 'Ishchi tayinlandi',
+  'job.cancel': "E'lon bekor qilindi",
+  'settings.update': "Sozlamalar o'zgartirildi",
+  'broadcast': 'Ommaviy xabar yuborildi',
+  'withdrawal.approve': "Yechish tasdiqlandi",
+  'withdrawal.reject': 'Yechish rad etildi',
+  'escrow.release': "Escrow to'lovi chiqarildi",
+  'escrow.refund': 'Escrow qaytarildi',
+};
+
+interface AuditRow {
+  id: string;
+  adminName: string | null;
+  action: string;
+  targetType: string | null;
+  targetId: string | null;
+  details: Record<string, unknown> | null;
+  ipAddress: string | null;
+  note: string | null;
+  createdAt: string | null;
+}
+
+const toAdminLog = (r: AuditRow): AdminLog => ({
+  id: r.id,
+  adminName: r.adminName || 'Administrator',
+  role: r.targetType || undefined,
+  action: ACTION_LABELS[r.action] || r.action,
+  target: [r.targetType, r.targetId].filter(Boolean).join(' · ') || '—',
+  ipAddress: r.ipAddress || undefined,
+  details: r.note || (r.details ? JSON.stringify(r.details) : undefined),
+  timestamp: r.createdAt ? new Date(r.createdAt).toLocaleString('uz-UZ') : '—',
+});
 
 export const AdminAuditLogs: React.FC = () => {
-  const [logs] = useState<AdminLog[]>(INITIAL_LOGS);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'all' | 'Super Admin' | 'Moderator'>('all');
+  const [actionFilter, setActionFilter] = useState<string>('all');
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['adminAuditLogs'],
+    queryFn: async () => {
+      const res = await apiClient('/admin/audit-logs?limit=200');
+      return (unwrapList(res) as AuditRow[]).map(toAdminLog);
+    },
+  });
+  const logs: AdminLog[] = data ?? [];
 
   const filteredLogs = logs.filter((log) => {
     const matchesSearch =
       log.adminName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.target.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || log.role === roleFilter;
-    return matchesSearch && matchesRole;
+    const matchesAction = actionFilter === 'all' || log.action === actionFilter;
+    return matchesSearch && matchesAction;
   });
 
   const handleExportCSV = () => {
-    alert('Audit loglar CSV formatida muvaffaqiyatli yuklab olindi!');
+    // This used to just show an alert claiming the file had been downloaded.
+    const header = ['Vaqt', 'Administrator', 'Amal', 'Obyekt', 'IP', 'Izoh'];
+    const escape = (v: string) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = [
+      header.join(','),
+      ...filteredLogs.map((l) =>
+        [l.timestamp, l.adminName, l.action, l.target, l.ipAddress ?? '', l.details ?? '']
+          .map(escape).join(','),
+      ),
+    ].join('\n');
+
+    const url = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `baito-audit-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -100,11 +124,11 @@ export const AdminAuditLogs: React.FC = () => {
         <div className="flex items-center gap-2">
           <Filter size={16} className="text-slate-400" />
           <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value as any)}
+            value={actionFilter}
+            onChange={(e) => setActionFilter(e.target.value)}
             className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           >
-            <option value="all">Barcha Rollar</option>
+            <option value="all">Barcha amallar</option>
             <option value="Super Admin">Super Admin</option>
             <option value="Moderator">Moderator</option>
           </select>

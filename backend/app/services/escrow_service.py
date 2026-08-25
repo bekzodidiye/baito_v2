@@ -8,9 +8,16 @@ import uuid
 PLATFORM_FEE_PERCENT = 10 # 10% platform fee
 
 class EscrowService:
-    """
-    Bank-grade Escrow Vault for Baito Marketplace.
-    Secures employer funds upon hiring and safely disburses upon job completion.
+    """Escrow vault for the marketplace.
+
+    TRANSACTIONS: these methods never commit. They ``flush()`` so the caller can
+    read back generated ids, and leave the commit to the request handler.
+
+    They used to commit internally while their callers committed again, which
+    meant a failure between the two left money frozen against a job nobody was
+    hired for — and, when completing a multi-worker job, paid some workers and
+    not others while the job was already marked complete. Holding one
+    transaction per request makes each of those operations all-or-nothing.
     """
     @staticmethod
     def hold_funds(db: Session, employer_id: str, job_id: str, amount_uzs: int) -> Transaction:
@@ -43,8 +50,7 @@ class EscrowService:
             description=f"Ish e'loni uchun mablag' muzlatildi ({amount_uzs} so'm)"
         )
         db.add(ledger)
-        db.commit()
-        db.refresh(tx)
+        db.flush()
         return tx
 
     @staticmethod
@@ -89,8 +95,7 @@ class EscrowService:
             description=f"Ish muvaffaqiyatli yakunlandi: to'lov o'tkazildi ({worker_payout} so'm)"
         )
         db.add(ledger_worker)
-        db.commit()
-        db.refresh(tx)
+        db.flush()
         return tx
 
     @staticmethod
@@ -123,6 +128,5 @@ class EscrowService:
             description=f"Bekor qilingan ish bo'yicha mablag' qaytarildi ({refund_amount} so'm)"
         )
         db.add(ledger)
-        db.commit()
-        db.refresh(tx)
+        db.flush()
         return tx
