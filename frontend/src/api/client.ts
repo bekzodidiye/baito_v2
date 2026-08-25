@@ -54,7 +54,19 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}, isR
       if (await refreshSession()) {
         return apiClient(endpoint, options, true);
       }
-      window.dispatchEvent(new Event('auth:unauthorized'));
+      // Only treat this as an expired session if there was a session to begin
+      // with. A 401 during signup — e.g. uploading a document before the
+      // account exists — used to fire this event and bounce the user back to
+      // the login screen in the middle of registering.
+      let wasLoggedIn = false;
+      try {
+        wasLoggedIn = localStorage.getItem('baito_is_logged_in') === 'true';
+      } catch {
+        wasLoggedIn = true; // storage blocked: fall back to the old behaviour
+      }
+      if (wasLoggedIn) {
+        window.dispatchEvent(new Event('auth:unauthorized'));
+      }
     }
 
     throw new Error(errorDetail || `So'rov bajarilmadi (${response.status})`);

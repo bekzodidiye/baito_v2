@@ -1,5 +1,5 @@
 import { useApp } from '../../context/AppContext';
-import { registerApi, loginApi, verifySmsApi } from '../../api/queries';
+import { registerApi, loginApi, verifySmsApi, uploadFileApi } from '../../api/queries';
 import { apiClient } from '../../api/client';
 import { LOCAL_TEXTS } from '../../components/login/LoginPromptScreen.translations';
 import { showToast } from '../../utils/toast';
@@ -51,6 +51,26 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
 
       await loginApi(state.regPhone, state.regPassword);
 
+      // Now that the account exists and the session cookie is set, the staged
+      // files can actually be uploaded. Failures here must not fail signup —
+      // the user is already registered and can re-upload from their profile.
+      const uploaded: Record<string, string | undefined> = {};
+      const pending = state.pendingFiles || {};
+      const uploads: [string, File | undefined, 'avatar' | 'document'][] = [
+        ['avatar', pending.avatar, 'avatar'],
+        ['doc1', pending.doc1, 'document'],
+        ['doc2', pending.doc2, 'document'],
+        ['doc3', pending.doc3, 'document'],
+      ];
+      for (const [key, file, purpose] of uploads) {
+        if (!file) continue;
+        try {
+          uploaded[key] = await uploadFileApi(file, purpose);
+        } catch (e) {
+          console.warn(`Upload failed for ${key}`, e);
+        }
+      }
+
       const extendedPayload = {
         name: state.selectedRole === 'worker' ? `${state.firstName} ${state.lastName}`.trim() : state.companyName,
         email: state.email || undefined,
@@ -58,10 +78,10 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
         birthDate: state.birthDay && state.birthMonth && state.birthYear ? `${state.birthYear}-${state.birthMonth.padStart(2, '0')}-${state.birthDay.padStart(2, '0')}` : undefined,
         passportSeries: state.passportSeries && state.passportNumber ? `${state.passportSeries} ${state.passportNumber}` : undefined,
         passportJshshir: state.jshshir || undefined,
-        passportDocFront: state.docFileName1 || undefined,
-        passportDocBack: state.docFileName2 || undefined,
-        selfieWithDoc: state.docFileName3 || undefined,
-        avatarUrl: state.profileImage || undefined,
+        passportDocFront: uploaded.doc1,
+        passportDocBack: uploaded.doc2,
+        selfieWithDoc: uploaded.doc3,
+        avatarUrl: uploaded.avatar,
       };
 
       try {
@@ -84,10 +104,10 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
         gender: state.gender || '',
         passportSeries: state.passportSeries && state.passportNumber ? `${state.passportSeries} ${state.passportNumber}` : '',
         pinfl: state.jshshir || '',
-        docFileName1: state.docFileName1 || '',
-        docFileName2: state.docFileName2 || '',
-        docFileName3: state.docFileName3 || '',
-        profileImage: state.profileImage || null,
+        docFileName1: uploaded.doc1 || '',
+        docFileName2: uploaded.doc2 || '',
+        docFileName3: uploaded.doc3 || '',
+        profileImage: uploaded.avatar || null,
         isVerified: false,
         rating: 0,
         completedJobsCount: 0,

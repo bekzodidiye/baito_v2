@@ -63,6 +63,13 @@ export const useLoginState = (isModal: boolean, initialMode?: 'login' | 'registe
   const [email, setEmail] = useState('');
 
   // Documents states
+  // Registration happens before any session exists, so files cannot be
+  // uploaded while the wizard is running — the upload endpoint requires
+  // authentication. The File objects are held here and sent once the account
+  // has been created and logged in.
+  const [pendingFiles, setPendingFiles] = useState<{
+    avatar?: File; doc1?: File; doc2?: File; doc3?: File;
+  }>({});
   const [docFileName1, setDocFileName1] = useState('');
   const [docFileName2, setDocFileName2] = useState('');
   const [docFileName3, setDocFileName3] = useState('');
@@ -147,6 +154,7 @@ export const useLoginState = (isModal: boolean, initialMode?: 'login' | 'registe
     birthYear, setBirthYear,
     gender, setGender,
     email, setEmail,
+    pendingFiles, setPendingFiles,
     docFileName1, setDocFileName1,
     docFileName2, setDocFileName2,
     docFileName3, setDocFileName3,

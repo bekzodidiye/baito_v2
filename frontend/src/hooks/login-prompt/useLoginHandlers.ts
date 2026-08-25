@@ -3,7 +3,6 @@ import { LOCAL_TEXTS } from '../../components/login/LoginPromptScreen.translatio
 import { useLoginApiHandlers } from './useLoginApiHandlers';
 import { showToast } from '../../utils/toast';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
-import { uploadFileApi } from '../../api/queries';
 
 export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => void) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
@@ -12,17 +11,21 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
   
   const { handleFinishSubmit, handleLoginSubmit, handleSendVerificationCode } = useLoginApiHandlers(state, isModal, onClose);
 
-  // File picker handlers
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // File picker handlers.
+  //
+  // Nothing is uploaded here. During registration there is no session yet, so
+  // /upload answers 401; apiClient then treats that as an expired session and
+  // bounces the user back to the login screen mid-signup. The files are kept
+  // in state and uploaded by handleFinishSubmit once the account exists.
+  const stageFile = (key: 'avatar' | 'doc1' | 'doc2' | 'doc3', file: File) => {
+    state.setPendingFiles((prev: Record<string, File>) => ({ ...prev, [key]: file }));
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       state.setProfileImage(URL.createObjectURL(file));
-      try {
-        const uploadedUrl = await uploadFileApi(file, 'avatar');
-        state.setProfileImage(uploadedUrl);
-      } catch (err) {
-        console.error('Avatar upload failed:', err);
-      }
+      stageFile('avatar', file);
     }
   };
 
@@ -31,40 +34,25 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
   const triggerDoc2Select = () => state.doc2InputRef.current?.click();
   const triggerDoc3Select = () => state.doc3InputRef.current?.click();
 
-  const handleDoc1Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDoc1Upload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       state.setDocFileName1(file.name);
-      try {
-        const uploadedUrl = await uploadFileApi(file, 'document');
-        state.setDocFileName1(uploadedUrl);
-      } catch (err) {
-        console.error('Doc1 upload failed:', err);
-      }
+      stageFile('doc1', file);
     }
   };
-  const handleDoc2Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDoc2Upload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       state.setDocFileName2(file.name);
-      try {
-        const uploadedUrl = await uploadFileApi(file, 'document');
-        state.setDocFileName2(uploadedUrl);
-      } catch (err) {
-        console.error('Doc2 upload failed:', err);
-      }
+      stageFile('doc2', file);
     }
   };
-  const handleDoc3Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDoc3Upload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       state.setDocFileName3(file.name);
-      try {
-        const uploadedUrl = await uploadFileApi(file, 'document');
-        state.setDocFileName3(uploadedUrl);
-      } catch (err) {
-        console.error('Doc3 upload failed:', err);
-      }
+      stageFile('doc3', file);
     }
   };
 
