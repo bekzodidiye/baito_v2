@@ -8,6 +8,7 @@ from .admin_promotions import router as promos_router
 from .admin_regions import router as regs_router
 from .admin_settings import router as settings_router
 from .admin_stats import router as stats_router
+from .admin_support import router as support_router
 from .admin_users import router as users_router
 
 router = APIRouter()
@@ -25,3 +26,4 @@ router.include_router(regs_router)
 router.include_router(promos_router)
 router.include_router(disputes_router)
 router.include_router(finance_router)
+router.include_router(support_router)

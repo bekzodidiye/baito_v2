@@ -273,6 +273,7 @@ export interface NotificationTemplate {
 }
 
 export type AdminTab =
+  | 'payouts'
   | 'overview'
   | 'users'
   | 'daily_jobs'

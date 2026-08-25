@@ -1,7 +1,7 @@
 import React from 'react';
 import { AdminTab } from './types';
 import {
-  LayoutDashboard, Users, Briefcase, FileCheck, DollarSign, AlertTriangle, Send, Sliders, X, User,
+  Wallet, LayoutDashboard, Users, Briefcase, FileCheck, DollarSign, AlertTriangle, Send, Sliders, X, User,
   Building2, Headphones, BarChart3, FolderTree, ShieldAlert, Ticket, MapPin, BellRing, Bot, Zap, FileText, ShieldCheck,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -49,6 +49,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
       titleEn: 'Finance & Security',
       items: [
         { id: 'transactions' as AdminTab, labelUz: 'Escrow va Tranzaksiyalar', labelRu: 'Escrow и транзакции', labelEn: 'Escrow & Transactions', icon: DollarSign },
+        { id: 'payouts' as AdminTab, labelUz: "To'lovlar va Escrow", labelRu: 'Выплаты и эскроу', labelEn: 'Payouts & Escrow', icon: Wallet },
         { id: 'disputes' as AdminTab, labelUz: 'Nizolar va Shikoyatlar', labelRu: 'Споры и жалобы', labelEn: 'Disputes & Claims', icon: AlertTriangle, badge: '3' },
         { id: 'verifications' as AdminTab, labelUz: 'Hujjatlarni Tasdiqlash', labelRu: 'Проверка документов', labelEn: 'Verifications', icon: FileCheck },
         { id: 'audit_logs' as AdminTab, labelUz: 'Audit Loglar Stream', labelRu: 'Логи аудита', labelEn: 'Audit Logs Stream', icon: ShieldAlert },

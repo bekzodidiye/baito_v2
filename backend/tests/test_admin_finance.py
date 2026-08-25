@@ -225,3 +225,60 @@ def test_failed_hire_does_not_leave_money_frozen(client):
         assert db.query(Transaction).filter(
             Transaction.jobId == job.id, Transaction.status == "held"
         ).count() == 0
+
+
+# ── Support tickets ────────────────────────────────────────────────────────
+
+def _open_ticket(user_id: str) -> str:
+    from app.models import SupportTicket
+    with SessionLocal() as db:
+        t = SupportTicket(userId=user_id, subject="Pul kelmadi", category="payment")
+        db.add(t)
+        db.commit()
+        return t.id
+
+
+def test_admin_can_reply_to_a_ticket(client):
+    """The models and the chat UI existed; no endpoint connected them."""
+    from app.models import Notification, TicketMessage
+
+    user = make_user(phone="+998921111130")
+    ticket_id = _open_ticket(user.id)
+
+    admin = make_user(role="admin", phone="+998921111131")
+    login(client, admin)
+
+    resp = client.post(f"/api/v1/admin/support-tickets/{ticket_id}/messages",
+                       json={"text": "Tekshirdik, to'lov yo'lda."})
+    assert resp.status_code == 200
+    assert resp.json()["message"]["isAdmin"] is True
+    # A "new" ticket becomes "open" once someone answers it.
+    assert resp.json()["status"] == "open"
+
+    with SessionLocal() as db:
+        assert db.query(TicketMessage).filter(TicketMessage.ticketId == ticket_id).count() == 1
+        assert db.query(Notification).filter(Notification.userId == user.id).count() == 1
+
+    body = client.get(f"/api/v1/admin/support-tickets/{ticket_id}").json()
+    assert len(body["messages"]) == 1
+    assert body["messages"][0]["text"] == "Tekshirdik, to'lov yo'lda."
+
+
+def test_ticket_status_is_validated(client):
+    user = make_user(phone="+998921111132")
+    ticket_id = _open_ticket(user.id)
+    admin = make_user(role="admin", phone="+998921111133")
+    login(client, admin)
+
+    assert client.patch(f"/api/v1/admin/support-tickets/{ticket_id}",
+                        json={"status": "nonsense"}).status_code == 400
+    assert client.patch(f"/api/v1/admin/support-tickets/{ticket_id}",
+                        json={"status": "resolved"}).status_code == 200
+
+
+def test_replying_requires_admin(client):
+    user = make_user(phone="+998921111134")
+    ticket_id = _open_ticket(user.id)
+    login(client, user)
+    assert client.post(f"/api/v1/admin/support-tickets/{ticket_id}/messages",
+                       json={"text": "men admin emasman"}).status_code == 403

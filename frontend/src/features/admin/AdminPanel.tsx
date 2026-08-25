@@ -9,6 +9,7 @@ import { AdminJobs } from './AdminJobs';
 import { AdminDailyJobs } from './AdminDailyJobs';
 import { AdminVerifications } from './AdminVerifications';
 import { AdminTransactions } from './AdminTransactions';
+import { AdminPayouts } from './AdminPayouts';
 import { AdminDisputes } from './AdminDisputes';
 import { AdminBroadcast } from './AdminBroadcast';
 import { AdminSettings } from './AdminSettings';
@@ -118,6 +119,10 @@ export const AdminPanel: React.FC = () => {
 
           {activeTab === 'transactions' && (
             <AdminTransactions transactions={transactions} />
+          )}
+
+          {activeTab === 'payouts' && (
+            <AdminPayouts />
           )}
 
           {activeTab === 'support' && (
