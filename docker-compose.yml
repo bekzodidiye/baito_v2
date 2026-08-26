@@ -18,8 +18,24 @@ x-logging: &default-logging
 
 services:
   db:
+    mem_limit: 2g
     image: postgres:15-alpine
     restart: unless-stopped
+    # Postgres shipped on stock defaults: 128 MB shared_buffers on a 7.6 GB
+    # box, and random_page_cost=4 which is an spinning-disk assumption that
+    # pushes the planner away from index scans. The two timeouts stop a single
+    # runaway query or a leaked transaction from pinning a connection or
+    # blocking VACUUM indefinitely.
+    command: >
+      postgres
+      -c shared_buffers=1536MB
+      -c effective_cache_size=4GB
+      -c work_mem=16MB
+      -c maintenance_work_mem=256MB
+      -c random_page_cost=1.1
+      -c statement_timeout=30s
+      -c idle_in_transaction_session_timeout=60s
+      -c max_connections=100
     networks:
       - baito_net
     environment:
@@ -39,6 +55,7 @@ services:
     logging: *default-logging
 
   redis:
+    mem_limit: 256m
     image: redis:7-alpine
     restart: unless-stopped
     networks:
@@ -53,6 +70,7 @@ services:
     logging: *default-logging
 
   minio:
+    mem_limit: 512m
     image: minio/minio:latest
     restart: unless-stopped
     networks:
@@ -93,6 +111,7 @@ services:
     logging: *default-logging
 
   backend:
+    mem_limit: 1g
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -138,6 +157,7 @@ services:
     logging: *default-logging
 
   celery_worker:
+    mem_limit: 512m
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -172,6 +192,7 @@ services:
   # Scheduler for the periodic tasks (job expiry, idempotency-key cleanup).
   # There was no beat service at all, so nothing scheduled ever ran.
   celery_beat:
+    mem_limit: 256m
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -193,6 +214,7 @@ services:
     logging: *default-logging
 
   backup_bot:
+    mem_limit: 512m
     build:
       context: ./backend
       dockerfile: Dockerfile.bot
@@ -229,6 +251,7 @@ services:
     logging: *default-logging
 
   frontend:
+    mem_limit: 256m
     build:
       context: ./frontend
       dockerfile: Dockerfile

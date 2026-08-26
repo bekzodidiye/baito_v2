@@ -35,3 +35,7 @@ scratch_*.py
 *.apk
 dump.rdb
 
+# Screenshots belong in a PR or an issue, not in the tree — CI checks out
+# with --depth=1, so every one of them is downloaded on every deploy.
+*_screenshot*.png
+*screenshot*.png

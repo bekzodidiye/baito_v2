@@ -21,6 +21,14 @@ from app.s3_client import create_bucket_if_not_exists
 
 logger = logging.getLogger(__name__)
 
+if not settings.SENTRY_DSN and settings.is_production:
+    # Silence here is the problem: the integration is wired up and the package
+    # is installed, so everything looks fine, but with no DSN every production
+    # exception goes nowhere. Say so loudly at boot and again in /api/health.
+    logger.error(
+        "SENTRY_DSN is not set — production errors are NOT being reported anywhere."
+    )
+
 if settings.SENTRY_DSN:
     try:
         import sentry_sdk
@@ -141,6 +149,8 @@ def health_check(response: Response):
         health_status["database"] = "unhealthy"
         health_status["status"] = "degraded"
         response.status_code = 503
+
+    health_status["error_reporting"] = "sentry" if settings.SENTRY_DSN else "none"
 
     if redis_is_mock():
         # An in-process stand-in is not a working Redis; say so.

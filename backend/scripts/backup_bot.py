@@ -15,7 +15,13 @@ from urllib.parse import urlparse
 
 # --- Timezone & Retention ---
 UZ_TZ = timezone(timedelta(hours=5))  # O'zbekiston vaqti (UTC+5: Toshkent / Samarqand)
-MAX_BACKUPS_TO_KEEP = 5
+# Retention is time-based, not count-based. With a plain "keep the newest 5"
+# rule every container start took a backup and rotated an older one out, so a
+# day with a handful of deploys silently destroyed the entire history — that is
+# exactly what happened on 2026-08-29.
+RETENTION_DAYS = 14
+# Floor so a burst of restarts can never leave fewer than this many archives.
+MIN_BACKUPS_TO_KEEP = 10
 
 # --- Configuration ---
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -119,8 +125,17 @@ def get_main_menu_keyboard():
     markup.add(btn_help)
     return markup
 
+def _expired(items, timestamp_of):
+    """Items to delete: older than RETENTION_DAYS, keeping a minimum count.
+
+    ``items`` must already be sorted newest-first.
+    """
+    cutoff = time.time() - RETENTION_DAYS * 86400
+    return [it for it in items[MIN_BACKUPS_TO_KEEP:] if timestamp_of(it) < cutoff]
+
+
 def cleanup_old_backups():
-    """Faqat eng so'nggi MAX_BACKUPS_TO_KEEP (5) ta bitta paketli zip zaxiralarni qoldirib, eskisini o'chiradi."""
+    """Prune archives older than RETENTION_DAYS, never below MIN_BACKUPS_TO_KEEP."""
     # 1. Local disk tozalash
     try:
         if os.path.exists(BACKUPS_DIR):
@@ -130,7 +145,7 @@ def cleanup_old_backups():
                     fp = os.path.join(BACKUPS_DIR, f)
                     disk_files.append((fp, os.path.getmtime(fp)))
             disk_files.sort(key=lambda x: x[1], reverse=True)
-            for fp, _ in disk_files[MAX_BACKUPS_TO_KEEP:]:
+            for fp, _ in _expired(disk_files, lambda item: item[1]):
                 try:
                     os.remove(fp)
                     print(f"🧹 Diskdan eski zaxira o'chirildi: {fp}")
@@ -146,7 +161,7 @@ def cleanup_old_backups():
         if 'Contents' in resp:
             s3_files = [obj for obj in resp['Contents'] if obj['Key'].endswith('.zip') or obj['Key'].endswith('.sql.gz') or obj['Key'].endswith('.tar.gz')]
             s3_files.sort(key=lambda x: x['LastModified'], reverse=True)
-            for obj in s3_files[MAX_BACKUPS_TO_KEEP:]:
+            for obj in _expired(s3_files, lambda o: o['LastModified'].timestamp()):
                 try:
                     s3_client.delete_object(Bucket=BUCKET_NAME, Key=obj['Key'])
                     print(f"🧹 MinIO/S3 dan eski zaxira o'chirildi: {obj['Key']}")
