@@ -8,6 +8,12 @@ os.environ.setdefault("DATABASE_URL", f"sqlite:///{_DB_DIR}/test.db")
 os.environ.setdefault("SEED_DEMO_DATA", "false")
 os.environ.setdefault("SMS_DEV_ECHO_CODE", "true")
 os.environ.setdefault("BCRYPT_ROUNDS", "4")
+# Point at a port nothing listens on so the suite always falls back to the
+# in-process MockRedis. Without this, tests silently attached to whatever Redis
+# happened to be running on the developer's machine and picked up state from
+# previous runs — the error-reporter dedupe test passed once and then failed
+# for an hour because its key was still live in that real Redis.
+os.environ.setdefault("REDIS_URL", "redis://127.0.0.1:1/0")
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

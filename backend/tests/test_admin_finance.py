@@ -282,3 +282,78 @@ def test_replying_requires_admin(client):
     login(client, user)
     assert client.post(f"/api/v1/admin/support-tickets/{ticket_id}/messages",
                        json={"text": "men admin emasman"}).status_code == 403
+
+
+# ── Error reporting ────────────────────────────────────────────────────────
+
+def test_health_reports_that_error_tracking_is_off(client):
+    """The whole point is that silence must be visible."""
+    body = client.get("/api/v1/health").json()
+    assert body["error_reporting"] == "none"
+
+
+def test_health_reports_telegram_when_configured(client, monkeypatch):
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "TELEGRAM_BOT_TOKEN", "test-token")
+    monkeypatch.setattr(settings, "TELEGRAM_CHAT_ID", "123")
+    assert client.get("/api/v1/health").json()["error_reporting"] == "telegram"
+
+
+def test_identical_errors_are_reported_once_per_hour(monkeypatch):
+    """A loop hitting one bug must not turn into hundreds of messages."""
+    from app.core import error_reporter
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "TELEGRAM_BOT_TOKEN", "test-token")
+    monkeypatch.setattr(settings, "TELEGRAM_CHAT_ID", "123")
+
+    sent = []
+    monkeypatch.setattr(error_reporter._pool, "submit",
+                        lambda fn, msg: sent.append(msg))
+
+    def boom():
+        raise ValueError("same failure every time")
+
+    for _ in range(5):
+        try:
+            boom()
+        except ValueError as e:
+            error_reporter.report_exception(e, where="test")
+
+    assert len(sent) == 1, f"expected one alert, got {len(sent)}"
+    assert "ValueError" in sent[0]
+
+
+def test_reporter_stays_silent_without_credentials(monkeypatch):
+    from app.core import error_reporter
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "TELEGRAM_BOT_TOKEN", "")
+    monkeypatch.setattr(settings, "TELEGRAM_CHAT_ID", "")
+    sent = []
+    monkeypatch.setattr(error_reporter._pool, "submit", lambda fn, msg: sent.append(msg))
+
+    try:
+        raise RuntimeError("nowhere to send this")
+    except RuntimeError as e:
+        error_reporter.report_exception(e, where="test")
+
+    assert sent == []
+
+
+def test_reporter_never_raises(monkeypatch):
+    """It runs on the error path; it must not become a second failure."""
+    from app.core import error_reporter
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "TELEGRAM_BOT_TOKEN", "test-token")
+    monkeypatch.setattr(settings, "TELEGRAM_CHAT_ID", "123")
+
+    def explode(*_a, **_k):
+        raise OSError("pool is gone")
+
+    monkeypatch.setattr(error_reporter._pool, "submit", explode)
+    try:
+        raise ValueError("original problem")
+    except ValueError as e:
+        error_reporter.report_exception(e, where="test")  # must not raise

@@ -150,6 +150,9 @@ services:
       - UZUM_SECRET_KEY=${UZUM_SECRET_KEY:-}
       - UZUM_API_URL=${UZUM_API_URL:-https://api.uzum.uz/epos/v1}
       - SENTRY_DSN=${SENTRY_DSN:-}
+      # Used by the error reporter, not just the backup bot.
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
     # Reachable through the frontend's nginx proxy; not published to the host.
     expose:

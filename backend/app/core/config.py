@@ -52,6 +52,11 @@ class Settings(BaseSettings):
     UZUM_SECRET_KEY: str = os.getenv("UZUM_SECRET_KEY", "")
     UZUM_API_URL: str = os.getenv("UZUM_API_URL", "https://api.uzum.uz/epos/v1")
 
+    # Telegram — reused by the error reporter. The backup bot already owns a
+    # channel; pointing exceptions at it costs no extra infrastructure.
+    TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    TELEGRAM_CHAT_ID: str = os.getenv("TELEGRAM_CHAT_ID", "")
+
     # TextUp SMS Integration
     TEXTUP_EMAIL: str = os.getenv("TEXTUP_EMAIL", "")
     TEXTUP_PASSWORD: str = os.getenv("TEXTUP_PASSWORD", "")
@@ -70,6 +75,16 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.ENVIRONMENT.lower() in ("production", "prod")
+
+    @property
+    def error_reporting_enabled(self) -> bool:
+        """Telegram reporting is on when both credentials are present.
+
+        Deliberately not gated on production: a staging box with the values set
+        should report too, and a box without them stays silent rather than
+        failing.
+        """
+        return bool(self.TELEGRAM_BOT_TOKEN and self.TELEGRAM_CHAT_ID)
 
     @property
     def uzum_configured(self) -> bool:
