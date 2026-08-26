@@ -113,6 +113,20 @@ jobs:
           touch backend/.env
           docker compose config > /dev/null
 
+      - name: Assert No Dangling Submodule Pointers
+        run: |
+          # A directory committed as a gitlink (mode 160000) with no matching
+          # .gitmodules entry makes actions/checkout fail `git submodule
+          # status`, decide the working copy is unusable, and re-clone the
+          # whole repository on every single run. AI-rules did exactly this and
+          # left the deploy job hung on checkout for 13-19 minutes at a time.
+          links=$(git ls-files -s | awk '$1 == "160000" { print $4 }')
+          if [ -n "$links" ] && [ ! -f .gitmodules ]; then
+            echo "::error::Gitlink entries exist but .gitmodules is missing:"
+            echo "$links" | sed 's/^/  /'
+            exit 1
+          fi
+
       - name: Assert No Secrets Are Committed
         run: |
           # Guards against the class of finding that started this: a live bot
