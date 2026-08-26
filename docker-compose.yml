@@ -1,3 +1,7 @@
+# IMAGE_TAG pins which build of the application images to run. CI sets it to
+# the commit SHA, so the previous build stays on disk and rollback is a single
+# `IMAGE_TAG=<sha> docker compose up -d --no-build`. See scripts/rollback.sh.
+#
 # Secrets have no defaults in this file. Every ${VAR:?...} below refuses to
 # start the stack unless the value is present in .env — the previous version
 # shipped a working JWT signing key, a live Telegram bot token and the
@@ -92,6 +96,7 @@ services:
     logging: *default-logging
 
   migrate:
+    image: baito-backend:${IMAGE_TAG:-current}
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -112,6 +117,7 @@ services:
 
   backend:
     mem_limit: 1g
+    image: baito-backend:${IMAGE_TAG:-current}
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -158,6 +164,7 @@ services:
 
   celery_worker:
     mem_limit: 512m
+    image: baito-backend:${IMAGE_TAG:-current}
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -193,6 +200,7 @@ services:
   # There was no beat service at all, so nothing scheduled ever ran.
   celery_beat:
     mem_limit: 256m
+    image: baito-backend:${IMAGE_TAG:-current}
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -215,6 +223,7 @@ services:
 
   backup_bot:
     mem_limit: 512m
+    image: baito-backup-bot:${IMAGE_TAG:-current}
     build:
       context: ./backend
       dockerfile: Dockerfile.bot
@@ -252,6 +261,7 @@ services:
 
   frontend:
     mem_limit: 256m
+    image: baito-frontend:${IMAGE_TAG:-current}
     build:
       context: ./frontend
       dockerfile: Dockerfile

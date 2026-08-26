@@ -176,16 +176,42 @@ jobs:
             --exclude 'baito_local_backups' \
             "$GITHUB_WORKSPACE/" /home/scarygun/IntellexGroup/Baito/
 
+      - name: 🏷️ Record the currently running build
+        working-directory: /home/scarygun/IntellexGroup/Baito
+        run: |
+          # Captured before anything changes so the health check below has
+          # something to roll back to.
+          prev=$(docker inspect baito-backend-1 --format '{{.Config.Image}}' 2>/dev/null \
+                 | cut -d: -f2 || true)
+          echo "PREVIOUS_TAG=${prev:-}" >> "$GITHUB_ENV"
+          echo "Previously running: ${prev:-none}"
+
+      - name: 🔨 Build Images
+        working-directory: /home/scarygun/IntellexGroup/Baito
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build first, swap second. `up -d --build` used to rebuild while the
+          # old containers were already down, so the site was offline for the
+          # whole build rather than for the few seconds a swap takes.
+          docker compose build
+
       - name: 🗄️ Apply Database Migrations
         working-directory: /home/scarygun/IntellexGroup/Baito
+        env:
+          IMAGE_TAG: ${{ github.sha }}
         run: docker compose run --rm migrate
 
-      - name: 🚀 Rebuild and Start Containers
+      - name: 🚀 Swap Containers
         working-directory: /home/scarygun/IntellexGroup/Baito
-        run: docker compose up -d --build --remove-orphans
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: docker compose up -d --no-build --remove-orphans
 
       - name: 🩺 Verify Deployment Health
         working-directory: /home/scarygun/IntellexGroup/Baito
+        env:
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           # Deployment used to report success the moment compose returned,
           # regardless of whether the app came up.
@@ -193,15 +219,45 @@ jobs:
             status=$(docker compose exec -T backend \
               curl -fsS http://localhost:8000/api/health | grep -o '"status":"[a-z]*"' || true)
             if [ "$status" = '"status":"ok"' ]; then
-              echo "✅ Backend healthy"
+              echo "✅ Backend healthy on ${GITHUB_SHA:0:7}"
+              echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) ${GITHUB_SHA} deploy" >> .deploy-history
               exit 0
             fi
             echo "⏳ Waiting for backend health ($i/30)..."
             sleep 5
           done
-          echo "::error::Backend did not become healthy; rolling back"
+
+          echo "::error::Backend did not become healthy"
           docker compose logs --tail=100 backend
+
+          if [ -n "${PREVIOUS_TAG}" ] && [ "${PREVIOUS_TAG}" != "current" ]; then
+            echo "::warning::Rolling back to ${PREVIOUS_TAG}"
+            IMAGE_TAG="${PREVIOUS_TAG}" docker compose up -d --no-build
+            for i in $(seq 1 20); do
+              status=$(docker compose exec -T backend \
+                curl -fsS http://localhost:8000/api/health | grep -o '"status":"[a-z]*"' || true)
+              if [ "$status" = '"status":"ok"' ]; then
+                echo "↩️  Rolled back to ${PREVIOUS_TAG}; the site is up on the previous build."
+                break
+              fi
+              sleep 5
+            done
+          else
+            echo "::warning::No previous tagged build to roll back to."
+          fi
           exit 1
+
+      - name: 🧹 Prune old images
+        if: always()
+        working-directory: /home/scarygun/IntellexGroup/Baito
+        run: |
+          # Keep the five most recent builds per image so rollback has targets
+          # without letting the disk fill.
+          for repo in baito-backend baito-frontend baito-backup-bot; do
+            docker images "$repo" --format '{{.Tag}} {{.CreatedAt}}' \
+              | grep -v '^current ' | sort -k2 -r | tail -n +6 | awk '{print $1}' \
+              | while read -r tag; do docker rmi "$repo:$tag" >/dev/null 2>&1 || true; done
+          done
 
       - name: 📣 Report a failed deploy
         # Deploys used to fail — or never run at all — with no signal anywhere.
