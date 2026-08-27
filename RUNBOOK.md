@@ -177,8 +177,11 @@ there.
 
 | Gap | Consequence |
 |---|---|
-| Backups live on the same host as the data | A disk or host loss takes both. The Telegram copy is the only off-box one. |
-| No external uptime monitoring | Nothing notices a full outage; `/api/health` is only polled from inside. |
-| Single server | Database, app, storage, CI runner and a second project all share one box. |
-| No log aggregation | Logs are per-container and disappear when a container is recreated. |
-| Server not owned by the team | The Tailscale device belongs to another account, and a second OS user has root-equivalent access. |
+| Single server | Database, app, storage, CI runner and a second project all share one box. A host loss stops everything; only the data is recoverable, from B2. |
+| No log aggregation | Logs are per-container and disappear when a container is recreated. Sentry covers exceptions, not everything else. |
+| Secrets predating 2026-08-30 not rotated | `SECRET_KEY`, `POSTGRES_PASSWORD`, `UZUM_SECRET_KEY` and `TEXTUP_PASSWORD` were inside backups that were briefly world-readable. |
+| No staging environment | Every change is proven in production. The health check plus automatic rollback limit the blast radius; they do not remove it. |
+
+Closed on 2026-08-30, listed so the history is clear: backups now have an
+offsite copy in Backblaze B2 with a 30-day lifecycle, and BetterStack polls
+`/api/health` from outside the network.
