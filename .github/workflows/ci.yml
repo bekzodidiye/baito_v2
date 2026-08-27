@@ -34,7 +34,7 @@ jobs:
       - name: Verify Backend Routes, Models & DB Initialization
         working-directory: ./backend
         env:
-          DATABASE_URL: sqlite:///:memory:
+          DATABASE_URL: sqlite:///./ci_test.db
           SECRET_KEY: test_secret_key_32_characters_long_ci_cd_12345
           ENVIRONMENT: test
         run: |
