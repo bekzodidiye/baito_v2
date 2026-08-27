@@ -64,13 +64,13 @@ function AppContent() {
   };
 
   const isSettingsOrHelp = ['settings', 'security', 'help', 'faq', 'guide', 'terms', 'support-chat'].includes(currentScreen);
-  const showNavigation = currentScreen !== 'admin' && currentScreen !== 'verification' && currentScreen !== 'login' && currentScreen !== 'register' && currentScreen !== 'landing' && !currentScreen.startsWith('employer-') && !isSettingsOrHelp;
+  const showNavigation = currentScreen !== 'admin' && currentScreen !== 'verification' && currentScreen !== 'login' && currentScreen !== 'register' && !currentScreen.startsWith('employer-') && !isSettingsOrHelp;
 
-  // Screens nobody may reach while logged out; they bounce back to the landing.
-  const isAuthGatedScreen = !isLoggedIn && !['landing', 'login', 'register', 'faq', 'terms', 'help', 'guide'].includes(currentScreen);
+  // Screens nobody may reach while logged out; in native mobile apps they bounce back to login.
+  const isAuthGatedScreen = !isLoggedIn && !['login', 'register', 'faq', 'terms', 'help', 'guide'].includes(currentScreen);
 
   // The map is only reachable while logged in, so tie it to the session: on
-  // logout it unmounts instead of idling, hidden, behind the landing page.
+  // logout it unmounts instead of idling, hidden.
   const shouldMountMap = isLoggedIn && !isEmployer && (hasOpenedMap || currentScreen === 'jobs');
 
   return (
@@ -99,13 +99,13 @@ function AppContent() {
         {showNavigation && <Drawer onOpenModal={handleOpenModal} />}
 
         {/* Main Content Layout */}
-        <main id="main-content" tabIndex={-1} className={`flex-1 w-full min-w-0 ${['landing', 'admin', 'jobs', 'messages', 'chat', 'verification', 'login', 'settings', 'security', 'help', 'faq', 'guide', 'terms', 'support-chat', 'profile', 'reviews', 'applications', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'jobs'].includes(currentScreen) ? 'max-w-none px-0 md:px-0' : 'max-w-7xl mx-auto px-4 md:px-6'}`}>
+        <main id="main-content" tabIndex={-1} className={`flex-1 w-full min-w-0 ${['admin', 'jobs', 'messages', 'chat', 'verification', 'login', 'settings', 'security', 'help', 'faq', 'guide', 'terms', 'support-chat', 'profile', 'reviews', 'applications', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'jobs'].includes(currentScreen) ? 'max-w-none px-0 md:px-0' : 'max-w-7xl mx-auto px-4 md:px-6'}`}>
           {/* Keyed on the screen so a crashed screen's fallback clears as soon as
               the user navigates away. Only route content belongs in here. */}
           <ErrorBoundary key={currentScreen}>
-            {/* If not logged in, and trying to access a protected screen, redirect to landing */}
+            {/* If not logged in, and trying to access a protected screen, redirect to login */}
             {isAuthGatedScreen ? (
-              <Navigate to="/" replace />
+              <Navigate to="/login" replace />
             ) : isEmployer && currentScreen === 'jobs' ? (
               <Navigate to="/employer-dashboard" replace />
             ) : (
@@ -113,10 +113,7 @@ function AppContent() {
             )}
           </ErrorBoundary>
 
-          {/* Persistently mounted map to avoid Leaflet re-initialization overhead.
-              It sits outside the keyed boundary on purpose: a key that changes on
-              every navigation would destroy and rebuild the Leaflet instance each
-              time, which is exactly what mounting it here is meant to avoid. */}
+          {/* Persistently mounted map to avoid Leaflet re-initialization overhead. */}
           {shouldMountMap && (
             <ErrorBoundary>
               <div className={currentScreen === 'jobs' ? 'block' : 'hidden'}>
@@ -131,7 +128,7 @@ function AppContent() {
       </div>
 
       {/* Region selector fallback overlay for non-map screens */}
-      {currentScreen !== 'jobs' && currentScreen !== 'landing' && <RegionSelector />}
+      {currentScreen !== 'jobs' && currentScreen !== 'login' && currentScreen !== 'register' && <RegionSelector />}
 
       {/* Menu item modal views */}
       <MenuModals isOpen={activeModal !== null} onClose={() => setActiveModal(null)} type={activeModal} />
