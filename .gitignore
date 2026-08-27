@@ -33,4 +33,6 @@ token*.txt
 .agents/scratch/
 test_*.py
 scratch_*.py
+*.apk
+dump.rdb
 
