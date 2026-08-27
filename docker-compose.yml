@@ -251,6 +251,8 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
       - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID:-}
+      # Extra Telegram user ids allowed to drive the bot, comma-separated.
+      - TELEGRAM_ALLOWED_IDS=${TELEGRAM_ALLOWED_IDS:-}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB:-baito}

@@ -82,8 +82,27 @@ bash backend/scripts/restore_backup.sh <archive.zip> --drill
 bash backend/scripts/restore_backup.sh <archive.zip>
 ```
 
-Archives live in the `baito-backups` MinIO bucket and are also sent to the
-Telegram channel. Each contains `database/database.sql.gz` and `media/`.
+Archives live in three places: the `baito-backups` MinIO bucket, Backblaze B2
+(offsite, 30-day lifecycle) and the Telegram channel. Each contains
+`database/database.sql.gz` and `media/`.
+
+**Do not copy archives out of MinIO's data directory.** MinIO stores each
+object as a directory of erasure-coded parts, so `docker cp` yields an
+`xl.meta` file rather than the ZIP. Fetch through the S3 API instead — from B2,
+which is also the copy you would actually reach for in a real incident:
+
+```bash
+docker compose exec -T backup_bot python -c "
+import os, boto3
+c = boto3.client('s3', endpoint_url=os.environ['OFFSITE_S3_ENDPOINT'],
+    aws_access_key_id=os.environ['OFFSITE_S3_KEY_ID'],
+    aws_secret_access_key=os.environ['OFFSITE_S3_SECRET'],
+    region_name=os.environ['OFFSITE_S3_REGION'])
+b = os.environ['OFFSITE_S3_BUCKET']
+newest = sorted(c.list_objects_v2(Bucket=b)['Contents'], key=lambda x: x['LastModified'])[-1]['Key']
+c.download_file(b, newest, '/tmp/restore.zip'); print(newest)"
+docker compose cp backup_bot:/tmp/restore.zip ~/restore.zip
+```
 
 After a restore: `docker compose restart backend celery_worker`.
 
@@ -145,6 +164,9 @@ Small, and each one covers a failure that is invisible until it matters.
 - [ ] **Rollback targets exist.** `bash scripts/rollback.sh` should list
       several builds.
 - [ ] **Disk.** `df -h /` — backups and images both grow.
+- [ ] **Offsite copy is arriving.** The Telegram backup message ends with
+      `☁️ Tashqi nusxa: ✅`. A ⚠️ there means B2 uploads are failing while local
+      backups still succeed, which is easy to miss.
 
 ---
 

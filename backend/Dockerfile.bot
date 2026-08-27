@@ -1,8 +1,14 @@
 
 FROM python:3.11-alpine
 
-# Install PostgreSQL client, bash & gzip
-RUN apk add --no-cache postgresql-client bash gzip
+# postgresql-client tracks Alpine's latest (18.x) while the server runs 15.
+# Dumping from a newer client to an older server is not supported and already
+# produced "unrecognized configuration parameter" errors during a restore.
+RUN apk add --no-cache postgresql15-client bash gzip
+
+# Without this Python buffers stdout and the container produces NO logs at all.
+# The bot ran for hours with an empty log, which made it impossible to diagnose.
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 

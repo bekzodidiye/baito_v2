@@ -156,9 +156,42 @@ def ensure_bucket():
         except Exception as e:
             print(f"⚠️ S3 bucket check warning: {e}")
 
+# Additional Telegram user ids allowed to drive the bot, comma-separated.
+# TELEGRAM_CHAT_ID alone meant exactly one account could use it — anyone else
+# was refused in complete silence, which is indistinguishable from the bot
+# being broken.
+ALLOWED_IDS = {
+    str(TELEGRAM_CHAT_ID).strip(),
+    *(i.strip() for i in os.getenv("TELEGRAM_ALLOWED_IDS", "").split(",") if i.strip()),
+}
+
+
 def is_authorized(message_or_query):
     user_id = message_or_query.from_user.id if hasattr(message_or_query, 'from_user') else message_or_query.chat.id
-    return str(user_id) == str(TELEGRAM_CHAT_ID)
+    ok = str(user_id) in ALLOWED_IDS
+    if not ok:
+        # Log the id so the owner can add it, instead of leaving them guessing.
+        print(f"⛔ Ruxsatsiz murojaat: user_id={user_id}. "
+              f"Ruxsat berish uchun TELEGRAM_ALLOWED_IDS ga qo'shing.")
+    return ok
+
+
+def deny(message_or_query):
+    """Tell the caller they are not allowed, rather than ignoring them."""
+    try:
+        uid = (message_or_query.from_user.id if hasattr(message_or_query, "from_user")
+               else message_or_query.chat.id)
+        chat = (message_or_query.chat.id if hasattr(message_or_query, "chat")
+                else message_or_query.message.chat.id)
+        bot.send_message(
+            chat,
+            "⛔ Sizda bu botdan foydalanish huquqi yo'q.\n"
+            f"Sizning ID: `{uid}`\n"
+            "Egasi uni `TELEGRAM_ALLOWED_IDS` ga qo'shishi kerak.",
+            parse_mode="Markdown",
+        )
+    except Exception as e:
+        print(f"deny() xabar yuborilmadi: {e}")
 
 # --- Keyboards ---
 def get_main_menu_keyboard():
@@ -349,7 +382,7 @@ def get_system_status():
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
-    if not is_authorized(message): return
+    if not is_authorized(message): deny(message); return
     welcome_text = (
         "👋 *Assalomu alaykum!*\n\n"
         "🛡 *Baito Tizimi Boshqaruv & Zaxira Boti (Bitta Paketli Arxiv)* ga xush kelibsiz.\n\n"
@@ -359,7 +392,7 @@ def handle_start(message):
 
 @bot.message_handler(commands=['help'])
 def handle_help(message):
-    if not is_authorized(message): return
+    if not is_authorized(message): deny(message); return
     help_text = (
         "ℹ️ *Baito Yagona Zaxira Tizimi Qo'llanmasi*\n\n"
         "🔘 *Asosiy Tugmalar:*\n"
@@ -374,17 +407,17 @@ def handle_help(message):
 
 @bot.message_handler(commands=['backup', 'full_backup'])
 def handle_backup_cmd(message):
-    if not is_authorized(message): return
+    if not is_authorized(message): deny(message); return
     run_unified_backup(message.chat.id)
 
 @bot.message_handler(commands=['list'])
 def handle_list_cmd(message):
-    if not is_authorized(message): return
+    if not is_authorized(message): deny(message); return
     send_backup_list(message.chat.id)
 
 @bot.message_handler(commands=['status'])
 def handle_status_cmd(message):
-    if not is_authorized(message): return
+    if not is_authorized(message): deny(message); return
     send_status_message(message.chat.id)
 
 # --- Channel Detection & Configuration Handlers ---
@@ -409,7 +442,7 @@ def handle_bot_membership(event):
 
 @bot.message_handler(commands=['setchannel'])
 def handle_set_channel(message):
-    if not is_authorized(message): return
+    if not is_authorized(message): deny(message); return
     parts = message.text.split()
     if len(parts) > 1:
         ch_id = parts[1].strip()
@@ -424,7 +457,7 @@ def handle_set_channel(message):
 
 @bot.message_handler(commands=['channel'])
 def handle_channel_cmd(message):
-    if not is_authorized(message): return
+    if not is_authorized(message): deny(message); return
     ch_id = get_channel_id()
     if ch_id:
         bot.reply_to(message, f"📢 *Ulangan Kanal Holati:*\n\n🆔 Kanal ID: `{ch_id}`\n✅ Barcha yangi zaxira paketlari ushbu kanalga yuborilmoqda.", parse_mode="Markdown")
@@ -440,7 +473,7 @@ def handle_channel_cmd(message):
 
 @bot.message_handler(func=lambda msg: msg.forward_from_chat is not None)
 def handle_forwarded_channel_msg(message):
-    if not is_authorized(message): return
+    if not is_authorized(message): deny(message); return
     if message.forward_from_chat.type in ['channel', 'supergroup']:
         ch_id = message.forward_from_chat.id
         ch_title = message.forward_from_chat.title or "Kanal"
@@ -454,7 +487,7 @@ def handle_forwarded_channel_msg(message):
 # --- Button Text Router ---
 @bot.message_handler(func=lambda msg: True)
 def handle_menu_buttons(message):
-    if not is_authorized(message): return
+    if not is_authorized(message): deny(message); return
     text = message.text.strip()
     
     if text == "⚡ Yangi Zaxira Olish":
