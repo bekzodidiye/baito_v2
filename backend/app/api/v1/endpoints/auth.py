@@ -189,7 +189,7 @@ def login(
     return {"success": True, "role": user.role}
 
 @router.post("/refresh")
-@limiter.limit("20/minute")
+@limiter.limit("120/minute")
 def refresh(
     request: Request,
     response: Response,

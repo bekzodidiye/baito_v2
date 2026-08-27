@@ -40,7 +40,7 @@ class User(Base):
     
     # Meta / Admin extra
     bankCardMask = Column(String)
-    sourceApp = Column(String, default="Organik (Play Store)")
+    sourceApp = Column(String, default="Web")
     
     # Notification Settings
     notify_new_jobs = Column(Boolean, default=True)
@@ -50,3 +50,6 @@ class User(Base):
     # Security Settings
     two_factor_enabled = Column(Boolean, default=False)
     biometrics_enabled = Column(Boolean, default=False)
+
+    # Admin Fields
+    adminNotes = Column(JSON, default=list)
