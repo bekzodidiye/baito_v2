@@ -357,3 +357,24 @@ def test_reporter_never_raises(monkeypatch):
         raise ValueError("original problem")
     except ValueError as e:
         error_reporter.report_exception(e, where="test")  # must not raise
+
+
+def test_a_malformed_sentry_dsn_cannot_take_the_app_down():
+    """A typo in a monitoring setting must never stop the API from serving.
+
+    A bad DSN raised BadDsn during module import, so every uvicorn worker died
+    on startup and the whole API went offline.
+    """
+    import importlib
+    from app.core.config import settings
+
+    original = settings.SENTRY_DSN
+    settings.SENTRY_DSN = "not-a-valid-dsn"
+    try:
+        import app.main
+        importlib.reload(app.main)          # must not raise
+        assert app.main.app is not None
+    finally:
+        settings.SENTRY_DSN = original
+        import app.main
+        importlib.reload(app.main)

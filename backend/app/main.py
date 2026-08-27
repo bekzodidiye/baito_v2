@@ -39,8 +39,18 @@ if settings.SENTRY_DSN:
             environment=settings.ENVIRONMENT,
             send_default_pii=False,
         )
+        logger.info("Sentry error reporting is active.")
     except ImportError:
         logger.warning("sentry_sdk not installed, skipping Sentry initialization.")
+    except Exception as e:
+        # A malformed DSN used to raise BadDsn at import time and take the
+        # whole application down — uvicorn workers died in a loop and the API
+        # went offline because of a typo in a monitoring setting. Observability
+        # config must never be able to stop the app from serving.
+        logger.error(
+            "Sentry could not be initialised (%s). Continuing without it — "
+            "check that SENTRY_DSN is a full DSN URL.", e
+        )
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
