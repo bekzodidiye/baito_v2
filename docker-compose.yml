@@ -260,6 +260,13 @@ services:
       - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
       - AWS_REGION=${AWS_REGION:-us-east-1}
       - S3_BUCKET_PATH=s3://${BACKUP_BUCKET_NAME:-baito-backups}/
+      # Optional second destination, off this machine. All four must be set or
+      # the offsite copy stays disabled — the local backup is unaffected.
+      - OFFSITE_S3_ENDPOINT=${OFFSITE_S3_ENDPOINT:-}
+      - OFFSITE_S3_BUCKET=${OFFSITE_S3_BUCKET:-}
+      - OFFSITE_S3_KEY_ID=${OFFSITE_S3_KEY_ID:-}
+      - OFFSITE_S3_SECRET=${OFFSITE_S3_SECRET:-}
+      - OFFSITE_S3_REGION=${OFFSITE_S3_REGION:-us-west-004}
     logging: *default-logging
 
   frontend:

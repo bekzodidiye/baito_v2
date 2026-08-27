@@ -91,6 +91,54 @@ def get_s3_client():
 
 s3_client = get_s3_client()
 
+# ── Offsite copy ───────────────────────────────────────────────────────────
+# The MinIO bucket lives on the same disk as the database it protects, so a
+# disk or host failure takes both. Telegram is the only copy that leaves the
+# machine today, and the bot skips it entirely once an archive passes 50 MB —
+# silently, with no error. This second destination is S3-compatible (Backblaze
+# B2, Cloudflare R2, Wasabi) and has no size ceiling, so restore_backup.sh can
+# pull straight from it.
+OFFSITE_ENDPOINT = os.getenv("OFFSITE_S3_ENDPOINT", "")
+OFFSITE_BUCKET = os.getenv("OFFSITE_S3_BUCKET", "")
+OFFSITE_KEY_ID = os.getenv("OFFSITE_S3_KEY_ID", "")
+OFFSITE_SECRET = os.getenv("OFFSITE_S3_SECRET", "")
+OFFSITE_REGION = os.getenv("OFFSITE_S3_REGION", "us-west-004")
+
+OFFSITE_ENABLED = all((OFFSITE_ENDPOINT, OFFSITE_BUCKET, OFFSITE_KEY_ID, OFFSITE_SECRET))
+
+
+def get_offsite_client():
+    if not OFFSITE_ENABLED:
+        return None
+    try:
+        return boto3.client(
+            "s3",
+            endpoint_url=OFFSITE_ENDPOINT,
+            aws_access_key_id=OFFSITE_KEY_ID,
+            aws_secret_access_key=OFFSITE_SECRET,
+            region_name=OFFSITE_REGION,
+        )
+    except Exception as e:
+        print(f"Offsite client could not be created: {e}")
+        return None
+
+
+def upload_offsite(local_path, key):
+    """Copy an archive off the machine. Never fails the backup."""
+    if not OFFSITE_ENABLED:
+        return False, "not configured"
+    client = get_offsite_client()
+    if client is None:
+        return False, "client error"
+    try:
+        client.upload_file(local_path, OFFSITE_BUCKET, key)
+        print(f"☁️  Offsite copy uploaded: {OFFSITE_BUCKET}/{key}")
+        return True, "ok"
+    except Exception as e:
+        # A failed offsite copy must not lose the local backup that succeeded.
+        print(f"⚠️  Offsite upload failed: {e}")
+        return False, str(e)[:200]
+
 def ensure_bucket():
     global s3_client
     try:
@@ -529,8 +577,20 @@ def run_unified_backup(chat_id, send_to_channel=True):
         except Exception as s3_err:
             print(f"MinIO/S3 zip upload warning: {s3_err}")
 
+        # Second destination, off this machine. Independent of the local one:
+        # if MinIO fails the offsite copy is still attempted, and vice versa.
+        offsite_ok, offsite_detail = upload_offsite(zip_filepath, s3_key)
+
         # 6. Retention: Cleanup old backups beyond latest 5
         cleanup_old_backups()
+
+        offsite_line = (
+
+            "☁️ Tashqi nusxa: ✅" if offsite_ok
+
+            else ("☁️ Tashqi nusxa: ⚠️ " + offsite_detail if OFFSITE_ENABLED else "")
+
+        )
 
         caption = (
             f"📦 *Baito Yagona Zaxira Paketi (All-in-One)*\n\n"
