@@ -80,8 +80,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Accept"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include router for both /api/v1 and /api for full frontend compatibility

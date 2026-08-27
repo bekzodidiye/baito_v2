@@ -57,9 +57,21 @@ class Settings(BaseSettings):
     def cors_origins(self) -> List[str]:
         if self.CORS_ORIGINS_RAW:
             return [o.strip() for o in self.CORS_ORIGINS_RAW.split(",") if o.strip()]
-        if self.is_production:
-            return ["https://baito.uz", "https://baito.tail365b27.ts.net", "https://scarygun.tail365b27.ts.net"]
-        return ["http://localhost:5173", "http://localhost:3000", "https://baito.uz", "https://baito.tail365b27.ts.net", "https://scarygun.tail365b27.ts.net"]
+        return [
+            "https://baito.uz",
+            "https://baito.tail365b27.ts.net",
+            "https://scarygun.tail365b27.ts.net",
+            "http://localhost",
+            "https://localhost",
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:8080",
+            "capacitor://localhost",
+            "ionic://localhost",
+            "http://127.0.0.1",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+        ]
 
     @property
     def cookie_secure(self) -> bool:
