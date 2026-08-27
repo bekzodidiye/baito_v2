@@ -1,0 +1,24 @@
+name: 🚀 Deploy to Server
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: 🔄 Auto Deploy on Server
+    runs-on: self-hosted
+    steps:
+      - name: 📥 Pull latest code in project directory and redeploy
+        run: |
+          echo "📂 Navigating to project directory..."
+          cd /home/scarygun/IntellexGroup/Baito
+
+          echo "📥 Pulling latest code from GitHub..."
+          git fetch origin main
+          git reset --hard origin/main
+
+          echo "🐳 Rebuilding and updating Docker containers..."
+          docker compose up -d --build --remove-orphans
+
+          echo "✅ Deployment completed successfully!"
