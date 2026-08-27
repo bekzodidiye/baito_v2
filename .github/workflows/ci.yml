@@ -79,7 +79,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Validate Docker Compose Configuration
-        run: docker compose config
+        run: |
+          touch backend/.env
+          docker compose config
 
   # ==========================================================
   # 4. SECURE PRODUCTION DEPLOYMENT (STRICTLY AFTER TESTS PASS)
