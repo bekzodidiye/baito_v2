@@ -272,10 +272,15 @@ jobs:
             echo "::warning::Telegram secrets are not configured; no alert sent."
             exit 0
           fi
+          # Built with printf rather than a literal multi-line string: an
+          # unindented continuation line ends the YAML block scalar and turns
+          # into a top-level key, which makes the whole workflow file invalid.
+          text=$(printf '%s\n%s\n%s' \
+            "🚨 <b>Baito deploy yiqildi</b>" \
+            "commit: <code>${GITHUB_SHA:0:7}</code>" \
+            "run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")
           curl -sS -X POST \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode=HTML \
-            --data-urlencode "text=🚨 <b>Baito deploy yiqildi</b>
-commit: <code>${GITHUB_SHA:0:7}</code>
-run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null
+            --data-urlencode "text=${text}" >/dev/null
