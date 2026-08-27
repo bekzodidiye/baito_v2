@@ -135,6 +135,29 @@ services:
         max-size: "50m"
         max-file: "5"
 
+  backup_bot:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.bot
+    restart: unless-stopped
+    networks:
+      - baito_net
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ./backend/.env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_DB=${POSTGRES_DB:-baito}
+      - POSTGRES_HOST=db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
   frontend:
     build:
       context: ./frontend
@@ -143,7 +166,7 @@ services:
     networks:
       - baito_net
     ports:
-      - "80:80"
+      - "3000:80"
     depends_on:
       backend:
         condition: service_healthy

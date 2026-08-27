@@ -1,0 +1,13 @@
+FROM python:3.11-alpine
+
+# Install PostgreSQL client for pg_dump
+RUN apk add --no-cache postgresql-client
+
+WORKDIR /app
+
+COPY scripts/requirements-bot.txt .
+RUN pip install --no-cache-dir -r requirements-bot.txt
+
+COPY scripts/backup_bot.py .
+
+CMD ["python", "backup_bot.py"]
