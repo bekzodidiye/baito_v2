@@ -19,15 +19,20 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
 
       - name: Install Dependencies
         working-directory: ./backend
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install -r requirements.txt pytest httpx
 
       - name: Verify Backend Import & Smoke Tests
         working-directory: ./backend
+        env:
+          DATABASE_URL: sqlite:///:memory:
+          SECRET_KEY: test_secret_key_32_characters_long_ci_cd_12345
+          ENVIRONMENT: test
         run: |
           python -c "from app.main import app; print('Backend loaded successfully:', app.title)"
 
