@@ -98,7 +98,7 @@ jobs:
 
       - name: 🔄 Sync Workspace & Deploy Containers
         run: |
-          echo "📁 Syncing repository files..."
+          echo "📁 Syncing repository files from $GITHUB_WORKSPACE..."
           mkdir -p /home/scarygun/IntellexGroup/Baito
           rsync -av --delete \
             --exclude '.env' \
@@ -106,10 +106,10 @@ jobs:
             --exclude 'postgres_data' \
             --exclude 'redis_data' \
             --exclude 'minio_data' \
-            ./ /home/scarygun/IntellexGroup/Baito/
+            "$GITHUB_WORKSPACE/" /home/scarygun/IntellexGroup/Baito/
           
           echo "🚀 Rebuilding and starting live containers..."
           cd /home/scarygun/IntellexGroup/Baito
-          docker compose up -d --build --remove-orphans
+          docker compose -f docker-compose.yml up -d --build --remove-orphans
           
           echo "✅ Production deployment completed successfully!"
