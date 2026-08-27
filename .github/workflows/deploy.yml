@@ -11,20 +11,11 @@ jobs:
     steps:
       - name: 📥 Sync repository and start containers
         run: |
-          mkdir -p /home/scarygun/IntellexGroup
-          cd /home/scarygun/IntellexGroup
-
-          if [ ! -d "/home/scarygun/IntellexGroup/Baito/.git" ]; then
-            echo "📦 First time setup: Cloning repository via SSH..."
-            git clone git@github.com:bekzodidiye/baito-v3-.git Baito
-          fi
-
           cd /home/scarygun/IntellexGroup/Baito
+          git config --global --add safe.directory /home/scarygun/IntellexGroup/Baito || true
           echo "📥 Pulling latest code..."
           git fetch origin main
           git reset --hard origin/main
-
           echo "🐳 Starting Docker containers..."
           docker compose up -d --build --remove-orphans
-
           echo "✅ Deployed successfully!"
