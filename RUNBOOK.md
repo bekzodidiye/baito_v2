@@ -115,11 +115,16 @@ them the new value.
 
 1. Confirm who can reach the server (`wheel` and `docker` groups, SSH keys,
    the Tailscale device owner). Remove anyone who should not be there.
-2. Edit `.env`, then `docker compose up -d` for the affected services.
-3. `SECRET_KEY` invalidates every session — every user is logged out. Do it
+2. Take a dump first: `docker compose exec -T db pg_dump -U user baito |
+   gzip > ~/pre-rotation-$(date +%F-%H%M).sql.gz`, and copy `.env` beside it.
+3. Edit `.env`, then `docker compose up -d` for the affected services.
+4. `SECRET_KEY` invalidates every session — every user is logged out. Do it
    during a quiet window.
-4. `MINIO_ROOT_PASSWORD` requires recreating the minio service; object data
+5. `MINIO_ROOT_PASSWORD` requires recreating the minio service; object data
    survives, root credentials are not used to encrypt anything.
+6. `POSTGRES_PASSWORD` is two changes, not one: `ALTER USER … WITH PASSWORD`
+   inside the database *and* the `.env` value. Doing only one of them locks
+   the application out of its own database.
 
 Treat anything that was in a backup taken before 2026-08-30 as compromised:
 those archives were briefly readable without authentication.
