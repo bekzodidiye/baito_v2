@@ -106,6 +106,9 @@ jobs:
             --exclude 'postgres_data' \
             --exclude 'redis_data' \
             --exclude 'minio_data' \
+            --exclude 'backups' \
+            --exclude 'backups/*' \
+            --exclude 'baito_local_backups' \
             "$GITHUB_WORKSPACE/" /home/scarygun/IntellexGroup/Baito/
           
           echo "🚀 Rebuilding and starting live containers..."
