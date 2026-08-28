@@ -1,8 +1,9 @@
 import os
 import sys
 import time
+import json
 import shutil
-import tarfile
+import zipfile
 import subprocess
 import threading
 from datetime import datetime, timezone, timedelta
@@ -108,37 +109,33 @@ def is_authorized(message_or_query):
 # --- Keyboards ---
 def get_main_menu_keyboard():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    btn_db = types.KeyboardButton("⚡ Baza Zaxirasi (DB)")
-    btn_media = types.KeyboardButton("🖼️ Rasmlar Zaxirasi (Media)")
-    btn_full = types.KeyboardButton("📦 To'liq Zaxira (DB + Media)")
+    btn_backup = types.KeyboardButton("⚡ Yangi Zaxira Olish")
     btn_list = types.KeyboardButton("📋 Zaxiralar Ro'yxati")
     btn_status = types.KeyboardButton("📊 Tizim & Baza Holati")
     btn_minio = types.KeyboardButton("☁️ MinIO / Xotira")
     btn_help = types.KeyboardButton("ℹ️ Yordam")
-    markup.add(btn_db, btn_media)
-    markup.add(btn_full)
-    markup.add(btn_list, btn_status)
-    markup.add(btn_minio, btn_help)
+    markup.add(btn_backup, btn_list)
+    markup.add(btn_status, btn_minio)
+    markup.add(btn_help)
     return markup
 
 def cleanup_old_backups():
-    """Faqat eng so'nggi MAX_BACKUPS_TO_KEEP (5) ta DB va Media fayllarni qoldirib, eskisini o'chiradi."""
+    """Faqat eng so'nggi MAX_BACKUPS_TO_KEEP (5) ta bitta paketli zip zaxiralarni qoldirib, eskisini o'chiradi."""
     # 1. Local disk tozalash
     try:
         if os.path.exists(BACKUPS_DIR):
-            for ext in [".sql.gz", ".tar.gz"]:
-                disk_files = []
-                for f in os.listdir(BACKUPS_DIR):
-                    if f.endswith(ext):
-                        fp = os.path.join(BACKUPS_DIR, f)
-                        disk_files.append((fp, os.path.getmtime(fp)))
-                disk_files.sort(key=lambda x: x[1], reverse=True)
-                for fp, _ in disk_files[MAX_BACKUPS_TO_KEEP:]:
-                    try:
-                        os.remove(fp)
-                        print(f"🧹 Diskdan eski zaxira o'chirildi: {fp}")
-                    except Exception as e:
-                        print(f"Disk tozalashda xatolik {fp}: {e}")
+            disk_files = []
+            for f in os.listdir(BACKUPS_DIR):
+                if f.endswith(".zip") or f.endswith(".sql.gz") or f.endswith(".tar.gz"):
+                    fp = os.path.join(BACKUPS_DIR, f)
+                    disk_files.append((fp, os.path.getmtime(fp)))
+            disk_files.sort(key=lambda x: x[1], reverse=True)
+            for fp, _ in disk_files[MAX_BACKUPS_TO_KEEP:]:
+                try:
+                    os.remove(fp)
+                    print(f"🧹 Diskdan eski zaxira o'chirildi: {fp}")
+                except Exception as e:
+                    print(f"Disk tozalashda xatolik {fp}: {e}")
     except Exception as e:
         print(f"Local cleanup xatolik: {e}")
 
@@ -147,15 +144,14 @@ def cleanup_old_backups():
         ensure_bucket()
         resp = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix=PREFIX)
         if 'Contents' in resp:
-            for ext in [".sql.gz", ".tar.gz"]:
-                s3_files = [obj for obj in resp['Contents'] if obj['Key'].endswith(ext)]
-                s3_files.sort(key=lambda x: x['LastModified'], reverse=True)
-                for obj in s3_files[MAX_BACKUPS_TO_KEEP:]:
-                    try:
-                        s3_client.delete_object(Bucket=BUCKET_NAME, Key=obj['Key'])
-                        print(f"🧹 MinIO/S3 dan eski zaxira o'chirildi: {obj['Key']}")
-                    except Exception as e:
-                        print(f"S3 tozalashda xatolik {obj['Key']}: {e}")
+            s3_files = [obj for obj in resp['Contents'] if obj['Key'].endswith('.zip') or obj['Key'].endswith('.sql.gz') or obj['Key'].endswith('.tar.gz')]
+            s3_files.sort(key=lambda x: x['LastModified'], reverse=True)
+            for obj in s3_files[MAX_BACKUPS_TO_KEEP:]:
+                try:
+                    s3_client.delete_object(Bucket=BUCKET_NAME, Key=obj['Key'])
+                    print(f"🧹 MinIO/S3 dan eski zaxira o'chirildi: {obj['Key']}")
+                except Exception as e:
+                    print(f"S3 tozalashda xatolik {obj['Key']}: {e}")
     except Exception as e:
         print(f"S3 cleanup xatolik: {e}")
 
@@ -164,15 +160,14 @@ def get_all_backup_files():
     # 1. Local disk
     if os.path.exists(BACKUPS_DIR):
         for f in os.listdir(BACKUPS_DIR):
-            if f.endswith(".sql.gz") or f.endswith(".tar.gz"):
+            if f.endswith(".zip") or f.endswith(".sql.gz") or f.endswith(".tar.gz"):
                 fp = os.path.join(BACKUPS_DIR, f)
                 stat = os.stat(fp)
                 mtime_dt = datetime.fromtimestamp(stat.st_mtime, tz=UZ_TZ).replace(tzinfo=None)
                 found_files.append({
                     'name': f,
                     'size': stat.st_size,
-                    'time': mtime_dt,
-                    'type': 'media' if f.endswith('.tar.gz') else 'db'
+                    'time': mtime_dt
                 })
     # 2. MinIO / S3
     try:
@@ -181,13 +176,12 @@ def get_all_backup_files():
         if 'Contents' in response:
             for obj in response['Contents']:
                 name = obj['Key'].replace(PREFIX, '')
-                if name and (name.endswith('.sql.gz') or name.endswith('.tar.gz')) and not any(item['name'] == name for item in found_files):
+                if name and (name.endswith('.zip') or name.endswith('.sql.gz') or name.endswith('.tar.gz')) and not any(item['name'] == name for item in found_files):
                     s3_dt = obj['LastModified'].astimezone(UZ_TZ).replace(tzinfo=None)
                     found_files.append({
                         'name': name,
                         'size': obj['Size'],
-                        'time': s3_dt,
-                        'type': 'media' if name.endswith('.tar.gz') else 'db'
+                        'time': s3_dt
                     })
     except Exception as e:
         print(f"MinIO list warning: {e}")
@@ -204,7 +198,6 @@ def get_minio_media_stats():
         paginator = s3_client.get_paginator('list_objects_v2')
         for page in paginator.paginate(Bucket=BUCKET_NAME):
             for obj in page.get('Contents', []):
-                # Backups papkasidagi arxivlarni media deb hisoblamaymiz
                 if not obj['Key'].startswith(PREFIX):
                     total_files += 1
                     total_size += obj['Size']
@@ -296,8 +289,8 @@ def handle_start(message):
     if not is_authorized(message): return
     welcome_text = (
         "👋 *Assalomu alaykum!*\n\n"
-        "🛡 *Baito Tizimi Boshqaruv & Zaxira Boti (DevOps 3-2-1)* ga xush kelibsiz.\n\n"
-        "Quyidagi tugmalar orqali PostgreSQL bazasi va MinIO media rasmlarini to'liq zaxiraga olishingiz mumkin 👇"
+        "🛡 *Baito Tizimi Boshqaruv & Zaxira Boti (Bitta Paketli Arxiv)* ga xush kelibsiz.\n\n"
+        "Bitta tugma orqali PostgreSQL bazasi va barcha MinIO rasmlarini **bitta umumiy `.zip` papka** ichida zaxiraga olishingiz mumkin 👇"
     )
     bot.send_message(message.chat.id, welcome_text, reply_markup=get_main_menu_keyboard(), parse_mode="Markdown")
 
@@ -305,33 +298,21 @@ def handle_start(message):
 def handle_help(message):
     if not is_authorized(message): return
     help_text = (
-        "ℹ️ *Baito To'liq Zaxira Tizimi Qo'llanmasi*\n\n"
+        "ℹ️ *Baito Yagona Zaxira Tizimi Qo'llanmasi*\n\n"
         "🔘 *Asosiy Tugmalar:*\n"
-        "• ⚡ *Baza Zaxirasi (DB)* — Faqat PostgreSQL jadvallari (`.sql.gz`)\n"
-        "• 🖼️ *Rasmlar Zaxirasi (Media)* — MinIO dagi barcha avatarlar va pasport rasmlari (`.tar.gz`)\n"
-        "• 📦 *To'liq Zaxira (DB + Media)* — Baza va Rasmlarni bir vaqtda to'liq zaxiralash\n"
-        "• 📋 *Zaxiralar Ro'yxati* — Saqlangan barcha zaxiralar va yuklab olish\n"
-        "• 📊 *Tizim & Baza Holati* — Baza, MinIO va disk hajmlari statistikasi\n"
-        "• ☁️ *MinIO / Xotira* — Bulutli saqlash holati\n\n"
-        "⏰ *Avtomatik Zaxira:* Har 6 soatda avtomatik ravishda DB + Media kanalingizga yuboriladi.\n"
-        "💬 *Buyruqlar:* `/backup`, `/media_backup`, `/full_backup`, `/list`, `/status`, `/channel`, `/help`"
+        "• ⚡ *Yangi Zaxira Olish* — Baza (`database.sql.gz`) va barcha rasmlar (`media/`) ni bitta `.zip` papkaga jamlab, Telegramga bitta fayl qilib yuboradi.\n"
+        "• 📋 *Zaxiralar Ro'yxati* — Saqlangan barcha zaxiralar va 1-klikda yuklab olish.\n"
+        "• 📊 *Tizim & Baza Holati* — Baza hajmi, foydalanuvchilar, rasmlar soni va xotira statistikasi.\n"
+        "• ☁️ *MinIO / Xotira* — Bulutli saqlash va MinIO hajmi.\n\n"
+        "⏰ *Avtomatik Zaxira:* Har 6 soatda avtomatik ravishda bitta to'liq `.zip` kanalingizga yuboriladi.\n"
+        "💬 *Buyruqlar:* `/backup`, `/list`, `/status`, `/channel`, `/help`"
     )
     bot.send_message(message.chat.id, help_text, reply_markup=get_main_menu_keyboard(), parse_mode="Markdown")
 
-@bot.message_handler(commands=['backup', 'db_backup'])
+@bot.message_handler(commands=['backup', 'full_backup'])
 def handle_backup_cmd(message):
     if not is_authorized(message): return
-    run_db_backup(message.chat.id)
-
-@bot.message_handler(commands=['media_backup'])
-def handle_media_backup_cmd(message):
-    if not is_authorized(message): return
-    run_media_backup(message.chat.id)
-
-@bot.message_handler(commands=['full_backup'])
-def handle_full_backup_cmd(message):
-    if not is_authorized(message): return
-    run_full_backup(message.chat.id)
+    run_unified_backup(message.chat.id)
 
 @bot.message_handler(commands=['list'])
 def handle_list_cmd(message):
@@ -357,7 +338,7 @@ def handle_bot_membership(event):
         try:
             bot.send_message(
                 TELEGRAM_CHAT_ID,
-                f"📢 *Baito Backup Kanalga Ulandi!*\n\nKanal: *{getattr(event.chat, 'title', '')}*\nID: `{event.chat.id}`\n\nEndi barcha yangi zaxiralar (DB + Media) ushbu kanalga ham avtomatik yuboriladi ✅",
+                f"📢 *Baito Backup Kanalga Ulandi!*\n\nKanal: *{getattr(event.chat, 'title', '')}*\nID: `{event.chat.id}`\n\nEndi barcha yangi to'liq zaxira paketlari ushbu kanalga bitta fayl qilib yuboriladi ✅",
                 parse_mode="Markdown"
             )
         except Exception:
@@ -370,7 +351,7 @@ def handle_set_channel(message):
     if len(parts) > 1:
         ch_id = parts[1].strip()
         set_channel_id(ch_id)
-        bot.reply_to(message, f"✅ Kanal ID muvaffaqiyatli saqlandi: `{ch_id}`\nBarcha yangi zaxiralar ushbu kanalga ham yuboriladi.", parse_mode="Markdown")
+        bot.reply_to(message, f"✅ Kanal ID muvaffaqiyatli saqlandi: `{ch_id}`\nBarcha yangi zaxiralar ushbu kanalga yuboriladi.", parse_mode="Markdown")
     else:
         bot.reply_to(
             message,
@@ -383,7 +364,7 @@ def handle_channel_cmd(message):
     if not is_authorized(message): return
     ch_id = get_channel_id()
     if ch_id:
-        bot.reply_to(message, f"📢 *Ulangan Kanal Holati:*\n\n🆔 Kanal ID: `{ch_id}`\n✅ Barcha yangi zaxiralar ushbu kanalga yuborilmoqda.", parse_mode="Markdown")
+        bot.reply_to(message, f"📢 *Ulangan Kanal Holati:*\n\n🆔 Kanal ID: `{ch_id}`\n✅ Barcha yangi zaxira paketlari ushbu kanalga yuborilmoqda.", parse_mode="Markdown")
     else:
         bot.reply_to(
             message,
@@ -403,7 +384,7 @@ def handle_forwarded_channel_msg(message):
         set_channel_id(ch_id)
         bot.reply_to(
             message,
-            f"✅ *Kanal Muvaffaqiyatli Ulandi!*\n\n📢 Kanal nomi: *{ch_title}*\n🆔 Kanal ID: `{ch_id}`\n\nEndi barcha yangi zaxiralar (DB + Media) avtomatik ravishda ushbu kanalga ham yuboriladi 🚀",
+            f"✅ *Kanal Muvaffaqiyatli Ulandi!*\n\n📢 Kanal nomi: *{ch_title}*\n🆔 Kanal ID: `{ch_id}`\n\nEndi barcha yangi zaxiralar bitta paketda avtomatik ravishda ushbu kanalga yuboriladi 🚀",
             parse_mode="Markdown"
         )
 
@@ -413,39 +394,15 @@ def handle_menu_buttons(message):
     if not is_authorized(message): return
     text = message.text.strip()
     
-    if text == "⚡ Baza Zaxirasi (DB)":
+    if text == "⚡ Yangi Zaxira Olish":
         markup = types.InlineKeyboardMarkup(row_width=2)
         markup.add(
-            types.InlineKeyboardButton("✅ Ha, DB Zaxira Olish", callback_data="cb_backup_db"),
+            types.InlineKeyboardButton("🚀 Ha, Zaxira Olish", callback_data="cb_backup_start"),
             types.InlineKeyboardButton("❌ Bekor Qilish", callback_data="cb_cancel")
         )
         bot.send_message(
             message.chat.id,
-            "⚠️ *PostgreSQL Baza Zaxirasini Olish*\n\nPostgreSQL ma'lumotlar bazasining `.sql.gz` nusxasi olinadi.",
-            reply_markup=markup,
-            parse_mode="Markdown"
-        )
-    elif text == "🖼️ Rasmlar Zaxirasi (Media)":
-        markup = types.InlineKeyboardMarkup(row_width=2)
-        markup.add(
-            types.InlineKeyboardButton("✅ Ha, Media Zaxira Olish", callback_data="cb_backup_media"),
-            types.InlineKeyboardButton("❌ Bekor Qilish", callback_data="cb_cancel")
-        )
-        bot.send_message(
-            message.chat.id,
-            "⚠️ *MinIO Rasmlar Zaxirasini Olish*\n\nFoydalanuvchi avatarlari va pasport fayllarining `.tar.gz` arxivi olinadi.",
-            reply_markup=markup,
-            parse_mode="Markdown"
-        )
-    elif text == "📦 To'liq Zaxira (DB + Media)":
-        markup = types.InlineKeyboardMarkup(row_width=2)
-        markup.add(
-            types.InlineKeyboardButton("🚀 Ha, To'liq Zaxira Olish", callback_data="cb_backup_full"),
-            types.InlineKeyboardButton("❌ Bekor Qilish", callback_data="cb_cancel")
-        )
-        bot.send_message(
-            message.chat.id,
-            "⚠️ *To'liq Zaxira (Disaster Recovery)*\n\n1. PostgreSQL Baza (`.sql.gz`)\n2. MinIO Media Rasmlar (`.tar.gz`)\nIkkalasi birgalikda zaxiralanadi va kanalga yuboriladi.",
+            "⚠️ *To'liq Zaxira (Bitta Arxiv) Olish*\n\nPostgreSQL bazasi va MinIO rasmlari bitta umumiy `.zip` paketiga jamlanadi.",
             reply_markup=markup,
             parse_mode="Markdown"
         )
@@ -468,176 +425,136 @@ def handle_menu_buttons(message):
 
 # --- Business Logic Functions ---
 
-def run_db_backup(chat_id, send_to_channel=True):
-    """PostgreSQL ma'lumotlar bazasi zaxirasini oladi."""
+def run_unified_backup(chat_id, send_to_channel=True):
+    """PostgreSQL baza va MinIO media rasmlarini bitta umumiy .zip paketiga jamlab zaxira oladi."""
     ensure_bucket()
-    status_msg = bot.send_message(chat_id, "⏳ PostgreSQL ma'lumotlar bazasidan zaxira olinmoqda...")
+    status_msg = bot.send_message(chat_id, "⏳ Baza va media rasmlari bitta papkaga jamlanmoqda... Iltimos kuting.")
     
     date_str = datetime.now(UZ_TZ).strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"baito_db_{date_str}.sql.gz"
-    backup_file_path = os.path.join(BACKUPS_DIR, filename)
-    s3_key = f"{PREFIX}{filename}"
+    bundle_name = f"baito_backup_{date_str}"
+    zip_filename = f"{bundle_name}.zip"
+    zip_filepath = os.path.join(BACKUPS_DIR, zip_filename)
+    s3_key = f"{PREFIX}{zip_filename}"
     
-    os.environ['PGPASSWORD'] = POSTGRES_PASSWORD
-    dump_cmd = f"pg_dump -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} | gzip > {backup_file_path}"
+    temp_stage_dir = f"/tmp/{bundle_name}"
+    db_stage_dir = os.path.join(temp_stage_dir, "database")
+    media_stage_dir = os.path.join(temp_stage_dir, "media")
     
     try:
+        os.makedirs(db_stage_dir, exist_ok=True)
+        os.makedirs(media_stage_dir, exist_ok=True)
+        
+        # 1. Dump PostgreSQL into database/
+        os.environ['PGPASSWORD'] = POSTGRES_PASSWORD
+        db_sql_gz = os.path.join(db_stage_dir, "database.sql.gz")
+        dump_cmd = f"pg_dump -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} | gzip > {db_sql_gz}"
         subprocess.run(dump_cmd, shell=True, check=True, executable='/bin/sh')
-        file_size_kb = os.path.getsize(backup_file_path) / 1024
+        db_size_kb = os.path.getsize(db_sql_gz) / 1024
         
-        # 1. Upload to S3 / MinIO
-        s3_uploaded = False
-        try:
-            s3_client.upload_file(backup_file_path, BUCKET_NAME, s3_key)
-            s3_uploaded = True
-        except Exception as s3_err:
-            print(f"MinIO/S3 upload warning: {s3_err}")
-
-        # 2. Cleanup old backups
-        cleanup_old_backups()
-
-        caption = (
-            f"🗄️ *PostgreSQL Baza Zaxirasi Tayyor!*\n\n"
-            f"📅 Sana: `{date_str}` (Toshkent vaqti)\n"
-            f"📁 Fayl: `{filename}`\n"
-            f"📊 Hajmi: `{file_size_kb:.2f} KB`\n"
-            f"☁️ Saqlash: {'MinIO Buluti & Server Diski ✅' if s3_uploaded else 'Server Diski ✅'}\n"
-            f"🧹 Xotira: Faqat eng so'nggi {MAX_BACKUPS_TO_KEEP} ta nusxa saqlanadi"
-        )
-
-        # 3. Send to Admin Chat
-        with open(backup_file_path, 'rb') as doc_file:
-            bot.send_document(chat_id, doc_file, caption=caption, parse_mode="Markdown")
-
-        # 4. Send to Channel
-        ch_id = get_channel_id()
-        if send_to_channel and ch_id and str(ch_id) != str(chat_id):
-            try:
-                with open(backup_file_path, 'rb') as doc_file:
-                    bot.send_document(ch_id, doc_file, caption=caption, parse_mode="Markdown")
-                print(f"✅ DB Zaxira kanalga ({ch_id}) yuborildi.")
-            except Exception as ch_err:
-                print(f"⚠️ Kanalga ({ch_id}) yuborishda xatolik: {ch_err}")
-            
-        bot.delete_message(chat_id, status_msg.message_id)
-        return filename
-        
-    except Exception as e:
-        bot.send_message(chat_id, f"❌ PostgreSQL zaxira olishda xatolik: {e}")
-        return None
-
-def run_media_backup(chat_id, send_to_channel=True):
-    """MinIO dagi barcha rasmlar va media fayllarni tar.gz qilib zaxiraga oladi."""
-    ensure_bucket()
-    status_msg = bot.send_message(chat_id, "⏳ MinIO rasmlar va media fayllar zaxiralanmoqda...")
-    
-    date_str = datetime.now(UZ_TZ).strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"baito_media_{date_str}.tar.gz"
-    backup_file_path = os.path.join(BACKUPS_DIR, filename)
-    s3_key = f"{PREFIX}{filename}"
-    temp_media_dir = f"/tmp/baito_media_{date_str}"
-    
-    try:
-        os.makedirs(temp_media_dir, exist_ok=True)
-        
-        # 1. Download all user files from MinIO (excluding backups/)
+        # 2. Download all User Uploads from MinIO into media/
         paginator = s3_client.get_paginator('list_objects_v2')
-        downloaded_count = 0
-        total_bytes = 0
-        
+        media_count = 0
+        media_bytes = 0
         for page in paginator.paginate(Bucket=BUCKET_NAME):
             for obj in page.get('Contents', []):
                 key = obj['Key']
                 if not key.startswith(PREFIX):
-                    target_local = os.path.join(temp_media_dir, key)
+                    target_local = os.path.join(media_stage_dir, key)
                     os.makedirs(os.path.dirname(target_local), exist_ok=True)
                     s3_client.download_file(BUCKET_NAME, key, target_local)
-                    downloaded_count += 1
-                    total_bytes += obj['Size']
+                    media_count += 1
+                    media_bytes += obj['Size']
 
-        # 2. If no media uploaded yet, write a marker file
-        if downloaded_count == 0:
-            with open(os.path.join(temp_media_dir, "media_inventory.txt"), "w") as f:
-                f.write(f"Baito Media Storage Snapshot at {date_str}. Zero active uploads.\n")
+        if media_count == 0:
+            with open(os.path.join(media_stage_dir, "info.txt"), "w") as f:
+                f.write(f"Baito Media Snapshot: 0 active files at {date_str}.\n")
 
-        # 3. Create compressed tarball
-        with tarfile.open(backup_file_path, "w:gz") as tar:
-            tar.add(temp_media_dir, arcname="media_storage")
-            
-        shutil.rmtree(temp_media_dir, ignore_errors=True)
+        # 3. Create Manifest JSON with stats
+        stats = get_system_status()
+        manifest = {
+            "project": "Baito Platform",
+            "created_at": datetime.now(UZ_TZ).isoformat(),
+            "timezone": "Asia/Tashkent (UTC+5)",
+            "database": {
+                "name": POSTGRES_DB,
+                "dump_file": "database/database.sql.gz",
+                "dump_size_kb": round(db_size_kb, 2),
+                "users_count": stats.get("users", 0),
+                "jobs_count": stats.get("jobs", 0),
+                "applications_count": stats.get("applications", 0)
+            },
+            "media": {
+                "folder": "media/",
+                "files_count": media_count,
+                "total_size_bytes": media_bytes
+            }
+        }
+        with open(os.path.join(temp_stage_dir, "backup_manifest.json"), "w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=2, ensure_ascii=False)
+
+        # 4. Create Consolidated ZIP Archive
+        with zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, _, files in os.walk(temp_stage_dir):
+                for file in files:
+                    full_path = os.path.join(root, file)
+                    rel_path = os.path.relpath(full_path, temp_stage_dir)
+                    zipf.write(full_path, arcname=os.path.join(bundle_name, rel_path))
+
+        shutil.rmtree(temp_stage_dir, ignore_errors=True)
         
-        tar_size_kb = os.path.getsize(backup_file_path) / 1024
-        tar_size_mb = tar_size_kb / 1024
-        size_str = f"{tar_size_mb:.2f} MB" if tar_size_mb >= 1 else f"{tar_size_kb:.1f} KB"
-        
-        # 4. Upload to MinIO backups
+        zip_size_kb = os.path.getsize(zip_filepath) / 1024
+        zip_size_mb = zip_size_kb / 1024
+        size_str = f"{zip_size_mb:.2f} MB" if zip_size_mb >= 1 else f"{zip_size_kb:.1f} KB"
+
+        # 5. Upload ZIP to MinIO
         s3_uploaded = False
         try:
-            s3_client.upload_file(backup_file_path, BUCKET_NAME, s3_key)
+            s3_client.upload_file(zip_filepath, BUCKET_NAME, s3_key)
             s3_uploaded = True
         except Exception as s3_err:
-            print(f"MinIO/S3 media upload warning: {s3_err}")
+            print(f"MinIO/S3 zip upload warning: {s3_err}")
 
-        # 5. Cleanup old media backups beyond last 5
+        # 6. Retention: Cleanup old backups beyond latest 5
         cleanup_old_backups()
 
         caption = (
-            f"🖼️ *MinIO Media (Rasmlar) Zaxirasi Tayyor!*\n\n"
+            f"📦 *Baito Yagona Zaxira Paketi (All-in-One)*\n\n"
             f"📅 Sana: `{date_str}` (Toshkent vaqti)\n"
-            f"📁 Fayl: `{filename}`\n"
-            f"📸 Jami rasmlar: `{downloaded_count}` ta\n"
-            f"📊 Arxiv hajmi: `{size_str}`\n"
+            f"📁 Fayl: `{zip_filename}`\n"
+            f"🗄️ Baza: `PostgreSQL` ({db_size_kb:.1f} KB)\n"
+            f"🖼️ Media: `{media_count}` ta rasm/fayl\n"
+            f"📊 Umumiy Arxiv: `{size_str}`\n"
             f"☁️ Saqlash: {'MinIO Buluti & Server Diski ✅' if s3_uploaded else 'Server Diski ✅'}\n"
-            f"🧹 Xotira: Faqat eng so'nggi {MAX_BACKUPS_TO_KEEP} ta nusxa saqlanadi"
+            f"🧹 Xotira: Faqat eng so'nggi {MAX_BACKUPS_TO_KEEP} ta paket saqlanadi"
         )
 
-        # 6. Send to Admin Chat (Telegram limit 50MB)
-        if tar_size_mb < 49:
-            with open(backup_file_path, 'rb') as doc_file:
+        # 7. Send single ZIP to Admin Chat
+        if zip_size_mb < 49:
+            with open(zip_filepath, 'rb') as doc_file:
                 bot.send_document(chat_id, doc_file, caption=caption, parse_mode="Markdown")
         else:
-            bot.send_message(chat_id, caption + "\n\n⚠️ *Eslatma:* Arxiv 50MB dan katta bo'lgani uchun MinIO bulutida va serverda saqlandi.", parse_mode="Markdown")
+            bot.send_message(chat_id, caption + "\n\n⚠️ Arxiv 50MB dan katta bo'lgani uchun MinIO bulutida saqlandi.", parse_mode="Markdown")
 
-        # 7. Send to Channel
+        # 8. Send to Channel
         ch_id = get_channel_id()
         if send_to_channel and ch_id and str(ch_id) != str(chat_id):
             try:
-                if tar_size_mb < 49:
-                    with open(backup_file_path, 'rb') as doc_file:
+                if zip_size_mb < 49:
+                    with open(zip_filepath, 'rb') as doc_file:
                         bot.send_document(ch_id, doc_file, caption=caption, parse_mode="Markdown")
                 else:
-                    bot.send_message(ch_id, caption + "\n\n⚠️ Arxiv MinIO bulutida va serverda saqlandi.", parse_mode="Markdown")
-                print(f"✅ Media Zaxira kanalga ({ch_id}) yuborildi.")
+                    bot.send_message(ch_id, caption + "\n\n⚠️ Arxiv MinIO bulutida saqlandi.", parse_mode="Markdown")
+                print(f"✅ Zaxira paketi kanalga ({ch_id}) yuborildi.")
             except Exception as ch_err:
-                print(f"⚠️ Media kanalga ({ch_id}) yuborishda xatolik: {ch_err}")
+                print(f"⚠️ Kanalga ({ch_id}) yuborishda xatolik: {ch_err}")
 
         bot.delete_message(chat_id, status_msg.message_id)
-        return filename
-        
-    except Exception as e:
-        shutil.rmtree(temp_media_dir, ignore_errors=True)
-        bot.send_message(chat_id, f"❌ Media zaxirasini olishda xatolik: {e}")
-        return None
+        return zip_filename
 
-def run_full_backup(chat_id, send_to_channel=True):
-    """PostgreSQL baza va MinIO media rasmlarni to'liq zaxiraga oladi."""
-    start_msg = bot.send_message(chat_id, "🚀 *To'liq Zaxiralash Boshlandi (DB + Media)*\n\nIltimos 1 daqiqa kuting...", parse_mode="Markdown")
-    
-    db_file = run_db_backup(chat_id, send_to_channel=send_to_channel)
-    media_file = run_media_backup(chat_id, send_to_channel=send_to_channel)
-    
-    try:
-        bot.delete_message(chat_id, start_msg.message_id)
-    except Exception:
-        pass
-        
-    summary_text = (
-        "🏆 *To'liq Zaxira (Disaster Recovery) Muvaffaqiyatli Yakunlandi!*\n\n"
-        f"✅ PostgreSQL Baza: `{db_file or 'Xato'}`\n"
-        f"✅ MinIO Rasmlar: `{media_file or 'Xato'}`\n\n"
-        "🛡 *Baito tizimi 100% zaxiralandi va himoyalandi.*"
-    )
-    bot.send_message(chat_id, summary_text, parse_mode="Markdown")
+    except Exception as e:
+        shutil.rmtree(temp_stage_dir, ignore_errors=True)
+        bot.send_message(chat_id, f"❌ Zaxira olishda xatolik: {e}")
+        return None
 
 def send_backup_list(chat_id, message_id=None):
     files = get_all_backup_files()
@@ -645,7 +562,7 @@ def send_backup_list(chat_id, message_id=None):
     if not files:
         text = "📭 *Hali hech qanday zaxira olinmagan.*\n\nZudlik bilan yangi zaxira olish uchun quyidagi tugmani bosing 👇"
         markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("🚀 To'liq Zaxira Olish", callback_data="cb_backup_full"))
+        markup.add(types.InlineKeyboardButton("⚡ Yangi Zaxira Olish", callback_data="cb_backup_start"))
         if message_id:
             bot.edit_message_text(text, chat_id, message_id, reply_markup=markup, parse_mode="Markdown")
         else:
@@ -660,16 +577,14 @@ def send_backup_list(chat_id, message_id=None):
         size_mb = size_kb / 1024
         size_str = f"{size_mb:.2f} MB" if size_mb >= 1 else f"{size_kb:.1f} KB"
         date_str = item['time'].strftime("%Y-%m-%d %H:%M")
-        icon = "🖼️" if item['type'] == 'media' else "🗄️"
-        type_label = "Media" if item['type'] == 'media' else "Baza"
         
-        text += f"*{idx+1}.* {icon} `[{type_label}]` `{item['name']}`\n   └ 📊 {size_str} | 📅 {date_str}\n\n"
+        text += f"*{idx+1}.* 📦 `{item['name']}`\n   └ 📊 {size_str} | 📅 {date_str}\n\n"
         btn_dl = types.InlineKeyboardButton(f"📥 Yuklab olish #{idx+1} ({item['name'][-16:]})", callback_data=f"cb_dl:{item['name']}")
         markup.add(btn_dl)
         
     markup.row(
         types.InlineKeyboardButton("🔄 Yangilash", callback_data="cb_list_refresh"),
-        types.InlineKeyboardButton("🚀 Yangi Zaxira", callback_data="cb_backup_full")
+        types.InlineKeyboardButton("⚡ Yangi Zaxira", callback_data="cb_backup_start")
     )
     
     if message_id:
@@ -696,8 +611,8 @@ def send_status_message(chat_id):
         "🖼️ *MinIO Media Xotirasi:*\n"
         f"• Jami Rasmlar/Fayllar: `{stats['media_files']}` ta\n"
         f"• Media Hajmi: `{stats['media_size']}`\n\n"
-        "📦 *Zaxira Nusxalar (Arxiv):*\n"
-        f"• Jami Zaxiralar: `{stats['backups_count']}` ta (DB + Media)\n"
+        "📦 *Zaxira Paketlar (ZIP):*\n"
+        f"• Jami Zaxiralar: `{stats['backups_count']}` ta paket\n"
         f"• Zaxiralar Hajmi: `{stats['backups_size']}`\n\n"
         "🖥️ *Server Xotirasi (Disk):*\n"
         f"• Bo'sh joy: `{stats['disk_free']}` / `{stats['disk_total']}`\n"
@@ -707,7 +622,7 @@ def send_status_message(chat_id):
     markup = types.InlineKeyboardMarkup(row_width=2)
     markup.add(
         types.InlineKeyboardButton("🔄 Yangilash", callback_data="cb_status_refresh"),
-        types.InlineKeyboardButton("🚀 To'liq Zaxira", callback_data="cb_backup_full")
+        types.InlineKeyboardButton("⚡ Yangi Zaxira", callback_data="cb_backup_start")
     )
     bot.send_message(chat_id, status_text, reply_markup=markup, parse_mode="Markdown")
 
@@ -724,7 +639,7 @@ def send_minio_info(chat_id):
         f"🌐 *Endpoint:* `{AWS_ENDPOINT_URL}`\n"
         f"📁 *Zaxira Prefiksi:* `{PREFIX}`\n"
         f"🖼️ *Foydalanuvchi Rasmlari:* `{m_files}` ta (`{m_size_str}`)\n"
-        f"📦 *Zaxira Arxivlar:* `{len(backups)}` ta (`{size_str}`)\n\n"
+        f"📦 *Zaxira Paketlar:* `{len(backups)}` ta (`{size_str}`)\n\n"
         "🔒 Barcha ma'lumotlar va media fayllar xavfsiz MinIO tarmog'ida saqlanadi."
     )
     markup = types.InlineKeyboardMarkup()
@@ -734,7 +649,7 @@ def send_minio_info(chat_id):
 def download_backup(message):
     parts = message.text.split(" ", 1)
     if len(parts) < 2:
-        bot.reply_to(message, "Iltimos fayl nomini kiriting.\nMasalan: `/download baito_db_2026.sql.gz`", parse_mode="Markdown")
+        bot.reply_to(message, "Iltimos fayl nomini kiriting.\nMasalan: `/download baito_backup_2026.zip`", parse_mode="Markdown")
         return
     deliver_backup_file(message.chat.id, parts[1].strip())
 
@@ -744,7 +659,7 @@ def deliver_backup_file(chat_id, filename):
     # 1. Local disk
     if os.path.exists(local_path):
         with open(local_path, 'rb') as doc:
-            bot.send_document(chat_id, doc, caption=f"📥 *Zaxira Fayli:* `{filename}`", parse_mode="Markdown")
+            bot.send_document(chat_id, doc, caption=f"📥 *Zaxira Paketi:* `{filename}`", parse_mode="Markdown")
         return
         
     # 2. MinIO / S3
@@ -754,7 +669,7 @@ def deliver_backup_file(chat_id, filename):
         s3_client.head_object(Bucket=BUCKET_NAME, Key=s3_key)
         s3_client.download_file(BUCKET_NAME, s3_key, local_path)
         with open(local_path, 'rb') as doc:
-            bot.send_document(chat_id, doc, caption=f"📥 *Zaxira Fayli:* `{filename}`", parse_mode="Markdown")
+            bot.send_document(chat_id, doc, caption=f"📥 *Zaxira Paketi:* `{filename}`", parse_mode="Markdown")
     except ClientError:
         bot.send_message(chat_id, f"❌ `{filename}` topilmadi. Ro'yxatni ko'rish uchun **📋 Zaxiralar Ro'yxati** tugmasini bosing.", parse_mode="Markdown")
     except Exception as e:
@@ -769,29 +684,13 @@ def handle_callbacks(call):
         
     data = call.data
     
-    if data == "cb_backup_db":
-        bot.answer_callback_query(call.id, "Baza zaxirasi olinmoqda ⏳")
+    if data == "cb_backup_start":
+        bot.answer_callback_query(call.id, "Zaxira olish boshlandi ⏳")
         try:
             bot.delete_message(call.message.chat.id, call.message.message_id)
         except Exception:
             pass
-        run_db_backup(call.message.chat.id)
-
-    elif data == "cb_backup_media":
-        bot.answer_callback_query(call.id, "Media zaxirasi olinmoqda ⏳")
-        try:
-            bot.delete_message(call.message.chat.id, call.message.message_id)
-        except Exception:
-            pass
-        run_media_backup(call.message.chat.id)
-
-    elif data == "cb_backup_full":
-        bot.answer_callback_query(call.id, "To'liq zaxira olinmoqda ⏳")
-        try:
-            bot.delete_message(call.message.chat.id, call.message.message_id)
-        except Exception:
-            pass
-        run_full_backup(call.message.chat.id)
+        run_unified_backup(call.message.chat.id)
         
     elif data == "cb_cancel":
         bot.answer_callback_query(call.id, "Bekor qilindi")
@@ -822,9 +721,7 @@ def register_bot_commands():
     try:
         bot.set_my_commands([
             telebot.types.BotCommand("start", "🏠 Asosiy menyuni ochish"),
-            telebot.types.BotCommand("full_backup", "🚀 To'liq zaxira olish (DB + Media)"),
-            telebot.types.BotCommand("db_backup", "🗄️ Baza zaxirasini olish (DB)"),
-            telebot.types.BotCommand("media_backup", "🖼️ Rasmlar zaxirasini olish (Media)"),
+            telebot.types.BotCommand("backup", "⚡ Yangi zaxira olish (Bitta ZIP paket)"),
             telebot.types.BotCommand("list", "📋 Zaxiralar ro'yxatini ko'rish"),
             telebot.types.BotCommand("status", "📊 Baza va tizim holati"),
             telebot.types.BotCommand("channel", "📢 Ulangan kanal holati"),
@@ -835,25 +732,25 @@ def register_bot_commands():
         print(f"⚠️ Bot buyruqlarini ro'yxatdan o'tkazishda ogohlantirish: {e}")
 
 def scheduled_backup_worker():
-    """Server orqa fonida har 6 soatda avtomatik to'liq (DB + Media) zaxira oladi va yuboradi."""
+    """Server orqa fonida har 6 soatda avtomatik bitta to'liq ZIP zaxira oladi va yuboradi."""
     time.sleep(30)  # Ishga tushgandan 30s keyin
     while True:
         try:
-            print("⏰ [Avtomatik Zaxira]: Rejalashtirilgan 6 soatlik to'liq (DB + Media) zaxira boshlanmoqda...")
-            run_full_backup(TELEGRAM_CHAT_ID, send_to_channel=True)
+            print("⏰ [Avtomatik Zaxira]: Rejalashtirilgan 6 soatlik yagona ZIP zaxira boshlanmoqda...")
+            run_unified_backup(TELEGRAM_CHAT_ID, send_to_channel=True)
         except Exception as e:
-            print(f"Scheduled full backup xatolik: {e}")
+            print(f"Scheduled backup xatolik: {e}")
         # Har 6 soatda (6 * 3600 soniya)
         time.sleep(6 * 3600)
 
 if __name__ == "__main__":
-    print("Starting Baito Backup & System Bot (Full DB + Media Mode)...")
+    print("Starting Baito Backup & System Bot (Single Bundle Mode)...")
     ensure_bucket()
     register_bot_commands()
     
     # Start auto-backup thread in background
     scheduler_thread = threading.Thread(target=scheduled_backup_worker, daemon=True)
     scheduler_thread.start()
-    print("✅ 6 soatlik avtomatik to'liq (DB + Media) zaxira xizmati ishga tushirildi.")
+    print("✅ 6 soatlik avtomatik yagona ZIP zaxira xizmati ishga tushirildi.")
     
     bot.infinity_polling()

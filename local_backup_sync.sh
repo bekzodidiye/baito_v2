@@ -27,7 +27,7 @@ if ! curl -s --connect-timeout 2 http://100.109.46.108:9000/minio/health/live > 
 fi
 
 # 1. Baza va Media zaxiralarini sinxronizatsiya qilish (va serverdan o'chirilganlarini lokalda ham tozalash)
-SYNC_OUTPUT=$(aws --endpoint-url "$AWS_ENDPOINT_URL" s3 sync "$S3_BUCKET_PATH" . --exclude "*" --include "*.sql.gz" --include "*.tar.gz" --delete 2>&1)
+SYNC_OUTPUT=$(aws --endpoint-url "$AWS_ENDPOINT_URL" s3 sync "$S3_BUCKET_PATH" . --exclude "*" --include "*.zip" --include "*.sql.gz" --include "*.tar.gz" --delete 2>&1)
 
 # Agar yangi baza zaxirasi yuklangan bo'lsa:
 if echo "$SYNC_OUTPUT" | grep -q "download:"; then
