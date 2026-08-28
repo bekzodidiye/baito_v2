@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Camera, Check, Loader2, Plus, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CustomSelect } from '../../../components/login/CustomSelect';
+import { uploadFileApi } from '../../../api/queries';
 
 const MONTHS: Record<string, string[]> = {
   uz: ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'],
@@ -99,16 +100,25 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                         type="file"
                         accept="image/*"
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 rounded-full"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
+                            // Instant local preview
                             const reader = new FileReader();
                             reader.onload = (event) => {
                               if (event.target?.result) {
-                                setEditForm({ ...editForm, profileImage: event.target.result as string });
+                                setEditForm((prev: any) => ({ ...prev, profileImage: event.target?.result as string }));
                               }
                             };
                             reader.readAsDataURL(file);
+
+                            // Upload to MinIO S3
+                            try {
+                              const uploadedUrl = await uploadFileApi(file);
+                              setEditForm((prev: any) => ({ ...prev, profileImage: uploadedUrl }));
+                            } catch (err) {
+                              console.error('Avatar upload to MinIO failed:', err);
+                            }
                           }
                         }}
                         disabled={isEditing}

@@ -3,6 +3,7 @@ import { LOCAL_TEXTS } from '../../components/login/LoginPromptScreen.translatio
 import { useLoginApiHandlers } from './useLoginApiHandlers';
 import { showToast } from '../../utils/toast';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { uploadFileApi } from '../../api/queries';
 
 export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => void) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
@@ -12,10 +13,16 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
   const { handleFinishSubmit, handleLoginSubmit, handleSendVerificationCode } = useLoginApiHandlers(state, isModal, onClose);
 
   // File picker handlers
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       state.setProfileImage(URL.createObjectURL(file));
+      try {
+        const uploadedUrl = await uploadFileApi(file);
+        state.setProfileImage(uploadedUrl);
+      } catch (err) {
+        console.error('Avatar upload failed:', err);
+      }
     }
   };
 
@@ -24,14 +31,41 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
   const triggerDoc2Select = () => state.doc2InputRef.current?.click();
   const triggerDoc3Select = () => state.doc3InputRef.current?.click();
 
-  const handleDoc1Upload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) state.setDocFileName1(e.target.files[0].name);
+  const handleDoc1Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      state.setDocFileName1(file.name);
+      try {
+        const uploadedUrl = await uploadFileApi(file);
+        state.setDocFileName1(uploadedUrl);
+      } catch (err) {
+        console.error('Doc1 upload failed:', err);
+      }
+    }
   };
-  const handleDoc2Upload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) state.setDocFileName2(e.target.files[0].name);
+  const handleDoc2Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      state.setDocFileName2(file.name);
+      try {
+        const uploadedUrl = await uploadFileApi(file);
+        state.setDocFileName2(uploadedUrl);
+      } catch (err) {
+        console.error('Doc2 upload failed:', err);
+      }
+    }
   };
-  const handleDoc3Upload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) state.setDocFileName3(e.target.files[0].name);
+  const handleDoc3Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      state.setDocFileName3(file.name);
+      try {
+        const uploadedUrl = await uploadFileApi(file);
+        state.setDocFileName3(uploadedUrl);
+      } catch (err) {
+        console.error('Doc3 upload failed:', err);
+      }
+    }
   };
 
   // Demo autofill
