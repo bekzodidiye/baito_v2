@@ -79,7 +79,7 @@ export function useMapViewScreen() {
     mapInstanceRef,
   });
 
-  const { activeCluster, getDisplayedJobs, setActiveCluster } = useMapFilterJobs({
+  const { activeCluster, displayedJobs, getDisplayedJobs, setActiveCluster } = useMapFilterJobs({
     jobs,
     filterLocation,
     geoJsonData,
@@ -178,6 +178,7 @@ export function useMapViewScreen() {
     isLocatingUser,
     distanceToSelectedJob,
     handleCalculateDistance,
+    displayedJobs,
     getDisplayedJobs,
     handleRefresh,
     handleJobSelect,

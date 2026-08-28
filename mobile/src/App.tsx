@@ -7,7 +7,7 @@ import { BottomNav } from './components/BottomNav';
 import { Drawer } from './components/Drawer';
 import { Sidebar } from './components/Sidebar';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { MapViewScreen } from './components/map/MapViewScreen';
+const MapViewScreen = React.lazy(() => import('./components/map/MapViewScreen').then(m => ({ default: m.MapViewScreen })));
 import { RegionSelector } from './components/RegionSelector';
 import { MenuModals } from './components/MenuModals';
 import { OnboardingTour } from './components/OnboardingTour';
@@ -116,9 +116,11 @@ function AppContent() {
           {/* Persistently mounted map to avoid Leaflet re-initialization overhead. */}
           {shouldMountMap && (
             <ErrorBoundary>
-              <div className={currentScreen === 'jobs' ? 'block' : 'hidden'}>
-                <MapViewScreen />
-              </div>
+              <Suspense fallback={<div className="h-[calc(100vh-56px-64px)] flex items-center justify-center bg-slate-50"><div className="animate-pulse w-8 h-8 rounded-full bg-slate-300"></div></div>}>
+                <div className={currentScreen === 'jobs' ? 'block' : 'hidden'}>
+                  <MapViewScreen />
+                </div>
+              </Suspense>
             </ErrorBoundary>
           )}
         </main>

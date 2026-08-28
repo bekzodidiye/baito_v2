@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import { Job } from '../../types';
 import { Language } from '../../translations';
-import { areDistrictNamesEqual, mapFeatureToRegionId } from './mapUtils';
+import { areDistrictNamesEqual, mapFeatureToRegionId, getFeatureCenter } from './mapUtils';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
 import { useRegionPolygonInitialization } from './useRegionPolygonInitialization';
 import { useRegionPolygonStyleUpdate } from './useRegionPolygonStyleUpdate';
@@ -55,19 +55,19 @@ export const useRegionPolygons = ({
   useEffect(() => { setFilterLocationRef.current = setFilterLocation; }, [setFilterLocation]);
   useEffect(() => { setIsPanelExpandedRef.current = setIsPanelExpanded; }, [setIsPanelExpanded]);
 
-  const getJobCountForLocation = (tumanName: string) => {
+  const getJobCountForLocation = useCallback((tumanName: string) => {
     if (!jobs || jobs.length === 0) return 0;
     const lowerName = tumanName.toLowerCase();
     let count = 0;
-    jobs.forEach(j => {
-      const loc = (j.rawLocation || j.location || "").toLowerCase();
+    for (let i = 0; i < jobs.length; i++) {
+      const loc = (jobs[i].rawLocation || jobs[i].location || "").toLowerCase();
       if (loc && (loc.includes(lowerName) || areDistrictNamesEqual(loc, tumanName))) {
         count++;
       }
-    });
+    }
     return count;
-  };
-  
+  }, [jobs]);
+
   const districtFeatureMap = useMemo(() => {
     const map = new Map<string, any>();
     if (!districtsGeoJsonData || !districtsGeoJsonData.features) return map;
@@ -80,7 +80,7 @@ export const useRegionPolygons = ({
     return map;
   }, [districtsGeoJsonData]);
 
-  const findDistrictFeature = (locationName: string) => {
+  const findDistrictFeature = useCallback((locationName: string) => {
     if (!locationName || locationName === 'Barchasi') return null;
     const exact = districtFeatureMap.get(locationName.toLowerCase());
     if (exact) return exact;
@@ -88,7 +88,7 @@ export const useRegionPolygons = ({
     return districtsGeoJsonData.features.find((f: any) =>
       f.properties && areDistrictNamesEqual(locationName, f.properties.shapeName || "")
     ) || null;
-  };
+  }, [districtFeatureMap, districtsGeoJsonData]);
 
   useRegionPolygonInitialization({
     isMapReady,
@@ -147,15 +147,11 @@ export const useRegionPolygons = ({
       const region = UZBEKISTAN_REGIONS.find(r => r.id === regionId);
       if (!region) return;
       if (!regionCentersRef.current.has(region.id)) {
-        try {
-          const layer = L.geoJSON(feature);
-          const bounds = layer.getBounds();
-          const c = bounds.getCenter();
-          regionCentersRef.current.set(region.id, [c.lat, c.lng]);
-        } catch (e) {
-          if (region.center) {
-            regionCentersRef.current.set(region.id, region.center);
-          }
+        const center = getFeatureCenter(feature.geometry);
+        if (center && (center.lat !== 41.3 || center.lng !== 69.2)) {
+          regionCentersRef.current.set(region.id, [center.lat, center.lng]);
+        } else if (region.center) {
+          regionCentersRef.current.set(region.id, region.center);
         }
       }
     });
@@ -166,13 +162,9 @@ export const useRegionPolygons = ({
     districtsGeoJsonData.features.forEach((f: any) => {
       const tumanName = f.properties?.shapeName || "";
       if (!tumanName || districtCentersRef.current.has(tumanName)) return;
-      try {
-        const layer = L.geoJSON(f);
-        const bounds = layer.getBounds();
-        const c = bounds.getCenter();
-        districtCentersRef.current.set(tumanName, [c.lat, c.lng]);
-      } catch (e) {
-        // ignore
+      const center = getFeatureCenter(f.geometry);
+      if (center) {
+        districtCentersRef.current.set(tumanName, [center.lat, center.lng]);
       }
     });
   }, [districtsGeoJsonData]);
