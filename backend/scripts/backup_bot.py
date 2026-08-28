@@ -844,6 +844,27 @@ def register_bot_commands():
 def scheduled_backup_worker():
     """Server orqa fonida har 6 soatda avtomatik bitta to'liq ZIP zaxira oladi va yuboradi."""
     time.sleep(30)  # Ishga tushgandan 30s keyin
+
+    # Skip the start-up backup when a recent one already exists. Every deploy
+    # recreates this container, so a busy day produced one archive per deploy —
+    # 20 in a single day here. That makes the archive count scale with deploy
+    # frequency rather than with time, and at a realistic database size it
+    # would dominate both the disk and the offsite bill.
+    try:
+        if os.path.exists(BACKUPS_DIR):
+            newest = max(
+                (os.path.getmtime(os.path.join(BACKUPS_DIR, f))
+                 for f in os.listdir(BACKUPS_DIR) if f.endswith(".zip")),
+                default=0,
+            )
+            age_hours = (time.time() - newest) / 3600
+            if age_hours < 3:
+                print(f"⏭️  So'nggi zaxira {age_hours:.1f} soat oldin olingan — "
+                      f"ishga tushishdagi zaxira o'tkazib yuborildi.")
+                time.sleep(6 * 3600)
+    except Exception as e:
+        print(f"Zaxira yoshini tekshirib bo'lmadi: {e}")
+
     while True:
         try:
             print("⏰ [Avtomatik Zaxira]: Rejalashtirilgan 6 soatlik yagona ZIP zaxira boshlanmoqda...")

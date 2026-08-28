@@ -259,6 +259,11 @@ jobs:
               | while read -r tag; do docker rmi "$repo:$tag" >/dev/null 2>&1 || true; done
           done
 
+          # The build cache had no bound at all: a day of frequent deploys took
+          # it from 3.4 GB to 12.3 GB. Keep a week of it so rebuilds stay fast
+          # without the growth being open-ended.
+          docker builder prune --force --filter 'until=168h' >/dev/null 2>&1 || true
+
       - name: 📣 Report a failed deploy
         # Deploys used to fail — or never run at all — with no signal anywhere.
         # The backup bot already owns a Telegram channel; reuse it so a broken
