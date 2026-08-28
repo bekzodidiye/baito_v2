@@ -55,7 +55,11 @@ export const TopUpScreen: React.FC = () => {
     return Number(val).toLocaleString('en-US');
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleProceed = () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     // Navigate to success or trigger payment API
     navigate('/payments/success');
   };
@@ -226,11 +230,20 @@ export const TopUpScreen: React.FC = () => {
       <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md p-4 pb-safe border-t border-slate-200/50 shadow-[0px_-8px_20px_rgba(0,0,0,0.03)] z-40">
         <button 
           onClick={handleProceed}
-          disabled={!amount || Number(amount) <= 0 || !paymentMethod}
+          disabled={isSubmitting || !amount || Number(amount) <= 0 || !paymentMethod}
           className="w-full bg-brand-primary text-white font-title-md text-[16px] font-semibold py-4 rounded-xl shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:active:scale-100 disabled:hover:scale-100"
         >
-          {language === 'uz' ? "To'lovni amalga oshirish" : language === 'ru' ? 'Выполнить платеж' : 'Proceed to payment'}
-          <ArrowRight size={20} />
+          {isSubmitting ? (
+            <span className="flex items-center gap-2">
+              <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              {language === 'uz' ? "Yuklanmoqda..." : language === 'ru' ? 'Загрузка...' : 'Loading...'}
+            </span>
+          ) : (
+            <>
+              {language === 'uz' ? "To'lovni amalga oshirish" : language === 'ru' ? 'Выполнить платеж' : 'Proceed to payment'}
+              <ArrowRight size={20} />
+            </>
+          )}
         </button>
       </div>
     </div>

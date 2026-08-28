@@ -83,7 +83,7 @@ const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
 ];
 
 export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) => {
-  const { token } = useApp();
+  const token = localStorage.getItem('access_token') || localStorage.getItem('baito_token') || '';
   const [activeTab, setActiveTab] = useState<TabKey>('info');
   const [detail, setDetail] = useState<AdminJobDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);

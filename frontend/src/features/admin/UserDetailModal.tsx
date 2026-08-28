@@ -40,7 +40,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   
   const [detail, setDetail] = useState<AdminUserDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const { token } = useApp();
+  const token = localStorage.getItem('access_token') || localStorage.getItem('baito_token') || '';
   
   const API = import.meta.env.VITE_API_URL || '';
 
@@ -117,7 +117,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
           
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 font-black text-2xl flex items-center justify-center border border-slate-200 overflow-hidden shrink-0">
-              {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : user.name.charAt(0).toUpperCase()}
+              {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : (user.name || 'Foydalanuvchi').charAt(0).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap mb-1">
