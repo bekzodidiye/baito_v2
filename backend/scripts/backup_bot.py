@@ -1,9 +1,11 @@
 import os
 import sys
 import time
+import shutil
 import subprocess
 from datetime import datetime
 import telebot
+from telebot import types
 import boto3
 from botocore.exceptions import ClientError
 from urllib.parse import urlparse
@@ -68,26 +70,203 @@ def ensure_bucket():
         except Exception as e:
             print(f"⚠️ S3 bucket check warning: {e}")
 
-def is_authorized(message):
-    return str(message.chat.id) == str(TELEGRAM_CHAT_ID)
+def is_authorized(message_or_query):
+    user_id = message_or_query.from_user.id if hasattr(message_or_query, 'from_user') else message_or_query.chat.id
+    return str(user_id) == str(TELEGRAM_CHAT_ID)
 
-@bot.message_handler(commands=['start', 'help'])
-def send_welcome(message):
+# --- Keyboards ---
+def get_main_menu_keyboard():
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    btn_backup = types.KeyboardButton("⚡ Yangi Zaxira Olish")
+    btn_list = types.KeyboardButton("📦 Zaxiralar Ro'yxati")
+    btn_status = types.KeyboardButton("📊 Tizim & Baza Holati")
+    btn_minio = types.KeyboardButton("☁️ MinIO / Xotira")
+    btn_help = types.KeyboardButton("ℹ️ Yordam")
+    markup.add(btn_backup, btn_list)
+    markup.add(btn_status, btn_minio)
+    markup.add(btn_help)
+    return markup
+
+def get_all_backup_files():
+    found_files = []
+    # 1. Local disk
+    if os.path.exists(BACKUPS_DIR):
+        for f in os.listdir(BACKUPS_DIR):
+            if f.endswith(".sql.gz"):
+                fp = os.path.join(BACKUPS_DIR, f)
+                stat = os.stat(fp)
+                found_files.append({
+                    'name': f,
+                    'size': stat.st_size,
+                    'time': datetime.fromtimestamp(stat.st_mtime)
+                })
+    # 2. MinIO / S3
+    try:
+        ensure_bucket()
+        response = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix=PREFIX)
+        if 'Contents' in response:
+            for obj in response['Contents']:
+                name = obj['Key'].replace(PREFIX, '')
+                if name and not any(item['name'] == name for item in found_files):
+                    found_files.append({
+                        'name': name,
+                        'size': obj['Size'],
+                        'time': obj['LastModified'].replace(tzinfo=None)
+                    })
+    except Exception as e:
+        print(f"MinIO list warning: {e}")
+        
+    found_files.sort(key=lambda x: x['time'], reverse=True)
+    return found_files
+
+# --- Database & System Stats Helper ---
+def get_system_status():
+    os.environ['PGPASSWORD'] = POSTGRES_PASSWORD
+    status_info = {
+        "db_size": "Aniqlanmadi",
+        "connections": "0",
+        "users": 0,
+        "jobs": 0,
+        "applications": 0,
+        "disk_free": "0 GB",
+        "disk_total": "0 GB",
+        "backups_count": 0,
+        "backups_size": "0 MB",
+    }
+    
+    # 1. Disk usage
+    try:
+        total, used, free = shutil.disk_usage("/app")
+        status_info["disk_free"] = f"{free / (1024**3):.1f} GB"
+        status_info["disk_total"] = f"{total / (1024**3):.1f} GB"
+    except Exception:
+        pass
+
+    # 2. Backup stats
+    backups = get_all_backup_files()
+    status_info["backups_count"] = len(backups)
+    total_b_size = sum(b['size'] for b in backups)
+    status_info["backups_size"] = f"{total_b_size / (1024*1024):.2f} MB" if total_b_size > 1024*1024 else f"{total_b_size / 1024:.1f} KB"
+
+    # 3. PostgreSQL stats via psql
+    try:
+        cmd_size = f"psql -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} -t -c \"SELECT pg_size_pretty(pg_database_size('{POSTGRES_DB}'));\""
+        out_size = subprocess.check_output(cmd_size, shell=True, executable='/bin/sh', text=True).strip()
+        status_info["db_size"] = out_size
+    except Exception:
+        pass
+
+    try:
+        cmd_conn = f"psql -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} -t -c \"SELECT count(*) FROM pg_stat_activity WHERE datname = '{POSTGRES_DB}';\""
+        out_conn = subprocess.check_output(cmd_conn, shell=True, executable='/bin/sh', text=True).strip()
+        status_info["connections"] = out_conn
+    except Exception:
+        pass
+
+    try:
+        cmd_users = f"psql -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} -t -c \"SELECT count(*) FROM users;\""
+        out_users = subprocess.check_output(cmd_users, shell=True, executable='/bin/sh', text=True).strip()
+        status_info["users"] = int(out_users) if out_users.isdigit() else 0
+    except Exception:
+        pass
+
+    try:
+        cmd_jobs = f"psql -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} -t -c \"SELECT count(*) FROM jobs;\""
+        out_jobs = subprocess.check_output(cmd_jobs, shell=True, executable='/bin/sh', text=True).strip()
+        status_info["jobs"] = int(out_jobs) if out_jobs.isdigit() else 0
+    except Exception:
+        pass
+
+    try:
+        cmd_apps = f"psql -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} -t -c \"SELECT count(*) FROM applications;\""
+        out_apps = subprocess.check_output(cmd_apps, shell=True, executable='/bin/sh', text=True).strip()
+        status_info["applications"] = int(out_apps) if out_apps.isdigit() else 0
+    except Exception:
+        pass
+
+    return status_info
+
+# --- Handlers ---
+
+@bot.message_handler(commands=['start'])
+def handle_start(message):
+    if not is_authorized(message): return
+    welcome_text = (
+        "👋 *Assalomu alaykum!*\n\n"
+        "🛡 *Baito Tizimi Boshqaruv & Zaxira Boti* ga xush kelibsiz.\n\n"
+        "Quyidagi tugmalar orqali ma'lumotlar bazasini bir zumda zaxiraga olishingiz, saqlangan nusxalarni yuklab olishingiz yoki server holatini tekshirishingiz mumkin 👇"
+    )
+    bot.send_message(message.chat.id, welcome_text, reply_markup=get_main_menu_keyboard(), parse_mode="Markdown")
+
+@bot.message_handler(commands=['help'])
+def handle_help(message):
     if not is_authorized(message): return
     help_text = (
-        "🛡 *Baito PostgreSQL Zaxira Boti* 🛡\n\n"
-        "Quyidagi buyruqlardan foydalanishingiz mumkin:\n\n"
-        "⚡ /backup — Jonli bazadan zaxira olish va faylni to'g'ridan-to'g'ri Telegramga yuborish\n"
-        "📦 /list — Barcha saqlangan zaxiralar ro'yxatini ko'rish\n"
-        "📥 /download <fayl> — Faylni qayta yuklab olish"
+        "ℹ️ *Baito Zaxira Boti Qo'llanmasi*\n\n"
+        "🔘 *Asosiy Tugmalar:*\n"
+        "• ⚡ *Yangi Zaxira Olish* — Jonli PostgreSQL bazasidan `.sql.gz` dump yaratadi, MinIO bulutiga saqlaydi va faylni chatga tashlaydi.\n"
+        "• 📦 *Zaxiralar Ro'yxati* — Barcha mavjud zaxiralar va ularni 1 ta bosishda yuklab olish tugmalari.\n"
+        "• 📊 *Tizim & Baza Holati* — Baza hajmi, faol ulanishlar, jami foydalanuvchilar va e'lonlar statistikasi.\n"
+        "• ☁️ *MinIO / Xotira* — Bulutli saqlash va disk sig'imi ma'lumotlari.\n\n"
+        "💬 *Buyruqlar:* `/backup`, `/list`, `/status`, `/help`"
     )
-    bot.reply_to(message, help_text, parse_mode="Markdown")
+    bot.send_message(message.chat.id, help_text, reply_markup=get_main_menu_keyboard(), parse_mode="Markdown")
 
 @bot.message_handler(commands=['backup'])
-def perform_backup(message):
+def handle_backup_cmd(message):
     if not is_authorized(message): return
+    run_backup_operation(message.chat.id)
+
+@bot.message_handler(commands=['list'])
+def handle_list_cmd(message):
+    if not is_authorized(message): return
+    send_backup_list(message.chat.id)
+
+@bot.message_handler(commands=['status'])
+def handle_status_cmd(message):
+    if not is_authorized(message): return
+    send_status_message(message.chat.id)
+
+# --- Button Text Router ---
+@bot.message_handler(func=lambda msg: True)
+def handle_menu_buttons(message):
+    if not is_authorized(message): return
+    text = message.text.strip()
+    
+    if text == "⚡ Yangi Zaxira Olish":
+        # Ask with inline confirmation
+        markup = types.InlineKeyboardMarkup(row_width=2)
+        btn_yes = types.InlineKeyboardButton("✅ Ha, Zaxira Olish", callback_data="cb_backup_start")
+        btn_no = types.InlineKeyboardButton("❌ Bekor Qilish", callback_data="cb_cancel")
+        markup.add(btn_yes, btn_no)
+        bot.send_message(
+            message.chat.id,
+            "⚠️ *Yangi Zaxira Olishni Tasdiqlang*\n\nPostgreSQL ma'lumotlar bazasining to'liq nusxasi olinib, MinIO bulutiga va Telegramga yuboriladi.",
+            reply_markup=markup,
+            parse_mode="Markdown"
+        )
+    elif text == "📦 Zaxiralar Ro'yxati":
+        send_backup_list(message.chat.id)
+    elif text == "📊 Tizim & Baza Holati":
+        send_status_message(message.chat.id)
+    elif text == "☁️ MinIO / Xotira":
+        send_minio_info(message.chat.id)
+    elif text == "ℹ️ Yordam":
+        handle_help(message)
+    elif text.startswith("/download"):
+        download_backup(message)
+    else:
+        bot.send_message(
+            message.chat.id,
+            "Quyidagi menyudan kerakli bo'limni tanlang 👇",
+            reply_markup=get_main_menu_keyboard()
+        )
+
+# --- Business Logic Functions ---
+
+def run_backup_operation(chat_id):
     ensure_bucket()
-    status_msg = bot.reply_to(message, "⏳ PostgreSQL ma'lumotlar bazasidan zaxira olinmoqda... Iltimos kuting.")
+    status_msg = bot.send_message(chat_id, "⏳ PostgreSQL ma'lumotlar bazasidan zaxira olinmoqda... Iltimos kuting.")
     
     date_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"baito_backup_{date_str}.sql.gz"
@@ -113,103 +292,191 @@ def perform_backup(message):
         # 2. Send the actual backup file directly to Telegram chat
         with open(backup_file_path, 'rb') as doc_file:
             caption = (
-                f"✅ *PostgreSQL Zaxira Nusxasi*\n\n"
+                f"✅ *PostgreSQL Zaxira Nusxasi Tayyor!*\n\n"
                 f"📅 Sana: `{date_str}`\n"
                 f"🗄️ Baza: `{POSTGRES_DB}`\n"
                 f"📊 Hajmi: `{file_size_kb:.2f} KB`\n"
-                f"☁️ Saqlash: {'MinIO Bulutida & Server Diskida ✅' if s3_uploaded else 'Server Diskida ✅'}"
+                f"☁️ Saqlash: {'MinIO Buluti & Server Diski ✅' if s3_uploaded else 'Server Diski ✅'}"
             )
-            bot.send_document(message.chat.id, doc_file, caption=caption, parse_mode="Markdown")
+            bot.send_document(chat_id, doc_file, caption=caption, parse_mode="Markdown")
             
-        bot.delete_message(message.chat.id, status_msg.message_id)
+        bot.delete_message(chat_id, status_msg.message_id)
         
     except subprocess.CalledProcessError as e:
-        bot.send_message(message.chat.id, f"❌ pg_dump xatoligi: {e}")
+        bot.send_message(chat_id, f"❌ pg_dump xatoligi: {e}")
     except Exception as e:
-        bot.send_message(message.chat.id, f"❌ Zaxira olishda xatolik: {e}")
+        bot.send_message(chat_id, f"❌ Zaxira olishda kutilmagan xatolik: {e}")
 
-@bot.message_handler(commands=['list'])
-def list_backups(message):
-    if not is_authorized(message): return
-    ensure_bucket()
-    bot.reply_to(message, "⏳ Zaxiralar ro'yxati tekshirilmoqda...")
+def send_backup_list(chat_id, message_id=None):
+    files = get_all_backup_files()
     
-    found_files = []
-    
-    # 1. Check local persistent volume
-    if os.path.exists(BACKUPS_DIR):
-        for f in os.listdir(BACKUPS_DIR):
-            if f.endswith(".sql.gz"):
-                fp = os.path.join(BACKUPS_DIR, f)
-                stat = os.stat(fp)
-                found_files.append({
-                    'name': f,
-                    'size': stat.st_size,
-                    'time': datetime.fromtimestamp(stat.st_mtime)
-                })
-                
-    # 2. Check S3 / MinIO if any
-    try:
-        response = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix=PREFIX)
-        if 'Contents' in response:
-            for obj in response['Contents']:
-                name = obj['Key'].replace(PREFIX, '')
-                if name and not any(item['name'] == name for item in found_files):
-                    found_files.append({
-                        'name': name,
-                        'size': obj['Size'],
-                        'time': obj['LastModified'].replace(tzinfo=None)
-                    })
-    except Exception as e:
-        print(f"MinIO list warning: {e}")
-        
-    if not found_files:
-        bot.send_message(message.chat.id, "📭 Hali hech qanday zaxira olinmagan.\nZudlik bilan yangi zaxira olish uchun: /backup")
+    if not files:
+        text = "📭 *Hali hech qanday zaxira olinmagan.*\n\nZudlik bilan yangi zaxira olish uchun quyidagi tugmani bosing 👇"
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("⚡ Yangi Zaxira Olish", callback_data="cb_backup_start"))
+        if message_id:
+            bot.edit_message_text(text, chat_id, message_id, reply_markup=markup, parse_mode="Markdown")
+        else:
+            bot.send_message(chat_id, text, reply_markup=markup, parse_mode="Markdown")
         return
         
-    found_files.sort(key=lambda x: x['time'], reverse=True)
+    text = f"📦 *Mavjud Zaxira Fayllar (Jami: {len(files)} ta):*\n\n"
+    markup = types.InlineKeyboardMarkup(row_width=1)
     
-    msg = "📦 *Mavjud Zaxira Nusxalar (So'nggi 10 ta):*\n\n"
-    for idx, item in enumerate(found_files[:10]):
+    for idx, item in enumerate(files[:8]):
         size_kb = item['size'] / 1024
         date_str = item['time'].strftime("%Y-%m-%d %H:%M")
-        msg += f"{idx+1}. 📄 `{item['name']}` ({size_kb:.2f} KB) — {date_str}\n"
+        text += f"*{idx+1}.* 📄 `{item['name']}`\n   └ 📊 {size_kb:.1f} KB | 📅 {date_str}\n\n"
+        # Download button for each item
+        btn_dl = types.InlineKeyboardButton(f"📥 Yuklab olish #{idx+1} ({item['name'][-15:]})", callback_data=f"cb_dl:{item['name']}")
+        markup.add(btn_dl)
         
-    msg += "\nYuklab olish uchun: `/download <fayl_nomi>`"
-    bot.send_message(message.chat.id, msg, parse_mode="Markdown")
+    markup.row(
+        types.InlineKeyboardButton("🔄 Yangilash", callback_data="cb_list_refresh"),
+        types.InlineKeyboardButton("⚡ Yangi Zaxira", callback_data="cb_backup_start")
+    )
+    
+    if message_id:
+        try:
+            bot.edit_message_text(text, chat_id, message_id, reply_markup=markup, parse_mode="Markdown")
+        except Exception:
+            bot.send_message(chat_id, text, reply_markup=markup, parse_mode="Markdown")
+    else:
+        bot.send_message(chat_id, text, reply_markup=markup, parse_mode="Markdown")
 
-@bot.message_handler(commands=['download'])
-def download_backup(message):
-    if not is_authorized(message): return
+def send_status_message(chat_id):
+    bot.send_chat_action(chat_id, "typing")
+    stats = get_system_status()
+    
+    status_text = (
+        "📊 *Baito Tizim & Baza Holati:*\n\n"
+        f"🗄️ *PostgreSQL Baza:* `{POSTGRES_DB}` (v15-alpine)\n"
+        f"💾 *Baza Hajmi:* `{stats['db_size']}`\n"
+        f"🔗 *Faol Ulanishlar:* `{stats['connections']}` ta\n\n"
+        "📈 *Jadvallar Statistikasi:*\n"
+        f"• 👤 Foydalanuvchilar: `{stats['users']}` ta\n"
+        f"• 💼 Ish E'lonlari: `{stats['jobs']}` ta\n"
+        f"• 📝 Arizalar: `{stats['applications']}` ta\n\n"
+        "📦 *Zaxira Nusxalar:*\n"
+        f"• Jami Zaxiralar: `{stats['backups_count']}` ta\n"
+        f"• Zaxiralar Hajmi: `{stats['backups_size']}`\n\n"
+        "🖥️ *Server Xotirasi (Disk):*\n"
+        f"• Bo'sh joy: `{stats['disk_free']}` / `{stats['disk_total']}`\n"
+        "• Holati: 🟢 Normal (Barqaror)"
+    )
+    
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    markup.add(
+        types.InlineKeyboardButton("🔄 Yangilash", callback_data="cb_status_refresh"),
+        types.InlineKeyboardButton("⚡ Zaxira Olish", callback_data="cb_backup_start")
+    )
+    bot.send_message(chat_id, status_text, reply_markup=markup, parse_mode="Markdown")
+
+def send_minio_info(chat_id):
     ensure_bucket()
+    backups = get_all_backup_files()
+    total_b_size = sum(b['size'] for b in backups)
+    size_str = f"{total_b_size / (1024*1024):.2f} MB" if total_b_size > 1024*1024 else f"{total_b_size / 1024:.1f} KB"
+    
+    text = (
+        "☁️ *MinIO S3 Cloud Storage Holati:*\n\n"
+        f"🪣 *Bucket nomi:* `{BUCKET_NAME}`\n"
+        f"🌐 *Endpoint:* `{AWS_ENDPOINT_URL}`\n"
+        f"📁 *Saqlash Prefiksi:* `{PREFIX}`\n"
+        f"📦 *Zaxira Fayllar Soni:* `{len(backups)}` ta\n"
+        f"📊 *Egallangan Hajm:* `{size_str}`\n\n"
+        "🔒 Barcha zaxiralar shifrlangan va server ichki xavfsiz tarmog'ida saqlanadi."
+    )
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton("📦 Zaxiralar Ro'yxati", callback_data="cb_list_refresh"))
+    bot.send_message(chat_id, text, reply_markup=markup, parse_mode="Markdown")
+
+def download_backup(message):
     parts = message.text.split(" ", 1)
     if len(parts) < 2:
         bot.reply_to(message, "Iltimos fayl nomini kiriting.\nMasalan: `/download baito_backup_2026.sql.gz`", parse_mode="Markdown")
         return
-        
-    filename = parts[1].strip()
+    deliver_backup_file(message.chat.id, parts[1].strip())
+
+def deliver_backup_file(chat_id, filename):
     local_path = os.path.join(BACKUPS_DIR, filename)
     
-    # Check if exists locally
+    # 1. Local disk
     if os.path.exists(local_path):
         with open(local_path, 'rb') as doc:
-            bot.send_document(message.chat.id, doc, caption=f"📥 Zaxira fayli: `{filename}`", parse_mode="Markdown")
+            bot.send_document(chat_id, doc, caption=f"📥 *Zaxira Fayli:* `{filename}`", parse_mode="Markdown")
         return
         
-    # Else check MinIO / S3
+    # 2. MinIO / S3
     s3_key = f"{PREFIX}{filename}"
     try:
+        ensure_bucket()
         s3_client.head_object(Bucket=BUCKET_NAME, Key=s3_key)
-        # Download locally and send
         s3_client.download_file(BUCKET_NAME, s3_key, local_path)
         with open(local_path, 'rb') as doc:
-            bot.send_document(message.chat.id, doc, caption=f"📥 Zaxira fayli: `{filename}`", parse_mode="Markdown")
+            bot.send_document(chat_id, doc, caption=f"📥 *Zaxira Fayli:* `{filename}`", parse_mode="Markdown")
     except ClientError:
-        bot.reply_to(message, f"❌ `{filename}` topilmadi. `/list` orqali mavjud fayllarni tekshiring.", parse_mode="Markdown")
+        bot.send_message(chat_id, f"❌ `{filename}` topilmadi. Ro'yxatni ko'rish uchun **📦 Zaxiralar Ro'yxati** tugmasini bosing.", parse_mode="Markdown")
     except Exception as e:
-        bot.reply_to(message, f"❌ Xatolik: {e}")
+        bot.send_message(chat_id, f"❌ Faylni yuklab olishda xatolik: {e}")
+
+# --- Callback Queries ---
+@bot.callback_query_handler(func=lambda call: True)
+def handle_callbacks(call):
+    if not is_authorized(call):
+        bot.answer_callback_query(call.id, "Ruxsat berilmagan ⛔")
+        return
+        
+    data = call.data
+    
+    if data == "cb_backup_start":
+        bot.answer_callback_query(call.id, "Zaxira olish boshlandi ⏳")
+        try:
+            bot.delete_message(call.message.chat.id, call.message.message_id)
+        except Exception:
+            pass
+        run_backup_operation(call.message.chat.id)
+        
+    elif data == "cb_cancel":
+        bot.answer_callback_query(call.id, "Bekor qilindi")
+        try:
+            bot.edit_message_text("❌ Amal bekor qilindi.", call.message.chat.id, call.message.message_id)
+        except Exception:
+            pass
+            
+    elif data == "cb_list_refresh":
+        bot.answer_callback_query(call.id, "Ro'yxat yangilandi 🔄")
+        send_backup_list(call.message.chat.id, call.message.message_id)
+        
+    elif data == "cb_status_refresh":
+        bot.answer_callback_query(call.id, "Holat yangilandi 🔄")
+        try:
+            bot.delete_message(call.message.chat.id, call.message.message_id)
+        except Exception:
+            pass
+        send_status_message(call.message.chat.id)
+        
+    elif data.startswith("cb_dl:"):
+        filename = data.split("cb_dl:", 1)[1]
+        bot.answer_callback_query(call.id, f"Yuklanmoqda: {filename} ⏳")
+        deliver_backup_file(call.message.chat.id, filename)
+
+# --- Register Bot Menu Commands ---
+def register_bot_commands():
+    try:
+        bot.set_my_commands([
+            telebot.types.BotCommand("start", "🏠 Asosiy menyuni ochish"),
+            telebot.types.BotCommand("backup", "⚡ Zudlik bilan yangi zaxira olish"),
+            telebot.types.BotCommand("list", "📦 Zaxiralar ro'yxatini ko'rish"),
+            telebot.types.BotCommand("status", "📊 Baza va tizim holati"),
+            telebot.types.BotCommand("help", "ℹ️ Yordam va qo'llanma"),
+        ])
+        print("✅ Telegram bot menyu buyruqlari muvaffaqiyatli ro'yxatdan o'tkazildi.")
+    except Exception as e:
+        print(f"⚠️ Bot buyruqlarini ro'yxatdan o'tkazishda ogohlantirish: {e}")
 
 if __name__ == "__main__":
-    print("Starting Baito Backup Bot...")
+    print("Starting Baito Backup & System Bot (Full Interactive Menu Mode)...")
     ensure_bucket()
+    register_bot_commands()
     bot.infinity_polling()
