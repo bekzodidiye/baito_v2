@@ -633,7 +633,9 @@ def run_unified_backup(chat_id, send_to_channel=True):
             f"🖼️ Media: `{media_count}` ta rasm/fayl\n"
             f"📊 Umumiy Arxiv: `{size_str}`\n"
             f"☁️ Saqlash: {'MinIO Buluti & Server Diski ✅' if s3_uploaded else 'Server Diski ✅'}\n"
-            f"🧹 Xotira: Faqat eng so'nggi {MAX_BACKUPS_TO_KEEP} ta paket saqlanadi"
+            + (f"{offsite_line}\n" if offsite_line else "")
+            + f"🧹 Xotira: {RETENTION_DAYS} kun saqlanadi "
+            f"(kamida {MIN_BACKUPS_TO_KEEP} ta paket)"
         )
 
         # 7. Send single ZIP to Admin Chat
