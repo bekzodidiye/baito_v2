@@ -79,8 +79,8 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
 
       <div className="flex gap-3.5 items-start">
         <div className="w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 border border-slate-100 shadow-3xs transition-transform group-hover:scale-105 duration-200">
-          {job.logoUrl ? (
-            <img src={job.logoUrl} alt={job.company} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          {job.imageUrl || job.logoUrl ? (
+            <img src={job.imageUrl || job.logoUrl} alt={job.company} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           ) : (
             <Briefcase size={20} className="text-slate-400" />
           )}
