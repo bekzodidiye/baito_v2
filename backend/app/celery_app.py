@@ -10,9 +10,14 @@ try:
         backend=settings.REDIS_URL,
         include=["app.tasks"],
     )
-    celery_app.conf.task_routes = {
-        "app.tasks.send_sms_task": "main-queue",
-    }
+    # Deliberately no task_routes. The worker is started without -Q, so it
+    # consumes only the default "celery" queue. send_sms_task used to be routed
+    # to "main-queue", which nothing consumed: every verification SMS was queued
+    # and never executed, while /auth/send-sms answered "SMS yuborildi" and the
+    # message never arrived. Fifteen of them were still sitting in Redis.
+    #
+    # Any route added here needs a matching -Q on the worker in
+    # docker-compose.yml. tests/test_celery_routing.py fails if it does not.
     celery_app.conf.update(
         task_acks_late=True,
         worker_prefetch_multiplier=1,

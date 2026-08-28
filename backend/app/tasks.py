@@ -15,6 +15,28 @@ TEXTUP_TOKEN_TTL = 50 * 60
 HTTP_TIMEOUT = httpx.Timeout(10.0, connect=5.0)
 
 
+def _delivery_failed(phone: str, reason: str) -> bool:
+    """Record a verification SMS that was never delivered.
+
+    /auth/send-sms has already told the user "SMS yuborildi" by the time this
+    runs, so a failure that only reaches the container log is a signup the user
+    abandons and nobody hears about. Always returns False, so callers can
+    ``return _delivery_failed(...)``.
+    """
+    logger.error("Verification SMS to %s was not delivered: %s", phone, reason)
+    try:
+        from app.core.error_reporter import report_message
+
+        report_message(
+            "SMS yuborilmadi",
+            f"{phone} raqamiga tasdiqlash SMS'i yetkazilmadi.\nSabab: {reason}",
+        )
+    except Exception:
+        # Reporting must never be the reason the task fails.
+        pass
+    return False
+
+
 def _fetch_textup_token(client: httpx.Client) -> tuple[str, str] | None:
     login_res = client.post(
         "https://api-auth.textup.uz/v1/login",
@@ -32,12 +54,25 @@ def _fetch_textup_token(client: httpx.Client) -> tuple[str, str] | None:
     return token, user_id
 
 
-@celery_app.task(name="app.tasks.send_sms_task", max_retries=3)
+@celery_app.task(
+    name="app.tasks.send_sms_task",
+    # max_retries alone retried nothing: retries need either self.retry() or
+    # autoretry_for. A gateway blip silently cost the user their signup.
+    autoretry_for=(httpx.TimeoutException, httpx.NetworkError),
+    retry_backoff=True,
+    retry_backoff_max=60,
+    max_retries=3,
+)
 def send_sms_task(phone: str, code: str) -> bool:
     """Send the verification SMS.
 
     Every network call is bounded by a timeout — without one a hung gateway
     pinned a Celery worker indefinitely. The code itself is never logged.
+
+    Transient network errors are raised so Celery retries them. Anything the
+    gateway rejects outright is reported: the caller already replied
+    "SMS yuborildi" to the user, so a failure here is invisible unless it is
+    pushed somewhere a human looks.
     """
     if not settings.TEXTUP_EMAIL or not settings.TEXTUP_PASSWORD:
         logger.info("SMS gateway not configured; nothing sent to %s", phone)
@@ -58,7 +93,7 @@ def send_sms_task(phone: str, code: str) -> bool:
             else:
                 credentials = _fetch_textup_token(client)
                 if not credentials:
-                    return False
+                    return _delivery_failed(phone, "TextUp'ga kirib bo'lmadi")
                 access_token, user_id = credentials
                 try:
                     redis_client.setex(
@@ -87,7 +122,7 @@ def send_sms_task(phone: str, code: str) -> bool:
                     pass
                 credentials = _fetch_textup_token(client)
                 if not credentials:
-                    return False
+                    return _delivery_failed(phone, "TextUp'ga kirib bo'lmadi")
                 access_token, user_id = credentials
                 sms_res = client.post(
                     "https://sms-api.textup.uz/v1/send",
@@ -105,14 +140,14 @@ def send_sms_task(phone: str, code: str) -> bool:
                 logger.info("Successfully sent SMS to %s", phone)
                 return True
 
-            logger.error("TextUp SMS send failed with HTTP %s", sms_res.status_code)
-            return False
-    except httpx.TimeoutException:
-        logger.error("TextUp request timed out for %s", phone)
-        return False
+            return _delivery_failed(phone, f"TextUp javobi HTTP {sms_res.status_code}")
+    except (httpx.TimeoutException, httpx.NetworkError):
+        # Let these out: autoretry_for above turns them into a retry. Only the
+        # last attempt reaches the worker's error log.
+        logger.warning("TextUp unreachable for %s, will retry", phone)
+        raise
     except Exception as e:
-        logger.error("Error in SMS task: %s", e)
-        return False
+        return _delivery_failed(phone, f"{type(e).__name__}: {e}")
 
 
 @celery_app.task(name="app.tasks.expire_stale_jobs")
