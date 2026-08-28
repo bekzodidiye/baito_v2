@@ -29,9 +29,27 @@ def _decode(token: str, expected_type: str) -> Optional[schemas.TokenPayload]:
     return token_data
 
 def get_access_token(request: Request) -> Optional[str]:
+    auth_header = (
+        request.headers.get("authorization")
+        or request.headers.get("Authorization")
+        or request.headers.get("HTTP_AUTHORIZATION")
+    )
+    if auth_header:
+        cleaned = auth_header.strip()
+        if cleaned.lower().startswith("bearer "):
+            return cleaned.split(" ", 1)[1].strip()
+        elif len(cleaned.split(".")) == 3:
+            return cleaned
     return request.cookies.get(settings.ACCESS_COOKIE_NAME)
 
 def get_refresh_token(request: Request) -> Optional[str]:
+    ref_header = (
+        request.headers.get("x-refresh-token")
+        or request.headers.get("X-Refresh-Token")
+        or request.headers.get("HTTP_X_REFRESH_TOKEN")
+    )
+    if ref_header:
+        return ref_header.strip()
     return request.cookies.get(settings.REFRESH_COOKIE_NAME)
 
 def get_current_user(
