@@ -93,10 +93,10 @@ services:
       - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
       - AWS_REGION=us-east-1
       - AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-baito-bucket}
-      - TEXTUP_EMAIL=${TEXTUP_EMAIL}
-      - TEXTUP_PASSWORD=${TEXTUP_PASSWORD}
-      - SENTRY_DSN=${SENTRY_DSN}
-      - SECRET_KEY=${SECRET_KEY}
+      - TEXTUP_EMAIL=${TEXTUP_EMAIL:-}
+      - TEXTUP_PASSWORD=${TEXTUP_PASSWORD:-}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SECRET_KEY=${SECRET_KEY:-baito_secret_jwt_key_2026}
     ports:
       - "8000:8000"
     healthcheck:
@@ -128,9 +128,9 @@ services:
       - TZ=Asia/Tashkent
       - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-baito}
       - REDIS_URL=redis://redis:6379/0
-      - TEXTUP_EMAIL=${TEXTUP_EMAIL}
-      - TEXTUP_PASSWORD=${TEXTUP_PASSWORD}
-      - SECRET_KEY=${SECRET_KEY}
+      - TEXTUP_EMAIL=${TEXTUP_EMAIL:-}
+      - TEXTUP_PASSWORD=${TEXTUP_PASSWORD:-}
+      - SECRET_KEY=${SECRET_KEY:-baito_secret_jwt_key_2026}
     logging:
       driver: "json-file"
       options:
