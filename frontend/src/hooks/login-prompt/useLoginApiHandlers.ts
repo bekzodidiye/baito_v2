@@ -30,6 +30,26 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
       return;
     }
 
+    // The name submitted here is assembled from the profile step. If that
+    // state was lost — a reload, or reaching this screen without a role — the
+    // payload went out with no name at all and the server answered with a raw
+    // 422. Worse, that happened *after* step 1 below had already spent the SMS
+    // code, so the user had to request a whole new one to try again.
+    const role = state.selectedRole || 'worker';
+    const fullName = role === 'worker'
+      ? `${state.firstName || ''} ${state.lastName || ''}`.trim()
+      : `${state.companyName || ''}`.trim();
+    if (!fullName) {
+      showToast(
+        language === 'uz'
+          ? "Ma'lumotlaringiz to'liq emas. Orqaga qaytib ism va profil ma'lumotlarini to'ldiring."
+          : language === 'ru'
+            ? 'Данные неполные. Вернитесь назад и заполните имя и профиль.'
+            : 'Your details are incomplete. Go back and fill in your name and profile.'
+      );
+      return;
+    }
+
     try {
       // Step 1: Verify the SMS code. The response carries a single-use token
       // that proves this phone number was verified; registration now requires
@@ -39,11 +59,9 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
       // Step 2: Register the user
       const payload = {
         password: state.regPassword,
-        name: state.selectedRole === 'worker'
-          ? `${state.firstName} ${state.lastName}`.trim()
-          : state.companyName,
+        name: fullName,
         phone: state.regPhone,
-        role: state.selectedRole || 'worker',
+        role,
         verification_token: verification?.verification_token,
       };
 
