@@ -3,12 +3,16 @@ import sys
 import time
 import shutil
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import telebot
 from telebot import types
 import boto3
 from botocore.exceptions import ClientError
 from urllib.parse import urlparse
+
+# --- Timezone & Retention ---
+UZ_TZ = timezone(timedelta(hours=5))  # O'zbekiston vaqti (UTC+5: Toshkent / Samarqand)
+MAX_BACKUPS_TO_KEEP = 5
 
 # --- Configuration ---
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -87,6 +91,42 @@ def get_main_menu_keyboard():
     markup.add(btn_help)
     return markup
 
+def cleanup_old_backups():
+    """Faqat eng so'nggi MAX_BACKUPS_TO_KEEP (5) ta faylni qoldirib, eskisini o'chiradi."""
+    # 1. Local disk tozalash
+    try:
+        if os.path.exists(BACKUPS_DIR):
+            disk_files = []
+            for f in os.listdir(BACKUPS_DIR):
+                if f.endswith(".sql.gz"):
+                    fp = os.path.join(BACKUPS_DIR, f)
+                    disk_files.append((fp, os.path.getmtime(fp)))
+            disk_files.sort(key=lambda x: x[1], reverse=True)
+            for fp, _ in disk_files[MAX_BACKUPS_TO_KEEP:]:
+                try:
+                    os.remove(fp)
+                    print(f"🧹 Diskdan eski zaxira o'chirildi: {fp}")
+                except Exception as e:
+                    print(f"Disk tozalashda xatolik {fp}: {e}")
+    except Exception as e:
+        print(f"Local cleanup xatolik: {e}")
+
+    # 2. S3 / MinIO tozalash
+    try:
+        ensure_bucket()
+        resp = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix=PREFIX)
+        if 'Contents' in resp:
+            s3_files = [obj for obj in resp['Contents'] if obj['Key'].endswith('.sql.gz')]
+            s3_files.sort(key=lambda x: x['LastModified'], reverse=True)
+            for obj in s3_files[MAX_BACKUPS_TO_KEEP:]:
+                try:
+                    s3_client.delete_object(Bucket=BUCKET_NAME, Key=obj['Key'])
+                    print(f"🧹 MinIO/S3 dan eski zaxira o'chirildi: {obj['Key']}")
+                except Exception as e:
+                    print(f"S3 tozalashda xatolik {obj['Key']}: {e}")
+    except Exception as e:
+        print(f"S3 cleanup xatolik: {e}")
+
 def get_all_backup_files():
     found_files = []
     # 1. Local disk
@@ -95,10 +135,12 @@ def get_all_backup_files():
             if f.endswith(".sql.gz"):
                 fp = os.path.join(BACKUPS_DIR, f)
                 stat = os.stat(fp)
+                # Convert disk mtime to Uzbekistan time
+                mtime_dt = datetime.fromtimestamp(stat.st_mtime, tz=UZ_TZ).replace(tzinfo=None)
                 found_files.append({
                     'name': f,
                     'size': stat.st_size,
-                    'time': datetime.fromtimestamp(stat.st_mtime)
+                    'time': mtime_dt
                 })
     # 2. MinIO / S3
     try:
@@ -108,10 +150,12 @@ def get_all_backup_files():
             for obj in response['Contents']:
                 name = obj['Key'].replace(PREFIX, '')
                 if name and not any(item['name'] == name for item in found_files):
+                    # Convert S3 LastModified UTC to Uzbekistan time
+                    s3_dt = obj['LastModified'].astimezone(UZ_TZ).replace(tzinfo=None)
                     found_files.append({
                         'name': name,
                         'size': obj['Size'],
-                        'time': obj['LastModified'].replace(tzinfo=None)
+                        'time': s3_dt
                     })
     except Exception as e:
         print(f"MinIO list warning: {e}")
@@ -268,7 +312,7 @@ def run_backup_operation(chat_id):
     ensure_bucket()
     status_msg = bot.send_message(chat_id, "⏳ PostgreSQL ma'lumotlar bazasidan zaxira olinmoqda... Iltimos kuting.")
     
-    date_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    date_str = datetime.now(UZ_TZ).strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"baito_backup_{date_str}.sql.gz"
     backup_file_path = os.path.join(BACKUPS_DIR, filename)
     s3_key = f"{PREFIX}{filename}"
@@ -289,14 +333,18 @@ def run_backup_operation(chat_id):
         except Exception as s3_err:
             print(f"MinIO/S3 upload warning: {s3_err}")
 
-        # 2. Send the actual backup file directly to Telegram chat
+        # 2. Cleanup old backups beyond the last 5 on disk and in MinIO
+        cleanup_old_backups()
+
+        # 3. Send the actual backup file directly to Telegram chat
         with open(backup_file_path, 'rb') as doc_file:
             caption = (
                 f"✅ *PostgreSQL Zaxira Nusxasi Tayyor!*\n\n"
-                f"📅 Sana: `{date_str}`\n"
+                f"📅 Sana: `{date_str}` (Toshkent vaqti)\n"
                 f"🗄️ Baza: `{POSTGRES_DB}`\n"
                 f"📊 Hajmi: `{file_size_kb:.2f} KB`\n"
-                f"☁️ Saqlash: {'MinIO Buluti & Server Diski ✅' if s3_uploaded else 'Server Diski ✅'}"
+                f"☁️ Saqlash: {'MinIO Buluti & Server Diski ✅' if s3_uploaded else 'Server Diski ✅'}\n"
+                f"🧹 Xotira: Faqat eng so'nggi {MAX_BACKUPS_TO_KEEP} ta zaxira saqlanmoqda"
             )
             bot.send_document(chat_id, doc_file, caption=caption, parse_mode="Markdown")
             
