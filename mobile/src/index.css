@@ -120,6 +120,10 @@ body {
 }
 
 /* Custom Leaflet Popup Styling */
+.leaflet-popup {
+  margin-bottom: 6px !important;
+}
+
 .leaflet-popup-content-wrapper {
   background: rgba(255, 255, 255, 0.98) !important;
   backdrop-filter: blur(12px) !important;
@@ -133,6 +137,10 @@ body {
   margin: 0 !important;
   padding: 12px !important;
   width: auto !important;
+}
+
+.leaflet-popup-tip-container {
+  overflow: visible !important;
 }
 
 .leaflet-popup-tip {
