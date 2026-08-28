@@ -45,18 +45,52 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   const API = import.meta.env.VITE_API_URL || '';
 
   useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+
     fetch(`${API}/api/v1/admin/users/${initialUser.id}/detail`, {
       headers: { Authorization: `Bearer ${token}` }
     })
-      .then(res => res.json())
-      .then((data: AdminUserDetailResponse) => {
-        setDetail(data);
-        setLoading(false);
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        return res.json();
       })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
+      .then((data: AdminUserDetailResponse) => {
+        if (isMounted) {
+          if (data && data.user) {
+            setDetail(data);
+          } else {
+            setDetail({
+              user: initialUser,
+              sessions: [],
+              transactions: [],
+              orders: [],
+              reviews: []
+            });
+          }
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load user detail:', err);
+        if (isMounted) {
+          // Fallback to initialUser on network/server errors
+          setDetail({
+            user: initialUser,
+            sessions: [],
+            transactions: [],
+            orders: [],
+            reviews: []
+          });
+          setLoading(false);
+        }
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, [initialUser.id, token, API]);
 
   const user = detail?.user || initialUser;

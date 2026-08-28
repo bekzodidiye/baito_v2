@@ -118,18 +118,34 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
           
           <div>
             <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-2">Ko'nikmalar</span>
-            {(!user.skills || user.skills.length === 0) ? (
-               <div className="text-sm text-slate-500 font-medium">Kiritilmagan</div>
-            ) : (
-               <div className="flex flex-wrap gap-2">
-                 {user.skills.map((s, i) => (
-                   <span key={i} className="px-3 py-1.5 bg-blue-50/50 text-blue-700 border border-blue-100 rounded-xl text-xs font-bold flex items-center gap-1.5">
-                     <Sparkles size={12} className="text-blue-500" />
-                     {s}
-                   </span>
-                 ))}
-               </div>
-            )}
+            {(() => {
+              let skillsList: string[] = [];
+              if (Array.isArray(user.skills)) {
+                skillsList = user.skills;
+              } else if (typeof user.skills === 'string') {
+                try {
+                  const parsed = JSON.parse(user.skills);
+                  skillsList = Array.isArray(parsed) ? parsed : [user.skills];
+                } catch {
+                  skillsList = user.skills.split(',').map((s) => s.trim()).filter(Boolean);
+                }
+              }
+
+              if (skillsList.length === 0) {
+                return <div className="text-sm text-slate-500 font-medium">Kiritilmagan</div>;
+              }
+
+              return (
+                <div className="flex flex-wrap gap-2">
+                  {skillsList.map((s, i) => (
+                    <span key={i} className="px-3 py-1.5 bg-blue-50/50 text-blue-700 border border-blue-100 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                      <Sparkles size={12} className="text-blue-500" />
+                      {String(s)}
+                    </span>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
           
           <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-4">
@@ -139,7 +155,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
             </div>
             <div>
               <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">Reyting</span>
-              <div className="text-[13px] font-bold text-slate-900">⭐ {user.rating?.toFixed(1) || '0.0'}</div>
+              <div className="text-[13px] font-bold text-slate-900">⭐ {Number(user.rating || 0).toFixed(1)}</div>
             </div>
           </div>
           
