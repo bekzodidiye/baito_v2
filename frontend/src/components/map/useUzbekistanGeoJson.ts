@@ -157,13 +157,6 @@ const loadDistrictsData = async () => {
   return districtsInFlight;
 };
 
-/** Run once the browser is not busy drawing, falling back where unsupported. */
-const whenIdle = (fn: () => void) => {
-  const ric = (window as any).requestIdleCallback;
-  if (typeof ric === 'function') ric(fn, { timeout: 2000 });
-  else setTimeout(fn, 300);
-};
-
 export const useUzbekistanGeoJson = (): GeoJsonData => {
   const [geoJsonData, setGeoJsonData] = useState<any>(cachedRegionsData);
   const [districtsGeoJsonData, setDistrictsGeoJsonData] = useState<any>(cachedDistrictsData);
@@ -177,15 +170,14 @@ export const useUzbekistanGeoJson = (): GeoJsonData => {
       });
     }
 
-    // The districts file is the larger of the two by far and nothing on the
-    // first paint needs it — the opening view is the fourteen regions. Starting
-    // it alongside the regions made the two compete for bandwidth and put its
-    // parse on the critical path, so it waits for a quiet moment instead.
+    // Loaded eagerly, alongside the regions. Deferring it to an idle callback
+    // looked free — nothing on the first paint needs district shapes — but it
+    // changes when every consumer downstream sees the data, and the district
+    // view depends on that ordering. At 0.48 MB gzipped rather than 1.34 it is
+    // no longer worth the risk.
     if (!cachedDistrictsData) {
-      whenIdle(() => {
-        loadDistrictsData().then(data => {
-          if (isMounted && data) setDistrictsGeoJsonData(data);
-        });
+      loadDistrictsData().then(data => {
+        if (isMounted && data) setDistrictsGeoJsonData(data);
       });
     }
 
