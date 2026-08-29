@@ -3,6 +3,8 @@ import { Language } from '../translations';
 import { DETAILS_MAP, DetailSet } from '../data/jobDetailsMap';
 
 export const getJobHeroImage = (job: Job): string => {
+  if (job.imageUrl) return job.imageUrl;
+  if (job.logoUrl) return job.logoUrl;
   const lower = job.title.toLowerCase();
   if (lower.includes('qurilish') || lower.includes('строитель') || lower.includes('construction')) {
     return 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=600&auto=format&fit=crop&q=80';
