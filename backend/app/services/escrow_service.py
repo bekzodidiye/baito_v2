@@ -21,7 +21,9 @@ class EscrowService:
     """
     @staticmethod
     def hold_funds(db: Session, employer_id: str, job_id: str, amount_uzs: int) -> Transaction:
-        employer = db.query(models.User).filter(models.User.id == employer_id).with_for_update().first()
+        employer = (db.query(models.User).filter(models.User.id == employer_id)
+                    .populate_existing()
+                    .with_for_update().first())
         if not employer or (employer.balance or 0) < amount_uzs:
             raise HTTPException(status_code=400, detail="Ish beruvchi balansida yetarli mablag' mavjud emas (Escrow HOLD)")
 
@@ -55,12 +57,20 @@ class EscrowService:
 
     @staticmethod
     def release_funds(db: Session, job_id: str, worker_id: str) -> Transaction:
+        # Flush before taking any lock below. populate_existing() overwrites
+        # what is in the session with the row as the database has it, which is
+        # the point — but it cannot tell a stale attribute from one the caller
+        # has just set and not yet written. The completion flow assigns the
+        # worker's new rating and then calls this, and without the flush that
+        # rating was silently thrown away.
+        db.flush()
+
         # Find active escrow hold
         tx = db.query(Transaction).filter(
             Transaction.jobId == job_id,
             Transaction.type == "escrow_hold",
             Transaction.status == "held"
-        ).with_for_update().first()
+        ).populate_existing().with_for_update().first()
 
         if not tx:
             raise HTTPException(status_code=404, detail="Ushbu ish uchun muzlatilgan mablag' topilmadi")
@@ -69,7 +79,7 @@ class EscrowService:
         platform_fee = int(total_amount * (PLATFORM_FEE_PERCENT / 100.0))
         worker_payout = total_amount - platform_fee
 
-        worker = db.query(models.User).filter(models.User.id == worker_id).with_for_update().first()
+        worker = db.query(models.User).filter(models.User.id == worker_id).populate_existing().with_for_update().first()
         if not worker:
             raise HTTPException(status_code=404, detail="Ishchi topilmadi")
 
@@ -100,17 +110,25 @@ class EscrowService:
 
     @staticmethod
     def refund_funds(db: Session, job_id: str) -> Transaction:
+        # Flush before taking any lock below. populate_existing() overwrites
+        # what is in the session with the row as the database has it, which is
+        # the point — but it cannot tell a stale attribute from one the caller
+        # has just set and not yet written. The completion flow assigns the
+        # worker's new rating and then calls this, and without the flush that
+        # rating was silently thrown away.
+        db.flush()
+
         tx = db.query(Transaction).filter(
             Transaction.jobId == job_id,
             Transaction.type == "escrow_hold",
             Transaction.status == "held"
-        ).with_for_update().first()
+        ).populate_existing().with_for_update().first()
 
         if not tx:
             raise HTTPException(status_code=404, detail="Muzlatilgan mablag' topilmadi")
 
         refund_amount = tx.amount // 100
-        employer = db.query(models.User).filter(models.User.id == tx.employerId).with_for_update().first()
+        employer = db.query(models.User).filter(models.User.id == tx.employerId).populate_existing().with_for_update().first()
         if employer:
             employer.balance = (employer.balance or 0) + refund_amount
             db.add(employer)

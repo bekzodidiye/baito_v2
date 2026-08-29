@@ -22,7 +22,7 @@ class GrowthEngine:
         if (worker.completedJobsCount or 0) != 1:
             return False # Only triggered on the very first completed job
 
-        referrer = db.query(models.User).filter(models.User.id == referrer_id).with_for_update().first()
+        referrer = db.query(models.User).filter(models.User.id == referrer_id).populate_existing().with_for_update().first()
         if not referrer:
             return False
 

@@ -230,7 +230,7 @@ def add_balance(
         raise HTTPException(status_code=400, detail="Summa noldan farqli bo'lishi kerak")
 
     user = (
-        db.query(models.User).filter(models.User.id == user_id).with_for_update().first()
+        db.query(models.User).filter(models.User.id == user_id).populate_existing().with_for_update().first()
     )
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")

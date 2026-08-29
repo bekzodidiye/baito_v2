@@ -179,6 +179,11 @@ def hire_applicant(
 
     # Hiring was previously unbounded: a one-vacancy job could take on
     # unlimited workers.
+    # Serialise every hire for this posting. Counting without holding a lock
+    # is a read-then-write race: concurrent requests all read the same count,
+    # all find a free vacancy, and all hire.
+    db.query(models.Job).filter(models.Job.id == job.id).populate_existing().with_for_update().first()
+
     already_hired = (
         db.query(models.Application)
         .filter(

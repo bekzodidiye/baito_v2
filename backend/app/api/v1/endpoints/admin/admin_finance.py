@@ -104,6 +104,7 @@ def decide_withdrawal(
     tx = (
         db.query(Transaction)
         .filter(Transaction.id == tx_id, Transaction.type == "withdraw")
+        .populate_existing()
         .with_for_update()
         .first()
     )
@@ -135,7 +136,7 @@ def decide_withdrawal(
         ))
     else:
         user = (
-            db.query(User).filter(User.id == tx.employerId).with_for_update().first()
+            db.query(User).filter(User.id == tx.employerId).populate_existing().with_for_update().first()
         )
         if not user:
             raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")

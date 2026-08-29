@@ -132,6 +132,7 @@ def uzum_webhook(payload: UzumWebhookPayload, db: Session = Depends(deps.get_db)
     tx = (
         db.query(Transaction)
         .filter(Transaction.id == payload.order_id)
+        .populate_existing()
         .with_for_update()
         .first()
     )
@@ -154,7 +155,7 @@ def uzum_webhook(payload: UzumWebhookPayload, db: Session = Depends(deps.get_db)
         tx.providerTransactionId = payload.uzum_transaction_id
         tx.performTime = int(time.time() * 1000)
 
-        user = db.query(User).filter(User.id == tx.employerId).with_for_update().first()
+        user = db.query(User).filter(User.id == tx.employerId).populate_existing().with_for_update().first()
         if user:
             amount_uzs = tx.amount // 100
             user.balance = (user.balance or 0) + amount_uzs
@@ -316,7 +317,9 @@ def request_withdrawal(
             status_code=403, detail="Hisobingiz cheklangan, mablag' yechish mumkin emas"
         )
 
-    user = db.query(User).filter(User.id == current_user.id).with_for_update().first()
+    user = (db.query(User).filter(User.id == current_user.id)
+            .populate_existing()
+            .with_for_update().first())
     if not user or (user.balance or 0) < req.amount:
         raise HTTPException(status_code=400, detail="Balansda yetarli mablag' mavjud emas")
 
