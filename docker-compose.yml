@@ -116,7 +116,11 @@ services:
     logging: *default-logging
 
   backend:
-    mem_limit: 1g
+    # Four uvicorn workers rather than two. Two of them measured 273 MB idle and
+    # 529 MB under load, so four could crowd a 1 GB cap and be OOM-killed mid
+    # request. The box has 7.7 GB with 4.7 GB free and the compose file hands
+    # out 5.2 GB in total, so the extra half gigabyte is there to give.
+    mem_limit: 1536m
     image: baito-backend:${IMAGE_TAG:-current}
     build:
       context: ./backend

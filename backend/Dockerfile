@@ -30,6 +30,6 @@ EXPOSE 8000
 # limiting (everyone shared one bucket) and made every logged IP identical.
 CMD ["uvicorn", "app.main:app", \
      "--host", "0.0.0.0", "--port", "8000", \
-     "--workers", "2", "--timeout-keep-alive", "30", \
+     "--workers", "4", "--timeout-keep-alive", "30", \
      "--proxy-headers", "--forwarded-allow-ips", "*"]
 
