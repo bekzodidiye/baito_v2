@@ -2,10 +2,7 @@
 name: 🚀 Baito CI/CD & Deployment Pipeline
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch: # Avtomatik triggerlar o'chirilgan (faqat qo'lda kerak bo'lsa)
 
 jobs:
   # ==========================================================
@@ -90,7 +87,7 @@ jobs:
   deploy:
     name: 🚀 4. Production Auto-Deploy (Server)
     needs: [test-backend, test-frontend, validate-docker]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: false # Avtomatik serverga deploy butunlay uzib qo'yildi
     runs-on: self-hosted
     steps:
       - name: 📥 Checkout Code on Server
