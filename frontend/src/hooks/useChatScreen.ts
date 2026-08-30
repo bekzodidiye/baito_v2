@@ -5,10 +5,15 @@ import { useChatsData } from "../context/useChatsData";
 import { getTranslatedChat } from '../chatTranslations';
 import { translations } from '../translations';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
+import { uploadFileApi } from '../api/queries';
+import { showToast } from '../utils/toast';
 
 export interface AttachedFileData {
   name: string;
-  previewUrl: string; // blob: URL from createObjectURL
+  /** For the sender's own preview only — a blob: URL exists in one browser. */
+  previewUrl: string;
+  /** The bytes, so they can be uploaded and given a URL the other side can open. */
+  file: File;
 }
 
 export function useChatScreen() {
@@ -46,15 +51,34 @@ export function useChatScreen() {
     e?.preventDefault();
     if (!activeChat || (!inputText.trim() && !attachedFile)) return;
 
-    let textToSend = inputText;
-    if (attachedFile) {
-      // Embed the blob URL so the bubble can render the actual image
-      textToSend = `[Img:${attachedFile.previewUrl}]` + (textToSend ? ` ${textToSend}` : '');
-    }
-
-    sendMessage(activeChat.id, textToSend);
+    const chatId = activeChat.id;
+    const pending = attachedFile;
+    const typed = inputText;
     setInputText('');
     setAttachedFile(null);
+
+    void (async () => {
+      let textToSend = typed;
+      if (pending) {
+        // The message used to carry `blob:` — a URL that only resolves in the
+        // sender's own browser, so the other side saw a broken image. Upload
+        // it and reference the stored copy instead.
+        try {
+          const url = await uploadFileApi(pending.file, 'job');
+          textToSend = `[Img:${url}]` + (textToSend ? ` ${textToSend}` : '');
+        } catch {
+          showToast(
+            language === 'uz'
+              ? "Faylni yuklab bo'lmadi. Xabar fayl-siz yuborildi."
+              : language === 'ru'
+                ? 'Не удалось загрузить файл. Сообщение отправлено без него.'
+                : 'The file could not be uploaded. The message was sent without it.',
+          );
+          if (!textToSend.trim()) return;
+        }
+      }
+      sendMessage(chatId, textToSend);
+    })();
     // There used to be a `setIsTyping(true)` here with a 2.4s timer, which
     // showed "typing…" for the other person every time *you* sent something.
     // Nobody was typing. Real presence needs the WebSocket at /chats/ws/{id}.

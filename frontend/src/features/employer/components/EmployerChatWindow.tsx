@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { AttachedFileData } from '../../../hooks/useChatScreen';
+import { uploadFileApi } from '../../../api/queries';
 import { ArrowLeft, Paperclip, Smile, Send } from 'lucide-react';
 import { ChatSession } from '../../../hooks/useEmployerChat';
 import { EmployerChatMessageBubble } from './EmployerChatMessageBubble';
@@ -20,7 +22,7 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
   isTyping
 }) => {
   const [inputText, setInputText] = useState('');
-  const [attachedFile, setAttachedFile] = useState<{ name: string; previewUrl: string } | null>(null);
+  const [attachedFile, setAttachedFile] = useState<AttachedFileData | null>(null);
   const [showEmoji, setShowEmoji] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -42,15 +44,29 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
   const handleSend = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!inputText.trim() && !attachedFile) return;
-    
-    let textToSend = inputText;
-    if (attachedFile) {
-      textToSend = `[Img:${attachedFile.previewUrl}]` + (textToSend ? ` ${textToSend}` : '');
-    }
-    
-    onSendMessage(textToSend);
+
+    const pending = attachedFile;
+    const typed = inputText;
     setInputText('');
     setAttachedFile(null);
+
+    void (async () => {
+      let textToSend = typed;
+      if (pending) {
+        // `blob:` resolves only in the sender's browser; upload and send the
+        // stored URL so the candidate can actually open it.
+        try {
+          const url = await uploadFileApi(pending.file, 'job');
+          textToSend = `[Img:${url}]` + (textToSend ? ` ${textToSend}` : '');
+        } catch {
+          window.dispatchEvent(new CustomEvent('global-toast', {
+            detail: "Faylni yuklab bo'lmadi. Xabar fayl-siz yuborildi.",
+          }));
+          if (!textToSend.trim()) return;
+        }
+      }
+      onSendMessage(textToSend);
+    })();
   };
 
   const safeMessages = Array.isArray(activeSession.messages) 
@@ -186,7 +202,7 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
               if (e.target.files && e.target.files[0]) {
                 const file = e.target.files[0];
                 const previewUrl = URL.createObjectURL(file);
-                setAttachedFile({ name: file.name, previewUrl });
+                setAttachedFile({ name: file.name, previewUrl, file });
                 window.dispatchEvent(new CustomEvent("global-toast", { detail: `${file.name} biriktirildi` }));
                 e.target.value = '';
               }

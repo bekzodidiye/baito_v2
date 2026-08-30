@@ -33,7 +33,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       const file = e.target.files[0];
       const previewUrl = URL.createObjectURL(file);
       if (setAttachedFile) {
-        setAttachedFile({ name: file.name, previewUrl });
+        setAttachedFile({ name: file.name, previewUrl, file });
       }
       window.dispatchEvent(new CustomEvent("global-toast", { detail: `${file.name} biriktirildi` }));
       e.target.value = '';
