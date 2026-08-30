@@ -1,7 +1,7 @@
 # Web framework
-fastapi==0.111.0
+fastapi==0.141.1
 uvicorn[standard]==0.30.1
-python-multipart==0.0.9
+python-multipart==0.0.32
 
 # Database
 sqlalchemy==2.0.30
@@ -9,14 +9,14 @@ psycopg2-binary==2.9.9
 alembic==1.13.1
 
 # Validation & settings
-pydantic==2.7.4
+pydantic==2.13.5
 pydantic-settings==2.3.4
 
 # Auth & crypto
 # bcrypt is imported directly by app/core/security.py; it used to arrive only
 # as a passlib extra, and passlib itself was never actually used.
 bcrypt==4.1.3
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.5.0
 
 # Rate limiting (Redis-backed storage)
 slowapi==0.1.10
@@ -28,10 +28,10 @@ celery==5.4.0
 
 # Storage & media
 boto3==1.34.101
-Pillow==10.3.0
+Pillow==12.3.0
 
 # Outbound HTTP (SMS gateway, payment provider)
 httpx==0.27.0
 
 # Monitoring
-sentry-sdk[fastapi]==2.2.1
+sentry-sdk[fastapi]==2.68.1
