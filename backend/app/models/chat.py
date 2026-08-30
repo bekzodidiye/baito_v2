@@ -19,3 +19,6 @@ class Message(Base):
     hasMap = Column(Boolean, default=False)
     mapLocation = Column(String)
     createdAt = Column(DateTime(timezone=True), server_default=func.now())
+    # Null until the recipient opens the conversation. Without this the unread
+    # count was every message the other side had ever sent, and never fell.
+    readAt = Column(DateTime(timezone=True), nullable=True)

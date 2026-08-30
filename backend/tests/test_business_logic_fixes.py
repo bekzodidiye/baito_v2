@@ -251,6 +251,59 @@ def test_chat_messages_can_be_sent_over_http(client):
     ).status_code == 422
 
 
+def test_unread_count_falls_once_a_chat_is_read(client):
+    """The badge used to be every message the other side had ever sent.
+
+    `unreadCount` counted on senderId alone, with nothing recording that a
+    message had been seen, so a conversation you had just read still showed its
+    whole history as unread and the number only ever went up.
+    """
+    employer = make_user(role="employer", phone="+998911111142")
+    worker = make_user(role="worker", phone="+998911111143")
+
+    login(client, worker)
+    chat_id = client.post("/api/v1/chats", json={"employerId": employer.id}).json()["id"]
+
+    login(client, employer)
+    client.post(f"/api/v1/chats/{chat_id}/messages", json={"text": "Salom"})
+    client.post(f"/api/v1/chats/{chat_id}/messages", json={"text": "Ertaga bo'shmisiz?"})
+
+    login(client, worker)
+    assert client.get("/api/v1/chats").json()[0]["unreadCount"] == 2
+
+    resp = client.post(f"/api/v1/chats/{chat_id}/read")
+    assert resp.status_code == 200
+    assert resp.json()["marked"] == 2
+    assert client.get("/api/v1/chats").json()[0]["unreadCount"] == 0
+
+    # A later message is unread again; reading is not permanent.
+    login(client, employer)
+    client.post(f"/api/v1/chats/{chat_id}/messages", json={"text": "Yana bir savol"})
+    login(client, worker)
+    assert client.get("/api/v1/chats").json()[0]["unreadCount"] == 1
+
+
+def test_your_own_messages_are_never_unread_to_you(client):
+    employer = make_user(role="employer", phone="+998911111144")
+    worker = make_user(role="worker", phone="+998911111145")
+    login(client, worker)
+    chat_id = client.post("/api/v1/chats", json={"employerId": employer.id}).json()["id"]
+    client.post(f"/api/v1/chats/{chat_id}/messages", json={"text": "Salom"})
+
+    assert client.get("/api/v1/chats").json()[0]["unreadCount"] == 0
+
+
+def test_outsider_cannot_mark_a_chat_read(client):
+    employer = make_user(role="employer", phone="+998911111146")
+    worker = make_user(role="worker", phone="+998911111147")
+    login(client, worker)
+    chat_id = client.post("/api/v1/chats", json={"employerId": employer.id}).json()["id"]
+
+    outsider = make_user(role="worker", phone="+998911111148")
+    login(client, outsider)
+    assert client.post(f"/api/v1/chats/{chat_id}/read").status_code == 403
+
+
 def test_outsider_cannot_read_a_chat(client):
     employer = make_user(role="employer", phone="+998911111139")
     worker = make_user(role="worker", phone="+998911111140")

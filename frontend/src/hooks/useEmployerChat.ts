@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEmployer } from './useEmployer';
-import { fetchChats, fetchChatMessages, sendChatMessageApi, createChatApi } from '../api/queries';
+import { fetchChats, fetchChatMessages, sendChatMessageApi, createChatApi, markChatReadApi } from '../api/queries';
 
 /**
  * The employer's side of the same conversations.
@@ -78,7 +78,22 @@ export const useEmployerChat = (
   const { language, employer } = useEmployer();
   const queryClient = useQueryClient();
 
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [selectedSessionId, setSelectedSessionIdState] = useState<string | null>(null);
+
+  /** Opening a conversation is what marks it read. */
+  const setSelectedSessionId = useCallback(
+    (id: string | null) => {
+      setSelectedSessionIdState(id);
+      if (!id) return;
+      queryClient.setQueryData<ApiChat[]>(CHATS_KEY, (prev) =>
+        (prev ?? []).map((c) => (c.id === id ? { ...c, unreadCount: 0 } : c)),
+      );
+      // The badge is already gone locally; the next poll corrects it if this
+      // does not land.
+      markChatReadApi(id).catch(() => {});
+    },
+    [queryClient],
+  );
   const [isTyping] = useState(false);
 
   const unknownName =
@@ -165,7 +180,7 @@ export const useEmployerChat = (
       const chat = await createChatApi({ workerId: targetUserId, jobId });
       if (!chat?.id) return;
 
-      setSelectedSessionId(chat.id);
+      setSelectedSessionIdState(chat.id);
       if (initialMessage.trim()) {
         await sendChatMessageApi(chat.id, { text: initialMessage.trim() });
       }

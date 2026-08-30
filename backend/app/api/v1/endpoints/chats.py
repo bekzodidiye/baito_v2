@@ -172,6 +172,7 @@ def get_chats(
         .filter(
             models.Message.chatId.in_(chat_ids),
             models.Message.senderId != current_user.id,
+            models.Message.readAt.is_(None),
         )
         .group_by(models.Message.chatId)
         .all()
@@ -280,6 +281,33 @@ def get_chat_messages(
         .limit(min(max(1, limit), 500))
         .all()
     )
+
+
+@router.post("/{chat_id}/read")
+def mark_chat_read(
+    chat_id: str,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """Mark everything the other participant sent in this chat as read.
+
+    Kept off the GET that fetches messages: a read should not be a side effect
+    of looking, and the client needs to be able to fetch a conversation — for
+    a search, say — without silently clearing its badge.
+    """
+    _get_participant_chat(db, chat_id, current_user)
+
+    updated = (
+        db.query(models.Message)
+        .filter(
+            models.Message.chatId == chat_id,
+            models.Message.senderId != current_user.id,
+            models.Message.readAt.is_(None),
+        )
+        .update({models.Message.readAt: func.now()}, synchronize_session=False)
+    )
+    db.commit()
+    return {"success": True, "marked": updated}
 
 
 @router.post("/{chat_id}/messages", response_model=schemas.Message)

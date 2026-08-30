@@ -29,6 +29,12 @@ export const createChatApi = async (params: {
   });
 };
 
+/** Mark everything the other participant sent as read. Deliberately its own
+    call rather than a side effect of fetching the messages. */
+export const markChatReadApi = async (chatId: string) => {
+  return await apiClient(`/chats/${chatId}/read`, { method: 'POST' });
+};
+
 export const sendChatMessageApi = async (
   chatId: string,
   payload: { text: string; hasMap?: boolean; mapLocation?: string },

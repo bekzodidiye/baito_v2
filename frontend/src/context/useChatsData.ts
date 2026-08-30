@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { Chat, Message } from '../types';
 import { useApp } from './AppContext';
-import { fetchChats, fetchChatMessages, sendChatMessageApi } from '../api/queries';
+import { fetchChats, fetchChatMessages, sendChatMessageApi, markChatReadApi } from '../api/queries';
 
 /**
  * Conversations, from the server.
@@ -149,17 +149,18 @@ export function useChatsData(language: 'uz' | 'ru' | 'en') {
     [queryClient, userProfile?.id],
   );
 
-  /** Clear a conversation's badge once it has been opened.
-   *
-   *  Messages carry no read state on the server — `unreadCount` is every
-   *  message the other party has ever sent — so this is the only place the
-   *  badge can be cleared, and it lasts as long as the cache does.
-   */
+  /** Clear a conversation's badge, on the server and here. */
   const markChatRead = useCallback(
-    (chatId: string) => {
+    async (chatId: string) => {
+      // Locally first so the badge goes as the conversation opens.
       queryClient.setQueryData<ApiChat[]>(CHATS_KEY, (prev) =>
         (prev ?? []).map((c) => (c.id === chatId ? { ...c, unreadCount: 0 } : c)),
       );
+      try {
+        await markChatReadApi(chatId);
+      } catch {
+        // Not worth interrupting anyone over; the next poll restores the truth.
+      }
     },
     [queryClient],
   );
