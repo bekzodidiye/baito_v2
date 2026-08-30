@@ -14,7 +14,7 @@ interface ChatDetailPanelProps {
   attachedFile: AttachedFileData | null;
   setAttachedFile: (file: AttachedFileData | null) => void;
   isTyping: boolean;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
   handleSend: (e?: React.FormEvent) => void;
   onBackMobile: () => void;
   setCurrentScreen: (screen: any) => void;

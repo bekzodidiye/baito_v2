@@ -15,10 +15,28 @@ interface AuthState {
   clearSession: () => void;
 }
 
+/** Keep <html lang> in step with the interface language.
+
+    A screen reader picks its pronunciation rules from this attribute. The
+    document was hard-coded to `en` while every string on the page is Uzbek by
+    default, so assistive technology read Uzbek text with English phonetics —
+    and switching the language in the UI did not change it either. */
+const applyDocumentLanguage = (lang: 'uz' | 'ru' | 'en') => {
+  try {
+    document.documentElement.lang = lang;
+  } catch {
+    // Nothing renders without a document; never let this break the store.
+  }
+};
+
+const initialLanguage = (safeGetItem('baito_language') as 'uz' | 'ru' | 'en') || 'uz';
+applyDocumentLanguage(initialLanguage);
+
 export const useAuthStore = create<AuthState>((set) => ({
-  language: (safeGetItem('baito_language') as 'uz' | 'ru' | 'en') || 'uz',
+  language: initialLanguage,
   setLanguage: (lang) => {
     safeSetItem('baito_language', lang);
+    applyDocumentLanguage(lang);
     set({ language: lang });
   },
 

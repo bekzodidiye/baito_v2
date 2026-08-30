@@ -122,7 +122,7 @@ export const AdminCategories: React.FC = () => {
             <div className="space-y-1.5">
               <span className="text-[11px] font-semibold text-slate-600 block">Biriktirilgan Ko'nikmalar:</span>
               <div className="flex flex-wrap gap-1.5">
-                {cat.skills.map((skill, idx) => (
+                {cat.skills.map((skill: string, idx: number) => (
                   <span key={idx} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-medium rounded-md border border-blue-100">
                     {skill}
                   </span>

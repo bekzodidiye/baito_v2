@@ -3,11 +3,11 @@ import { Briefcase, MapPin, Navigation, Clock, Share2, Info, Users } from 'lucid
 import { Job } from '../../types';
 import { getLatLng, calculateDistance } from './mapUtils';
 import { getJobShiftTime, getJobDuration } from '../../utils/jobTimeUtils';
-import { translations } from '../../translations';
+import { translations, Language } from '../../translations';
 
 interface JobCardItemProps {
   job: Job;
-  language: string;
+  language: Language;
   selectedJob: Job | null;
   handleJobSelect: (job: Job) => void;
   userLocation: { lat: number; lng: number } | null;

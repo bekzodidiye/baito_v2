@@ -68,6 +68,25 @@ export interface CalendarDay {
   fullDate: string; // YYYY-MM-DD
 }
 
+/** What GET /applications/worker returns: a worker looking at their own
+    applications, which is a different shape from `Application` below — that
+    one is the employer's view of a candidate. */
+export interface WorkerApplication {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  jobCompany: string;
+  jobLocation: string;
+  jobDate: string;
+  status: string;
+  appliedDate: string | null;
+  rating?: number | null;
+  review?: string | null;
+  bonus?: number | null;
+  earnedAmount?: number;
+  expectedAmount?: number;
+}
+
 export interface Application {
   id: string;
   jobId: string;

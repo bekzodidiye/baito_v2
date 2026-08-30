@@ -5,6 +5,7 @@ import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 import { translations } from '../../../translations';
 import { fetchWorkerApplicationsApi } from '../../../api/queries';
 import { ApplicationCard } from './ApplicationCard';
+import { WorkerApplication } from '../../../types';
 
 import { useQuery } from '@tanstack/react-query';
 
@@ -27,7 +28,7 @@ export const ApplicationsScreen: React.FC = () => {
     // Navigate to job details screen if you have one, or handle click
   };
 
-  const filteredApplications = applications.filter(app => {
+  const filteredApplications = applications.filter((app: WorkerApplication) => {
     if (activeTab === 'all') return true;
     return app.status === activeTab;
   });
@@ -158,7 +159,7 @@ export const ApplicationsScreen: React.FC = () => {
           </div>
         ) : (
           <div className="flex flex-col gap-4 pb-8 animate-in slide-in-from-bottom-4 duration-500 fade-in">
-            {filteredApplications.map((app) => (
+            {filteredApplications.map((app: WorkerApplication) => (
               <ApplicationCard 
                 key={app.id} 
                 application={app} 

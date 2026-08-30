@@ -190,12 +190,17 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
           completedJobsCount: me.completedJobsCount || 0,
         };
       } catch {
+        // /users/me did not answer. UserProfile declares birthDate and
+        // docFileName1 as required, and this fallback omitted both — so the
+        // type promised strings that were undefined at runtime.
         profile = {
           id: 'unknown',
           firstName: 'Foydalanuvchi',
           lastName: '',
           selectedRole: 'worker' as const,
+          birthDate: '',
           phone: state.loginPhone,
+          docFileName1: '',
           profileImage: null,
           isVerified: false,
           rating: 0,

@@ -25,6 +25,7 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true,
+    "strict": true,
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
     "noImplicitThis": true,

@@ -44,7 +44,7 @@ export const EmployerProfile: React.FC = () => {
           <button 
             onClick={async () => {
               const newName = prompt(language === "uz" ? "Kompaniya nomini kiriting:" : "Введите название компании:", companyName);
-              if (newName && newName.trim()) {
+              if (newName && newName.trim() && userProfile) {
                 setUserProfile({ ...userProfile, firstName: newName.trim() });
                 await apiClient('/users/me', {
                   method: 'PUT',

@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { useChatsData } from "../context/useChatsData";
 import { translations } from '../translations';
 import { getTranslatedChat } from '../chatTranslations';
+import { Chat } from '../types';
 
 export function useMessagesScreen() {
   const navigate = useNavigate();
@@ -32,8 +33,8 @@ export function useMessagesScreen() {
 
   const handleChatClick = (chatId: string) => {
     if (chatId) {
-      setChats(prev =>
-        prev.map(c => (c.id === chatId ? { ...c, unreadCount: 0 } : c))
+      setChats((prev: Chat[]) =>
+        prev.map((c: Chat) => (c.id === chatId ? { ...c, unreadCount: 0 } : c))
       );
       navigate(`/chats/${chatId}`);
     } else {

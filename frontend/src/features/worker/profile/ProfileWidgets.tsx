@@ -11,7 +11,7 @@ interface ProfileWidgetsProps {
   isVerifiedUser?: boolean;
 
   setCurrentScreen: (screen: ScreenType) => void;
-  setActiveDialog: (dialog: 'withdraw' | 'edit' | null) => void;
+  setActiveDialog: React.Dispatch<React.SetStateAction<'none' | 'edit' | 'withdraw'>>;
   balance?: string;
 }
 

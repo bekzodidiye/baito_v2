@@ -40,8 +40,10 @@ export function useChatScreen() {
     scrollToBottom();
   }, [activeChat?.messages, isTyping]);
 
-  const handleSend = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSend = (e?: React.FormEvent) => {
+    // The form calls this with an event; the send button calls it with none,
+    // and `e.preventDefault()` on the button path threw a TypeError.
+    e?.preventDefault();
     if (!activeChat || (!inputText.trim() && !attachedFile)) return;
 
     let textToSend = inputText;

@@ -1,18 +1,10 @@
 import React from 'react';
+import { WorkerApplication } from '../../../types';
 import { MapPin, Calendar, Clock, ChevronRight, Building2, CheckCircle2, XCircle, Clock3 } from 'lucide-react';
 import { Language } from '../../../translations';
 
 interface ApplicationCardProps {
-  application: {
-    id: string;
-    jobId: string;
-    jobTitle: string;
-    jobCompany: string;
-    jobLocation: string;
-    jobDate: string;
-    status: string;
-    appliedDate: string | null;
-  };
+  application: WorkerApplication;
   language: Language;
   onClick: () => void;
 }

@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchNotificationsApi, markAllNotificationsReadApi } from '../../api/queries';
+import { useApp } from '../../context/AppContext';
+import { showToast } from '../../utils/toast';
 import { NotificationItemData } from './NotificationItem';
 import { NotificationCategory } from './NotificationFilterPanel';
 
@@ -8,6 +10,8 @@ export const useNotificationsData = (
   activeCategory: NotificationCategory,
   setUnreadNotificationsCount: (count: number) => void
 ) => {
+  const { language } = useApp();
+
   const { data: apiNotifs = [], refetch } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
@@ -40,10 +44,22 @@ export const useNotificationsData = (
   }, [apiNotifs]);
 
   const handleMarkAllRead = async () => {
+    // The counter used to be zeroed whether or not the request succeeded, and
+    // the failure was swallowed. The badge cleared, the server still had them
+    // unread, and they reappeared on the next refresh with no explanation.
     try {
       await markAllNotificationsReadApi();
-    } catch (e) {}
-    setUnreadNotificationsCount(0);
+      setUnreadNotificationsCount(0);
+    } catch (e) {
+      console.error('Could not mark notifications as read', e);
+      showToast(
+        language === 'uz'
+          ? "Bildirishnomalarni o'qilgan deb belgilab bo'lmadi. Qaytadan urinib ko'ring."
+          : language === 'ru'
+            ? 'Не удалось отметить уведомления прочитанными. Попробуйте ещё раз.'
+            : 'Could not mark notifications as read. Please try again.'
+      );
+    }
   };
 
   const counts: Record<NotificationCategory, number> = {
