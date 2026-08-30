@@ -55,8 +55,9 @@ export function useChatScreen() {
     sendMessage(activeChat.id, textToSend);
     setInputText('');
     setAttachedFile(null);
-    setIsTyping(true);
-    setTimeout(() => setIsTyping(false), 2400);
+    // There used to be a `setIsTyping(true)` here with a 2.4s timer, which
+    // showed "typing…" for the other person every time *you* sent something.
+    // Nobody was typing. Real presence needs the WebSocket at /chats/ws/{id}.
   };
 
   return {

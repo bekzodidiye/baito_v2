@@ -9,7 +9,7 @@ import { Chat } from '../types';
 export function useMessagesScreen() {
   const navigate = useNavigate();
   const { messagesSearchOpen, setMessagesSearchOpen, language } = useApp();
-  const { chats, setChats } = useChatsData(language);
+  const { chats, markChatRead } = useChatsData(language);
 
   const [searchQuery, setSearchQuery] = useState('');
   const t = translations[language];
@@ -33,9 +33,7 @@ export function useMessagesScreen() {
 
   const handleChatClick = (chatId: string) => {
     if (chatId) {
-      setChats((prev: Chat[]) =>
-        prev.map((c: Chat) => (c.id === chatId ? { ...c, unreadCount: 0 } : c))
-      );
+      markChatRead(chatId);
       navigate(`/chats/${chatId}`);
     } else {
       navigate('/messages');

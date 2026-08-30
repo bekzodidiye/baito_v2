@@ -13,11 +13,19 @@ export const fetchChatMessages = async (chatId: string) => {
   return await apiClient(`/chats/${chatId}/messages`);
 };
 
-export const createChatApi = async (employerId: string, jobId?: string) => {
-  // workerId is derived from the session server-side.
+/** Open a conversation. Name only the *other* participant: the server fills
+    in the caller's side from the session, so a worker passes `employerId` and
+    an employer passes `workerId`. The old signature took a bare `employerId`,
+    which meant an employer opening a chat with a candidate named the wrong
+    side of it. */
+export const createChatApi = async (params: {
+  workerId?: string;
+  employerId?: string;
+  jobId?: string;
+}) => {
   return await apiClient('/chats', {
     method: 'POST',
-    body: JSON.stringify({ employerId, jobId })
+    body: JSON.stringify(params)
   });
 };
 
