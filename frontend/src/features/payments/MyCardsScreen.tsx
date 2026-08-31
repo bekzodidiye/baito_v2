@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { clickable } from '../../utils/clickable';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Star, EyeOff, Snowflake, Trash2, CreditCard, X, AlertTriangle, Info, CheckCircle2, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -237,7 +238,7 @@ export const MyCardsScreen: React.FC = () => {
                 const bankName = card.bankName || getBankName(card.cardNumber || card.last4);
                 
                 return (
-                  <div key={card.id} onClick={() => setSelectedCardId(card.id)} className="flex items-center justify-between p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.04)] border border-slate-100 active:scale-[0.98] transition-transform cursor-pointer hover:border-brand-primary/30">
+                  <div key={card.id} {...clickable(() => setSelectedCardId(card.id))} className="flex items-center justify-between p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.04)] border border-slate-100 active:scale-[0.98] transition-transform cursor-pointer hover:border-brand-primary/30">
                     <div className="flex items-center gap-4">
                       <div className={`w-12 h-8 bg-slate-100 flex items-center justify-center rounded border border-slate-200 text-[10px] font-bold ${card.cardType === 'VISA' ? 'text-blue-800 italic' : 'text-slate-600'}`}>
                         {card.cardType || bankName.substring(0, 4) || 'CARD'}

@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { clickable } from '../../../utils/clickable';
 import { motion } from 'motion/react';
 import { Briefcase, Building, FileText, ClipboardList, Image as ImageIcon, Upload, X, Tag as TagIcon, Plus } from 'lucide-react';
 import { uploadFileApi } from '../../../api/queries';
@@ -91,7 +92,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
             </div>
           </div>
         ) : (
-          <div onClick={() => fileInputRef.current?.click()} className="w-full h-32 border-2 border-dashed border-slate-200 bg-slate-50/60 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-100/50">
+          <div {...clickable(() => fileInputRef.current?.click())} className="w-full h-32 border-2 border-dashed border-slate-200 bg-slate-50/60 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-100/50">
             <Upload size={22} className="text-brand-primary/70" />
             <span className="text-xs font-bold text-slate-600">{language === 'uz' ? "Rasm yuklash uchun bosing" : "Click to upload image"}</span>
           </div>

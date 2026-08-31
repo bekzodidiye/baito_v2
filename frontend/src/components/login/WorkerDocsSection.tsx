@@ -46,17 +46,20 @@ export const WorkerDocsSection: React.FC<WorkerDocsSectionProps> = (props) => {
       <div className="grid grid-cols-12 gap-3">
         <div className="col-span-4 space-y-1">
           <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block px-1">{t.series}</label>
-          <input type="text" required maxLength={2} value={passportSeries} onChange={(e) => setPassportSeries(e.target.value.toUpperCase())} placeholder="AB" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3 text-xs font-black text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary" />
+          <input
+              aria-label={t.series} type="text" required maxLength={2} value={passportSeries} onChange={(e) => setPassportSeries(e.target.value.toUpperCase())} placeholder="AB" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3 text-xs font-black text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary" />
         </div>
         <div className="col-span-8 space-y-1">
           <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block px-1">{t.passportNumber}</label>
-          <input type="text" required maxLength={7} value={passportNumber} onChange={(e) => setPassportNumber(e.target.value.replace(/\D/g, ''))} placeholder="1234567" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary" />
+          <input
+              aria-label={t.passportNumber} type="text" required maxLength={7} value={passportNumber} onChange={(e) => setPassportNumber(e.target.value.replace(/\D/g, ''))} placeholder="1234567" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary" />
         </div>
       </div>
 
       <div className="space-y-1">
         <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block px-1">{t.jshshir}</label>
-        <input type="text" required maxLength={14} value={jshshir} onChange={(e) => setJshshir(e.target.value.replace(/\D/g, ''))} placeholder="12345678901234" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary" />
+        <input
+              aria-label={t.jshshir} type="text" required maxLength={14} value={jshshir} onChange={(e) => setJshshir(e.target.value.replace(/\D/g, ''))} placeholder="12345678901234" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary" />
       </div>
 
       <div className="space-y-2 pt-1">
@@ -71,7 +74,8 @@ export const WorkerDocsSection: React.FC<WorkerDocsSectionProps> = (props) => {
               onClick={triggerDoc1Select}
               className={`border border-dashed rounded-xl aspect-video p-2 flex flex-col items-center justify-center text-center cursor-pointer ${docFileName1 ? 'border-brand-primary bg-brand-primary/10' : 'border-slate-200/80 bg-white'}`}
             >
-              <input type="file" ref={doc1InputRef} onChange={handleDoc1Upload} accept="image/*,.pdf" className="hidden" />
+              <input
+              aria-label={t.passportFront} type="file" ref={doc1InputRef} onChange={handleDoc1Upload} accept="image/*,.pdf" className="hidden" />
               {docFileName1 ? <Check size={16} className="text-brand-primary" /> : <Camera size={16} className="text-slate-400" />}
               <span className="text-[10px] font-bold text-slate-600 mt-1">{docFileName1 || 'Old tomon'}</span>
             </div>
@@ -86,7 +90,8 @@ export const WorkerDocsSection: React.FC<WorkerDocsSectionProps> = (props) => {
               onClick={triggerDoc2Select}
               className={`border border-dashed rounded-xl aspect-video p-2 flex flex-col items-center justify-center text-center cursor-pointer ${docFileName2 ? 'border-brand-primary bg-brand-primary/10' : 'border-slate-200/80 bg-white'}`}
             >
-              <input type="file" ref={doc2InputRef} onChange={handleDoc2Upload} accept="image/*,.pdf" className="hidden" />
+              <input
+              aria-label={t.passportBack} type="file" ref={doc2InputRef} onChange={handleDoc2Upload} accept="image/*,.pdf" className="hidden" />
               {docFileName2 ? <Check size={16} className="text-brand-primary" /> : <Camera size={16} className="text-slate-400" />}
               <span className="text-[10px] font-bold text-slate-600 mt-1">{docFileName2 || 'Orqa tomon'}</span>
             </div>

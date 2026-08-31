@@ -52,6 +52,7 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           {t.orgName}
         </label>
         <input
+              aria-label={t.orgName}
           type="text"
           required
           value={companyName}
@@ -67,6 +68,7 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           {t.stir}
         </label>
         <input
+              aria-label={t.stir}
           type="text"
           required
           maxLength={9}

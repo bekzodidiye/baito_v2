@@ -1,4 +1,5 @@
 import React from 'react';
+import { clickable } from '../utils/clickable';
 import { useApp, ScreenType } from '../context/AppContext';
 import { 
   Map, Calendar, Mail, Bell, User, Settings, HelpCircle, 
@@ -56,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   return (
     <aside className="hidden md:flex flex-col w-64 shrink-0 bg-white border-r border-slate-200/80 min-h-screen sticky top-0 h-screen overflow-y-auto z-40 select-none">
       <div className="p-4 flex items-center justify-between border-b border-slate-100">
-        <div onClick={() => setCurrentScreen(isEmployer ? 'employer-dashboard' : 'jobs')} className="cursor-pointer group flex items-center">
+        <div {...clickable(() => setCurrentScreen(isEmployer ? 'employer-dashboard' : 'jobs'))} className="cursor-pointer group flex items-center">
           <Logo sizeClassName="text-xl" className="group-hover:scale-[1.02] transition-transform origin-left duration-300" />
         </div>
         <LanguageSelector align="right" />

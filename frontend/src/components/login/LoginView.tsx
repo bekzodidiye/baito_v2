@@ -65,6 +65,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <Smartphone size={16} className="stroke-[2.2]" />
             </span>
             <input
+              aria-label={t.phoneLabel || 'TELEFON RAQAM *'}
               type="tel"
               required
               value={loginPhone}
@@ -85,6 +86,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <Lock size={16} className="stroke-[2.2]" />
             </span>
             <input
+              aria-label={t.passwordLabel || 'PAROL *'}
               type={showPassword ? 'text' : 'password'}
               required
               value={loginPassword}

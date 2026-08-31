@@ -93,7 +93,8 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
           <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">
             {language === 'uz' ? "Kompaniya nomi *" : language === 'ru' ? "Название компании *" : "Company Name *"}
           </label>
-          <input type="text" required value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Masalan: Korzinka.uz" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+          <input
+              aria-label={language === 'uz' ? "Kompaniya nomi *" : language === 'ru' ? "Название компании *" : "Company Name *"} type="text" required value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Masalan: Korzinka.uz" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
         </div>
 
         <div className="space-y-1">
@@ -107,7 +108,9 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
           <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">
             {language === 'uz' ? "Manzil *" : language === 'ru' ? "Адрес *" : "Location *"}
           </label>
-          <input type="text" required value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Toshkent, Chilonzor" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+          <input
+              aria-label={language === 'uz' ? "Manzil *" : language === 'ru' ? "Адрес *" : "Location *"}
+              type="text" required value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Toshkent, Chilonzor" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -115,13 +118,15 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
             <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">
               {language === 'uz' ? "Xodimlar soni" : "Employees"}
             </label>
-            <input type="text" value={employeesCount} onChange={(e) => setEmployeesCount(e.target.value)} placeholder="100-500" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+            <input
+              aria-label={language === 'uz' ? "Xodimlar soni" : "Employees"} type="text" value={employeesCount} onChange={(e) => setEmployeesCount(e.target.value)} placeholder="100-500" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">
               {language === 'uz' ? "Tashkil topgan yil" : "Founded Year"}
             </label>
-            <input type="number" value={foundedYear} onChange={(e) => setFoundedYear(e.target.value)} placeholder="2006" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+            <input
+              aria-label={language === 'uz' ? "Tashkil topgan yil" : "Founded Year"} type="number" value={foundedYear} onChange={(e) => setFoundedYear(e.target.value)} placeholder="2006" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
           </div>
         </div>
 
@@ -129,7 +134,8 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
           <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">
             {language === 'uz' ? "Vebsayt" : "Website"}
           </label>
-          <input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="company.uz" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+          <input
+              aria-label={language === 'uz' ? "Vebsayt" : "Website"} type="url" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="company.uz" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
         </div>
 
         <div className="space-y-1">

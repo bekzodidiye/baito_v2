@@ -94,6 +94,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
               <Smartphone size={16} className="stroke-[2.2]" />
             </span>
             <input
+              aria-label={t.finishPhone}
               type="tel"
               required
               value={regPhone}
@@ -135,6 +136,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
                 <Lock size={16} className="stroke-[2.2]" />
               </span>
               <input
+              aria-label={t.verifyCode || 'Tasdiqlash kodi'}
                 type="text"
                 required
                 value={regCode}
@@ -167,6 +169,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
               <Lock size={16} className="stroke-[2.2]" />
             </span>
             <input
+              aria-label={t.finishPassword}
               type={regShowPassword ? 'text' : 'password'}
               required
               value={regPassword}
@@ -194,6 +197,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
               <Lock size={16} className="stroke-[2.2]" />
             </span>
             <input
+              aria-label={t.finishConfirmPassword}
               type={regShowPassword ? 'text' : 'password'}
               required
               value={regConfirmPassword}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { clickable } from '../../utils/clickable';
 import { AdminUser } from './types';
 import { Search, UserCheck, PlusCircle, Phone, Ban, CheckCircle, Eye } from 'lucide-react';
 import { UserDetailModal } from './UserDetailModal';
@@ -74,7 +75,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
                 filteredUsers.map((u) => (
                   <tr key={u.id} className={`hover:bg-slate-50/80 transition-colors ${u.isBanned ? 'bg-red-50/40' : ''}`}>
                     <td className="p-4">
-                      <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedUser(u)}>
+                      <div className="flex items-center gap-3 cursor-pointer" {...clickable(() => setSelectedUser(u))}>
                         <div className="w-9 h-9 rounded-full bg-slate-100 font-bold flex items-center justify-center shrink-0 border border-slate-200">
                           {u.avatarUrl ? <img src={u.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" /> : u.name.charAt(0).toUpperCase()}
                         </div>
