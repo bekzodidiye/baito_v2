@@ -443,3 +443,78 @@ def test_writing_again_continues_the_same_ticket(client):
 def test_support_requires_a_session(client):
     assert client.get("/api/v1/support/conversation").status_code == 401
     assert client.post("/api/v1/support/messages", json={"text": "x"}).status_code == 401
+
+
+# ── Automation settings that used to be React state ────────────────────────
+
+def _set_settings(client, admin, **values):
+    login(client, admin)
+    resp = client.put("/api/v1/admin/settings", json=values)
+    assert resp.status_code == 200, resp.text
+    return resp.json()
+
+
+def test_the_spam_word_list_is_stored_and_screens_new_postings(client):
+    """The forbidden-words control edited a React array and nothing else.
+
+    SpamFraudDetector held the list in its own source, so an administrator
+    could add a word, watch it appear, and have postings containing it sail
+    through — including after a reload, when the word was gone too.
+    """
+    admin = make_user(role="admin", phone="+998944444001")
+    _set_settings(client, admin, spamKeywords="qorasuv-scheme\nboshqa-ibora")
+
+    employer = make_user(role="employer", phone="+998944444002")
+    login(client, employer)
+
+    clean = client.post("/api/v1/jobs", json={
+        "title": "Kuryer kerak", "company": "X", "salary": "300000",
+        "location": "Toshkent", "description": "Oddiy ish tavsifi",
+    })
+    assert clean.status_code == 200, clean.text
+
+    flagged = client.post("/api/v1/jobs", json={
+        "title": "Qorasuv-scheme bo'yicha ish", "company": "X", "salary": "300000",
+        "location": "Toshkent", "description": "Qorasuv-scheme orqali daromad",
+    })
+    assert flagged.status_code == 400
+    assert "shubhali" in flagged.json()["detail"].lower()
+
+
+def test_settings_survive_a_reload(client):
+    """Every one of these had nowhere to be stored."""
+    admin = make_user(role="admin", phone="+998944444003")
+    _set_settings(
+        client, admin,
+        escrowAutoReleaseEnabled=True,
+        escrowAutoReleaseHours=48,
+        telegramDigestEnabled=True,
+        telegramDigestChannel="@baito_stats",
+        matchMinScore=65,
+        spamAutoFineAmount=50000,
+        spamAutoBanHours=24,
+    )
+
+    body = client.get("/api/v1/admin/settings").json()
+    assert body["escrowAutoReleaseEnabled"] is True
+    assert body["escrowAutoReleaseHours"] == 48
+    assert body["telegramDigestEnabled"] is True
+    assert body["telegramDigestChannel"] == "@baito_stats"
+    assert body["matchMinScore"] == 65
+    assert body["spamAutoFineAmount"] == 50000
+    assert body["spamAutoBanHours"] == 24
+
+
+def test_auto_release_does_nothing_while_it_is_switched_off(client):
+    from app.tasks import auto_release_escrow
+
+    admin = make_user(role="admin", phone="+998944444004")
+    _set_settings(client, admin, escrowAutoReleaseEnabled=False)
+    assert auto_release_escrow() == 0
+
+
+def test_settings_are_validated(client):
+    admin = make_user(role="admin", phone="+998944444005")
+    login(client, admin)
+    assert client.put("/api/v1/admin/settings", json={"matchMinScore": 500}).status_code == 422
+    assert client.put("/api/v1/admin/settings", json={"escrowAutoReleaseHours": 0}).status_code == 422

@@ -118,7 +118,7 @@ export const AdminPanel: React.FC = () => {
           )}
 
           {activeTab === 'transactions' && (
-            <AdminTransactions transactions={transactions} />
+            <AdminTransactions transactions={transactions} onRefresh={refresh} />
           )}
 
           {activeTab === 'payouts' && (
@@ -158,19 +158,19 @@ export const AdminPanel: React.FC = () => {
           )}
 
           {activeTab === 'auto_moderation' && (
-            <AdminAutoModeration />
+            <AdminAutoModeration settings={settings} onUpdateSettings={updateSettings} />
           )}
 
           {activeTab === 'auto_matching' && (
-            <AdminAutoMatching />
+            <AdminAutoMatching settings={settings} onUpdateSettings={updateSettings} />
           )}
 
           {activeTab === 'auto_reports' && (
-            <AdminAutoReports />
+            <AdminAutoReports settings={settings} onUpdateSettings={updateSettings} />
           )}
 
           {activeTab === 'auto_escrow_docs' && (
-            <AdminAutoEscrowDocs />
+            <AdminAutoEscrowDocs settings={settings} onUpdateSettings={updateSettings} />
           )}
 
           {activeTab === 'settings' && (

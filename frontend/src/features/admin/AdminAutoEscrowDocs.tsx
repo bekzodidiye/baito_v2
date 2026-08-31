@@ -1,9 +1,36 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ShieldCheck, FileCheck, Clock, Download, CheckCircle2, ToggleLeft, ToggleRight, QrCode, FileText, Sparkles } from 'lucide-react';
 
-export const AdminAutoEscrowDocs: React.FC = () => {
-  const [autoReleaseHours, setAutoReleaseHours] = useState(24);
-  const [autoReleaseEnabled, setAutoReleaseEnabled] = useState(true);
+import { SystemSettings } from './types';
+
+interface AdminAutoEscrowDocsProps {
+  settings: SystemSettings;
+  onUpdateSettings: (cfg: Partial<SystemSettings>) => Promise<unknown> | void;
+}
+
+export const AdminAutoEscrowDocs: React.FC<AdminAutoEscrowDocsProps> = ({ settings, onUpdateSettings }) => {
+  // These drive a Celery task that releases escrow on completed jobs. They
+  // used to be local state, so the timer an administrator set never reached it.
+  const [autoReleaseHours, setAutoReleaseHours] = useState(settings.escrowAutoReleaseHours ?? 24);
+  const [autoReleaseEnabled, setAutoReleaseEnabled] = useState(settings.escrowAutoReleaseEnabled ?? false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setAutoReleaseHours(settings.escrowAutoReleaseHours ?? 24);
+    setAutoReleaseEnabled(settings.escrowAutoReleaseEnabled ?? false);
+  }, [settings.escrowAutoReleaseHours, settings.escrowAutoReleaseEnabled]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onUpdateSettings({
+        escrowAutoReleaseEnabled: autoReleaseEnabled,
+        escrowAutoReleaseHours: Number(autoReleaseHours) || 24,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
   const [autoChekEnabled, setAutoChekEnabled] = useState(true);
   const [activeTab, setActiveTab] = useState<'settings' | 'act_preview'>('settings');
 
@@ -193,6 +220,19 @@ export const AdminAutoEscrowDocs: React.FC = () => {
           </div>
         </div>
       )}
+            <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+              <p className="text-[11px] text-slate-500 font-medium">
+                Bu sozlamalar serverda saqlanadi va har soatda ishlaydigan vazifa tomonidan qo'llanadi.
+              </p>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs rounded-xl cursor-pointer shrink-0"
+              >
+                {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+              </button>
+            </div>
+
     </div>
   );
 };

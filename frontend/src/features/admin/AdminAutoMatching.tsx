@@ -1,10 +1,38 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Zap, Send, CheckCircle2, UserCheck, Star, Sparkles, SlidersHorizontal } from 'lucide-react';
 
-export const AdminAutoMatching: React.FC = () => {
-  const [minMatchScore, setMinMatchScore] = useState(80);
-  const [maxDistanceKm, setMaxDistanceKm] = useState(15);
-  const [minWorkerRating, setMinWorkerRating] = useState(4.5);
+import { SystemSettings } from './types';
+
+interface AdminAutoMatchingProps {
+  settings: SystemSettings;
+  onUpdateSettings: (cfg: Partial<SystemSettings>) => Promise<unknown> | void;
+}
+
+export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, onUpdateSettings }) => {
+  // The match threshold now filters what /jobs/recommended returns.
+  const [minMatchScore, setMinMatchScore] = useState(settings.matchMinScore ?? 80);
+  const [maxDistanceKm, setMaxDistanceKm] = useState(settings.matchMaxDistanceKm ?? 15);
+  const [minWorkerRating, setMinWorkerRating] = useState(settings.matchMinWorkerRating ?? 0);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setMinMatchScore(settings.matchMinScore ?? 80);
+    setMaxDistanceKm(settings.matchMaxDistanceKm ?? 15);
+    setMinWorkerRating(settings.matchMinWorkerRating ?? 0);
+  }, [settings.matchMinScore, settings.matchMaxDistanceKm, settings.matchMinWorkerRating]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onUpdateSettings({
+        matchMinScore: Number(minMatchScore) || 0,
+        matchMaxDistanceKm: Number(maxDistanceKm) || 15,
+        matchMinWorkerRating: Number(minWorkerRating) || 0,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
   const [autoNotifySms, setAutoNotifySms] = useState(true);
   const [autoNotifyTelegram, setAutoNotifyTelegram] = useState(true);
   const [notifiedCount, setNotifiedCount] = useState<number | null>(null);
@@ -169,6 +197,19 @@ export const AdminAutoMatching: React.FC = () => {
           </div>
         </div>
       </div>
+            <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+              <p className="text-[11px] text-slate-500 font-medium">
+                Bu sozlamalar serverda saqlanadi va tavsiya etilgan ishlarni filtrlashda qo'llanadi.
+              </p>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs rounded-xl cursor-pointer shrink-0"
+              >
+                {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+              </button>
+            </div>
+
     </div>
   );
 };

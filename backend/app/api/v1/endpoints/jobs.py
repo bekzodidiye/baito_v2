@@ -11,7 +11,7 @@ from app.models.job import JobStatus
 from app.redis_client import redis_client
 from app.services.ai_matcher import AIMatchmaker
 from app.services.geo_service import GeoSpatialService
-from app.services.spam_detector import SpamFraudDetector
+from app.services.spam_detector import SpamFraudDetector, keywords_from_settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -44,7 +44,23 @@ def get_recommended_jobs(
     if not active_jobs:
         return []
 
-    ranked = AIMatchmaker.rank_jobs_for_worker(current_user, active_jobs)[:limit]
+    ranked = AIMatchmaker.rank_jobs_for_worker(current_user, active_jobs)
+
+    # The admin panel's "minimum match threshold" used to be a slider bound to
+    # React state and nothing else. It filters the recommendations now.
+    row = (
+        db.query(models.SystemSetting)
+        .filter(models.SystemSetting.id == "singleton")
+        .first()
+    )
+    threshold = getattr(row, "matchMinScore", None) if row else None
+    if threshold:
+        above = [item for item in ranked if item["match_score"] >= threshold]
+        # Never hand back an empty screen because the threshold is set high;
+        # fall back to the best matches there are.
+        ranked = above or ranked[:limit]
+
+    ranked = ranked[:limit]
     # Same serialisation problem as /nearby: the matcher returns ORM objects.
     return [
         {**item, "job": schemas.Job.model_validate(item["job"])}
@@ -238,7 +254,8 @@ def create_job(
 ) -> Any:
     """Create a new job posting, screening it for fraud first."""
     verdict = SpamFraudDetector.analyze_job_posting(
-        job_in.title, job_in.description, job_in.salary
+        job_in.title, job_in.description, job_in.salary,
+        keywords=keywords_from_settings(db),
     )
     if verdict["is_spam"]:
         logger.warning(
@@ -325,6 +342,7 @@ def update_job(
             update_data.get("title", job.title),
             update_data.get("description", job.description),
             update_data.get("salary", job.salary),
+            keywords=keywords_from_settings(db),
         )
         if verdict["is_spam"]:
             raise HTTPException(

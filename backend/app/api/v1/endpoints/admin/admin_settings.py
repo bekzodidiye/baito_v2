@@ -20,6 +20,18 @@ SETTING_FIELDS = (
     "autoExpireJobs",
     "autoExpireDays",
     "autoDeleteSpamJobs",
+    # The automation screens' controls. They had no storage at all, so every
+    # one of them reset on reload.
+    "spamKeywords",
+    "spamAutoFineAmount",
+    "spamAutoBanHours",
+    "escrowAutoReleaseEnabled",
+    "escrowAutoReleaseHours",
+    "telegramDigestEnabled",
+    "telegramDigestChannel",
+    "matchMinScore",
+    "matchMaxDistanceKm",
+    "matchMinWorkerRating",
 )
 
 
@@ -31,6 +43,18 @@ class SettingsPayload(BaseModel):
     autoExpireJobs: Optional[bool] = None
     autoExpireDays: Optional[int] = Field(default=None, ge=1, le=365)
     autoDeleteSpamJobs: Optional[bool] = None
+
+    # Newline-separated; stored as text so the list can be edited as a whole.
+    spamKeywords: Optional[str] = Field(default=None, max_length=8000)
+    spamAutoFineAmount: Optional[int] = Field(default=None, ge=0, le=100_000_000)
+    spamAutoBanHours: Optional[int] = Field(default=None, ge=0, le=8760)
+    escrowAutoReleaseEnabled: Optional[bool] = None
+    escrowAutoReleaseHours: Optional[int] = Field(default=None, ge=1, le=720)
+    telegramDigestEnabled: Optional[bool] = None
+    telegramDigestChannel: Optional[str] = Field(default=None, max_length=200)
+    matchMinScore: Optional[int] = Field(default=None, ge=0, le=100)
+    matchMaxDistanceKm: Optional[int] = Field(default=None, ge=1, le=1000)
+    matchMinWorkerRating: Optional[float] = Field(default=None, ge=0, le=5)
 
 
 def _get_or_create(db: Session) -> models.SystemSetting:

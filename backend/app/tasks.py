@@ -196,3 +196,120 @@ def purge_expired_idempotency_keys() -> int:
         )
         db.commit()
         return deleted or 0
+
+
+@celery_app.task(name="app.tasks.auto_release_escrow")
+def auto_release_escrow() -> int:
+    """Pay out work that was finished and never disputed.
+
+    The admin panel offered an "auto-release after N hours" control with
+    nothing behind it — the number lived in React state. Money stayed frozen
+    until somebody released it by hand, which for a completed job nobody had
+    objected to is just a delay to the worker.
+    """
+    from app.db.session import SessionLocal
+    from app.models import Job, SystemSetting, Transaction
+    from app.models.job import JobStatus
+    from app.services.escrow_service import EscrowService
+
+    released = 0
+    with SessionLocal() as db:
+        row = db.query(SystemSetting).filter(SystemSetting.id == "singleton").first()
+        if not row or not row.escrowAutoReleaseEnabled:
+            return 0
+        hours = row.escrowAutoReleaseHours or 24
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+
+        held = (
+            db.query(Transaction)
+            .join(Job, Job.id == Transaction.jobId)
+            .filter(
+                Transaction.type == "escrow_hold",
+                Transaction.status == "held",
+                Job.status == JobStatus.COMPLETED,
+                Job.completedAt.isnot(None),
+                Job.completedAt < cutoff,
+            )
+            .all()
+        )
+
+        for tx in held:
+            job = db.query(Job).filter(Job.id == tx.jobId).first()
+            worker_id = job.hiredWorkerId if job else None
+            if not worker_id:
+                # Nobody to pay; leave it for a human rather than guessing.
+                continue
+            try:
+                EscrowService.release_funds(db, job_id=tx.jobId, worker_id=worker_id)
+                db.commit()
+                released += 1
+            except Exception as e:
+                db.rollback()
+                logger.error("Auto-release failed for job %s: %s", tx.jobId, e)
+
+    if released:
+        logger.info("Auto-released escrow for %d completed job(s)", released)
+    return released
+
+
+@celery_app.task(name="app.tasks.send_telegram_digest")
+def send_telegram_digest() -> bool:
+    """A daily summary to the channel named in the admin panel.
+
+    That field, too, was a text box wired to nothing.
+    """
+    from sqlalchemy import func as sa_func
+
+    from app.db.session import SessionLocal
+    from app.models import Job, SystemSetting, Transaction, User
+    from app.models.job import JobStatus
+
+    with SessionLocal() as db:
+        row = db.query(SystemSetting).filter(SystemSetting.id == "singleton").first()
+        if not row or not row.telegramDigestEnabled or not row.telegramDigestChannel:
+            return False
+        if not settings.TELEGRAM_BOT_TOKEN:
+            logger.warning("Telegram digest is on but no bot token is configured.")
+            return False
+
+        since = datetime.now(timezone.utc) - timedelta(days=1)
+        new_users = db.query(sa_func.count(User.id)).filter(User.createdAt >= since).scalar() or 0
+        new_jobs = db.query(sa_func.count(Job.id)).filter(Job.createdAt >= since).scalar() or 0
+        completed = (
+            db.query(sa_func.count(Job.id))
+            .filter(Job.status == JobStatus.COMPLETED, Job.completedAt >= since)
+            .scalar()
+            or 0
+        )
+        held = (
+            db.query(sa_func.coalesce(sa_func.sum(Transaction.amount), 0))
+            .filter(Transaction.type == "escrow_hold", Transaction.status == "held")
+            .scalar()
+            or 0
+        )
+
+    text = (
+        "📊 <b>Baito — sutkalik hisobot</b>\n"
+        f"👤 Yangi foydalanuvchilar: {new_users}\n"
+        f"📋 Yangi e'lonlar: {new_jobs}\n"
+        f"✅ Yakunlangan ishlar: {completed}\n"
+        f"🔒 Eskrouda muzlatilgan: {held // 100:,} so'm"
+    )
+
+    try:
+        with httpx.Client(timeout=HTTP_TIMEOUT) as client:
+            resp = client.post(
+                f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage",
+                json={
+                    "chat_id": row.telegramDigestChannel,
+                    "text": text,
+                    "parse_mode": "HTML",
+                },
+            )
+        if resp.status_code != 200:
+            logger.error("Telegram digest rejected with HTTP %s", resp.status_code)
+            return False
+    except Exception as e:
+        logger.error("Telegram digest could not be sent: %s", e)
+        return False
+    return True

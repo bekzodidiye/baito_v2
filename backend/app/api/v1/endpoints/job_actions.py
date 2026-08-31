@@ -1,7 +1,7 @@
 import logging
 import re
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -386,6 +386,7 @@ def complete_job(
         raise HTTPException(status_code=400, detail="Yakunlash uchun yollangan ishchi yo'q")
 
     job.status = JobStatus.COMPLETED
+    job.completedAt = datetime.now(timezone.utc)
     db.add(job)
 
     paid, unpaid = [], []

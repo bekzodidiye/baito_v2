@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient, unwrapList } from '../../api/client';
 import { AdminStats, AdminUser, AdminJob, AdminTransaction, SystemSettings } from './types';
 import { useApp } from '../../context/AppContext';
+import { showToast as globalToast } from '../../utils/toast';
 
 export function useAdminData() {
   const { } = useApp();
@@ -62,10 +63,22 @@ export function useAdminData() {
     autoExpireJobs: true,
     autoExpireDays: 14,
     autoDeleteSpamJobs: true,
+    spamKeywords: null,
+    spamAutoFineAmount: 0,
+    spamAutoBanHours: 0,
+    escrowAutoReleaseEnabled: false,
+    escrowAutoReleaseHours: 24,
+    telegramDigestEnabled: false,
+    telegramDigestChannel: null,
+    matchMinScore: 80,
+    matchMaxDistanceKm: 15,
+    matchMinWorkerRating: 0,
   };
 
+  // This was `(msg);` — the message was built and thrown away, so every
+  // confirmation and every failure in the admin panel was silent.
   const showToast = (msg: string) => {
-    (msg);
+    globalToast(msg);
   };
 
   const addBalance = async (userId: string, amount: number) => {

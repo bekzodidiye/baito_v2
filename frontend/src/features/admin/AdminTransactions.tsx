@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
+import { apiClient } from '../../api/client';
+import { showToast } from '../../utils/toast';
 import { AdminTransaction } from './types';
 import { DollarSign, ArrowUpRight, ArrowDownLeft, ShieldCheck, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 interface AdminTransactionsProps {
+  /** Lets the list refresh after a decision. */
+  onRefresh?: () => void;
   transactions: AdminTransaction[];
 }
 
-export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactions }) => {
+export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactions, onRefresh }) => {
   const [activeTab, setActiveTab] = useState<'tx' | 'withdrawals' | 'commission'>('tx');
 
   // Computed properties from transactions
@@ -25,16 +29,36 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
     return num.toLocaleString('uz-UZ') + ' UZS';
   };
 
+  // Both of these used to pop `alert("API orqali ulash kutilmoqda...")`. The
+  // endpoint had been there the whole time — the Payouts screen uses it — so
+  // an administrator pressing Approve here was told to wait for something that
+  // already existed, and nothing happened.
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const decide = async (id: string, action: 'approve' | 'reject', reason: string) => {
+    setBusyId(id);
+    try {
+      await apiClient(`/admin/withdrawals/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ action, reason }),
+      });
+      showToast(action === 'approve' ? 'Yechish tasdiqlandi' : 'Rad etildi, mablag&#39; qaytarildi');
+      onRefresh?.();
+    } catch (e: any) {
+      showToast(e?.message || 'Amal bajarilmadi');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const handleApproveWithdrawal = (id: string) => {
-    // This should ideally call an API
-    alert("API orqali ulash kutilmoqda...");
+    const reference = prompt("To'lov ma'lumotnomasi (ixtiyoriy):") ?? '';
+    void decide(id, 'approve', reference);
   };
 
   const handleRejectWithdrawal = (id: string) => {
     const reason = prompt('Rad etish sababini kiriting:');
-    if (reason) {
-      alert(`API orqali ulash kutilmoqda. Sabab: ${reason}`);
-    }
+    if (reason && reason.trim()) void decide(id, 'reject', reason.trim());
   };
 
   return (

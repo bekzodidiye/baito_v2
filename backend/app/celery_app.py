@@ -40,6 +40,16 @@ try:
             "task": "app.tasks.purge_expired_idempotency_keys",
             "schedule": crontab(hour=4, minute=0),
         },
+        # Both of these back a control in the admin panel and do nothing
+        # unless it is switched on there.
+        "auto-release-escrow": {
+            "task": "app.tasks.auto_release_escrow",
+            "schedule": crontab(minute=0),  # hourly, so the timer is honoured
+        },
+        "telegram-digest": {
+            "task": "app.tasks.send_telegram_digest",
+            "schedule": crontab(hour=9, minute=0),
+        },
     }
 except ImportError:
     class MockCeleryTask:

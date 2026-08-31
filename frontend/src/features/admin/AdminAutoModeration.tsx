@@ -1,33 +1,76 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ShieldAlert, Bot, Plus, Trash2, ToggleLeft, ToggleRight, AlertTriangle, AlertCircle } from 'lucide-react';
+import { SystemSettings } from './types';
 
-export const AdminAutoModeration: React.FC = () => {
-  const [enabled, setEnabled] = useState(true);
-  const [autoFine, setAutoFine] = useState(true);
-  const [fineAmount, setFineAmount] = useState(50000);
-  const [autoBanHours, setAutoBanHours] = useState(24);
-  const [forbiddenWords, setForbiddenWords] = useState<string[]>([
-    'soxta', '1xbet', 'kazino', 'narkotik', 'stroyka bet', 'qumor', 'firibgar'
-  ]);
+interface AdminAutoModerationProps {
+  settings: SystemSettings;
+  onUpdateSettings: (cfg: Partial<SystemSettings>) => Promise<unknown> | void;
+}
+
+const DEFAULT_WORDS = ['soxta', '1xbet', 'kazino', 'narkotik', 'qumor', 'firibgar'];
+
+const parseWords = (raw?: string | null): string[] =>
+  (raw ?? '')
+    .split(/[\n,]/)
+    .map((w) => w.trim().toLowerCase())
+    .filter(Boolean);
+
+export const AdminAutoModeration: React.FC<AdminAutoModerationProps> = ({
+  settings,
+  onUpdateSettings,
+}) => {
+  // These used to start from hard-coded values and live only in React state,
+  // so the list an administrator curated vanished on reload and the job
+  // screener never saw it.
+  const [autoFine, setAutoFine] = useState((settings.spamAutoFineAmount ?? 0) > 0);
+  const [fineAmount, setFineAmount] = useState(settings.spamAutoFineAmount ?? 0);
+  const [autoBanHours, setAutoBanHours] = useState(settings.spamAutoBanHours ?? 0);
+  const [forbiddenWords, setForbiddenWords] = useState<string[]>(
+    parseWords(settings.spamKeywords).length ? parseWords(settings.spamKeywords) : DEFAULT_WORDS,
+  );
   const [newWord, setNewWord] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
 
-  const [botLogs] = useState([
-    { id: 'LOG-1', user: 'Sherzod M.', jobTitle: '1xbet hisob to\'ldirish', word: '1xbet', action: '24 soatga bloklandi + 50,000 UZS jarima', time: ' Bugun, 11:20' },
-    { id: 'LOG-2', user: 'Rustam K.', jobTitle: 'Tez pul ishlash soxta sxema', word: 'soxta', action: 'Ogohlantirish yuborildi (1/3)', time: ' Bugun, 09:45' },
-    { id: 'LOG-3', user: 'Jasur B.', jobTitle: 'Kazino bot targ\'iboti', word: 'kazino', action: 'E\'lon o\'chirildi + 24 soat blok', time: ' Kecha, 18:30' },
-  ]);
+  useEffect(() => {
+    const stored = parseWords(settings.spamKeywords);
+    if (stored.length) setForbiddenWords(stored);
+    setFineAmount(settings.spamAutoFineAmount ?? 0);
+    setAutoBanHours(settings.spamAutoBanHours ?? 0);
+    setAutoFine((settings.spamAutoFineAmount ?? 0) > 0);
+    setDirty(false);
+  }, [settings.spamKeywords, settings.spamAutoFineAmount, settings.spamAutoBanHours]);
+
+  const enabled = forbiddenWords.length > 0;
 
   const handleAddWord = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newWord.trim()) return;
-    if (!forbiddenWords.includes(newWord.trim().toLowerCase())) {
-      setForbiddenWords([...forbiddenWords, newWord.trim().toLowerCase()]);
+    const word = newWord.trim().toLowerCase();
+    if (!word) return;
+    if (!forbiddenWords.includes(word)) {
+      setForbiddenWords([...forbiddenWords, word]);
+      setDirty(true);
     }
     setNewWord('');
   };
 
   const handleRemoveWord = (word: string) => {
     setForbiddenWords(forbiddenWords.filter((w) => w !== word));
+    setDirty(true);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onUpdateSettings({
+        spamKeywords: forbiddenWords.join('\n'),
+        spamAutoFineAmount: autoFine ? Number(fineAmount) || 0 : 0,
+        spamAutoBanHours: Number(autoBanHours) || 0,
+      });
+      setDirty(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -43,15 +86,17 @@ export const AdminAutoModeration: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setEnabled(!enabled)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition cursor-pointer ${
+        {/* The screener runs whenever there is a list to run against, so this
+            reports the state rather than pretending to be a switch that used
+            to toggle a local boolean and nothing else. */}
+        <div
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold ${
             enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
           }`}
         >
           {enabled ? <ToggleRight size={24} className="text-emerald-600" /> : <ToggleLeft size={24} />}
           <span>{enabled ? 'BOT FAOL' : 'BOT O\'CHIRILGAN'}</span>
-        </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -137,21 +182,26 @@ export const AdminAutoModeration: React.FC = () => {
             ))}
           </div>
 
-          <div className="pt-4 border-t border-slate-100">
-            <h4 className="font-bold text-slate-900 mb-2.5 flex items-center gap-1.5">
-              <AlertCircle size={15} className="text-blue-600" /> Bot Tomonidan Oxirgi Bajarilgan Harakatlar
-            </h4>
-            <div className="space-y-2">
-              {botLogs.map((log) => (
-                <div key={log.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <span className="font-extrabold text-slate-900">{log.user}</span> — <span className="text-slate-600 font-medium">"{log.jobTitle}"</span>
-                    <div className="text-[11px] text-red-600 font-bold mt-0.5">Topilgan so'z: #{log.word} • {log.action}</div>
-                  </div>
-                  <span className="text-[10px] text-slate-400 font-semibold shrink-0">{log.time}</span>
-                </div>
-              ))}
+          <div className="pt-4 border-t border-slate-100 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[11px] text-slate-500 font-medium">
+                {dirty ? "Saqlanmagan o'zgarishlar bor." : "Ro'yxat saqlangan va e'lon tekshiruvida qo'llanadi."}
+              </p>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs rounded-xl cursor-pointer"
+              >
+                {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+              </button>
             </div>
+
+            {/* There was a "recent bot actions" list here with three invented
+                entries — names, job titles and penalties that never happened.
+                Real moderation actions belong in the audit log. */}
+            <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5">
+              <AlertCircle size={13} /> Bot bajargan harakatlar Audit Loglar bo'limida ko'rinadi.
+            </p>
           </div>
         </div>
       </div>

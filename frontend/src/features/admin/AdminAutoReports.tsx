@@ -1,10 +1,37 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FileText, Send, CheckCircle2, Clock, Download, MessageSquare, Sparkles } from 'lucide-react';
 
-export const AdminAutoReports: React.FC = () => {
-  const [dailyDigest, setDailyDigest] = useState(true);
+import { SystemSettings } from './types';
+
+interface AdminAutoReportsProps {
+  settings: SystemSettings;
+  onUpdateSettings: (cfg: Partial<SystemSettings>) => Promise<unknown> | void;
+}
+
+export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ settings, onUpdateSettings }) => {
+  // A Celery task posts the digest to this channel every morning; the field
+  // used to hold a placeholder that went nowhere.
+  const [dailyDigest, setDailyDigest] = useState(settings.telegramDigestEnabled ?? false);
   const [weeklyReport, setWeeklyReport] = useState(true);
-  const [telegramChannel, setTelegramChannel] = useState('@baito_admin_stats');
+  const [telegramChannel, setTelegramChannel] = useState(settings.telegramDigestChannel ?? '');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setDailyDigest(settings.telegramDigestEnabled ?? false);
+    setTelegramChannel(settings.telegramDigestChannel ?? '');
+  }, [settings.telegramDigestEnabled, settings.telegramDigestChannel]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onUpdateSettings({
+        telegramDigestEnabled: dailyDigest,
+        telegramDigestChannel: telegramChannel.trim() || null,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
   const [sentSuccess, setSentSuccess] = useState(false);
 
   const reportData = {
@@ -135,6 +162,19 @@ export const AdminAutoReports: React.FC = () => {
           </div>
         </div>
       </div>
+            <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+              <p className="text-[11px] text-slate-500 font-medium">
+                Bu sozlamalar serverda saqlanadi va har kuni ertalab hisobot yuborishda ishlatiladi.
+              </p>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs rounded-xl cursor-pointer shrink-0"
+              >
+                {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+              </button>
+            </div>
+
     </div>
   );
 };

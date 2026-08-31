@@ -177,6 +177,19 @@ export interface SystemSettings {
   autoExpireJobs?: boolean;
   autoExpireDays?: number;
   autoDeleteSpamJobs?: boolean;
+
+  // The automation screens' controls. They had no field to write to, so each
+  // screen kept its values in React state and lost them on reload.
+  spamKeywords?: string | null;
+  spamAutoFineAmount?: number;
+  spamAutoBanHours?: number;
+  escrowAutoReleaseEnabled?: boolean;
+  escrowAutoReleaseHours?: number;
+  telegramDigestEnabled?: boolean;
+  telegramDigestChannel?: string | null;
+  matchMinScore?: number;
+  matchMaxDistanceKm?: number;
+  matchMinWorkerRating?: number;
 }
 
 /** The statuses the API actually uses. The screen previously filtered on

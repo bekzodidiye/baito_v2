@@ -46,6 +46,9 @@ class Job(Base):
     views = Column(Integer, default=0)
     hiredWorkerId = Column(String, ForeignKey("users.id"))
     createdAt = Column(DateTime(timezone=True), server_default=func.now())
+    # When the employer marked the work done. The auto-release timer counts
+    # from here, and there was nothing recording it.
+    completedAt = Column(DateTime(timezone=True), nullable=True)
     
     # Extended fields
     workDate = Column(String, index=True)
