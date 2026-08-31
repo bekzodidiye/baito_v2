@@ -29,6 +29,29 @@ export const createChatApi = async (params: {
   });
 };
 
+/** One support ticket with its conversation. The list endpoint returns no
+    messages, and passing a list row to the chat view crashed it. */
+export const fetchAdminTicketApi = async (ticketId: string) => {
+  return await apiClient(`/admin/support-tickets/${ticketId}`);
+};
+
+export const replyToTicketApi = async (
+  ticketId: string,
+  payload: { text: string; status?: string },
+) => {
+  return await apiClient(`/admin/support-tickets/${ticketId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+};
+
+export const updateTicketStatusApi = async (ticketId: string, status: string) => {
+  return await apiClient(`/admin/support-tickets/${ticketId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+};
+
 /** The user's own support conversation. The admin panel could read and reply
     to tickets, but nothing let a user open one, so the queue could never fill. */
 export const fetchSupportConversationApi = async () => {

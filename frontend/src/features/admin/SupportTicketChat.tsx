@@ -1,9 +1,10 @@
 import React from 'react';
-import { SupportTicket } from './types';
+import { SupportTicketDetail } from './types';
 import { CheckCircle, Send, X, MessageSquare } from 'lucide-react';
 
 interface SupportTicketChatProps {
-  ticket: SupportTicket | null;
+  ticket: SupportTicketDetail | null;
+  loading?: boolean;
   onClose: () => void;
   onResolve: (id: string) => void;
   onSendReply: (replyText: string) => void;
@@ -14,6 +15,7 @@ interface SupportTicketChatProps {
 
 export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
   ticket,
+  loading = false,
   onClose,
   onResolve,
   onSendReply,
@@ -21,6 +23,14 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
   setReplyText,
   quickReplies,
 }) => {
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center text-slate-400 flex flex-col items-center justify-center h-[520px]">
+        <p className="font-extrabold text-slate-700 text-sm">Yuklanmoqda...</p>
+      </div>
+    );
+  }
+
   if (!ticket) {
     return (
       <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center text-slate-400 flex flex-col items-center justify-center h-[520px]">
@@ -43,7 +53,9 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
       <div className="p-4 border-b border-slate-200/80 flex items-center justify-between bg-slate-50/50 rounded-t-2xl">
         <div>
           <h3 className="font-extrabold text-slate-900 text-sm">{ticket.subject}</h3>
-          <p className="text-xs text-slate-500 mt-0.5">{ticket.userName} ({ticket.userRole === 'worker' ? 'Ishchi' : 'Ish beruvchi'})</p>
+          <p className="text-xs text-slate-500 mt-0.5">
+            {ticket.userName}{ticket.userPhone ? ` · ${ticket.userPhone}` : ''}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -59,13 +71,20 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
       </div>
 
       <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/30 text-xs">
-        {ticket.messages.map((m, idx) => (
-          <div key={idx} className={`flex ${m.sender === 'admin' ? 'justify-end' : 'justify-start'}`}>
+        {(ticket.messages ?? []).length === 0 && (
+          <p className="text-center text-slate-400 py-6">Hali xabar yo'q</p>
+        )}
+        {(ticket.messages ?? []).map((m) => (
+          <div key={m.id} className={`flex ${m.isAdmin ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[80%] p-3 rounded-2xl ${
-              m.sender === 'admin' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-xs'
+              m.isAdmin ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-xs'
             }`}>
               <p className="font-medium leading-relaxed">{m.text}</p>
-              <span className={`text-[10px] block text-right mt-1 font-bold ${m.sender === 'admin' ? 'text-blue-200' : 'text-slate-400'}`}>{m.timestamp}</span>
+              <span className={`text-[10px] block text-right mt-1 font-bold ${m.isAdmin ? 'text-blue-200' : 'text-slate-400'}`}>
+                {m.timestamp
+                  ? new Date(m.timestamp).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
+                  : ''}
+              </span>
             </div>
           </div>
         ))}

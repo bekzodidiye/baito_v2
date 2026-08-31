@@ -1,17 +1,44 @@
 import React, { useState } from 'react';
-import { SupportTicket } from './types';
+import { SupportTicket, SupportTicketDetail } from './types';
 import { Headphones, User } from 'lucide-react';
 import { SupportTicketChat } from './SupportTicketChat';
+import { fetchAdminTicketApi, replyToTicketApi, updateTicketStatusApi } from '../../api/queries';
+import { showToast } from '../../utils/toast';
 
 interface AdminSupportProps {
   supportTickets: SupportTicket[];
 }
 
+const formatTicketTime = (raw?: string): string => {
+  if (!raw) return '';
+  const d = new Date(raw.replace(' ', 'T'));
+  return Number.isNaN(d.getTime())
+    ? ''
+    : d.toLocaleString('uz-UZ', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+};
+
 export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) => {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [activeTab, setActiveTab] = useState<'all' | 'new' | 'in_progress' | 'resolved'>('all');
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'new' | 'open' | 'resolved'>('all');
+  // The list carries no messages, so selecting a ticket has to fetch it.
+  // Handing a list row straight to the chat view is what crashed the screen:
+  // it read `ticket.messages.map(...)` on a value that had no messages.
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicketDetail | null>(null);
+  const [loadingTicket, setLoadingTicket] = useState(false);
   const [replyText, setReplyText] = useState('');
+
+  const openTicket = async (id: string) => {
+    setLoadingTicket(true);
+    try {
+      setSelectedTicket(await fetchAdminTicketApi(id));
+    } catch (e) {
+      console.error('Could not load the ticket', e);
+      showToast("Murojaatni yuklab bo'lmadi. Qaytadan urinib ko'ring.");
+      setSelectedTicket(null);
+    } finally {
+      setLoadingTicket(false);
+    }
+  };
 
   React.useEffect(() => {
     setTickets(supportTickets);
@@ -25,31 +52,32 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
 
   const filteredTickets = tickets.filter((t) => activeTab === 'all' || t.status === activeTab);
 
-  const handleSendReply = (text: string) => {
+  /** Reply, and move the ticket along. This only ever changed local state
+   *  before, so nothing an administrator wrote was sent anywhere. */
+  const handleSendReply = async (text: string) => {
     if (!selectedTicket || !text.trim()) return;
-
-    const updated = tickets.map((t) => {
-      if (t.id === selectedTicket.id) {
-        return {
-          ...t,
-          status: 'in_progress' as const,
-          messages: [
-            ...t.messages,
-            { sender: 'admin' as const, text, timestamp: new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }) },
-          ],
-        };
-      }
-      return t;
-    });
-
-    setTickets(updated);
-    setSelectedTicket(updated.find((t) => t.id === selectedTicket.id) || null);
+    const id = selectedTicket.id;
     setReplyText('');
+    try {
+      await replyToTicketApi(id, { text: text.trim(), status: 'open' });
+      setSelectedTicket(await fetchAdminTicketApi(id));
+      setTickets((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'open' } : t)));
+    } catch (e) {
+      console.error('Could not send the reply', e);
+      showToast("Javobni yuborib bo'lmadi. Qaytadan urinib ko'ring.");
+      setReplyText(text);
+    }
   };
 
-  const handleResolve = (id: string) => {
-    setTickets(tickets.map((t) => (t.id === id ? { ...t, status: 'resolved' } : t)));
-    if (selectedTicket?.id === id) setSelectedTicket(null);
+  const handleResolve = async (id: string) => {
+    try {
+      await updateTicketStatusApi(id, 'resolved');
+      setTickets((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'resolved' } : t)));
+      if (selectedTicket?.id === id) setSelectedTicket(null);
+    } catch (e) {
+      console.error('Could not resolve the ticket', e);
+      showToast("Holatni o'zgartirib bo'lmadi.");
+    }
   };
 
   return (
@@ -65,7 +93,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
           </p>
         </div>
         <div className="flex items-center gap-1.5">
-          {(['all', 'new', 'in_progress', 'resolved'] as const).map((tab) => (
+          {(['all', 'new', 'open', 'resolved'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -73,7 +101,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
                 activeTab === tab ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              {tab === 'all' ? 'Barchasi' : tab === 'new' ? 'Yangi' : tab === 'in_progress' ? 'Jarayonda' : 'Hal etildi'}
+              {tab === 'all' ? 'Barchasi' : tab === 'new' ? 'Yangi' : tab === 'open' ? 'Jarayonda' : 'Hal etildi'}
             </button>
           ))}
         </div>
@@ -84,7 +112,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
           {filteredTickets.map((t) => (
             <div
               key={t.id}
-              onClick={() => setSelectedTicket(t)}
+              onClick={() => openTicket(t.id)}
               className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                 selectedTicket?.id === t.id
                   ? 'bg-blue-50/80 border-blue-300 shadow-sm'
@@ -103,7 +131,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
               <div className="flex items-center gap-2 mt-2 text-[11px] text-slate-500">
                 <span className="flex items-center gap-1 font-semibold text-slate-700"><User size={12} /> {t.userName}</span>
                 <span>•</span>
-                <span>{t.createdAt.split(' ')[1]}</span>
+                <span>{formatTicketTime(t.createdAt)}</span>
               </div>
             </div>
           ))}
@@ -112,6 +140,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
         <div className="lg:col-span-2">
           <SupportTicketChat
             ticket={selectedTicket}
+            loading={loadingTicket}
             onClose={() => setSelectedTicket(null)}
             onResolve={handleResolve}
             onSendReply={handleSendReply}

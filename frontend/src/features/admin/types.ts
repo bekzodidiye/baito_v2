@@ -179,20 +179,37 @@ export interface SystemSettings {
   autoDeleteSpamJobs?: boolean;
 }
 
+/** The statuses the API actually uses. The screen previously filtered on
+    'in_progress', which the backend never returns, so that tab was always
+    empty. */
+export type SupportTicketStatus = 'new' | 'open' | 'pending' | 'resolved' | 'closed';
+
+/** A row in GET /admin/support-tickets — no messages on it. */
 export interface SupportTicket {
   id: string;
+  userId?: string;
   userName: string;
-  userRole: 'worker' | 'employer';
+  userRole?: 'worker' | 'employer';
   subject: string;
-  category: 'payment' | 'account' | 'job' | 'technical' | 'dispute';
-  status: 'new' | 'in_progress' | 'resolved' | 'closed';
+  category: string;
+  status: SupportTicketStatus;
   priority: 'low' | 'medium' | 'high' | 'urgent';
   createdAt: string;
-  messages: {
-    sender: 'user' | 'admin';
-    text: string;
-    timestamp: string;
-  }[];
+}
+
+export interface SupportTicketMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  isAdmin: boolean;
+  text: string;
+  timestamp: string | null;
+}
+
+/** GET /admin/support-tickets/{id} — the conversation, fetched on selection. */
+export interface SupportTicketDetail extends SupportTicket {
+  userPhone?: string;
+  messages: SupportTicketMessage[];
 }
 
 export interface WithdrawalRequest {
