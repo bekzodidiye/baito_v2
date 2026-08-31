@@ -63,12 +63,9 @@ export const ChatListPanel: React.FC<ChatListPanelProps> = ({
         )}
       </div>
 
-      {/* Bottom Footer Note */}
-      <div className="p-2.5 bg-slate-50/80 border-t border-slate-100 text-center">
-        <p className="text-[11px] text-slate-400 font-medium">
-          Sizda yana 12 ta eski yozishmalar mavjud
-        </p>
-      </div>
+      {/* There was a footer here reading "you have 12 more archived
+          conversations". The number was hard-coded and there is no archive —
+          it told every user the same untrue thing. */}
     </div>
   );
 };

@@ -87,7 +87,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       )}
 
       <div className="w-full max-w-5xl mx-auto flex items-end gap-2 px-4 pb-3 pt-2 relative bg-white">
-        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,application/pdf,.doc,.docx" />
+        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
         <button 
           onClick={() => fileInputRef.current?.click()} 
           type="button"

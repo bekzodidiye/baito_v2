@@ -168,7 +168,6 @@ export const uz = {
   appliedLabel: "Ariza yuborilgan",
   noConversations: "Xabarlar topilmadi",
   conversationNotStarted: "Muloqot boshlanmadi",
-  archivedConversations: "Sizda yana 12 ta eski yozishmalar mavjud",
   writeNewMessage: "Yangi xabar yozish",
   employerClient: "Ish beruvchi / Buyurtmachi",
   employerPlaceholder: "Masalan: Artel Mebel, Grand To'yxona...",

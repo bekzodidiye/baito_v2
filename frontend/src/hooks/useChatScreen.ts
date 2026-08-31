@@ -16,8 +16,18 @@ export interface AttachedFileData {
   file: File;
 }
 
-export function useChatScreen() {
-  const { id: selectedChatId } = useParams<{ id: string }>();
+/**
+ * @param displayedChatId The conversation the screen is showing when the route
+ *   carries no id. The messages screen opens the first conversation on its own
+ *   — but the active chat here came only from the route, so on /messages it was
+ *   null, and `handleSend` returned on its first line. The panel showed a
+ *   conversation and the send button did nothing.
+ */
+export function useChatScreen(displayedChatId?: string | null) {
+  const { id: routeChatId } = useParams<{ id: string }>();
+  // The route still decides the layout — one panel or two on mobile.
+  const selectedChatId = routeChatId;
+  const activeChatId = routeChatId || displayedChatId || undefined;
   const navigate = useNavigate();
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { language } = useApp();
@@ -28,7 +38,7 @@ export function useChatScreen() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const t = translations[language];
 
-  const rawActiveChat = chats.find((c: any) => c.id === selectedChatId);
+  const rawActiveChat = chats.find((c: any) => c.id === activeChatId);
   const activeChat = rawActiveChat ? getTranslatedChat(rawActiveChat, language) : null;
 
   const scrollToBottom = () => {
@@ -36,10 +46,10 @@ export function useChatScreen() {
   };
 
   useEffect(() => {
-    if (selectedChatId) {
-      setActiveChatId(selectedChatId);
+    if (activeChatId) {
+      setActiveChatId(activeChatId);
     }
-  }, [selectedChatId, setActiveChatId]);
+  }, [activeChatId, setActiveChatId]);
 
   useEffect(() => {
     scrollToBottom();

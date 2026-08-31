@@ -168,7 +168,6 @@ export const en = {
   appliedLabel: "Application submitted",
   noConversations: "No messages found",
   conversationNotStarted: "Conversation not started",
-  archivedConversations: "You have 12 more archived conversations",
   writeNewMessage: "Write a new message",
   employerClient: "Employer / Client",
   employerPlaceholder: "For example: Artel Mebel, Grand Toyhona...",

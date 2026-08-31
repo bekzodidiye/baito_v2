@@ -14,6 +14,10 @@ export const MessagesScreen: React.FC = () => {
     handleChatClick
   } = useMessagesScreen();
 
+  // Which conversation the panel shows when the route has no id — the same
+  // choice made below, so the send button targets what is on screen.
+  const displayedChatId = filteredChats.length > 0 ? filteredChats[0].id : null;
+
   const {
     selectedChatId,
     activeChat,
@@ -26,7 +30,7 @@ export const MessagesScreen: React.FC = () => {
     handleSend,
     setCurrentScreen,
     sendMessage
-  } = useChatScreen();
+  } = useChatScreen(displayedChatId);
 
   // If no chat selected yet on desktop, select the first one by default for continuous view
   const effectiveActiveChat = activeChat || (filteredChats.length > 0 ? filteredChats[0] : null);

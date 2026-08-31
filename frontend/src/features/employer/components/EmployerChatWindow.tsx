@@ -197,7 +197,7 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
             type="file" 
             id="employer-chat-file" 
             className="hidden" 
-            accept="image/*,application/pdf,.doc,.docx"
+            accept="image/*"
             onChange={(e) => {
               if (e.target.files && e.target.files[0]) {
                 const file = e.target.files[0];

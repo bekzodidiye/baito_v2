@@ -168,7 +168,6 @@ export const ru = {
   appliedLabel: "Заявка отправлена",
   noConversations: "Сообщения не найдены",
   conversationNotStarted: "Диалог не начат",
-  archivedConversations: "У вас есть еще 12 архивных переписок",
   writeNewMessage: "Написать новое сообщение",
   employerClient: "Работодатель / Заказчик",
   employerPlaceholder: "Например: Artel Mebel, Grand Toyhona...",
