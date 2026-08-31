@@ -44,6 +44,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
         <div>
           <label className="text-xs font-semibold text-slate-700 block mb-1">Hudud / Viloyat Nomi</label>
           <input
+              aria-label="Hudud / Viloyat Nomi"
             type="text"
             required
             value={name}
@@ -57,6 +58,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1">Tumanlar soni</label>
             <input
+              aria-label="Tumanlar soni"
               type="number"
               min="1"
               value={districtsCount}
@@ -67,6 +69,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1">Komissiya (%)</label>
             <input
+              aria-label="Komissiya (%)"
               type="number"
               step="0.5"
               min="0"
@@ -81,6 +84,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
         <div>
           <label className="text-xs font-semibold text-slate-700 block mb-1">Minimal Kunlik Ish Haq (so'm)</label>
           <input
+              aria-label="Minimal Kunlik Ish Haq (so'm)"
             type="number"
             step="10000"
             min="50000"

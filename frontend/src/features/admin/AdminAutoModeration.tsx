@@ -65,6 +65,7 @@ export const AdminAutoModeration: React.FC = () => {
             <div>
               <label className="font-bold text-slate-700 block mb-1">Avto-Jarima Miqdori (UZS)</label>
               <input
+              aria-label="Avto-Jarima Miqdori (UZS)"
                 type="number"
                 step="10000"
                 value={fineAmount}
@@ -76,6 +77,7 @@ export const AdminAutoModeration: React.FC = () => {
             <div>
               <label className="font-bold text-slate-700 block mb-1">Avto-Bloklash Davomiyligi (Soat)</label>
               <input
+              aria-label="Avto-Bloklash Davomiyligi (Soat)"
                 type="number"
                 value={autoBanHours}
                 onChange={(e) => setAutoBanHours(Number(e.target.value))}

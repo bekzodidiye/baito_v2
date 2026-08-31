@@ -248,6 +248,7 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
                         <label className="text-sm font-semibold text-slate-700">{t.amount}</label>
                         <div className="relative group">
                           <input
+              aria-label={t.amount}
                             type="text"
                             inputMode="numeric"
                             required
@@ -292,6 +293,7 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
                         <label className="text-sm font-semibold text-slate-700">{t.cardNumber}</label>
                         <div className="relative">
                           <input
+              aria-label={t.cardNumber}
                             type="text"
                             inputMode="numeric"
                             required
@@ -311,6 +313,7 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700">{t.expiry}</label>
                         <input
+              aria-label={t.expiry}
                           type="text"
                           inputMode="numeric"
                           required

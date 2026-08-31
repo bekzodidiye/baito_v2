@@ -43,6 +43,7 @@ export const AddPromoModal: React.FC<AddPromoModalProps> = ({ isOpen, onClose, o
         <div>
           <label className="text-xs font-semibold text-slate-700 block mb-1">Promokod kodi</label>
           <input
+              aria-label="Promokod kodi"
             type="text"
             required
             value={code}
@@ -66,6 +67,7 @@ export const AddPromoModal: React.FC<AddPromoModalProps> = ({ isOpen, onClose, o
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1">Miqdori</label>
             <input
+              aria-label="Miqdori"
               type="number"
               value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
@@ -77,6 +79,7 @@ export const AddPromoModal: React.FC<AddPromoModalProps> = ({ isOpen, onClose, o
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1">Max ishlatish</label>
             <input
+              aria-label="Max ishlatish"
               type="number"
               value={maxUsage}
               onChange={(e) => setMaxUsage(Number(e.target.value))}
@@ -86,6 +89,7 @@ export const AddPromoModal: React.FC<AddPromoModalProps> = ({ isOpen, onClose, o
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1">Tugash sanasi</label>
             <input
+              aria-label="Tugash sanasi"
               type="date"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}

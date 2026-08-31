@@ -33,6 +33,10 @@ PURPOSE_VISIBILITY = {
     "job": MediaVisibility.PUBLIC,
     "logo": MediaVisibility.PUBLIC,
     "document": MediaVisibility.PRIVATE,
+    # Sent inside a conversation, so readable by its two participants and no
+    # one else. Uploading these as "job" made them public to anyone holding
+    # the URL.
+    "chat": MediaVisibility.PRIVATE,
 }
 
 PDF_MAGIC = b"%PDF-"

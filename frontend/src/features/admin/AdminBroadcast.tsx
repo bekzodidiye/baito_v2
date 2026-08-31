@@ -64,6 +64,7 @@ export const AdminBroadcast: React.FC<AdminBroadcastProps> = ({ onSendBroadcast 
           <div>
             <label className="text-xs font-bold text-slate-700 block mb-1">Sarlavha (Title)</label>
             <input
+              aria-label="Sarlavha (Title)"
               type="text"
               placeholder="Masalan: Tizimda yangilanishlar e'lon qilindi!"
               value={title}

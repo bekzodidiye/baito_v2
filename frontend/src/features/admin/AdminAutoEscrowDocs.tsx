@@ -66,6 +66,7 @@ export const AdminAutoEscrowDocs: React.FC = () => {
               <div>
                 <label className="font-bold text-slate-700 block mb-1">E'tiroz Bildirish Taymer Soati</label>
                 <input
+              aria-label="E'tiroz Bildirish Taymer Soati"
                   type="number"
                   value={autoReleaseHours}
                   onChange={(e) => setAutoReleaseHours(Number(e.target.value))}

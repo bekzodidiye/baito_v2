@@ -83,7 +83,7 @@ export const fetchWorkerApplicationsApi = async () => {
   return await apiClient('/applications/worker');
 };
 
-export type UploadPurpose = 'avatar' | 'job' | 'logo' | 'document';
+export type UploadPurpose = 'avatar' | 'job' | 'logo' | 'document' | 'chat';
 
 export const uploadFileApi = async (
   file: File,

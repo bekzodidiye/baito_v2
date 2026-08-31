@@ -96,11 +96,13 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Platforma Komissiyasi (%)</label>
-                <input type="number" value={fee} onChange={(e) => setFee(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border rounded-xl font-bold" />
+                <input
+              aria-label="Platforma Komissiyasi (%)" type="number" value={fee} onChange={(e) => setFee(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border rounded-xl font-bold" />
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Minimal Soatlik Ish Haqi (UZS)</label>
-                <input type="number" value={minRate} onChange={(e) => setMinRate(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border rounded-xl font-bold" />
+                <input
+              aria-label="Minimal Soatlik Ish Haqi (UZS)" type="number" value={minRate} onChange={(e) => setMinRate(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border rounded-xl font-bold" />
               </div>
             </div>
 

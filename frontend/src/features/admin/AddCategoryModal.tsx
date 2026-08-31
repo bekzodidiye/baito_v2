@@ -43,6 +43,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
         <div>
           <label className="text-xs font-semibold text-slate-700 block mb-1">Nomi</label>
           <input
+              aria-label="Nomi"
             type="text"
             required
             value={newCatName}
@@ -55,6 +56,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1">Emodji / Icon</label>
             <input
+              aria-label="Emodji / Icon"
               type="text"
               value={newCatIcon}
               onChange={(e) => setNewCatIcon(e.target.value)}
@@ -64,6 +66,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1">Komissiya (%)</label>
             <input
+              aria-label="Komissiya (%)"
               type="number"
               min="0"
               max="30"
@@ -86,6 +89,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
         <div>
           <label className="text-xs font-semibold text-slate-700 block mb-1">Ko'nikmalar (vergul bilan ajrating)</label>
           <input
+              aria-label="Ko'nikmalar (vergul bilan ajrating)"
             type="text"
             value={newCatSkills}
             onChange={(e) => setNewCatSkills(e.target.value)}

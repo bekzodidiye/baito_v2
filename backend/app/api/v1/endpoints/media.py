@@ -61,6 +61,21 @@ def _is_identity_document(db: Session, object_key: str) -> Optional[str]:
     return owner[0] if owner else None
 
 
+def _shares_a_chat(db: Session, viewer_id: str, owner_id: str) -> bool:
+    """Are these two people in a conversation together?"""
+    return (
+        db.query(models.Chat.id)
+        .filter(
+            or_(
+                (models.Chat.workerId == viewer_id) & (models.Chat.employerId == owner_id),
+                (models.Chat.employerId == viewer_id) & (models.Chat.workerId == owner_id),
+            )
+        )
+        .first()
+        is not None
+    )
+
+
 @router.get("/{object_key}")
 def get_media(
     object_key: str,
@@ -89,7 +104,10 @@ def get_media(
             raise HTTPException(status_code=401, detail="Tizimga kiring")
         is_owner = owner_id is not None and current_user.id == owner_id
         if not is_owner and current_user.role != "admin":
-            raise HTTPException(status_code=403, detail="Bu faylni ko'rish huquqingiz yo'q")
+            # An image sent in a chat has to be readable by the person it was
+            # sent to. Ownership alone would mean only the sender could open it.
+            if not (owner_id and _shares_a_chat(db, current_user.id, owner_id)):
+                raise HTTPException(status_code=403, detail="Bu faylni ko'rish huquqingiz yo'q")
 
     try:
         obj = get_s3_client().get_object(Bucket=settings.AWS_BUCKET_NAME, Key=object_key)

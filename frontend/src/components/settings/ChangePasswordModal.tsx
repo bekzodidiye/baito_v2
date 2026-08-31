@@ -32,6 +32,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           <div>
             <label className="font-bold text-slate-700 block mb-1">Joriy Parol</label>
             <input
+              aria-label="Joriy Parol"
               type="password"
               required
               value={passData.current}
@@ -43,6 +44,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           <div>
             <label className="font-bold text-slate-700 block mb-1">Yangi Parol</label>
             <input
+              aria-label="Yangi Parol"
               type="password"
               required
               value={passData.newPass}
@@ -54,6 +56,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           <div>
             <label className="font-bold text-slate-700 block mb-1">Yangi Parolni Tasdiqlang</label>
             <input
+              aria-label="Yangi Parolni Tasdiqlang"
               type="password"
               required
               value={passData.confirm}

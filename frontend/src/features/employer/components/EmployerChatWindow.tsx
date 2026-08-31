@@ -56,7 +56,7 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
         // `blob:` resolves only in the sender's browser; upload and send the
         // stored URL so the candidate can actually open it.
         try {
-          const url = await uploadFileApi(pending.file, 'job');
+          const url = await uploadFileApi(pending.file, 'chat');
           textToSend = `[Img:${url}]` + (textToSend ? ` ${textToSend}` : '');
         } catch {
           window.dispatchEvent(new CustomEvent('global-toast', {

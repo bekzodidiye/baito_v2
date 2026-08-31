@@ -64,7 +64,7 @@ export function useChatScreen() {
         // sender's own browser, so the other side saw a broken image. Upload
         // it and reference the stored copy instead.
         try {
-          const url = await uploadFileApi(pending.file, 'job');
+          const url = await uploadFileApi(pending.file, 'chat');
           textToSend = `[Img:${url}]` + (textToSend ? ` ${textToSend}` : '');
         } catch {
           showToast(

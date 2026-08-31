@@ -233,6 +233,45 @@ def test_private_media_is_not_readable_anonymously(client):
     assert client.get(f"/api/v1/media/{key}").status_code == 401
 
 
+def test_a_chat_attachment_is_readable_by_the_other_participant_only(client):
+    """Chat images were uploaded as 'job', which made them public.
+
+    Anyone holding the URL could open one. Private would have been correct
+    except that private means owner-only, and the whole point of sending an
+    image in a chat is that the other person sees it.
+    """
+    from app.models import MediaFile
+    from app.models.media_file import MediaVisibility
+
+    worker = make_user(role="worker", phone="+998901234478")
+    employer = make_user(role="employer", phone="+998901234479")
+    outsider = make_user(role="worker", phone="+998901234480")
+
+    key = "c" * 32 + ".webp"
+    with SessionLocal() as db:
+        db.add(MediaFile(objectKey=key, ownerId=worker.id,
+                         visibility=MediaVisibility.PRIVATE, contentType="image/webp"))
+        db.commit()
+
+    # No conversation yet: the employer is a stranger like anyone else.
+    login(client, employer)
+    assert client.get(f"/api/v1/media/{key}").status_code == 403
+
+    login(client, worker)
+    client.post("/api/v1/chats", json={"employerId": employer.id})
+
+    # Now they share one. Storage is not configured under test, so a 404 here
+    # means the permission check passed and the fetch failed after it.
+    login(client, employer)
+    assert client.get(f"/api/v1/media/{key}").status_code != 403
+
+    login(client, outsider)
+    assert client.get(f"/api/v1/media/{key}").status_code == 403
+
+    client.post("/api/v1/auth/logout")
+    assert client.get(f"/api/v1/media/{key}").status_code == 401
+
+
 def test_media_endpoint_refuses_path_traversal(client):
     for probe in ("../backups/dump.zip", "backups%2Fdump.zip", "..%2F..%2Fetc%2Fpasswd"):
         resp = client.get(f"/api/v1/media/{probe}")

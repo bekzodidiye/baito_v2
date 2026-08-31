@@ -77,6 +77,7 @@ export const AdminAutoReports: React.FC = () => {
             <div>
               <label className="font-bold text-slate-700 block mb-1">Telegram Kanal / Guruh Useri</label>
               <input
+              aria-label="Telegram Kanal / Guruh Useri"
                 type="text"
                 value={telegramChannel}
                 onChange={(e) => setTelegramChannel(e.target.value)}

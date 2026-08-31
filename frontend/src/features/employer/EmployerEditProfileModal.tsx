@@ -79,7 +79,8 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
                 <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">
                   {language === 'uz' ? "Kompaniya nomi" : "Название компании"}
                 </label>
-                <input 
+                <input
+              aria-label={language === 'uz' ? "Kompaniya nomi" : "Название компании"} 
                   type="text"
                   required
                   value={name}
@@ -93,7 +94,8 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
                 <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">
                   {language === 'uz' ? "Telefon raqam" : "Номер телефона"}
                 </label>
-                <input 
+                <input
+              aria-label={language === 'uz' ? "Telefon raqam" : "Номер телефона"} 
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
