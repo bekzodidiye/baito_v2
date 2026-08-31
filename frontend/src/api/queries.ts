@@ -29,6 +29,19 @@ export const createChatApi = async (params: {
   });
 };
 
+/** The user's own support conversation. The admin panel could read and reply
+    to tickets, but nothing let a user open one, so the queue could never fill. */
+export const fetchSupportConversationApi = async () => {
+  return await apiClient('/support/conversation');
+};
+
+export const sendSupportMessageApi = async (text: string) => {
+  return await apiClient('/support/messages', {
+    method: 'POST',
+    body: JSON.stringify({ text }),
+  });
+};
+
 /** Mark everything the other participant sent as read. Deliberately its own
     call rather than a side effect of fetching the messages. */
 export const markChatReadApi = async (chatId: string) => {

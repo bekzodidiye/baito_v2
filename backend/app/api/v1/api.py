@@ -10,6 +10,7 @@ from app.api.v1.endpoints import (
     media,
     notifications,
     payments,
+    support,
     upload,
     users,
 )
@@ -24,5 +25,6 @@ api_router.include_router(chats.router, prefix="/chats", tags=["chats"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
+api_router.include_router(support.router, prefix="/support", tags=["support"])
 api_router.include_router(upload.router, prefix="/upload", tags=["upload"])
 api_router.include_router(media.router, prefix="/media", tags=["media"])

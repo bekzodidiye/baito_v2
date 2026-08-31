@@ -378,3 +378,68 @@ def test_a_malformed_sentry_dsn_cannot_take_the_app_down():
         settings.SENTRY_DSN = original
         import app.main
         importlib.reload(app.main)
+
+
+# ── Support, from the user's side ───────────────────────────────────────────
+
+def test_opening_support_does_not_create_a_ticket(client):
+    """The admin queue should not fill with empty tickets.
+
+    Support is shown in the messages list for everyone, so this endpoint is
+    hit on every visit to that screen.
+    """
+    user = make_user(role="worker", phone="+998955555001")
+    login(client, user)
+
+    body = client.get("/api/v1/support/conversation").json()
+    assert body["ticketId"] is None
+    assert body["messages"] == []
+
+    admin = make_user(role="admin", phone="+998955555002")
+    login(client, admin)
+    tickets = client.get("/api/v1/admin/support-tickets").json()
+    items = tickets if isinstance(tickets, list) else tickets.get("items", [])
+    assert items == []
+
+
+def test_the_first_message_opens_a_ticket_the_admin_can_answer(client):
+    """The models and the admin screens existed; nothing could create a ticket."""
+    user = make_user(role="worker", phone="+998955555003")
+    login(client, user)
+
+    body = client.post("/api/v1/support/messages", json={"text": "To'lov kelmadi"}).json()
+    ticket_id = body["ticketId"]
+    assert ticket_id
+    assert [m["text"] for m in body["messages"]] == ["To'lov kelmadi"]
+    assert body["messages"][0]["fromSupport"] is False
+
+    admin = make_user(role="admin", phone="+998955555004")
+    login(client, admin)
+    resp = client.post(
+        f"/api/v1/admin/support-tickets/{ticket_id}/messages",
+        json={"text": "Tekshiryapmiz"},
+    )
+    assert resp.status_code == 200
+
+    login(client, user)
+    body = client.get("/api/v1/support/conversation").json()
+    assert [(m["text"], m["fromSupport"]) for m in body["messages"]] == [
+        ("To'lov kelmadi", False),
+        ("Tekshiryapmiz", True),
+    ]
+
+
+def test_writing_again_continues_the_same_ticket(client):
+    user = make_user(role="worker", phone="+998955555005")
+    login(client, user)
+
+    first = client.post("/api/v1/support/messages", json={"text": "Birinchi"}).json()
+    second = client.post("/api/v1/support/messages", json={"text": "Ikkinchi"}).json()
+
+    assert second["ticketId"] == first["ticketId"]
+    assert len(second["messages"]) == 2
+
+
+def test_support_requires_a_session(client):
+    assert client.get("/api/v1/support/conversation").status_code == 401
+    assert client.post("/api/v1/support/messages", json={"text": "x"}).status_code == 401

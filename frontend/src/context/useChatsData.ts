@@ -2,7 +2,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { Chat, Message } from '../types';
 import { useApp } from './AppContext';
-import { fetchChats, fetchChatMessages, sendChatMessageApi, markChatReadApi } from '../api/queries';
+import {
+  fetchChats,
+  fetchChatMessages,
+  sendChatMessageApi,
+  markChatReadApi,
+  fetchSupportConversationApi,
+  sendSupportMessageApi,
+} from '../api/queries';
 
 /**
  * Conversations, from the server.
@@ -46,6 +53,26 @@ interface ApiMessage {
 
 const CHATS_KEY = ['chats'] as const;
 const MESSAGES_KEY = 'chat-messages';
+const SUPPORT_KEY = ['support-conversation'] as const;
+
+/** Support is always in the list, above the rest, whether or not anything has
+ *  been said yet. It is not a row in `chats` — it is a ticket — so it carries a
+ *  fixed id the send path recognises. */
+export const SUPPORT_CHAT_ID = 'support';
+
+interface ApiSupportMessage {
+  id: string;
+  senderId: string;
+  fromSupport: boolean;
+  text: string;
+  timestamp?: string | null;
+}
+
+interface ApiSupportConversation {
+  ticketId: string | null;
+  status: string | null;
+  messages: ApiSupportMessage[];
+}
 
 const clockTime = (iso?: string | null): string => {
   if (!iso) return '';
@@ -99,16 +126,46 @@ export function useChatsData(language: 'uz' | 'ru' | 'en') {
     staleTime: 5000,
   });
 
+  const { data: support } = useQuery<ApiSupportConversation>({
+    queryKey: SUPPORT_KEY,
+    queryFn: fetchSupportConversationApi,
+    enabled: isLoggedIn,
+    refetchInterval: activeChatId === SUPPORT_CHAT_ID ? 5000 : 30000,
+  });
+
   const { data: apiMessages = [] } = useQuery<ApiMessage[]>({
     queryKey: [MESSAGES_KEY, activeChatId],
     queryFn: () => fetchChatMessages(activeChatId as string),
-    enabled: Boolean(activeChatId) && isLoggedIn,
+    // Support is a ticket, not a chat row; its messages come from its own query.
+    enabled: Boolean(activeChatId) && activeChatId !== SUPPORT_CHAT_ID && isLoggedIn,
     // Faster while a conversation is open, because that is when a reply is
     // actually being waited for.
     refetchInterval: activeChatId ? 5000 : false,
   });
 
-  const chats: Chat[] = (Array.isArray(apiChats) ? apiChats : []).map((c) =>
+  const supportName =
+    language === 'uz' ? 'Yordam markazi' : language === 'ru' ? 'Служба поддержки' : 'Support Center';
+
+  const supportMessages: Message[] = (support?.messages ?? []).map((m) => ({
+    id: m.id,
+    sender: m.fromSupport ? 'recruiter' : 'user',
+    text: m.text,
+    time: clockTime(m.timestamp),
+  }));
+
+  const supportChat: Chat = {
+    id: SUPPORT_CHAT_ID,
+    companyName: supportName,
+    recruiterName: supportName,
+    online: true,
+    messages: supportMessages,
+    unreadCount: 0,
+    lastMessageTime: supportMessages.length
+      ? supportMessages[supportMessages.length - 1].time
+      : '',
+  };
+
+  const conversations: Chat[] = (Array.isArray(apiChats) ? apiChats : []).map((c) =>
     toChat(
       c,
       c.id === activeChatId
@@ -120,10 +177,21 @@ export function useChatsData(language: 'uz' | 'ru' | 'en') {
     ),
   );
 
+  const chats: Chat[] = [supportChat, ...conversations];
+
   const sendMessage = useCallback(
     async (chatId: string, text: string) => {
       const body = text.trim();
       if (!body || !chatId) return;
+
+      if (chatId === SUPPORT_CHAT_ID) {
+        try {
+          await sendSupportMessageApi(body);
+        } finally {
+          queryClient.invalidateQueries({ queryKey: SUPPORT_KEY });
+        }
+        return;
+      }
 
       // Show it straight away, then reconcile with what the server stored.
       queryClient.setQueryData<ApiMessage[]>([MESSAGES_KEY, chatId], (prev) => [
@@ -152,6 +220,8 @@ export function useChatsData(language: 'uz' | 'ru' | 'en') {
   /** Clear a conversation's badge, on the server and here. */
   const markChatRead = useCallback(
     async (chatId: string) => {
+      // Nothing to mark: the support ticket has no unread state of its own.
+      if (chatId === SUPPORT_CHAT_ID) return;
       // Locally first so the badge goes as the conversation opens.
       queryClient.setQueryData<ApiChat[]>(CHATS_KEY, (prev) =>
         (prev ?? []).map((c) => (c.id === chatId ? { ...c, unreadCount: 0 } : c)),
