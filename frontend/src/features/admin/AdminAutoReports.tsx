@@ -1,20 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { FileText, Send, CheckCircle2, Clock, Download, MessageSquare, Sparkles } from 'lucide-react';
 
-import { SystemSettings } from './types';
+import { AdminStats, SystemSettings } from './types';
+import { sendDigestNowApi } from '../../api/queries';
+import { showToast } from '../../utils/toast';
 
 interface AdminAutoReportsProps {
+  stats: AdminStats | null;
   settings: SystemSettings;
   onUpdateSettings: (cfg: Partial<SystemSettings>) => Promise<unknown> | void;
 }
 
-export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ settings, onUpdateSettings }) => {
+export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, settings, onUpdateSettings }) => {
   // A Celery task posts the digest to this channel every morning; the field
   // used to hold a placeholder that went nowhere.
   const [dailyDigest, setDailyDigest] = useState(settings.telegramDigestEnabled ?? false);
   const [weeklyReport, setWeeklyReport] = useState(true);
   const [telegramChannel, setTelegramChannel] = useState(settings.telegramDigestChannel ?? '');
   const [saving, setSaving] = useState(false);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     setDailyDigest(settings.telegramDigestEnabled ?? false);
@@ -34,33 +38,52 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ settings, on
   };
   const [sentSuccess, setSentSuccess] = useState(false);
 
+  // These used to be invented: "14,850,000 UZS revenue", "142 new users",
+  // dated 2026-07-24 — shown as the platform's own figures and exported to a
+  // CSV named Baito_Admin_Report. They come from /admin/stats now.
+  const money = (n?: number) => `${(n ?? 0).toLocaleString('uz-UZ')} UZS`;
   const reportData = {
-    date: '2026-07-24',
-    totalRevenue: '14,850,000 UZS',
-    newUsers: 142,
-    activeJobs: 38,
-    completedJobs: 94,
-    escrowHeld: '28,400,000 UZS',
-    autoFlaggedSpam: 3,
+    date: new Date().toISOString().slice(0, 10),
+    totalRevenue: money(stats?.totalRevenue),
+    newUsers: stats?.totalUsers ?? 0,
+    activeJobs: stats?.activeJobsCount ?? 0,
+    completedJobs: stats?.completedJobsCount ?? 0,
+    escrowHeld: money(stats?.totalEscrowHeld),
   };
 
-  const handleSendTelegramDigest = () => {
-    setSentSuccess(true);
-    setTimeout(() => {
-      alert(`Telegram Daily Digest muvaffaqiyatli ${telegramChannel} kanaliga yuborildi!`);
-      setSentSuccess(false);
-    }, 1200);
+  const handleSendTelegramDigest = async () => {
+    setSending(true);
+    try {
+      await sendDigestNowApi();
+      setSentSuccess(true);
+      showToast(`Hisobot ${telegramChannel} kanaliga yuborildi`);
+      setTimeout(() => setSentSuccess(false), 2500);
+    } catch (e: any) {
+      showToast(e?.message || "Hisobotni yuborib bo'lmadi");
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleDownloadCsv = () => {
-    const csvContent = "data:text/csv;charset=utf-8,Ko'rsatkich,Qiymat\nJami Daromad,14850000 UZS\nYangi Foydalanuvchilar,142\nTugatilgan Ishlar,94\nEscrow Summasi,28400000 UZS";
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Baito_Admin_Report_${reportData.date}.csv`);
+    const rows = [
+      ["Ko'rsatkich", 'Qiymat'],
+      ['Sana', reportData.date],
+      ['Jami daromad', reportData.totalRevenue],
+      ['Foydalanuvchilar', String(reportData.newUsers)],
+      ['Aktiv ishlar', String(reportData.activeJobs)],
+      ['Yakunlangan ishlar', String(reportData.completedJobs)],
+      ['Eskrouda muzlatilgan', reportData.escrowHeld],
+    ];
+    const csv = rows.map((r) => r.join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Baito_Admin_Report_${reportData.date}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -153,7 +176,6 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ settings, on
               👥 <b>Yangi Ro'yxatdan O'tganlar:</b> +{reportData.newUsers} ta<br />
               🛠️ <b>Aktiv Ishlar:</b> {reportData.activeJobs} ta<br />
               ✅ <b>Tugatilgan Ishlar:</b> {reportData.completedJobs} ta<br />
-              🛡️ <b>Bot Bloklagan Spam E'lonlar:</b> {reportData.autoFlaggedSpam} ta<br />
               ─────────────────────────────
             </div>
             <div className="text-slate-400 text-[11px] font-sans">

@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -111,3 +111,32 @@ def update_settings(
     db.commit()
     db.refresh(row)
     return _serialize(row)
+
+
+@router.post("/reports/digest")
+def send_digest_now(
+    db: Session = Depends(deps.get_db),
+    admin: models.User = Depends(get_admin_user),
+) -> Any:
+    """Send the Telegram digest immediately.
+
+    The button for this used to set a flag and pop "muvaffaqiyatli yuborildi"
+    after 1.2 seconds without sending anything, so an administrator was told a
+    message had gone out that never had.
+    """
+    from app.tasks import send_telegram_digest
+
+    row = _get_or_create(db)
+    if not row.telegramDigestEnabled or not row.telegramDigestChannel:
+        raise HTTPException(
+            status_code=400,
+            detail="Avval Telegram kanalini kiriting va hisobotni yoqing",
+        )
+
+    sent = bool(send_telegram_digest())
+    if not sent:
+        raise HTTPException(
+            status_code=502,
+            detail="Hisobotni yuborib bo'lmadi. Kanal nomi va bot sozlamalarini tekshiring.",
+        )
+    return {"success": True, "channel": row.telegramDigestChannel}

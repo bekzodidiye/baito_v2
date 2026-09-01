@@ -29,6 +29,12 @@ export const createChatApi = async (params: {
   });
 };
 
+/** Send the daily digest now. The button for this used to set a flag and
+    claim success 1.2 seconds later without sending anything. */
+export const sendDigestNowApi = async () => {
+  return await apiClient('/admin/reports/digest', { method: 'POST' });
+};
+
 /** One support ticket with its conversation. The list endpoint returns no
     messages, and passing a list row to the chat view crashed it. */
 export const fetchAdminTicketApi = async (ticketId: string) => {

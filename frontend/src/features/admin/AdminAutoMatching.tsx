@@ -45,11 +45,13 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
   ];
 
   const handleRunSimulator = () => {
-    const matched = sampleCandidates.filter((c) => c.matchScore >= minMatchScore && c.rating >= minWorkerRating);
+    // This used to claim "Push va Telegram xabarnomalari yuborildi" — nothing
+    // was sent, to anyone. It shows which of the example candidates the
+    // current thresholds would keep, and says so.
+    const matched = sampleCandidates.filter(
+      (c) => c.matchScore >= minMatchScore && c.rating >= minWorkerRating,
+    );
     setNotifiedCount(matched.length);
-    setTimeout(() => {
-      alert(`AI Auto-Matching ishga tushirildi! ${matched.length} ta eng mos usta/ishchiga Push va Telegram orqali taklifnoma yuborildi.`);
-    }, 100);
   };
 
   return (
@@ -151,7 +153,7 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
             </h3>
             {notifiedCount !== null && (
               <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-extrabold rounded-full flex items-center gap-1">
-                <CheckCircle2 size={13} /> {notifiedCount} ta ustaga yuborildi
+                <CheckCircle2 size={13} /> {notifiedCount} ta namuna nomzod chegaradan o'tdi
               </span>
             )}
           </div>

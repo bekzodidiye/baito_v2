@@ -167,7 +167,12 @@ export const AdminAutoEscrowDocs: React.FC<AdminAutoEscrowDocsProps> = ({ settin
           <div className="p-5 border border-slate-200 rounded-xl bg-slate-50/50 space-y-4 font-sans text-xs">
             <div className="flex items-start justify-between border-b border-slate-200 pb-3">
               <div>
-                <div className="font-black text-slate-900 text-sm">BAITO PLATFORMA ESCROW ACT</div>
+                <div className="font-black text-slate-900 text-sm">
+                    BAITO PLATFORMA ESCROW ACT
+                    <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-extrabold rounded-full align-middle">
+                      NAMUNA
+                    </span>
+                  </div>
                 <div className="text-[10px] text-slate-500">Hujjat raqami: {sampleContract.id}</div>
               </div>
               <div className="text-right">

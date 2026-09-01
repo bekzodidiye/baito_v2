@@ -166,7 +166,7 @@ export const AdminPanel: React.FC = () => {
           )}
 
           {activeTab === 'auto_reports' && (
-            <AdminAutoReports settings={settings} onUpdateSettings={updateSettings} />
+            <AdminAutoReports stats={stats} settings={settings} onUpdateSettings={updateSettings} />
           )}
 
           {activeTab === 'auto_escrow_docs' && (
