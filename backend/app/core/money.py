@@ -17,8 +17,14 @@ _SEPARATORS = str.maketrans({" ": "", " ": "", "'": "", "’": "", ",": "", "."
 MAX_REASONABLE_SALARY_UZS = 500_000_000
 
 
-def parse_salary_amounts(salary: str | None) -> list[int]:
-    """Extract every distinct amount mentioned in a salary string."""
+def parse_salary_amounts(salary: str | None, bounded: bool = True) -> list[int]:
+    """Extract every distinct amount mentioned in a salary string.
+
+    ``bounded`` drops implausible figures, which is what callers computing a
+    wage want. Pass False to see what was actually written: a figure over the
+    bound and no figure at all both reduce to zero otherwise, and validation
+    has to tell those two apart.
+    """
     if not salary:
         return []
     amounts = []
@@ -27,7 +33,7 @@ def parse_salary_amounts(salary: str | None) -> list[int]:
         if not digits.isdigit():
             continue
         value = int(digits)
-        if 0 < value <= MAX_REASONABLE_SALARY_UZS:
+        if not bounded or 0 < value <= MAX_REASONABLE_SALARY_UZS:
             amounts.append(value)
     return amounts
 
