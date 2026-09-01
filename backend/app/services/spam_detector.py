@@ -1,6 +1,8 @@
 import re
 from typing import Any, Dict, Optional, Sequence
 
+from app.core.money import parse_salary_amounts
+
 
 def keywords_from_settings(db) -> Optional[list[str]]:
     """The administrator's own keyword list, if they have set one.
@@ -63,10 +65,19 @@ class SpamFraudDetector:
             flags.append("Tavsifda to'g'ridan-to'g'ri telefon raqami ko'rsatilgan (Platformadan tashqari muloqot xavfi)")
             risk_score += 20
 
-        # 3. Abnormal / unrealistic salary check (e.g. > 100,000,000 UZS/day for manual labor)
-        salary_digits = ''.join(filter(str.isdigit, salary or ''))
-        if salary_digits and int(salary_digits) > 50_000_000:
-            flags.append(f"Haqiqatdan yiroq maosh ko'rsatilgan ({salary_digits} so'm)")
+        # 3. Abnormal / unrealistic salary. A high-but-usable figure is a
+        # heuristic worth 40. A figure the parser cannot represent is not: it
+        # resolves to zero, so hiring took nothing into escrow while the listing
+        # advertised the full amount, and the worker was owed nothing.
+        written = parse_salary_amounts(salary, bounded=False)
+        if written and not parse_salary_amounts(salary):
+            flags.append(
+                f"Maosh tizim qabul qila oladigan chegaradan oshib ketgan "
+                f"({max(written)} so'm)"
+            )
+            risk_score += 100
+        elif written and max(written) > 50_000_000:
+            flags.append(f"Haqiqatdan yiroq maosh ko'rsatilgan ({max(written)} so'm)")
             risk_score += 40
 
         is_spam = risk_score >= 50
