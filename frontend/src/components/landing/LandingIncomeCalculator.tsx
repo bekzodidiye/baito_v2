@@ -81,6 +81,7 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
                 <span className="text-brand-primary font-black text-sm">{hoursPerDay} soat / kun</span>
               </div>
               <input
+              aria-label="Kunlik ish vaqti (soat)"
                 type="range"
                 min="4"
                 max="12"
@@ -98,6 +99,7 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
                 <span className="text-sky-600 font-black text-sm">{daysPerWeek} kun / hafta</span>
               </div>
               <input
+              aria-label="Haftalik ish kunlari"
                 type="range"
                 min="1"
                 max="7"

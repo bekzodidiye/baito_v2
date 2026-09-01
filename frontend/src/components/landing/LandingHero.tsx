@@ -97,6 +97,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
                 <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl flex-1 border border-slate-200/80 text-slate-900 focus-within:border-brand-primary/60 transition-colors">
                   <Search size={19} className="text-brand-primary shrink-0" />
                   <input
+              aria-label="Ish qidirish"
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}

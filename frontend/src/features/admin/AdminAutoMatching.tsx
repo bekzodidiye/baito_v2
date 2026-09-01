@@ -86,6 +86,7 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
             <div>
               <label className="font-bold text-slate-700 block mb-1">Minimal Moslik Chegarasi (%): {minMatchScore}%</label>
               <input
+              aria-label="Minimal moslik chegarasi (%)"
                 type="range"
                 min="50"
                 max="95"
@@ -99,6 +100,7 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
             <div>
               <label className="font-bold text-slate-700 block mb-1">Maksimal Masofa Радиуси (km): {maxDistanceKm} km</label>
               <input
+              aria-label="Maksimal masofa (km)"
                 type="range"
                 min="5"
                 max="50"
@@ -112,6 +114,7 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
             <div>
               <label className="font-bold text-slate-700 block mb-1">Minimal Usta Reytingi: {minWorkerRating} ⭐</label>
               <input
+              aria-label="Minimal usta reytingi"
                 type="range"
                 min="3.0"
                 max="4.9"

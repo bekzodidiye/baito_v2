@@ -118,6 +118,7 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
         </label>
         <div className="relative">
           <input
+              aria-label={language === 'uz' ? "Masalan: Ibn Sino ko'chasi, 17A" : "e.g. Ibn Sino street, 17A"}
             type="text"
             placeholder={language === 'uz' ? "Masalan: Ibn Sino ko'chasi, 17A" : "e.g. Ibn Sino street, 17A"}
             className="w-full bg-slate-50 border rounded-xl px-4 py-3 pl-10 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"

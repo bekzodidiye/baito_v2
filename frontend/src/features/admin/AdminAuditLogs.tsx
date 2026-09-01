@@ -114,6 +114,7 @@ export const AdminAuditLogs: React.FC = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
+              aria-label="Audit loglarni qidirish"
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}

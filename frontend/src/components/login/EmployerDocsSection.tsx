@@ -103,6 +103,7 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           }`}
         >
           <input
+              aria-label="Guvohnoma fayli"
             type="file"
             ref={doc1InputRef}
             onChange={handleDoc1Upload}
@@ -157,6 +158,7 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           }`}
         >
           <input
+              aria-label="Qo'shimcha hujjat fayli"
             type="file"
             ref={doc2InputRef}
             onChange={handleDoc2Upload}

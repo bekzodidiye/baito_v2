@@ -68,6 +68,7 @@ export const AdminCategories: React.FC = () => {
       <div className="relative max-w-md">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
         <input
+              aria-label="Kategoriyalarni qidirish"
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

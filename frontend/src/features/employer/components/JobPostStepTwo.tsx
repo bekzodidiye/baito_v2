@@ -129,7 +129,8 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
             <DollarSign size={14} className="stroke-[2.5] text-brand-primary" />
             {language === 'uz' ? "Umumiy to'lov (so'm) *" : "Total Salary (UZS) *"}
           </label>
-          <input type="number" placeholder="200000" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} />
+          <input
+              aria-label="200000" type="number" placeholder="200000" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} />
         </div>
       </div>
 
@@ -139,7 +140,8 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
           <Truck size={14} className="stroke-[2.5] text-brand-primary" />
           {language === 'uz' ? "Transport xarajati (so'm)" : "Transport Expenses"}
         </label>
-        <input type="number" placeholder="15000" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={transportRate} onChange={(e) => setTransportRate(e.target.value)} />
+        <input
+              aria-label="15000" type="number" placeholder="15000" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={transportRate} onChange={(e) => setTransportRate(e.target.value)} />
       </div>
 
       {/* Talablar va shartlar */}

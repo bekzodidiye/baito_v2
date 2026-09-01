@@ -120,6 +120,7 @@ export const SecurityScreen: React.FC = () => {
       {showSearch && (
         <div className="pt-4 px-5 max-w-4xl mx-auto w-full">
           <input
+              aria-label="Xavfsizlik bo'limlaridan izlash..."
             type="text"
             placeholder="Xavfsizlik bo'limlaridan izlash..."
             value={searchQuery}

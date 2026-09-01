@@ -60,7 +60,8 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
           >
             <Camera size={14} className="stroke-[2.2]" />
           </button>
-          <input 
+          <input
+              aria-label="Profil rasmini yuklash" 
             ref={fileInputRef}
             type="file" 
             accept="image/*" 

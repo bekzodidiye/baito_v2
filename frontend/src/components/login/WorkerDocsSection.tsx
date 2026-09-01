@@ -108,7 +108,8 @@ export const WorkerDocsSection: React.FC<WorkerDocsSectionProps> = (props) => {
           onClick={triggerDoc3Select}
           className={`border border-dashed rounded-xl p-4 text-center cursor-pointer ${docFileName3 ? 'border-brand-primary bg-brand-primary/10' : 'border-slate-200/80 bg-white'}`}
         >
-          <input type="file" ref={doc3InputRef} onChange={handleDoc3Upload} accept="image/*" className="hidden" />
+          <input
+              aria-label="Selfi fayli" type="file" ref={doc3InputRef} onChange={handleDoc3Upload} accept="image/*" className="hidden" />
           <Camera size={20} className="text-slate-400 mx-auto mb-1" />
           <p className="text-xs font-bold text-slate-700">{docFileName3 || t.selfie}</p>
         </div>

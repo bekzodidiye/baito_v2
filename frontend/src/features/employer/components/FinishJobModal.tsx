@@ -120,6 +120,7 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
                 </label>
                 <div className="relative">
                   <input
+              aria-label="Qo'shimcha bonus summasi"
                     type="text"
                     value={bonus}
                     onChange={(e) => {

@@ -181,6 +181,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
           <div className="relative w-full sm:w-64">
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
+              aria-label="Qidiruv..."
               type="text"
               placeholder="Qidiruv..."
               value={search}

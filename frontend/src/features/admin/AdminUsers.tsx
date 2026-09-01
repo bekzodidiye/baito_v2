@@ -31,6 +31,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
         <div className="relative w-full sm:w-80">
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
+              aria-label="Ism, telefon yoki kompaniya..."
             type="text"
             placeholder="Ism, telefon yoki kompaniya..."
             value={search}

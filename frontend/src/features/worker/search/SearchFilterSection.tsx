@@ -74,6 +74,7 @@ const SearchFilterSectionComponent: React.FC<SearchFilterSectionProps> = ({
       <div className="relative flex-1">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-outline" size={20} />
         <input
+              aria-label={t.keywordPlaceholder || "Kasb, kompaniya yoki kalit so'z..."}
           type="text"
           className="w-full bg-white text-brand-text font-sans rounded-full py-3 pl-12 pr-4 shadow-[inset_0_4px_8px_rgba(0,0,0,0.14),_0_0_12px_rgba(0,0,0,0.04)] border-0 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-brand-outline text-sm"
           placeholder={t.keywordPlaceholder || "Kasb, kompaniya yoki kalit so'z..."}

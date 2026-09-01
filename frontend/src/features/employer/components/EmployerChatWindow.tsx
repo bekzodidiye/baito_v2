@@ -220,6 +220,7 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
           <form onSubmit={handleSend} className="flex-1 relative flex flex-col items-start gap-1 w-full">
             <div className="w-full relative flex items-center">
               <input
+              aria-label={t.typeMessage}
                 type="text"
                 className="w-full bg-slate-50 text-brand-text font-sans rounded-full py-3 px-5 pr-12 border-none focus:outline-none transition-all placeholder:text-brand-outline text-xs font-semibold h-11"
                 placeholder={t.typeMessage}

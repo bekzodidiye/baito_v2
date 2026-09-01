@@ -218,6 +218,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
         {/* Terms and conditions checkbox */}
         <div className="flex items-start gap-3 pt-2 group">
           <input
+              aria-label="Foydalanish shartlariga roziman"
             type="checkbox"
             checked={agreeTerms}
             readOnly

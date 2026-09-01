@@ -104,7 +104,8 @@ export const SupportChatScreen: React.FC = () => {
       <footer className="sticky bottom-0 bg-white border-t border-slate-100 p-3 shrink-0 w-full z-30">
         <form onSubmit={handleSendMessage} className="flex items-center gap-2">
           <div className="flex-1 bg-brand-surface-low rounded-full px-4 py-2 flex items-center">
-            <input 
+            <input
+              aria-label="Xabar matni" 
               type="text" 
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}

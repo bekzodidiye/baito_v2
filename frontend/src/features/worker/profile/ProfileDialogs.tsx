@@ -96,7 +96,8 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                   
                   <div className="flex flex-col items-center justify-center mb-6">
                     <div className="w-[88px] h-[88px] rounded-full border border-dashed border-slate-300 hover:border-brand-primary/40 flex items-center justify-center relative bg-white cursor-pointer transition-all active:scale-95 group shadow-3xs">
-                      <input 
+                      <input
+              aria-label="Hujjat rasmini yuklash" 
                         type="file"
                         accept="image/*"
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 rounded-full"

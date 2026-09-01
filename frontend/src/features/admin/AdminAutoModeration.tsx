@@ -150,6 +150,7 @@ export const AdminAutoModeration: React.FC<AdminAutoModerationProps> = ({
 
           <form onSubmit={handleAddWord} className="flex gap-2">
             <input
+              aria-label="Yangi taqiqlangan so'z"
               type="text"
               value={newWord}
               onChange={(e) => setNewWord(e.target.value)}

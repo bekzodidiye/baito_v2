@@ -75,7 +75,8 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           <Briefcase size={14} className="text-brand-primary" />
           {language === 'uz' ? "Ish / Vazifa nomi *" : "Job Title *"}
         </label>
-        <input type="text" placeholder={language === 'uz' ? "Masalan: Omborda yuk tashuvchi / Kassir" : "e.g. Warehouse Loader"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input
+              aria-label={language === 'uz' ? "Masalan: Omborda yuk tashuvchi / Kassir" : "e.g. Warehouse Loader"} type="text" placeholder={language === 'uz' ? "Masalan: Omborda yuk tashuvchi / Kassir" : "e.g. Warehouse Loader"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20" value={title} onChange={(e) => setTitle(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -97,7 +98,8 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
             <span className="text-xs font-bold text-slate-600">{language === 'uz' ? "Rasm yuklash uchun bosing" : "Click to upload image"}</span>
           </div>
         )}
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+        <input
+              aria-label="E'lon rasmini yuklash" ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -127,7 +129,8 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           })}
         </div>
         <div className="flex items-center gap-2 mt-1">
-          <input type="text" placeholder={language === 'uz' ? "Yangi teg qo'shish (#Student, #Bo'shVaqt)..." : "Add custom tag..."} className="flex-1 bg-slate-50 border rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={customTag} onChange={(e) => setCustomTag(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddCustomTag(e)} />
+          <input
+              aria-label={language === 'uz' ? "Yangi teg qo'shish (#Student, #Bo'shVaqt)..." : "Add custom tag..."} type="text" placeholder={language === 'uz' ? "Yangi teg qo'shish (#Student, #Bo'shVaqt)..." : "Add custom tag..."} className="flex-1 bg-slate-50 border rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={customTag} onChange={(e) => setCustomTag(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddCustomTag(e)} />
           <button type="button" onClick={() => handleAddCustomTag()} className="px-3.5 py-2 bg-brand-primary text-white text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer"><Plus size={14} /> {language === 'uz' ? "Qo'shish" : "Add"}</button>
         </div>
       </div>
@@ -137,7 +140,8 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           <Building size={14} className="text-brand-primary" />
           {language === 'uz' ? "Tashkilot nomi" : "Company Name"}
         </label>
-        <input type="text" placeholder="e.g. Murod Buildings" className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={company} onChange={(e) => setCompany(e.target.value)} />
+        <input
+              aria-label="e.g. Murod Buildings" type="text" placeholder="e.g. Murod Buildings" className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={company} onChange={(e) => setCompany(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-2">

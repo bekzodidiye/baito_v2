@@ -201,7 +201,8 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
           {showTopUp && (
             <div className="p-5">
               <form onSubmit={handleTopUpSubmit} className="flex gap-3 max-w-sm">
-                <input 
+                <input
+              aria-label="To'ldirish summasi" 
                   type="number" 
                   value={topUpAmount} 
                   onChange={(e) => setTopUpAmount(e.target.value)} 
@@ -314,7 +315,8 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
           
           <div className="p-4 border-t border-slate-100 bg-white shrink-0">
             <form onSubmit={handleAddNote} className="flex gap-2">
-              <input 
+              <input
+              aria-label="Izoh matni" 
                 type="text" 
                 value={newNote} 
                 onChange={(e) => setNewNote(e.target.value)} 

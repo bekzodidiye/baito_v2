@@ -87,7 +87,8 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       )}
 
       <div className="w-full max-w-5xl mx-auto flex items-end gap-2 px-4 pb-3 pt-2 relative bg-white">
-        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+        <input
+              aria-label="Fayl biriktirish" type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
         <button 
           onClick={() => fileInputRef.current?.click()} 
           type="button"
@@ -100,6 +101,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
         <form onSubmit={handleSend} className="flex-1 relative flex flex-col items-start w-full">
           <div className="w-full relative flex items-center">
             <input
+              aria-label={t.typeMessage}
               type="text"
               className="w-full bg-slate-50 text-brand-text font-sans rounded-full py-3 px-5 pr-12 border-none focus:outline-none transition-all placeholder:text-brand-outline text-xs font-semibold h-11"
               placeholder={t.typeMessage}

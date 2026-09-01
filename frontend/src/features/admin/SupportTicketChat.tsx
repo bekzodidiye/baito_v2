@@ -100,6 +100,7 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
         </div>
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
+              aria-label="Javob matni"
             type="text"
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}

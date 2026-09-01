@@ -75,7 +75,8 @@ export const ProfileInfoView: React.FC<ProfileInfoViewProps> = (props) => {
             <Plus size={12} className="stroke-[3]" />
           </div>
         </div>
-        <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
+        <input
+              aria-label="Profil rasmini yuklash" type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
         <p className="mt-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{t.uploadPhoto}</p>
       </div>
 
