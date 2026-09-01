@@ -1,7 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Chat, Message } from '../types';
 import { useApp } from './AppContext';
+import { openChatSocket, SocketMessage } from '../api/chatSocket';
 import {
   fetchChats,
   fetchChatMessages,
@@ -138,9 +139,8 @@ export function useChatsData(language: 'uz' | 'ru' | 'en') {
     queryFn: () => fetchChatMessages(activeChatId as string),
     // Support is a ticket, not a chat row; its messages come from its own query.
     enabled: Boolean(activeChatId) && activeChatId !== SUPPORT_CHAT_ID && isLoggedIn,
-    // Faster while a conversation is open, because that is when a reply is
-    // actually being waited for.
-    refetchInterval: activeChatId ? 5000 : false,
+    // The socket delivers new messages; this is the net under it.
+    refetchInterval: activeChatId ? 20000 : false,
   });
 
   const supportName =
@@ -178,6 +178,26 @@ export function useChatsData(language: 'uz' | 'ru' | 'en') {
   );
 
   const chats: Chat[] = [supportChat, ...conversations];
+
+  // Live updates for the conversation on screen. Polling stays as the
+  // fallback: if the upgrade is refused the interval still carries it.
+  useEffect(() => {
+    if (!isLoggedIn || !activeChatId || activeChatId === SUPPORT_CHAT_ID) return;
+    const chatId = activeChatId;
+
+    const socket = openChatSocket(chatId, (msg: SocketMessage) => {
+      queryClient.setQueryData<ApiMessage[]>([MESSAGES_KEY, chatId], (prev) => {
+        const list = prev ?? [];
+        // The server echoes to everyone including the author, who already has
+        // this from their own optimistic insert.
+        if (list.some((m) => m.id === msg.id)) return list;
+        return [...list.filter((m) => !m.id.startsWith('pending_')), msg];
+      });
+      queryClient.invalidateQueries({ queryKey: CHATS_KEY });
+    });
+
+    return () => socket.close();
+  }, [isLoggedIn, activeChatId, queryClient]);
 
   const sendMessage = useCallback(
     async (chatId: string, text: string) => {

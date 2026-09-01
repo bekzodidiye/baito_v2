@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEmployer } from './useEmployer';
+import { openChatSocket, SocketMessage } from '../api/chatSocket';
 import { fetchChats, fetchChatMessages, sendChatMessageApi, createChatApi, markChatReadApi } from '../api/queries';
 
 /**
@@ -111,7 +112,8 @@ export const useEmployerChat = (
     queryKey: [MESSAGES_KEY, selectedSessionId],
     queryFn: () => fetchChatMessages(selectedSessionId as string),
     enabled: Boolean(selectedSessionId),
-    refetchInterval: selectedSessionId ? 5000 : false,
+    // The socket delivers new messages; this is the net under it.
+    refetchInterval: selectedSessionId ? 20000 : false,
   });
 
   const toMessage = useCallback(
@@ -143,6 +145,23 @@ export const useEmployerChat = (
   }));
 
   const activeSession = sessions.find((s) => s.id === selectedSessionId);
+
+  // Same live updates as the worker side; polling remains the fallback.
+  useEffect(() => {
+    if (!employer?.id || !selectedSessionId) return;
+    const chatId = selectedSessionId;
+
+    const socket = openChatSocket(chatId, (msg: SocketMessage) => {
+      queryClient.setQueryData<ApiMessage[]>([MESSAGES_KEY, chatId], (prev) => {
+        const list = prev ?? [];
+        if (list.some((m) => m.id === msg.id)) return list;
+        return [...list.filter((m) => !m.id.startsWith('pending_')), msg];
+      });
+      queryClient.invalidateQueries({ queryKey: CHATS_KEY });
+    });
+
+    return () => socket.close();
+  }, [employer?.id, selectedSessionId, queryClient]);
 
   const sendMessage = useCallback(
     async (text: string) => {
