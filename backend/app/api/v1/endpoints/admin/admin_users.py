@@ -182,14 +182,29 @@ def change_role(
     if payload.isVerified is not None:
         changes["isVerified"] = {"from": user.isVerified, "to": payload.isVerified}
         user.isVerified = payload.isVerified
+        # Wording the admin panel can edit. It used to be a literal here, so
+        # the templates screen edited a React array that reached nothing.
+        settings_row = (
+            db.query(models.SystemSetting)
+            .filter(models.SystemSetting.id == "singleton")
+            .first()
+        )
+        default = (
+            "Sizning shaxsingiz va hujjatlaringiz tasdiqlandi!"
+            if user.isVerified
+            else "Hujjatlaringiz rad etildi, iltimos qaytadan to'g'ri hujjatlarni yuklang."
+        )
+        template = (
+            getattr(settings_row, "notifVerifiedTemplate", None)
+            if user.isVerified
+            else getattr(settings_row, "notifRejectedTemplate", None)
+        ) if settings_row else None
+        message = (template or default).replace("{user_name}", user.name or "")
+
         db.add(models.Notification(
             userId=user.id,
             title="Verifikatsiya holati",
-            message=(
-                "Sizning shaxsingiz va hujjatlaringiz tasdiqlandi!"
-                if user.isVerified
-                else "Hujjatlaringiz rad etildi, iltimos qaytadan to'g'ri hujjatlarni yuklang."
-            ),
+            message=message,
             type="system",
         ))
 

@@ -518,3 +518,34 @@ def test_settings_are_validated(client):
     login(client, admin)
     assert client.put("/api/v1/admin/settings", json={"matchMinScore": 500}).status_code == 422
     assert client.put("/api/v1/admin/settings", json={"escrowAutoReleaseHours": 0}).status_code == 422
+
+
+def test_the_verification_message_uses_the_admin_s_wording(client):
+    """The templates screen edited a React array; the wording was a literal."""
+    admin = make_user(role="admin", phone="+998944444006")
+    _set_settings(
+        client, admin,
+        notifVerifiedTemplate="Salom {user_name}, hujjatlaringiz tasdiqlandi.",
+        notifRejectedTemplate="{user_name}, hujjatlar rad etildi.",
+    )
+
+    worker = make_user(role="worker", phone="+998944444007", name="Ali")
+    login(client, admin)
+    assert client.patch(
+        f"/api/v1/admin/users/{worker.id}/role", json={"isVerified": True}
+    ).status_code == 200
+
+    login(client, worker)
+    messages = [n["message"] for n in client.get("/api/v1/notifications").json()]
+    assert "Salom Ali, hujjatlaringiz tasdiqlandi." in messages
+
+
+def test_the_default_wording_is_used_when_no_template_is_set(client):
+    admin = make_user(role="admin", phone="+998944444008")
+    worker = make_user(role="worker", phone="+998944444009", name="Vali")
+    login(client, admin)
+    client.patch(f"/api/v1/admin/users/{worker.id}/role", json={"isVerified": False})
+
+    login(client, worker)
+    messages = [n["message"] for n in client.get("/api/v1/notifications").json()]
+    assert any("rad etildi" in m for m in messages)

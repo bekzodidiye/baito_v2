@@ -154,7 +154,7 @@ export const AdminPanel: React.FC = () => {
           )}
 
           {activeTab === 'notification_rules' && (
-            <AdminNotificationRules />
+            <AdminNotificationRules settings={settings} onUpdateSettings={updateSettings} />
           )}
 
           {activeTab === 'auto_moderation' && (

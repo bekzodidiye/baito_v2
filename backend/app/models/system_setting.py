@@ -37,3 +37,10 @@ class SystemSetting(Base):
     matchMinScore = Column(Integer, default=80)
     matchMaxDistanceKm = Column(Integer, default=15)
     matchMinWorkerRating = Column(Float, default=0.0)
+
+    # Notification wording an administrator can edit. Only the two events that
+    # exist are stored: the templates screen also listed "new job in your
+    # area" and an inactivity reminder, neither of which anything sends.
+    # {user_name} is substituted when the message is written.
+    notifVerifiedTemplate = Column(Text, nullable=True)
+    notifRejectedTemplate = Column(Text, nullable=True)

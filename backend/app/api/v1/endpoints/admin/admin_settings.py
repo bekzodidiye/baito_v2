@@ -32,6 +32,8 @@ SETTING_FIELDS = (
     "matchMinScore",
     "matchMaxDistanceKm",
     "matchMinWorkerRating",
+    "notifVerifiedTemplate",
+    "notifRejectedTemplate",
 )
 
 
@@ -55,6 +57,8 @@ class SettingsPayload(BaseModel):
     matchMinScore: Optional[int] = Field(default=None, ge=0, le=100)
     matchMaxDistanceKm: Optional[int] = Field(default=None, ge=1, le=1000)
     matchMinWorkerRating: Optional[float] = Field(default=None, ge=0, le=5)
+    notifVerifiedTemplate: Optional[str] = Field(default=None, max_length=1000)
+    notifRejectedTemplate: Optional[str] = Field(default=None, max_length=1000)
 
 
 def _get_or_create(db: Session) -> models.SystemSetting:

@@ -190,6 +190,8 @@ export interface SystemSettings {
   matchMinScore?: number;
   matchMaxDistanceKm?: number;
   matchMinWorkerRating?: number;
+  notifVerifiedTemplate?: string | null;
+  notifRejectedTemplate?: string | null;
 }
 
 /** The statuses the API actually uses. The screen previously filtered on

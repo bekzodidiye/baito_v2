@@ -1,101 +1,132 @@
-import React, { useState } from 'react';
-import { NotificationTemplate } from './types';
-import { BellRing, Plus, Edit2, CheckCircle, MessageSquare, Smartphone, Zap, ToggleLeft, ToggleRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { BellRing, CheckCircle, AlertTriangle } from 'lucide-react';
+import { SystemSettings } from './types';
 
-const INITIAL_RULES: NotificationTemplate[] = [
+/**
+ * Notification wording.
+ *
+ * This screen used to list four templates in a local array with toggles that
+ * flipped a boolean in React state. Editing one changed nothing: the wording
+ * that actually goes out was a literal in the backend, and two of the four
+ * described events nothing in the system sends.
+ *
+ * The two that correspond to a real event are stored and used. The other two
+ * are still listed, because the intent behind them is worth keeping visible,
+ * but they say plainly that nothing sends them yet rather than offering a
+ * switch that does nothing.
+ */
+
+interface AdminNotificationRulesProps {
+  settings: SystemSettings;
+  onUpdateSettings: (cfg: Partial<SystemSettings>) => Promise<unknown> | void;
+}
+
+const DEFAULT_VERIFIED =
+  "Tabriklaymiz, {user_name}! Hujjatlaringiz muvaffaqiyatli tasdiqlandi.";
+const DEFAULT_REJECTED =
+  "Hurmatli {user_name}, hujjatlaringiz rad etildi. Qayta yuklash uchun profilingizga o'ting.";
+
+const NOT_WIRED = [
   {
-    id: 'notif-1',
-    title: 'Hujjat Tasdiqlandi (Verification Success)',
-    eventTrigger: 'verification_approved',
-    channel: 'both',
-    bodyTemplate: 'Tabriklaymiz, {user_name}! Hujjatlaringiz muvaffaqiyatli tasdiqlandi. Endi e\'lonlarga ariza topshirishingiz mumkin.',
-    isActive: true,
+    title: "Yangi ish e'loni (hududingizda)",
+    why: "Bunday xabarnoma yuboradigan kod hozircha yo'q.",
   },
   {
-    id: 'notif-2',
-    title: 'Hujjat Rad Etildi (Verification Rejected)',
-    eventTrigger: 'verification_rejected',
-    channel: 'both',
-    bodyTemplate: 'Hurmatli {user_name}, hujjatlaringiz rad etildi. Sabab: {reason}. Qayta yuklash uchun profilingizga o\'ting.',
-    isActive: true,
-  },
-  {
-    id: 'notif-3',
-    title: 'Yangi Ish E\'loni Yaratildi',
-    eventTrigger: 'job_created',
-    channel: 'push',
-    bodyTemplate: 'Sizning hududingizda yangi ish joylandi: "{job_title}". Darhol ko\'rib chiqing!',
-    isActive: true,
-  },
-  {
-    id: 'notif-4',
-    title: 'Nofaollik bo\'yicha Eslatma (7 kun kirmaganlar)',
-    eventTrigger: 'inactive_reminder',
-    channel: 'sms',
-    bodyTemplate: '{user_name}, Baito ilovasida siz uchun 15+ yangi ish takliflari bor! Darhol ilovani oching.',
-    isActive: false,
+    title: 'Nofaollik eslatmasi (7 kun kirmaganlar)',
+    why: "Rejalashtirilgan vazifa yozilmagan.",
   },
 ];
 
-export const AdminNotificationRules: React.FC = () => {
-  const [rules, setRules] = useState<NotificationTemplate[]>(INITIAL_RULES);
+export const AdminNotificationRules: React.FC<AdminNotificationRulesProps> = ({
+  settings,
+  onUpdateSettings,
+}) => {
+  const [verified, setVerified] = useState(settings.notifVerifiedTemplate ?? DEFAULT_VERIFIED);
+  const [rejected, setRejected] = useState(settings.notifRejectedTemplate ?? DEFAULT_REJECTED);
+  const [saving, setSaving] = useState(false);
 
-  const toggleRule = (id: string) => {
-    setRules(rules.map((r) => (r.id === id ? { ...r, isActive: !r.isActive } : r)));
+  useEffect(() => {
+    setVerified(settings.notifVerifiedTemplate ?? DEFAULT_VERIFIED);
+    setRejected(settings.notifRejectedTemplate ?? DEFAULT_REJECTED);
+  }, [settings.notifVerifiedTemplate, settings.notifRejectedTemplate]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onUpdateSettings({
+        notifVerifiedTemplate: verified.trim() || DEFAULT_VERIFIED,
+        notifRejectedTemplate: rejected.trim() || DEFAULT_REJECTED,
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <BellRing className="text-amber-500" size={24} />
-            Avto-Xabarnoma Qoidalari va Shablonlar
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Tizim hodisalari va triggerlari bo'yicha avtomatik SMS va Push bildirishnomalar
+    <div className="space-y-5 text-xs">
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+        <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+          <BellRing size={20} className="text-blue-600" />
+          <span>Avtomatik Xabarnoma Matnlari</span>
+        </h2>
+        <p className="text-xs text-slate-500 mt-1 font-medium">
+          Foydalanuvchiga yuboriladigan matnlar. <code>{'{user_name}'}</code> foydalanuvchi ismiga almashadi.
+        </p>
+      </div>
+
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex items-center gap-2 text-emerald-700 font-extrabold">
+          <CheckCircle size={15} /> Ishlaydigan xabarnomalar
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="notif-verified" className="font-bold text-slate-700 block">
+            Hujjatlar tasdiqlanganda
+          </label>
+          <textarea
+            id="notif-verified"
+            value={verified}
+            onChange={(e) => setVerified(e.target.value)}
+            rows={3}
+            className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-medium focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="notif-rejected" className="font-bold text-slate-700 block">
+            Hujjatlar rad etilganda
+          </label>
+          <textarea
+            id="notif-rejected"
+            value={rejected}
+            onChange={(e) => setRejected(e.target.value)}
+            rows={3}
+            className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-medium focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <p className="text-[11px] text-slate-500 font-medium">
+            Hujjatlarni tasdiqlash bo'limida qo'llanadi.
           </p>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs rounded-xl cursor-pointer shrink-0"
+          >
+            {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+          </button>
         </div>
       </div>
 
-      {/* Rules List */}
-      <div className="space-y-3">
-        {rules.map((rule) => (
-          <div key={rule.id} className="bg-white border border-slate-200 rounded-2xl p-5 hover:shadow-xs transition">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-100 text-amber-600">
-                  <Zap size={20} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-800 text-sm">{rule.title}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
-                      Trigger: {rule.eventTrigger}
-                    </span>
-                    <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
-                      Kanal: {rule.channel.toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => toggleRule(rule.id)}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer ${
-                  rule.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'
-                }`}
-              >
-                {rule.isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
-                {rule.isActive ? 'FAOL' : 'NOFAOL'}
-              </button>
-            </div>
-
-            {/* Template Body */}
-            <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-700 font-mono">
-              {rule.bodyTemplate}
-            </div>
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+        <div className="flex items-center gap-2 text-amber-700 font-extrabold">
+          <AlertTriangle size={15} /> Hali ulanmagan
+        </div>
+        {NOT_WIRED.map((r) => (
+          <div key={r.title} className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+            <div className="font-bold text-slate-800">{r.title}</div>
+            <div className="text-[11px] text-slate-500 mt-0.5">{r.why}</div>
           </div>
         ))}
       </div>
