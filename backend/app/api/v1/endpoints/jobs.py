@@ -2,6 +2,7 @@ import logging
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -140,9 +141,32 @@ def read_jobs(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),
     employer_id: Optional[str] = None,
+    search: Optional[str] = Query(None, max_length=200),
+    location: Optional[str] = Query(None, max_length=200),
+    category: Optional[str] = Query(None, max_length=100),
 ) -> Any:
-    """Retrieve jobs. If the caller is logged in, attach their application status."""
+    """Retrieve jobs. If the caller is logged in, attach their application status.
+
+    ``search``, ``location`` and ``category`` narrow the query in SQL. Without
+    them the endpoint only ever returned the first page and the client filtered
+    that in the browser, so a job past the limit could not be found at all.
+    """
     query = db.query(models.Job)
+
+    if search:
+        term = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                models.Job.title.ilike(term),
+                models.Job.company.ilike(term),
+                models.Job.description.ilike(term),
+                models.Job.location.ilike(term),
+            )
+        )
+    if location:
+        query = query.filter(models.Job.location.ilike(f"%{location.strip()}%"))
+    if category:
+        query = query.filter(models.Job.category == category)
 
     is_admin = bool(current_user and current_user.role == 'admin')
     is_employer = bool(current_user and current_user.role == 'employer')
@@ -479,6 +503,7 @@ def delete_job(
 
     job.status = JobStatus.CANCELLED
     db.add(job)
+
     # One hold per hire, so a job with several vacancies has several to return.
     # refund_funds settles the oldest outstanding hold, so it is called once per
     # hold that was counted up front rather than looped on a live query.
