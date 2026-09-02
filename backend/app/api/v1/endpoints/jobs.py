@@ -11,6 +11,7 @@ from app.models.job import JobStatus
 from app.redis_client import redis_client
 from app.services.ai_matcher import AIMatchmaker
 from app.services.geo_service import GeoSpatialService
+from app.services.escrow_service import EscrowService
 from app.services.spam_detector import SpamFraudDetector, keywords_from_settings
 
 logger = logging.getLogger(__name__)
@@ -444,5 +445,27 @@ def delete_job(
 
     job.status = JobStatus.CANCELLED
     db.add(job)
+    # One hold per hire, so a job with several vacancies has several to return.
+    # refund_funds settles the oldest outstanding hold, so it is called once per
+    # hold that was counted up front rather than looped on a live query.
+    holds = (
+        db.query(models.Transaction)
+        .filter(
+            models.Transaction.jobId == job.id,
+            models.Transaction.type == "escrow_hold",
+            models.Transaction.status == "held",
+        )
+        .count()
+    )
+    refunded = sum(
+        EscrowService.refund_funds(db, job_id=job.id).amount // 100
+        for _ in range(holds)
+    )
+
     db.commit()
-    return {"success": True, "status": JobStatus.CANCELLED, "notified": len(affected)}
+    return {
+        "success": True,
+        "status": JobStatus.CANCELLED,
+        "notified": len(affected),
+        "refunded": refunded,
+    }
