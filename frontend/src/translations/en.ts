@@ -69,6 +69,8 @@ export const en = {
   copied: "Copied!",
   share: "Share",
   bookmarkSaved: "Saved to bookmarks",
+  bookmarkAdd: "Save to bookmarks",
+  bookmarkRemove: "Remove from bookmarks",
   bookmarkRemoved: "Removed from bookmarks",
   
   // Profile Modal

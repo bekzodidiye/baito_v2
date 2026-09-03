@@ -1,7 +1,8 @@
 import React, { memo } from 'react';
-import { Briefcase, MapPin, Clock, Share2 } from 'lucide-react';
+import { Briefcase, MapPin, Clock, Share2, Bookmark } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Job } from '../../../types';
+import { translations } from '../../../translations';
 import { getJobShiftTime, getJobDuration } from '../../../utils/jobTimeUtils';
 import { getJobCategory } from '../../../utils/jobCategoryUtils';
 import { useApp } from '../../../context/AppContext';
@@ -39,6 +40,7 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
   isActive = false,
 }) => {
   const { language } = useApp();
+  const t = translations[language];
   const category = getJobCategory(job);
   const categoryName = language === 'ru' ? category.nameRu : language === 'en' ? category.nameEn : category.nameUz;
 
@@ -58,6 +60,25 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
     >
       {/* Interactive Action Buttons directly on card */}
       <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5">
+        {/* toggleBookmark was threaded down to here and never called, so saving
+            a job had no button anywhere in the app. */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleBookmark(job.id);
+          }}
+          className={`p-1.5 rounded-full transition-colors cursor-pointer shrink-0 border ${
+            job.bookmarked
+              ? 'bg-brand-primary/10 text-brand-primary border-brand-primary/20'
+              : 'bg-slate-50/50 text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 border-slate-100'
+          }`}
+          type="button"
+          aria-pressed={!!job.bookmarked}
+          title={job.bookmarked ? t.bookmarkRemove : t.bookmarkAdd}
+          aria-label={job.bookmarked ? t.bookmarkRemove : t.bookmarkAdd}
+        >
+          <Bookmark size={14} fill={job.bookmarked ? 'currentColor' : 'none'} />
+        </button>
         <button
           onClick={(e) => {
             e.stopPropagation();
