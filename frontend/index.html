@@ -461,7 +461,14 @@
           window.SharedWorker = CustomSharedWorker;
         }
       })();
-    <script src="https://api-maps.yandex.ru/2.1/?apikey=9ff594fb-14e1-4409-be2d-8e11e8df6429&lang=uz_UZ" type="text/javascript"></script>
+    </script>
+
+    <!-- Yandex Maps is used on one employer screen only (the map picker in
+         step three of posting a job). Loading it here blocked rendering for
+         every visitor on every page, so the URL is parked on a data
+         attribute and loadYandexMaps() injects the real script on demand. -->
+    <link rel="preconnect" href="https://api-maps.yandex.ru">
+    <meta name="yandex-maps-src" content="https://api-maps.yandex.ru/2.1/?apikey=9ff594fb-14e1-4409-be2d-8e11e8df6429&lang=uz_UZ">
     
     <!-- PWA & Mobile Meta -->
     <link rel="manifest" href="/manifest.json" />
