@@ -21,7 +21,7 @@ import { useCurrentScreen } from './hooks/useCurrentScreen';
 
 function AppContent() {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { isLoggedIn, userProfile, requireAuth } = useApp();
+  const { isLoggedIn, userProfile, requireAuth, jobsView } = useApp();
   const [hasOpenedMap, setHasOpenedMap] = useState(false);
   const [activeModal, setActiveModal] = useState<'profile' | 'settings' | 'help' | 'auth' | null>(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -109,7 +109,10 @@ function AppContent() {
             ) : isEmployer && currentScreen === 'jobs' ? (
               <Navigate to="/employer-dashboard" replace />
             ) : (
-              currentScreen !== 'jobs' && <AppRoutes />
+              // The map replaces the routed content on the jobs screen, so the
+              // list — and with it the search box and every filter — only
+              // renders when the header's toggle asks for it.
+              (currentScreen !== 'jobs' || jobsView === 'list') && <AppRoutes />
             )}
           </ErrorBoundary>
 
@@ -119,7 +122,7 @@ function AppContent() {
               time, which is exactly what mounting it here is meant to avoid. */}
           {shouldMountMap && (
             <ErrorBoundary>
-              <div className={currentScreen === 'jobs' ? 'block' : 'hidden'}>
+              <div className={currentScreen === 'jobs' && jobsView === 'map' ? 'block' : 'hidden'}>
                 <MapViewScreen />
               </div>
             </ErrorBoundary>

@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
-import { Search, MapPin, Loader2, Tag } from 'lucide-react';
+import { Search, MapPin, Loader2, Tag, Map } from 'lucide-react';
+import { useApp } from '../../../context/AppContext';
 import { REGIONS_LIST, getRegionDisplayName } from './JobSearchScreen.utils';
 import { Language } from '../../../translations';
 import { CATEGORIES_CONFIG, CATEGORY_FILTERS_LIST } from '../../../utils/jobCategoryUtils';
@@ -29,8 +30,20 @@ const SearchSidebarComponent: React.FC<SearchSidebarProps> = ({
   filterType, setFilterType, filterCategory, setFilterCategory, sortBy, setSortBy,
   clearFilters, language, SCHEDULE_FILTERS, requestLocation, isRequestingLocation
 }) => {
+  const { setJobsView } = useApp();
+
   return (
     <aside className="col-span-3 min-w-0 bg-white p-5 lg:p-6 rounded-2xl shadow-xs flex flex-col gap-5 lg:gap-6 sticky top-4 h-[calc(100vh-32px)] overflow-y-auto no-scrollbar">
+      {/* The way back. The header's toggle is mobile-only, so without this a
+          desktop user who opened the list could not return to the map. */}
+      <button
+        onClick={() => setJobsView('map')}
+        className="flex items-center gap-2 text-xs font-semibold text-brand-primary hover:bg-brand-surface-low rounded-xl px-3 py-2 -mx-1 transition-colors cursor-pointer self-start"
+      >
+        <Map size={16} />
+        {t.mapView}
+      </button>
+
       <div>
         <h3 className="font-display font-bold text-sm text-brand-primary uppercase tracking-wider mb-3">{t.searchProfession}</h3>
         <div className="relative">
