@@ -1,28 +1,39 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchJobs, bookmarkJobApi, applyToJobApi, requestStartJobApi, confirmStartJobApi } from '../api/queries';
+import { fetchJobs, JobQuery, bookmarkJobApi, applyToJobApi, requestStartJobApi, confirmStartJobApi } from '../api/queries';
 
 import { Job } from '../types';
 import { useCallback } from 'react';
 
-export function useJobsData() {
+export function useJobsData(query: JobQuery = {}) {
   const queryClient = useQueryClient();
 
+  // Screens that show every job (map, calendar, landing) call this with no
+  // argument and keep sharing one cache entry; a search gets its own. Every
+  // key starts with 'jobs', so the invalidations below still reach them all.
+  const search = query.search?.trim() ?? '';
+  const queryKey = search ? ['jobs', { search }] : ['jobs'];
+
   const { data: jobs = [], isLoading } = useQuery({
-    queryKey: ['jobs'],
+    queryKey,
     queryFn: async () => {
-      const res = await fetchJobs();
+      const res = await fetchJobs({ search });
       return Array.isArray(res) ? res : [];
     },
     refetchInterval: 30000,
     staleTime: 1000,
+    // Keep the previous results on screen while the next search loads, so the
+    // list does not blank out on every keystroke.
+    placeholderData: (previous) => previous,
   });
 
   const setJobs = useCallback((action: React.SetStateAction<Job[]>) => {
-    queryClient.setQueryData<Job[]>(['jobs'], (old = []) => {
+    // Write to whichever entry this caller is reading, not always the unfiltered
+    // one — otherwise an optimistic update on a search result went nowhere.
+    queryClient.setQueryData<Job[]>(queryKey, (old = []) => {
       const newJobs = typeof action === 'function' ? action(old) : action;
       return newJobs;
     });
-  }, [queryClient]);
+  }, [queryClient, search]);
 
   const toggleBookmark = useCallback(async (jobId: string) => {
     // Optimistic UI update
@@ -31,6 +42,8 @@ export function useJobsData() {
     ));
     try {
       await bookmarkJobApi(jobId);
+      // Other screens hold their own copy of the same job.
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
     } catch (e) {
       console.error("Failed to toggle bookmark", e);
       // Revert optimistic update on failure
@@ -38,7 +51,7 @@ export function useJobsData() {
         job.id === jobId ? { ...job, bookmarked: !job.bookmarked } : job
       ));
     }
-  }, [setJobs]);
+  }, [setJobs, queryClient]);
 
   const applyToJob = useCallback(async (jobId: string) => {
     try {

@@ -26,10 +26,16 @@ export function useJobSearchFilters({
 }: UseJobSearchFiltersProps) {
   const filteredJobs = useMemo(() => {
     return jobs.filter(job => {
+      // The server matches the same four fields. Keeping this pass in step
+      // matters twice: it stops a result the server found on location from
+      // being dropped here, and it keeps the list responsive while the
+      // debounced request for the newest keystroke is still in flight.
+      const term = searchTerm.toLowerCase();
       const matchesSearch =
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.description.toLowerCase().includes(searchTerm.toLowerCase());
+        job.title.toLowerCase().includes(term) ||
+        job.company.toLowerCase().includes(term) ||
+        job.description.toLowerCase().includes(term) ||
+        (job.rawLocation || job.location || '').toLowerCase().includes(term);
       const matchesLocation =
         filterLocation === 'Barchasi' ||
         (job.rawLocation || job.location).toLowerCase().includes(filterLocation.toLowerCase()) ||
