@@ -67,8 +67,8 @@ export const EmployerAnalytics: React.FC = () => {
           </div>
           <div>
             <p className="text-3xl font-black text-slate-800">{todaysApps}</p>
-            <p className="text-[11px] font-bold text-emerald-500 mt-1 flex items-center gap-1">
-              +12% {language === 'uz' ? "kechagidan" : language === 'ru' ? "вчера" : "from yesterday"}
+            <p className="text-[11px] font-bold text-slate-400 mt-1 flex items-center gap-1">
+              {language === 'uz' ? "Bugun tushgan arizalar" : language === 'ru' ? "Заявки за сегодня" : "Applications today"}
             </p>
           </div>
         </motion.div>
@@ -88,8 +88,8 @@ export const EmployerAnalytics: React.FC = () => {
           </div>
           <div>
             <p className="text-3xl font-black text-slate-800">{totalViews}</p>
-            <p className="text-[11px] font-bold text-emerald-500 mt-1 flex items-center gap-1">
-              +8% {language === 'uz' ? "o'tgan haftadan" : language === 'ru' ? "с прошлой недели" : "from last week"}
+            <p className="text-[11px] font-bold text-slate-400 mt-1 flex items-center gap-1">
+              {language === 'uz' ? "E'lonlaringiz bo'yicha jami" : language === 'ru' ? "Всего по вашим объявлениям" : "Across your postings"}
             </p>
           </div>
         </motion.div>
@@ -129,7 +129,7 @@ export const EmployerAnalytics: React.FC = () => {
             </div>
           </div>
           <div>
-            <p className="text-3xl font-black text-slate-800">{formattedAvgCost} <span className="text-sm font-bold text-slate-400">/ {language === 'uz' ? 'soat' : language === 'ru' ? 'час' : "hour"}</span></p>
+            <p className="text-3xl font-black text-slate-800">{formattedAvgCost} <span className="text-sm font-bold text-slate-400">/ {language === 'uz' ? "e'lon" : language === 'ru' ? 'объявление' : "posting"}</span></p>
             <p className="text-[11px] font-bold text-slate-400 mt-1 flex items-center gap-1">
               {language === 'uz' ? "Barcha e'lonlar bo'yicha" : language === 'ru' ? "По всем объявлениям" : "Across all jobs"}
             </p>
