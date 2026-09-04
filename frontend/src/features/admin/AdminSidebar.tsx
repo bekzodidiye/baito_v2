@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useAdminData } from './useAdminData';
 
 interface AdminSidebarProps {
   activeTab: AdminTab;
@@ -18,6 +19,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { language, userProfile, setUserProfile } = useApp();
 
+  // These three counts were the literals '12', '3' and '7'. They never moved,
+  // so an administrator was shown seven support tickets and three disputes
+  // that did not exist — and a badge that never changes is one nobody reads.
+  const { jobs, disputes, supportTickets } = useAdminData();
+  const badge = (n: number) => (n > 0 ? String(n) : undefined);
+
   const navGroups = [
     {
       titleUz: 'Boshqaruv Markazi',
@@ -27,7 +34,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
         { id: 'overview' as AdminTab, labelUz: 'Umumiy Statistika', labelRu: 'Общая статистика', labelEn: 'Overview Stats', icon: LayoutDashboard },
         { id: 'users' as AdminTab, labelUz: 'Foydalanuvchilar', labelRu: 'Пользователи', labelEn: 'Users & Roles', icon: Users },
         { id: 'daily_jobs' as AdminTab, labelUz: 'Ishlar', labelRu: 'Ежедневные работы', labelEn: 'Daily Jobs', icon: Briefcase },
-        { id: 'jobs' as AdminTab, labelUz: 'E\'lonlar va Vakansiyalar', labelRu: 'Объявления и вакансии', labelEn: 'Jobs & Moderation', icon: Briefcase, badge: '12' },
+        { id: 'jobs' as AdminTab, labelUz: 'E\'lonlar va Vakansiyalar', labelRu: 'Объявления и вакансии', labelEn: 'Jobs & Moderation', icon: Briefcase, badge: badge(jobs.length) },
         { id: 'categories' as AdminTab, labelUz: 'Kategoriyalar', labelRu: 'Категории', labelEn: 'Categories', icon: FolderTree },
       ],
     },
@@ -50,7 +57,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
       items: [
         { id: 'transactions' as AdminTab, labelUz: 'Escrow va Tranzaksiyalar', labelRu: 'Escrow и транзакции', labelEn: 'Escrow & Transactions', icon: DollarSign },
         { id: 'payouts' as AdminTab, labelUz: "To'lovlar va Escrow", labelRu: 'Выплаты и эскроу', labelEn: 'Payouts & Escrow', icon: Wallet },
-        { id: 'disputes' as AdminTab, labelUz: 'Nizolar va Shikoyatlar', labelRu: 'Споры и жалобы', labelEn: 'Disputes & Claims', icon: AlertTriangle, badge: '3' },
+        { id: 'disputes' as AdminTab, labelUz: 'Nizolar va Shikoyatlar', labelRu: 'Споры и жалобы', labelEn: 'Disputes & Claims', icon: AlertTriangle, badge: badge(disputes.length) },
         { id: 'verifications' as AdminTab, labelUz: 'Hujjatlarni Tasdiqlash', labelRu: 'Проверка документов', labelEn: 'Verifications', icon: FileCheck },
         { id: 'audit_logs' as AdminTab, labelUz: 'Audit Loglar Stream', labelRu: 'Логи аудита', labelEn: 'Audit Logs Stream', icon: ShieldAlert },
       ],
@@ -62,7 +69,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
       items: [
         { id: 'promotions' as AdminTab, labelUz: 'Promokodlar', labelRu: 'Промокоды', labelEn: 'Promotions', icon: Ticket },
         { id: 'regions' as AdminTab, labelUz: 'Hududlar & Geofencing', labelRu: 'Регионы и Геозоны', labelEn: 'Regions & Geofencing', icon: MapPin },
-        { id: 'support' as AdminTab, labelUz: 'Support Ticketlar', labelRu: 'Тикеты поддержки', labelEn: 'Support Tickets', icon: Headphones, badge: '7' },
+        { id: 'support' as AdminTab, labelUz: 'Support Ticketlar', labelRu: 'Тикеты поддержки', labelEn: 'Support Tickets', icon: Headphones, badge: badge(supportTickets.length) },
         { id: 'broadcast' as AdminTab, labelUz: 'Ommaviy Xabarnoma', labelRu: 'Массовые рассылки', labelEn: 'Broadcast Messages', icon: Send },
         { id: 'analytics' as AdminTab, labelUz: 'Chuqur Analitika', labelRu: 'Глубокая аналитика', labelEn: 'Deep Analytics', icon: BarChart3 },
         { id: 'settings' as AdminTab, labelUz: 'Tizim Sozlamalari', labelRu: 'Системные настройки', labelEn: 'System Settings', icon: Sliders },

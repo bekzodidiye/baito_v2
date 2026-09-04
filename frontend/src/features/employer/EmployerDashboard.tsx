@@ -25,8 +25,13 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   // Stats
   const activeJobsCount = postedJobs.filter(j => j.status !== 'completed').length;
   const pendingApplicantsCount = applications.filter(a => a.status === 'applied').length;
-  const totalViews = 1204;
-  const avgFillRate = 85;
+  // These two were fixed at 1204 and 85 — an employer with no postings at all
+  // was still shown 1,204 views and an 85% fill rate as their own figures.
+  const totalViews = postedJobs.reduce((sum, j) => sum + (Number(j.views) || 0), 0);
+  const vacancyTotal = postedJobs.reduce(
+    (sum, j) => sum + (Number(j.vacancies) || Number(j.neededWorkers) || 1), 0);
+  const hiredTotal = postedJobs.reduce((sum, j) => sum + (Number(j.hiredCount) || 0), 0);
+  const avgFillRate = vacancyTotal > 0 ? Math.round((hiredTotal / vacancyTotal) * 100) : 0;
 
   // Date picker state
   const TOTAL_DAYS = 37;
