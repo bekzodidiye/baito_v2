@@ -31,6 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
 
   const t = translations[language];
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
+  const isAdmin = isLoggedIn && userProfile?.selectedRole === 'admin';
 
   const handleLogout = () => {
     logout();
@@ -137,7 +138,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
                 </div>
               </button>
 
-              <button
+              {isAdmin && <button
                 onClick={() => setCurrentScreen('admin')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-[13px] transition-all duration-200 cursor-pointer ${
                   currentScreen === 'admin' ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/15' : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
@@ -147,7 +148,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
                   <ShieldCheck size={18} className="stroke-[2.2]" />
                   <span>Admin Panel</span>
                 </div>
-              </button>
+              </button>}
 
               <button
                 onClick={() => setCurrentScreen('help')}

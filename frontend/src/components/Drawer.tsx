@@ -18,6 +18,7 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
   const { drawerOpen, setDrawerOpen, setActiveCalendarFilter, language, isLoggedIn, logout, userProfile } = useApp();
   const t = translations[language];
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
+  const isAdmin = isLoggedIn && userProfile?.selectedRole === 'admin';
 
   const handleMeningArizalarim = () => {
     setCurrentScreen('calendar');
@@ -98,14 +99,19 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
     }
   }
 
-  menuItems.push(
-    {
+  // Offered to everyone, so a worker could open it and be bounced straight
+  // back by the route guard with nothing said.
+  if (isAdmin) {
+    menuItems.push({
       id: 'admin',
       label: language === 'uz' ? 'Admin Panel' : language === 'ru' ? 'Админ панель' : 'Admin Panel',
       icon: ShieldCheck,
       action: () => { setDrawerOpen(false); setCurrentScreen('admin'); },
       active: currentScreen === 'admin',
-    },
+    });
+  }
+
+  menuItems.push(
     {
       id: 'settings',
       label: t.settings,
