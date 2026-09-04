@@ -81,14 +81,17 @@ export function useAdminData() {
     globalToast(msg);
   };
 
-  const addBalance = async (userId: string, amount: number) => {
+  const addBalance = async (userId: string, amount: number, reason: string) => {
     try {
       const res = await apiClient(`/admin/users/${userId}/balance`, {
         method: 'POST',
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({ amount, reason }),
       });
       if (res !== undefined) { showToast(`Hisobga ${amount.toLocaleString()} UZS qo'shildi`); fetchAllData(); }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      showToast("Balansni o'zgartirib bo'lmadi");
+    }
   };
 
   const changeRole = async (userId: string, role: string) => {

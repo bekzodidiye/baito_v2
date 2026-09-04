@@ -6,7 +6,7 @@ import { UserDetailModal } from './UserDetailModal';
 
 interface AdminUsersProps {
   users: AdminUser[];
-  onAddBalance: (userId: string, amount: number) => void;
+  onAddBalance: (userId: string, amount: number, reason: string) => void;
   onChangeRole: (userId: string, role: string) => void;
   onToggleBan: (userId: string, isBanned?: boolean) => void;
 }

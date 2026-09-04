@@ -22,7 +22,7 @@ import { UserTabsExtra } from './UserTabsExtra';
 interface UserDetailModalProps {
   user: AdminUser;
   onClose: () => void;
-  onAddBalance: (userId: string, amount: number) => void;
+  onAddBalance: (userId: string, amount: number, reason: string) => void;
   onChangeRole: (userId: string, role: string) => void;
   onToggleBan: (userId: string, isBanned?: boolean) => void;
   onConfirmAssignment?: () => void;
