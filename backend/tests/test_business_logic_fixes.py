@@ -1,6 +1,6 @@
 """Regression tests for the functional and business-logic findings."""
 
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 
 from app.core.money import salary_to_uzs
 from app.db.session import SessionLocal
@@ -554,10 +554,13 @@ def test_search_reaches_past_the_first_page(client):
     """All filtering used to happen in the browser over one page of results, so
     a job beyond the limit could not be found at all."""
     employer = make_user(role="employer", phone="+998911111192")
-    # Newest first, so the one posted first is the one a short page never reaches.
-    buried = make_job(employer.id, title="Zebrakassir kerak")
-    make_job(employer.id, title="Yangi e'lon")
-    make_job(employer.id, title="Yana bitta")
+    # Explicit timestamps: three rows written in the same instant tie on
+    # createdAt, and which one a page of size 1 returns is then up to the
+    # database. Newest first, so the oldest is the one it never reaches.
+    base = datetime(2026, 1, 1, 9, 0, 0, tzinfo=timezone.utc)
+    buried = make_job(employer.id, title="Zebrakassir kerak", createdAt=base)
+    make_job(employer.id, title="Yangi e\'lon", createdAt=base + timedelta(minutes=1))
+    make_job(employer.id, title="Yana bitta", createdAt=base + timedelta(minutes=2))
 
     login(client, make_user(role="worker", phone="+998911111193"))
     # A page of one cannot contain it...
@@ -582,3 +585,23 @@ def test_location_and_category_filter_in_sql(client):
     login(client, make_user(role="worker", phone="+998911111197"))
     assert [j["id"] for j in client.get("/api/v1/jobs?location=Toshkent").json()] == [tashkent.id]
     assert [j["id"] for j in client.get("/api/v1/jobs?category=savdo").json()] == [tashkent.id]
+
+
+def test_pagination_does_not_repeat_or_skip_tied_postings(client):
+    """createdAt is not a total order. Several postings can share a timestamp,
+    and the database is then free to return the tied rows in any order — so
+    walking the pages could show one job twice and never show another."""
+    employer = make_user(role="employer", phone="+998911111198")
+    same_moment = datetime(2026, 2, 2, 12, 0, 0, tzinfo=timezone.utc)
+    created = {make_job(employer.id, title=f"Ish {i}", createdAt=same_moment).id
+               for i in range(6)}
+
+    login(client, make_user(role="worker", phone="+998911111199"))
+
+    seen = []
+    for skip in range(0, 6, 2):
+        page = client.get(f"/api/v1/jobs?skip={skip}&limit=2").json()
+        seen.extend(j["id"] for j in page)
+
+    assert len(seen) == len(set(seen)), "bir e'lon ikki sahifada chiqdi"
+    assert set(seen) == created, "sahifalash e'lonni tushirib qoldirdi"

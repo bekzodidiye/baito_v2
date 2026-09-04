@@ -58,7 +58,7 @@ def get_recommended_jobs(
     active_jobs = (
         db.query(models.Job)
         .filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
-        .order_by(models.Job.createdAt.desc())
+        .order_by(models.Job.createdAt.desc(), models.Job.id.desc())
         .limit(100)
         .all()
     )
@@ -183,7 +183,15 @@ def read_jobs(
         # Job seekers only ever see live postings.
         query = query.filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
 
-    jobs = query.order_by(models.Job.createdAt.desc()).offset(skip).limit(limit).all()
+    # createdAt alone is not a total order — several postings can share a
+    # timestamp, and Postgres is then free to return the tied rows in any
+    # order, so an offset page could repeat one job and skip another.
+    jobs = (
+        query.order_by(models.Job.createdAt.desc(), models.Job.id.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
     if not jobs:
         return []
 
