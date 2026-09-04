@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, models
 from app.api import deps
-from app.core.money import salary_to_uzs
+from app.core.money import parse_salary_amounts, salary_to_uzs
 from app.models.job import JobStatus
 from app.services.escrow_service import EscrowService
 
@@ -200,6 +200,18 @@ def hire_applicant(
         )
 
     wage = salary_to_uzs(job.salary)
+    if wage <= 0 and parse_salary_amounts(job.salary, bounded=False):
+        # A figure was written but the parser cannot represent it, so the wage
+        # collapses to zero. Hiring then took nothing into escrow while the
+        # listing still advertised the full amount, and the worker was owed
+        # nothing for the work. A salary with no figure at all ("kelishilgan
+        # holda") is a different case and still hires without escrow.
+        raise HTTPException(
+            status_code=400,
+            detail="E'londagi maosh tizim qabul qila oladigan chegaradan tashqarida, "
+                   "yollashdan oldin uni to'g'rilang",
+        )
+
     escrow_held = False
     if wage > 0:
         # Freeze the wage now so the worker is not left chasing an employer

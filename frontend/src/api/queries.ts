@@ -1,8 +1,17 @@
 import { apiClient } from './client';
 import { Job, Chat } from '../types';
 
-export const fetchJobs = async (): Promise<Job[]> => {
-  return await apiClient('/jobs');
+export interface JobQuery {
+  /** Free text. Matched server-side against title, company, description and
+   *  location, so a posting past the first page is still reachable. */
+  search?: string;
+}
+
+export const fetchJobs = async (query: JobQuery = {}): Promise<Job[]> => {
+  const params = new URLSearchParams();
+  if (query.search?.trim()) params.set('search', query.search.trim());
+  const qs = params.toString();
+  return await apiClient(qs ? `/jobs?${qs}` : '/jobs');
 };
 
 export const fetchChats = async () => {

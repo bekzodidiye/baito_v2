@@ -1,6 +1,6 @@
 """Regression tests for the functional and business-logic findings."""
 
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 
 from app.core.money import salary_to_uzs
 from app.db.session import SessionLocal
@@ -487,3 +487,121 @@ def test_banning_a_user_revokes_their_sessions(client):
         assert resp.json()["revoked_sessions"] >= 1
 
         assert victim_client.get("/api/v1/users/me").status_code in (401, 403)
+
+
+# ── Bookmarks ──────────────────────────────────────────────────────────────
+
+def test_a_saved_job_is_still_saved_after_a_reload(client):
+    """The toggle wrote to the bookmarks table and nothing ever read it back,
+    so the flag lived only in the browser and a refresh lost it."""
+    employer = make_user(role="employer", phone="+998911111180")
+    job = make_job(employer.id, title="Saqlanadigan ish")
+
+    worker = make_user(role="worker", phone="+998911111181")
+    login(client, worker)
+
+    assert client.get("/api/v1/jobs").json()[0]["bookmarked"] is False
+    assert client.post(f"/api/v1/jobs/{job.id}/bookmark", json={}).json()["bookmarked"] is True
+    assert client.get("/api/v1/jobs").json()[0]["bookmarked"] is True
+
+    client.post(f"/api/v1/jobs/{job.id}/bookmark", json={})
+    assert client.get("/api/v1/jobs").json()[0]["bookmarked"] is False
+
+
+def test_saved_jobs_can_be_listed(client):
+    employer = make_user(role="employer", phone="+998911111182")
+    saved = make_job(employer.id, title="Saqlangan")
+    make_job(employer.id, title="Saqlanmagan")
+
+    worker = make_user(role="worker", phone="+998911111183")
+    login(client, worker)
+    client.post(f"/api/v1/jobs/{saved.id}/bookmark", json={})
+
+    resp = client.get("/api/v1/jobs/bookmarked")
+    assert resp.status_code == 200
+    assert [j["id"] for j in resp.json()] == [saved.id]
+
+
+def test_one_users_bookmarks_are_not_anothers(client):
+    employer = make_user(role="employer", phone="+998911111184")
+    job = make_job(employer.id)
+
+    first = make_user(role="worker", phone="+998911111185")
+    login(client, first)
+    client.post(f"/api/v1/jobs/{job.id}/bookmark", json={})
+
+    second = make_user(role="worker", phone="+998911111186")
+    login(client, second)
+    assert client.get("/api/v1/jobs").json()[0]["bookmarked"] is False
+    assert client.get("/api/v1/jobs/bookmarked").json() == []
+
+
+# ── Search ─────────────────────────────────────────────────────────────────
+
+def test_search_narrows_the_query_instead_of_returning_everything(client):
+    employer = make_user(role="employer", phone="+998911111190")
+    make_job(employer.id, title="Omborchi kerak", company="Alfa")
+    wanted = make_job(employer.id, title="Zebrakassir kerak", company="Beta")
+
+    login(client, make_user(role="worker", phone="+998911111191"))
+    found = client.get("/api/v1/jobs?search=Zebrakassir").json()
+    assert [j["id"] for j in found] == [wanted.id]
+
+    assert client.get("/api/v1/jobs?search=bumasloqyoqnarsa").json() == []
+
+
+def test_search_reaches_past_the_first_page(client):
+    """All filtering used to happen in the browser over one page of results, so
+    a job beyond the limit could not be found at all."""
+    employer = make_user(role="employer", phone="+998911111192")
+    # Explicit timestamps: three rows written in the same instant tie on
+    # createdAt, and which one a page of size 1 returns is then up to the
+    # database. Newest first, so the oldest is the one it never reaches.
+    base = datetime(2026, 1, 1, 9, 0, 0, tzinfo=timezone.utc)
+    buried = make_job(employer.id, title="Zebrakassir kerak", createdAt=base)
+    make_job(employer.id, title="Yangi e\'lon", createdAt=base + timedelta(minutes=1))
+    make_job(employer.id, title="Yana bitta", createdAt=base + timedelta(minutes=2))
+
+    login(client, make_user(role="worker", phone="+998911111193"))
+    # A page of one cannot contain it...
+    assert buried.id not in [j["id"] for j in client.get("/api/v1/jobs?limit=1").json()]
+    # ...but a search still finds it.
+    assert buried.id in [j["id"] for j in client.get("/api/v1/jobs?search=Zebrakassir").json()]
+
+
+def test_search_is_case_insensitive_and_covers_the_company(client):
+    employer = make_user(role="employer", phone="+998911111194")
+    job = make_job(employer.id, title="Kassir", company="Korzinka Savdo")
+
+    login(client, make_user(role="worker", phone="+998911111195"))
+    assert [j["id"] for j in client.get("/api/v1/jobs?search=korzinka").json()] == [job.id]
+
+
+def test_location_and_category_filter_in_sql(client):
+    employer = make_user(role="employer", phone="+998911111196")
+    tashkent = make_job(employer.id, location="Toshkent", category="savdo")
+    make_job(employer.id, location="Samarqand", category="qurilish")
+
+    login(client, make_user(role="worker", phone="+998911111197"))
+    assert [j["id"] for j in client.get("/api/v1/jobs?location=Toshkent").json()] == [tashkent.id]
+    assert [j["id"] for j in client.get("/api/v1/jobs?category=savdo").json()] == [tashkent.id]
+
+
+def test_pagination_does_not_repeat_or_skip_tied_postings(client):
+    """createdAt is not a total order. Several postings can share a timestamp,
+    and the database is then free to return the tied rows in any order — so
+    walking the pages could show one job twice and never show another."""
+    employer = make_user(role="employer", phone="+998911111198")
+    same_moment = datetime(2026, 2, 2, 12, 0, 0, tzinfo=timezone.utc)
+    created = {make_job(employer.id, title=f"Ish {i}", createdAt=same_moment).id
+               for i in range(6)}
+
+    login(client, make_user(role="worker", phone="+998911111199"))
+
+    seen = []
+    for skip in range(0, 6, 2):
+        page = client.get(f"/api/v1/jobs?skip={skip}&limit=2").json()
+        seen.extend(j["id"] for j in page)
+
+    assert len(seen) == len(set(seen)), "bir e'lon ikki sahifada chiqdi"
+    assert set(seen) == created, "sahifalash e'lonni tushirib qoldirdi"

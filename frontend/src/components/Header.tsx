@@ -12,7 +12,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { setDrawerOpen, unreadNotificationsCount, messagesSearchOpen, setMessagesSearchOpen, language, isLoggedIn, userProfile, employerSelectedChatId, selectedChatId } = useApp();
+  const { setDrawerOpen, unreadNotificationsCount, messagesSearchOpen, setMessagesSearchOpen, language, isLoggedIn, userProfile, employerSelectedChatId, selectedChatId, jobsView, setJobsView } = useApp();
   const t = translations[language];
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
 
@@ -69,14 +69,18 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
           </button>
         );
       case 'jobs':
+        // This called setCurrentScreen('jobs') from the jobs screen, which the
+        // navigation guard drops as a no-op — so the list, the search box and
+        // every filter were unreachable.
         return (
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setCurrentScreen('jobs')}
+              onClick={() => setJobsView(jobsView === 'map' ? 'list' : 'map')}
               className="p-2 cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
-              title={t.listView}
+              title={jobsView === 'map' ? t.listView : t.mapView}
+              aria-label={jobsView === 'map' ? t.listView : t.mapView}
             >
-              <LayoutList size={22} />
+              {jobsView === 'map' ? <LayoutList size={22} /> : <Map size={22} />}
             </button>
           </div>
         );

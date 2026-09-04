@@ -50,15 +50,32 @@ def _clean_tables(_schema):
         db.commit()
 
 
-@pytest.fixture(autouse=True)
-def _clean_redis():
+def _flush_redis():
+    """Empty whichever client is in use.
+
+    Only the in-memory fallback used to be cleared, so against a real Redis the
+    fixture did nothing: keys with a long TTL — the error reporter dedupes for
+    an hour — survived between runs and the second run of the suite failed.
+    """
     from app.redis_client import redis_client
+
     store = getattr(redis_client, "store", None)
     if isinstance(store, dict):
         store.clear()
+        return
+    try:
+        redis_client.flushdb()
+    except Exception:
+        # A Redis that cannot be flushed is not a reason to fail every test;
+        # the suite is simply back to the isolation it had before.
+        pass
+
+
+@pytest.fixture(autouse=True)
+def _clean_redis():
+    _flush_redis()
     yield
-    if isinstance(store, dict):
-        store.clear()
+    _flush_redis()
 
 
 @pytest.fixture

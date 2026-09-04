@@ -38,6 +38,25 @@ export const PaymentsScreen: React.FC = () => {
     return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   };
 
+  // The four figures below were the literals 1.2 mln, 450k, 890k and
+  // 2,540,000 — a worker with an empty balance and no completed jobs was told
+  // they had earned two and a half million so'm. They come from the same
+  // transactions the list underneath shows, so the two always agree.
+  const sum = (rows: any[]) => rows.reduce((n, tx) => n + (Number(tx.amount) || 0), 0);
+  const earned = transactions.filter((tx: any) =>
+    tx.type !== 'withdraw' && ['paid', 'released', 'completed'].includes(tx.status));
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const totalIncome = sum(earned);
+  const monthIncome = sum(earned.filter((tx: any) =>
+    tx.createdAt && new Date(tx.createdAt) >= startOfMonth));
+  const pendingIncome = sum(transactions.filter((tx: any) =>
+    ['pending', 'held'].includes(tx.status)));
+  const withdrawn = sum(transactions.filter((tx: any) =>
+    tx.type === 'withdraw' && ['paid', 'completed'].includes(tx.status)));
+
   const filteredTransactions = transactions.filter((tx: any) => {
     if (txFilter === 'in') return tx.type === 'deposit';
     if (txFilter === 'out') return tx.type === 'withdraw';
@@ -107,19 +126,19 @@ export const PaymentsScreen: React.FC = () => {
             <p className="text-slate-500 text-[10px] uppercase font-bold tracking-tighter mb-1">
               {language === 'uz' ? 'Bu oy daromad' : language === 'ru' ? 'Доход за месяц' : 'Monthly Income'}
             </p>
-            <p className="text-brand-primary font-bold text-sm">1.2 mln</p>
+            <p className="text-brand-primary font-bold text-sm">{formatMoney(monthIncome)}</p>
           </div>
           <div className="bg-white p-3 rounded-xl shadow-[0px_4px_20px_rgba(26,35,126,0.04)] text-center border border-slate-200">
             <p className="text-slate-500 text-[10px] uppercase font-bold tracking-tighter mb-1">
               {language === 'uz' ? 'Kutilmoqda' : language === 'ru' ? 'Ожидается' : 'Pending'}
             </p>
-            <p className="text-blue-600 font-bold text-sm">450k</p>
+            <p className="text-blue-600 font-bold text-sm">{formatMoney(pendingIncome)}</p>
           </div>
           <div className="bg-white p-3 rounded-xl shadow-[0px_4px_20px_rgba(26,35,126,0.04)] text-center border border-slate-200">
             <p className="text-slate-500 text-[10px] uppercase font-bold tracking-tighter mb-1">
               {language === 'uz' ? 'Yechilgan' : language === 'ru' ? 'Снято' : 'Withdrawn'}
             </p>
-            <p className="text-slate-800 font-bold text-sm">890k</p>
+            <p className="text-slate-800 font-bold text-sm">{formatMoney(withdrawn)}</p>
           </div>
         </section>
 
@@ -132,7 +151,7 @@ export const PaymentsScreen: React.FC = () => {
             <p className="text-slate-500 text-xs font-medium">
               {language === 'uz' ? 'Jami daromad' : language === 'ru' ? 'Общий доход' : 'Total Income'}
             </p>
-            <p className="text-brand-primary font-bold text-lg">2,540,000</p>
+            <p className="text-brand-primary font-bold text-lg">{formatMoney(totalIncome)}</p>
           </div>
           
           <div className="min-w-[160px] bg-white p-4 rounded-xl shadow-[0px_4px_12px_rgba(26,35,126,0.04)] border border-slate-200">
@@ -152,7 +171,7 @@ export const PaymentsScreen: React.FC = () => {
             <p className="text-slate-500 text-xs font-medium">
               {language === 'uz' ? 'Kutilmoqda' : language === 'ru' ? 'В ожидании' : 'Pending'}
             </p>
-            <p className="text-slate-800 font-bold text-lg">120,000</p>
+            <p className="text-slate-800 font-bold text-lg">{formatMoney(pendingIncome)}</p>
           </div>
         </section>
 

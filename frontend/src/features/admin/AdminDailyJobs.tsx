@@ -12,7 +12,7 @@ interface AdminJobsProps {
   onChangeJobStatus: (jobId: string, status: string) => void;
   onChangeJobWorker?: (jobId: string, workerId: string | null) => void;
   onDeleteJob: (jobId: string) => void;
-  onAddBalance?: (userId: string, amount: number) => void;
+  onAddBalance?: (userId: string, amount: number, reason: string) => void;
   onChangeRole?: (userId: string, role: string) => void;
   onToggleBan?: (userId: string, isBanned?: boolean) => void;
 }

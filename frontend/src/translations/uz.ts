@@ -69,6 +69,8 @@ export const uz = {
   copied: "Nusxalandi!",
   share: "Ulashish",
   bookmarkSaved: "Saralanganlarga saqlandi",
+  bookmarkAdd: "Saralanganlarga qo'shish",
+  bookmarkRemove: "Saralanganlardan o'chirish",
   bookmarkRemoved: "Saralanganlardan o'chirildi",
   
   // Profile Modal

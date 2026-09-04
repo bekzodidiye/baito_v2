@@ -69,6 +69,8 @@ export const ru = {
   copied: "Скопировано!",
   share: "Поделиться",
   bookmarkSaved: "Сохранено в избранное",
+  bookmarkAdd: "Добавить в избранное",
+  bookmarkRemove: "Удалить из избранного",
   bookmarkRemoved: "Удалено из избранного",
   
   // Profile Modal

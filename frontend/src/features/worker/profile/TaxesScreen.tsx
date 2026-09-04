@@ -13,31 +13,16 @@ export const TaxesScreen: React.FC = () => {
     thisYear: language === 'uz' ? "Joriy yil hujjatlari" : language === 'ru' ? "Документы текущего года" : "This Year's Documents",
     pastYears: language === 'uz' ? "O'tgan yillar" : language === 'ru' ? "Прошлые года" : "Past Years",
     download: language === 'uz' ? "Yuklash" : language === 'ru' ? "Скачать" : "Download",
+    emptyTitle: language === 'uz' ? "Hujjatlar hali tayyor emas"
+      : language === 'ru' ? "Документы пока не готовы" : "No documents yet",
+    emptyBody: language === 'uz'
+      ? "Soliq hujjatlari birinchi yakunlangan ishlaringizdan keyin shu yerda paydo bo'ladi."
+      : language === 'ru'
+        ? "Налоговые документы появятся здесь после первых завершённых работ."
+        : "Tax documents will appear here after your first completed jobs.",
   };
 
-  const currentDocs = [
-    {
-      id: 1,
-      title: "Avgust 2026 - Daromad xulosasi",
-      status: 'ready',
-      date: '31 Avg, 2026',
-      size: '124 KB',
-    },
-    {
-      id: 2,
-      title: "Iyul 2026 - Soliq aylanmasi",
-      status: 'ready',
-      date: '31 Iyul, 2026',
-      size: '210 KB',
-    },
-    {
-      id: 3,
-      title: "Sentyabr 2026 (Tayyorlanmoqda)",
-      status: 'pending',
-      date: 'Tez kunda',
-      size: '--',
-    }
-  ];
+  const currentDocs: { id: number; title: string; status: string; date: string; size: string }[] = [];
 
   return (
     <div className="w-full max-w-6xl mx-auto pb-28 md:pb-6 flex flex-col h-full bg-slate-50 min-h-screen">
@@ -59,6 +44,16 @@ export const TaxesScreen: React.FC = () => {
         {/* Document List */}
         <section>
           <h2 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest mb-4 pl-1">{t.thisYear}</h2>
+          {currentDocs.length === 0 && (
+            <div className="bg-white border border-slate-200 rounded-[20px] p-8 flex flex-col items-center text-center gap-2">
+              <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center">
+                <FileJson size={24} className="stroke-[2]" />
+              </div>
+              <h3 className="font-display font-bold text-slate-800 text-sm">{t.emptyTitle}</h3>
+              <p className="text-xs text-slate-500 max-w-xs">{t.emptyBody}</p>
+            </div>
+          )}
+
           <div className="flex flex-col gap-3">
             {currentDocs.map(doc => (
               <div 

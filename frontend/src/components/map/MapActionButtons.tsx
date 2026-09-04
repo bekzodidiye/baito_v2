@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, Compass, Plus, Minus } from 'lucide-react';
+import { RefreshCw, Compass, Plus, Minus, LayoutList } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { MapTypeSelector } from './MapTypeSelector';
@@ -23,7 +23,7 @@ export const MapActionButtons: React.FC<MapActionButtonsProps> = ({
   mapType,
   setMapType,
 }) => {
-  const { language } = useApp();
+  const { language, setJobsView } = useApp();
   const t = translations[language];
 
   return (
@@ -67,6 +67,17 @@ export const MapActionButtons: React.FC<MapActionButtonsProps> = ({
             <Minus size={16} strokeWidth={2.5} />
           </button>
         </div>
+
+        {/* Switch to the list. The header carries the same toggle, but it is
+            mobile-only, so on a desktop the list had no way in at all. */}
+        <button
+          onClick={() => setJobsView('list')}
+          className="pointer-events-auto bg-white text-brand-primary w-11 h-11 rounded-full shadow-[0_6px_20px_rgba(0,0,0,0.12)] border border-slate-100 flex items-center justify-center active:translate-y-[2px] active:shadow-[0_2px_6px_rgba(0,0,0,0.06)] transition-all duration-150 hover:bg-slate-50 cursor-pointer border-none"
+          title={t.listView}
+          aria-label={t.listView}
+        >
+          <LayoutList size={18} className="text-brand-primary" />
+        </button>
 
         {/* Current Location / Reset FAB */}
         <button

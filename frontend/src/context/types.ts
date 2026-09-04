@@ -69,6 +69,8 @@ export interface AppContextType {
   userProfile: UserProfile | null;
   setUserProfile: (profile: UserProfile | null) => void;
   hasSeenTour: boolean;
+  jobsView: 'map' | 'list';
+  setJobsView: (view: 'map' | 'list') => void;
   setHasSeenTour: (seen: boolean) => void;
   requireAuth: (targetScreen?: ScreenType, action?: () => void) => boolean;
   executePendingRedirect: () => boolean;

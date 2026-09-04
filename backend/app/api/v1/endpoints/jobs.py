@@ -2,6 +2,7 @@ import logging
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -11,6 +12,7 @@ from app.models.job import JobStatus
 from app.redis_client import redis_client
 from app.services.ai_matcher import AIMatchmaker
 from app.services.geo_service import GeoSpatialService
+from app.services.escrow_service import EscrowService
 from app.services.spam_detector import SpamFraudDetector, keywords_from_settings
 
 logger = logging.getLogger(__name__)
@@ -27,6 +29,25 @@ def _vacancies(job: models.Job) -> int:
     return int(raw) if raw.isdigit() and int(raw) > 0 else 1
 
 
+@router.get("/bookmarked", response_model=List[schemas.Job])
+def get_bookmarked_jobs(
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """The jobs this user has saved.
+
+    The toggle wrote to the bookmarks table from the start, but nothing ever
+    read it back, so there was no way to see what had been saved.
+    """
+    return (
+        db.query(models.Job)
+        .join(models.Bookmark, models.Bookmark.jobId == models.Job.id)
+        .filter(models.Bookmark.userId == current_user.id)
+        .order_by(models.Bookmark.createdAt.desc())
+        .all()
+    )
+
+
 @router.get("/recommended")
 def get_recommended_jobs(
     db: Session = Depends(deps.get_db),
@@ -37,7 +58,7 @@ def get_recommended_jobs(
     active_jobs = (
         db.query(models.Job)
         .filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
-        .order_by(models.Job.createdAt.desc())
+        .order_by(models.Job.createdAt.desc(), models.Job.id.desc())
         .limit(100)
         .all()
     )
@@ -120,9 +141,32 @@ def read_jobs(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),
     employer_id: Optional[str] = None,
+    search: Optional[str] = Query(None, max_length=200),
+    location: Optional[str] = Query(None, max_length=200),
+    category: Optional[str] = Query(None, max_length=100),
 ) -> Any:
-    """Retrieve jobs. If the caller is logged in, attach their application status."""
+    """Retrieve jobs. If the caller is logged in, attach their application status.
+
+    ``search``, ``location`` and ``category`` narrow the query in SQL. Without
+    them the endpoint only ever returned the first page and the client filtered
+    that in the browser, so a job past the limit could not be found at all.
+    """
     query = db.query(models.Job)
+
+    if search:
+        term = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                models.Job.title.ilike(term),
+                models.Job.company.ilike(term),
+                models.Job.description.ilike(term),
+                models.Job.location.ilike(term),
+            )
+        )
+    if location:
+        query = query.filter(models.Job.location.ilike(f"%{location.strip()}%"))
+    if category:
+        query = query.filter(models.Job.category == category)
 
     is_admin = bool(current_user and current_user.role == 'admin')
     is_employer = bool(current_user and current_user.role == 'employer')
@@ -139,7 +183,15 @@ def read_jobs(
         # Job seekers only ever see live postings.
         query = query.filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
 
-    jobs = query.order_by(models.Job.createdAt.desc()).offset(skip).limit(limit).all()
+    # createdAt alone is not a total order — several postings can share a
+    # timestamp, and Postgres is then free to return the tied rows in any
+    # order, so an offset page could repeat one job and skip another.
+    jobs = (
+        query.order_by(models.Job.createdAt.desc(), models.Job.id.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
     if not jobs:
         return []
 
@@ -155,6 +207,20 @@ def read_jobs(
             )
             .all()
         )
+
+    # Bookmarks were written to the table and never read back, so the flag only
+    # lived in the browser: saving a job and reloading lost it.
+    bookmarked_ids: set[str] = set()
+    if current_user:
+        bookmarked_ids = {
+            b.jobId
+            for b in db.query(models.Bookmark.jobId)
+            .filter(
+                models.Bookmark.userId == current_user.id,
+                models.Bookmark.jobId.in_(job_ids),
+            )
+            .all()
+        }
 
     hired_apps = (
         db.query(models.Application)
@@ -220,6 +286,7 @@ def read_jobs(
         job_dict = schemas.JobWithApplicationStatus.model_validate(job)
         job_dict.status = job_status
         job_dict.applied = bool(app_item)
+        job_dict.bookmarked = job.id in bookmarked_ids
         if app_item:
             job_dict.appliedDate = app_item.appliedDate
 
@@ -444,5 +511,28 @@ def delete_job(
 
     job.status = JobStatus.CANCELLED
     db.add(job)
+
+    # One hold per hire, so a job with several vacancies has several to return.
+    # refund_funds settles the oldest outstanding hold, so it is called once per
+    # hold that was counted up front rather than looped on a live query.
+    holds = (
+        db.query(models.Transaction)
+        .filter(
+            models.Transaction.jobId == job.id,
+            models.Transaction.type == "escrow_hold",
+            models.Transaction.status == "held",
+        )
+        .count()
+    )
+    refunded = sum(
+        EscrowService.refund_funds(db, job_id=job.id).amount // 100
+        for _ in range(holds)
+    )
+
     db.commit()
-    return {"success": True, "status": JobStatus.CANCELLED, "notified": len(affected)}
+    return {
+        "success": True,
+        "status": JobStatus.CANCELLED,
+        "notified": len(affected),
+        "refunded": refunded,
+    }

@@ -8,6 +8,7 @@ import { translations, translateRegion } from '../translations';
 import { useUzbekistanGeoJson } from '../components/map/useUzbekistanGeoJson';
 import { useJobSearchFilters } from './useJobSearchFilters';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
+import { useDebouncedValue } from './useDebouncedValue';
 
 export function useJobSearchScreen() {
   const { id } = useParams<{ id: string }>();
@@ -15,7 +16,13 @@ export function useJobSearchScreen() {
   const { districtsGeoJsonData } = useUzbekistanGeoJson();
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { filterLocation, setFilterLocation, setShowRegionSelector, language, activeCalendarDay } = useApp();
-  const { jobs: rawJobs, toggleBookmark, applyToJob } = useJobsData();
+
+  const [searchTerm, setSearchTerm] = useState('');
+  // The server does the matching, so a posting past the first page is still
+  // found; the client-side pass below then narrows it further by the filters
+  // the server has no equivalent for.
+  const debouncedSearch = useDebouncedValue(searchTerm, 300);
+  const { jobs: rawJobs, toggleBookmark, applyToJob } = useJobsData({ search: debouncedSearch });
 
   const jobs = useMemo(() => {
     return rawJobs.map(j => getTranslatedJob(j, language));
@@ -23,7 +30,6 @@ export function useJobSearchScreen() {
 
   const t = translations[language];
 
-  const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('Barchasi');
   const [filterCategory, setFilterCategory] = useState('Barchasi');
   const [sortBy, setSortBy] = useState<'yangilari' | 'maosh' | 'yaqin' | 'mos'>('yangilari');

@@ -9,7 +9,15 @@ interface ProfileContentProps {
 }
 
 export const ProfileContent: React.FC<ProfileContentProps> = ({ onClose }) => {
-  const { language, logout, } = useApp();
+  // Every field here was a fixed value — a real person's name, email and
+  // phone number, plus 12 completed jobs and a 4.9 rating. Nothing is wired to
+  // open this panel today, so none of it reached a user, but it should read
+  // the signed-in profile if it ever does.
+  const { language, logout, userProfile } = useApp();
+  const fullName = [userProfile?.firstName, userProfile?.lastName].filter(Boolean).join(' ');
+  const displayName = fullName || (language === 'ru' ? 'Пользователь' : language === 'en' ? 'User' : 'Foydalanuvchi');
+  const initials = displayName.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();
+  const dash = '\u2014';
   const t = MODAL_TRANSLATIONS[language];
 
   return (
@@ -17,10 +25,10 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({ onClose }) => {
       {/* Avatar Card */}
       <div className="flex items-center gap-4 p-4 bg-brand-surface-low rounded-xl border border-brand-outline-variant/50">
         <div className="w-16 h-16 rounded-full bg-brand-primary/10 border-2 border-brand-primary/20 flex items-center justify-center font-display text-2xl font-black text-brand-primary select-none shrink-0">
-          OS
+          {initials}
         </div>
         <div>
-          <h4 className="font-bold text-slate-800 text-base">Ozodbek Salimov</h4>
+          <h4 className="font-bold text-slate-800 text-base">{displayName}</h4>
           <p className="text-xs text-brand-primary font-bold mt-0.5">{t.professional}</p>
           <div className="flex items-center gap-1.5 mt-1 text-slate-500 text-[11px] font-medium">
             <MapPin size={12} />
@@ -39,7 +47,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({ onClose }) => {
           </div>
           <div>
             <p className="text-[10px] text-slate-400 font-bold uppercase leading-none">Email</p>
-            <p className="text-slate-700 font-medium mt-0.5">ozodbeksalimov989@gmail.com</p>
+            <p className="text-slate-700 font-medium mt-0.5">{userProfile?.email || dash}</p>
           </div>
         </div>
 
@@ -49,7 +57,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({ onClose }) => {
           </div>
           <div>
             <p className="text-[10px] text-slate-400 font-bold uppercase leading-none">{language === 'ru' ? 'Номер телефона' : language === 'en' ? 'Phone Number' : 'Telefon raqam'}</p>
-            <p className="text-slate-700 font-medium mt-0.5">+998 (90) 123-45-67</p>
+            <p className="text-slate-700 font-medium mt-0.5">{userProfile?.phone || dash}</p>
           </div>
         </div>
 
@@ -59,7 +67,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({ onClose }) => {
           </div>
           <div>
             <p className="text-[10px] text-slate-400 font-bold uppercase leading-none">{t.specialty}</p>
-            <p className="text-slate-700 font-medium mt-0.5">{t.specialtyText}</p>
+            <p className="text-slate-700 font-medium mt-0.5">{userProfile?.profession || dash}</p>
           </div>
         </div>
       </div>
@@ -67,11 +75,11 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({ onClose }) => {
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-3 pt-2">
         <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-          <p className="text-2xl font-black text-brand-primary">12</p>
+          <p className="text-2xl font-black text-brand-primary">{userProfile?.completedJobsCount ?? 0}</p>
           <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">{t.completedJobs}</p>
         </div>
         <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-          <p className="text-2xl font-black text-emerald-600">4.9 ★</p>
+          <p className="text-2xl font-black text-emerald-600">{(userProfile?.rating ?? 0).toFixed(1)} ★</p>
           <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">{t.rating}</p>
         </div>
       </div>

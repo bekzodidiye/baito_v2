@@ -7,7 +7,7 @@ import { useApp } from '../../context/AppContext';
 interface UserTabsExtraProps {
   detail: AdminUserDetailResponse;
   activeTab: number;
-  onAddBalance: (userId: string, amount: number) => void;
+  onAddBalance: (userId: string, amount: number, reason: string) => void;
 }
 
 export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab, onAddBalance }) => {
@@ -20,6 +20,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
   
   const [showTopUp, setShowTopUp] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState('');
+  const [topUpReason, setTopUpReason] = useState('');
   const [notes, setNotes] = useState<{ text: string; date: string }[]>(user?.adminNotes || []);
   const [newNote, setNewNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,9 +35,14 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
   const handleTopUpSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const num = parseFloat(topUpAmount);
-    if (!isNaN(num) && num > 0 && user?.id) {
-      onAddBalance(user.id, num);
+    // The adjustment is written to the audit ledger, and the API requires the
+    // reason that goes with it — the form used to send only the amount, so
+    // every top-up was rejected with a 422 the administrator never saw.
+    if (!isNaN(num) && num > 0 && topUpReason.trim().length >= 3 && user?.id) {
+      onAddBalance(user.id, num, topUpReason.trim());
       setShowTopUp(false);
+      setTopUpAmount('');
+      setTopUpReason('');
     }
   };
 
@@ -200,7 +206,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
 
           {showTopUp && (
             <div className="p-5">
-              <form onSubmit={handleTopUpSubmit} className="flex gap-3 max-w-sm">
+              <form onSubmit={handleTopUpSubmit} className="flex flex-col gap-3 max-w-sm">
                 <input
               aria-label="To'ldirish summasi" 
                   type="number" 
@@ -209,6 +215,16 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
                   className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm text-slate-900 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all" 
                   placeholder="Summa UZS" 
                   required 
+                />
+                <input
+                  aria-label="To'ldirish sababi"
+                  type="text"
+                  value={topUpReason}
+                  onChange={(e) => setTopUpReason(e.target.value)}
+                  className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-sm text-slate-900 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all"
+                  placeholder="Sabab (audit uchun)"
+                  minLength={3}
+                  required
                 />
                 <button type="submit" className="px-6 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white text-sm font-bold rounded-xl cursor-pointer shadow-sm shadow-brand-primary/20 transition-colors">
                   Tasdiqlash

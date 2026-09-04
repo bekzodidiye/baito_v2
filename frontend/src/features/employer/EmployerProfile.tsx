@@ -16,7 +16,12 @@ export const EmployerProfile: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { userProfile, logout, setUserProfile } = useApp();
   
-  const companyName = userProfile?.firstName || 'Korzinka.uz';
+  // The fallback used to be 'Korzinka.uz' — a real retail brand, shown to any
+  // employer who had not set a name yet.
+  const companyName = userProfile?.firstName
+    || (language === 'uz' ? 'Kompaniya' : language === 'ru' ? 'Компания' : 'Company');
+  const isVerified = !!userProfile?.isVerified;
+  const about = (userProfile?.aboutMe || '').trim();
 
   React.useEffect(() => {
     const handleScrollEvent = (e: Event) => {
@@ -67,13 +72,30 @@ export const EmployerProfile: React.FC = () => {
         <div className="flex flex-col items-center sm:items-start text-center sm:text-left mt-2 sm:mt-0">
           <h2 className="text-xl font-display font-black text-slate-800">{companyName}</h2>
           <div className="flex items-center justify-center sm:justify-start gap-1.5 mt-1.5">
-            <ShieldCheck size={14} className="text-emerald-500" />
-            <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
-              {language === 'uz' ? 'Tasdiqlangan kompaniya' : language === 'ru' ? 'Проверенная компания' : "Verified Company"}
-            </span>
+            {isVerified ? (
+              <>
+                <ShieldCheck size={14} className="text-emerald-500" />
+                <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
+                  {language === 'uz' ? 'Tasdiqlangan kompaniya' : language === 'ru' ? 'Проверенная компания' : "Verified Company"}
+                </span>
+              </>
+            ) : (
+              <>
+                <ShieldCheck size={14} className="text-slate-400" />
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  {language === 'uz' ? 'Tasdiqlanmagan' : language === 'ru' ? 'Не проверено' : 'Not verified'}
+                </span>
+              </>
+            )}
           </div>
           <p className="text-xs font-medium text-slate-500 mt-3 max-w-sm">
-            {language === 'uz' ? "Biz chakana savdo tarmog'ida yetakchimiz va doimiy ravishda yangi ishchilarni izlaymiz." : language === 'ru' ? "Мы являемся лидерами в сфере розничной торговли и постоянно ищем новых сотрудников." : "We are leaders in retail and constantly looking for new employees."}
+            {/* This was a fixed sentence claiming every employer led a retail
+                network, regardless of what they actually do. */}
+            {about || (language === 'uz'
+              ? "Kompaniya haqida ma'lumot qo'shilmagan."
+              : language === 'ru'
+                ? 'Описание компании не добавлено.'
+                : 'No company description yet.')}
           </p>
         </div>
       </motion.div>

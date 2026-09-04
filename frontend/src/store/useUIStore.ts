@@ -29,6 +29,10 @@ interface UIState {
   activeCalendarDay: string;
   setActiveCalendarDay: (day: string) => void;
   hasSeenTour: boolean;
+  /** Which half of the job search the worker is looking at. The header toggles
+   *  it; App decides whether to render the map or the list from it. */
+  jobsView: 'map' | 'list';
+  setJobsView: (view: 'map' | 'list') => void;
   setHasSeenTour: (seen: boolean) => void;
 }
 
@@ -72,6 +76,9 @@ export const useUIStore = create<UIState>((set) => ({
   activeCalendarDay: new Date().toLocaleDateString('en-CA'),
   setActiveCalendarDay: (day) => set({ activeCalendarDay: day }),
   
+  jobsView: 'map',
+  setJobsView: (view) => set({ jobsView: view }),
+
   hasSeenTour: safeGetItem('baito_has_seen_tour') === 'true',
   setHasSeenTour: (seen) => {
     safeSetItem('baito_has_seen_tour', String(seen));
