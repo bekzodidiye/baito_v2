@@ -199,5 +199,8 @@ export const uz = {
   notifySystem: "Tizim va yangiliklar",
   notifyNewJobsDesc: "Yangi bo'sh ish o'rinlari haqida",
   skipToContent: "Asosiy kontentga o'tish",
+  openMenu: "Menyuni ochish",
+  changePhoto: "Suratni almashtirish",
+  goBack: "Orqaga",
   showAll: "Barchasini ko'rsatish"
 };

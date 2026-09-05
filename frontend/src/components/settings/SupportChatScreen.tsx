@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { translations } from '../../translations';
 import { ArrowLeft, Send, User } from 'lucide-react';
 import { Logo } from '../Logo';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
@@ -12,6 +13,8 @@ interface ChatMessage {
 }
 
 export const SupportChatScreen: React.FC = () => {
+  const { language } = useApp();
+  const t = translations[language];
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -65,7 +68,8 @@ export const SupportChatScreen: React.FC = () => {
       <header className="md:hidden sticky top-0 z-30 flex justify-between items-center px-4 h-16 w-full bg-white/90 backdrop-blur-md shadow-2xs shrink-0 border-b border-slate-100">
         <button 
           onClick={() => setCurrentScreen('help')}
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low transition-colors cursor-pointer"
+          aria-label={t.goBack}
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low transition-colors cursor-pointer"
         >
           <ArrowLeft size={24} className="text-brand-text-variant" />
         </button>

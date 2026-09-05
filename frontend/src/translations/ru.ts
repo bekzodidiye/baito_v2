@@ -199,5 +199,8 @@ export const ru = {
   notifySystem: "Система и новости",
   notifyNewJobsDesc: "О новых вакансиях",
   skipToContent: "Перейти к основному содержимому",
+  openMenu: "Открыть меню",
+  changePhoto: "Сменить фото",
+  goBack: "Назад",
   showAll: "Показать все"
 };

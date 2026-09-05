@@ -103,6 +103,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
       {currentScreen !== 'chat' && currentScreen !== 'notifications' && currentScreen !== 'profile' && currentScreen !== 'reviews' && currentScreen !== 'applications' && currentScreen !== 'payments' && !((currentScreen === 'messages' || currentScreen === 'employer-chats') && (selectedChatId || employerSelectedChatId)) && (
         <header className="flex md:hidden justify-between items-center px-4 h-14 w-full z-50 bg-white shadow-[0_0_24px_rgba(0,0,0,0.08),_0_4px_12px_rgba(0,0,0,0.04)] fixed top-0 left-0">
           <button
+            aria-label={t.openMenu}
             onClick={() => setDrawerOpen(true)}
             className="flex items-center justify-center p-2 rounded-full hover:bg-brand-surface-low transition-colors text-brand-primary cursor-pointer"
           >

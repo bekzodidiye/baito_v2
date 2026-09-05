@@ -1,3 +1,4 @@
+import { translations } from '../../../translations';
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { apiClient } from '../../../api/client';
@@ -11,6 +12,7 @@ import { fetchWorkerApplicationsApi } from '../../../api/queries';
 
 export const ReviewsScreen: React.FC = () => {
   const { language } = useApp();
+  const tGlobal = translations[language];
   const { setCurrentScreen } = useCurrentScreen();
 
   const { data: reviews = [], isLoading } = useQuery({
@@ -56,7 +58,8 @@ export const ReviewsScreen: React.FC = () => {
       <header className="flex items-center gap-2 shrink-0">
         <button
           onClick={() => setCurrentScreen('profile')}
-          className="w-11 h-11 flex items-center justify-center hover:bg-slate-50 transition-colors rounded-full text-slate-700 cursor-pointer"
+          aria-label={tGlobal.goBack}
+            className="w-11 h-11 flex items-center justify-center hover:bg-slate-50 transition-colors rounded-full text-slate-700 cursor-pointer"
         >
           <ArrowLeft size={18} className="stroke-[2.5]" />
         </button>

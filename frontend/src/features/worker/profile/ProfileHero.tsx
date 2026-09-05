@@ -1,3 +1,5 @@
+import { useApp } from '../../../context/AppContext';
+import { translations } from '../../../translations';
 import React from 'react';
 import { Camera, MapPin, Briefcase, Star, Award, Edit2 } from 'lucide-react';
 
@@ -26,6 +28,9 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
   onEditClick,
   region
 }) => {
+  const { language } = useApp();
+  const tGlobal = translations[language];
+
   return (
     <>
       {/* Profile Hero Section */}
@@ -56,7 +61,8 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
           </div>
           <button 
             onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-1 right-1 w-11 h-11 flex items-center justify-center bg-brand-primary hover:bg-brand-primary/95 text-white w-8 h-8 rounded-full flex items-center justify-center border-2 border-white shadow-xs cursor-pointer active:scale-90 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+            aria-label={tGlobal.changePhoto}
+              className="absolute bottom-1 right-1 w-11 h-11 flex items-center justify-center bg-brand-primary hover:bg-brand-primary/95 text-white w-8 h-8 rounded-full flex items-center justify-center border-2 border-white shadow-xs cursor-pointer active:scale-90 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           >
             <Camera size={14} className="stroke-[2.2]" />
           </button>

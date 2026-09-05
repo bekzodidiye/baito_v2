@@ -199,5 +199,8 @@ export const en = {
   notifySystem: "System and news",
   notifyNewJobsDesc: "About new job openings",
   skipToContent: "Skip to main content",
+  openMenu: "Open menu",
+  changePhoto: "Change photo",
+  goBack: "Back",
   showAll: "Show All"
 };
