@@ -57,6 +57,21 @@ body {
   }
 }
 
+/* Touch targets.
+   On a phone the filter chips, icon buttons and month arrows came out between
+   20 and 40px, under the 44px every platform asks for — and this is a
+   phone-first audience. Scoped to a coarse pointer so a mouse keeps the
+   compact desktop layout, and to <button> only: a min-height on inline <a>
+   inside running text would stretch the line boxes around it. */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+  }
+}
+
 /* Custom scrollbar - hidden but scrollable */
 ::-webkit-scrollbar {
   display: none !important;

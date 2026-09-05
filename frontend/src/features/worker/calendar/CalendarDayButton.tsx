@@ -41,7 +41,7 @@ export const CalendarDayButton: React.FC<CalendarDayButtonProps> = ({
   setSelectedJob
 }) => {
   // Determine day button classes & inner elements dynamically
-  let buttonClasses = "w-9 h-9 flex items-center justify-center rounded-full text-xs font-bold transition-all duration-150 ease-out active:scale-75 active:opacity-95 transform-gpu relative cursor-pointer ";
+  let buttonClasses = "w-11 h-11 flex items-center justify-center rounded-full text-xs font-bold transition-all duration-150 ease-out active:scale-75 active:opacity-95 transform-gpu relative cursor-pointer ";
   let content: React.ReactNode = <span className={isToday ? "-translate-y-[2px]" : ""}>{day}</span>;
 
   // Set up base styling based on status/day type

@@ -76,14 +76,14 @@ export const CalendarGridCard: React.FC<CalendarGridCardProps> = ({
         <div className="flex items-center gap-1">
           <button
             onClick={handlePrevMonth}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer active:scale-95"
+            className="w-11 h-11 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer active:scale-95"
             aria-label="Oldingi oy"
           >
             <ChevronLeft size={18} />
           </button>
           <button
             onClick={handleNextMonth}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer active:scale-95"
+            className="w-11 h-11 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer active:scale-95"
             aria-label="Keyingi oy"
           >
             <ChevronRight size={18} />
@@ -104,7 +104,7 @@ export const CalendarGridCard: React.FC<CalendarGridCardProps> = ({
       <div className="grid grid-cols-7 gap-y-1 text-center items-center justify-items-center">
         {/* Previous Month Days (Muted) */}
         {prevMonthDays.map((d, i) => (
-          <div key={`prev-${i}`} className="w-9 h-9 flex items-center justify-center text-xs font-bold text-slate-300 select-none">
+          <div key={`prev-${i}`} className="w-11 h-11 flex items-center justify-center text-xs font-bold text-slate-300 select-none">
             {d}
           </div>
         ))}
@@ -143,7 +143,7 @@ export const CalendarGridCard: React.FC<CalendarGridCardProps> = ({
 
         {/* Next Month Days (Muted) */}
         {nextMonthDays.map((d, i) => (
-          <div key={`next-${i}`} className="w-9 h-9 flex items-center justify-center text-xs font-bold text-slate-300 select-none">
+          <div key={`next-${i}`} className="w-11 h-11 flex items-center justify-center text-xs font-bold text-slate-300 select-none">
             {d}
           </div>
         ))}

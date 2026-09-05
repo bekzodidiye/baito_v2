@@ -1,3 +1,4 @@
+import { translations } from '../../../translations';
 import React from 'react';
 import { ArrowLeft, LogOut } from 'lucide-react';
 import { useProfileScreen } from '../../../hooks/useProfileScreen';
@@ -42,6 +43,7 @@ export const ProfileScreen: React.FC = () => {
     setEditForm,
     toggleRole
   } = useProfileScreen();
+  const tGlobal = translations[language];
 
   React.useEffect(() => {
     const handleScrollEvent = (e: Event) => {
@@ -68,7 +70,8 @@ export const ProfileScreen: React.FC = () => {
         <div className="flex items-center gap-2">
           <button 
             onClick={() => setCurrentScreen('jobs')}
-            className="p-2 hover:bg-slate-50 transition-colors rounded-full text-slate-700 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+            aria-label={tGlobal.goBack}
+            className="w-11 h-11 flex items-center justify-center hover:bg-slate-50 transition-colors rounded-full text-slate-700 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           >
             <ArrowLeft size={18} className="stroke-[2.5]" />
           </button>
@@ -123,7 +126,7 @@ export const ProfileScreen: React.FC = () => {
             </div>
             <button
               onClick={toggleRole}
-              className="w-full py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl font-display font-black text-xs transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 shadow-sm"
+              className="w-full min-h-[44px] py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl font-display font-black text-xs transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 shadow-sm"
             >
               {userProfile?.selectedRole === 'employer'
                 ? (language === 'uz' ? "Xodim rejimiga o'tish" : language === 'ru' ? "Режим работника" : "Worker Mode")

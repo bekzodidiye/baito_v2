@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useApp } from '../../context/AppContext';
+import { translations } from '../../translations';
 import { ChevronDown, Check, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -197,6 +199,8 @@ interface PrivacyScreenProps {
 }
 
 export const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack, onConfirm }) => {
+  const { language } = useApp();
+  const t = translations[language];
   const navigate = useNavigate();
   
   const [openSection, setOpenSection] = useState<number | null>(null);
@@ -239,7 +243,8 @@ export const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack, onConfirm 
         <button 
           type="button"
           onClick={() => onBack ? onBack() : navigate(-1)}
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low transition-colors"
+          aria-label={t.goBack}
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low transition-colors"
         >
           <ArrowLeft size={24} className="text-brand-text-variant" />
         </button>

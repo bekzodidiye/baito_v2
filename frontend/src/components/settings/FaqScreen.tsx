@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { translations } from '../../translations';
 import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const FaqScreen: React.FC = () => {
+  const { language } = useApp();
+  const t = translations[language];
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -37,7 +40,8 @@ export const FaqScreen: React.FC = () => {
       <header className="md:hidden flex justify-between items-center px-4 h-16 w-full z-50 bg-brand-surface/90 backdrop-blur-md sticky top-0 border-b border-brand-outline-variant/30">
         <button 
           onClick={() => setCurrentScreen('help')}
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low transition-colors"
+          aria-label={t.goBack}
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low transition-colors"
         >
           <ArrowLeft size={24} className="text-brand-text-variant" />
         </button>

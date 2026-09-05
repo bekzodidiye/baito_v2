@@ -39,7 +39,7 @@ export const ProfileWidgets: React.FC<ProfileWidgetsProps> = ({
           <h3 className="text-3xl font-black text-white my-2.5 tracking-tight">{Number(balance).toLocaleString()} so'm</h3>
           <button 
             onClick={() => setCurrentScreen('payments')}
-            className="w-full py-2.5 bg-white text-brand-primary font-display font-black text-[11px] rounded-xl hover:bg-slate-50 transition-all cursor-pointer shadow-[0_4px_12px_rgba(255,255,255,0.15)] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-[0.99]"
+            className="w-full min-h-[44px] py-2.5 bg-white text-brand-primary font-display font-black text-[11px] rounded-xl hover:bg-slate-50 transition-all cursor-pointer shadow-[0_4px_12px_rgba(255,255,255,0.15)] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-[0.99]"
           >
             {t.walletBtn}
           </button>

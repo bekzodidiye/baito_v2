@@ -55,7 +55,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
                 }).catch((error) => console.log('Error sharing', error));
               }
             }}
-            className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-brand-primary transition-all duration-200 cursor-pointer z-10"
+            className="absolute top-3 right-3 w-11 h-11 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-brand-primary transition-all duration-200 cursor-pointer z-10"
             title="Share"
           >
             <Share2 size={13} />
@@ -167,7 +167,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
               e.stopPropagation();
               applyToJob(job.id);
             }}
-            className={`w-full py-1.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 shrink-0 border-none ${
+            className={`w-full min-h-[44px] py-2.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 shrink-0 border-none ${
               applied
                 ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-default'
                 : 'bg-brand-primary hover:bg-brand-primary/95 text-white shadow-[0_4px_10px_rgba(37,99,235,0.18)] active:scale-[0.98]'
