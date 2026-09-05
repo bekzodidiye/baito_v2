@@ -9,7 +9,6 @@ export const SettingsScreen: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { language, setLanguage, userProfile, setUserProfile } = useApp();
   const t = translations[language];
-  const tMenu = (t as any).menu || {};
 
   const [newJobsNotifications, setNewJobsNotifications] = useState(userProfile?.notify_new_jobs ?? true);
   const [interviewNotifications, setInterviewNotifications] = useState(userProfile?.notify_interviews ?? true);
@@ -43,7 +42,7 @@ export const SettingsScreen: React.FC = () => {
           <ArrowLeft size={24} className="text-brand-text-variant" />
         </button>
         <h1 className="text-[18px] font-semibold text-brand-primary absolute left-1/2 transform -translate-x-1/2">
-          {tMenu.settings || 'Sozlamalar'}
+          {t.settings}
         </h1>
         <div className="w-10 h-10 flex items-center justify-center">
           {isUpdating && <Loader2 size={20} className="animate-spin text-brand-primary" />}
@@ -55,7 +54,7 @@ export const SettingsScreen: React.FC = () => {
         
         {/* Account Section */}
         <section className="md:hidden">
-          <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">Hisob</h2>
+          <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">{t.settingsAccount}</h2>
           <div className="bg-brand-surface-lowest rounded-3xl shadow-[0_4px_20px_rgba(0,6,102,0.05),0_1px_3px_rgba(0,6,102,0.02)] overflow-hidden">
             <button 
               onClick={() => setCurrentScreen('security')}
@@ -66,7 +65,7 @@ export const SettingsScreen: React.FC = () => {
                   <Lock size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">Xavfsizlik</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{t.security}</p>
                 </div>
               </div>
               <ChevronRight size={22} className="text-brand-text-variant group-hover:text-brand-primary transition-colors" />
@@ -76,7 +75,7 @@ export const SettingsScreen: React.FC = () => {
 
         {/* Preferences Section */}
         <section>
-          <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">Afzalliklar</h2>
+          <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">{t.settingsPreferences}</h2>
           <div className="bg-brand-surface-lowest rounded-3xl shadow-[0_4px_20px_rgba(0,6,102,0.05),0_1px_3px_rgba(0,6,102,0.02)] overflow-hidden">
             
             <div className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group relative">
@@ -85,7 +84,7 @@ export const SettingsScreen: React.FC = () => {
                   <Globe size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">Ilova tili</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{t.appLanguage}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -110,7 +109,7 @@ export const SettingsScreen: React.FC = () => {
 
         {/* Notifications Section */}
         <section>
-          <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">Bildirishnomalar</h2>
+          <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">{t.notifications}</h2>
           <div className="bg-brand-surface-lowest rounded-3xl shadow-[0_4px_20px_rgba(0,6,102,0.05),0_1px_3px_rgba(0,6,102,0.02)] overflow-hidden">
             
             <button 
@@ -123,8 +122,8 @@ export const SettingsScreen: React.FC = () => {
                   <Briefcase size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">Yangi ish joylari</p>
-                  <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium">Yangi bo'sh ish o'rinlari haqida</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{t.notifyNewJobs}</p>
+                  <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium">{t.notifyNewJobsDesc}</p>
                 </div>
               </div>
               
@@ -143,8 +142,8 @@ export const SettingsScreen: React.FC = () => {
                   <MessageSquare size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">Suhbat takliflari</p>
-                  <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium">Ish beruvchilardan takliflar</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{t.notifyChat}</p>
+                  <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium">{t.notifyOffers}</p>
                 </div>
               </div>
               
@@ -163,8 +162,8 @@ export const SettingsScreen: React.FC = () => {
                   <Bell size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">Umumiy xabarnomalar</p>
-                  <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium">Tizim va yangiliklar</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{t.notifyGeneral}</p>
+                  <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium">{t.notifySystem}</p>
                 </div>
               </div>
               
@@ -178,7 +177,7 @@ export const SettingsScreen: React.FC = () => {
 
         {/* About Section */}
         <section>
-          <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">Qo'shimcha</h2>
+          <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">{t.settingsExtra}</h2>
           <div className="bg-brand-surface-lowest rounded-3xl shadow-[0_4px_20px_rgba(0,6,102,0.05),0_1px_3px_rgba(0,6,102,0.02)] overflow-hidden">
             
             <div className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest border-b border-slate-100">
@@ -187,7 +186,7 @@ export const SettingsScreen: React.FC = () => {
                   <Info size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">Ilova haqida</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{t.settingsAbout}</p>
                 </div>
               </div>
               <span className="text-[14px] text-brand-text-variant font-medium">v1.0.2</span>
@@ -202,7 +201,7 @@ export const SettingsScreen: React.FC = () => {
                   <HelpCircle size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">Yordam markazi</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{t.settingsHelpCenter}</p>
                 </div>
               </div>
               <ChevronRight size={22} className="text-brand-text-variant group-hover:text-brand-primary transition-colors" />

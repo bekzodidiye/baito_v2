@@ -18,10 +18,11 @@ import { AlertCircle, CheckCircle } from 'lucide-react';
 
 import { AppRoutes } from './components/AppRoutes';
 import { useCurrentScreen } from './hooks/useCurrentScreen';
+import { translations } from './translations';
 
 function AppContent() {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { isLoggedIn, userProfile, requireAuth, jobsView } = useApp();
+  const { isLoggedIn, userProfile, requireAuth, jobsView, language } = useApp();
   const [hasOpenedMap, setHasOpenedMap] = useState(false);
   const [activeModal, setActiveModal] = useState<'profile' | 'settings' | 'help' | 'auth' | null>(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -79,7 +80,7 @@ function AppContent() {
         ? 'h-screen overflow-hidden'
         : 'min-h-screen'
     }`}>
-      <a href="#main-content" className="skip-link">Asosiy kontentga o'tish</a>
+      <a href="#main-content" className="skip-link">{translations[language].skipToContent}</a>
       <ToastContainer />
       {isOffline && (
         <div className="bg-red-500 text-white text-center py-2 px-4 text-sm font-semibold z-[9999] fixed top-0 w-full flex items-center justify-center gap-2">

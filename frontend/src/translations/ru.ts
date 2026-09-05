@@ -187,5 +187,17 @@ export const ru = {
   refreshing: "Обновление...",
   zoomIn: "Приблизить",
   zoomOut: "Отдалить",
+  settingsAccount: "Аккаунт",
+  settingsPreferences: "Предпочтения",
+  settingsExtra: "Дополнительно",
+  settingsHelpCenter: "Центр помощи",
+  settingsAbout: "О приложении",
+  notifyGeneral: "Общие уведомления",
+  notifyNewJobs: "Новые вакансии",
+  notifyOffers: "Предложения от работодателей",
+  notifyChat: "Сообщения в чате",
+  notifySystem: "Система и новости",
+  notifyNewJobsDesc: "О новых вакансиях",
+  skipToContent: "Перейти к основному содержимому",
   showAll: "Показать все"
 };

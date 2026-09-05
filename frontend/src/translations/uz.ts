@@ -187,5 +187,17 @@ export const uz = {
   refreshing: "Yangilanmoqda...",
   zoomIn: "Yaqinlashtirish",
   zoomOut: "Uzoqlashtirish",
+  settingsAccount: "Hisob",
+  settingsPreferences: "Afzalliklar",
+  settingsExtra: "Qo'shimcha",
+  settingsHelpCenter: "Yordam markazi",
+  settingsAbout: "Ilova haqida",
+  notifyGeneral: "Umumiy xabarnomalar",
+  notifyNewJobs: "Yangi ish joylari",
+  notifyOffers: "Ish beruvchilardan takliflar",
+  notifyChat: "Suhbat takliflari",
+  notifySystem: "Tizim va yangiliklar",
+  notifyNewJobsDesc: "Yangi bo'sh ish o'rinlari haqida",
+  skipToContent: "Asosiy kontentga o'tish",
   showAll: "Barchasini ko'rsatish"
 };

@@ -187,5 +187,17 @@ export const en = {
   refreshing: "Refreshing...",
   zoomIn: "Zoom In",
   zoomOut: "Zoom Out",
+  settingsAccount: "Account",
+  settingsPreferences: "Preferences",
+  settingsExtra: "More",
+  settingsHelpCenter: "Help centre",
+  settingsAbout: "About the app",
+  notifyGeneral: "General notifications",
+  notifyNewJobs: "New jobs",
+  notifyOffers: "Offers from employers",
+  notifyChat: "Chat messages",
+  notifySystem: "System and news",
+  notifyNewJobsDesc: "About new job openings",
+  skipToContent: "Skip to main content",
   showAll: "Show All"
 };
