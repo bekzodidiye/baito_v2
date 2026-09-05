@@ -53,7 +53,7 @@ export const MapActionButtons: React.FC<MapActionButtonsProps> = ({
         <div className="pointer-events-auto bg-white rounded-2xl shadow-[0_6px_20px_rgba(0,0,0,0.12)] border border-slate-100/95 flex flex-col p-1 w-11 items-center gap-1">
           <button
             onClick={onZoomIn}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-50 hover:text-brand-primary active:scale-90 transition-all duration-150 cursor-pointer border-none"
+            className="w-11 h-11 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-50 hover:text-brand-primary active:scale-90 transition-all duration-150 cursor-pointer border-none"
             title={t.zoomIn}
           >
             <Plus size={16} strokeWidth={2.5} />
@@ -61,7 +61,7 @@ export const MapActionButtons: React.FC<MapActionButtonsProps> = ({
           <div className="h-[1px] bg-slate-100 w-6 my-0.5" />
           <button
             onClick={onZoomOut}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-50 hover:text-brand-primary active:scale-90 transition-all duration-150 cursor-pointer border-none"
+            className="w-11 h-11 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-50 hover:text-brand-primary active:scale-90 transition-all duration-150 cursor-pointer border-none"
             title={t.zoomOut}
           >
             <Minus size={16} strokeWidth={2.5} />

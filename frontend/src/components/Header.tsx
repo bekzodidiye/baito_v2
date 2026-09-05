@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
         return (
           <div 
             onClick={() => setCurrentScreen('notifications')}
-            className="relative p-2 cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
+            className="relative w-11 h-11 flex items-center justify-center cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
           >
             <Bell size={22} />
             {unreadNotificationsCount > 0 && (
@@ -76,7 +76,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setJobsView(jobsView === 'map' ? 'list' : 'map')}
-              className="p-2 cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
+              className="w-11 h-11 flex items-center justify-center cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
               title={jobsView === 'map' ? t.listView : t.mapView}
               aria-label={jobsView === 'map' ? t.listView : t.mapView}
             >
@@ -88,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
         return (
           <button
             onClick={() => setCurrentScreen('jobs')}
-            className="p-2 cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
+            className="w-11 h-11 flex items-center justify-center cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
             title={t.mapView}
           >
             <Map size={22} />

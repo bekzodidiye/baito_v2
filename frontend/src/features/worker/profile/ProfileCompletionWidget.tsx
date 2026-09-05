@@ -100,7 +100,7 @@ export const ProfileCompletionWidget: React.FC<ProfileCompletionWidgetProps> = (
             </div>
             <button 
               onClick={() => setActiveDialog('edit')}
-              className="mt-1 text-[10px] font-bold bg-amber-200/60 hover:bg-amber-300 text-amber-900 px-3 py-1.5 rounded-lg transition-colors w-full sm:w-fit flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+              className="mt-1 min-h-[44px] text-[10px] font-bold bg-amber-200/60 hover:bg-amber-300 text-amber-900 px-3 py-1.5 rounded-lg transition-colors w-full sm:w-fit flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
             >
               <Edit2 size={12} className="stroke-[2.5]" />
               {language === 'uz' ? 'To\'ldirish' : language === 'ru' ? 'Заполнить' : 'Complete'}
