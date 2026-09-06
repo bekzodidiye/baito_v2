@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# Refuse a direct push to main.
+#
+# This repository cannot use GitHub's branch protection: it is private on a free
+# plan, and both the branch-protection and rulesets APIs answer 403 with
+# "Upgrade to GitHub Pro or make this repository public". So the same rule is
+# kept here instead.
+#
+# Be clear about what this is and is not. It runs on this machine only. It does
+# not bind anyone else, it does not bind you from another checkout, and
+# `--no-verify` walks straight past it. It is a reminder at the moment it is
+# useful, not a guarantee.
+#
+# The guarantee that does exist is in .github/workflows/ci.yml: the deploy job
+# needs test-backend, test-frontend, test-e2e and validate-docker, so a red main
+# cannot reach production. What this hook protects is main itself — so that a
+# branch cut from it starts from something that was reviewed and tested.
+#
+# Enable with:   git config core.hooksPath .githooks
+# Disable with:  git config --unset core.hooksPath
+
+protected='refs/heads/main'
+
+blocked=0
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+	[ -z "$remote_ref" ] && continue
+	if [ "$remote_ref" = "$protected" ]; then
+		blocked=1
+	fi
+done
+
+if [ "$blocked" -eq 1 ]; then
+	branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+	cat >&2 <<-MSG
+
+	  Push to main refused.
+
+	  main is where deploys come from, and this repository has no server-side
+	  protection to fall back on. Open a pull request instead, so CI runs before
+	  the change lands:
+
+	      git push -u origin ${branch}
+	      gh pr create --base main
+
+	  If you are certain — a revert, a hotfix with the pipeline already green —
+	  then say so explicitly:
+
+	      git push --no-verify origin main
+
+	MSG
+	exit 1
+fi
+
+exit 0

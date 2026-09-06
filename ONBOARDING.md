@@ -47,6 +47,12 @@ Top MCP Servers:
   an AI which review personas to run. Don't read it as onboarding docs.
 - **Production runs on a separate host**, not on your machine — see
   `RUNBOOK.md` for how to reach it and what to check.
+- **Turn on the pre-push hook once**, with `git config core.hooksPath .githooks`.
+  It refuses a direct push to `main`. GitHub's own branch protection is not
+  available here — the repository is private on a free plan and the API answers
+  403 — so this is the local stand-in. It binds your machine only, and
+  `--no-verify` walks past it; the rule that actually holds is in CI, where the
+  deploy job needs all four test jobs to be green.
 
 ## Get Started
 
