@@ -13,6 +13,7 @@ export const OnboardingTour: React.FC = () => {
     skip: language === 'uz' ? "O'tkazib yuborish" : language === 'ru' ? "Пропустить" : "Skip",
     next: language === 'uz' ? "Keyingisi" : language === 'ru' ? "Далее" : "Next",
     start: language === 'uz' ? "Boshlash" : language === 'ru' ? "Начать" : "Start",
+    close: language === 'uz' ? "Yopish" : language === 'ru' ? "Закрыть" : "Close",
   };
 
   const steps = [
@@ -65,9 +66,15 @@ export const OnboardingTour: React.FC = () => {
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-brand-primary/10 rounded-full blur-3xl z-0 pointer-events-none" />
         <div className="absolute top-12 -left-12 w-32 h-32 bg-blue-400/10 rounded-full blur-2xl z-0 pointer-events-none" />
 
+        {/* z-20, not z-10: the content block below is `relative z-10` and its
+            box covers this corner, so at an equal stacking level the later
+            element won every hit test and this button was painted but never
+            clickable. It also had no accessible name, so a screen reader
+            announced it as "button". */}
         <button 
           onClick={handleSkip}
-          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center bg-white/80 hover:bg-slate-100 text-slate-500 rounded-full transition-colors z-10 shadow-sm"
+          aria-label={t.close}
+          className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center bg-white/80 hover:bg-slate-100 text-slate-500 rounded-full transition-colors z-20 shadow-sm"
         >
           <X size={18} />
         </button>

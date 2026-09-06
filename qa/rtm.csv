@@ -21,4 +21,4 @@ Mobile usability,R-13,touch targets at 375px,UI,PASS,"fixed earlier today; 60+ -
 Accessibility: accessible names,R-14,14 routes scanned,UI,PARTIAL,"6 -> 2 unnamed; contrast not measured; no screen-reader run"
 Dependency hygiene,R-15,pip-audit + npm audit,static,FAIL->PASS,"BUG-003 fixed; npm audit --omit=dev --audit-level=high now gates CI"
 CI gates,R-15,workflow review,static,FAIL->PASS,"BUG-004: lint gate, dep audit and E2E job all real; frontend unit tests remain a decision"
-E2E coverage,R-15,7 specs on the built bundle with a real API,E2E,FAIL->PASS,"BUG-005 fixed: tour fixture, 2 stale assertions rewritten, empty test given one, preview proxy added; 7 passing in CI"
+E2E coverage,R-15,15 specs on the built bundle with a real API,E2E,FAIL->PASS,"BUG-005 fixed; onboarding tour given its own 8 specs; 15 passing, 0 skipped after BUG-007 was fixed"
