@@ -127,6 +127,13 @@ jobs:
         working-directory: ./frontend
         run: npm run lint
 
+      # The frontend had no unit layer at all: every defect found in it this
+      # year was found by hand, which does not scale and does not survive the
+      # session that found it.
+      - name: Unit Tests
+        working-directory: ./frontend
+        run: npm test
+
       # Five high-severity advisories shipped in the production bundle without
       # anything noticing, because nothing looked. --omit=dev because a build
       # tool's advisory does not reach a user's browser; a runtime one does.

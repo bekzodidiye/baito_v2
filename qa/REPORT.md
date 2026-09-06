@@ -22,9 +22,9 @@ them into CI as they stand would make main red on every commit, so that
 condition stays open pending a decision that belongs to the owner, not the
 tester.
 
-What remains: **no frontend unit tests**, and four unanswered questions in
-`project-facts.md`, two of which decide what "done" means for the passport scans
-and card references this system stores. A release can ship.
+What remains: four unanswered questions in `project-facts.md`, two of which
+decide what "done" means for the passport scans and card references this system
+stores. A release can ship.
 
 ## 2. Scope
 
@@ -60,7 +60,7 @@ exist for all three roles, the browser tooling reads console and network.
 | BUG-001 | S2 | P1 | functional | `tasks.py::auto_release_escrow` | Releases nothing, ever — `jobs.hiredWorkerId` is never written | **Fixed + test** |
 | BUG-002 | S3 | P2 | functional | `schemas/job.py` | NUL byte in any text field answers 500, not 422 | **Fixed + tests** |
 | BUG-003 | S3 | P2 | security | frontend deps | 5 high-severity advisories in the production bundle | **Fixed + CI gate** |
-| BUG-004 | S3 | P2 | process | `ci.yml` | Lint gate cannot fail; E2E suite never runs; no frontend unit tests | **Fixed** except frontend unit tests, which remain a decision |
+| BUG-004 | S3 | P2 | process | `ci.yml` | Lint gate cannot fail; E2E suite never runs; no frontend unit tests | **Fixed** — all three |
 | BUG-005 | S3 | P2 | process | `frontend/tests/` | 5 Playwright specs never ran; 2 asserted a flow the app has never had | **Fixed** — 7 pass, CI job added |
 | BUG-006 | S3 | P2 | functional | `PaymentResult.tsx` | Payment result screens render Russian to an English interface | **Fixed** |
 | BUG-007 | S3 | P2 | functional / a11y | `OnboardingTour.tsx` | The tour's ✕ is painted but unreachable, and has no accessible name | **Fixed + test** |
@@ -72,6 +72,7 @@ exist for all three roles, the browser tooling reads console and network.
 | Area | Cases | Pass | Fail | Blocked | Coverage / score |
 |---|---|---|---|---|---|
 | Functional (backend suite) | 108 | 108 | 0 | 0 | 69% line coverage |
+| Functional (frontend units) | 49 | 49 | 0 | 0 | Vitest; first unit layer in the project |
 | API | 94 endpoints enumerated | see below | 1 | 0 | auth/authz swept across all; per-endpoint happy paths partial |
 | Data | escrow, balances, applications | pass | 0 | 0 | escrow_service 93% |
 | **UI sweep** | 59 screens · 1,513 elements | 59 | 0 | 0 | **100% of screens**; BUG-006 found here and fixed |
@@ -162,9 +163,11 @@ instruction. What follows is their state as of this revision.
   19%, and all of that gain is the one test written for BUG-001 — and it holds
   the only money movement that happens without a human. `expire_stale_jobs` and
   `send_telegram_digest` are still untested.
-- **Add a frontend test layer.** There are zero unit tests. Every frontend
-  defect in this session was found by hand, which does not scale and does not
-  survive this session ending.
+- ~~**Add a frontend test layer.**~~ Done: 49 unit tests under Vitest, gating CI.
+  The first of them is a parity check across the three locale files, which is
+  the defect class behind BUG-006 and the settings-screen fix before it — a key
+  added to one file and forgotten in another fails no build, no type check and
+  no test, only a user.
 - **Stand up a staging environment.** `RUNBOOK.md` states every change is proven
   in production. That is the single largest structural risk to quality here.
 - **Decide on idempotency for writes** (OBS-02). The mechanism exists and is

@@ -28,7 +28,7 @@ nobody had opened.
 | Coverage, `app/schemas/job.py` | — | **93%** | 129 statements | after the BUG-002 validator and its four tests |
 | Coverage, `app/services/escrow_service.py` | — | **93%** | — | |
 | Coverage, `app/core/security.py` | — | **90%** | — | |
-| Frontend unit tests | — | **0** | — | none exist |
+| Frontend unit tests | 0 | **49** | 6 files | Vitest, gating CI; translations parity, keyboard helper, debounce, card BINs, shift-time fallbacks, auth store |
 | E2E specs that run in CI | 0 of 5 | **15** | own job, Postgres + Redis + API | gates `validate-docker` and `deploy` |
 | E2E specs that pass when run | 0 of 5 | **15 of 15** | against the built bundle | +8 for the onboarding tour; the fixme became a passing test when BUG-007 was fixed |
 | Defects found by writing the tour spec | — | **1** | 8 specs | BUG-007, found and fixed in the same change |
