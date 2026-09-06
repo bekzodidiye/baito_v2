@@ -313,3 +313,48 @@ def send_telegram_digest() -> bool:
         logger.error("Telegram digest could not be sent: %s", e)
         return False
     return True
+
+
+@celery_app.task(name="app.tasks.expire_uzum_transactions")
+def expire_uzum_transactions() -> int:
+    """Close out Uzum transactions that were never confirmed.
+
+    The Merchant API spec is explicit: a transaction not confirmed within 30
+    minutes of creation is unsuccessful, and the partner should move it to a
+    failed state. Left alone, those rows sit at CREATED forever and hold their
+    order out of use — the customer sees "already being paid" on an order
+    nobody is paying.
+
+    Deliberately does not touch anything CONFIRMED or REVERSED, and moves no
+    money: an unconfirmed transaction never took any.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    from app import models
+    from app.db.session import SessionLocal
+
+    cutoff_ms = int(
+        (datetime.now(timezone.utc) - timedelta(minutes=30)).timestamp() * 1000
+    )
+
+    db = SessionLocal()
+    try:
+        stale = (
+            db.query(models.UzumTransaction)
+            .filter(
+                models.UzumTransaction.status == "CREATED",
+                models.UzumTransaction.transTime < cutoff_ms,
+            )
+            .all()
+        )
+        # Only the transaction changes. An order is not taken out of use while
+        # a payment is in flight — /check refuses on "paid" and "cancelled" and
+        # nothing else — so there is no order state to restore here.
+        for trans in stale:
+            trans.status = "FAILED"
+        if stale:
+            db.commit()
+            logger.info("Expired %s unconfirmed Uzum transactions", len(stale))
+        return len(stale)
+    finally:
+        db.close()

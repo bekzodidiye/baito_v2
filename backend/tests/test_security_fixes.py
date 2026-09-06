@@ -300,3 +300,39 @@ def test_employer_job_history_is_not_publicly_enumerable(client):
     employer = make_user(role="employer", phone="+998901234455")
     make_job(employer.id)
     assert client.get(f"/api/v1/jobs?employer_id={employer.id}").status_code == 403
+
+
+def test_uzum_webhook_actually_credits_a_balance(client, monkeypatch):
+    """The success path, which had no test — and could not have passed.
+
+    Every other test on this endpoint asserts a refusal: bad signature, wrong
+    amount, provider not configured. None of them reach the line that writes
+    performTime, and that line stored milliseconds into a 32-bit column. On
+    PostgreSQL it raised NumericValueOutOfRange and rolled back the credit, so
+    the bank took the money and nothing was recorded. Widening the column is
+    only half the fix; this is the other half.
+    """
+    monkeypatch.setattr(settings, "UZUM_SECRET_KEY", "unit-test-secret")
+    employer = make_user(role="employer", phone="+998901234599", balance=0)
+    with SessionLocal() as db:
+        tx = Transaction(employerId=employer.id, amount=250_000, type="deposit", status="pending")
+        db.add(tx)
+        db.commit()
+        tx_id = tx.id
+
+    sign = hmac.new(
+        b"unit-test-secret", f"{tx_id}{250000}SUCCESS".encode(), hashlib.sha256
+    ).hexdigest()
+
+    resp = client.post("/api/v1/payments/webhook/uzum", json={
+        "order_id": tx_id, "uzum_transaction_id": "uzum-1", "amount": 250_000,
+        "status": "SUCCESS", "sign": sign,
+    })
+    assert resp.status_code == 200, resp.text
+
+    with SessionLocal() as db:
+        # 250 000 tiyin is 2 500 so'm.
+        assert db.query(User).filter(User.id == employer.id).first().balance == 2_500
+        stored = db.query(Transaction).filter(Transaction.id == tx_id).first()
+        assert stored.status == "paid"
+        assert stored.performTime > 1_000_000_000_000  # milliseconds, not seconds

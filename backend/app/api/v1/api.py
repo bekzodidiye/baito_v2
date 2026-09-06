@@ -12,6 +12,7 @@ from app.api.v1.endpoints import (
     payments,
     support,
     upload,
+    uzum_merchant,
     users,
 )
 
@@ -25,6 +26,11 @@ api_router.include_router(chats.router, prefix="/chats", tags=["chats"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
+# Uzum Bank Merchant API. Uzum calls these; the path is what we register with
+# them at onboarding, so it is fixed by that agreement rather than by taste.
+api_router.include_router(
+    uzum_merchant.router, prefix="/payments/uzum", tags=["uzum-merchant"]
+)
 api_router.include_router(support.router, prefix="/support", tags=["support"])
 api_router.include_router(upload.router, prefix="/upload", tags=["upload"])
 api_router.include_router(media.router, prefix="/media", tags=["media"])

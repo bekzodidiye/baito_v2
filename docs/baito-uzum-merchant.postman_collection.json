@@ -1,0 +1,1010 @@
+{
+  "info": {
+    "name": "Baito — Uzum Bank Merchant API",
+    "description": "The webhooks Uzum Bank calls on Baito, per https://developer.uzumbank.uz/merchant.\n\nSet these in a Postman ENVIRONMENT, not here: username, password, serviceId, baseUrl.\nA collection file is the thing people commit and forward; a password in one is a password published.\n\norderId and amount are filled in by the first request, which opens an order through Baito's own API. That is deliberate: the previous version of this collection read amount out of /create's own response, so a first run sent 0 and could only ever answer 10011.\n\nAmounts are in TIYIN. 1 UZS = 100 tiyin, so 1000000 is ten thousand so'm.\n\nRun the folders one at a time. 'Payment' and 'Cancellation' both start from a fresh order; running the whole collection top to bottom would confirm and then reverse the same transaction, which is a different scenario from either.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{username}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{password}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://<host>/api/v1/payments/uzum",
+      "type": "string"
+    },
+    {
+      "key": "apiUrl",
+      "value": "https://<host>/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "serviceId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "employerPhone",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "employerPassword",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "amount",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "transId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "timestamp",
+      "value": "0",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Open an order (Baito API, not a webhook)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('order number is 16 digits', () => pm.expect(body.orderNumber).to.match(/^[0-9]{16}$/));",
+              "pm.collectionVariables.set('orderId', body.orderNumber);",
+              "// The webhook side speaks tiyin; this API speaks so'm.",
+              "pm.collectionVariables.set('amount', String(body.amount * 100));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 10000\n}"
+        },
+        "url": {
+          "raw": "{{apiUrl}}/payments/uzum/orders",
+          "host": [
+            "{{apiUrl}}"
+          ],
+          "path": [
+            "payments",
+            "uzum",
+            "orders"
+          ]
+        },
+        "description": "Needs an employer session cookie — sign in with POST {{apiUrl}}/auth/login first (form fields username and password). amount here is in SO'M."
+      }
+    },
+    {
+      "name": "Payment (check -> create -> confirm -> status)",
+      "item": [
+        {
+          "name": "1. Check",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('status OK', () => pm.expect(b.status).to.eql('OK'));",
+                  "pm.test('serviceId echoes back', () => pm.expect(String(b.serviceId)).to.eql(pm.collectionVariables.get('serviceId')));",
+                  "pm.test('data carries the order', () => pm.expect(String(b.data.order_id)).to.eql(pm.collectionVariables.get('orderId')));",
+                  "pm.test('data carries the amount', () => pm.expect(String(b.data.amount)).to.eql(pm.collectionVariables.get('amount')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"params\": {\n    \"order_id\": \"{{orderId}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/check",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "check"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Create",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());",
+                  "const uuid = require('uuid');",
+                  "pm.collectionVariables.set('transId', uuid.v4());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('status CREATED', () => pm.expect(b.status).to.eql('CREATED'));",
+                  "pm.test('amount comes back unchanged', () => pm.expect(String(b.amount)).to.eql(pm.collectionVariables.get('amount')));",
+                  "pm.test('transTime is set', () => pm.expect(b.transTime).to.be.a('number'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"transId\": \"{{transId}}\",\n  \"params\": {\n    \"order_id\": \"{{orderId}}\"\n  },\n  \"amount\": \"{{amount}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Confirm",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('status CONFIRMED', () => pm.expect(b.status).to.eql('CONFIRMED'));",
+                  "pm.test('confirmTime is set', () => pm.expect(b.confirmTime).to.be.a('number'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"transId\": \"{{transId}}\",\n  \"paymentSource\": \"UZCARD\",\n  \"tariff\": null,\n  \"processingReferenceNumber\": \"000\",\n  \"phone\": \"998901234567\",\n  \"cardType\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "confirm"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Status",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('reports CONFIRMED', () => pm.expect(b.status).to.eql('CONFIRMED'));",
+                  "pm.test('reverseTime is null', () => pm.expect(b.reverseTime).to.eql(null));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"transId\": \"{{transId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. Confirm again is 10016",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('errorCode 10016', () => pm.expect(pm.response.json().errorCode).to.eql('10016'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"transId\": \"{{transId}}\",\n  \"paymentSource\": \"UZCARD\",\n  \"phone\": \"998901234567\",\n  \"cardType\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "confirm"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6. Check the paid order is 10008",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('errorCode 10008', () => pm.expect(pm.response.json().errorCode).to.eql('10008'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"params\": {\n    \"order_id\": \"{{orderId}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/check",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "check"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cancellation (open a NEW order first, then check -> create -> reverse)",
+      "item": [
+        {
+          "name": "1. Create",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());",
+                  "const uuid = require('uuid');",
+                  "pm.collectionVariables.set('transId', uuid.v4());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('status CREATED', () => pm.expect(pm.response.json().status).to.eql('CREATED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"transId\": \"{{transId}}\",\n  \"params\": {\n    \"order_id\": \"{{orderId}}\"\n  },\n  \"amount\": \"{{amount}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Reverse",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('status REVERSED', () => pm.expect(b.status).to.eql('REVERSED'));",
+                  "pm.test('reverseTime is set', () => pm.expect(b.reverseTime).to.be.a('number'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"transId\": \"{{transId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reverse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reverse"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Reverse again is 10018",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('errorCode 10018', () => pm.expect(pm.response.json().errorCode).to.eql('10018'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"transId\": \"{{transId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reverse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reverse"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Confirm a reversed transaction is 10015",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('errorCode 10015', () => pm.expect(pm.response.json().errorCode).to.eql('10015'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"transId\": \"{{transId}}\",\n  \"paymentSource\": \"UZCARD\",\n  \"phone\": \"998901234567\",\n  \"cardType\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "confirm"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refusals",
+      "item": [
+        {
+          "name": "10001 — wrong password",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('errorCode 10001', () => pm.expect(pm.response.json().errorCode).to.eql('10001'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"params\": {\n    \"order_id\": \"{{orderId}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/check",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "check"
+              ]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{username}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "definitely-not-the-password",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "10001 — no Authorization header at all",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('errorCode 10001', () => pm.expect(pm.response.json().errorCode).to.eql('10001'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"params\": {\n    \"order_id\": \"{{orderId}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/check",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "check"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "10006 — unknown serviceId",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('errorCode 10006', () => pm.expect(pm.response.json().errorCode).to.eql('10006'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": 999999,\n  \"timestamp\": \"{{timestamp}}\",\n  \"params\": {\n    \"order_id\": \"{{orderId}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/check",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "check"
+              ]
+            }
+          }
+        },
+        {
+          "name": "10007 — unknown order",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('errorCode 10007', () => pm.expect(pm.response.json().errorCode).to.eql('10007'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"params\": {\n    \"order_id\": \"0000000000000000\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/check",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "check"
+              ]
+            }
+          }
+        },
+        {
+          "name": "10010 — transId reused",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('errorCode 10010', () => pm.expect(pm.response.json().errorCode).to.eql('10010'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"transId\": \"{{transId}}\",\n  \"params\": {\n    \"order_id\": \"{{orderId}}\"\n  },\n  \"amount\": \"{{amount}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "10011 — wrong amount",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const uuid = require('uuid');",
+                  "pm.collectionVariables.set('badTransId', uuid.v4());",
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('errorCode 10011', () => pm.expect(pm.response.json().errorCode).to.eql('10011'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"transId\": \"{{badTransId}}\",\n  \"params\": {\n    \"order_id\": \"{{orderId}}\"\n  },\n  \"amount\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "10011 — so'm sent where tiyin is meant",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const uuid = require('uuid');",
+                  "pm.collectionVariables.set('badTransId', uuid.v4());",
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('errorCode 10011', () => pm.expect(pm.response.json().errorCode).to.eql('10011'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"transId\": \"{{badTransId}}\",\n  \"params\": {\n    \"order_id\": \"{{orderId}}\"\n  },\n  \"amount\": 10000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "10014 — unknown transId",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('timestamp', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "pm.test('errorCode 10014', () => pm.expect(pm.response.json().errorCode).to.eql('10014'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"timestamp\": \"{{timestamp}}\",\n  \"transId\": \"00000000-0000-0000-0000-000000000000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "status"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

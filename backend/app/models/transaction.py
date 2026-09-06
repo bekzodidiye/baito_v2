@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Integer
+from sqlalchemy import BigInteger, Column, String, DateTime, ForeignKey, Integer
 from sqlalchemy.sql import func
 from app.db.base_class import Base
 from .user import generate_uuid
@@ -16,6 +16,9 @@ class Transaction(Base):
 
     # Provider specific fields (Payme/Click)
     providerTransactionId = Column(String, nullable=True, index=True)
-    performTime = Column(Integer, nullable=True) # unix timestamp from payme
-    cancelTime = Column(Integer, nullable=True) # unix timestamp from payme
+    # Milliseconds, not seconds — which does not fit a 32-bit integer. Every
+    # writer of these columns multiplies by 1000, so on PostgreSQL the insert
+    # raised NumericValueOutOfRange and rolled back the whole credit.
+    performTime = Column(BigInteger, nullable=True)  # unix ms
+    cancelTime = Column(BigInteger, nullable=True)  # unix ms
     cancelReason = Column(Integer, nullable=True)

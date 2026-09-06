@@ -52,6 +52,15 @@ class Settings(BaseSettings):
     UZUM_SECRET_KEY: str = os.getenv("UZUM_SECRET_KEY", "")
     UZUM_API_URL: str = os.getenv("UZUM_API_URL", "https://api.uzum.uz/epos/v1")
 
+    # Uzum Bank Merchant API — a different product from the e-commerce one
+    # above. There, we send the customer to Uzum's checkout. Here, Uzum calls
+    # us: the customer types an order number into the Uzum app and the bank
+    # drives /check, /create, /confirm, /reverse and /status against this
+    # service. Empty means not configured, and every webhook answers 10001.
+    UZUM_MERCHANT_SERVICE_ID: int = int(os.getenv("UZUM_MERCHANT_SERVICE_ID", "0") or 0)
+    UZUM_MERCHANT_USERNAME: str = os.getenv("UZUM_MERCHANT_USERNAME", "")
+    UZUM_MERCHANT_PASSWORD: str = os.getenv("UZUM_MERCHANT_PASSWORD", "")
+
     # Telegram — reused by the error reporter. The backup bot already owns a
     # channel; pointing exceptions at it costs no extra infrastructure.
     TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -89,6 +98,14 @@ class Settings(BaseSettings):
     @property
     def uzum_configured(self) -> bool:
         return bool(self.UZUM_TERMINAL_ID and self.UZUM_SECRET_KEY)
+
+    @property
+    def uzum_merchant_configured(self) -> bool:
+        return bool(
+            self.UZUM_MERCHANT_SERVICE_ID
+            and self.UZUM_MERCHANT_USERNAME
+            and self.UZUM_MERCHANT_PASSWORD
+        )
 
     @property
     def cors_origins(self) -> List[str]:
