@@ -202,5 +202,12 @@ export const ru = {
   openMenu: "Открыть меню",
   changePhoto: "Сменить фото",
   goBack: "Назад",
-  showAll: "Показать все"
+  showAll: "Показать все",
+
+  // Payment result
+  paymentSuccessTitle: "Оплата прошла успешно!",
+  paymentSuccessBody: "Ваш счет успешно пополнен.",
+  paymentErrorTitle: "Ошибка при оплате",
+  paymentErrorBody: "Оплата не удалась. Пожалуйста, попробуйте еще раз.",
+  paymentResultBack: "Вернуться назад"
 };

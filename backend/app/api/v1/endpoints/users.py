@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 from app.core import security
-from app.core.config import settings
 from app.core.limiter import limiter
 from app.core.phone import consume_verification_grant, is_valid_uz_phone, normalize_phone
 from app.core.security import get_password_hash

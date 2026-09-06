@@ -1,0 +1,24 @@
+  HEAD (db4d78e) nusxasi olindi
+[notice] To update, run: pip install --upgrade pip
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+../../usr/local/lib/python3.11/site-packages/fastapi/applications.py:4681
+tests/test_admin_finance.py::test_a_malformed_sentry_dsn_cannot_take_the_app_down
+tests/test_admin_finance.py::test_a_malformed_sentry_dsn_cannot_take_the_app_down
+  /usr/local/lib/python3.11/site-packages/fastapi/applications.py:4681: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)  # ty: ignore[deprecated]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+108 passed, 19 warnings in 806.22s (0:13:26)
+
+[exited with code 0]

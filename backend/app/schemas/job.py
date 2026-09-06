@@ -7,6 +7,34 @@ from app.core.money import parse_salary_amounts
 # A shift's crew, not a workforce. Past this it is a typo, not a vacancy count.
 MAX_WORKERS_PER_JOB = 100
 
+# PostgreSQL refuses a NUL byte in a text column, and it refuses it in the
+# driver — past every check the schema makes. A posting carrying one answered
+# 500 with an unhandled exception where the writer should have seen a 422 with
+# a reason. Tab, newline and carriage return stay allowed: a description is
+# written on several lines. Everything else below U+0020, and DEL, is not text
+# anybody typed.
+_FORBIDDEN_CHARS = frozenset(
+    [chr(c) for c in range(0x20) if chr(c) not in "\t\n\r"] + ["\x7f"]
+)
+
+
+def _reject_control_chars(v):
+    """Refuse text the database cannot store, at the boundary that can explain it.
+
+    Applied to every field rather than a named list, so a field added later is
+    covered without anybody remembering to add it here. Emoji, right-to-left
+    scripts, mixed alphabets and accented Latin are all above U+0020 and are
+    deliberately untouched.
+    """
+    if isinstance(v, str):
+        if not _FORBIDDEN_CHARS.isdisjoint(v):
+            raise ValueError("Matnda ruxsat etilmagan boshqaruv belgisi bor")
+    elif isinstance(v, list):
+        for item in v:
+            _reject_control_chars(item)
+    return v
+
+
 def _validate_salary(v: str) -> str:
     if "-" in v and not any(c.isdigit() for c in v.split("-")[0]):
         # A leading minus: "-500000". The parser strips it and the employer
@@ -88,6 +116,11 @@ class JobCreate(JobBase):
     location: str = Field(min_length=1, max_length=200)
     description: str = Field(min_length=10, max_length=5000)
 
+    @field_validator("*")
+    @classmethod
+    def check_control_chars(cls, v):
+        return _reject_control_chars(v)
+
     @field_validator("salary")
     @classmethod
     def check_salary(cls, v: str) -> str:
@@ -108,6 +141,11 @@ class JobUpdate(JobBase):
     location: Optional[str] = None
     description: Optional[str] = Field(default=None, min_length=10, max_length=5000)
     status: Optional[str] = None
+
+    @field_validator("*")
+    @classmethod
+    def check_control_chars(cls, v):
+        return _reject_control_chars(v)
 
     @field_validator("title")
     @classmethod

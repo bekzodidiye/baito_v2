@@ -162,3 +162,34 @@ def test_cancelling_returns_every_hold_not_just_the_first(client):
     resp = client.delete(f"/api/v1/jobs/{job.id}")
     assert resp.json()["refunded"] == 100_000 * len(apps)
     assert client.get("/api/v1/users/me").json()["balance"] == 1_000_000
+
+
+def test_a_nul_byte_is_refused_with_a_reason_not_a_crash(client):
+    """A NUL byte reached PostgreSQL, which refused it in the driver — past every
+    check the schema made. The writer saw "server error"; the log saw an
+    unhandled exception. 422 is the honest answer."""
+    login(client, make_user(role="employer", phone="+998911112220"))
+    for field in ("title", "description", "location", "company"):
+        resp = _post(client, **{field: VALID[field][:3] + "\x00" + VALID[field][3:]})
+        assert resp.status_code == 422, f"{field} answered {resp.status_code}"
+
+
+def test_other_control_characters_are_refused_too(client):
+    login(client, make_user(role="employer", phone="+998911112221"))
+    for ch in ("\x01", "\x1b", "\x7f"):
+        assert _post(client, title=f"Omborchi{ch}").status_code == 422
+
+
+def test_newlines_and_tabs_are_still_allowed(client):
+    """A description is written on several lines. Refusing those would break
+    every posting that has ever had a list in it."""
+    login(client, make_user(role="employer", phone="+998911112222"))
+    assert _post(client, description="Birinchi qator.\n\tIkkinchi qator.\r\nUchinchi.").status_code == 200
+
+
+def test_real_text_from_real_alphabets_is_still_allowed(client):
+    """The regression this fix could plausibly cause. Every one of these was
+    accepted before the change and must stay accepted."""
+    login(client, make_user(role="employer", phone="+998911112223"))
+    for title in ("Omborchi 📦", "عامل مستودع", "Кладовщик", "Magasinier — café"):
+        assert _post(client, title=title).status_code == 200, title

@@ -3,7 +3,7 @@
 import pytest
 
 from app.db.session import SessionLocal
-from app.models import Application, Transaction, User
+from app.models import Application, Job, Transaction, User
 from app.services.escrow_service import EscrowService
 
 from .conftest import login, make_job, make_user
@@ -549,3 +549,48 @@ def test_the_default_wording_is_used_when_no_template_is_set(client):
     login(client, worker)
     messages = [n["message"] for n in client.get("/api/v1/notifications").json()]
     assert any("rad etildi" in m for m in messages)
+
+
+def test_auto_release_actually_releases_a_completed_job(client):
+    """BUG-001. The only test this task had asserted it returns 0 — which it did,
+    for the wrong reason: it reads jobs.hiredWorkerId, and the hire flow never
+    wrote that column, so every run fell through 'nobody to pay' and the safety
+    net that exists to stop a finished worker's wage sitting frozen did nothing.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    from app.models.job import JobStatus
+    from app.tasks import auto_release_escrow
+
+    employer = make_user(role="employer", phone="+998944444010", balance=1_000_000)
+    worker = make_user(role="worker", phone="+998944444011")
+    job = make_job(employer.id, salary="200000")
+
+    login(client, worker)
+    client.post(f"/api/v1/jobs/{job.id}/apply", json={})
+
+    login(client, employer)
+    app_id = next(a["id"] for a in client.get("/api/v1/applications/employer").json()
+                  if a.get("jobId") == job.id)
+    assert client.post(f"/api/v1/applications/{app_id}/hire", json={}).status_code == 200
+
+    admin = make_user(role="admin", phone="+998944444012")
+    _set_settings(client, admin, escrowAutoReleaseEnabled=True, escrowAutoReleaseHours=24)
+
+    # The state the task exists for: finished, undisputed, past the window, and
+    # the wage still held.
+    with SessionLocal() as db:
+        row = db.query(Job).filter(Job.id == job.id).first()
+        row.status = JobStatus.COMPLETED
+        row.completedAt = datetime.now(timezone.utc) - timedelta(hours=48)
+        db.commit()
+
+    assert auto_release_escrow() == 1, "a completed, undisputed job was not released"
+
+    with SessionLocal() as db:
+        tx = (db.query(Transaction)
+              .filter(Transaction.jobId == job.id, Transaction.type == "escrow_hold")
+              .first())
+        assert tx.status == "released"
+        paid = db.query(User).filter(User.id == worker.id).first()
+        assert (paid.balance or 0) > 0, "the worker was not paid"

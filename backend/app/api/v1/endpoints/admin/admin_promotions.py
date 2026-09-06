@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from app import models
 from app.api import deps
 from .admin_users import get_admin_user
-import datetime
 
 router = APIRouter()
 

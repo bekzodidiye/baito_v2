@@ -10,6 +10,10 @@ export const PaymentResult: React.FC = () => {
   const { language } = useApp();
   const t = translations[language];
   
+  // Every string here used to be `language === 'uz' ? uz : ru`, so English —
+  // which the rest of the interface honours — fell through to the Russian
+  // branch. There was no third branch to reach. `t` was already in scope and
+  // unused.
   const isSuccess = location.pathname.includes('success');
 
   return (
@@ -27,17 +31,11 @@ export const PaymentResult: React.FC = () => {
         )}
 
         <h1 className="font-display font-black text-2xl text-slate-800 mb-2">
-          {isSuccess 
-            ? (language === 'uz' ? 'To\'lov muvaffaqiyatli!' : 'Оплата прошла успешно!')
-            : (language === 'uz' ? 'To\'lovda xatolik' : 'Ошибка при оплате')
-          }
+          {isSuccess ? t.paymentSuccessTitle : t.paymentErrorTitle}
         </h1>
-        
+
         <p className="text-sm text-slate-500 font-medium mb-8">
-          {isSuccess 
-            ? (language === 'uz' ? 'Hisobingiz muvaffaqiyatli to\'ldirildi.' : 'Ваш счет успешно пополнен.')
-            : (language === 'uz' ? 'To\'lov amalga oshmadi. Iltimos, qaytadan urinib ko\'ring.' : 'Оплата не удалась. Пожалуйста, попробуйте еще раз.')
-          }
+          {isSuccess ? t.paymentSuccessBody : t.paymentErrorBody}
         </p>
 
         <button 
@@ -45,7 +43,7 @@ export const PaymentResult: React.FC = () => {
           className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
         >
           <ArrowLeft size={18} />
-          {language === 'uz' ? 'Orqaga qaytish' : 'Вернуться назад'}
+          {t.paymentResultBack}
         </button>
       </div>
     </div>

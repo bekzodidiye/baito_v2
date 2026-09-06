@@ -1,0 +1,25 @@
+# Lint rules for the backend.
+#
+# This file exists so `ruff check app/` can be a gate that actually fails. It
+# used to run as `ruff check app/ || true`, which meant the step could not fail
+# and the 110 findings it printed went unread. The choice is between fixing a
+# finding and saying out loud why it is not one; there is no third option where
+# the gate stays green by not being a gate.
+
+target-version = "py311"
+line-length = 120
+
+[lint]
+# Ruff's default selection, written out. Widening it is a separate decision
+# from making the gate work, and mixing the two would bury the one in the other.
+select = ["E4", "E7", "E9", "F"]
+
+[lint.per-file-ignores]
+# Re-export modules. The imports look unused because nothing in the file uses
+# them — the file exists so that everything else can. Removing them breaks
+# `models.Job` and friends, and breaks Alembic autogenerate, which discovers
+# tables only through what `base.py` has imported.
+"app/db/base.py" = ["F401"]
+"app/models/__init__.py" = ["F401"]
+"app/schemas/__init__.py" = ["F401"]
+"app/crud/__init__.py" = ["F401"]

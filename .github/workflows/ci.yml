@@ -90,9 +90,16 @@ jobs:
           PYTHONPATH: .
         run: alembic upgrade head
 
+      # `|| true` used to end this line, which meant the step could not fail
+      # and its 110 findings went unread. They are now either fixed or ignored
+      # by name in backend/ruff.toml, so the gate can gate. The version is
+      # pinned: an unpinned linter turns somebody else's release into a red
+      # build on a branch that changed nothing.
       - name: Lint
         working-directory: ./backend
-        run: ruff check app/ || true
+        run: |
+          pip install ruff==0.5.0
+          ruff check app/
 
   # ==========================================================
   # 2. FRONTEND TYPECHECK & PRODUCTION BUILD
@@ -119,6 +126,13 @@ jobs:
       - name: Typecheck
         working-directory: ./frontend
         run: npm run lint
+
+      # Five high-severity advisories shipped in the production bundle without
+      # anything noticing, because nothing looked. --omit=dev because a build
+      # tool's advisory does not reach a user's browser; a runtime one does.
+      - name: Audit Production Dependencies
+        working-directory: ./frontend
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Build Frontend Production Artifacts
         working-directory: ./frontend

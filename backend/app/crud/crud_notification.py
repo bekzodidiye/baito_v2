@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
 from app.models.notification import Notification
@@ -19,7 +19,10 @@ class CRUDNotification(CRUDBase[Notification, NotificationCreate, NotificationUp
 
     def mark_all_as_read(self, db: Session, *, user_id: str) -> None:
         db.query(self.model).filter(
-            Notification.userId == user_id, Notification.isRead == False
+            # .is_(False) rather than `== False`: ruff's suggested `not
+            # Notification.isRead` evaluates in Python and builds no SQL at all,
+            # which is why it offers that one only as an unsafe fix.
+            Notification.userId == user_id, Notification.isRead.is_(False)
         ).update({"isRead": True})
         db.commit()
 

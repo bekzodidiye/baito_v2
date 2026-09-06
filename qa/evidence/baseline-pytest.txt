@@ -1,0 +1,30 @@
+INTERNALERROR>     self.cov.save()
+INTERNALERROR>   File "/app/.local/lib/python3.11/site-packages/coverage/control.py", line 864, in save
+INTERNALERROR>     data = self.get_data()
+INTERNALERROR>            ^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/app/.local/lib/python3.11/site-packages/coverage/control.py", line 944, in get_data
+INTERNALERROR>     if self._collector.flush_data():
+INTERNALERROR>        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/app/.local/lib/python3.11/site-packages/coverage/collector.py", line 488, in flush_data
+INTERNALERROR>     self.covdata.add_lines(self.mapped_file_dict(line_data))
+INTERNALERROR>   File "/app/.local/lib/python3.11/site-packages/coverage/sqldata.py", line 136, in _wrapped
+INTERNALERROR>     return method(self, *args, **kwargs)
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/app/.local/lib/python3.11/site-packages/coverage/sqldata.py", line 550, in add_lines
+INTERNALERROR>     self._choose_lines_or_arcs(lines=True)
+INTERNALERROR>   File "/app/.local/lib/python3.11/site-packages/coverage/sqldata.py", line 626, in _choose_lines_or_arcs
+INTERNALERROR>     with self._connect() as con:
+INTERNALERROR>          ^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/app/.local/lib/python3.11/site-packages/coverage/sqldata.py", line 396, in _connect
+INTERNALERROR>     self._open_db()
+INTERNALERROR>   File "/app/.local/lib/python3.11/site-packages/coverage/sqldata.py", line 314, in _open_db
+INTERNALERROR>     self._read_db()
+INTERNALERROR>   File "/app/.local/lib/python3.11/site-packages/coverage/sqldata.py", line 318, in _read_db
+INTERNALERROR>     with self._dbs[threading.get_ident()] as db:
+INTERNALERROR>   File "/app/.local/lib/python3.11/site-packages/coverage/sqlitedb.py", line 96, in __enter__
+INTERNALERROR>     self._connect()
+INTERNALERROR>   File "/app/.local/lib/python3.11/site-packages/coverage/sqlitedb.py", line 60, in _connect
+INTERNALERROR>     raise DataError(f"Couldn't use data file {self.filename!r}: {exc}") from exc
+INTERNALERROR> coverage.exceptions.DataError: Couldn't use data file '/snap/backend/.coverage.b5ff36ce62c5.pid10.X1PlskOx': unable to open database file
+
+103 passed, 19 warnings in 782.88s (0:13:02)

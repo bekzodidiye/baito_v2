@@ -1,0 +1,12 @@
+app/schemas/session.py                              22      0   100%
+app/schemas/token.py                                 9      0   100%
+app/schemas/transaction.py                          20      0   100%
+app/schemas/user.py                                 98      4    96%
+app/services/ai_matcher.py                          39     13    67%
+app/services/escrow_service.py                      61      4    93%
+app/services/geo_service.py                         33      2    94%
+app/services/spam_detector.py                       39      4    90%
+app/tasks.py                                       157    113    28%
+--------------------------------------------------------------------
+TOTAL                                             4106   1271    69%
+104 passed, 19 warnings in 755.17s (0:12:35)

@@ -202,5 +202,12 @@ export const en = {
   openMenu: "Open menu",
   changePhoto: "Change photo",
   goBack: "Back",
-  showAll: "Show All"
+  showAll: "Show All",
+
+  // Payment result
+  paymentSuccessTitle: "Payment successful",
+  paymentSuccessBody: "Your balance has been topped up.",
+  paymentErrorTitle: "Payment failed",
+  paymentErrorBody: "The payment did not go through. Please try again.",
+  paymentResultBack: "Go back"
 };

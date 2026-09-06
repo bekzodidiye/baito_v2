@@ -32,6 +32,17 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
+  /* The suite had no way to start the app it tests, so running it meant
+     remembering to start a server first — which is part of why nothing ran it.
+     Building and previewing, rather than `npm run dev`, so CI exercises the
+     bundle that actually ships. */
+  webServer: {
+    command: 'npm run build && npm run preview -- --port 5173 --strictPort',
+    url: 'http://localhost:5173',
+    reuseExistingServer: !process.env.CI,
+    timeout: 180_000,
+  },
+
   /* Configure projects for major browsers */
   projects: [
     {

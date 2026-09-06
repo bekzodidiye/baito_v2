@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from app import models
 from app.models.audit_ledger import AuditLedger
-import uuid
 
 REFERRAL_BONUS_AMOUNT = 20_000 # 20,000 UZS reward for both referrer and worker
 

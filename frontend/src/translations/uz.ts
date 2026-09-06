@@ -202,5 +202,12 @@ export const uz = {
   openMenu: "Menyuni ochish",
   changePhoto: "Suratni almashtirish",
   goBack: "Orqaga",
-  showAll: "Barchasini ko'rsatish"
+  showAll: "Barchasini ko'rsatish",
+
+  // Payment result
+  paymentSuccessTitle: "To'lov muvaffaqiyatli!",
+  paymentSuccessBody: "Hisobingiz muvaffaqiyatli to'ldirildi.",
+  paymentErrorTitle: "To'lovda xatolik",
+  paymentErrorBody: "To'lov amalga oshmadi. Iltimos, qaytadan urinib ko'ring.",
+  paymentResultBack: "Orqaga qaytish"
 };

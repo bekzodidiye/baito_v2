@@ -223,6 +223,11 @@ def hire_applicant(
 
     app.status = "hired"
     job.status = JobStatus.CONFIRMED
+    # auto_release_escrow reads this to decide who to pay. Nothing wrote it, so
+    # that task fell through "nobody to pay" on every run and the wage of a
+    # finished, undisputed job stayed frozen until a human released it.
+    if job.hiredWorkerId is None:
+        job.hiredWorkerId = app.workerId
     db.add(job)
     db.add(app)
 

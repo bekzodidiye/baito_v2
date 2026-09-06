@@ -1,0 +1,28 @@
+  low: 1 · moderate: 10 · high: 6 · total: 17
+    moderate @esbuild-kit/core-utils — 
+    moderate @esbuild-kit/esm-loader — 
+    moderate @google-cloud/storage — 
+    low      body-parser — body-parser vulnerable to denial of service when invalid limit value silently disab
+    high     brace-expansion — brace-expansion: DoS via unbounded expansion length causing an out-of-memory pr
+    high     browserslist — Browserslist: Unbounded memory growth (no cache eviction) via distinct query resul
+  high: 5 · total: 5
+    high     browserslist
+    high     nanoid
+    high     postcss
+    high     react-router
+    high     react-router-dom
+  react-router
+    React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response
+    joriy: 7.12.0 - 7.18.1   tuzatish: True
+  react-router-dom
+    (tranzitiv)
+    joriy: 7.12.0-pre.0 - 7.18.1   tuzatish: True
+  postcss
+    PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arb
+    joriy: <=8.5.22   tuzatish: True
+  nanoid
+    nanoid: non-secure generators can loop indefinitely with negative size
+    joriy: <=3.3.17   tuzatish: True
+  browserslist
+    Browserslist: Unbounded memory growth (no cache eviction) via distinct query results, leading t
+    joriy: <=4.28.6   tuzatish: True

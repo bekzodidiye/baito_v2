@@ -1,0 +1,246 @@
+### BUTUN BACKEND ###
+alembic/env.py:15:8: F401 [*] `app.models` imported but unused
+app/api/v1/endpoints/admin/admin_jobs.py:5:24: F401 [*] `sqlalchemy.func` imported but unused
+app/api/v1/endpoints/admin/admin_promotions.py:7:8: F401 [*] `datetime` imported but unused
+app/api/v1/endpoints/admin/admin_stats.py:1:25: F401 [*] `typing.Optional` imported but unused
+app/api/v1/endpoints/admin/admin_support.py:10:56: F401 [*] `fastapi.Query` imported but unused
+app/api/v1/endpoints/payments.py:4:8: F401 [*] `re` imported but unused
+app/api/v1/endpoints/payments.py:6:20: F401 [*] `typing.Any` imported but unused
+app/api/v1/endpoints/payments.py:9:40: F401 [*] `pydantic.field_validator` imported but unused
+app/api/v1/endpoints/users.py:10:29: F401 [*] `app.core.config.settings` imported but unused
+app/crud/__init__.py:1:24: F401 `.crud_user.user` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/crud/__init__.py:2:23: F401 `.crud_job.job` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/crud/__init__.py:3:31: F401 `.crud_application.application` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/crud/__init__.py:4:24: F401 `.crud_chat.chat` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/crud/__init__.py:5:32: F401 `.crud_notification.notification` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/crud/crud_application.py:1:20: F401 [*] `typing.Any` imported but unused
+app/crud/crud_application.py:1:25: F401 [*] `typing.Dict` imported but unused
+app/crud/crud_application.py:1:31: F401 [*] `typing.Optional` imported but unused
+app/crud/crud_application.py:1:41: F401 [*] `typing.Union` imported but unused
+app/crud/crud_chat.py:1:20: F401 [*] `typing.Any` imported but unused
+app/crud/crud_chat.py:1:25: F401 [*] `typing.Dict` imported but unused
+app/crud/crud_chat.py:1:31: F401 [*] `typing.Optional` imported but unused
+app/crud/crud_chat.py:1:41: F401 [*] `typing.Union` imported but unused
+app/crud/crud_chat.py:3:28: F401 [*] `sqlalchemy.orm.Session` imported but unused
+app/crud/crud_job.py:1:26: F401 [*] `typing.Optional` imported but unused
+app/crud/crud_notification.py:1:26: F401 [*] `typing.Optional` imported but unused
+app/crud/crud_notification.py:22:45: E712 Avoid equality comparisons to `False`; use `if not Notification.isRead:` for false checks
+app/crud/crud_user.py:1:20: F401 [*] `typing.Any` imported but unused
+app/crud/crud_user.py:1:25: F401 [*] `typing.Dict` imported but unused
+app/crud/crud_user.py:1:41: F401 [*] `typing.Union` imported but unused
+app/db/base.py:6:31: F401 [*] `app.db.base_class.Base` imported but unused
+app/db/base.py:7:29: F401 [*] `app.models.user.User` imported but unused
+app/db/base.py:8:28: F401 [*] `app.models.job.Job` imported but unused
+app/db/base.py:9:36: F401 [*] `app.models.application.Application` imported but unused
+app/db/base.py:10:36: F401 [*] `app.models.transaction.Transaction` imported but unused
+app/db/base.py:11:29: F401 [*] `app.models.chat.Chat` imported but unused
+app/db/base.py:11:35: F401 [*] `app.models.chat.Message` imported but unused
+app/db/base.py:12:33: F401 [*] `app.models.bookmark.Bookmark` imported but unused
+app/db/base.py:13:37: F401 [*] `app.models.notification.Notification` imported but unused
+app/db/base.py:14:37: F401 [*] `app.models.payment_card.PaymentCard` imported but unused
+app/db/base.py:15:32: F401 [*] `app.models.session.ActiveSession` imported but unused
+app/db/base.py:16:39: F401 [*] `app.models.support_ticket.SupportTicket` imported but unused
+app/db/base.py:16:54: F401 [*] `app.models.support_ticket.TicketMessage` imported but unused
+app/db/base.py:17:33: F401 [*] `app.models.category.Category` imported but unused
+app/db/base.py:18:31: F401 [*] `app.models.region.Region` imported but unused
+app/db/base.py:19:34: F401 [*] `app.models.promotion.Promotion` imported but unused
+app/db/base.py:20:32: F401 [*] `app.models.dispute.Dispute` imported but unused
+app/db/base.py:21:39: F401 [*] `app.models.system_setting.SystemSetting` imported but unused
+app/db/base.py:22:37: F401 [*] `app.models.audit_ledger.AuditLedger` imported but unused
+app/db/base.py:23:36: F401 [*] `app.models.idempotency.IdempotencyKey` imported but unused
+app/db/base.py:24:35: F401 [*] `app.models.media_file.MediaFile` imported but unused
+app/db/base.py:25:40: F401 [*] `app.models.admin_audit_log.AdminAuditLog` imported but unused
+app/models/__init__.py:1:19: F401 `.user.User` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:2:18: F401 `.job.Job` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:2:23: F401 `.job.JobStatus` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:3:25: F401 `.media_file.MediaFile` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:3:36: F401 `.media_file.MediaVisibility` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:4:26: F401 `.application.Application` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:5:26: F401 `.transaction.Transaction` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:6:19: F401 `.chat.Chat` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:6:25: F401 `.chat.Message` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:7:23: F401 `.bookmark.Bookmark` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:8:29: F401 `.support_ticket.SupportTicket` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:8:44: F401 `.support_ticket.TicketMessage` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:9:27: F401 `.notification.Notification` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:10:22: F401 `.session.ActiveSession` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:11:27: F401 `.payment_card.PaymentCard` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:12:23: F401 `.category.Category` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:13:21: F401 `.region.Region` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:14:24: F401 `.promotion.Promotion` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:15:22: F401 `.dispute.Dispute` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:16:29: F401 `.system_setting.SystemSetting` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:17:27: F401 `.audit_ledger.AuditLedger` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:18:26: F401 `.idempotency.IdempotencyKey` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:19:30: F401 `.admin_audit_log.AdminAuditLog` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/promotion.py:1:49: F401 [*] `sqlalchemy.DateTime` imported but unused
+app/models/support_ticket.py:1:62: F401 [*] `sqlalchemy.Integer` imported but unused
+app/schemas/__init__.py:1:19: F401 `.user.User` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:1:25: F401 `.user.UserCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:1:37: F401 `.user.UserUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:1:49: F401 `.user.PasswordChange` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:2:18: F401 `.job.Job` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:2:23: F401 `.job.JobCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:2:34: F401 `.job.JobUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:2:45: F401 `.job.JobWithApplicationStatus` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:3:20: F401 `.token.Token` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:3:27: F401 `.token.TokenPayload` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:4:26: F401 `.application.Application` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:4:39: F401 `.application.ApplicationCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:4:58: F401 `.application.ApplicationUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:6:5: F401 `.payment_card.PaymentCardBase` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:7:5: F401 `.payment_card.PaymentCardCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:8:5: F401 `.payment_card.PaymentCardInDB` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:9:5: F401 `.payment_card.PaymentCardOut` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:10:5: F401 `.payment_card.PaymentCardUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:12:26: F401 `.transaction.TransactionBase` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:12:43: F401 `.transaction.TransactionOut` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:13:19: F401 `.chat.Chat` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:13:25: F401 `.chat.ChatCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:13:37: F401 `.chat.ChatUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:13:49: F401 `.chat.Message` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:13:58: F401 `.chat.MessageSend` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:14:23: F401 `.bookmark.Bookmark` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:14:33: F401 `.bookmark.BookmarkCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:16:27: F401 `.notification.Notification` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:16:41: F401 `.notification.NotificationCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:16:61: F401 `.notification.NotificationUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:17:22: F401 `.session.ActiveSession` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:17:37: F401 `.session.ActiveSessionCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:17:58: F401 `.session.ActiveSessionUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/services/geo_service.py:2:37: F401 [*] `typing.Optional` imported but unused
+app/services/growth_engine.py:4:8: F401 [*] `uuid` imported but unused
+scripts/backup_bot.py:385:34: E701 Multiple statements on one line (colon)
+scripts/backup_bot.py:385:49: E702 Multiple statements on one line (semicolon)
+scripts/backup_bot.py:395:34: E701 Multiple statements on one line (colon)
+scripts/backup_bot.py:395:49: E702 Multiple statements on one line (semicolon)
+scripts/backup_bot.py:410:34: E701 Multiple statements on one line (colon)
+scripts/backup_bot.py:410:49: E702 Multiple statements on one line (semicolon)
+scripts/backup_bot.py:415:34: E701 Multiple statements on one line (colon)
+scripts/backup_bot.py:415:49: E702 Multiple statements on one line (semicolon)
+scripts/backup_bot.py:420:34: E701 Multiple statements on one line (colon)
+scripts/backup_bot.py:420:49: E702 Multiple statements on one line (semicolon)
+scripts/backup_bot.py:445:34: E701 Multiple statements on one line (colon)
+scripts/backup_bot.py:445:49: E702 Multiple statements on one line (semicolon)
+scripts/backup_bot.py:460:34: E701 Multiple statements on one line (colon)
+scripts/backup_bot.py:460:49: E702 Multiple statements on one line (semicolon)
+scripts/backup_bot.py:476:34: E701 Multiple statements on one line (colon)
+scripts/backup_bot.py:476:49: E702 Multiple statements on one line (semicolon)
+scripts/backup_bot.py:490:34: E701 Multiple statements on one line (colon)
+scripts/backup_bot.py:490:49: E702 Multiple statements on one line (semicolon)
+Found 129 errors.
+[*] 49 fixable with the `--fix` option (1 hidden fix can be enabled with the `--unsafe-fixes` option).
+
+### FAQAT app/ (CI shu yerni tekshiradi) ###
+app/api/v1/endpoints/admin/admin_jobs.py:5:24: F401 [*] `sqlalchemy.func` imported but unused
+app/api/v1/endpoints/admin/admin_promotions.py:7:8: F401 [*] `datetime` imported but unused
+app/api/v1/endpoints/admin/admin_stats.py:1:25: F401 [*] `typing.Optional` imported but unused
+app/api/v1/endpoints/admin/admin_support.py:10:56: F401 [*] `fastapi.Query` imported but unused
+app/api/v1/endpoints/payments.py:4:8: F401 [*] `re` imported but unused
+app/api/v1/endpoints/payments.py:6:20: F401 [*] `typing.Any` imported but unused
+app/api/v1/endpoints/payments.py:9:40: F401 [*] `pydantic.field_validator` imported but unused
+app/api/v1/endpoints/users.py:10:29: F401 [*] `app.core.config.settings` imported but unused
+app/crud/__init__.py:1:24: F401 `.crud_user.user` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/crud/__init__.py:2:23: F401 `.crud_job.job` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/crud/__init__.py:3:31: F401 `.crud_application.application` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/crud/__init__.py:4:24: F401 `.crud_chat.chat` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/crud/__init__.py:5:32: F401 `.crud_notification.notification` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/crud/crud_application.py:1:20: F401 [*] `typing.Any` imported but unused
+app/crud/crud_application.py:1:25: F401 [*] `typing.Dict` imported but unused
+app/crud/crud_application.py:1:31: F401 [*] `typing.Optional` imported but unused
+app/crud/crud_application.py:1:41: F401 [*] `typing.Union` imported but unused
+app/crud/crud_chat.py:1:20: F401 [*] `typing.Any` imported but unused
+app/crud/crud_chat.py:1:25: F401 [*] `typing.Dict` imported but unused
+app/crud/crud_chat.py:1:31: F401 [*] `typing.Optional` imported but unused
+app/crud/crud_chat.py:1:41: F401 [*] `typing.Union` imported but unused
+app/crud/crud_chat.py:3:28: F401 [*] `sqlalchemy.orm.Session` imported but unused
+app/crud/crud_job.py:1:26: F401 [*] `typing.Optional` imported but unused
+app/crud/crud_notification.py:1:26: F401 [*] `typing.Optional` imported but unused
+app/crud/crud_notification.py:22:45: E712 Avoid equality comparisons to `False`; use `if not Notification.isRead:` for false checks
+app/crud/crud_user.py:1:20: F401 [*] `typing.Any` imported but unused
+app/crud/crud_user.py:1:25: F401 [*] `typing.Dict` imported but unused
+app/crud/crud_user.py:1:41: F401 [*] `typing.Union` imported but unused
+app/db/base.py:6:31: F401 [*] `app.db.base_class.Base` imported but unused
+app/db/base.py:7:29: F401 [*] `app.models.user.User` imported but unused
+app/db/base.py:8:28: F401 [*] `app.models.job.Job` imported but unused
+app/db/base.py:9:36: F401 [*] `app.models.application.Application` imported but unused
+app/db/base.py:10:36: F401 [*] `app.models.transaction.Transaction` imported but unused
+app/db/base.py:11:29: F401 [*] `app.models.chat.Chat` imported but unused
+app/db/base.py:11:35: F401 [*] `app.models.chat.Message` imported but unused
+app/db/base.py:12:33: F401 [*] `app.models.bookmark.Bookmark` imported but unused
+app/db/base.py:13:37: F401 [*] `app.models.notification.Notification` imported but unused
+app/db/base.py:14:37: F401 [*] `app.models.payment_card.PaymentCard` imported but unused
+app/db/base.py:15:32: F401 [*] `app.models.session.ActiveSession` imported but unused
+app/db/base.py:16:39: F401 [*] `app.models.support_ticket.SupportTicket` imported but unused
+app/db/base.py:16:54: F401 [*] `app.models.support_ticket.TicketMessage` imported but unused
+app/db/base.py:17:33: F401 [*] `app.models.category.Category` imported but unused
+app/db/base.py:18:31: F401 [*] `app.models.region.Region` imported but unused
+app/db/base.py:19:34: F401 [*] `app.models.promotion.Promotion` imported but unused
+app/db/base.py:20:32: F401 [*] `app.models.dispute.Dispute` imported but unused
+app/db/base.py:21:39: F401 [*] `app.models.system_setting.SystemSetting` imported but unused
+app/db/base.py:22:37: F401 [*] `app.models.audit_ledger.AuditLedger` imported but unused
+app/db/base.py:23:36: F401 [*] `app.models.idempotency.IdempotencyKey` imported but unused
+app/db/base.py:24:35: F401 [*] `app.models.media_file.MediaFile` imported but unused
+app/db/base.py:25:40: F401 [*] `app.models.admin_audit_log.AdminAuditLog` imported but unused
+app/models/__init__.py:1:19: F401 `.user.User` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:2:18: F401 `.job.Job` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:2:23: F401 `.job.JobStatus` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:3:25: F401 `.media_file.MediaFile` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:3:36: F401 `.media_file.MediaVisibility` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:4:26: F401 `.application.Application` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:5:26: F401 `.transaction.Transaction` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:6:19: F401 `.chat.Chat` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:6:25: F401 `.chat.Message` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:7:23: F401 `.bookmark.Bookmark` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:8:29: F401 `.support_ticket.SupportTicket` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:8:44: F401 `.support_ticket.TicketMessage` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:9:27: F401 `.notification.Notification` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:10:22: F401 `.session.ActiveSession` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:11:27: F401 `.payment_card.PaymentCard` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:12:23: F401 `.category.Category` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:13:21: F401 `.region.Region` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:14:24: F401 `.promotion.Promotion` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:15:22: F401 `.dispute.Dispute` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:16:29: F401 `.system_setting.SystemSetting` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:17:27: F401 `.audit_ledger.AuditLedger` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:18:26: F401 `.idempotency.IdempotencyKey` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/__init__.py:19:30: F401 `.admin_audit_log.AdminAuditLog` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/models/promotion.py:1:49: F401 [*] `sqlalchemy.DateTime` imported but unused
+app/models/support_ticket.py:1:62: F401 [*] `sqlalchemy.Integer` imported but unused
+app/schemas/__init__.py:1:19: F401 `.user.User` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:1:25: F401 `.user.UserCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:1:37: F401 `.user.UserUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:1:49: F401 `.user.PasswordChange` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:2:18: F401 `.job.Job` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:2:23: F401 `.job.JobCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:2:34: F401 `.job.JobUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:2:45: F401 `.job.JobWithApplicationStatus` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:3:20: F401 `.token.Token` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:3:27: F401 `.token.TokenPayload` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:4:26: F401 `.application.Application` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:4:39: F401 `.application.ApplicationCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:4:58: F401 `.application.ApplicationUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:6:5: F401 `.payment_card.PaymentCardBase` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:7:5: F401 `.payment_card.PaymentCardCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:8:5: F401 `.payment_card.PaymentCardInDB` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:9:5: F401 `.payment_card.PaymentCardOut` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:10:5: F401 `.payment_card.PaymentCardUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:12:26: F401 `.transaction.TransactionBase` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:12:43: F401 `.transaction.TransactionOut` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:13:19: F401 `.chat.Chat` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:13:25: F401 `.chat.ChatCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:13:37: F401 `.chat.ChatUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:13:49: F401 `.chat.Message` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:13:58: F401 `.chat.MessageSend` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:14:23: F401 `.bookmark.Bookmark` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:14:33: F401 `.bookmark.BookmarkCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:16:27: F401 `.notification.Notification` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:16:41: F401 `.notification.NotificationCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:16:61: F401 `.notification.NotificationUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:17:22: F401 `.session.ActiveSession` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:17:37: F401 `.session.ActiveSessionCreate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/schemas/__init__.py:17:58: F401 `.session.ActiveSessionUpdate` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+app/services/geo_service.py:2:37: F401 [*] `typing.Optional` imported but unused
+app/services/growth_engine.py:4:8: F401 [*] `uuid` imported but unused
+Found 110 errors.
+[*] 48 fixable with the `--fix` option (1 hidden fix can be enabled with the `--unsafe-fixes` option).
