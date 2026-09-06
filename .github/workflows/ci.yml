@@ -139,11 +139,132 @@ jobs:
         run: npm run build
 
   # ==========================================================
+  # 2b. END-TO-END
+  # ==========================================================
+  test-e2e:
+    name: 🎭 2b. End-to-End
+    runs-on: ubuntu-latest
+
+    # Five Playwright specs sat in the repo and nothing ran them. Running them
+    # for the first time found that two asserted a flow this app has never had,
+    # and that all five were being blocked by the onboarding tour before they
+    # reached anything. Both are fixed; this job is what stops it recurring.
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: baito
+          POSTGRES_PASSWORD: baito
+          POSTGRES_DB: baito_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://baito:baito@localhost:5432/baito_e2e
+      REDIS_URL: redis://localhost:6379/8
+      SECRET_KEY: ci_only_secret_key_0123456789abcdef0123456789
+      ENVIRONMENT: development
+      BCRYPT_ROUNDS: "4"
+      PYTHONPATH: .
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Migrate
+        working-directory: ./backend
+        run: alembic upgrade head
+
+      # The password is generated here and exported to the job, never written
+      # into a file and never printed. `::add-mask::` keeps it out of the log
+      # even if a later step echoes it by accident.
+      - name: Seed a Throwaway Account
+        working-directory: ./backend
+        run: |
+          OUT=$(python scripts/create_accounts.py 'employer:+998900004001:CI E2E')
+          PHONE=$(echo "$OUT" | awk '/employer/ {print $2}')
+          PASS=$(echo "$OUT" | awk '/employer/ {print $3}')
+          if [ -z "$PHONE" ] || [ -z "$PASS" ]; then
+            echo "Seeding produced no credentials; the E2E sign-in test would skip silently." >&2
+            exit 1
+          fi
+          echo "::add-mask::$PASS"
+          echo "E2E_PHONE=$PHONE" >> "$GITHUB_ENV"
+          echo "E2E_PASSWORD=$PASS" >> "$GITHUB_ENV"
+
+      - name: Start the API
+        working-directory: ./backend
+        run: |
+          uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://127.0.0.1:8000/docs && exit 0
+            sleep 1
+          done
+          echo "API did not come up within 60s" >&2
+          exit 1
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install Chromium
+        working-directory: ./frontend
+        run: npx playwright install --with-deps chromium
+
+      # playwright.config.ts builds the bundle and serves it with `vite preview`,
+      # so this exercises what ships rather than the dev server.
+      - name: Run End-to-End Suite
+        working-directory: ./frontend
+        run: npm run test:e2e -- --project=chromium
+
+      - name: Upload Report on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7
+
+  # ==========================================================
   # 3. DOCKER ARCHITECTURE VALIDATION
   # ==========================================================
   validate-docker:
     name: 🐳 3. Docker Compose Validation
-    needs: [test-backend, test-frontend]
+    needs: [test-backend, test-frontend, test-e2e]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -200,7 +321,7 @@ jobs:
   # ==========================================================
   deploy:
     name: 🚀 4. Production Deploy
-    needs: [test-backend, test-frontend, validate-docker]
+    needs: [test-backend, test-frontend, test-e2e, validate-docker]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     # The server has no public address — it is only reachable inside the
     # tailnet — so deployment has to run on the box itself. That makes the

@@ -28,6 +28,19 @@ export default defineConfig(() => {
         },
       },
     },
+    // `vite preview` serves the built bundle, and it does not inherit
+    // server.proxy — so an end-to-end run against the real bundle had no way to
+    // reach the API. The E2E suite runs against preview precisely so it
+    // exercises what ships; without this it would exercise a 404.
+    preview: {
+      proxy: {
+        '/api': {
+          target: 'http://127.0.0.1:8000',
+          changeOrigin: true,
+          ws: true,
+        },
+      },
+    },
     build: {
       rollupOptions: {
         output: {

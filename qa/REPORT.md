@@ -22,9 +22,9 @@ them into CI as they stand would make main red on every commit, so that
 condition stays open pending a decision that belongs to the owner, not the
 tester.
 
-What remains: no E2E coverage, no frontend unit tests, and four unanswered
-questions in `project-facts.md`, two of which decide what "done" means for the
-passport scans and card references this system stores. A release can ship.
+What remains: **no frontend unit tests**, and four unanswered questions in
+`project-facts.md`, two of which decide what "done" means for the passport scans
+and card references this system stores. A release can ship.
 
 ## 2. Scope
 
@@ -60,8 +60,8 @@ exist for all three roles, the browser tooling reads console and network.
 | BUG-001 | S2 | P1 | functional | `tasks.py::auto_release_escrow` | Releases nothing, ever — `jobs.hiredWorkerId` is never written | **Fixed + test** |
 | BUG-002 | S3 | P2 | functional | `schemas/job.py` | NUL byte in any text field answers 500, not 422 | **Fixed + tests** |
 | BUG-003 | S3 | P2 | security | frontend deps | 5 high-severity advisories in the production bundle | **Fixed + CI gate** |
-| BUG-004 | S3 | P2 | process | `ci.yml` | Lint gate cannot fail; E2E suite never runs; no frontend unit tests | **Partly fixed** — gates real; E2E blocked on BUG-005 |
-| BUG-005 | S3 | P2 | process | `frontend/tests/` | All 5 Playwright specs assert a login flow the app does not use | Open — needs an owner decision |
+| BUG-004 | S3 | P2 | process | `ci.yml` | Lint gate cannot fail; E2E suite never runs; no frontend unit tests | **Fixed** except frontend unit tests, which remain a decision |
+| BUG-005 | S3 | P2 | process | `frontend/tests/` | 5 Playwright specs never ran; 2 asserted a flow the app has never had | **Fixed** — 7 pass, CI job added |
 | BUG-006 | S3 | P2 | functional | `PaymentResult.tsx` | Payment result screens render Russian to an English interface | **Fixed** |
 | OBS-01 | S4 | P4 | data | `transportRate` | Accepts `-50000`; traced — free-text display field, never parsed into money | Observation |
 | OBS-02 | — | — | design | `POST /jobs` | Duplicate submits create two postings; an `Idempotency-Key` mechanism exists but only payments use it | Observation |
@@ -77,7 +77,7 @@ exist for all three roles, the browser tooling reads console and network.
 | AI eval | — | — | — | — | **N/A — no model** |
 | Security | 12 systematic checks | 12 | 0 | 0 | BUG-003 closed |
 | Performance | 3 load profiles | 3 | 0 | 0 | 1,000 req @200 concurrent, all 200 OK |
-| E2E | 5 specs exist | 0 | **5** | 0 | runnable now; all 5 stale (BUG-005) |
+| E2E | 7 specs | 7 | 0 | 0 | was 5 specs, 0 passing and never invoked |
 | A11y | names + focus order, 14 routes | partial | — | — | 2 unnamed controls remain; contrast unmeasured |
 
 ## 4b. UI sweep coverage
@@ -142,12 +142,12 @@ instruction. What follows is their state as of this revision.
 2. ~~Close the five advisories and add a CI audit.~~ **Done.** All five are
    patch bumps inside the declared ranges. `npm audit --omit=dev
    --audit-level=high` now runs before the build.
-3. **Wire the Playwright specs to CI — still open, and now understood.** The
-   `test:e2e` script and a `webServer` exist, so one command runs them. Running
-   them surfaced **BUG-005**: all five fail, none for a product reason. Wiring
-   them in as they stand would make main red on every commit. Needs an owner
-   decision: update them to the modal-based flow, or delete them and record
-   that E2E is uncovered. — *owner*
+3. ~~Wire the Playwright specs to CI.~~ **Done.** Running them found the
+   onboarding tour was intercepting every click, and that two of the five
+   asserted a flow the app has never had. Fixture, two rewritten assertions,
+   one empty test given something to assert, and a `preview.proxy` without
+   which the CI job would have been red for a reason unrelated to the app.
+   7 pass; `validate-docker` and `deploy` now depend on the job.
 4. ~~Fix BUG-002 with a test.~~ **Done.** Control characters are refused at the
    schema layer with a 422; four tests, one of which asserts that emoji, Arabic,
    Cyrillic and accented Latin stay accepted.
