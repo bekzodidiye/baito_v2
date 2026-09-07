@@ -35,22 +35,43 @@ closed.
 
 ## What to give Uzum at onboarding
 
+Five values. Four of them we decide; the fifth comes out of our own API once the
+first three are live.
+
+| What | Value | Where it comes from |
+|---|---|---|
+| Base URL | `https://baito.tail365b27.ts.net/api/v1/payments/uzum` | verified live |
+| `username` | e.g. `baito` | we pick it |
+| `password` | `openssl rand -hex 24` | we generate it |
+| `serviceId` | e.g. `783774` | we assign it for the test period |
+| `order_id` | 16 digits | `POST /api/v1/payments/uzum/orders` |
+
+Plus the shape of the integration, which they will ask for:
+
 | | |
 |---|---|
-| Base URL | `https://baito.tail365b27.ts.net/api/v1/payments/uzum` |
 | Endpoints | `POST /check`, `/create`, `/confirm`, `/reverse`, `/status` |
 | Auth | HTTP Basic |
-| Payment attribute | `order_id` (16 digits) |
+| Payment attribute | `order_id`, 16 digits, typed by the customer |
+| Amount unit | tiyin |
+
+And the collection, `baito-uzum-merchant.postman_collection.json`, with those
+values filled into a Postman **environment** rather than into the file.
 
 ## Configuration
 
 Three variables. Until all three are set, every webhook answers `10001` rather
 than half-working.
 
+**We choose all three and hand them to Uzum**, not the other way round. Nothing
+here waits on the bank: pick the values, set them, create a test order, and send
+the lot. For the testing period the `serviceId` is ours to assign as well — Uzum
+issues the production one when the integration is accepted.
+
 ```
-UZUM_MERCHANT_SERVICE_ID=783774
-UZUM_MERCHANT_USERNAME=<login agreed with Uzum>
-UZUM_MERCHANT_PASSWORD=<password agreed with Uzum>
+UZUM_MERCHANT_SERVICE_ID=783774          # ours to pick for testing
+UZUM_MERCHANT_USERNAME=baito             # ours to pick
+UZUM_MERCHANT_PASSWORD=<openssl rand -hex 24>
 ```
 
 They are passed through in `docker-compose.yml`, so `backend/.env` on the server
