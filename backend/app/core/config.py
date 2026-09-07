@@ -1,6 +1,7 @@
 import os
 import secrets
 from typing import List
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -57,7 +58,7 @@ class Settings(BaseSettings):
     # us: the customer types an order number into the Uzum app and the bank
     # drives /check, /create, /confirm, /reverse and /status against this
     # service. Empty means not configured, and every webhook answers 10001.
-    UZUM_MERCHANT_SERVICE_ID: int = int(os.getenv("UZUM_MERCHANT_SERVICE_ID", "0") or 0)
+    UZUM_MERCHANT_SERVICE_ID: int = 0
     UZUM_MERCHANT_USERNAME: str = os.getenv("UZUM_MERCHANT_USERNAME", "")
     UZUM_MERCHANT_PASSWORD: str = os.getenv("UZUM_MERCHANT_PASSWORD", "")
 
@@ -94,6 +95,23 @@ class Settings(BaseSettings):
         failing.
         """
         return bool(self.TELEGRAM_BOT_TOKEN and self.TELEGRAM_CHAT_ID)
+
+    @field_validator("UZUM_MERCHANT_SERVICE_ID", mode="before")
+    @classmethod
+    def _empty_means_unset(cls, v):
+        """An empty environment variable must not take the application down.
+
+        BaseSettings reads the variable itself, so a default computed in the
+        field declaration never applies once the name exists in the
+        environment. docker-compose lists it as `${VAR:-}`, which sets it to the
+        empty string — and Pydantic cannot parse that as an int, so importing
+        settings raised ValidationError, the container failed its health check,
+        and the site returned 502. "Not configured" has to read as 0, not as a
+        crash.
+        """
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return 0
+        return v
 
     @property
     def uzum_configured(self) -> bool:

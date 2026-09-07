@@ -158,7 +158,7 @@ services:
       # every webhook with 10001 until all three are present, so leaving them
       # empty is safe; leaving them out of this list is not, because then
       # nothing in .env can reach the container.
-      - UZUM_MERCHANT_SERVICE_ID=${UZUM_MERCHANT_SERVICE_ID:-}
+      - UZUM_MERCHANT_SERVICE_ID=${UZUM_MERCHANT_SERVICE_ID:-0}
       - UZUM_MERCHANT_USERNAME=${UZUM_MERCHANT_USERNAME:-}
       - UZUM_MERCHANT_PASSWORD=${UZUM_MERCHANT_PASSWORD:-}
       - SENTRY_DSN=${SENTRY_DSN:-}

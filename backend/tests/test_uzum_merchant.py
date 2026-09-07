@@ -501,3 +501,22 @@ def test_the_sweep_leaves_finished_transactions_alone(client, monkeypatch):
 
     expire_uzum_transactions()
     assert _trans_status(trans_id) == "CONFIRMED"
+
+
+def test_an_empty_service_id_env_var_does_not_crash_the_app():
+    """The outage this integration caused.
+
+    Settings is a BaseSettings, so it reads the variable itself and a default
+    computed in the field declaration never applies once the name exists in the
+    environment. docker-compose lists it as `${VAR:-}`, which sets it to the
+    empty string, and Pydantic cannot parse that as an int — so importing
+    settings raised ValidationError, the container failed its health check, and
+    the site returned 502 until this was fixed.
+
+    "Not configured" has to read as 0. It must never read as a crash.
+    """
+    from app.core.config import Settings
+
+    for value in ("", "   ", None):
+        assert Settings(UZUM_MERCHANT_SERVICE_ID=value).UZUM_MERCHANT_SERVICE_ID == 0
+    assert Settings(UZUM_MERCHANT_SERVICE_ID="783774").UZUM_MERCHANT_SERVICE_ID == 783774
