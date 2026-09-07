@@ -8,11 +8,36 @@ Uzum's checkout page and Uzum calls back once. Here the direction is reversed:
 the customer opens the Uzum app, types an order number, and the bank drives a
 two-phase payment against us. Both exist; they are different products.
 
+## Which host to give them
+
+Checked on 2026-09-03, from outside the tailnet by forcing the public ingress:
+
+| Host | Public DNS | Reachable |
+|---|---|---|
+| `baito.tail365b27.ts.net` | 185.40.234.37, .210, .172 (Tailscale Funnel) | **yes** |
+| `baito.uz` | *no A record at all* | no |
+
+So the address Uzum can actually call today is the Funnel one. `baito.uz` does
+not resolve anywhere — not the app's fault and not something a deploy fixes; the
+domain has no DNS pointing at anything. If Uzum is to be given `baito.uz`, that
+has to be sorted first, and the URL agreed with them at onboarding is awkward to
+change afterwards.
+
+Verified live on both public ingress addresses:
+
+```
+GET  /api/health                  -> 200  database connected, redis connected
+POST /api/v1/payments/uzum/check  -> 400  {"errorCode":"10001", ...}
+```
+
+The 10001 is the right answer to an unauthenticated call: the service fails
+closed.
+
 ## What to give Uzum at onboarding
 
 | | |
 |---|---|
-| Base URL | `https://<host>/api/v1/payments/uzum` |
+| Base URL | `https://baito.tail365b27.ts.net/api/v1/payments/uzum` |
 | Endpoints | `POST /check`, `/create`, `/confirm`, `/reverse`, `/status` |
 | Auth | HTTP Basic |
 | Payment attribute | `order_id` (16 digits) |
