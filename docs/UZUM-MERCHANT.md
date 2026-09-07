@@ -53,6 +53,11 @@ UZUM_MERCHANT_USERNAME=<login agreed with Uzum>
 UZUM_MERCHANT_PASSWORD=<password agreed with Uzum>
 ```
 
+They are passed through in `docker-compose.yml`, so `backend/.env` on the server
+is where they go, followed by `docker compose up -d backend`. A variable that is
+not listed in that file cannot reach the container no matter what `.env` says —
+which is how this integration nearly shipped answering 10001 forever.
+
 Generate the password with something like `openssl rand -hex 24` and put it in
 the deployment environment only. It does not belong in a Postman collection, a
 chat message or this repository — a collection file is exactly the thing people

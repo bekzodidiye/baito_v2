@@ -153,6 +153,14 @@ services:
       - UZUM_TERMINAL_ID=${UZUM_TERMINAL_ID:-}
       - UZUM_SECRET_KEY=${UZUM_SECRET_KEY:-}
       - UZUM_API_URL=${UZUM_API_URL:-https://api.uzum.uz/epos/v1}
+      # Merchant API — the webhooks Uzum calls on us. Separate credentials from
+      # the three above, which are for the checkout product. The service refuses
+      # every webhook with 10001 until all three are present, so leaving them
+      # empty is safe; leaving them out of this list is not, because then
+      # nothing in .env can reach the container.
+      - UZUM_MERCHANT_SERVICE_ID=${UZUM_MERCHANT_SERVICE_ID:-}
+      - UZUM_MERCHANT_USERNAME=${UZUM_MERCHANT_USERNAME:-}
+      - UZUM_MERCHANT_PASSWORD=${UZUM_MERCHANT_PASSWORD:-}
       - SENTRY_DSN=${SENTRY_DSN:-}
       # Used by the error reporter, not just the backup bot.
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
