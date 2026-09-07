@@ -39,3 +39,9 @@ dump.rdb
 # with --depth=1, so every one of them is downloaded on every deploy.
 *_screenshot*.png
 *screenshot*.png
+
+# Written on the server by backup_db.sh and mounted into the backup bot. Real
+# data, never source — but untracked and unignored it shows up in `git status`
+# on the deploy host, where a dirty tree is noise nobody can act on.
+backups/
+.deploy-history

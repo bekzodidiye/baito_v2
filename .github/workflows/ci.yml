@@ -401,6 +401,24 @@ jobs:
               curl -fsS http://localhost:8000/api/health | grep -o '"status":"[a-z]*"' || true)
             if [ "$status" = '"status":"ok"' ]; then
               echo "✅ Backend healthy on ${GITHUB_SHA:0:7}"
+              # Move `current` onto the build that just proved itself.
+              #
+              # compose reads `${IMAGE_TAG:-current}`, so `current` is what runs
+              # when somebody types `docker compose up -d` on the server without
+              # setting IMAGE_TAG — which is the obvious thing to type. Nothing
+              # ever moved the tag, so it pointed at whatever ancient build had
+              # last been built without one, and a manual restart silently
+              # downgraded the site. That is how a deploy that had already
+              # succeeded ended up serving 502: the old image's alembic could
+              # not find the revision the database was already on.
+              #
+              # Tagged here rather than after the build, so `current` only ever
+              # names an image that answered /api/health.
+              for img in baito-backend baito-frontend baito-backup-bot; do
+                if docker image inspect "$img:${GITHUB_SHA}" >/dev/null 2>&1; then
+                  docker tag "$img:${GITHUB_SHA}" "$img:current"
+                fi
+              done
               echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) ${GITHUB_SHA} deploy" >> .deploy-history
               exit 0
             fi
@@ -419,6 +437,13 @@ jobs:
                 curl -fsS http://localhost:8000/api/health | grep -o '"status":"[a-z]*"' || true)
               if [ "$status" = '"status":"ok"' ]; then
                 echo "↩️  Rolled back to ${PREVIOUS_TAG}; the site is up on the previous build."
+                # And `current` follows the rollback, or the next manual restart
+                # would put the failed build back.
+                for img in baito-backend baito-frontend baito-backup-bot; do
+                  if docker image inspect "$img:${PREVIOUS_TAG}" >/dev/null 2>&1; then
+                    docker tag "$img:${PREVIOUS_TAG}" "$img:current"
+                  fi
+                done
                 break
               fi
               sleep 5
