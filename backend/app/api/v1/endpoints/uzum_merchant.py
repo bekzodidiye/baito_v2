@@ -20,7 +20,7 @@ import secrets
 import time
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field
@@ -29,6 +29,7 @@ from sqlalchemy.orm import Session
 from app import models
 from app.api import deps
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.models.audit_ledger import AuditLedger
 from app.models.transaction import Transaction
 from app.models.user import User
@@ -36,6 +37,18 @@ from app.models.user import User
 logger = logging.getLogger(__name__)
 router = APIRouter()
 basic = HTTPBasic(auto_error=False)
+
+# The webhooks authenticate with a 192-bit random password, so brute-force is
+# already infeasible — these limits are a flood stop, not the primary control.
+# They are set well above any realistic Uzum volume (a payment is at most a
+# handful of calls) precisely because the caller is a single party sharing one
+# IP bucket: throttling real Uzum traffic would be a worse failure than the
+# thing being guarded against. The stronger control is an nginx IP allowlist of
+# Uzum's ranges, which needs those ranges from onboarding. /orders is different
+# — it is called by our own authenticated employers, so it gets a tight limit.
+WEBHOOK_RATE = "300/minute"
+ORDER_RATE = "10/minute"
+ORDER_RATE_HOURLY = "60/hour"
 
 # Uzum's codes. Named so the call sites read as the spec does.
 ERR_UNAUTHORIZED = "10001"
@@ -168,7 +181,9 @@ def _order_data(order: models.PaymentOrder, db: Session) -> Dict[str, Any]:
 
 
 @router.post("/check")
+@limiter.limit(WEBHOOK_RATE)
 def check(
+    request: Request,
     payload: CheckRequest,
     db: Session = Depends(deps.get_db),
     authorized: bool = Depends(require_uzum),
@@ -196,7 +211,9 @@ def check(
 
 
 @router.post("/create")
+@limiter.limit(WEBHOOK_RATE)
 def create(
+    request: Request,
     payload: CreateRequest,
     db: Session = Depends(deps.get_db),
     authorized: bool = Depends(require_uzum),
@@ -317,7 +334,9 @@ def _credit(db: Session, order: models.PaymentOrder, trans: models.UzumTransacti
 
 
 @router.post("/confirm")
+@limiter.limit(WEBHOOK_RATE)
 def confirm(
+    request: Request,
     payload: ConfirmRequest,
     db: Session = Depends(deps.get_db),
     authorized: bool = Depends(require_uzum),
@@ -363,7 +382,9 @@ def confirm(
 
 
 @router.post("/reverse")
+@limiter.limit(WEBHOOK_RATE)
 def reverse(
+    request: Request,
     payload: TransRequest,
     db: Session = Depends(deps.get_db),
     authorized: bool = Depends(require_uzum),
@@ -443,7 +464,9 @@ def reverse(
 
 
 @router.post("/status")
+@limiter.limit(WEBHOOK_RATE)
 def status_(
+    request: Request,
     payload: TransRequest,
     db: Session = Depends(deps.get_db),
     authorized: bool = Depends(require_uzum),
@@ -520,7 +543,10 @@ def _new_order_number(db: Session) -> str:
 
 
 @router.post("/orders", response_model=CreateOrderResponse)
+@limiter.limit(ORDER_RATE)
+@limiter.limit(ORDER_RATE_HOURLY)
 def create_order(
+    request: Request,
     req: CreateOrderRequest,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
