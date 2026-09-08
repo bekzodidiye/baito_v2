@@ -1,9 +1,30 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import fs from 'fs';
 import path from 'path';
 import {defineConfig} from 'vite';
-// The repo's declared version. frontend/package.json is still a 0.0.0 stub.
-import pkg from '../package.json' with {type: 'json'};
+
+// The repo's declared version; frontend/package.json is still a 0.0.0 stub, so
+// the root file is the source of truth.
+//
+// This used to be `import pkg from '../package.json'`, which resolves fine from
+// a repo checkout and cannot resolve at all inside the frontend image — the
+// Docker build context is `./frontend`, so there is no parent package.json.
+// That broke a production deploy at the build step. Read it instead of
+// importing it: take an injected APP_VERSION first (what the deploy passes),
+// fall back to the root file when it is reachable, and never throw.
+const appVersion = (() => {
+  if (process.env.APP_VERSION) return process.env.APP_VERSION;
+  for (const candidate of ['../package.json', './package.json']) {
+    try {
+      const {version} = JSON.parse(fs.readFileSync(path.resolve(__dirname, candidate), 'utf8'));
+      if (version && version !== '0.0.0') return version;
+    } catch {
+      // Not reachable from this build context; try the next one.
+    }
+  }
+  return '0.0.0';
+})();
 
 export default defineConfig(() => {
   return {
@@ -12,7 +33,7 @@ export default defineConfig(() => {
       'process.env.GOOGLE_MAPS_PLATFORM_KEY': JSON.stringify(process.env.GOOGLE_MAPS_PLATFORM_KEY || ''),
       // The settings screen said v1.0.2 and the drawer said v1.1.0, both
       // hardcoded, neither matching package.json. One source now.
-      __APP_VERSION__: JSON.stringify(pkg.version)
+      __APP_VERSION__: JSON.stringify(appVersion)
     },
     resolve: {
       alias: {

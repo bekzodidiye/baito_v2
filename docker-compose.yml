@@ -289,6 +289,10 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        # The root package.json is the version's source of truth and sits
+        # outside this build context, so the deploy reads it and passes it here.
+        APP_VERSION: ${APP_VERSION:-}
     restart: unless-stopped
     networks:
       - baito_net

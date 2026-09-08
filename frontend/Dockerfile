@@ -8,6 +8,13 @@ RUN npm install
 
 COPY . .
 
+# The version shown in the drawer and the settings screen. The root
+# package.json holds it, and it is outside this build context, so compose
+# passes it in; vite.config.ts falls back to reading the file when building
+# from a repo checkout.
+ARG APP_VERSION=""
+ENV APP_VERSION=$APP_VERSION
+
 # Build the production frontend bundle
 RUN npm run build
 

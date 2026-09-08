@@ -139,7 +139,30 @@ jobs:
       # tool's advisory does not reach a user's browser; a runtime one does.
       - name: Audit Production Dependencies
         working-directory: ./frontend
-        run: npm audit --omit=dev --audit-level=high
+        # Retried because the registry's audit endpoint answers 503 often enough
+        # to fail a build on its own — it did, on a PR whose lint and tests had
+        # both passed. The retry is only for reaching the endpoint: a real
+        # advisory still fails the job on the first attempt, since npm exits
+        # non-zero with findings rather than with an endpoint error. Never
+        # replace this with `|| true`; the point of the gate is that it blocks.
+        run: |
+          # --fetch-timeout so a dead endpoint fails in seconds. Without it npm
+          # retries internally for ~6 minutes per call, so three attempts took
+          # twenty and still only spanned one outage window; failing fast lets
+          # more attempts cover more real time.
+          attempts=5
+          for attempt in $(seq 1 $attempts); do
+            out=$(npm audit --omit=dev --audit-level=high --fetch-timeout=30000 --fetch-retries=1 2>&1) && exit 0
+            printf '%s\n' "$out"
+            if ! printf '%s' "$out" | grep -qiE 'audit endpoint returned an error|Service Unavailable|ENOTFOUND|ETIMEDOUT|EAI_AGAIN|network timeout|request to .* failed'; then
+              echo "::error::Audit found a high-severity advisory in a production dependency."
+              exit 1
+            fi
+            echo "::warning::Audit endpoint unreachable (attempt ${attempt}/${attempts}); retrying."
+            sleep $((attempt * 20))
+          done
+          echo "::error::Could not reach the npm audit endpoint after ${attempts} attempts."
+          exit 1
 
       - name: Build Frontend Production Artifacts
         working-directory: ./frontend
@@ -375,6 +398,12 @@ jobs:
           # Build first, swap second. `up -d --build` used to rebuild while the
           # old containers were already down, so the site was offline for the
           # whole build rather than for the few seconds a swap takes.
+          #
+          # The frontend's build context is ./frontend, so the root
+          # package.json holding the version is not visible from inside it.
+          # Read it here and hand it to compose as a build arg.
+          export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '')"
+          echo "Building frontend as version '${APP_VERSION}'"
           docker compose build
 
       - name: 🗄️ Apply Database Migrations
