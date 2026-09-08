@@ -1,0 +1,77 @@
+name: 🏷️ Release
+
+# Every push to main deploys, so a tag does not ship anything — it names a
+# commit that is already live. That is what makes a release useful here: it
+# turns "which build is in production" from a 40-character SHA into a version
+# a person can say out loud, and gives `scripts/rollback.sh` something
+# meaningful to roll back to.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish the release
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # release notes are generated from history
+
+      - name: Check the tag matches package.json
+        run: |
+          # A tag that disagrees with the version the app displays would put a
+          # number in the UI that matches nothing. Catch it here rather than
+          # after it ships.
+          tag="${GITHUB_REF_NAME#v}"
+          pkg=$(node -p "require('./package.json').version")
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version ${pkg}."
+            echo "Bump package.json and re-tag, or use scripts/release.sh which does both."
+            exit 1
+          fi
+          echo "Tag and package.json agree on ${pkg}."
+
+      - name: Check the tagged commit is on main
+        run: |
+          # Releases name something that shipped. A tag on a side branch would
+          # promise a version that was never deployed.
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main 2>/dev/null; then
+            git fetch origin main --quiet || true
+            if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
+              echo "::error::${GITHUB_SHA} is not on main; only shipped commits can be released."
+              exit 1
+            fi
+          fi
+          echo "Commit is on main."
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          previous=$(git tag --list 'v*' --sort=-version:refname | grep -v "^${GITHUB_REF_NAME}$" | head -1)
+          notes_arg="--generate-notes"
+          if [ -n "$previous" ]; then
+            notes_arg="--generate-notes --notes-start-tag ${previous}"
+            echo "Generating notes since ${previous}."
+          else
+            echo "First release; generating notes from the whole history."
+          fi
+
+          # The deploy tags images by commit SHA, so record the mapping the
+          # rollback script needs to resolve a version back to an image.
+          {
+            printf '**Deployed build:** `%s`\n\n' "${GITHUB_SHA}"
+            printf 'Roll back to this version on the server with:\n\n'
+            printf '```bash\nbash scripts/rollback.sh %s\n```\n' "${GITHUB_REF_NAME}"
+          } > /tmp/release-header.md
+
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file /tmp/release-header.md \
+            $notes_arg

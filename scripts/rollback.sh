@@ -43,19 +43,56 @@ if [ -z "$TARGET" ]; then
         tac "$STATE_FILE" | head -10 | sed 's/^/    /'
         printf '\n'
     fi
-    available_tags | head -10 | sed 's/^/  /'
-    printf '\n  Roll back with:  bash scripts/rollback.sh <sha>\n'
+    # Annotate each build with the release that names it, where there is one.
+    # A version is what the release notes quote and what people remember; the
+    # SHA stays visible because that is what the image is actually tagged with.
+    available_tags | head -10 | while IFS= read -r line; do
+        sha=${line#baito-backend:}; sha=${sha%%	*}
+        version=$(git tag --points-at "$sha" 2>/dev/null | grep '^v' | head -1)
+        if [ -n "$version" ]; then
+            printf '  %s\t<- %s\n' "$line" "$version"
+        else
+            printf '  %s\n' "$line"
+        fi
+    done
+
+    if [ -n "$(git tag --list 'v*' 2>/dev/null)" ]; then
+        printf '\n  Roll back with:  bash scripts/rollback.sh v1.2.3\n'
+        printf '                   bash scripts/rollback.sh <sha>\n'
+    else
+        printf '\n  Roll back with:  bash scripts/rollback.sh <sha>\n'
+    fi
     printf '                   bash scripts/rollback.sh --previous\n\n'
     exit 0
 fi
 
 if [ "$TARGET" = "--previous" ]; then
     [ -s "$STATE_FILE" ] || die "No deploy history yet; pass an explicit tag."
-    # Second-to-last entry: the release before the one running now.
+    # Second-to-last entry: the release before the one running now. One entry
+    # means nothing has been deployed over yet, and there is nothing to go back
+    # to — say that rather than resolving to an empty tag.
     TARGET=$(tac "$STATE_FILE" | sed -n '2p' | awk '{print $2}')
-    [ -n "$TARGET" ] || die "No previous release recorded."
+    [ -n "$TARGET" ] || die "Only one deploy is recorded, so there is no previous release. Pass an explicit version or SHA; run with no arguments to list what is on this host."
     ok "Previous release: $TARGET"
 fi
+
+# A version reads better than a SHA and is what the release notes quote, so
+# accept `v1.1.0` and resolve it to the commit that release names. Images are
+# tagged by SHA, so this is only a lookup — nothing else in the script changes.
+case "$TARGET" in
+    v[0-9]*)
+        VERSION="$TARGET"
+        # --verify, and a shape check on the result: plain `git rev-parse` on a
+        # tag that does not exist echoes the argument back rather than failing,
+        # which would leave TARGET holding the literal string "v9.9.9^{commit}"
+        # and produce a confusing error two lines later.
+        RESOLVED=$(git rev-parse --verify --quiet "refs/tags/${VERSION}^{commit}" || true)
+        printf '%s' "$RESOLVED" | grep -qE '^[0-9a-f]{40}$' \
+            || die "No tag ${VERSION} in this checkout. Run 'git fetch --tags' and try again, or run with no arguments to list what is on this host."
+        TARGET="$RESOLVED"
+        ok "${VERSION} is ${TARGET}"
+        ;;
+esac
 
 docker image inspect "baito-backend:$TARGET" >/dev/null 2>&1 \
     || die "No image tagged baito-backend:$TARGET on this host. Run without arguments to list."

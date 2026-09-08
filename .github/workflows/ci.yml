@@ -137,6 +137,16 @@ jobs:
       # Five high-severity advisories shipped in the production bundle without
       # anything noticing, because nothing looked. --omit=dev because a build
       # tool's advisory does not reach a user's browser; a runtime one does.
+      # npm 10, which ships with Node 20, audits through
+      # /-/npm/v1/security/audits/quick. npm says of that endpoint: "This
+      # endpoint is being retired. Use the bulk advisory endpoint instead" —
+      # and it has been answering 503 and 400 for us. Newer npm uses the bulk
+      # endpoint, which works. Upgraded after `npm ci` so only the audit is
+      # affected and the install stays on the version the lockfile was made
+      # with.
+      - name: Use an npm that does not audit through a retiring endpoint
+        run: npm install -g npm@11
+
       - name: Audit Production Dependencies
         working-directory: ./frontend
         # Retried because the registry's audit endpoint answers 503 often enough
