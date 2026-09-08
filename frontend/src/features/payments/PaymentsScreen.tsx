@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchPaymentCardsApi, addPaymentCardApi, fetchTransactionsApi, requestWithdrawalApi } from '../../api/queries';
+import { fetchPaymentCardsApi, addPaymentCardApi, fetchTransactionsApi, requestWithdrawalApi, fetchUserProfileApi } from '../../api/queries';
 import { useAuthStore } from '../../store/useAuthStore';
 import { 
   ArrowLeft, Search, Wallet, TrendingUp, CreditCard, 
@@ -32,10 +32,29 @@ export const PaymentsScreen: React.FC = () => {
     queryFn: fetchTransactionsApi,
   });
 
-  const currentBalance = user?.balance || 0;
+  // userProfile in the auth store never carries a balance — nothing writes one
+  // — so this card read "0 so'm" for every worker, including one who had just
+  // been paid. Read it from /users/me, which is where the balance actually is.
+  const { data: me } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: fetchUserProfileApi,
+  });
+
+  const currentBalance = me?.balance ?? user?.balance ?? 0;
 
   const formatMoney = (amount: number | string) => {
     return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  };
+
+  // Whether a row is money arriving or money leaving depends on which side of
+  // it you are. The sign used to be `tx.type === 'deposit' ? '+' : '-'`, so a
+  // worker's own wage — an escrow_hold released to them — was labelled "Kirim"
+  // and printed as "-275 000" in the same row.
+  const myId = me?.id ?? user?.id;
+  const isIncoming = (tx: any) => {
+    if (tx.type === 'withdraw') return false;
+    if (tx.type === 'deposit') return true;
+    return !!myId && tx.workerId === myId;
   };
 
   // The four figures below were the literals 1.2 mln, 450k, 890k and
@@ -278,7 +297,11 @@ export const PaymentsScreen: React.FC = () => {
                     
                     <div>
                       <p className="font-bold text-[15px] text-brand-primary mb-0.5">
-                        {tx.type === 'withdraw' ? (language === 'uz' ? "Mablag' yechish" : "Снятие средств") : (language === 'uz' ? "Kirim" : "Поступление")}
+                        {tx.type === 'withdraw'
+                          ? (language === 'uz' ? "Mablag' yechish" : "Снятие средств")
+                          : isIncoming(tx)
+                            ? (language === 'uz' ? "Kirim" : "Поступление")
+                            : (language === 'uz' ? "Ish uchun to'lov" : "Оплата за работу")}
                       </p>
                       <div className="flex items-center gap-2 text-slate-500 text-[11px]">
                         <span>{new Date(tx.createdAt).toLocaleDateString()} • {new Date(tx.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
@@ -292,8 +315,8 @@ export const PaymentsScreen: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <p className={`font-bold text-[16px] ${tx.type === 'deposit' ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {tx.type === 'deposit' ? '+' : '-'}{formatMoney(tx.amount)}
+                      <p className={`font-bold text-[16px] ${isIncoming(tx) ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {isIncoming(tx) ? '+' : '-'}{formatMoney(tx.amount)}
                       </p>
                       {tx.status === 'pending' ? (
                         <span className="inline-block px-2.5 py-0.5 rounded-full bg-amber-100 text-[10px] font-bold text-amber-700 mt-1">

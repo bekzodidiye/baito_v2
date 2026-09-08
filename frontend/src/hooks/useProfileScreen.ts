@@ -18,6 +18,11 @@ export const useProfileScreen = () => {
     queryKey: ['userProfile'],
     queryFn: async () => {
       const data = await apiClient('/users/me');
+      // setBalance was declared and never called, so the wallet on a worker's
+      // own profile read "0 so'm" no matter what they had actually been paid.
+      if (data && data.balance !== undefined && data.balance !== null) {
+        setBalance(String(data.balance));
+      }
       if (data && userProfile) {
         let fName = userProfile.firstName;
         let lName = userProfile.lastName;

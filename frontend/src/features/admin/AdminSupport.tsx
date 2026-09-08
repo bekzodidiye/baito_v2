@@ -109,6 +109,13 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-1 space-y-2.5">
+          {filteredTickets.length === 0 && (
+            <div className="text-center text-slate-500 text-xs py-12 bg-white border border-slate-200 rounded-2xl">
+              {tickets.length === 0
+                ? 'Hozircha murojaatlar yo\'q'
+                : 'Ushbu holatda murojaat topilmadi'}
+            </div>
+          )}
           {filteredTickets.map((t) => (
             <div
               key={t.id}

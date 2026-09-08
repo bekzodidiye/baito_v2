@@ -135,7 +135,7 @@ export const AdminAutoEscrowDocs: React.FC<AdminAutoEscrowDocsProps> = ({ settin
                 <div className="font-extrabold text-emerald-900 text-xs mb-1 flex items-center gap-1.5">
                   <CheckCircle2 size={14} /> 100% Himoyalangan Hamyon
                 </div>
-                <p className="text-[11px] text-emerald-800/80">Mablağ Baito trasst hamyonida muzlatiladi. Usta ishni yakunlamaguncha berilmaydi.</p>
+                <p className="text-[11px] text-emerald-800/80">Mablag' Baito trast hamyonida muzlatiladi. Usta ishni yakunlamaguncha berilmaydi.</p>
               </div>
 
               <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded-xl">

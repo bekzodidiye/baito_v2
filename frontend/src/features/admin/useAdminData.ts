@@ -81,6 +81,14 @@ export function useAdminData() {
     globalToast(msg);
   };
 
+  // The header's refresh button only ever refetched this hook's own
+  // plain-fetch data. Screens built on useQuery (AdminPayouts, AdminAuditLogs)
+  // have their own cache keys this never touched, so their "refresh" button
+  // did nothing for admins who happened to be on one of those screens.
+  const refreshAll = () => {
+    queryClient.invalidateQueries();
+  };
+
   const addBalance = async (userId: string, amount: number, reason: string) => {
     try {
       const res = await apiClient(`/admin/users/${userId}/balance`, {
@@ -203,7 +211,7 @@ export function useAdminData() {
     promotions,
     disputes,
     settings,
-    refresh: fetchAllData,
+    refresh: refreshAll,
     addBalance,
     changeRole,
     toggleBan,

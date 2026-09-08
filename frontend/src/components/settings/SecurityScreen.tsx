@@ -5,10 +5,11 @@ import { ChangePasswordModal } from './ChangePasswordModal';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { fetchActiveSessionsApi, logoutSessionApi, logoutAllOtherSessionsApi, changePasswordApi, updateUserProfileApi } from '../../api/queries';
 import { useAuthStore } from '../../store/useAuthStore';
+import { formatShortDate } from '../../utils/dateFormat';
 export const SecurityScreen: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { userProfile, setUserProfile } = useApp();
-  
+  const { userProfile, setUserProfile, language } = useApp();
+
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(userProfile?.two_factor_enabled ?? false);
   const [biometricsEnabled, setBiometricsEnabled] = useState(userProfile?.biometrics_enabled ?? false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -222,8 +223,7 @@ export const SecurityScreen: React.FC = () => {
                   else if (deviceNameStr.includes('ipad') || deviceNameStr.includes('tablet')) Icon = Tablet;
                   
                   // Format last_active
-                  const lastActiveDate = new Date(session.last_active_at);
-                  const formattedTime = lastActiveDate.toLocaleString('uz-UZ', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                  const formattedTime = formatShortDate(session.last_active_at, language, true);
 
                   return (
                     <React.Fragment key={session.id}>

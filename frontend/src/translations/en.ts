@@ -154,6 +154,7 @@ export const en = {
   measureDistance: "Measure distance",
   distanceLabel: "Distance: {distance}",
   startJob: "Start work",
+  startJobFailed: "Could not start the job. Please try again.",
   waitingToStart: "Waiting to start ({day} June)",
   startedToast: "Work started successfully! Good luck. 🚀",
   locatingYourself: "Locating your position...",

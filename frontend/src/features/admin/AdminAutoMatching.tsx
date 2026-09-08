@@ -98,7 +98,7 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Maksimal Masofa Радиуси (km): {maxDistanceKm} km</label>
+              <label className="font-bold text-slate-700 block mb-1">Maksimal Masofa Radiusi (km): {maxDistanceKm} km</label>
               <input
               aria-label="Maksimal masofa (km)"
                 type="range"

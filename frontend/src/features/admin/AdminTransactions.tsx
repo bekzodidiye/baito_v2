@@ -29,6 +29,24 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
     return num.toLocaleString('uz-UZ') + ' UZS';
   };
 
+  // These three used to be typed-in numbers that never changed no matter what
+  // was actually in the ledger, on the one screen whose whole job is to show
+  // real commission revenue.
+  const settledFees = transactions.filter((t) => t.status === 'paid' || t.status === 'released');
+  const isToday = (iso?: string) => !!iso && new Date(iso).toDateString() === new Date().toDateString();
+  const isThisMonth = (iso?: string) => {
+    if (!iso) return false;
+    const d = new Date(iso);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  };
+  const sumFees = (rows: AdminTransaction[]) => rows.reduce((acc, t) => acc + (Number(t.platformFee) || 0), 0);
+  const todayCommission = sumFees(settledFees.filter((t) => isToday(t.createdAt)));
+  const monthCommission = sumFees(settledFees.filter((t) => isThisMonth(t.createdAt)));
+  const settledAmount = settledFees.reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+  const settledFeeTotal = sumFees(settledFees);
+  const avgCommissionRate = settledAmount > 0 ? (settledFeeTotal / settledAmount) * 100 : 0;
+
   // Both of these used to pop `alert("API orqali ulash kutilmoqda...")`. The
   // endpoint had been there the whole time — the Payouts screen uses it — so
   // an administrator pressing Approve here was told to wait for something that
@@ -176,15 +194,15 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
         <div className="grid md:grid-cols-3 gap-4">
           <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase">Bugungi Komissiya</span>
-            <div className="text-xl font-black text-indigo-600 mt-1">1,450,000 UZS</div>
+            <div className="text-xl font-black text-indigo-600 mt-1">{formatSum(todayCommission)}</div>
           </div>
           <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase">Oylik Jami Komissiya</span>
-            <div className="text-xl font-black text-emerald-600 mt-1">48,500,000 UZS</div>
+            <div className="text-xl font-black text-emerald-600 mt-1">{formatSum(monthCommission)}</div>
           </div>
           <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase">O'rtacha Komissiya Stavkasi</span>
-            <div className="text-xl font-black text-slate-900 mt-1">10.0%</div>
+            <div className="text-xl font-black text-slate-900 mt-1">{avgCommissionRate.toFixed(1)}%</div>
           </div>
         </div>
       )}

@@ -190,7 +190,7 @@ export const SettingsScreen: React.FC = () => {
                   <p className="text-[16px] font-semibold text-brand-text">{t.settingsAbout}</p>
                 </div>
               </div>
-              <span className="text-[14px] text-brand-text-variant font-medium">v1.0.2</span>
+              <span className="text-[14px] text-brand-text-variant font-medium">v{__APP_VERSION__}</span>
             </div>
 
             <button 

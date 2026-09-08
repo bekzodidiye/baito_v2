@@ -1,0 +1,347 @@
+npm notice run baito-monorepo@1.0.0 npx
+npm notice run 'playwright' test
+
+Running 45 tests using 6 workers
+
+[1/45] [chromium] › tests/admin.spec.ts:19:3 › Admin Flow › the admin API refuses a guest outright
+[2/45] [chromium] › tests/onboarding.spec.ts:40:3 › Onboarding tour › opens on a first visit, at the first of four steps
+[3/45] [chromium] › tests/auth.spec.ts:21:3 › Authentication Flow › a real account can sign in
+[4/45] [chromium] › tests/admin.spec.ts:4:3 › Admin Flow › unauthenticated user cannot reach the admin panel
+[5/45] [chromium] › tests/auth.spec.ts:7:3 › Authentication Flow › login with the wrong password is refused, and says so
+[6/45] [chromium] › tests/employer.spec.ts:4:3 › Employer Flow › unauthenticated employer clicking post job is sent to register
+[7/45] [chromium] › tests/onboarding.spec.ts:52:3 › Onboarding tour › advances through all four steps and offers to start on the last
+[8/45] [chromium] › tests/onboarding.spec.ts:77:3 › Onboarding tour › finishing it closes it for good
+[9/45] [chromium] › tests/onboarding.spec.ts:94:3 › Onboarding tour › skipping it closes it for good, from the first step
+[10/45] [chromium] › tests/onboarding.spec.ts:110:3 › Onboarding tour › the close control in the corner also dismisses it
+[11/45] [chromium] › tests/onboarding.spec.ts:120:3 › Onboarding tour › it takes every click meant for the page beneath it
+[12/45] [chromium] › tests/onboarding.spec.ts:144:5 › Onboarding tour › speaks the interface language: ru
+[13/45] [chromium] › tests/onboarding.spec.ts:144:5 › Onboarding tour › speaks the interface language: en
+[14/45] [chromium] › tests/worker.spec.ts:4:3 › Worker Flow › searching from the landing page shows results in place
+[15/45] [chromium] › tests/worker.spec.ts:25:3 › Worker Flow › a worker-only route is closed to a guest
+[16/45] [firefox] › tests/admin.spec.ts:4:3 › Admin Flow › unauthenticated user cannot reach the admin panel
+[17/45] [firefox] › tests/admin.spec.ts:19:3 › Admin Flow › the admin API refuses a guest outright
+[18/45] [firefox] › tests/auth.spec.ts:7:3 › Authentication Flow › login with the wrong password is refused, and says so
+[19/45] [firefox] › tests/employer.spec.ts:4:3 › Employer Flow › unauthenticated employer clicking post job is sent to register
+[20/45] [firefox] › tests/auth.spec.ts:21:3 › Authentication Flow › a real account can sign in
+[21/45] [firefox] › tests/onboarding.spec.ts:40:3 › Onboarding tour › opens on a first visit, at the first of four steps
+[22/45] [firefox] › tests/onboarding.spec.ts:52:3 › Onboarding tour › advances through all four steps and offers to start on the last
+[23/45] [firefox] › tests/onboarding.spec.ts:77:3 › Onboarding tour › finishing it closes it for good
+[24/45] [firefox] › tests/onboarding.spec.ts:94:3 › Onboarding tour › skipping it closes it for good, from the first step
+[25/45] [firefox] › tests/onboarding.spec.ts:110:3 › Onboarding tour › the close control in the corner also dismisses it
+[26/45] [firefox] › tests/onboarding.spec.ts:120:3 › Onboarding tour › it takes every click meant for the page beneath it
+[27/45] [firefox] › tests/onboarding.spec.ts:144:5 › Onboarding tour › speaks the interface language: ru
+[28/45] [firefox] › tests/onboarding.spec.ts:144:5 › Onboarding tour › speaks the interface language: en
+[29/45] [firefox] › tests/worker.spec.ts:4:3 › Worker Flow › searching from the landing page shows results in place
+[30/45] [firefox] › tests/worker.spec.ts:25:3 › Worker Flow › a worker-only route is closed to a guest
+[31/45] [webkit] › tests/admin.spec.ts:4:3 › Admin Flow › unauthenticated user cannot reach the admin panel
+  1) [webkit] › tests/admin.spec.ts:4:3 › Admin Flow › unauthenticated user cannot reach the admin panel 
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/admin-Admin-Flow-unauthent-048a3-annot-reach-the-admin-panel-webkit/error-context.md
+
+
+[32/45] [webkit] › tests/admin.spec.ts:19:3 › Admin Flow › the admin API refuses a guest outright
+[33/45] [webkit] › tests/auth.spec.ts:7:3 › Authentication Flow › login with the wrong password is refused, and says so
+  2) [webkit] › tests/auth.spec.ts:7:3 › Authentication Flow › login with the wrong password is refused, and says so 
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/auth-Authentication-Flow-l-52549-word-is-refused-and-says-so-webkit/error-context.md
+
+
+[34/45] [webkit] › tests/auth.spec.ts:21:3 › Authentication Flow › a real account can sign in
+  3) [webkit] › tests/auth.spec.ts:21:3 › Authentication Flow › a real account can sign in ─────────
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/auth-Authentication-Flow-a-real-account-can-sign-in-webkit/error-context.md
+
+
+[35/45] [webkit] › tests/onboarding.spec.ts:40:3 › Onboarding tour › opens on a first visit, at the first of four steps
+[36/45] [webkit] › tests/employer.spec.ts:4:3 › Employer Flow › unauthenticated employer clicking post job is sent to register
+  4) [webkit] › tests/onboarding.spec.ts:40:3 › Onboarding tour › opens on a first visit, at the first of four steps 
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/onboarding-Onboarding-tour-aa1c8--at-the-first-of-four-steps-webkit/error-context.md
+
+
+  5) [webkit] › tests/employer.spec.ts:4:3 › Employer Flow › unauthenticated employer clicking post job is sent to register 
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/employer-Employer-Flow-una-25c69-ost-job-is-sent-to-register-webkit/error-context.md
+
+
+[37/45] [webkit] › tests/onboarding.spec.ts:52:3 › Onboarding tour › advances through all four steps and offers to start on the last
+[38/45] [webkit] › tests/onboarding.spec.ts:94:3 › Onboarding tour › skipping it closes it for good, from the first step
+  6) [webkit] › tests/onboarding.spec.ts:52:3 › Onboarding tour › advances through all four steps and offers to start on the last 
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/onboarding-Onboarding-tour-22562-offers-to-start-on-the-last-webkit/error-context.md
+
+
+[39/45] [webkit] › tests/onboarding.spec.ts:77:3 › Onboarding tour › finishing it closes it for good
+[40/45] [webkit] › tests/onboarding.spec.ts:110:3 › Onboarding tour › the close control in the corner also dismisses it
+  7) [webkit] › tests/onboarding.spec.ts:94:3 › Onboarding tour › skipping it closes it for good, from the first step 
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/onboarding-Onboarding-tour-41456-or-good-from-the-first-step-webkit/error-context.md
+
+
+  8) [webkit] › tests/onboarding.spec.ts:77:3 › Onboarding tour › finishing it closes it for good ──
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/onboarding-Onboarding-tour-finishing-it-closes-it-for-good-webkit/error-context.md
+
+
+  9) [webkit] › tests/onboarding.spec.ts:110:3 › Onboarding tour › the close control in the corner also dismisses it 
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/onboarding-Onboarding-tour-2e143-he-corner-also-dismisses-it-webkit/error-context.md
+
+
+[41/45] [webkit] › tests/onboarding.spec.ts:120:3 › Onboarding tour › it takes every click meant for the page beneath it
+  10) [webkit] › tests/onboarding.spec.ts:120:3 › Onboarding tour › it takes every click meant for the page beneath it 
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/onboarding-Onboarding-tour-8ec50-ant-for-the-page-beneath-it-webkit/error-context.md
+
+
+[42/45] [webkit] › tests/onboarding.spec.ts:144:5 › Onboarding tour › speaks the interface language: en
+[43/45] [webkit] › tests/worker.spec.ts:25:3 › Worker Flow › a worker-only route is closed to a guest
+[44/45] [webkit] › tests/worker.spec.ts:4:3 › Worker Flow › searching from the landing page shows results in place
+  11) [webkit] › tests/onboarding.spec.ts:144:5 › Onboarding tour › speaks the interface language: en 
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/onboarding-Onboarding-tour-speaks-the-interface-language-en-webkit/error-context.md
+
+
+  12) [webkit] › tests/worker.spec.ts:25:3 › Worker Flow › a worker-only route is closed to a guest 
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/worker-Worker-Flow-a-worker-only-route-is-closed-to-a-guest-webkit/error-context.md
+
+
+  13) [webkit] › tests/worker.spec.ts:4:3 › Worker Flow › searching from the landing page shows results in place 
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/worker-Worker-Flow-searchi-193fb-page-shows-results-in-place-webkit/error-context.md
+
+
+[45/45] [webkit] › tests/onboarding.spec.ts:144:5 › Onboarding tour › speaks the interface language: ru
+  14) [webkit] › tests/onboarding.spec.ts:144:5 › Onboarding tour › speaks the interface language: ru 
+
+    Error: browserType.launch: 
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo npx playwright install-deps                 ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libicu74\                   ║
+    ║         libxml2\                                     ║
+    ║         libflite1                                    ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: test-results/onboarding-Onboarding-tour-speaks-the-interface-language-ru-webkit/error-context.md
+
+
+  14 failed
+    [webkit] › tests/admin.spec.ts:4:3 › Admin Flow › unauthenticated user cannot reach the admin panel 
+    [webkit] › tests/auth.spec.ts:7:3 › Authentication Flow › login with the wrong password is refused, and says so 
+    [webkit] › tests/auth.spec.ts:21:3 › Authentication Flow › a real account can sign in ──────────
+    [webkit] › tests/employer.spec.ts:4:3 › Employer Flow › unauthenticated employer clicking post job is sent to register 
+    [webkit] › tests/onboarding.spec.ts:40:3 › Onboarding tour › opens on a first visit, at the first of four steps 
+    [webkit] › tests/onboarding.spec.ts:52:3 › Onboarding tour › advances through all four steps and offers to start on the last 
+    [webkit] › tests/onboarding.spec.ts:77:3 › Onboarding tour › finishing it closes it for good ───
+    [webkit] › tests/onboarding.spec.ts:94:3 › Onboarding tour › skipping it closes it for good, from the first step 
+    [webkit] › tests/onboarding.spec.ts:110:3 › Onboarding tour › the close control in the corner also dismisses it 
+    [webkit] › tests/onboarding.spec.ts:120:3 › Onboarding tour › it takes every click meant for the page beneath it 
+    [webkit] › tests/onboarding.spec.ts:144:5 › Onboarding tour › speaks the interface language: ru 
+    [webkit] › tests/onboarding.spec.ts:144:5 › Onboarding tour › speaks the interface language: en 
+    [webkit] › tests/worker.spec.ts:4:3 › Worker Flow › searching from the landing page shows results in place 
+    [webkit] › tests/worker.spec.ts:25:3 › Worker Flow › a worker-only route is closed to a guest ──
+  2 skipped
+  29 passed (47.0s)

@@ -13,15 +13,23 @@ export const TaxesScreen: React.FC = () => {
     thisYear: language === 'uz' ? "Joriy yil hujjatlari" : language === 'ru' ? "Документы текущего года" : "This Year's Documents",
     pastYears: language === 'uz' ? "O'tgan yillar" : language === 'ru' ? "Прошлые года" : "Past Years",
     download: language === 'uz' ? "Yuklash" : language === 'ru' ? "Скачать" : "Download",
-    emptyTitle: language === 'uz' ? "Hujjatlar hali tayyor emas"
-      : language === 'ru' ? "Документы пока не готовы" : "No documents yet",
+    emptyTitle: language === 'uz' ? "Soliq hujjatlari hozircha mavjud emas"
+      : language === 'ru' ? "Налоговых документов пока нет" : "Tax documents are not available yet",
+    // The old copy said documents would appear "after your first completed jobs".
+    // Nothing produces them — there is no endpoint and `currentDocs` below is a
+    // fixed empty list — so a worker who completed jobs came back to the same
+    // screen and reasonably concluded their work had not been recorded. Until
+    // fiscalisation is built this says what is true and points somewhere useful.
     emptyBody: language === 'uz'
-      ? "Soliq hujjatlari birinchi yakunlangan ishlaringizdan keyin shu yerda paydo bo'ladi."
+      ? "Bu bo'lim hali ishga tushirilmagan. Daromadingiz tarixini \"To'lovlar\" bo'limidan ko'rishingiz mumkin."
       : language === 'ru'
-        ? "Налоговые документы появятся здесь после первых завершённых работ."
-        : "Tax documents will appear here after your first completed jobs.",
+        ? "Этот раздел ещё не запущен. Историю доходов можно посмотреть в разделе «Платежи»."
+        : "This section is not live yet. You can see your income history under \"Payments\".",
   };
 
+  // Fiscalisation is not built: there is no endpoint serving tax documents, and
+  // `SoliqFiscalService` in the backend is not referenced anywhere. This stays
+  // empty deliberately rather than pretending to load. See qa/findings/BUG-021.
   const currentDocs: { id: number; title: string; status: string; date: string; size: string }[] = [];
 
   return (

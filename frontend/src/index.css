@@ -252,3 +252,22 @@ g:focus,
 
 
 
+
+/* Keyboard focus must be visible — BUG-023.
+   Controls that set their own `shadow-[…]` never composed the Tailwind v4 ring
+   into `box-shadow`: the `--tw-ring-*` variables resolved correctly but the
+   painted shadow stayed transparent, and `focus:outline-none` had already
+   removed the browser's outline. The result was a control that takes keyboard
+   focus and shows nothing at all.
+
+   An outline composes independently of `box-shadow`, so it lands regardless.
+   `currentColor` is what makes it safe on both grounds: a light button draws it
+   in its own dark text colour, a dark one in white — which is exactly what the
+   computed styles already showed those controls intending.
+
+   Leaflet keeps its own rules below/above this: the map deliberately suppresses
+   the outline to avoid a black rectangle on click, and that is left untouched. */
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}

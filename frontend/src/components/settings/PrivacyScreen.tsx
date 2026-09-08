@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { ChevronDown, Check, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { formatLongDate } from '../../utils/dateFormat';
 
 const SECTIONS = [
   {
@@ -359,7 +360,7 @@ export const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack, onConfirm 
               Siz Baito maxfiylik siyosatini muvaffaqiyatli qabul qildingiz. Akkauntingiz to'liq faollashtirildi.
             </p>
             <p className="text-[12px] text-slate-400">
-              Tasdiqlangan sana: {new Date().toLocaleDateString('uz-UZ', {year:'numeric',month:'long',day:'numeric'})}
+              Tasdiqlangan sana: {formatLongDate(new Date(), language)}
             </p>
             <button 
               type="button"

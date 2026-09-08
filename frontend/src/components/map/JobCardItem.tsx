@@ -3,6 +3,7 @@ import { Briefcase, MapPin, Navigation, Clock, Share2, Info, Users } from 'lucid
 import { Job } from '../../types';
 import { getLatLng, calculateDistance } from './mapUtils';
 import { getJobShiftTime, getJobDuration } from '../../utils/jobTimeUtils';
+import { shareJob } from '../../utils/shareJob';
 import { translations, Language } from '../../translations';
 
 interface JobCardItemProps {
@@ -47,13 +48,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (navigator.share) {
-                navigator.share({
-                  title: job.title,
-                  text: `${job.title} - ${job.company}`,
-                  url: `${window.location.origin}/?jobId=${job.id}`,
-                }).catch((error) => console.log('Error sharing', error));
-              }
+              void shareJob(job, language);
             }}
             className="absolute top-3 right-3 w-11 h-11 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-brand-primary transition-all duration-200 cursor-pointer z-10"
             title="Share"

@@ -2,12 +2,17 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
+// The repo's declared version. frontend/package.json is still a 0.0.0 stub.
+import pkg from '../package.json' with {type: 'json'};
 
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
     define: {
-      'process.env.GOOGLE_MAPS_PLATFORM_KEY': JSON.stringify(process.env.GOOGLE_MAPS_PLATFORM_KEY || '')
+      'process.env.GOOGLE_MAPS_PLATFORM_KEY': JSON.stringify(process.env.GOOGLE_MAPS_PLATFORM_KEY || ''),
+      // The settings screen said v1.0.2 and the drawer said v1.1.0, both
+      // hardcoded, neither matching package.json. One source now.
+      __APP_VERSION__: JSON.stringify(pkg.version)
     },
     resolve: {
       alias: {

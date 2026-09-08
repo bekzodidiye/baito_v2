@@ -78,6 +78,13 @@ export const AdminCategories: React.FC = () => {
       </div>
 
       {/* Categories Grid */}
+      {!loading && filtered.length === 0 ? (
+        <div className="text-center text-slate-500 text-sm py-16 bg-white border border-slate-200 rounded-2xl">
+          {categories.length === 0
+            ? "Hozircha kategoriya qo'shilmagan"
+            : "Qidiruvga mos kategoriya topilmadi"}
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filtered.map((cat) => (
           <div key={cat.id} className="bg-white border border-slate-200 rounded-2xl p-5 hover:shadow-md transition">
@@ -133,6 +140,7 @@ export const AdminCategories: React.FC = () => {
           </div>
         ))}
       </div>
+      )}
 
       <AddCategoryModal
         isOpen={showAddModal}

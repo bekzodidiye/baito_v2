@@ -2,7 +2,7 @@ import React from 'react';
 import { Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Job } from '../../../types';
-import { MONTHS_TRANSLATIONS, isJobOnDay } from './CalendarScreen.utils';
+import { MONTHS_TRANSLATIONS, isJobOnDay, isDayInPast } from './CalendarScreen.utils';
 import { CalendarDayTooltip } from './CalendarDayTooltip';
 
 interface CalendarDayButtonProps {
@@ -156,7 +156,7 @@ export const CalendarDayButton: React.FC<CalendarDayButtonProps> = ({
             status={status}
             language={language}
             setSelectedJob={setSelectedJob}
-            isPast={currentYear < yearFromContext || (currentYear === yearFromContext && currentMonth < monthFromContext) || (currentYear === yearFromContext && currentMonth === monthFromContext && day < dayFromContext)}
+            isPast={isDayInPast(day, currentYear, currentMonth, yearFromContext, monthFromContext, dayFromContext)}
             isToday={isToday}
           />
         )}

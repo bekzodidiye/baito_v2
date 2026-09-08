@@ -154,6 +154,7 @@ export const uz = {
   measureDistance: "Masofani o'lchash",
   distanceLabel: "Masofa: {distance}",
   startJob: "Ishni boshlash",
+  startJobFailed: "Ishni boshlab bo'lmadi. Qaytadan urinib ko'ring.",
   waitingToStart: "Boshlanishi kutilmoqda ({day}-iyun)",
   startedToast: "Ish muvaffaqiyatli boshlandi! Omad tilaymiz. 🚀",
   locatingYourself: "Joylashuvingiz aniqlanmoqda...",

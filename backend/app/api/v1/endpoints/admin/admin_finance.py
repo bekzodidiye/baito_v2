@@ -237,6 +237,28 @@ def decide_escrow(
         worker = db.query(User).filter(User.id == payload.workerId).first()
         if not worker:
             raise HTTPException(status_code=404, detail="Ishchi topilmadi")
+
+        # The admin types this ID by hand (see AdminPayouts.tsx). Nothing here
+        # checked it was the worker this job's escrow was ever held for —
+        # `release_funds` looks the hold up by job_id alone and pays out to
+        # whatever id it is given. A typo, a stale id copied from another tab,
+        # or a compromised admin session could move real money to an unrelated
+        # account, and the API would report success either way.
+        was_hired = (
+            db.query(models.Application)
+            .filter(
+                models.Application.jobId == job.id,
+                models.Application.workerId == payload.workerId,
+                models.Application.status == "hired",
+            )
+            .first()
+        )
+        if not was_hired:
+            raise HTTPException(
+                status_code=400,
+                detail="Bu ishchi ushbu ish uchun yollanmagan — to'lov chiqarib bo'lmaydi",
+            )
+
         tx = EscrowService.release_funds(db, job_id=job.id, worker_id=payload.workerId)
         db.add(models.Notification(
             userId=payload.workerId,

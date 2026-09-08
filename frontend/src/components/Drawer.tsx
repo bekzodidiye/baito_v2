@@ -192,7 +192,7 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
             {/* Bottom Footer Info */}
             <div className="p-5 border-t border-slate-100 bg-slate-50/30 text-center flex flex-col gap-1">
               <p className="text-[11px] font-bold text-brand-primary select-none">Baito Uzbekistan</p>
-              <p className="text-[9px] font-medium text-slate-400 select-none tracking-wider">v1.1.0 • Premium Design</p>
+              <p className="text-[9px] font-medium text-slate-400 select-none tracking-wider">v{__APP_VERSION__} • Premium Design</p>
             </div>
           </motion.nav>
         </aside>

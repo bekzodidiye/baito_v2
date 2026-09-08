@@ -2,6 +2,7 @@ import React from 'react';
 import { WorkerApplication } from '../../../types';
 import { MapPin, Calendar, Clock, ChevronRight, Building2, CheckCircle2, XCircle, Clock3 } from 'lucide-react';
 import { Language } from '../../../translations';
+import { formatShortDate } from '../../../utils/dateFormat';
 
 interface ApplicationCardProps {
   application: WorkerApplication;
@@ -55,17 +56,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '';
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString(language === 'uz' ? 'uz-UZ' : language === 'ru' ? 'ru-RU' : 'en-US', {
-        day: 'numeric',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return dateStr;
-    }
+    return formatShortDate(dateStr, language, true) || dateStr;
   };
 
   // Extract initials for the avatar

@@ -1,0 +1,136 @@
+........................................................................ [ 52%]
+................................................................         [100%]
+=============================== warnings summary ===============================
+../../../../../../.pyenv/versions/3.11.9/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: 11 warnings
+  /home/Bekzod/.pyenv/versions/3.11.9/lib/python3.11/site-packages/pydantic/_internal/_config.py:284: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.7/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+app/db/base_class.py:4
+  /home/Bekzod/Desktop/baito-v3-/.claude/worktrees/loyihani-toliq-tekshirish-d839d5/backend/app/db/base_class.py:4: MovedIn20Warning: The ``as_declarative()`` function is now available as sqlalchemy.orm.as_declarative() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    @as_declarative()
+
+app/main.py:64
+tests/test_admin_finance.py::test_a_malformed_sentry_dsn_cannot_take_the_app_down
+tests/test_admin_finance.py::test_a_malformed_sentry_dsn_cannot_take_the_app_down
+  /home/Bekzod/Desktop/baito-v3-/.claude/worktrees/loyihani-toliq-tekshirish-d839d5/backend/app/main.py:64: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+../../../../../../.pyenv/versions/3.11.9/lib/python3.11/site-packages/fastapi/applications.py:4495
+tests/test_admin_finance.py::test_a_malformed_sentry_dsn_cannot_take_the_app_down
+tests/test_admin_finance.py::test_a_malformed_sentry_dsn_cannot_take_the_app_down
+  /home/Bekzod/.pyenv/versions/3.11.9/lib/python3.11/site-packages/fastapi/applications.py:4495: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+../../../../../../.pyenv/versions/3.11.9/lib/python3.11/site-packages/_pytest/cacheprovider.py:469
+  /home/Bekzod/.pyenv/versions/3.11.9/lib/python3.11/site-packages/_pytest/cacheprovider.py:469: PytestCacheWarning: cache could not write path /home/Bekzod/Desktop/baito-v3-/.claude/worktrees/loyihani-toliq-tekshirish-d839d5/backend/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/home/Bekzod/Desktop/baito-v3-/.claude/worktrees/loyihani-toliq-tekshirish-d839d5/backend/.pytest_cache/v/cache/nodeids'
+    config.cache.set("cache/nodeids", sorted(self.cached_nodeids))
+
+../../../../../../.pyenv/versions/3.11.9/lib/python3.11/site-packages/_pytest/cacheprovider.py:423
+  /home/Bekzod/.pyenv/versions/3.11.9/lib/python3.11/site-packages/_pytest/cacheprovider.py:423: PytestCacheWarning: cache could not write path /home/Bekzod/Desktop/baito-v3-/.claude/worktrees/loyihani-toliq-tekshirish-d839d5/backend/.pytest_cache/v/cache/lastfailed: [Errno 13] Permission denied: '/home/Bekzod/Desktop/baito-v3-/.claude/worktrees/loyihani-toliq-tekshirish-d839d5/backend/.pytest_cache/v/cache/lastfailed'
+    config.cache.set("cache/lastfailed", self.lastfailed)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.11.9-final-0 ________________
+
+Name                                             Stmts   Miss  Cover   Missing
+------------------------------------------------------------------------------
+app/api/deps.py                                     85     16    81%   25-26, 28, 38-42, 52, 66, 80, 82, 103, 108, 112, 123
+app/api/v1/api.py                                   16      0   100%
+app/api/v1/endpoints/admin/__init__.py              22      0   100%
+app/api/v1/endpoints/admin/admin_categories.py      29     16    45%   15-28, 36-48, 65-70
+app/api/v1/endpoints/admin/admin_disputes.py        28     17    39%   15-33, 42-52
+app/api/v1/endpoints/admin/admin_finance.py         86      7    92%   65, 112, 142, 189, 232, 236, 239
+app/api/v1/endpoints/admin/admin_jobs.py           137    109    20%   33, 81-127, 137-243, 260-281, 292-353, 369-398
+app/api/v1/endpoints/admin/admin_promotions.py      39     24    38%   15-29, 37-50, 68-73, 82-90
+app/api/v1/endpoints/admin/admin_regions.py         39     24    38%   15-25, 33-42, 56-61, 70-78
+app/api/v1/endpoints/admin/admin_settings.py        70      9    87%   103, 131-146
+app/api/v1/endpoints/admin/admin_stats.py           58     23    60%   23-63, 85-102, 140-146
+app/api/v1/endpoints/admin/admin_support.py         54      5    91%   49, 103, 106, 160, 168
+app/api/v1/endpoints/admin/admin_users.py          166     80    52%   47, 84-103, 116, 118, 158, 164, 169-180, 212-217, 220, 245, 251, 255, 285-396, 413-431, 446-457
+app/api/v1/endpoints/admin/audit.py                  6      0   100%
+app/api/v1/endpoints/applications.py               126     36    71%   24, 28, 31, 44, 54-93, 108, 118, 174, 176, 178, 247-268, 292
+app/api/v1/endpoints/auth.py                       145     33    77%   43, 69-74, 98, 102-104, 108-109, 116-123, 180, 198, 203, 244, 248-249, 253-254, 259-260, 269-275
+app/api/v1/endpoints/chats.py                      232    131    44%   30, 50-52, 55-61, 64-68, 71-91, 94-101, 104-114, 136, 220, 230, 234, 239, 242, 246, 258, 276, 340-351, 362-377, 384-472
+app/api/v1/endpoints/job_actions.py                226     66    71%   38, 43, 48-49, 52-53, 58-60, 73-77, 84, 86, 89-101, 112, 142, 149, 161, 180-200, 249, 252, 282, 293, 317-335, 365, 370, 386, 424-430
+app/api/v1/endpoints/jobs.py                       219     54    75%   66, 79-82, 179, 181, 254, 275-284, 291, 306, 357-366, 383, 390, 398-405, 415, 443-465, 483, 485, 488
+app/api/v1/endpoints/media.py                       49     12    76%   45-61, 86, 99-100, 114-115, 120-131
+app/api/v1/endpoints/notifications.py               29     11    62%   32-40, 49-50, 64-77, 90
+app/api/v1/endpoints/payments.py                   166     56    66%   59-95, 128-129, 139, 142, 175-181, 200, 227-236, 246-259, 269, 310, 315, 323, 366-372
+app/api/v1/endpoints/support.py                     41      2    95%   126-127
+app/api/v1/endpoints/upload.py                      81     56    31%   52-63, 73-112, 130-171
+app/api/v1/endpoints/users.py                      105     48    54%   57, 67-68, 71, 100-145, 161, 164, 182, 200-214, 223-227
+app/api/v1/endpoints/uzum_merchant.py              236     14    94%   155, 225, 227, 241, 243, 245, 306-307, 360-361, 410-411, 542, 556
+app/celery_app.py                                   27      6    78%   5-34, 67, 77
+app/core/config.py                                  92     15    84%   131, 159-167, 172-193, 196
+app/core/error_reporter.py                          66     18    73%   67-68, 72-85, 108, 117, 132-140
+app/core/exceptions.py                              20      5    75%   17-18, 22-27
+app/core/limiter.py                                 17      9    47%   29-38
+app/core/money.py                                   21      1    95%   34
+app/core/phone.py                                   35      5    86%   29, 32, 34, 37, 63
+app/core/security.py                                30      3    90%   25, 29-30
+app/crud/__init__.py                                 5      0   100%
+app/crud/base.py                                    39     22    44%   19, 22-27, 36-47, 50-53
+app/crud/crud_application.py                         8      1    88%   10
+app/crud/crud_chat.py                                6      0   100%
+app/crud/crud_job.py                                19      7    63%   11, 14, 17-25
+app/crud/crud_notification.py                       12      2    83%   21-27
+app/crud/crud_user.py                               37     11    70%   11, 21, 33-46, 63-64, 66
+app/db/base.py                                      21      0   100%
+app/db/base_class.py                                 9      0   100%
+app/db/init_db.py                                   35     23    34%   43-92
+app/db/session.py                                   16      6    62%   10, 27-31
+app/main.py                                         97     21    78%   28, 42, 44, 77-78, 83-84, 157-161, 164, 176-183
+app/models/__init__.py                              20      0   100%
+app/models/admin_audit_log.py                       16      0   100%
+app/models/application.py                           13      0   100%
+app/models/audit_ledger.py                          15      0   100%
+app/models/bookmark.py                               9      0   100%
+app/models/category.py                              13      0   100%
+app/models/chat.py                                  20      0   100%
+app/models/dispute.py                               12      0   100%
+app/models/idempotency.py                           11      0   100%
+app/models/job.py                                   46      0   100%
+app/models/media_file.py                            16      0   100%
+app/models/notification.py                          14      0   100%
+app/models/payment_card.py                          12      0   100%
+app/models/promotion.py                             14      0   100%
+app/models/region.py                                10      0   100%
+app/models/session.py                               18      0   100%
+app/models/support_ticket.py                        22      0   100%
+app/models/system_setting.py                        24      0   100%
+app/models/transaction.py                           18      0   100%
+app/models/user.py                                  41      0   100%
+app/models/uzum_payment.py                          28      0   100%
+app/redis_client.py                                 65     21    68%   43-44, 53, 56-62, 65-69, 72-75, 78, 81, 84, 91, 96
+app/s3_client.py                                    49     25    49%   9-10, 18-19, 28, 33, 49-52, 69-89
+app/schemas/__init__.py                             10      0   100%
+app/schemas/admin.py                                49     49     0%   1-66
+app/schemas/application.py                          19      0   100%
+app/schemas/bookmark.py                             13      0   100%
+app/schemas/chat.py                                 41      0   100%
+app/schemas/job.py                                 129      9    93%   32-34, 63, 133, 160-162, 173
+app/schemas/notification.py                         21      0   100%
+app/schemas/payment_card.py                         31      2    94%   20, 27
+app/schemas/session.py                              22      0   100%
+app/schemas/token.py                                 9      0   100%
+app/schemas/transaction.py                          20      0   100%
+app/schemas/user.py                                 98      4    96%   19, 82-84
+app/services/ai_matcher.py                          39     13    67%   16-17, 19-20, 24-25, 33-35, 39-40, 42-43
+app/services/escrow_service.py                      61      4    93%   28, 76, 84, 128
+app/services/geo_service.py                         33      2    94%   67-68
+app/services/spam_detector.py                       39      4    90%   22-23, 65-66
+app/tasks.py                                       173    113    35%   26-37, 41-54, 77-150, 160-181, 187-198, 241, 246-248, 261-315
+------------------------------------------------------------------------------
+TOTAL                                             4415   1250    72%
+136 passed, 20 warnings in 36.64s

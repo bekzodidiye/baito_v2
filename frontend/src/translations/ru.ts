@@ -154,6 +154,7 @@ export const ru = {
   measureDistance: "Измерить расстояние",
   distanceLabel: "Расстояние: {distance}",
   startJob: "Начать работу",
+  startJobFailed: "Не удалось начать работу. Попробуйте ещё раз.",
   waitingToStart: "Ожидается начало ({day} июня)",
   startedToast: "Работа успешно начата! Желаем удачи! 🚀",
   locatingYourself: "Определение вашего местоположения...",

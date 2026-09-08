@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, PlusCircle, Wallet, CreditCard, CheckCircle2, AlertCircle, Trash2, Star, ChevronDown } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useNavigate } from 'react-router-dom';
+import { requestWithdrawalApi } from '../../api/queries';
+import { showToast } from '../../utils/toast';
 
 export type PaymentModalType = 'deposit' | 'withdraw' | 'addCard' | 'myCards' | null;
 
@@ -86,13 +88,28 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
 
   const cardType = getCardType(cardNumber);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // This used to be a 1.5s setTimeout that set `success` unconditionally: the
+  // worker was shown "Muvaffaqiyatli!" while nothing had been requested and no
+  // money had moved. Success is now only claimed once the server has said so.
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (type !== 'withdraw') return;
+
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await requestWithdrawalApi(Number(amount));
       setSuccess(true);
-    }, 1500);
+    } catch (err) {
+      console.error(err);
+      showToast(
+        language === 'uz' ? "So'rov yuborilmadi, qaytadan urinib ko'ring"
+          : language === 'ru' ? 'Запрос не отправлен, попробуйте ещё раз'
+            : 'The request did not go through, please try again',
+        'error',
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClose = () => {

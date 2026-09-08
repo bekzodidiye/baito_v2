@@ -165,7 +165,7 @@ export const ProfileScreen: React.FC = () => {
             <button 
               onClick={handleLogout}
               className="w-full flex items-center justify-center gap-2 py-3.5 text-rose-600 hover:text-rose-700 font-display font-black text-xs bg-white hover:bg-rose-50/50 transition-all rounded-xl border border-rose-100 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-98 shadow-2xs"
-             aria-label="Chiqish">
+             aria-label={t.logout}>
 <LogOut size={14} className="stroke-[2.5]" />
               <span>{t.logout}</span>
             </button>

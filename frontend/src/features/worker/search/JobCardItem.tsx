@@ -5,6 +5,7 @@ import { Job } from '../../../types';
 import { translations } from '../../../translations';
 import { getJobShiftTime, getJobDuration } from '../../../utils/jobTimeUtils';
 import { getJobCategory } from '../../../utils/jobCategoryUtils';
+import { shareJob } from '../../../utils/shareJob';
 import { useApp } from '../../../context/AppContext';
 
 interface JobCardItemProps {
@@ -82,13 +83,7 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            if (navigator.share) {
-              navigator.share({
-                title: job.title,
-                text: `${job.title} - ${job.company}`,
-                url: `${window.location.origin}/?jobId=${job.id}`,
-              }).catch((error) => console.log('Error sharing', error));
-            }
+            void shareJob(job, language);
           }}
           className="p-1.5 rounded-full hover:bg-brand-primary/10 text-slate-400 hover:text-brand-primary transition-colors cursor-pointer shrink-0 bg-slate-50/50 border border-slate-100"
           type="button"

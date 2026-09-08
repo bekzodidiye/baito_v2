@@ -266,7 +266,7 @@ def get_transactions(
     skip: int = 0,
     limit: int = 100,
 ):
-    return (
+    rows = (
         db.query(Transaction)
         .filter(
             (Transaction.employerId == current_user.id)
@@ -277,6 +277,16 @@ def get_transactions(
         .limit(min(max(1, limit), 200))
         .all()
     )
+
+    # amount and platformFee are stored in tiyin (UZS * 100). Returning the ORM
+    # rows straight through handed the raw tiyin to the payments screen, which
+    # showed a 275,000 so'm payout as "27 500 000".
+    return [
+        TransactionOut.model_validate(r).model_copy(
+            update={"amount": r.amount // 100, "platformFee": (r.platformFee or 0) // 100}
+        )
+        for r in rows
+    ]
 
 
 class WithdrawRequest(BaseModel):

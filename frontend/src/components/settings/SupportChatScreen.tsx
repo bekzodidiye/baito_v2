@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { ArrowLeft, Send, User } from 'lucide-react';
 import { Logo } from '../Logo';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { fetchSupportConversationApi, sendSupportMessageApi } from '../../api/queries';
+import { showToast } from '../../utils/toast';
 
 interface ChatMessage {
   id: string;
@@ -12,21 +15,61 @@ interface ChatMessage {
   time: string;
 }
 
+interface ApiSupportMessage {
+  id: string;
+  fromSupport: boolean;
+  text: string;
+  timestamp?: string | null;
+}
+
+interface ApiSupportConversation {
+  ticketId: string | null;
+  status: string | null;
+  messages: ApiSupportMessage[];
+}
+
+const clockTime = (iso?: string | null): string => {
+  const d = iso ? new Date(iso) : new Date();
+  return Number.isNaN(d.getTime())
+    ? ''
+    : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
 export const SupportChatScreen: React.FC = () => {
   const { language } = useApp();
   const t = translations[language];
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      text: "Assalomu alaykum! Baito yordam xizmatiga xush kelibsiz. Sizga qanday yordam bera olaman?",
-      sender: 'support',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }
-  ]);
+  const queryClient = useQueryClient();
   const [inputValue, setInputValue] = useState('');
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // This screen used to keep its messages in local state and answer itself on a
+  // timer, so nothing a user typed here ever reached the support queue. It now
+  // reads and writes the same ticket the Messages screen uses.
+  const { data: conversation } = useQuery<ApiSupportConversation>({
+    queryKey: ['supportConversation'],
+    queryFn: fetchSupportConversationApi,
+    refetchInterval: 5000,
+  });
+
+  const greeting: ChatMessage = {
+    id: 'greeting',
+    text: "Assalomu alaykum! Baito yordam xizmatiga xush kelibsiz. Sizga qanday yordam bera olaman?",
+    sender: 'support',
+    time: '',
+  };
+
+  const messages: ChatMessage[] = [
+    greeting,
+    ...(conversation?.messages ?? []).map((m) => ({
+      id: m.id,
+      text: m.text,
+      sender: (m.fromSupport ? 'support' : 'user') as 'support' | 'user',
+      time: clockTime(m.timestamp),
+    })),
+  ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -36,30 +79,27 @@ export const SupportChatScreen: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim()) return;
+    const body = inputValue.trim();
+    if (!body || sending) return;
 
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      text: inputValue,
-      sender: 'user',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setMessages([...messages, newMessage]);
-    setInputValue('');
-
-    // Simulate support reply
-    setTimeout(() => {
-      const replyMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        text: "Xabaringizni qabul qildik. Operatorlarimiz tez orada sizga javob qaytarishadi. Iltimos, kuting.",
-        sender: 'support',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, replyMessage]);
-    }, 1500);
+    setSending(true);
+    try {
+      await sendSupportMessageApi(body);
+      setInputValue('');
+    } catch (err) {
+      console.error(err);
+      showToast(
+        language === 'uz' ? "Xabar yuborilmadi, qaytadan urinib ko'ring"
+          : language === 'ru' ? 'Сообщение не отправлено, попробуйте ещё раз'
+            : 'The message was not sent, please try again',
+        'error',
+      );
+    } finally {
+      setSending(false);
+      queryClient.invalidateQueries({ queryKey: ['supportConversation'] });
+    }
   };
 
   return (
@@ -119,7 +159,7 @@ export const SupportChatScreen: React.FC = () => {
           </div>
           <button 
             type="submit"
-            disabled={!inputValue.trim()}
+            disabled={!inputValue.trim() || sending}
             className="w-10 h-10 bg-brand-primary text-white rounded-full flex items-center justify-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-primary/90 transition-colors"
           >
             <Send size={18} className="ml-1" />

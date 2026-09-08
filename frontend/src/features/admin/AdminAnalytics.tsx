@@ -1,11 +1,17 @@
 import React from 'react';
-import { BarChart3, TrendingUp, Users, DollarSign, Download, ArrowUpRight, Award, PieChart } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, Award, PieChart, AlertTriangle } from 'lucide-react';
 
+/** Every figure on this screen is placeholder markup — there is no query behind
+ *  any of it. Until the aggregations exist (see qa/findings/BUG-015, which also
+ *  records the definitions the product owner still needs to settle: what counts
+ *  as an "active user", and as "on time"), the screen says so out loud rather
+ *  than letting an administrator plan against numbers nobody computed.
+ *
+ *  The Excel and PDF buttons were removed with the same reasoning. They ran
+ *  `alert("... muvaffaqiyatli yuklab olindi!")` — announcing a download that
+ *  never happened — and had they worked, they would only have written these
+ *  invented figures into a file that outlives the screen's own caveat. */
 export const AdminAnalytics: React.FC = () => {
-  const handleExport = (type: string) => {
-    alert(`${type} ko'rinishidagi analitik hisobot muvaffaqiyatli yuklab olindi!`);
-  };
-
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -19,19 +25,25 @@ export const AdminAnalytics: React.FC = () => {
             Foydalanuvchilar faolligi, mehnat bozori ko'rsatkichlari va moliya dinamikasi
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleExport('Excel')}
-            className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer"
-          >
-            <Download size={14} /> Excel Export
-          </button>
-          <button
-            onClick={() => handleExport('PDF')}
-            className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer"
-          >
-            <Download size={14} /> PDF Hisobot
-          </button>
+      </div>
+
+      {/* Says plainly that none of the figures below are real, so nobody plans
+          against them. Removing it is part of implementing BUG-015, not a
+          separate tidy-up. */}
+      <div
+        role="status"
+        className="bg-amber-50 border border-amber-200/80 rounded-2xl p-4 flex items-start gap-3"
+      >
+        <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-xs font-extrabold text-amber-900">
+            Bu sahifadagi raqamlar haqiqiy emas
+          </p>
+          <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+            Ko'rsatkichlar hali hisoblanmagan — quyidagi qiymatlar namuna sifatida
+            qo'yilgan va real ma'lumotni aks ettirmaydi. Qaror qabul qilish uchun
+            «Boshqaruv paneli» va «Moliya» bo'limlaridagi ma'lumotlardan foydalaning.
+          </p>
         </div>
       </div>
 

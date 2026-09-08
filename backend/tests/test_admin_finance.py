@@ -149,6 +149,36 @@ def test_admin_can_release_a_frozen_wage_to_the_worker(client):
         assert db.query(User).filter(User.id == worker.id).first().balance == 225_000
 
 
+def test_release_refuses_a_worker_who_was_never_hired_for_this_job(client):
+    """The admin free-types a worker id into a prompt with no picker. A typo,
+    a stale id from another tab, or a compromised admin session must not be
+    able to move real money to whoever that id happens to belong to."""
+    employer = make_user(role="employer", phone="+998921111130", balance=1_000_000)
+    hired_worker = make_user(phone="+998921111131", balance=0)
+    bystander = make_user(phone="+998921111132", balance=0)
+    job = make_job(employer.id, salary="250000")
+    _hire_with_escrow(client, employer, hired_worker, job)
+
+    admin = make_user(role="admin", phone="+998921111133")
+    login(client, admin)
+    resp = client.post(f"/api/v1/admin/jobs/{job.id}/escrow",
+                       json={"action": "release", "reason": "wrong id, by mistake",
+                             "workerId": bystander.id})
+    assert resp.status_code == 400
+
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == bystander.id).first().balance == 0
+        assert db.query(User).filter(User.id == hired_worker.id).first().balance == 0
+
+    # The hold is still there, waiting for the right id.
+    resp = client.post(f"/api/v1/admin/jobs/{job.id}/escrow",
+                       json={"action": "release", "reason": "correct id this time",
+                             "workerId": hired_worker.id})
+    assert resp.status_code == 200
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == hired_worker.id).first().balance == 225_000
+
+
 def test_escrow_holds_are_listed_for_admin(client):
     employer = make_user(role="employer", phone="+998921111116", balance=1_000_000)
     worker = make_user(phone="+998921111117")
@@ -161,6 +191,34 @@ def test_escrow_holds_are_listed_for_admin(client):
     assert body["total"] == 1
     assert body["items"][0]["jobId"] == job.id
     assert body["items"][0]["amountUzs"] == 250_000
+
+
+def test_admin_transactions_list_reports_uzs_not_tiyin(client):
+    """Transaction.amount/platformFee are stored in tiyin (UZS * 100), same as
+    every other money column in this table. /admin/escrow already converted
+    back to UZS for display; this list endpoint returned the raw tiyin value
+    instead, so the admin transactions screen showed every amount and every
+    commission figure 100x too large."""
+    employer = make_user(role="employer", phone="+998921111120", balance=1_000_000)
+    worker = make_user(phone="+998921111121")
+    job = make_job(employer.id, salary="250000")
+    _hire_with_escrow(client, employer, worker, job)
+
+    admin = make_user(role="admin", phone="+998921111122")
+    login(client, admin)
+    body = client.get("/api/v1/admin/transactions").json()
+    assert body["total"] == 1
+    assert body["items"][0]["amount"] == 250_000
+
+    # The payments screen both sides use reads a different endpoint that had
+    # the same defect: it returned the ORM rows straight through, so a 250,000
+    # so'm hold was rendered as "25 000 000".
+    login(client, employer)
+    rows = client.get("/api/v1/payments/transactions").json()
+    assert len(rows) == 1
+    assert rows[0]["amount"] == 250_000
+    assert rows[0]["platformFee"] == 0  # still held, so no fee taken yet
+    assert body["items"][0]["platformFee"] == 0
 
 
 # ── Transaction atomicity (TX-01) ──────────────────────────────────────────

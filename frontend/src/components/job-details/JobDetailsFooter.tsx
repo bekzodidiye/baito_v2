@@ -4,7 +4,7 @@ import { Job } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { showToast } from '../../utils/toast';
-import { confirmStartJobApi } from '../../api/queries';
+import { requestStartJobApi } from '../../api/queries';
 
 interface JobDetailsFooterProps {
   selectedJob: Job;
@@ -76,12 +76,17 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
                 setIsSubmitting(true);
                 try {
                   setIsStartedLocal(true);
-                  selectedJob.status = 'in_progress';
-                  const success = await confirmStartJobApi(selectedJob.id);
-                  if (success && onApplied) (onApplied as any)('in_progress');
+                  // The worker asks to start; the employer confirms. This used
+                  // to call confirm-start, the employer's own endpoint, which
+                  // answers 403 to a worker — so the button reverted itself and
+                  // said nothing, and no worker could ever start a job here.
+                  selectedJob.status = 'start_requested';
+                  const success = await requestStartJobApi(selectedJob.id);
+                  if (success && onApplied) (onApplied as any)('start_requested');
                 } catch (e) {
                   setIsStartedLocal(false);
                   selectedJob.status = 'hired'; // Revert back
+                  showToast(t.startJobFailed || "Ishni boshlab bo'lmadi. Qaytadan urinib ko'ring.");
                 } finally {
                   setIsSubmitting(false);
                 }

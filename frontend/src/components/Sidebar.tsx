@@ -170,7 +170,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
             <button
               onClick={handleLogout}
               className="w-full flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl font-bold text-xs text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border border-rose-200/60"
-             aria-label="Chiqish">
+             aria-label={t.logout}>
 <LogOut size={16} />
               <span>{t.logout}</span>
             </button>

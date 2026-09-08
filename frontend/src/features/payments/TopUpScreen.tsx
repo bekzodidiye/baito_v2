@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Lock, ShieldCheck, Plus, CreditCard } from 'luci
 import { useAuthStore } from '../../store/useAuthStore';
 import { useApp } from '../../context/AppContext';
 import { useQuery } from '@tanstack/react-query';
-import { fetchPaymentCardsApi } from '../../api/queries';
+import { fetchPaymentCardsApi, fetchUserProfileApi } from '../../api/queries';
 import { getBankName } from '../../utils/cardUtils';
 
 export const TopUpScreen: React.FC = () => {
@@ -27,7 +27,14 @@ export const TopUpScreen: React.FC = () => {
     }
   }, [savedCards, paymentMethod]);
 
-  const currentBalance = user?.balance || 0;
+  // Same as the payments screen: userProfile in the auth store carries no
+  // balance, so this card showed 0 to everyone. /users/me is where it lives.
+  const { data: me } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: fetchUserProfileApi,
+  });
+
+  const currentBalance = me?.balance ?? user?.balance ?? 0;
 
   const handleBack = () => {
     navigate(-1);

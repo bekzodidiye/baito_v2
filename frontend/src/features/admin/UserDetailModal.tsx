@@ -42,43 +42,28 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   const [detail, setDetail] = useState<AdminUserDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Auth travels in the httpOnly session cookie; the old Bearer token was
+  // read from a localStorage key that is never written, so this always 401'd.
+  const loadDetail = async (): Promise<AdminUserDetailResponse | null> => {
+    try {
+      const data = await apiClient(`/admin/users/${initialUser.id}/detail`);
+      return data && data.user ? data : null;
+    } catch (err) {
+      console.error('Failed to load user detail:', err);
+      return null;
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
 
-    // Auth travels in the httpOnly session cookie; the old Bearer token was
-    // read from a localStorage key that is never written, so this always 401'd.
-    apiClient(`/admin/users/${initialUser.id}/detail`)
-      .then((data: AdminUserDetailResponse) => {
-        if (isMounted) {
-          if (data && data.user) {
-            setDetail(data);
-          } else {
-            setDetail({
-              user: initialUser,
-              sessions: [],
-              transactions: [],
-              orders: [],
-              reviews: []
-            });
-          }
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load user detail:', err);
-        if (isMounted) {
-          // Fallback to initialUser on network/server errors
-          setDetail({
-            user: initialUser,
-            sessions: [],
-            transactions: [],
-            orders: [],
-            reviews: []
-          });
-          setLoading(false);
-        }
-      });
+    loadDetail().then((data) => {
+      if (isMounted) {
+        setDetail(data ?? { user: initialUser, sessions: [], transactions: [], orders: [], reviews: [] });
+        setLoading(false);
+      }
+    });
 
     return () => {
       isMounted = false;
@@ -86,6 +71,31 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   }, [initialUser.id]);
 
   const user = detail?.user || initialUser;
+
+  // addBalance/changeRole/toggleBan write through and refresh the plain user
+  // list they came from, but this modal keeps its own copy of the user
+  // fetched separately — without this, the balance/role/ban shown here stayed
+  // frozen at whatever it was when the modal opened, even after a successful
+  // top-up.
+  const refreshDetail = async () => {
+    const data = await loadDetail();
+    if (data) setDetail(data);
+  };
+
+  const handleAddBalance = async (userId: string, amount: number, reason: string) => {
+    await onAddBalance(userId, amount, reason);
+    refreshDetail();
+  };
+
+  const handleChangeRole = async (userId: string, role: string) => {
+    await onChangeRole(userId, role);
+    refreshDetail();
+  };
+
+  const handleToggleBan = async (userId: string, currentBannedState?: boolean) => {
+    await onToggleBan(userId, currentBannedState);
+    refreshDetail();
+  };
 
 
   const tabs = [
@@ -149,7 +159,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
           ) : detail ? (
             <>
               <UserTabsMain user={user} activeTab={activeTab} />
-              <UserTabsExtra detail={detail} activeTab={activeTab} onAddBalance={onAddBalance} />
+              <UserTabsExtra detail={detail} activeTab={activeTab} onAddBalance={handleAddBalance} />
             </>
           ) : (
             <div className="text-center text-slate-500 py-10">Ma'lumot topilmadi</div>
@@ -160,7 +170,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
         <div className="p-4 bg-white border-t border-slate-100 flex items-center justify-between shrink-0 text-xs">
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-500">Rol:</span>
-            <select value={user.role} onChange={(e) => onChangeRole(user.id, e.target.value)} className="bg-slate-50 font-bold text-slate-700 px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all">
+            <select value={user.role} onChange={(e) => handleChangeRole(user.id, e.target.value)} className="bg-slate-50 font-bold text-slate-700 px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all">
               <option value="worker">Ishchi</option>
               <option value="employer">Ish beruvchi</option>
               <option value="admin">Admin</option>
@@ -171,7 +181,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
             <button
               onClick={() => {
                 if (user.isBanned) {
-                  onToggleBan(user.id, true);
+                  handleToggleBan(user.id, true);
                 } else {
                   setShowBanModal(true);
                 }
@@ -202,7 +212,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
           userName={user.name}
           onClose={() => setShowBanModal(false)}
           onConfirmBan={(reason, details) => {
-            onToggleBan(user.id, false);
+            handleToggleBan(user.id, false);
             alert(`Foydalanuvchi bloklandi. Sabab: ${reason}. Izoh: ${details}`);
             setShowBanModal(false);
           }}

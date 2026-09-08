@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { UserDocumentsSection } from './UserDocumentsSection';
+import { formatLongDate } from '../../utils/dateFormat';
 
 interface VerificationDetailModalProps {
   user: AdminUser;
@@ -25,9 +26,7 @@ export const VerificationDetailModal: React.FC<VerificationDetailModalProps> = (
   onClose,
   onVerify,
 }) => {
-  const formattedDate = user.createdAt
-    ? new Date(user.createdAt).toLocaleDateString('uz-UZ', { year: 'numeric', month: 'long', day: 'numeric' })
-    : 'Yaqinda';
+  const formattedDate = user.createdAt ? formatLongDate(user.createdAt, 'uz') : 'Yaqinda';
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
