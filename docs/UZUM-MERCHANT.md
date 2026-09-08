@@ -108,6 +108,33 @@ against a job funds it, it does not hire for it.
 other amount our own clients send is in so'm, and converts once. That single
 line is the only place the two units meet.
 
+## After onboarding — do this once Uzum gives you their IP ranges
+
+**Deferred by decision (2026-09-03): add an nginx IP allowlist for the Uzum
+webhooks.** It cannot be done before onboarding because it needs Uzum's source
+IP ranges, which they issue then.
+
+Why it matters: the caller of `/check`, `/create`, `/confirm`, `/reverse` and
+`/status` is always Uzum, from their own addresses. Restricting those five
+routes to Uzum's ranges at nginx is a stronger fence than the rate limit already
+in place (SEC-01) — an allowlisted endpoint cannot be reached by anyone else at
+all, so the Basic-auth password stops being the only thing standing between a
+stranger and the money path.
+
+When the ranges arrive, add to `frontend/nginx.conf`, on the
+`/api/v1/payments/uzum/` location (not `/orders`, which our own employers call):
+
+```nginx
+location /api/v1/payments/uzum/ {
+    allow 185.x.x.0/24;   # Uzum ranges — from onboarding
+    # allow ...;          # (repeat per range)
+    deny all;
+    # ... existing proxy_pass ...
+}
+```
+
+`/orders` stays open to authenticated employers and keeps only its rate limit.
+
 ## The flow
 
 ```
