@@ -90,3 +90,29 @@ stop reading the old shape, and only then remove it.
 Nothing enforces this automatically yet. It is the weakest point in the rollback
 story and worth a CI check that flags `DROP COLUMN` and `RENAME` in new
 migrations.
+
+## Merging
+
+GitHub's branch protection would hold a merge until its checks pass. It is
+unavailable here — the repository is private on a free account, and both the
+protection and rulesets APIs answer:
+
+> Upgrade to GitHub Pro or make this repository public
+
+so **nothing server-side stops a merge**, and `gh pr merge --auto` does not help:
+with no protection to wait on, it merges immediately. A pull request has already
+landed here with its backend suite still running because of exactly that.
+
+Until protection is available, merge through:
+
+```bash
+bash scripts/merge-pr.sh 24            # waits for the checks, then squash-merges
+bash scripts/merge-pr.sh 24 --no-wait  # fails instead of waiting
+```
+
+It refuses outright on a failing check, waits on a pending one, and treats
+`skipping` as fine — the deploy job is gated to `main`, so on a pull request it
+skips and never resolves. Waiting on it would hang forever.
+
+This is a convenience, not a control: the web UI can still merge anything. The
+real fix is GitHub Pro or a public repository.
