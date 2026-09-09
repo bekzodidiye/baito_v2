@@ -34,6 +34,14 @@ SETTING_FIELDS = (
     "matchMinWorkerRating",
     "notifVerifiedTemplate",
     "notifRejectedTemplate",
+    # Our own bank details. The payout invoice prints these; without storage
+    # the account number would have to be hard-coded into the template.
+    "payoutCompanyName",
+    "payoutBankName",
+    "payoutBankAccount",
+    "payoutBankMfo",
+    "payoutCompanyInn",
+    "payoutCompanyAddress",
 )
 
 
@@ -59,6 +67,12 @@ class SettingsPayload(BaseModel):
     matchMinWorkerRating: Optional[float] = Field(default=None, ge=0, le=5)
     notifVerifiedTemplate: Optional[str] = Field(default=None, max_length=1000)
     notifRejectedTemplate: Optional[str] = Field(default=None, max_length=1000)
+    payoutCompanyName: Optional[str] = Field(default=None, max_length=200)
+    payoutBankName: Optional[str] = Field(default=None, max_length=200)
+    payoutBankAccount: Optional[str] = Field(default=None, max_length=40)
+    payoutBankMfo: Optional[str] = Field(default=None, max_length=20)
+    payoutCompanyInn: Optional[str] = Field(default=None, max_length=20)
+    payoutCompanyAddress: Optional[str] = Field(default=None, max_length=500)
 
 
 def _get_or_create(db: Session) -> models.SystemSetting:

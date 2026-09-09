@@ -15,6 +15,7 @@ from .promotion import Promotion
 from .dispute import Dispute
 from .system_setting import SystemSetting
 from .audit_ledger import AuditLedger
+from .job_payout import JobPayout, PayoutStatus
 from .idempotency import IdempotencyKey
 from .admin_audit_log import AdminAuditLog
 from .uzum_payment import PaymentOrder, UzumTransaction

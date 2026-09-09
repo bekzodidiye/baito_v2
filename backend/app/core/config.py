@@ -71,6 +71,17 @@ class Settings(BaseSettings):
     TEXTUP_EMAIL: str = os.getenv("TEXTUP_EMAIL", "")
     TEXTUP_PASSWORD: str = os.getenv("TEXTUP_PASSWORD", "")
 
+    # SMTP, for the invoice a company is sent after a shift is paid out. With
+    # no host configured the send is refused rather than silently dropped —
+    # an invoice that was never delivered but reported as sent is worse than
+    # one that plainly failed.
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USER: str = os.getenv("SMTP_USER", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    SMTP_FROM: str = os.getenv("SMTP_FROM", "")
+    SMTP_STARTTLS: bool = os.getenv("SMTP_STARTTLS", "true").lower() in ("1", "true", "yes")
+
     # Development-only conveniences. Both are refused in production.
     SEED_DEMO_DATA: bool = os.getenv("SEED_DEMO_DATA", "false").lower() in ("1", "true", "yes")
     # When SMS credentials are absent in development, /send-sms returns the code

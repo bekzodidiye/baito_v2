@@ -20,6 +20,7 @@ from app.models.promotion import Promotion
 from app.models.dispute import Dispute
 from app.models.system_setting import SystemSetting
 from app.models.audit_ledger import AuditLedger
+from app.models.job_payout import JobPayout
 from app.models.idempotency import IdempotencyKey
 from app.models.media_file import MediaFile
 from app.models.admin_audit_log import AdminAuditLog

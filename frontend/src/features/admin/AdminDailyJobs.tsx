@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { AdminJob, AdminUser } from './types';
-import { Search, Trash2, MapPin, Building2, Briefcase, XCircle, Eye } from 'lucide-react';
+import { Search, Trash2, MapPin, Building2, Briefcase, XCircle, Eye, Wallet } from 'lucide-react';
 import { RejectJobModal } from './RejectJobModal';
 import { UserDetailModal } from './UserDetailModal';
 import { JobDetailModal } from './JobDetailModal';
+import { PayoutModal } from './PayoutModal';
 import { CustomSelect, CustomDatePicker, StatusSelect } from './AdminCustomControls';
 
 interface AdminJobsProps {
@@ -34,6 +35,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
   const [autoDeleteEnabled, setAutoDeleteEnabled] = useState(true);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [pendingWorkerJobId, setPendingWorkerJobId] = useState<string | null>(null);
+  const [payoutJobId, setPayoutJobId] = useState<string | null>(null);
 
   const today = new Date();
   const yy = today.getFullYear();
@@ -310,6 +312,24 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                 />
 
                 <div className="flex items-center gap-1 border-l border-slate-200 pl-3">
+                  {/* Settling the shift by hand. Enabled only once the work is
+                      finished — paying for a shift still in progress would
+                      debit a balance the worker has not earned yet. Rendered
+                      disabled rather than hidden so the action is discoverable
+                      on the rows where it will eventually apply. */}
+                  <button
+                    onClick={() => setPayoutJobId(j.id)}
+                    disabled={j.status !== 'completed'}
+                    aria-label="To'lovni tasdiqlash"
+                    className="p-2 rounded-xl transition-colors flex items-center justify-center text-emerald-600 hover:bg-emerald-50 cursor-pointer disabled:text-slate-300 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                    title={
+                      j.status === 'completed'
+                        ? "To'lovni tasdiqlash"
+                        : "Faqat yakunlangan ishlar uchun"
+                    }
+                  >
+                    <Wallet size={18} />
+                  </button>
                   <button
                     onClick={() => setRejectingJob(j)}
                     className="p-2 text-amber-600 hover:bg-amber-50 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
@@ -347,6 +367,13 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
         <JobDetailModal
           job={selectedJobDetails}
           onClose={() => setSelectedJobDetails(null)}
+        />
+      )}
+
+      {payoutJobId && (
+        <PayoutModal
+          jobId={payoutJobId}
+          onClose={() => setPayoutJobId(null)}
         />
       )}
 

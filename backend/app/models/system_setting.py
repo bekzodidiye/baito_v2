@@ -44,3 +44,14 @@ class SystemSetting(Base):
     # {user_name} is substituted when the message is written.
     notifVerifiedTemplate = Column(Text, nullable=True)
     notifRejectedTemplate = Column(Text, nullable=True)
+
+    # Our own bank details. They belong on the invoice that bills a company for
+    # a shift, and there was nowhere to put them — so the invoice would have
+    # had to hard-code an account number, which is exactly the kind of thing
+    # that is wrong for months before anyone notices.
+    payoutCompanyName = Column(String, nullable=True)
+    payoutBankName = Column(String, nullable=True)
+    payoutBankAccount = Column(String, nullable=True)   # hisob raqami
+    payoutBankMfo = Column(String, nullable=True)       # MFO
+    payoutCompanyInn = Column(String, nullable=True)    # INN / STIR
+    payoutCompanyAddress = Column(Text, nullable=True)

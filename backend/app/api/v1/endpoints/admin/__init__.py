@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from .admin_categories import router as cats_router
 from .admin_disputes import router as disputes_router
 from .admin_finance import router as finance_router
+from .admin_payouts import router as payouts_router
 from .admin_jobs import router as jobs_router
 from .admin_promotions import router as promos_router
 from .admin_regions import router as regs_router
@@ -26,4 +27,5 @@ router.include_router(regs_router)
 router.include_router(promos_router)
 router.include_router(disputes_router)
 router.include_router(finance_router)
+router.include_router(payouts_router)
 router.include_router(support_router)
