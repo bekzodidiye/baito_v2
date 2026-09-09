@@ -45,3 +45,16 @@ dump.rdb
 # on the deploy host, where a dirty tree is noise nobody can act on.
 backups/
 .deploy-history
+
+# Local secrets. Already covered above, kept explicit because these are the
+# names that would hurt: nothing matching them has ever been committed and
+# nothing should be.
+.env
+.env.local
+.env.*.local
+
+# Agent tooling writes these into the repo root on every run. They are runtime
+# state, not source, and unignored they sit in `git status` forever — which is
+# how a real change gets lost in the noise.
+.swarm/
+.claude-flow/
