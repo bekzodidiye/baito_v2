@@ -43,6 +43,39 @@ next_version() {
     esac
 }
 
+# --- step two: tag a bump that has merged and deployed ----------------------
+if [ "$BUMP" = "tag" ]; then
+    BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    [ "$BRANCH" = "main" ] || die "Tag from main; you are on '${BRANCH}'."
+
+    git fetch origin main --tags --quiet
+    [ -z "$(git rev-list HEAD..origin/main)" ] || die "origin/main is ahead. Pull first, so the tag names what is live."
+
+    git rev-parse --verify --quiet "refs/tags/v${CURRENT}" >/dev/null \
+        && die "v${CURRENT} is already tagged."
+
+    subject=$(git log -1 --format=%s)
+    case "$subject" in
+        "chore(release): v${CURRENT}"*) ;;
+        *) warn "HEAD is not the v${CURRENT} bump commit — it is: ${subject}"
+           printf '  Tag it anyway? Type yes: '
+           read -r c; [ "$c" = "yes" ] || die "Aborted." ;;
+    esac
+
+    say "Tagging"
+    printf '  version: %s\n   commit: %s\n\n' "$CURRENT" "$(git rev-parse --short HEAD)"
+    warn "A release names what is deployed. Confirm the deploy for this commit finished."
+    printf '  Type the version to confirm (%s): ' "$CURRENT"
+    read -r answer
+    [ "$answer" = "$CURRENT" ] || die "Aborted."
+
+    git tag -a "v${CURRENT}" -m "v${CURRENT}"
+    git push origin "v${CURRENT}" --quiet
+    ok "Tagged and pushed v${CURRENT}"
+    printf '\n  The release workflow will publish it with generated notes.\n\n'
+    exit 0
+fi
+
 # --- with no argument, report and stop -------------------------------------
 if [ -z "$BUMP" ]; then
     say "Current version"
@@ -98,7 +131,23 @@ printf '\n  Type the version to confirm (%s): ' "$NEW"
 read -r answer
 [ "$answer" = "$NEW" ] || die "Aborted."
 
-# --- bump, commit, tag, push ------------------------------------------------
+# --- bump, commit, open the PR ----------------------------------------------
+# The bump does NOT go straight to main, and does not get tagged here. Two
+# reasons, learned by trying it the other way:
+#
+#   .githooks/pre-push refuses a direct push to main — "main is where deploys
+#   come from" — and reserves its --no-verify escape for a revert or a hotfix.
+#   A version bump is neither; it is an ordinary change and CI should see it.
+#
+#   And a tag must name a commit that is already live. Tagging before the bump
+#   has merged and deployed produces a version pointing at nothing shipped;
+#   the release workflow's own "commit is on main" check would reject it.
+#
+# So: this opens the PR, and `release.sh tag` finishes the job afterwards.
+BRANCH_NAME="release/v${NEW}"
+git rev-parse --verify --quiet "$BRANCH_NAME" >/dev/null && die "Branch ${BRANCH_NAME} already exists."
+
+git checkout -q -b "$BRANCH_NAME"
 node -e '
   const fs = require("fs");
   const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
@@ -109,13 +158,19 @@ ok "package.json -> ${NEW}"
 
 git add package.json
 git commit -q -m "chore(release): v${NEW}"
-git tag -a "v${NEW}" -m "v${NEW}"
-ok "Tagged v${NEW}"
+git push -u origin "$BRANCH_NAME" --quiet
+ok "Pushed ${BRANCH_NAME}"
 
-git push origin main --quiet
-git push origin "v${NEW}" --quiet
-ok "Pushed"
+if command -v gh >/dev/null; then
+    gh pr create --base main --head "$BRANCH_NAME" \
+        --title "chore(release): v${NEW}" \
+        --body "Version bump for v${NEW}. Once this has merged and deployed, run \`bash scripts/release.sh tag\` to tag it and publish the release." >/dev/null
+    ok "Opened the pull request"
+else
+    warn "gh not found; open the pull request for ${BRANCH_NAME} yourself."
+fi
 
-say "Done"
-printf '  The release workflow will publish v%s with generated notes.\n' "$NEW"
-printf '  The version bump itself deploys, so the app will show v%s shortly.\n\n' "$NEW"
+say "Next"
+printf '  1. Let CI pass and merge the pull request.\n'
+printf '  2. Wait for the deploy to finish — a release names what is live.\n'
+printf '  3. Run:  bash scripts/release.sh tag\n\n'

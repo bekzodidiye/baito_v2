@@ -12,16 +12,28 @@ From an up-to-date `main`, after the deploy for those commits has succeeded:
 
 ```bash
 bash scripts/release.sh          # what would go out, and what has shipped since the last one
-bash scripts/release.sh minor    # 1.0.0 -> 1.1.0
+bash scripts/release.sh minor    # opens the bump PR: 1.0.0 -> 1.1.0
+#   ... merge it, and let the deploy finish ...
+bash scripts/release.sh tag      # tags the bump commit and publishes the release
 ```
 
-It bumps `package.json`, commits, tags, and pushes. The tag triggers
-`.github/workflows/release.yml`, which publishes the release with notes
-generated from the commits since the previous tag.
+**Two steps, and the split is deliberate.** The first opens a pull request for
+the version bump; the second tags it once it has merged and deployed.
 
-The bump commit is itself a push to `main`, so it deploys — which is what makes
-the version the app displays become true. The drawer and the settings screen
-read `package.json` through `__APP_VERSION__`.
+The bump does not go straight to `main` because `.githooks/pre-push` refuses
+that — "main is where deploys come from" — and reserves its `--no-verify`
+escape for a revert or a hotfix. A version bump is neither.
+
+The tag waits because a release names a commit that is **already live**.
+Tagging before the bump has deployed produces a version pointing at nothing
+shipped; the release workflow's own "commit is on main" check rejects it.
+
+The tag triggers `.github/workflows/release.yml`, which publishes the release
+with notes generated from the commits since the previous tag.
+
+The bump commit deploys like any other, which is what makes the version the app
+displays become true. The drawer and the settings screen read `package.json`
+through `__APP_VERSION__`.
 
 ### Which number to bump
 
