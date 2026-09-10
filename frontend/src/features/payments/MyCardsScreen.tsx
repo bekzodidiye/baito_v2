@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { clickable } from '../../utils/clickable';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Star, EyeOff, Snowflake, Trash2, CreditCard, X, AlertTriangle, Info, CheckCircle2, Edit2 } from 'lucide-react';
+import { ArrowLeft, Plus, EyeOff, Snowflake, Trash2, CreditCard, X, AlertTriangle, Info, CheckCircle2, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
@@ -202,18 +202,6 @@ export const MyCardsScreen: React.FC = () => {
               <span className="text-[13px] font-bold text-slate-600">Ma'lumotlar</span>
             </button>
 
-            <button 
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('global-toast', { detail: { message: "Asosiy karta qilib belgilandi", type: 'success' } }));
-              }}
-              className="flex flex-col items-center gap-2 group cursor-pointer"
-            >
-              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-800 shadow-sm group-hover:bg-amber-50 group-hover:text-amber-500 transition-colors group-active:scale-95">
-                <Star className="w-7 h-7" />
-              </div>
-              <span className="text-[13px] font-bold text-slate-600">Asosiy qilish</span>
-            </button>
-            
             <button 
               onClick={() => {
                 setConfirmModal({ isOpen: true, type: 'delete', cardId: primaryCard.id });

@@ -20,6 +20,10 @@ export const PaymentsScreen: React.FC = () => {
   const queryClient = useQueryClient();
 
   const [txFilter, setTxFilter] = useState<'all' | 'in' | 'out'>('all');
+  // The magnifier in the header used to be decoration with an aria-label: it
+  // announced itself as a search control and did nothing when pressed.
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [modalType, setModalType] = useState<PaymentModalType>(null);
   
   const { data: savedCards = [] } = useQuery({
@@ -76,11 +80,37 @@ export const PaymentsScreen: React.FC = () => {
   const withdrawn = sum(transactions.filter((tx: any) =>
     tx.type === 'withdraw' && ['paid', 'completed'].includes(tx.status)));
 
+  // One derivation of a row's title, used by both the list and the search, so
+  // what a user reads is exactly what they can search for.
+  const txLabel = (tx: any) =>
+    tx.type === 'withdraw'
+      ? (language === 'uz' ? "Mablag' yechish" : language === 'ru' ? "Снятие средств" : "Withdrawal")
+      : isIncoming(tx)
+        ? (language === 'uz' ? "Kirim" : language === 'ru' ? "Поступление" : "Incoming")
+        : (language === 'uz' ? "Ish uchun to'lov" : language === 'ru' ? "Оплата за работу" : "Payment for work");
+
+  const query = searchQuery.trim().toLowerCase();
+  const matchesQuery = (tx: any) => {
+    if (!query) return true;
+    const haystack = [
+      txLabel(tx),
+      formatMoney(tx.amount),
+      String(tx.amount ?? ''),
+      tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : '',
+    ].join(' ').toLowerCase();
+    return haystack.includes(query);
+  };
+
   const filteredTransactions = transactions.filter((tx: any) => {
+    if (!matchesQuery(tx)) return false;
     if (txFilter === 'in') return tx.type === 'deposit';
     if (txFilter === 'out') return tx.type === 'withdraw';
     return true;
   });
+
+  // "No transactions yet" is a lie to someone who has a history and simply
+  // searched for something absent.
+  const isNarrowed = !!query || txFilter !== 'all';
 
   const handleBack = () => {
     if (user?.selectedRole === 'employer') {
@@ -107,12 +137,33 @@ export const PaymentsScreen: React.FC = () => {
           </h1>
         </div>
         <button 
-          aria-label={language === 'uz' ? 'Qidirish' : 'Поиск'}
+          onClick={() => {
+            setShowSearch((open) => {
+              if (open) setSearchQuery('');
+              return !open;
+            });
+          }}
+          aria-label={language === 'uz' ? 'Qidirish' : language === 'ru' ? 'Поиск' : 'Search'}
+          aria-expanded={showSearch}
           className="active:scale-95 duration-200 p-2 hover:bg-slate-200 transition-colors rounded-full cursor-pointer"
         >
           <Search className="text-brand-primary w-6 h-6" />
         </button>
       </header>
+
+      {showSearch && (
+        <div className="fixed top-16 w-full max-w-4xl z-40 bg-brand-background px-5 pb-3">
+          <input
+            autoFocus
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label={language === 'uz' ? "To'lovlar ichidan qidirish" : language === 'ru' ? 'Поиск по платежам' : 'Search payments'}
+            placeholder={language === 'uz' ? "To'lovlar ichidan qidirish..." : language === 'ru' ? 'Поиск по платежам...' : 'Search payments...'}
+            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+          />
+        </div>
+      )}
 
       <main className="mt-20 px-5 space-y-6">
         {/* Main Balance Card */}
@@ -297,11 +348,7 @@ export const PaymentsScreen: React.FC = () => {
                     
                     <div>
                       <p className="font-bold text-[15px] text-brand-primary mb-0.5">
-                        {tx.type === 'withdraw'
-                          ? (language === 'uz' ? "Mablag' yechish" : "Снятие средств")
-                          : isIncoming(tx)
-                            ? (language === 'uz' ? "Kirim" : "Поступление")
-                            : (language === 'uz' ? "Ish uchun to'lov" : "Оплата за работу")}
+                        {txLabel(tx)}
                       </p>
                       <div className="flex items-center gap-2 text-slate-500 text-[11px]">
                         <span>{new Date(tx.createdAt).toLocaleDateString()} • {new Date(tx.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
@@ -338,64 +385,16 @@ export const PaymentsScreen: React.FC = () => {
                   <History className="text-slate-300 w-8 h-8" />
                 </div>
                 <p className="text-slate-800 font-bold mb-1">
-                  {language === 'uz' ? 'Tranzaksiyalar yo\'q' : language === 'ru' ? 'Нет транзакций' : 'No transactions'}
+                  {isNarrowed
+                    ? (language === 'uz' ? 'Hech narsa topilmadi' : language === 'ru' ? 'Ничего не найдено' : 'Nothing found')
+                    : (language === 'uz' ? 'Tranzaksiyalar yo\'q' : language === 'ru' ? 'Нет транзакций' : 'No transactions')}
                 </p>
                 <p className="text-slate-500 text-sm">
-                  {language === 'uz' ? 'Hozircha hech qanday to\'lov amaliyoti bajarilmagan.' : 'Пока нет ни одной операции.'}
+                  {isNarrowed
+                    ? (language === 'uz' ? 'Boshqa so\'rov yoki filtr bilan urinib ko\'ring.' : language === 'ru' ? 'Попробуйте другой запрос или фильтр.' : 'Try a different search or filter.')
+                    : (language === 'uz' ? 'Hozircha hech qanday to\'lov amaliyoti bajarilmagan.' : language === 'ru' ? 'Пока нет ни одной операции.' : 'No payment activity yet.')}
                 </p>
               </div>
-            )}
-
-            {/* Dummy transactions to match design if there are none in db yet */}
-            {filteredTransactions.length === 0 && (
-              <>
-                {/* Transaction 1 */}
-                <div className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shadow-sm flex items-center justify-center">
-                      <ImageIcon className="text-slate-400 w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-[15px] text-brand-primary mb-0.5">Lobia Machida — Smena</p>
-                      <div className="flex items-center gap-2 text-slate-500 text-[11px]">
-                        <span>12 Oct, 2023 • 14:30</span>
-                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                        <span className="flex items-center gap-1"><Wallet size={12} /> Hamyon</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <p className="font-bold text-[16px] text-emerald-600">+45,000</p>
-                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700 mt-1">Bajarildi</span>
-                    </div>
-                    <ChevronRight className="text-slate-300 group-hover:text-brand-primary transition-colors w-6 h-6" />
-                  </div>
-                </div>
-                {/* Transaction 2 */}
-                <div className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-brand-primary/5 flex items-center justify-center shadow-sm">
-                      <Landmark className="text-brand-primary w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-[15px] text-brand-primary mb-0.5">Mablag' yechish</p>
-                      <div className="flex items-center gap-2 text-slate-500 text-[11px]">
-                        <span>11 Oct, 2023 • 09:15</span>
-                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                        <span className="flex items-center gap-1"><CreditCard size={12} /> Uzcard ****4521</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <p className="font-bold text-[16px] text-red-600">-20,000</p>
-                      <span className="inline-block px-2.5 py-0.5 rounded-full bg-amber-100 text-[10px] font-bold text-amber-700 mt-1">Kutilmoqda</span>
-                    </div>
-                    <ChevronRight className="text-slate-300 group-hover:text-brand-primary transition-colors w-6 h-6" />
-                  </div>
-                </div>
-              </>
             )}
           </div>
         </section>

@@ -3,7 +3,7 @@
 - **Severity:** S2
 - **Component:** frontend / payments (`PaymentsScreen.tsx:349`)
 - **Found:** 2026-09-03, round-3 per-control click sweep
-- **Status:** **Open** — fix identified (delete the block) but not applied; the owner has asked to leave the payment system untouched for now
+- **Status:** **Fixed** 2026-09-06 — the block is deleted; the owner lifted the hold on the payment screens
 - **Evidence:** `qa/evidence/BUG-022-fabricated-transactions.png`
 
 ## What happens
@@ -84,3 +84,14 @@ content that outlived the design phase on a surface nobody had reason to distrus
 
 Delete the block. The real empty state directly above it is already correct, already
 translated, and already says the right thing.
+
+## Fix (2026-09-06)
+
+The 52-line placeholder block is gone. The real empty state directly above it
+was already correct, already translated, and already said the right thing — it
+now says it alone.
+
+Guarded by `PaymentsScreen.test.tsx`, which renders the screen with no
+transactions and fails if "Lobia Machida", the 2023 dates, the 4521 card, or a
+completed-payment badge appear. Verified against the old code first: two of the
+three assertions went red.

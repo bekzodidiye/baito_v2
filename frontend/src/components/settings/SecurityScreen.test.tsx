@@ -59,3 +59,13 @@ describe('SecurityScreen — ending every session asks first', () => {
     await waitFor(() => expect(logoutAllOtherSessionsApi).toHaveBeenCalled());
   });
 });
+
+describe('SecurityScreen — no control that does nothing', () => {
+  it('offers no search box over three settings rows', () => {
+    render(<SecurityScreen />);
+    // The magnifier revealed a field whose value was never read, so typing
+    // filtered nothing. Three rows do not need a search; it is gone.
+    expect(screen.queryByPlaceholderText(/izlash/i)).toBeNull();
+    expect(screen.getByText(/Parolni o'zgartirish/i)).toBeTruthy();
+  });
+});

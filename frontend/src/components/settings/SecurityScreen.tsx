@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { ArrowLeft, ChevronRight, Search, Shield, Lock, ShieldCheck, Fingerprint, Smartphone, Monitor, Tablet, ShieldAlert, Loader2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Shield, Lock, ShieldCheck, Fingerprint, Smartphone, Monitor, Tablet, ShieldAlert, Loader2 } from 'lucide-react';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
@@ -15,8 +15,6 @@ export const SecurityScreen: React.FC = () => {
   const [biometricsEnabled, setBiometricsEnabled] = useState(userProfile?.biometrics_enabled ?? false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   
   const [passData, setPassData] = useState({ current: '', newPass: '', confirm: '' });
   const [passSuccess, setPassSuccess] = useState(false);
@@ -121,23 +119,9 @@ export const SecurityScreen: React.FC = () => {
           <ArrowLeft className="text-brand-primary" />
         </button>
         <h1 className="text-[20px] font-semibold text-brand-primary">Xavfsizlik</h1>
-        <button onClick={() => setShowSearch(!showSearch)} className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-brand-surface-low transition-colors active:scale-95 cursor-pointer">
-          <Search className="text-brand-primary" />
-        </button>
+        <span className="w-10" aria-hidden="true" />
       </header>
 
-      {showSearch && (
-        <div className="pt-4 px-5 max-w-4xl mx-auto w-full">
-          <input
-              aria-label="Xavfsizlik bo'limlaridan izlash..."
-            type="text"
-            placeholder="Xavfsizlik bo'limlaridan izlash..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-          />
-        </div>
-      )}
 
       <main className="md:pt-8 flex-1 overflow-y-auto pt-6 pb-12 px-5 max-w-4xl mx-auto w-full">
         {/* Brand Illustration */}

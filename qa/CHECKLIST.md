@@ -55,7 +55,7 @@ faqat bitta kirish nuqtasi undan foydalanmasdi. Endi foydalanadi.
 
 ---
 
-## 2. Yolg'on muvaffaqiyat — TUZATISH KERAK
+## 2. Yolg'on muvaffaqiyat — TUZATILDI (2026-09-06)
 
 | # | Amal | Nima deydi | Nima qiladi | Takror |
 |---|---|---|---|---|
@@ -73,9 +73,14 @@ turdagi nuqson: **interfeys qilmagan ishini qilgan deb aytadi.**
 
 **Batafsil:** `qa/findings/BUG-025-make-default-card-reports-success.md`
 
-**Ochiq qoldi — ataylab.** Bu ekran To'lovlar bo'limida, siz "hozir to'lov
-tizimiga teginmang, buni hali o'zgartiramiz" deganingiz uchun tegilmadi.
-Xuddi shu sababdan **BUG-020** va **BUG-022** ham ochiq. Aytsangiz, tuzataman.
+**Tuzatildi.** Tugma olib tashlandi — tekshirganda ma'lum bo'ldiki, backend'da
+"asosiy karta" tushunchasi **umuman yo'q**: `PaymentCard` da faqat `isActive`,
+va `PUT /payments/cards/{id}` boshqa hech narsani yangilamaydi. Ya'ni
+chaqiriladigan endpoint yo'q edi. Uni ishlatish uchun yangi ustun, migratsiya
+va endpoint kerak — siz qayta yozmoqchi bo'lgan to'lov tizimining ma'lumot
+modeliga. Buning vaqti emas.
+
+To'lov ekranlaridagi **BUG-020** va **BUG-022** ham o'sha kuni tuzatildi.
 
 ---
 
@@ -188,7 +193,10 @@ QA.md §2.6 aynan shuning uchun "gumonni nuqson deb yozma" deydi.
 | 1.3 | Barcha qurilmalardan chiqish | ✅ tuzatildi |
 | 1.4 | Arizani topshirish | ✅ tuzatildi |
 | BUG-026 | Ovozsiz admin amallari | ✅ tuzatildi |
-| 2.1 | Asosiy qilish (yolg'on muvaffaqiyat) | ⏸ to'lov bo'limi — siz aytganingizcha tegilmadi |
+| 2.1 | Asosiy qilish (yolg'on muvaffaqiyat) | ✅ tugma olib tashlandi |
+| BUG-022 | Soxta tranzaksiyalar | ✅ tuzatildi |
+| BUG-020 | O'lik qidiruv tugmasi (To'lovlar) | ✅ ulandi |
+| BUG-027 | O'lik qidiruv maydoni (Xavfsizlik) | ✅ olib tashlandi |
 | 4 | O'lchanmagan oltita amal | ⬜ hali o'lchanmagan |
 
 Qolgan ish: **4-bo'lim** — ishni yakunlash, admin balans qo'shish, rol

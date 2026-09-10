@@ -3,7 +3,7 @@
 - **Severity:** S3
 - **Component:** frontend / payments (`MyCardsScreen.tsx:205`)
 - **Found:** 2026-09-05, round-4 sweep
-- **Status:** open
+- **Status:** **Fixed** 2026-09-06 — button removed; the owner lifted the hold on the payment screens
 - **Reproduction rate:** 3/3, plus a fourth run watching for the toast
 
 ## What happens
@@ -50,10 +50,18 @@ recorded `clicked` with an empty request list.
 
 The handler's entire body is the success message. There is no call behind it.
 
-## This is not a missing feature
+## Correction to the original fix direction
 
-`PUT /payments/cards/{cardId}` exists and is already wrapped in
-`api/queries.ts`. The endpoint the button needs is there and unused.
+This finding first said the endpoint was "there and unused". That was wrong.
+`PUT /payments/cards/{cardId}` exists, but it updates **`isActive` and nothing
+else**, and `PaymentCard` has no default-card column at all:
+
+```python
+id, userId, type, last4, bank, token, isActive
+```
+
+So there was no endpoint to call. A default card is not a feature the backend
+has.
 
 ## Impact
 
@@ -70,3 +78,26 @@ Call `PUT /payments/cards/{cardId}` with the default flag, `await` it, and only
 toast on success — the same shape the withdrawal fix used. If a default card is
 not a concept the backend supports yet, remove the button rather than leave it
 announcing a state change it cannot make.
+
+## Fix (2026-09-06)
+
+The button is removed.
+
+Making it work would mean a new column, a migration, an endpoint change and a
+frontend change — a feature, in the data model of a payment system the owner
+has said is being rewritten. The wrong week to add a column. Removing the
+control costs users nothing they had: it never did anything.
+
+Worth knowing for whoever does that rewrite: **`isDefault` is already read in
+two places** and never supplied by the server —
+
+- `MyCardsScreen.tsx:107` — picks which card shows as primary
+- `PaymentModals.tsx:32` — preselects the card for a withdrawal
+
+Both fall back to `savedCards[0]`, so they work; they just do not do what the
+name suggests. If a default card is built later, those two reads are where it
+lands.
+
+Guarded by `MyCardsScreen.test.tsx`, which presses every control on the screen
+and fails if any of them reports that a default was set. Against the old code
+it caught the toast verbatim.

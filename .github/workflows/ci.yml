@@ -359,6 +359,55 @@ jobs:
   # ==========================================================
   # 4. PRODUCTION DEPLOYMENT
   # ==========================================================
+  # A deploy that never starts is the failure mode this pipeline is worst at
+  # reporting: the job sits on "Waiting for a runner to pick up this job", the
+  # run stays yellow, and nothing is ever sent to anyone. It happened again on
+  # 2026-09-05 — every self-hosted runner offline, two merges queued behind it,
+  # one of them for 15 hours — and the only reason it was noticed is that
+  # somebody went looking.
+  #
+  # timeout-minutes does not cover this. It bounds how long a job may *run*,
+  # and starts counting once a runner picks the job up; a job nobody picks up
+  # is not running, so the clock never starts. GitHub drops such a job after 24
+  # hours, silently. This job is the missing alarm.
+  deploy-watchdog:
+    name: ⏱️ 4b. Deploy Runner Watchdog
+    needs: [test-backend, test-frontend, test-e2e, validate-docker]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    timeout-minutes: 20
+    steps:
+      - name: ⏱️ Fail loudly if no runner takes the deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Long enough to cover a runner restarting on its own, short enough
+          # that a human hears about it the same hour.
+          WAIT_SECONDS: 900
+        run: |
+          set -euo pipefail
+          deadline=$(( SECONDS + WAIT_SECONDS ))
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            status=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs" \
+                       --jq '.jobs[] | select(.name | contains("Production Deploy")) | .status' \
+                     2>/dev/null || echo "")
+            case "$status" in
+              in_progress|completed)
+                echo "✅ A runner picked the deploy up (${status})."
+                exit 0
+                ;;
+            esac
+            echo "⏳ Deploy still queued after $SECONDS s..."
+            sleep 30
+          done
+
+          echo "::error title=No deploy runner::The deploy has been queued for \
+          ${WAIT_SECONDS}s with no self-hosted runner to take it, so this commit \
+          is NOT on the server. Bring a runner back up on the box \
+          (sudo systemctl status 'actions.runner.*'), then re-run this job."
+          exit 1
+
   deploy:
     name: 🚀 4. Production Deploy
     needs: [test-backend, test-frontend, test-e2e, validate-docker]
@@ -367,9 +416,22 @@ jobs:
     # tailnet — so deployment has to run on the box itself. That makes the
     # self-hosted runner a hard dependency.
     runs-on: self-hosted
-    # Without this a job simply queues forever when no runner is available.
-    # The runner was down for over 15 hours and nothing surfaced it: the
-    # workflow showed no failure, deploys just silently stopped happening.
+    # Deploys must not stack. When runners were offline, two runs queued: an
+    # older commit and a newer one. Whichever a returning runner happened to
+    # take second would have been the build left on the server — so the older
+    # commit could have overwritten the newer one. That had to be untangled by
+    # hand.
+    #
+    # cancel-in-progress is deliberately false: a deploy that is already
+    # running is mid-way through swapping containers and migrating the
+    # database, and killing it there is far worse than a stale queue. With it
+    # false, GitHub cancels the older *pending* run instead and keeps the
+    # newest — which is the one that should land.
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+    # Bounds how long the deploy may run once a runner has it. It does not, and
+    # cannot, bound how long it waits for one — that is deploy-watchdog's job.
     timeout-minutes: 30
     steps:
       - name: 📥 Checkout Code on Server

@@ -3,7 +3,7 @@
 - **Severity:** S4
 - **Component:** frontend / payments (`PaymentsScreen.tsx:109`)
 - **Found:** 2026-09-03, round-3 per-control click sweep
-- **Status:** **Open** — not fixed; the button sits on the Payments screen, which the owner has asked to leave untouched for now
+- **Status:** **Fixed** 2026-09-06 — wired up; the owner lifted the hold on the payment screens
 
 ## What happens
 
@@ -47,3 +47,28 @@ genuinely inert, not because it is urgent.
 Either wire it to filter the transaction list below (the list is already client-side, so a
 local filter is enough), or delete the button and its `aria-label`. A control that
 announces itself as search must do something when pressed.
+
+## Fix (2026-09-06)
+
+Wired, not deleted — the transaction list is already client-side, so a local
+filter was enough, and a header magnifier is a control users expect to work.
+
+Pressing it reveals a search field; typing narrows the list. Row titles come
+from one `txLabel` helper now used by both the list and the search, so what a
+user reads is exactly what they can search for.
+
+One thing had to come with it. The empty state said "Hozircha hech qanday
+to'lov amaliyoti bajarilmagan" — *no payment activity yet* — which is false for
+someone who has a history and simply searched for something absent. A search
+with no matches now says "Hech narsa topilmadi". Adding a search that produces
+a lying empty state would have replaced one defect with another, immediately
+after BUG-022 was fixed for exactly that reason.
+
+Guarded by three tests in `PaymentsScreen.test.tsx`, all three red against the
+old code.
+
+## Same defect, different screen
+
+`SecurityScreen.tsx` has the same shape: a magnifier reveals a search input,
+`searchQuery` is written by the field and **never read**, so nothing filters.
+Recorded as BUG-027.
