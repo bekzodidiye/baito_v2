@@ -6,8 +6,10 @@ os.environ.setdefault("SECRET_KEY", "test_secret_key_for_pytest_only_0123456789a
 _DB_DIR = tempfile.mkdtemp(prefix="baito-tests-")
 os.environ.setdefault("DATABASE_URL", f"sqlite:///{_DB_DIR}/test.db")
 os.environ.setdefault("SEED_DEMO_DATA", "false")
-os.environ.setdefault("SMS_DEV_ECHO_CODE", "true")
-os.environ.setdefault("BCRYPT_ROUNDS", "4")
+os.environ["TEXTUP_EMAIL"] = ""
+os.environ["TEXTUP_PASSWORD"] = ""
+os.environ["SMS_DEV_ECHO_CODE"] = "true"
+os.environ["BCRYPT_ROUNDS"] = "4"
 # Point at a port nothing listens on so the suite always falls back to the
 # in-process MockRedis. Without this, tests silently attached to whatever Redis
 # happened to be running on the developer's machine and picked up state from
@@ -29,8 +31,11 @@ from app.models.job import JobStatus  # noqa: E402
 TEST_PASSWORD = "Str0ngPassw0rd"
 
 
-# Rate limits are real behaviour, but applying them across a whole test
-# session makes unrelated tests fail with 429.
+from app.core.config import settings  # noqa: E402
+settings.TEXTUP_EMAIL = ""
+settings.TEXTUP_PASSWORD = ""
+settings.SMS_DEV_ECHO_CODE = True
+settings.BCRYPT_ROUNDS = 4
 limiter.enabled = False
 
 
