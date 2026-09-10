@@ -63,6 +63,18 @@ def _open_chat(ctx) -> None:
     assert res.status_code == 200, res.text
 
 
+def _start(ctx, ) -> None:
+    """The worker asks to start; the employer confirms. /complete refuses
+    without this — "Ishni yakunlash uchun avval uni boshlash kerak"."""
+    login(ctx["client"], ctx["worker"])
+    asked = ctx["client"].post(f"/api/v1/jobs/{ctx['job'].id}/request-start")
+    assert asked.status_code == 200, asked.text
+
+    login(ctx["client"], ctx["employer"])
+    confirmed = ctx["client"].post(f"/api/v1/jobs/{ctx['job'].id}/confirm-start")
+    assert confirmed.status_code == 200, confirmed.text
+
+
 def _complete(ctx) -> None:
     res = ctx["client"].post(
         f"/api/v1/jobs/{ctx['job'].id}/complete",
@@ -76,6 +88,7 @@ def test_full_platform_e2e_lifecycle(lifecycle):
     application_id = _apply(lifecycle)
     _hire(lifecycle, application_id)
     _open_chat(lifecycle)
+    _start(lifecycle)
     _complete(lifecycle)
 
     with SessionLocal() as db:

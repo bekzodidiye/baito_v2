@@ -55,7 +55,14 @@ def test_geo_service_measures_a_known_tashkent_distance():
 
 @pytest.fixture
 def escrow_pair():
-    """An employer holding 500,000 and the worker they will pay."""
+    """An employer holding 500,000, the worker they will pay, and a real job.
+
+    The job matters: transactions.jobId is a foreign key. Passing a bare uuid
+    is accepted by SQLite, which does not enforce foreign keys by default, and
+    rejected by the Postgres CI runs with
+
+        ForeignKeyViolation: Key (jobId)=(...) is not present in table "jobs"
+    """
     with SessionLocal() as db:
         employer = models.User(
             id=str(uuid.uuid4()), uid=f"emp_esc_{uuid.uuid4().hex[:6]}",
@@ -72,19 +79,28 @@ def escrow_pair():
         db.commit()
         db.refresh(employer)
         db.refresh(worker)
-        yield db, employer, worker
+
+        job = models.Job(
+            id=str(uuid.uuid4()), employerId=employer.id,
+            title="Escrow test job", company="Baito Corp",
+            description="Escrow lifecycle fixture", salary="200000",
+            location="Toshkent",
+        )
+        db.add(job)
+        db.commit()
+        db.refresh(job)
+        yield db, employer, worker, job
 
 
 def test_escrow_holds_then_releases_minus_the_platform_fee(escrow_pair):
-    db, employer, worker = escrow_pair
-    job_id = str(uuid.uuid4())
+    db, employer, worker, job = escrow_pair
 
-    held = EscrowService.hold_funds(db, employer.id, job_id, 200000)
+    held = EscrowService.hold_funds(db, employer.id, job.id, 200000)
     assert held.status == "held"
     db.refresh(employer)
     assert employer.balance == 300000
 
-    released = EscrowService.release_funds(db, job_id, worker.id)
+    released = EscrowService.release_funds(db, job.id, worker.id)
     assert released.status == "released"
     db.refresh(worker)
     assert worker.balance == 180000  # 200,000 less the 10% platform fee
@@ -102,10 +118,9 @@ def test_fiscal_receipt_is_confirmed_and_points_at_soliq():
 
 
 def test_referral_bonus_credits_both_sides(escrow_pair):
-    db, employer, worker = escrow_pair
-    job_id = str(uuid.uuid4())
-    EscrowService.hold_funds(db, employer.id, job_id, 200000)
-    EscrowService.release_funds(db, job_id, worker.id)
+    db, employer, worker, job = escrow_pair
+    EscrowService.hold_funds(db, employer.id, job.id, 200000)
+    EscrowService.release_funds(db, job.id, worker.id)
 
     GrowthEngine.apply_referral_bonus_on_first_job(db, worker, employer.id)
     db.refresh(employer)
