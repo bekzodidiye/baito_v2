@@ -1,112 +1,114 @@
-import pytest
-from app.db.session import SessionLocal
-from app import models
-from app.services.ai_matcher import AIMatchmaker
-from app.services.spam_detector import SpamFraudDetector
-from app.services.geo_service import GeoSpatialService
-from app.services.escrow_service import EscrowService
-from app.services.soliq_service import SoliqFiscalService
-from app.services.growth_engine import GrowthEngine
+"""Specialised services: matching, spam, geo, escrow, fiscal receipts, growth.
+
+Originally one 98-line function running six unrelated services inside a
+91-line try/finally, with prints in place of failure messages. Six services,
+six tests: when one regresses, the name of the failing test says which.
+"""
 import uuid
 
-def test_all_specialized_enterprise_services():
-    print("\n🚀 Running Specialized Developer Test Suite (AI, GIS, FinTech, Growth)...")
-    db = SessionLocal()
-    try:
-        # 1. Test AI Matchmaker
-        worker = models.User(
-            id=str(uuid.uuid4()),
-            name="Rustam Aliyev",
-            category="Haydovchi",
-            region="Toshkent",
-            skills=["Haydovchilik", "B toifa", "Yandex pro"],
-            rating=4.8,
-            completedJobsCount=10
-        )
-        job_matching = models.Job(
-            id=str(uuid.uuid4()),
-            title="Kuryer va Haydovchi kerak",
-            category="Haydovchi",
-            location="Toshkent, Yunusobod",
-            requirements="B toifa haydovchilik guvohnomasi"
-        )
-        match_result = AIMatchmaker.calculate_match_score(worker, job_matching)
-        assert match_result["score"] >= 70
-        assert match_result["is_recommended"] is True
-        print(f"  ✅ 1. AI Matchmaking Engine: Score {match_result['score']}% (Reasons: {len(match_result['match_reasons'])})")
+import pytest
 
-        # 2. Test Spam & Fraud Detector
-        spam_job = SpamFraudDetector.analyze_job_posting(
-            title="Onlayn oson daromad 1000$",
-            description="Kripto va piramida orqali 1 soatda boyish. Tel: +998 90 123 45 67",
-            salary="80000000"
-        )
-        assert spam_job["is_spam"] is True
-        assert spam_job["risk_score"] >= 70
-        print(f"  ✅ 2. AI Anti-Fraud / Spam Detector: Flagged accurately (Risk: {spam_job['risk_score']}%)")
+from app import models
+from app.db.session import SessionLocal
+from app.services.ai_matcher import AIMatchmaker
+from app.services.escrow_service import EscrowService
+from app.services.geo_service import GeoSpatialService
+from app.services.growth_engine import GrowthEngine
+from app.services.soliq_service import SoliqFiscalService
+from app.services.spam_detector import SpamFraudDetector
 
-        # 3. Test GeoSpatial GIS Service (Tashkent Amir Timur Sq -> Chilonzor ~7km)
-        dist = GeoSpatialService.haversine_distance(41.311081, 69.240562, 41.282778, 69.204444)
-        assert 4.0 <= dist <= 8.0
-        commute = GeoSpatialService.estimate_commute_time(dist)
-        assert "transit_time_min" in commute
-        print(f"  ✅ 3. Geo-Spatial GIS Engine: Distance: {dist} km, Driving: {commute['driving_time_min']} min")
 
-        # 4. Test FinTech Escrow Lifecycle & Audit Ledger
+def test_matchmaker_recommends_a_driver_for_a_driving_job():
+    worker = models.User(
+        id=str(uuid.uuid4()), name="Rustam Aliyev", category="Haydovchi",
+        region="Toshkent", skills=["Haydovchilik", "B toifa", "Yandex pro"],
+        rating=4.8, completedJobsCount=10,
+    )
+    job = models.Job(
+        id=str(uuid.uuid4()), title="Kuryer va Haydovchi kerak",
+        category="Haydovchi", location="Toshkent, Yunusobod",
+        requirements="B toifa haydovchilik guvohnomasi",
+    )
+    result = AIMatchmaker.calculate_match_score(worker, job)
+    assert result["score"] >= 70
+    assert result["is_recommended"] is True
+
+
+def test_spam_detector_flags_a_get_rich_quick_posting():
+    result = SpamFraudDetector.analyze_job_posting(
+        title="Onlayn oson daromad 1000$",
+        description="Kripto va piramida orqali 1 soatda boyish. Tel: +998 90 123 45 67",
+        salary="80000000",
+    )
+    assert result["is_spam"] is True
+    assert result["risk_score"] >= 70
+
+
+def test_geo_service_measures_a_known_tashkent_distance():
+    # Amir Timur square -> Chilonzor, roughly 7 km.
+    distance = GeoSpatialService.haversine_distance(
+        41.311081, 69.240562, 41.282778, 69.204444
+    )
+    assert 4.0 <= distance <= 8.0
+    assert "transit_time_min" in GeoSpatialService.estimate_commute_time(distance)
+
+
+@pytest.fixture
+def escrow_pair():
+    """An employer holding 500,000 and the worker they will pay."""
+    with SessionLocal() as db:
         employer = models.User(
-            id=str(uuid.uuid4()),
-            uid=f"emp_esc_{uuid.uuid4().hex[:6]}",
-            phone=f"+99890{uuid.uuid4().hex[:6]}",
-            name="Escrow Employer",
-            balance=500000
+            id=str(uuid.uuid4()), uid=f"emp_esc_{uuid.uuid4().hex[:6]}",
+            phone=f"+99890{uuid.uuid4().hex[:6]}", name="Escrow Employer",
+            balance=500000,
         )
-        worker_esc = models.User(
-            id=str(uuid.uuid4()),
-            uid=f"wrk_esc_{uuid.uuid4().hex[:6]}",
-            phone=f"+99890{uuid.uuid4().hex[:6]}",
-            name="Escrow Worker",
-            balance=0
+        worker = models.User(
+            id=str(uuid.uuid4()), uid=f"wrk_esc_{uuid.uuid4().hex[:6]}",
+            phone=f"+99890{uuid.uuid4().hex[:6]}", name="Escrow Worker",
+            balance=0,
         )
         db.add(employer)
-        db.add(worker_esc)
+        db.add(worker)
         db.commit()
-
-        job_esc_id = str(uuid.uuid4())
-        # A. Hold 200,000 UZS in Escrow
-        tx_hold = EscrowService.hold_funds(db, employer.id, job_esc_id, 200000)
-        assert tx_hold.status == "held"
         db.refresh(employer)
-        assert employer.balance == 300000
+        db.refresh(worker)
+        yield db, employer, worker
 
-        # B. Release funds to Worker (200k minus 10% fee = 180k)
-        tx_release = EscrowService.release_funds(db, job_esc_id, worker_esc.id)
-        assert tx_release.status == "released"
-        db.refresh(worker_esc)
-        assert worker_esc.balance == 180000
-        print("  ✅ 4. Bank-Grade Escrow & Audit Ledger: Held 200k -> Disbursed 180k (+10% Platform fee)")
 
-        # 5. Test Soliq.uz Fiscalization Receipt
-        receipt = SoliqFiscalService.generate_fiscal_receipt(
-            worker_pinfl="31205901234567",
-            worker_name=worker_esc.name,
-            amount_uzs=180000,
-            job_title="Baito xizmatlari"
-        )
-        assert receipt["status"] == "FISCAL_CONFIRMED"
-        assert "my.soliq.uz" in receipt["qr_url"]
-        print(f"  ✅ 5. Soliq.uz Fiscal Receipt Generator: {receipt['receipt_id']} (QR Verified)")
+def test_escrow_holds_then_releases_minus_the_platform_fee(escrow_pair):
+    db, employer, worker = escrow_pair
+    job_id = str(uuid.uuid4())
 
-        # 6. Test Growth Engine Referral Bonus
-        GrowthEngine.apply_referral_bonus_on_first_job(db, worker_esc, employer.id)
-        db.refresh(employer)
-        db.refresh(worker_esc)
-        assert employer.balance == 320000 # 300k + 20k bonus
-        assert worker_esc.balance == 200000 # 180k + 20k bonus
-        print("  ✅ 6. Growth Referral Engine: +20,000 UZS Bonus credited to both Referrer and Worker")
+    held = EscrowService.hold_funds(db, employer.id, job_id, 200000)
+    assert held.status == "held"
+    db.refresh(employer)
+    assert employer.balance == 300000
 
-        print("🌟 All 6 Advanced Enterprise Specialized Developer Tests: 100% PASSED!\n")
-    finally:
-        db.close()
+    released = EscrowService.release_funds(db, job_id, worker.id)
+    assert released.status == "released"
+    db.refresh(worker)
+    assert worker.balance == 180000  # 200,000 less the 10% platform fee
 
-if __name__ == "__main__":
-    test_all_specialized_enterprise_services()
+
+def test_fiscal_receipt_is_confirmed_and_points_at_soliq():
+    receipt = SoliqFiscalService.generate_fiscal_receipt(
+        worker_pinfl="31205901234567",
+        worker_name="Escrow Worker",
+        amount_uzs=180000,
+        job_title="Baito xizmatlari",
+    )
+    assert receipt["status"] == "FISCAL_CONFIRMED"
+    assert "my.soliq.uz" in receipt["qr_url"]
+
+
+def test_referral_bonus_credits_both_sides(escrow_pair):
+    db, employer, worker = escrow_pair
+    job_id = str(uuid.uuid4())
+    EscrowService.hold_funds(db, employer.id, job_id, 200000)
+    EscrowService.release_funds(db, job_id, worker.id)
+
+    GrowthEngine.apply_referral_bonus_on_first_job(db, worker, employer.id)
+    db.refresh(employer)
+    db.refresh(worker)
+    assert employer.balance == 320000  # 300,000 + 20,000
+    assert worker.balance == 200000    # 180,000 + 20,000

@@ -17,8 +17,13 @@ jobs:
 
     permissions:
       contents: read
+      # Needed by `skylos cicd review`, which posts inline comments.
       pull-requests: write
-      id-token: write
+      # id-token: write was dropped. It exists to mint an OIDC token for
+      # Skylos Cloud, and the sync step already tolerates its absence
+      # (`skylos sync pull || echo ...`). Skylos flagged the permission in its
+      # own workflow as a privilege expansion, and it was right: nothing here
+      # uses it.
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
