@@ -5,6 +5,7 @@ import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { showToast } from '../../utils/toast';
 import { requestStartJobApi } from '../../api/queries';
+import { ConfirmModal } from '../common/ConfirmModal';
 
 interface JobDetailsFooterProps {
   selectedJob: Job;
@@ -23,6 +24,9 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
     selectedJob.status === 'in_progress' || selectedJob.status === 'start_requested'
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Applying commits the worker to turning up. It went through on one press,
+  // which on a phone is one stray tap while scrolling a listing.
+  const [confirmingApply, setConfirmingApply] = useState(false);
 
   useEffect(() => {
     setIsStartedLocal(selectedJob.status === 'in_progress' || selectedJob.status === 'start_requested');
@@ -40,6 +44,15 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
       setIsSubmitting(false);
     }
   };
+
+  // Say which shift, when, and for how much — the three things a worker needs
+  // to recognise they are about to commit to the right job.
+  const shiftWhen = [selectedJob.workDate, selectedJob.workTime].filter(Boolean).join(', ');
+  const applyQuestion = {
+    ru: `«${selectedJob.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${selectedJob.salary ? `Оплата: ${selectedJob.salary}.` : ''} Работодатель увидит вашу заявку.`,
+    en: `"${selectedJob.title}"${shiftWhen ? ` — ${shiftWhen}` : ''}. ${selectedJob.salary ? `Pay: ${selectedJob.salary}.` : ''} The employer will see your application.`,
+    uz: `«${selectedJob.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${selectedJob.salary ? `To'lov: ${selectedJob.salary}.` : ''} Ish beruvchi arizangizni ko'radi.`,
+  }[language as 'uz' | 'ru' | 'en'] ?? `«${selectedJob.title}» uchun ariza topshirasizmi?`;
 
   const isHiredOrConfirmed = ['hired', 'confirmed', 'todo', 'approved'].includes(selectedJob.status) || (selectedJob as any).hired;
 
@@ -113,7 +126,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
         } else {
           return (
             <button
-              onClick={handleApply}
+              onClick={() => setConfirmingApply(true)}
               disabled={isSubmitting}
               aria-label="Ushbu ishga ariza topshirish"
               className={`flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-black shadow-lg transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'bg-brand-primary/50 cursor-not-allowed' : 'bg-brand-primary hover:bg-brand-primary/90 shadow-brand-primary/20 active:scale-[0.98] cursor-pointer'}`}
@@ -124,6 +137,17 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
           );
         }
       })()}
+
+      <ConfirmModal
+        isOpen={confirmingApply}
+        title={language === 'ru' ? 'Подать заявку?' : language === 'en' ? 'Apply for this shift?' : 'Ariza topshirasizmi?'}
+        message={applyQuestion}
+        confirmText={language === 'ru' ? 'Подать' : language === 'en' ? 'Apply' : 'Topshirish'}
+        cancelText={language === 'ru' ? 'Отмена' : language === 'en' ? 'Cancel' : 'Bekor qilish'}
+        isDestructive={false}
+        onConfirm={handleApply}
+        onCancel={() => setConfirmingApply(false)}
+      />
     </footer>
   );
 };

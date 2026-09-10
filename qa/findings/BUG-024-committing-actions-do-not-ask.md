@@ -3,7 +3,7 @@
 - **Severity:** S2
 - **Component:** frontend — `JobDetailsFooter.tsx`, `EmployerApplicants.tsx` / `ApplicantCard.tsx`, `AdminUsers.tsx`, `SecurityScreen.tsx`
 - **Found:** 2026-09-05, round-4 confirmation sweep
-- **Status:** open
+- **Status:** fixed — all four, see `Fix` below
 - **Reproduction rate:** 3/3 on each of the four actions below
 
 ## What happens
@@ -116,3 +116,34 @@ Reuse what is already there rather than inventing a fourth pattern:
 - **Apply** — the lightest of the four. A confirm naming the shift and its date
   is enough; this one is arguably a product call rather than a bug, and is
   listed because the owner raised it.
+
+## Fix (2026-09-06)
+
+All four now ask, each reusing what the codebase already had rather than
+inventing a fourth pattern.
+
+| Action | What asks now | Commit |
+|---|---|---|
+| **Ban** (list) | `BanUserModal`, the same dialog the detail view already used | `ad358a5` |
+| **Qabul qilish** (hire) | `ConfirmModal`, naming the worker, the job and the exact sum frozen | `e15ab76` |
+| **Barcha qurilmalardan chiqish** | `ConfirmModal`, saying the other devices must sign in again | `ebe085a` |
+| **Arizani topshirish** | `ConfirmModal`, naming the shift, its date and time, and the pay | `c99f844` |
+
+Two things changed beyond adding the dialogs:
+
+- The hire confirmation states a figure, so it needs one that cannot be wrong.
+  `/applications/employer` now returns `wageAmount`, computed by the same
+  `salary_to_uzs` call `/hire` uses. What the employer reads and what leaves
+  their balance come from one source.
+- The ban dialog has always collected a reason, and the endpoint has always
+  accepted one and stored it on the admin action record — but the frontend
+  never sent it. It does now, from both entry points, so the audit log says
+  why rather than only that someone was banned.
+
+Rejecting an applicant still goes through on one press: it costs nothing and
+freezes nothing.
+
+Each fix is covered by a test that fails against the old behaviour — verified
+by reverting the handler and watching it go red:
+`AdminUsers.test.tsx`, `ApplicantCard.test.tsx`, `SecurityScreen.test.tsx`,
+`JobDetailsFooter.test.tsx`.

@@ -26,7 +26,22 @@ export const EmployerApplicants: React.FC<EmployerApplicantsProps> = ({ onChatCl
   const displayedApps = activeTab === 'pending' ? pendingApps : activeTab === 'active' ? activeWorkers : historyApps;
 
   const handleBulkApprove = () => {
-    if (confirm(language === 'uz' ? 'Barcha arizalarni tasdiqlaysizmi?' : language === 'ru' ? 'Подтвердить все заявки?' : 'Approve all applications?')) {
+    // This asked before, but only "approve all?" — never how many people it
+    // hires or what it costs. It is the largest single money mover on the
+    // screen, so the question now carries both.
+    const total = pendingApps.reduce((sum, app) => sum + Number(app.wageAmount ?? 0), 0);
+    const count = pendingApps.length;
+    const cost = total > 0
+      ? { uz: ` Jami ${total.toLocaleString('uz-UZ')} so'm escrow'ga muzlatiladi.`,
+          ru: ` Всего ${total.toLocaleString('ru-RU')} сум будет заморожено.`,
+          en: ` ${total.toLocaleString('en-US')} UZS will be frozen in escrow.` }[language] ?? ''
+      : '';
+    const question = {
+      uz: `${count} ta nomzodni yollaysizmi?${cost}`,
+      ru: `Нанять ${count} кандидатов?${cost}`,
+      en: `Hire ${count} candidates?${cost}`,
+    }[language] ?? `${count} ta nomzodni yollaysizmi?${cost}`;
+    if (confirm(question)) {
       pendingApps.forEach(app => {
         updateApplicationStatus(app.id, 'hired');
       });

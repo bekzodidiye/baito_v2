@@ -112,14 +112,16 @@ export function useAdminData() {
     } catch (e) { console.error(e); }
   };
 
-  const toggleBan = async (userId: string, currentBannedState?: boolean) => {
+  const toggleBan = async (userId: string, currentBannedState?: boolean, reason?: string) => {
     try {
       const res = await apiClient(`/admin/users/${userId}/ban`, {
         method: 'PATCH',
-        body: JSON.stringify({ isBanned: !currentBannedState }),
+        // The endpoint records `reason` on the admin action, and the ban
+        // dialog has always collected one — it just never left the browser.
+        body: JSON.stringify({ isBanned: !currentBannedState, reason: reason || undefined }),
       });
       if (res !== undefined) {
-        (!currentBannedState ? "Foydalanuvchi bloklandi" : "Foydalanuvchi blokdan chiqarildi");
+        showToast(!currentBannedState ? "Foydalanuvchi bloklandi" : "Foydalanuvchi blokdan chiqarildi");
         fetchAllData();
       }
     } catch (e) {
@@ -134,7 +136,7 @@ export function useAdminData() {
         body: JSON.stringify({ status }),
       });
       if (res !== undefined) {
-        ("E'lon holati o'zgardi");
+        showToast("E'lon holati o'zgardi");
         fetchAllData();
       }
     } catch (e) {
@@ -162,7 +164,7 @@ export function useAdminData() {
         method: 'DELETE',
       });
       if (res !== undefined) {
-        ("E'lon o'chirib tashlandi");
+        showToast("E'lon o'chirib tashlandi");
         fetchAllData();
       }
     } catch (e) {
@@ -178,7 +180,7 @@ export function useAdminData() {
       });
       if (res !== undefined) {
         fetchAllData();
-        ("Tizim sozlamalari saqlandi");
+        showToast("Tizim sozlamalari saqlandi");
       }
     } catch (e) {
       console.error(e);
@@ -192,7 +194,7 @@ export function useAdminData() {
         body: JSON.stringify({ title, message, targetRole }),
       });
       if (res !== undefined) {
-        ("Ommaviy xabarnoma muvaffaqiyatli yuborildi");
+        showToast("Ommaviy xabarnoma muvaffaqiyatli yuborildi");
       }
     } catch (e) {
       console.error(e);

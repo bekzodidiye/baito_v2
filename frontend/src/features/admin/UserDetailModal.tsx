@@ -24,7 +24,7 @@ interface UserDetailModalProps {
   onClose: () => void;
   onAddBalance: (userId: string, amount: number, reason: string) => void;
   onChangeRole: (userId: string, role: string) => void;
-  onToggleBan: (userId: string, isBanned?: boolean) => void;
+  onToggleBan: (userId: string, isBanned?: boolean, reason?: string) => void;
   onConfirmAssignment?: () => void;
 }
 
@@ -92,8 +92,8 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
     refreshDetail();
   };
 
-  const handleToggleBan = async (userId: string, currentBannedState?: boolean) => {
-    await onToggleBan(userId, currentBannedState);
+  const handleToggleBan = async (userId: string, currentBannedState?: boolean, reason?: string) => {
+    await onToggleBan(userId, currentBannedState, reason);
     refreshDetail();
   };
 
@@ -212,8 +212,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
           userName={user.name}
           onClose={() => setShowBanModal(false)}
           onConfirmBan={(reason, details) => {
-            handleToggleBan(user.id, false);
-            alert(`Foydalanuvchi bloklandi. Sabab: ${reason}. Izoh: ${details}`);
+            handleToggleBan(user.id, false, [reason, details].filter(Boolean).join(' — '));
             setShowBanModal(false);
           }}
         />

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ArrowLeft, ChevronRight, Search, Shield, Lock, ShieldCheck, Fingerprint, Smartphone, Monitor, Tablet, ShieldAlert, Loader2 } from 'lucide-react';
 import { ChangePasswordModal } from './ChangePasswordModal';
+import { ConfirmModal } from '../common/ConfirmModal';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { fetchActiveSessionsApi, logoutSessionApi, logoutAllOtherSessionsApi, changePasswordApi, updateUserProfileApi } from '../../api/queries';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -22,12 +23,19 @@ export const SecurityScreen: React.FC = () => {
 
   const [activeSessions, setActiveSessions] = useState<any[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
+  // Ending every session on every device sits on a screen people scroll
+  // through while reading, and it used to commit on the first press.
+  const [confirmLogoutAll, setConfirmLogoutAll] = useState(false);
 
   const loadSessions = async () => {
     try {
       setLoadingSessions(true);
       const sessions = await fetchActiveSessionsApi();
-      setActiveSessions(sessions);
+      // apiClient answers null on a 204 and {} on a body it cannot parse, and
+      // this screen renders `activeSessions.length` unguarded — either one
+      // takes the whole security page down. The live endpoint always returns a
+      // list, so this is a boundary guard, not a fix for an observed failure.
+      setActiveSessions(Array.isArray(sessions) ? sessions : []);
     } catch (error) {
       console.error("Failed to load sessions:", error);
     } finally {
@@ -266,7 +274,7 @@ export const SecurityScreen: React.FC = () => {
             <div className="relative z-10">
               <h3 className="text-[16px] font-bold mb-1">Shubhali faollikni ko'rdingizmi?</h3>
               <p className="text-white/90 text-[12px] mb-3">Barcha boshqa qurilmalardan bitta tugma bilan chiqing.</p>
-              <button onClick={handleLogoutAllOther} className="bg-white text-brand-primary px-4 py-2 rounded-xl font-bold text-xs active:scale-95 transition-transform cursor-pointer">
+              <button onClick={() => setConfirmLogoutAll(true)} className="bg-white text-brand-primary px-4 py-2 rounded-xl font-bold text-xs active:scale-95 transition-transform cursor-pointer">
                 Barcha qurilmalardan chiqish
               </button>
             </div>
@@ -274,6 +282,22 @@ export const SecurityScreen: React.FC = () => {
           </div>
         </div>
       </main>
+
+      <ConfirmModal
+        isOpen={confirmLogoutAll}
+        title={language === 'ru' ? 'Выйти со всех устройств?' : language === 'en' ? 'Log out everywhere?' : 'Barcha qurilmalardan chiqasizmi?'}
+        message={
+          language === 'ru'
+            ? 'Все сеансы, кроме текущего, будут завершены. На тех устройствах придётся войти заново.'
+            : language === 'en'
+            ? 'Every session except this one ends. Those devices will have to sign in again.'
+            : "Shu qurilmadan boshqa barcha seanslar tugatiladi. U qurilmalarda qaytadan kirishga to'g'ri keladi."
+        }
+        confirmText={language === 'ru' ? 'Выйти' : language === 'en' ? 'Log out' : 'Chiqish'}
+        cancelText={language === 'ru' ? 'Отмена' : language === 'en' ? 'Cancel' : 'Bekor qilish'}
+        onConfirm={handleLogoutAllOther}
+        onCancel={() => setConfirmLogoutAll(false)}
+      />
 
       {/* Password Modal */}
       <ChangePasswordModal

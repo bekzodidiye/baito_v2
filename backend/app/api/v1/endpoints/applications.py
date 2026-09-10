@@ -140,6 +140,10 @@ def get_employer_applications(
             "id": app.id,
             "jobId": app.jobId,
             "jobTitle": job.title if job else "Ish e'loni",
+            # What hiring will actually freeze. Computed the same way /hire
+            # computes it, so the confirmation the employer reads and the sum
+            # taken out of their balance cannot drift apart.
+            "wageAmount": salary_to_uzs(job.salary) if job else 0,
             "workerId": app.workerId,
             "workerName": worker.name if worker else "Ishchi",
             "workerPhone": (

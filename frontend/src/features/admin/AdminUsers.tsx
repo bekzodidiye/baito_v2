@@ -3,18 +3,25 @@ import { clickable } from '../../utils/clickable';
 import { AdminUser } from './types';
 import { Search, UserCheck, PlusCircle, Phone, Ban, CheckCircle, Eye } from 'lucide-react';
 import { UserDetailModal } from './UserDetailModal';
+import { BanUserModal } from './BanUserModal';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 interface AdminUsersProps {
   users: AdminUser[];
   onAddBalance: (userId: string, amount: number, reason: string) => void;
   onChangeRole: (userId: string, role: string) => void;
-  onToggleBan: (userId: string, isBanned?: boolean) => void;
+  onToggleBan: (userId: string, isBanned?: boolean, reason?: string) => void;
 }
 
 export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onChangeRole, onToggleBan }) => {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'worker' | 'employer'>('all');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  // Banning cuts a person off the platform and revokes every session they
+  // have. The detail view already asks first, through BanUserModal; this
+  // row button used to commit on a single press. Same modal, same reason.
+  const [banTarget, setBanTarget] = useState<AdminUser | null>(null);
+  const [unbanTarget, setUnbanTarget] = useState<AdminUser | null>(null);
 
   const filteredUsers = users.filter((u) => {
     const matchSearch =
@@ -116,7 +123,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
                           <Eye size={13} className="text-slate-600" /> Batafsil
                         </button>
                         <button
-                          onClick={() => onToggleBan(u.id, u.isBanned)}
+                          onClick={() => (u.isBanned ? setUnbanTarget(u) : setBanTarget(u))}
                           className={`inline-flex items-center gap-1 px-2.5 py-1.5 font-bold rounded-xl text-xs cursor-pointer ${
                             u.isBanned ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-red-50 text-red-600 hover:bg-red-100'
                           }`}
@@ -133,6 +140,30 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
           </table>
         </div>
       </div>
+
+      {banTarget && (
+        <BanUserModal
+          userName={banTarget.name}
+          onClose={() => setBanTarget(null)}
+          onConfirmBan={(reason, details) => {
+            // The endpoint stores this on the admin action record, so the log
+            // says why rather than only that someone was banned.
+            onToggleBan(banTarget.id, banTarget.isBanned, [reason, details].filter(Boolean).join(' — '));
+            setBanTarget(null);
+          }}
+        />
+      )}
+
+      <ConfirmModal
+        isOpen={!!unbanTarget}
+        title="Blokdan chiqarishni tasdiqlang"
+        message={`${unbanTarget?.name ?? ''} yana platformadan foydalana oladi. Davom etasizmi?`}
+        confirmText="Blokdan chiqarish"
+        cancelText="Bekor qilish"
+        isDestructive={false}
+        onConfirm={() => unbanTarget && onToggleBan(unbanTarget.id, unbanTarget.isBanned)}
+        onCancel={() => setUnbanTarget(null)}
+      />
 
       {selectedUser && (
         <UserDetailModal

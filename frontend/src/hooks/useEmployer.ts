@@ -57,6 +57,7 @@ export const useEmployer = () => {
         id: a.id,
         jobId: a.jobId,
         jobTitle: a.jobTitle,
+        wageAmount: a.wageAmount ?? 0,
         candidateName: a.workerName || 'Ishchi',
         candidatePhone: a.workerPhone || '+998 90 987 65 43',
         candidateAvatar: a.workerAvatar || null,

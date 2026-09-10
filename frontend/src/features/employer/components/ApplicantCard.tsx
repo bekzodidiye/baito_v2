@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Check, X, Star, Briefcase, MapPin, Clock, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { confirmStartJobApi } from '../../../api/queries';
+import { ConfirmModal } from '../../../components/common/ConfirmModal';
 
 interface ApplicantCardProps {
   app: any;
@@ -18,6 +19,38 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
 }) => {
   const isHired = app.status === 'hired';
   const isRejected = app.status === 'rejected';
+  // Hiring freezes the wage in escrow the moment it goes through. On a
+  // crowded list of candidates that is a lot of money to move on one stray
+  // press, so it says whose shift and how much before it does anything.
+  const [confirmingHire, setConfirmingHire] = useState(false);
+
+  const wage = Number(app.wageAmount ?? 0);
+  const wageText = wage > 0
+    ? `${wage.toLocaleString('uz-UZ')} so'm hisobingizdan escrow'ga muzlatiladi`
+    : "e'londa aniq summa yo'q (kelishilgan holda), shuning uchun hech narsa muzlatilmaydi";
+
+  const hireCopy = {
+    uz: {
+      title: 'Yollashni tasdiqlang',
+      message: `${app.workerName || app.candidateName} — «${app.jobTitle}». Tasdiqlasangiz, ${wageText}.`,
+      confirm: 'Yollash',
+      cancel: 'Bekor qilish',
+    },
+    ru: {
+      title: 'Подтвердите наём',
+      message: `${app.workerName || app.candidateName} — «${app.jobTitle}». ${wage > 0 ? `${wage.toLocaleString('ru-RU')} сум будет заморожено на эскроу.` : 'Сумма в объявлении не указана, эскроу не создаётся.'}`,
+      confirm: 'Нанять',
+      cancel: 'Отмена',
+    },
+    en: {
+      title: 'Confirm hire',
+      message: `${app.workerName || app.candidateName} — "${app.jobTitle}". ${wage > 0 ? `${wage.toLocaleString('en-US')} UZS will be frozen in escrow.` : 'The listing names no figure, so nothing is frozen.'}`,
+      confirm: 'Hire',
+      cancel: 'Cancel',
+    },
+  }[(language as 'uz' | 'ru' | 'en')] ?? {
+    title: 'Yollashni tasdiqlang', message: '', confirm: 'Yollash', cancel: 'Bekor qilish',
+  };
   
   return (
     <motion.div
@@ -186,7 +219,7 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
           ) : (
             <>
               <button
-                onClick={() => updateApplicationStatus(app.id, 'hired')}
+                onClick={() => setConfirmingHire(true)}
                 className="flex-1 py-3 bg-gradient-to-r from-brand-primary to-blue-600 hover:from-brand-primary/90 hover:to-blue-600/90 text-white rounded-xl text-xs font-bold shadow-[0_4px_12px_rgba(0,6,102,0.15)] hover:shadow-[0_6px_16px_rgba(0,6,102,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Check size={16} className="stroke-[2.5]" />
@@ -202,6 +235,17 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
           )}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmingHire}
+        title={hireCopy.title}
+        message={hireCopy.message}
+        confirmText={hireCopy.confirm}
+        cancelText={hireCopy.cancel}
+        isDestructive={false}
+        onConfirm={() => updateApplicationStatus(app.id, 'hired')}
+        onCancel={() => setConfirmingHire(false)}
+      />
     </motion.div>
   );
 };
