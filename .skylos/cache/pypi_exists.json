@@ -1,0 +1,8 @@
+{
+  "app": "exists",
+  "celery": "exists",
+  "boto3": "exists",
+  "botocore": "exists",
+  "telebot": "exists",
+  "locust": "exists"
+}
