@@ -19,6 +19,15 @@ jobs:
     # is a no-op on SQLite, which is exactly the lock the escrow tests exist to
     # prove. Ordering ties also resolve differently, which is how a flaky test
     # passed locally and failed here.
+    #
+    # The service containers publish on high host ports. This workflow runs on
+    # a self-hosted runner - a laptop that already has other projects' Postgres
+    # and Redis bound to 5432 and 6379 - and a service container that cannot
+    # bind its port takes the whole job down before a single step runs:
+    #
+    #   Bind for 0.0.0.0:5432 failed: port is already allocated
+    #
+    # A GitHub-hosted runner is a clean VM and never hit this.
     services:
       postgres:
         image: postgres:15
@@ -27,7 +36,7 @@ jobs:
           POSTGRES_PASSWORD: baito
           POSTGRES_DB: baito_test
         ports:
-          - 5432:5432
+          - 55432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -36,7 +45,7 @@ jobs:
       redis:
         image: redis:7-alpine
         ports:
-          - 6379:6379
+          - 56379:6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -63,8 +72,8 @@ jobs:
       - name: Run Backend Test Suite
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://baito:baito@localhost:5432/baito_test
-          REDIS_URL: redis://localhost:6379/9
+          DATABASE_URL: postgresql://baito:baito@localhost:55432/baito_test
+          REDIS_URL: redis://localhost:56379/9
           SECRET_KEY: ci_only_secret_key_0123456789abcdef0123456789
           ENVIRONMENT: test
           BCRYPT_ROUNDS: "4"
@@ -82,7 +91,7 @@ jobs:
       - name: Verify Migrations Apply Cleanly
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://baito:baito@localhost:5432/baito_migrate
+          DATABASE_URL: postgresql://baito:baito@localhost:55432/baito_migrate
           SECRET_KEY: ci_only_secret_key_0123456789abcdef0123456789
           ENVIRONMENT: test
           PYTHONPATH: .
@@ -190,7 +199,7 @@ jobs:
           POSTGRES_PASSWORD: baito
           POSTGRES_DB: baito_e2e
         ports:
-          - 5432:5432
+          - 55432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -199,7 +208,7 @@ jobs:
       redis:
         image: redis:7-alpine
         ports:
-          - 6379:6379
+          - 56379:6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -207,8 +216,8 @@ jobs:
           --health-retries 10
 
     env:
-      DATABASE_URL: postgresql://baito:baito@localhost:5432/baito_e2e
-      REDIS_URL: redis://localhost:6379/8
+      DATABASE_URL: postgresql://baito:baito@localhost:55432/baito_e2e
+      REDIS_URL: redis://localhost:56379/8
       SECRET_KEY: ci_only_secret_key_0123456789abcdef0123456789
       ENVIRONMENT: development
       BCRYPT_ROUNDS: "4"
