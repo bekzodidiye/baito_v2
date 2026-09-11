@@ -450,6 +450,7 @@ jobs:
             --exclude 'backups' \
             --exclude 'backups/*' \
             --exclude 'baito_local_backups' \
+            --exclude '.deploy-history' \
             "$GITHUB_WORKSPACE/" /home/scarygun/IntellexGroup/Baito/
 
       - name: 🏷️ Record the currently running build
