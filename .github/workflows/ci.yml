@@ -47,9 +47,37 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # Asked for by name rather than inherited. The runner's own python3 is
+      # whatever the machine happens to have - on this self-hosted runner that
+      # is 3.14, which has no psycopg2-binary wheel, so pip fell back to a
+      # source build and died on a missing pg_config:
+      #
+      #   Error: pg_config executable not found.
+      #   ERROR: Failed to build 'psycopg2-binary'
+      #
+      # actions/setup-python cannot fix it here: it downloads Ubuntu builds,
+      # and this runner is not Ubuntu -
+      #   The version '3.11' with architecture 'x64' was not found
+      #
+      # 3.11 is what backend/Dockerfile runs (python:3.11-slim), so the suite
+      # exercises the interpreter production uses. If a runner does not have
+      # it, that is worth failing loudly for rather than quietly testing a
+      # different Python than we ship.
       - name: Set up Python venv
         run: |
-          python3 -m venv venv
+          PY="$(command -v python3.11 || true)"
+          # A runner service does not load the user's shell profile, so a
+          # pyenv-managed 3.11 is installed but not on PATH. Look where pyenv
+          # puts it before giving up.
+          if [ -z "$PY" ]; then
+            PY="$(ls -d "${PYENV_ROOT:-$HOME/.pyenv}"/versions/3.11.*/bin/python3.11 2>/dev/null | head -1)"
+          fi
+          if [ -z "$PY" ]; then
+            echo "::error title=No Python 3.11::This job needs python3.11; production runs python:3.11-slim. Install it on the runner, or put it on the runner service PATH."
+            exit 1
+          fi
+          "$PY" --version
+          "$PY" -m venv venv
           echo "$PWD/venv/bin" >> $GITHUB_PATH
 
       - name: Install Backend Dependencies
@@ -73,11 +101,28 @@ jobs:
 
       # The service container creates one database; the migration check wants
       # a clean second one so it proves the migrations from empty.
+      # Was `psql`, which is not installed on every runner - the self-hosted
+      # one answered `psql: command not found` and took the job down after the
+      # suite had already passed. psycopg2 is in the venv either way, because
+      # the app needs it, so the database can be made without asking the
+      # machine for a Postgres client at all.
       - name: Create Migration Database
         run: |
-          PGPASSWORD=baito psql -h localhost -p 5433 -U baito -d baito_test \
-            -c 'DROP DATABASE IF EXISTS baito_migrate' \
-            -c 'CREATE DATABASE baito_migrate'
+          python3 - <<'PYEOF'
+          import psycopg2
+
+          conn = psycopg2.connect(
+              host="localhost", port=5433, user="baito",
+              password="baito", dbname="baito_test",
+          )
+          # CREATE DATABASE cannot run inside a transaction block.
+          conn.autocommit = True
+          with conn.cursor() as cur:
+              cur.execute("DROP DATABASE IF EXISTS baito_migrate")
+              cur.execute("CREATE DATABASE baito_migrate")
+          conn.close()
+          print("baito_migrate created")
+          PYEOF
 
       - name: Verify Migrations Apply Cleanly
         working-directory: ./backend
@@ -218,9 +263,37 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # Asked for by name rather than inherited. The runner's own python3 is
+      # whatever the machine happens to have - on this self-hosted runner that
+      # is 3.14, which has no psycopg2-binary wheel, so pip fell back to a
+      # source build and died on a missing pg_config:
+      #
+      #   Error: pg_config executable not found.
+      #   ERROR: Failed to build 'psycopg2-binary'
+      #
+      # actions/setup-python cannot fix it here: it downloads Ubuntu builds,
+      # and this runner is not Ubuntu -
+      #   The version '3.11' with architecture 'x64' was not found
+      #
+      # 3.11 is what backend/Dockerfile runs (python:3.11-slim), so the suite
+      # exercises the interpreter production uses. If a runner does not have
+      # it, that is worth failing loudly for rather than quietly testing a
+      # different Python than we ship.
       - name: Set up Python venv
         run: |
-          python3 -m venv venv
+          PY="$(command -v python3.11 || true)"
+          # A runner service does not load the user's shell profile, so a
+          # pyenv-managed 3.11 is installed but not on PATH. Look where pyenv
+          # puts it before giving up.
+          if [ -z "$PY" ]; then
+            PY="$(ls -d "${PYENV_ROOT:-$HOME/.pyenv}"/versions/3.11.*/bin/python3.11 2>/dev/null | head -1)"
+          fi
+          if [ -z "$PY" ]; then
+            echo "::error title=No Python 3.11::This job needs python3.11; production runs python:3.11-slim. Install it on the runner, or put it on the runner service PATH."
+            exit 1
+          fi
+          "$PY" --version
+          "$PY" -m venv venv
           echo "$PWD/venv/bin" >> $GITHUB_PATH
 
       - name: Install Backend Dependencies
@@ -250,10 +323,17 @@ jobs:
           echo "E2E_PHONE=$PHONE" >> "$GITHUB_ENV"
           echo "E2E_PASSWORD=$PASS" >> "$GITHUB_ENV"
 
+      # The pid is written down so the job can stop what it started. On a
+      # hosted runner nobody had to: the VM is destroyed when the job ends. On
+      # a self-hosted one the uvicorn process outlived every step, the runner
+      # would not close the job while it held the pipe, and the run sat
+      # "in_progress" with all steps green - once for over twenty minutes,
+      # until the process was killed by hand.
       - name: Start the API
         working-directory: ./backend
         run: |
           uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          echo "API_PID=$!" >> "$GITHUB_ENV"
           for i in $(seq 1 60); do
             curl -sf -o /dev/null http://127.0.0.1:8000/docs && exit 0
             sleep 1
@@ -272,15 +352,39 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
+      # `--with-deps` shells out to `sudo apt-get install` for the shared
+      # libraries Chromium needs. On a hosted Ubuntu runner that is free; on
+      # this self-hosted one it asks for a password nobody can type:
+      #
+      #   sudo: a terminal is required to read the password
+      #
+      # and the machine is not Debian-based anyway. OS packages on a
+      # self-hosted runner are the machine owner's to install, once, not
+      # something CI should re-acquire on every run. The browser download
+      # itself needs no privileges and is cached between runs.
       - name: Install Chromium
         working-directory: ./frontend
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       # playwright.config.ts builds the bundle and serves it with `vite preview`,
       # so this exercises what ships rather than the dev server.
       - name: Run End-to-End Suite
         working-directory: ./frontend
         run: npm run test:e2e -- --project=chromium
+
+      # always(): a failing suite is exactly when the process is most likely to
+      # be left behind, and leaving it behind hangs the next run too.
+      - name: Stop the API
+        if: always()
+        run: |
+          if [ -n "${API_PID:-}" ] && kill -0 "$API_PID" 2>/dev/null; then
+            kill "$API_PID" || true
+            sleep 2
+            kill -9 "$API_PID" 2>/dev/null || true
+            echo "stopped API pid $API_PID"
+          else
+            echo "no API process to stop"
+          fi
 
       - name: Upload Report on Failure
         if: failure()
@@ -406,7 +510,14 @@ jobs:
     # The server has no public address — it is only reachable inside the
     # tailnet — so deployment has to run on the box itself. That makes the
     # self-hosted runner a hard dependency.
-    runs-on: self-hosted
+    #
+    # `baito-server` is not decoration. Once a second self-hosted runner was
+    # registered (the laptop that now runs the tests), a bare `self-hosted`
+    # matched both, and a deploy could land on whichever was free. On the
+    # laptop it would mkdir /home/scarygun/IntellexGroup/Baito, build the whole
+    # stack there, pass its own health check and report success — while the
+    # server got nothing. The label names the one machine that is the server.
+    runs-on: [self-hosted, baito-server]
     # Deploys must not stack. When runners were offline, two runs queued: an
     # older commit and a newer one. Whichever a returning runner happened to
     # take second would have been the build left on the server — so the older
