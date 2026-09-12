@@ -109,6 +109,68 @@ class EscrowService:
         return tx
 
     @staticmethod
+    def pay_completion_bonus(
+        db: Session, job_id: str, employer_id: str, worker_id: str, amount_uzs: int
+    ) -> None:
+        """Move a completion bonus from the employer to the worker.
+
+        The bonus is decided at completion, so unlike the wage nothing was
+        escrowed for it at hire — the employer is debited here, at the moment
+        they choose to give it.
+
+        No platform fee. The completion modal tells the employer "Kiritilgan
+        summa ishchining balansiga qo'shiladi" — *the amount entered* is added
+        to the worker's balance — and taking a cut would make that sentence
+        false.
+
+        Callers must check the employer can cover the total before changing
+        any state; this raises rather than paying a partial bonus.
+        """
+        if amount_uzs <= 0:
+            return
+
+        employer = (db.query(models.User).filter(models.User.id == employer_id)
+                    .populate_existing().with_for_update().first())
+        if not employer or (employer.balance or 0) < amount_uzs:
+            raise HTTPException(
+                status_code=400,
+                detail="Bonus uchun ish beruvchi balansida yetarli mablag' yo'q",
+            )
+
+        worker = (db.query(models.User).filter(models.User.id == worker_id)
+                  .populate_existing().with_for_update().first())
+        if not worker:
+            raise HTTPException(status_code=404, detail="Ishchi topilmadi")
+
+        employer.balance = (employer.balance or 0) - amount_uzs
+        worker.balance = (worker.balance or 0) + amount_uzs
+        db.add(employer)
+        db.add(worker)
+
+        db.add(Transaction(
+            id=str(uuid.uuid4()),
+            jobId=job_id,
+            employerId=employer.id,
+            workerId=worker.id,
+            amount=amount_uzs * 100,
+            type="completion_bonus",
+            status="released",
+        ))
+        db.add(AuditLedger(
+            userId=employer.id, amountDelta=-amount_uzs,
+            balanceAfter=employer.balance, entryType="completion_bonus",
+            referenceType="job", referenceId=job_id,
+            description=f"Ishchiga bonus to'landi ({amount_uzs} so'm)",
+        ))
+        db.add(AuditLedger(
+            userId=worker.id, amountDelta=amount_uzs,
+            balanceAfter=worker.balance, entryType="completion_bonus",
+            referenceType="job", referenceId=job_id,
+            description=f"Ish yakunlangani uchun bonus ({amount_uzs} so'm)",
+        ))
+        db.flush()
+
+    @staticmethod
     def refund_funds(db: Session, job_id: str) -> Transaction:
         # Flush before taking any lock below. populate_existing() overwrites
         # what is in the session with the row as the database has it, which is

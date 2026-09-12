@@ -9,7 +9,7 @@
 - **Environment:** branch `claude/qa-protokol-2`, disposable local QA stack (`baito-qa3-net`)
 - **Reproduction rate:** 1/1, walked end to end through the real UI (post → apply → hire →
   request-start → confirm-start → complete-with-bonus)
-- **Status:** **Open** — documented, deliberately not fixed in this pass (see below)
+- **Status:** **Fixed** 2026-09-06 — see `Fix` at the end
 - **Traces to:** the critical journey "employer hires → escrow → worker completes → payout";
   found by clicking the whole worker/employer lifecycle rather than only the admin panel
 
@@ -94,3 +94,49 @@ Not assessed — no fix was written.
 
 **Follow-up**
 Flagged as its own task, like BUG-015, rather than patched blind.
+
+
+---
+
+## Fix (2026-09-06)
+
+The three questions this finding refused to answer on its own, and what each
+answer is:
+
+**Who funds it** — the employer, debited at completion. The wage is escrowed
+at hire; the bonus is decided afterwards, so nothing is reserved for it.
+
+**Does the platform fee apply** — no. The modal promises the entered amount
+reaches the worker's balance, and taking 10% of a tip would make that
+sentence false.
+
+**Is it atomic** — the employer's balance is checked before a single row
+changes, and the refusal names the shortfall. Refusing then costs one retry;
+refusing halfway would mark a job complete with some workers tipped and
+others not. The bonus is paid per hired worker, so a two-worker job costs
+twice what was typed, and the check accounts for that. The wage is released
+first — it is owed for work already done and must not be held up by an
+optional tip.
+
+`EscrowService.pay_completion_bonus` moves the money and writes an
+`AuditLedger` entry for each side plus a `completion_bonus` transaction, the
+same shape `release_funds` uses for the wage. The worker's notification says
+the bonus arrived.
+
+`earnedAmount` and `expectedAmount` are now net of the platform fee, so what
+a worker is told matches what they can spend.
+
+### Verification
+
+`backend/tests/test_completion_bonus.py`, five tests, checked in both
+directions: all five fail against the code as it was, with the failures
+naming the defect exactly —
+
+```
+assert [] == [-25000, 25000]     no ledger entries at all
+assert 300000 == 247500          the figures from this report
+assert 200 == 400                an unaffordable bonus accepted silently
+```
+
+— and all five pass with the fix. The full suite is 164 passing (159 before,
+plus these five).

@@ -385,11 +385,39 @@ def complete_job(
     if not apps:
         raise HTTPException(status_code=400, detail="Yakunlash uchun yollangan ishchi yo'q")
 
+    # The bonus is paid to every hired worker, so a two-worker job costs twice
+    # what was typed. Nothing is escrowed for it — the wage was frozen at hire,
+    # the bonus is decided now — so the employer is debited at this moment, and
+    # that can fail.
+    #
+    # Checked here, before a single row changes. Refusing now costs the
+    # employer one retry with a smaller figure; refusing halfway would leave a
+    # job marked complete with some workers paid a bonus and others not, or
+    # leave the wage unpaid over an optional tip.
+    bonus_each = req.bonus or 0
+    if bonus_each > 0:
+        employer = (
+            db.query(models.User)
+            .filter(models.User.id.in_([job.employerId]))
+            .first()
+        )
+        total_bonus = bonus_each * len(apps)
+        if not employer or (employer.balance or 0) < total_bonus:
+            available = (employer.balance or 0) if employer else 0
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"{len(apps)} ta ishchiga {bonus_each:,} so'mdan bonus uchun "
+                    f"{total_bonus:,} so'm kerak, balansingizda {available:,} so'm bor. "
+                    "Bonusni kamaytiring yoki hisobni to'ldiring."
+                ).replace(",", " "),
+            )
+
     job.status = JobStatus.COMPLETED
     job.completedAt = datetime.now(timezone.utc)
     db.add(job)
 
-    paid, unpaid = [], []
+    paid, unpaid, bonus_paid = [], [], []
     for app in apps:
         app.status = "completed"
         app.rating = req.rating
@@ -421,6 +449,15 @@ def complete_job(
         try:
             EscrowService.release_funds(db, job_id=job.id, worker_id=app.workerId)
             paid.append(app.workerId)
+            # The wage is released first: it is owed for work already done and
+            # must not be held up by an optional tip. The balance check above
+            # means this cannot fail for want of funds.
+            if bonus_each > 0:
+                EscrowService.pay_completion_bonus(
+                    db, job_id=job.id, employer_id=job.employerId,
+                    worker_id=app.workerId, amount_uzs=bonus_each,
+                )
+                bonus_paid.append(app.workerId)
         except HTTPException as e:
             # No escrow was held for this job (it predates escrow, or the
             # employer never funded it). Complete the job anyway, but say so
@@ -429,11 +466,15 @@ def complete_job(
                            job.id, app.workerId, e.detail)
             unpaid.append(app.workerId)
 
-        message = (
-            f"'{job.title}' ishi bo'yicha to'lov hisobingizga o'tkazildi."
-            if app.workerId in paid
-            else f"'{job.title}' ishi yakunlandi. To'lov ish beruvchi tomonidan alohida amalga oshiriladi."
-        )
+        if app.workerId in paid:
+            message = f"'{job.title}' ishi bo'yicha to'lov hisobingizga o'tkazildi."
+            if app.workerId in bonus_paid:
+                message += f" Ish beruvchi qo'shimcha {bonus_each} so'm bonus qo'shdi."
+        else:
+            message = (
+                f"'{job.title}' ishi yakunlandi. "
+                "To'lov ish beruvchi tomonidan alohida amalga oshiriladi."
+            )
         db.add(models.Notification(
             id=str(uuid.uuid4()), userId=app.workerId, title="Ish yakunlandi",
             message=message, type="completed", relatedJobId=id,
@@ -445,6 +486,8 @@ def complete_job(
         "job_status": JobStatus.COMPLETED,
         "paid_workers": len(paid),
         "unpaid_workers": len(unpaid),
+        "bonus_paid_workers": len(bonus_paid),
+        "bonus_each": bonus_each,
     }
 
 

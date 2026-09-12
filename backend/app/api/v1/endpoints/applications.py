@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app import crud, models
 from app.api import deps
 from app.core.money import parse_salary_amounts, salary_to_uzs
+from app.services.escrow_service import PLATFORM_FEE_PERCENT
 from app.models.job import JobStatus
 from app.services.escrow_service import EscrowService
 
@@ -72,6 +73,12 @@ def get_worker_applications(
         # Earnings used to be computed by gluing every digit in the salary
         # string together, so "1 500 000 - 2 000 000" became 15000002000000.
         base_salary = salary_to_uzs(job.salary)
+        # What the worker is told they earned has to be what reached their
+        # balance. release_funds credits the wage less the platform fee, and
+        # the bonus is paid in full on top; reporting the gross wage overstated
+        # every completed job by the fee, and the Reviews screen sums this
+        # field into a lifetime total, so the gap compounded.
+        net_wage = base_salary - int(base_salary * (PLATFORM_FEE_PERCENT / 100.0))
 
         result.append({
             "id": app.id,
@@ -85,8 +92,8 @@ def get_worker_applications(
             "rating": app.rating,
             "review": app.review,
             "bonus": app.bonus,
-            "earnedAmount": (base_salary + (app.bonus or 0)) if app.status == "completed" else 0,
-            "expectedAmount": base_salary + (app.bonus or 0),
+            "earnedAmount": (net_wage + (app.bonus or 0)) if app.status == "completed" else 0,
+            "expectedAmount": net_wage + (app.bonus or 0),
         })
 
     result.sort(key=lambda x: x.get("appliedDate") or "", reverse=True)
