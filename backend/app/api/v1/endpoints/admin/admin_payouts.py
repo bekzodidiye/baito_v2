@@ -362,11 +362,11 @@ def send_payout_invoice(
             detail="Bank rekvizitlari kiritilmagan. To'lovlar bo'limidan kiriting.",
         )
 
-    if not email_service.is_configured():
-        raise HTTPException(
-            status_code=503,
-            detail="Pochta serveri sozlanmagan (SMTP_HOST va SMTP_FROM kerak)",
-        )
+    # One source for the reason, so the endpoint and the sender cannot drift
+    # into telling an operator two different stories.
+    smtp_problem = email_service.missing_config()
+    if smtp_problem:
+        raise HTTPException(status_code=503, detail=smtp_problem)
 
     payout.invoiceAmount = payload.amount
     payout.invoiceNumber = f"INV-{datetime.now(timezone.utc):%Y%m%d}-{payout.id[:8].upper()}"

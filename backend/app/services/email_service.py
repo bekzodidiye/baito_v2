@@ -21,13 +21,50 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
+# Providers that refuse mail without a login. The check used to pass on host
+# and from alone, so a Gmail setup with no credentials was reported as
+# configured, smtp.login was skipped because SMTP_USER was empty, and the
+# provider answered "530 Authentication Required" — a worse error, one step
+# further in, after the operator thought they were done.
+_AUTH_REQUIRED_HOSTS = (
+    "gmail.com", "googlemail.com",
+    "outlook.com", "office365.com", "hotmail.com",
+    "yahoo.com", "yandex.ru", "mail.ru",
+    "sendgrid.net", "mailgun.org", "postmarkapp.com", "amazonaws.com",
+)
+
+
+def missing_config() -> str | None:
+    """What stops mail being sent, phrased so an operator can act on it.
+
+    Returns None when nothing does.
+    """
+    if not settings.SMTP_HOST or not settings.SMTP_FROM:
+        return "Pochta serveri sozlanmagan (SMTP_HOST va SMTP_FROM kerak)"
+
+    host = settings.SMTP_HOST.strip().lower()
+    if any(host == d or host.endswith("." + d) for d in _AUTH_REQUIRED_HOSTS):
+        if not (settings.SMTP_USER and settings.SMTP_PASSWORD):
+            return (
+                f"{settings.SMTP_HOST} autentifikatsiya talab qiladi — "
+                "SMTP_USER va SMTP_PASSWORD ham kerak "
+                "(Gmail uchun oddiy parol emas, App Password)"
+            )
+
+    # Half a credential is a mistake whichever half is missing.
+    if bool(settings.SMTP_USER) != bool(settings.SMTP_PASSWORD):
+        return "SMTP_USER va SMTP_PASSWORD birgalikda kiritilishi kerak"
+
+    return None
+
+
 def is_configured() -> bool:
     """Whether mail can be sent at all.
 
     Checked by the endpoint before it does any work, so an operator is told
-    "SMTP is not configured" instead of watching a payout half-complete.
+    what is missing instead of watching a payout half-complete.
     """
-    return bool(settings.SMTP_HOST and settings.SMTP_FROM)
+    return missing_config() is None
 
 
 def send_email(*, to: str, subject: str, text_body: str, html_body: str | None = None) -> None:
@@ -37,11 +74,9 @@ def send_email(*, to: str, subject: str, text_body: str, html_body: str | None =
     value is a caller that will eventually forget, and the thing it would
     forget about is whether a company was ever billed.
     """
-    if not is_configured():
-        raise HTTPException(
-            status_code=503,
-            detail="Pochta serveri sozlanmagan (SMTP_HOST va SMTP_FROM kerak)",
-        )
+    problem = missing_config()
+    if problem:
+        raise HTTPException(status_code=503, detail=problem)
 
     recipient = (to or "").strip()
     if not recipient or "@" not in recipient:
