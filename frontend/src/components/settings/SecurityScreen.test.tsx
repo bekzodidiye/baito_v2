@@ -10,11 +10,13 @@ vi.mock('../../context/AppContext', () => ({
 vi.mock('../../hooks/useCurrentScreen', () => ({
   useCurrentScreen: () => ({ currentScreen: 'security', setCurrentScreen: vi.fn() }),
 }));
+const changePasswordApi = vi.fn().mockResolvedValue({});
+
 vi.mock('../../api/queries', () => ({
   fetchActiveSessionsApi: vi.fn().mockResolvedValue([]),
   logoutSessionApi: vi.fn(),
   logoutAllOtherSessionsApi: (...a: unknown[]) => logoutAllOtherSessionsApi(...(a as [])),
-  changePasswordApi: vi.fn(),
+  changePasswordApi: (...a: unknown[]) => changePasswordApi(...(a as [])),
   updateUserProfileApi: vi.fn(),
 }));
 
@@ -67,5 +69,16 @@ describe('SecurityScreen — no control that does nothing', () => {
     // filtered nothing. Three rows do not need a search; it is gone.
     expect(screen.queryByPlaceholderText(/izlash/i)).toBeNull();
     expect(screen.getByText(/Parolni o'zgartirish/i)).toBeTruthy();
+  });
+});
+
+describe('SecurityScreen — changing a password takes the old one', () => {
+  it('opens a form rather than changing anything', () => {
+    changePasswordApi.mockClear();
+    render(<SecurityScreen />);
+    fireEvent.click(screen.getByText(/Parolni o'zgartirish/i));
+    expect(changePasswordApi).not.toHaveBeenCalled();
+    // Three fields: current, new, and the repeat.
+    expect(screen.getAllByLabelText(/parol/i).length).toBeGreaterThanOrEqual(3);
   });
 });

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Send, Bell, Users, CheckCircle2 } from 'lucide-react';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 interface AdminBroadcastProps {
   onSendBroadcast: (title: string, message: string, targetRole: string) => void;
@@ -10,10 +11,23 @@ export const AdminBroadcast: React.FC<AdminBroadcastProps> = ({ onSendBroadcast 
   const [message, setMessage] = useState('');
   const [targetRole, setTargetRole] = useState('all');
   const [sent, setSent] = useState(false);
+  // A broadcast reaches every user on the platform at once and cannot be
+  // recalled. It used to go out on the first press.
+  const [confirming, setConfirming] = useState(false);
+
+  const audience = targetRole === 'worker'
+    ? 'barcha ishchilarga'
+    : targetRole === 'employer'
+      ? 'barcha ish beruvchilarga'
+      : 'platformadagi BARCHA foydalanuvchilarga';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !message) return;
+    setConfirming(true);
+  };
+
+  const send = () => {
     onSendBroadcast(title, message, targetRole);
     setSent(true);
     setTimeout(() => {
@@ -105,6 +119,17 @@ export const AdminBroadcast: React.FC<AdminBroadcastProps> = ({ onSendBroadcast 
           </button>
         </form>
       </div>
+
+      <ConfirmModal
+        isOpen={confirming}
+        title="Xabarnomani yuborasizmi?"
+        message={`«${title}» ${audience} yuboriladi. Yuborilgan xabarnomani qaytarib bo'lmaydi.`}
+        confirmText="Yuborish"
+        cancelText="Bekor qilish"
+        isDestructive={false}
+        onConfirm={send}
+        onCancel={() => setConfirming(false)}
+      />
     </div>
   );
 };

@@ -15,15 +15,16 @@ const users: AdminUser[] = [
 
 const renderUsers = () => {
   const onToggleBan = vi.fn();
+  const onChangeRole = vi.fn();
   render(
     <AdminUsers
       users={users}
       onAddBalance={vi.fn()}
-      onChangeRole={vi.fn()}
+      onChangeRole={onChangeRole}
       onToggleBan={onToggleBan}
     />,
   );
-  return { onToggleBan };
+  return { onToggleBan, onChangeRole };
 };
 
 // vitest.config.ts does not set `globals`, so Testing Library never registers
@@ -75,5 +76,39 @@ describe('AdminUsers — banning asks before it cuts a user off', () => {
     expect(onToggleBan).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: /^Blokdan chiqarish$/i }));
     expect(onToggleBan).toHaveBeenCalledWith('u-2', true);
+  });
+});
+
+describe('AdminUsers — changing a role asks first', () => {
+  const roleSelectFor = (name: string) =>
+    within(rowFor(name)).getByRole('combobox');
+
+  it('does not change the role the moment an option is picked', () => {
+    const { onChangeRole } = renderUsers();
+    fireEvent.change(roleSelectFor('Aziz Karimov'), { target: { value: 'admin' } });
+    expect(onChangeRole).not.toHaveBeenCalled();
+  });
+
+  it('names the user and both roles before committing', () => {
+    renderUsers();
+    fireEvent.change(roleSelectFor('Aziz Karimov'), { target: { value: 'admin' } });
+    const shown = screen.getByRole('dialog').textContent ?? '';
+    expect(shown).toContain('Aziz Karimov');
+    expect(shown).toMatch(/admin/i);
+  });
+
+  it('changes it once confirmed', () => {
+    const { onChangeRole } = renderUsers();
+    fireEvent.change(roleSelectFor('Aziz Karimov'), { target: { value: 'admin' } });
+    fireEvent.click(screen.getByRole('button', { name: /^O'zgartirish$/i }));
+    expect(onChangeRole).toHaveBeenCalledWith('u-1', 'admin');
+  });
+
+  it('cancelling leaves the role alone', () => {
+    const { onChangeRole } = renderUsers();
+    fireEvent.change(roleSelectFor('Aziz Karimov'), { target: { value: 'admin' } });
+    fireEvent.click(screen.getByRole('button', { name: /Bekor qilish/i }));
+    expect(onChangeRole).not.toHaveBeenCalled();
+    expect((roleSelectFor('Aziz Karimov') as HTMLSelectElement).value).toBe('worker');
   });
 });

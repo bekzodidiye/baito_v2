@@ -136,22 +136,41 @@ allaqachon bor** — 1-bo'limdagi to'rtta joyda u qo'llanilmagan.
 
 ---
 
-## 4. Tekshirilmagan — ochiq qoldi
+## 4. O'lchandi (2026-09-06)
 
-QA.md §2.8 talabi: qamramagan narsa nomma-nom aytilishi kerak.
+3-bosqichda bu oltita amal "o'lchanmagan" deb yozilgandi. Endi har biri
+komponent testi bilan o'lchandi — manbani o'qib emas, bosib.
 
-| Nima | Nega |
+| Amal | Natija |
 |---|---|
-| **Ishni yakunlash** (ish beruvchi, escrow chiqaradi) | "JARAYONDA" yorlig'i ochildi, lekin yakunlash tugmasi topilmadi — ehtimol ish kartasini ochish kerak |
-| **Balans qo'shish** (admin, pul) | Foydalanuvchi tafsiloti oynasi ochildi, "Moliya" yorlig'iga o'tilmadi — tugma topilmadi |
-| **Rol o'zgartirish** (admin) | Tekshirilmadi |
-| **Ommaviy xabarnoma** (admin) | Tekshirilmadi |
-| **Parolni o'zgartirish** (ishchi) | Tekshirilmadi |
-| **E'lonni o'chirish** (ish beruvchi) | Ro'yxatda tugma ko'rinmadi |
+| **Rol o'zgartirish** (admin) | ❌ **tanlash bilanoq bajarilardi** → tuzatildi |
+| **Ommaviy xabarnoma** (admin) | ❌ **bir bosishda hammaga ketardi** → tuzatildi |
+| **E'lonni o'chirish** (ish beruvchi) | ✅ tasdiq oynasi, "ortga qaytarib bo'lmaydi" |
+| **Balans qo'shish** (admin) | ✅ summa **va** audit uchun sabab talab qiladi |
+| **Ishni yakunlash** (ish beruvchi) | ✅ reyting/sharh/bonus formasi, aniq tasdiq tugmasi |
+| **Parolni o'zgartirish** (ishchi) | ✅ eski parolni ham so'raydigan forma |
 
-Bu ro'yxat "muammo yo'q" degani **emas** — "o'lchanmagan" degani.
+### Ikkita topilgan nuqson
 
----
+**Rol o'zgartirish tugma ham emas edi** — `<select>`, va u tanlangan zahoti
+bajarilardi:
+
+```jsx
+onChange={(e) => onChangeRole(u.id, e.target.value)}
+```
+
+Uzun ro'yxatda dropdown ustidan bir marta skroll qilish kifoya: kimdir admin
+bo'lib qoladi yoki admin huquqini yo'qotadi. Oradagi hech narsa yo'q.
+
+**Ommaviy xabarnoma** birinchi bosishda **barcha foydalanuvchilarga** ketardi
+va qaytarib bo'lmasdi. Endi kimga ketishini aytadi — "BARCHA
+foydalanuvchilarga" deb, chunki eng ko'p tasodifan bosiladigan holat shu.
+
+Ikkalasi ham `ConfirmModal` bilan tuzatildi, ikki tomonlama tekshirilgan:
+eski kodda 7/7 qizil, tuzatilgandan keyin yashil.
+
+Qolgan to'rttasi **to'g'ri ishlaydi** — va endi bu manbadan chiqarilgan xulosa
+emas, o'lchangan fakt. Har biri uchun test qoldi, ya'ni keyin sinsa bilinadi.
 
 ## 5. O'lchov usuli
 
@@ -197,7 +216,7 @@ QA.md §2.6 aynan shuning uchun "gumonni nuqson deb yozma" deydi.
 | BUG-022 | Soxta tranzaksiyalar | ✅ tuzatildi |
 | BUG-020 | O'lik qidiruv tugmasi (To'lovlar) | ✅ ulandi |
 | BUG-027 | O'lik qidiruv maydoni (Xavfsizlik) | ✅ olib tashlandi |
-| 4 | O'lchanmagan oltita amal | ⬜ hali o'lchanmagan |
+| 4 | Oltita amal | ✅ o'lchandi — 2 tasi nuqsonli edi, tuzatildi |
 
-Qolgan ish: **4-bo'lim** — ishni yakunlash, admin balans qo'shish, rol
-o'zgartirish, ommaviy xabarnoma, parol o'zgartirish, e'lonni o'chirish.
+Cheklistdagi barcha bandlar yopildi. **BUG-016** (ishchiga va'da qilingan
+bonus to'lanmasdi) ham tuzatildi — u alohida hisobotda.

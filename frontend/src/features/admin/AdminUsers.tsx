@@ -22,6 +22,12 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
   // row button used to commit on a single press. Same modal, same reason.
   const [banTarget, setBanTarget] = useState<AdminUser | null>(null);
   const [unbanTarget, setUnbanTarget] = useState<AdminUser | null>(null);
+  // The role dropdown committed on selection: one stray scroll over it made
+  // somebody an admin, or stripped an admin of their access.
+  const [roleChange, setRoleChange] = useState<{ user: AdminUser; role: string } | null>(null);
+
+  const roleLabel = (role: string) =>
+    role === 'admin' ? 'Admin' : role === 'employer' ? 'Ish beruvchi' : 'Ishchi';
 
   const filteredUsers = users.filter((u) => {
     const matchSearch =
@@ -100,7 +106,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
                     <td className="p-4">
                       <select
                         value={u.role}
-                        onChange={(e) => onChangeRole(u.id, e.target.value)}
+                        onChange={(e) => setRoleChange({ user: u, role: e.target.value })}
                         className="bg-slate-100 font-bold text-slate-700 px-2.5 py-1 rounded-lg text-xs border border-slate-200/60 cursor-pointer"
                       >
                         <option value="worker">Ishchi</option>
@@ -153,6 +159,24 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
           }}
         />
       )}
+
+      <ConfirmModal
+        isOpen={!!roleChange}
+        title="Rolni o'zgartirishni tasdiqlang"
+        message={
+          roleChange
+            ? `${roleChange.user.name}: ${roleLabel(roleChange.user.role)} -> ${roleLabel(roleChange.role)}. `
+              + (roleChange.role === 'admin'
+                  ? 'Admin roli butun platformaga to\'liq kirish beradi.'
+                  : 'Bu foydalanuvchining huquqlarini o\'zgartiradi.')
+            : ''
+        }
+        confirmText="O'zgartirish"
+        cancelText="Bekor qilish"
+        isDestructive={roleChange?.role === 'admin'}
+        onConfirm={() => roleChange && onChangeRole(roleChange.user.id, roleChange.role)}
+        onCancel={() => setRoleChange(null)}
+      />
 
       <ConfirmModal
         isOpen={!!unbanTarget}
