@@ -202,6 +202,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
         onClose={() => setJobToComplete(null)}
         onConfirm={handleFinishConfirm}
         jobTitle={jobToComplete?.title || ''}
+        jobId={jobToComplete?.id}
         language={language}
       />
     </div>

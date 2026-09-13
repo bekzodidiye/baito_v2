@@ -260,6 +260,7 @@ def decide_escrow(
             )
 
         tx = EscrowService.release_funds(db, job_id=job.id, worker_id=payload.workerId)
+        refund_total = 0
         db.add(models.Notification(
             userId=payload.workerId,
             title="To'lov chiqarildi",
@@ -267,7 +268,10 @@ def decide_escrow(
             type="system", relatedJobId=job.id,
         ))
     else:
-        tx = EscrowService.refund_funds(db, job_id=job.id)
+        refunded = EscrowService.refund_funds(db, job_id=job.id)
+        # Every outstanding day, not just one of them.
+        tx = refunded[-1]
+        refund_total = sum(t.amount // 100 for t in refunded)
         db.add(models.Notification(
             userId=job.employerId,
             title="Mablag' qaytarildi",
@@ -275,11 +279,12 @@ def decide_escrow(
             type="system", relatedJobId=job.id,
         ))
 
+    amount_uzs = refund_total if payload.action != "release" else tx.amount // 100
     record_admin_action(
         db, admin, f"escrow.{payload.action}", target_type="job", target_id=job.id,
-        details={"transactionId": tx.id, "amountUzs": tx.amount // 100,
+        details={"transactionId": tx.id, "amountUzs": amount_uzs,
                  "workerId": payload.workerId},
         request=request, note=payload.reason,
     )
     db.commit()
-    return {"success": True, "action": payload.action, "amountUzs": tx.amount // 100}
+    return {"success": True, "action": payload.action, "amountUzs": amount_uzs}

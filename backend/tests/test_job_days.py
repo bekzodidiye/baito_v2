@@ -1,0 +1,286 @@
+"""A multi-day shift, as days that are worked and paid one at a time.
+
+The defect these cover: ``Job.workDate`` said a shift ran for three days, but
+one Job row carried one status and one escrow hold. Finishing the first day
+finished all three and released a single payment for the lot — so an employer
+who marked one day done had, without meaning to, closed and paid the whole run.
+"""
+
+import uuid
+
+from app.models.application import Application
+from app.models.job import Job, JobStatus
+from app.models.job_day import JobDay, JobDayStatus
+from app.models.transaction import Transaction
+from app.models.user import User
+from app.db.session import SessionLocal
+
+from .conftest import login, make_job, make_user
+
+THREE_DAYS = "2026-09-02, 2026-09-03, 2026-09-04"
+WAGE = 250_000
+
+
+def _phone():
+    return f"+9989{uuid.uuid4().int % 10**8:08d}"
+
+
+def _posting(*, balance=10_000_000, work_date=THREE_DAYS, salary=f"{WAGE}"):
+    employer = make_user(role="employer", phone=_phone(), balance=balance)
+    worker = make_user(role="worker", phone=_phone())
+    job = make_job(employer.id, salary=salary, workDate=work_date)
+    with SessionLocal() as db:
+        app = Application(jobId=job.id, workerId=worker.id, status="applied")
+        db.add(app)
+        db.commit()
+        return employer, worker, job, app.id
+
+
+def _days(job_id):
+    with SessionLocal() as db:
+        return [
+            (d.id, d.workDate, d.status, d.amount)
+            for d in db.query(JobDay).filter(JobDay.jobId == job_id)
+            .order_by(JobDay.workDate.asc()).all()
+        ]
+
+
+# --- the days themselves ---------------------------------------------------
+
+def test_a_three_day_posting_has_three_days(client):
+    employer = make_user(role="employer", phone=_phone(), balance=1_000_000)
+    login(client, employer)
+
+    resp = client.post("/api/v1/jobs", json={
+        "title": "Omborxona", "company": "Korzinka", "salary": str(WAGE),
+        "location": "Toshkent", "description": "Yuk ortish",
+        "workDate": THREE_DAYS, "neededWorkers": "1",
+    })
+    assert resp.status_code == 200
+    job_id = resp.json()["id"]
+
+    assert [d[1] for d in _days(job_id)] == ["2026-09-02", "2026-09-03", "2026-09-04"]
+    assert {d[2] for d in _days(job_id)} == {JobDayStatus.PENDING}
+
+
+def test_editing_the_dates_moves_the_days(client):
+    employer = make_user(role="employer", phone=_phone(), balance=1_000_000)
+    job = make_job(employer.id, salary=str(WAGE), workDate=THREE_DAYS)
+    login(client, employer)
+
+    resp = client.put(f"/api/v1/jobs/{job.id}", json={"workDate": "2026-09-02, 2026-09-05"})
+    assert resp.status_code == 200
+    assert [d[1] for d in _days(job.id)] == ["2026-09-02", "2026-09-05"]
+
+
+# --- the money -------------------------------------------------------------
+
+def test_hiring_freezes_the_wage_for_every_day(client):
+    """The posted wage is what one day is worth, so three days costs three
+    times it. Hiring used to freeze one day's wage for the whole run."""
+    employer, worker, job, app_id = _posting(balance=1_000_000)
+    login(client, employer)
+
+    resp = client.post(f"/api/v1/applications/{app_id}/hire")
+    assert resp.status_code == 200
+
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == employer.id).first().balance == \
+            1_000_000 - WAGE * 3
+
+        holds = db.query(Transaction).filter(
+            Transaction.jobId == job.id, Transaction.type == "escrow_hold").all()
+        # One per day, each nameable on its own — which is what lets a single
+        # day be released without touching the other two.
+        assert len(holds) == 3
+        assert all(h.jobDayId for h in holds)
+        assert {h.amount for h in holds} == {WAGE * 100}
+
+    # And the day rows carry the wage as it stood at hire.
+    assert {d[3] for d in _days(job.id)} == {WAGE}
+
+
+def test_hiring_says_what_the_whole_run_costs_when_the_balance_is_short(client):
+    """One day's wage is affordable, three is not. The employer is told the
+    real figure before anything is frozen, not after day one succeeds."""
+    employer, worker, job, app_id = _posting(balance=WAGE + 1000)
+    login(client, employer)
+
+    resp = client.post(f"/api/v1/applications/{app_id}/hire")
+    assert resp.status_code == 400
+    detail = resp.json()["detail"]
+    assert "3 kunlik" in detail
+    assert "750 000" in detail
+
+    with SessionLocal() as db:
+        # Nothing frozen, nothing hired — the employer can top up and retry.
+        assert db.query(User).filter(User.id == employer.id).first().balance == WAGE + 1000
+        assert db.query(Transaction).filter(Transaction.jobId == job.id).count() == 0
+
+
+# --- finishing one day at a time -------------------------------------------
+
+def _hired_and_started(client):
+    employer, worker, job, app_id = _posting()
+    login(client, employer)
+    assert client.post(f"/api/v1/applications/{app_id}/hire").status_code == 200
+    with SessionLocal() as db:
+        j = db.query(Job).filter(Job.id == job.id).first()
+        j.status = JobStatus.IN_PROGRESS
+        db.add(j)
+        db.commit()
+    return employer, worker, job
+
+
+def test_finishing_one_day_pays_one_day_and_leaves_the_rest(client):
+    """The reported defect, stated as a test."""
+    employer, worker, job = _hired_and_started(client)
+    first_day = _days(job.id)[0][0]
+
+    resp = client.post(f"/api/v1/jobs/{job.id}/days/{first_day}/complete")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["remaining_days"] == 2
+    # The posting is emphatically not finished.
+    assert body["job_status"] == JobStatus.IN_PROGRESS
+
+    statuses = [d[2] for d in _days(job.id)]
+    assert statuses == [JobDayStatus.COMPLETED, JobDayStatus.PENDING, JobDayStatus.PENDING]
+
+    with SessionLocal() as db:
+        # One day's wage, less the platform's 10%.
+        assert db.query(User).filter(User.id == worker.id).first().balance == \
+            WAGE - int(WAGE * 0.10)
+        held = db.query(Transaction).filter(
+            Transaction.jobId == job.id, Transaction.type == "escrow_hold",
+            Transaction.status == "held").count()
+        assert held == 2
+
+
+def test_the_posting_closes_only_when_its_last_day_does(client):
+    employer, worker, job = _hired_and_started(client)
+    day_ids = [d[0] for d in _days(job.id)]
+
+    for day_id in day_ids[:-1]:
+        assert client.post(f"/api/v1/jobs/{job.id}/days/{day_id}/complete").status_code == 200
+
+    with SessionLocal() as db:
+        assert db.query(Job).filter(Job.id == job.id).first().status \
+            == JobStatus.IN_PROGRESS
+
+    last = client.post(f"/api/v1/jobs/{job.id}/days/{day_ids[-1]}/complete")
+    assert last.status_code == 200
+    assert last.json()["job_status"] == JobStatus.COMPLETED
+
+    with SessionLocal() as db:
+        worker_row = db.query(User).filter(User.id == worker.id).first()
+        # Three days of wages.
+        assert worker_row.balance == (WAGE - int(WAGE * 0.10)) * 3
+        # But one job. A week's work is not a career.
+        assert worker_row.completedJobsCount == 1
+
+
+def test_a_day_cannot_be_finished_twice(client):
+    employer, worker, job = _hired_and_started(client)
+    first_day = _days(job.id)[0][0]
+
+    assert client.post(f"/api/v1/jobs/{job.id}/days/{first_day}/complete").status_code == 200
+    second = client.post(f"/api/v1/jobs/{job.id}/days/{first_day}/complete")
+    assert second.status_code == 400
+
+    with SessionLocal() as db:
+        # Still one day's pay, not two.
+        assert db.query(User).filter(User.id == worker.id).first().balance == \
+            WAGE - int(WAGE * 0.10)
+
+
+def test_only_the_employer_may_finish_a_day(client):
+    employer, worker, job = _hired_and_started(client)
+    first_day = _days(job.id)[0][0]
+
+    login(client, worker)
+    resp = client.post(f"/api/v1/jobs/{job.id}/days/{first_day}/complete")
+    assert resp.status_code == 403
+
+
+# --- finishing the whole posting -------------------------------------------
+
+def test_finishing_the_whole_posting_settles_every_remaining_day(client):
+    """The employer wraps it up in one go rather than day by day. All three
+    days are still owed, and releasing once would pay for one."""
+    employer, worker, job = _hired_and_started(client)
+
+    resp = client.post(f"/api/v1/jobs/{job.id}/complete",
+                       json={"rating": 5, "review": "Yaxshi"})
+    assert resp.status_code == 200
+
+    assert {d[2] for d in _days(job.id)} == {JobDayStatus.COMPLETED}
+    with SessionLocal() as db:
+        worker_row = db.query(User).filter(User.id == worker.id).first()
+        assert worker_row.balance == (WAGE - int(WAGE * 0.10)) * 3
+        assert worker_row.completedJobsCount == 1
+
+
+def test_finishing_the_rest_after_one_day_pays_only_what_is_left(client):
+    employer, worker, job = _hired_and_started(client)
+    first_day = _days(job.id)[0][0]
+    assert client.post(f"/api/v1/jobs/{job.id}/days/{first_day}/complete").status_code == 200
+
+    assert client.post(f"/api/v1/jobs/{job.id}/complete",
+                       json={"rating": 5}).status_code == 200
+
+    with SessionLocal() as db:
+        # Three days total, not four: the day already paid is not paid again.
+        assert db.query(User).filter(User.id == worker.id).first().balance == \
+            (WAGE - int(WAGE * 0.10)) * 3
+
+
+# --- calling it off --------------------------------------------------------
+
+def test_cancelling_refunds_every_day_that_was_frozen(client):
+    """Hiring freezes three days. Cancelling used to return one of them and
+    leave the other two frozen against a posting that no longer existed —
+    refund_funds settled the first hold it found and stopped."""
+    employer, worker, job, app_id = _posting(balance=1_000_000)
+    login(client, employer)
+    assert client.post(f"/api/v1/applications/{app_id}/hire").status_code == 200
+
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == employer.id).first().balance == \
+            1_000_000 - WAGE * 3
+
+    # A started job cannot be called off — that guard is deliberate — so this
+    # is the state a posting is actually cancelled from.
+    resp = client.delete(f"/api/v1/jobs/{job.id}")
+    assert resp.status_code == 200
+    assert resp.json()["refunded"] == WAGE * 3
+
+    assert {d[2] for d in _days(job.id)} == {JobDayStatus.CANCELLED}
+
+    with SessionLocal() as db:
+        # Every so'm back, and nothing left frozen.
+        assert db.query(User).filter(User.id == employer.id).first().balance == 1_000_000
+        assert db.query(Transaction).filter(
+            Transaction.jobId == job.id, Transaction.type == "escrow_hold",
+            Transaction.status == "held").count() == 0
+
+
+# --- postings made before any of this existed ------------------------------
+
+def test_a_single_day_posting_still_behaves_exactly_as_before(client):
+    employer, worker, job, app_id = _posting(balance=1_000_000, work_date="2026-09-02")
+    login(client, employer)
+    assert client.post(f"/api/v1/applications/{app_id}/hire").status_code == 200
+
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == employer.id).first().balance == \
+            1_000_000 - WAGE
+        j = db.query(Job).filter(Job.id == job.id).first()
+        j.status = JobStatus.IN_PROGRESS
+        db.add(j)
+        db.commit()
+
+    assert client.post(f"/api/v1/jobs/{job.id}/complete", json={"rating": 5}).status_code == 200
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == worker.id).first().balance == \
+            WAGE - int(WAGE * 0.10)

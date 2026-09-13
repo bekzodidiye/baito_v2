@@ -11,6 +11,7 @@ from app.core.money import parse_salary_amounts, salary_to_uzs
 from app.services.escrow_service import PLATFORM_FEE_PERCENT
 from app.models.job import JobStatus
 from app.services.escrow_service import EscrowService
+from app.services import job_days
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -223,13 +224,50 @@ def hire_applicant(
                    "yollashdan oldin uni to'g'rilang",
         )
 
+    # The wage on a posting is what one day is worth. A three-day shift is
+    # three days of work and three days of pay, so it takes three holds — one
+    # per day, each releasable on its own. Before this, hiring froze a single
+    # day's wage for the whole run and the worker was paid once for all of it.
+    days = job_days.sync_days(db, job)
+
+    # Checked before a single hold is taken, so the employer is told the real
+    # figure once instead of watching day one freeze and day two fail. A
+    # three-day shift costs three times the posted wage, and that is not
+    # obvious from a form that asks for one number.
+    total_due = wage * max(1, len(days))
+    if wage > 0:
+        employer = db.query(models.User).filter(models.User.id == job.employerId).first()
+        available = (employer.balance or 0) if employer else 0
+        if available < total_due:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"{len(days) or 1} kunlik ish uchun {wage:,} so'mdan "
+                    f"jami {total_due:,} so'm kerak, balansingizda {available:,} so'm bor. "
+                    "Hisobni to'ldiring."
+                ).replace(",", " "),
+            )
+
     escrow_held = False
     if wage > 0:
         # Freeze the wage now so the worker is not left chasing an employer
         # who has since spent the money.
-        EscrowService.hold_funds(
-            db, employer_id=job.employerId, job_id=job.id, amount_uzs=wage
-        )
+        if days:
+            for day in days:
+                EscrowService.hold_funds(
+                    db, employer_id=job.employerId, job_id=job.id,
+                    amount_uzs=wage, job_day_id=day.id,
+                )
+                # Frozen here rather than read from the posting later: an
+                # employer editing the salary afterwards must not change what
+                # is owed for a day already agreed.
+                day.amount = wage
+                db.add(day)
+        else:
+            # No parseable date at all. Still one day of somebody's work.
+            EscrowService.hold_funds(
+                db, employer_id=job.employerId, job_id=job.id, amount_uzs=wage
+            )
         escrow_held = True
 
     app.status = "hired"

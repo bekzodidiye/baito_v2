@@ -233,6 +233,7 @@ def auto_release_escrow() -> int:
             .all()
         )
 
+        counted_jobs: set[str] = set()
         for tx in held:
             job = db.query(Job).filter(Job.id == tx.jobId).first()
             worker_id = job.hiredWorkerId if job else None
@@ -240,7 +241,17 @@ def auto_release_escrow() -> int:
                 # Nobody to pay; leave it for a human rather than guessing.
                 continue
             try:
-                EscrowService.release_funds(db, job_id=tx.jobId, worker_id=worker_id)
+                EscrowService.release_funds(
+                    db, job_id=tx.jobId, worker_id=worker_id,
+                    # A multi-day posting has one hold per day. Naming the day
+                    # keeps each iteration on its own hold instead of releasing
+                    # whichever the query happened to return first.
+                    job_day_id=tx.jobDayId,
+                    # However many days it ran for, it is one job on the
+                    # worker's profile.
+                    count_completed_job=tx.jobId not in counted_jobs,
+                )
+                counted_jobs.add(tx.jobId)
                 db.commit()
                 released += 1
             except Exception as e:

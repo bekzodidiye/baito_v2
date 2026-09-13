@@ -13,6 +13,8 @@ from app.redis_client import redis_client
 from app.services.ai_matcher import AIMatchmaker
 from app.services.geo_service import GeoSpatialService
 from app.services.escrow_service import EscrowService
+from app.services import job_days
+from app.models.job_day import JobDayStatus
 from app.services.spam_detector import SpamFraudDetector, keywords_from_settings
 
 logger = logging.getLogger(__name__)
@@ -362,6 +364,11 @@ def create_job(
 
     db_job = models.Job(**job_in_dict)
     db.add(db_job)
+    db.flush()
+    # A three-day posting becomes three day rows here, not at hire: the
+    # calendar and the employer's own list need to show the days before
+    # anybody has been taken on.
+    job_days.sync_days(db, db_job)
     db.commit()
     db.refresh(db_job)
     return db_job
@@ -441,6 +448,12 @@ def update_job(
         setattr(job, field, value)
 
     db.add(job)
+    if "workDate" in update_data:
+        # Editing the dates moves the day rows with them. sync_days leaves any
+        # day that has already been worked and paid alone — that is history,
+        # and a typo fixed in the date field must not be able to erase it.
+        db.flush()
+        job_days.sync_days(db, job)
     db.commit()
     db.refresh(job)
     return job
@@ -532,22 +545,21 @@ def delete_job(
     job.status = JobStatus.CANCELLED
     db.add(job)
 
-    # One hold per hire, so a job with several vacancies has several to return.
-    # refund_funds settles the oldest outstanding hold, so it is called once per
-    # hold that was counted up front rather than looped on a live query.
-    holds = (
-        db.query(models.Transaction)
-        .filter(
-            models.Transaction.jobId == job.id,
-            models.Transaction.type == "escrow_hold",
-            models.Transaction.status == "held",
-        )
-        .count()
-    )
-    refunded = sum(
-        EscrowService.refund_funds(db, job_id=job.id).amount // 100
-        for _ in range(holds)
-    )
+    # A posting can hold money several times over: once per vacancy filled,
+    # and once per day of a multi-day shift. refund_funds settles all of them
+    # in one pass, so this is a single call rather than a counted loop.
+    try:
+        refunded = sum(tx.amount // 100 for tx in EscrowService.refund_funds(db, job_id=job.id))
+    except HTTPException:
+        # Nothing was ever frozen — an unfilled posting, or one from before
+        # escrow. Cancelling is still legitimate.
+        refunded = 0
+
+    # The days go with it, so a cancelled posting stops offering work.
+    for day in job_days.days_of(db, job.id):
+        if day.status == JobDayStatus.PENDING:
+            day.status = JobDayStatus.CANCELLED
+            db.add(day)
 
     db.commit()
     return {

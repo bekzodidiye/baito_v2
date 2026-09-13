@@ -12,6 +12,9 @@ from app import crud, models
 from app.api import deps
 from app.models.job import JobStatus
 from app.services.escrow_service import EscrowService
+from app.services import job_days as job_days_service
+from app.models.job_day import JobDay, JobDayStatus
+from app.services.work_dates import get_job_dates_set  # noqa: F401  (re-exported)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -24,86 +27,6 @@ class JobCompleteRequest(BaseModel):
     rating: Optional[int] = Field(default=None, ge=1, le=5)
     review: Optional[str] = Field(default=None, max_length=2000)
     bonus: Optional[int] = Field(default=0, ge=0, le=50_000_000)
-
-
-def _parse_single_date(token: str, reference: date) -> Optional[date]:
-    """Parse one date token.
-
-    A bare day number ("15") used to be resolved against *today's* month, so a
-    posting made on the 28th for the 3rd landed in the past. It now rolls
-    forward to the next month when the day has already gone by.
-    """
-    token = token.strip()
-    if not token:
-        return None
-
-    if re.fullmatch(r"\d{1,2}", token):
-        day = int(token)
-        if not 1 <= day <= 31:
-            return None
-        year, month = reference.year, reference.month
-        if day < reference.day:
-            month += 1
-            if month > 12:
-                month = 1
-                year += 1
-        try:
-            return date(year, month, day)
-        except ValueError:
-            return None
-
-    for fmt in ("%Y-%m-%d", "%d.%m.%Y", "%d/%m/%Y"):
-        try:
-            return datetime.strptime(token, fmt).date()
-        except ValueError:
-            continue
-    return None
-
-
-def get_job_dates_set(job: Any) -> set:
-    """Every calendar day a job occupies, as ``YYYY-MM-DD`` strings."""
-    if not job or not job.workDate:
-        return set()
-
-    date_str = str(job.workDate).strip()
-    reference = date.today()
-    dates: set[str] = set()
-
-    if ',' in date_str:
-        for part in date_str.split(','):
-            parsed = _parse_single_date(part, reference)
-            if parsed:
-                dates.add(parsed.strftime("%Y-%m-%d"))
-        return dates
-
-    # A range is written with '~', or with '-' between two bare day numbers.
-    # A full ISO date also contains '-', so only treat '-' as a range separator
-    # when neither side looks like a complete date.
-    range_delim = None
-    if '~' in date_str:
-        range_delim = '~'
-    elif date_str.count('-') == 1 and not re.fullmatch(r"\d{4}-\d{1,2}", date_str):
-        range_delim = '-'
-
-    if range_delim:
-        parts = [p.strip() for p in date_str.split(range_delim)]
-        if len(parts) == 2:
-            start_dt = _parse_single_date(parts[0], reference)
-            # The end of a range shares the start's month when it is a bare day.
-            end_dt = _parse_single_date(parts[1], start_dt or reference)
-            if start_dt and end_dt and start_dt <= end_dt:
-                # Guard against a pathological range locking up the loop.
-                if (end_dt - start_dt).days <= 366:
-                    current = start_dt
-                    while current <= end_dt:
-                        dates.add(current.strftime("%Y-%m-%d"))
-                        current += timedelta(days=1)
-            return dates
-
-    parsed = _parse_single_date(date_str, reference)
-    if parsed:
-        dates.add(parsed.strftime("%Y-%m-%d"))
-    return dates
 
 
 def _get_job_or_404(db: Session, id: str) -> models.Job:
@@ -344,6 +267,134 @@ def confirm_start_job(
     return {"success": True, "status": JobStatus.IN_PROGRESS}
 
 
+@router.get("/{id}/days")
+def list_job_days(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: str,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """The days this posting covers, each with its own status and wage."""
+    job = _get_job_or_404(db, id)
+    return [job_days_service.serialise(d) for d in job_days_service.days_of(db, job.id)]
+
+
+@router.post("/{id}/days/{day_id}/complete")
+def complete_job_day(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: str,
+    day_id: str,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """Finish one day of a posting and pay for that day alone.
+
+    The reason this exists: a three-day shift used to be one row with one
+    status, so marking the first day done marked all three done and released a
+    single payment for the lot. A day is worked, and paid, on its own.
+
+    The posting itself only closes when its last day does — and the review, the
+    rating and any bonus belong to that moment, not to this one, so they stay
+    on ``/complete``.
+    """
+    job = _get_job_or_404(db, id)
+
+    if job.employerId not in (current_user.id, current_user.uid) and current_user.role != 'admin':
+        raise HTTPException(status_code=403, detail="Faqat ish beruvchi ishni yakunlay oladi")
+
+    if job.status == JobStatus.CANCELLED:
+        raise HTTPException(status_code=400, detail="Bekor qilingan ishni yakunlab bo'lmaydi")
+    if job.status not in (JobStatus.IN_PROGRESS, JobStatus.CONFIRMED):
+        raise HTTPException(
+            status_code=400,
+            detail="Kunni yakunlash uchun avval ishni boshlash kerak",
+        )
+
+    day = (
+        db.query(JobDay)
+        .filter(JobDay.id == day_id, JobDay.jobId == job.id)
+        .first()
+    )
+    if not day:
+        raise HTTPException(status_code=404, detail="Bu ish kuni topilmadi")
+    if day.status == JobDayStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="Bu kun allaqachon yakunlangan")
+    if day.status == JobDayStatus.CANCELLED:
+        raise HTTPException(status_code=400, detail="Bu kun bekor qilingan")
+
+    apps = (
+        db.query(models.Application)
+        .filter(
+            models.Application.jobId == job.id,
+            models.Application.status.in_(COMMITTED_APP_STATUSES),
+        )
+        .all()
+    )
+    if not apps:
+        raise HTTPException(status_code=400, detail="Yakunlash uchun yollangan ishchi yo'q")
+
+    remaining_after = [
+        d for d in job_days_service.payable_days(db, job.id) if d.id != day.id
+    ]
+    is_last_day = not remaining_after
+
+    day.status = JobDayStatus.COMPLETED
+    day.completedAt = datetime.now(timezone.utc)
+    db.add(day)
+
+    paid, unpaid = [], []
+    for app in apps:
+        try:
+            EscrowService.release_funds(
+                db, job_id=job.id, worker_id=app.workerId, job_day_id=day.id,
+                # One posting is one completed job on a worker's profile,
+                # however many days it ran for. Counted when the last day lands.
+                count_completed_job=is_last_day,
+            )
+            paid.append(app.workerId)
+        except HTTPException as e:
+            logger.warning("Escrow release skipped for job %s day %s / worker %s: %s",
+                           job.id, day.workDate, app.workerId, e.detail)
+            unpaid.append(app.workerId)
+
+        if app.workerId in paid:
+            message = (
+                f"'{job.title}' ishining {day.workDate} kuni yakunlandi, "
+                "shu kun uchun to'lov hisobingizga o'tkazildi."
+            )
+        else:
+            message = (
+                f"'{job.title}' ishining {day.workDate} kuni yakunlandi. "
+                "To'lov ish beruvchi tomonidan alohida amalga oshiriladi."
+            )
+        db.add(models.Notification(
+            id=str(uuid.uuid4()), userId=app.workerId, title="Ish kuni yakunlandi",
+            message=message, type="completed", relatedJobId=job.id,
+        ))
+
+    # The posting closes only when nothing is left to work. Left IN_PROGRESS
+    # otherwise, which is what keeps the remaining days visible and payable.
+    if is_last_day:
+        job.status = JobStatus.COMPLETED
+        job.completedAt = datetime.now(timezone.utc)
+        for app in apps:
+            app.status = "completed"
+            db.add(app)
+        db.add(job)
+
+    db.commit()
+    return {
+        "success": True,
+        "dayId": day.id,
+        "workDate": day.workDate,
+        "day_status": JobDayStatus.COMPLETED,
+        "job_status": job.status,
+        "remaining_days": len(remaining_after),
+        "paid_workers": len(paid),
+        "unpaid_workers": len(unpaid),
+    }
+
+
 @router.post("/{id}/complete")
 def complete_job(
     *,
@@ -413,8 +464,18 @@ def complete_job(
                 ).replace(",", " "),
             )
 
+    # Whatever days were never ticked off one by one are settled here. A
+    # posting finished in one go still owes each of its days: releasing once
+    # would pay a three-day shift as though it had been one.
+    remaining = job_days_service.payable_days(db, job.id)
+    now = datetime.now(timezone.utc)
+    for day in remaining:
+        day.status = JobDayStatus.COMPLETED
+        day.completedAt = now
+        db.add(day)
+
     job.status = JobStatus.COMPLETED
-    job.completedAt = datetime.now(timezone.utc)
+    job.completedAt = now
     db.add(job)
 
     paid, unpaid, bonus_paid = [], [], []
@@ -447,7 +508,17 @@ def complete_job(
             db.add(worker)
 
         try:
-            EscrowService.release_funds(db, job_id=job.id, worker_id=app.workerId)
+            if remaining:
+                for index, day in enumerate(remaining):
+                    EscrowService.release_funds(
+                        db, job_id=job.id, worker_id=app.workerId, job_day_id=day.id,
+                        # One posting, one completed job on the profile.
+                        count_completed_job=(index == 0),
+                    )
+            else:
+                # Either every day was already ticked off, or the posting
+                # predates day records and still holds one lump for the lot.
+                EscrowService.release_funds(db, job_id=job.id, worker_id=app.workerId)
             paid.append(app.workerId)
             # The wage is released first: it is owed for work already done and
             # must not be held up by an optional tip. The balance check above

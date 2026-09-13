@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
-import { X, Star, MessageSquare, PlusCircle } from 'lucide-react';
+import { X, Star, MessageSquare, PlusCircle, CalendarCheck, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchJobDaysApi, completeJobDayApi } from '../../../api/queries';
+
+interface JobDay {
+  id: string;
+  workDate: string;
+  status: 'pending' | 'completed' | 'cancelled';
+  amount: number | null;
+}
 
 interface FinishJobModalProps {
   isOpen: boolean;
@@ -8,6 +17,8 @@ interface FinishJobModalProps {
   onConfirm: (data: { rating: number; review: string; bonus: number }) => void;
   jobTitle: string;
   language: string;
+  /** Needed to load and finish the posting's individual days. */
+  jobId?: string;
 }
 
 export const FinishJobModal: React.FC<FinishJobModalProps> = ({
@@ -15,14 +26,36 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
   onClose,
   onConfirm,
   jobTitle,
-  language
+  language,
+  jobId
 }) => {
   const [rating, setRating] = useState(5);
   const [review, setReview] = useState('');
   const [bonus, setBonus] = useState('');
   const [hoveredStar, setHoveredStar] = useState<number | null>(null);
+  const queryClient = useQueryClient();
+
+  const { data: days = [] } = useQuery<JobDay[]>({
+    queryKey: ['jobDays', jobId],
+    queryFn: () => fetchJobDaysApi(jobId as string),
+    enabled: isOpen && !!jobId,
+  });
+
+  const finishDay = useMutation({
+    mutationFn: (dayId: string) => completeJobDayApi(jobId as string, dayId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobDays', jobId] });
+      queryClient.invalidateQueries({ queryKey: ['employerJobs'] });
+    },
+  });
 
   if (!isOpen) return null;
+
+  const pending = days.filter(d => d.status === 'pending');
+  // One day is just a job; the choice only means something when there is more
+  // than one day to choose between.
+  const showDays = days.length > 1;
+  const money = (n: number) => n.toLocaleString('ru-RU').replace(/ /g, ' ');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +101,82 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
           </div>
 
           <div className="p-6 overflow-y-auto">
+            {/* Individual days. A three-day shift used to be finished by one
+                press that closed and paid all three at once; each day is its
+                own work and its own wage, so each is finished on its own. */}
+            {showDays && (
+              <div className="mb-6 flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <CalendarCheck size={15} className="text-brand-primary stroke-[2.5]" />
+                  <span className="text-sm font-bold text-slate-700">
+                    {language === 'uz' ? 'Ish kunlari' : language === 'ru' ? 'Рабочие дни' : 'Work days'}
+                  </span>
+                  <span className="text-xs text-slate-400 font-semibold ml-auto">
+                    {pending.length}/{days.length} {language === 'uz' ? 'qoldi' : language === 'ru' ? 'осталось' : 'left'}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {days.map(day => {
+                    const done = day.status === 'completed';
+                    const off = day.status === 'cancelled';
+                    return (
+                      <div
+                        key={day.id}
+                        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl border ${
+                          done ? 'border-emerald-200 bg-emerald-50/60'
+                               : off ? 'border-slate-200 bg-slate-50 opacity-60'
+                                     : 'border-slate-200 bg-white'
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-800 tabular-nums">{day.workDate}</p>
+                          {day.amount != null && (
+                            <p className="text-xs text-slate-500 tabular-nums">{money(day.amount)} so'm</p>
+                          )}
+                        </div>
+                        {done ? (
+                          <span className="flex items-center gap-1 text-xs font-bold text-emerald-700">
+                            <Check size={14} className="stroke-[3]" />
+                            {language === 'uz' ? 'To\'landi' : language === 'ru' ? 'Оплачен' : 'Paid'}
+                          </span>
+                        ) : off ? (
+                          <span className="text-xs font-bold text-slate-400">
+                            {language === 'uz' ? 'Bekor' : language === 'ru' ? 'Отменён' : 'Cancelled'}
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => finishDay.mutate(day.id)}
+                            disabled={finishDay.isPending}
+                            className="text-xs font-bold text-white bg-brand-primary px-3 py-1.5 rounded-lg hover:opacity-90 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                          >
+                            {finishDay.isPending && finishDay.variables === day.id ? (
+                              <Loader2 size={13} className="animate-spin" />
+                            ) : (
+                              language === 'uz' ? 'Yakunlash' : language === 'ru' ? 'Завершить' : 'Finish'
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {finishDay.isError && (
+                  <p className="text-xs text-red-600">{(finishDay.error as Error).message}</p>
+                )}
+
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  {language === 'uz'
+                    ? "Har kun alohida yakunlanadi va o'sha kun uchun to'lov o'tkaziladi. Pastdagi tugma esa qolgan barcha kunlarni yakunlaydi."
+                    : language === 'ru'
+                    ? 'Каждый день завершается отдельно и оплачивается отдельно. Кнопка ниже завершает все оставшиеся дни.'
+                    : 'Each day is finished and paid separately. The button below finishes every remaining day.'}
+                </p>
+              </div>
+            )}
+
             <form id="finish-job-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
               
               {/* Rating */}

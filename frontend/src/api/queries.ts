@@ -277,3 +277,17 @@ export const declareInvoicePaymentApi = async (
     body: JSON.stringify(data),
   });
 };
+
+/** The days a posting covers, each with its own status and its own wage.
+ *
+ *  A three-day shift is three of these. Finishing one pays for one — which is
+ *  the whole reason they exist as separate records.
+ */
+export const fetchJobDaysApi = async (jobId: string) => {
+  return await apiClient(`/jobs/${jobId}/days`);
+};
+
+export const completeJobDayApi = async (jobId: string, dayId: string) => {
+  return await apiClient(`/jobs/${jobId}/days/${dayId}/complete`, { method: 'POST' });
+};
+

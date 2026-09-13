@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Users, Calendar as CalendarIcon, Clock, DollarSign, Truck, CheckCircle, AlertTriangle } from 'lucide-react';
 import { DateTimePickerModal } from '../../../components/common/DateTimePickerModal';
 import { formatDateDisplay } from './JobPostStepTwo.utils';
+import { parseWorkDates } from '../../../utils/workDates';
 
 interface JobPostStepTwoProps {
   language: string;
@@ -39,6 +40,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
   };
 
   const formattedDateText = formatDateDisplay(workDate);
+  const dayCount = parseWorkDates(workDate).length;
 
   return (
     <motion.div
@@ -127,10 +129,26 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
             <DollarSign size={14} className="stroke-[2.5] text-brand-primary" />
-            {language === 'uz' ? "Umumiy to'lov (so'm) *" : "Total Salary (UZS) *"}
+            {/* Not "umumiy": a three-day shift takes this figure three
+                times over, once per day, and the employer's balance has to
+                cover all of it at the moment they hire. */}
+            {language === 'uz' ? "Bir kunlik to'lov (so'm) *" : "Daily Pay (UZS) *"}
           </label>
           <input
               aria-label="200000" type="number" placeholder="200000" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} />
+          {/* What the posting will actually cost. The employer types one
+              day's wage and needs the whole run frozen at hire, so the
+              multiplication belongs here rather than in a rejection later. */}
+          {dayCount > 1 && Number(hourlyRate) > 0 && (
+            <p className="text-xs text-slate-500">
+              {dayCount} {language === 'uz' ? 'kun' : language === 'ru' ? 'дн.' : 'days'} &times;{' '}
+              {Number(hourlyRate).toLocaleString('ru-RU').replace(/\u00a0/g, ' ')} ={' '}
+              <span className="font-bold text-slate-700 tabular-nums">
+                {(Number(hourlyRate) * dayCount).toLocaleString('ru-RU').replace(/\u00a0/g, ' ')} so&apos;m
+              </span>{' '}
+              {language === 'uz' ? 'jami' : language === 'ru' ? 'всего' : 'total'}
+            </p>
+          )}
         </div>
       </div>
 

@@ -6,6 +6,11 @@ from .user import generate_uuid
 class Transaction(Base):
     id = Column(String, primary_key=True, default=generate_uuid, index=True)
     jobId = Column(String, ForeignKey("jobs.id"))
+    # Which day of the posting this holds money for. A multi-day shift
+    # takes one escrow hold per day, so a day can be released when it is
+    # worked and refunded when it is not. Null on everything else — top-ups,
+    # payouts, and the single-day holds made before this existed.
+    jobDayId = Column(String, ForeignKey("job_days.id"), nullable=True, index=True)
     employerId = Column(String, ForeignKey("users.id"), nullable=False)
     workerId = Column(String, ForeignKey("users.id"))
     amount = Column(Integer, nullable=False)

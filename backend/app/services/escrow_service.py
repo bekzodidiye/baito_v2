@@ -20,7 +20,8 @@ class EscrowService:
     transaction per request makes each of those operations all-or-nothing.
     """
     @staticmethod
-    def hold_funds(db: Session, employer_id: str, job_id: str, amount_uzs: int) -> Transaction:
+    def hold_funds(db: Session, employer_id: str, job_id: str, amount_uzs: int,
+                   job_day_id: str | None = None) -> Transaction:
         employer = (db.query(models.User).filter(models.User.id == employer_id)
                     .populate_existing()
                     .with_for_update().first())
@@ -34,6 +35,10 @@ class EscrowService:
         tx = Transaction(
             id=str(uuid.uuid4()),
             jobId=job_id,
+            # One hold per day of the posting, so a day can be released when it
+            # is worked and refunded when it is not. Null for a job booked
+            # before days existed, which still has a single hold for the lot.
+            jobDayId=job_day_id,
             employerId=employer.id,
             amount=amount_uzs * 100,
             type="escrow_hold",
@@ -56,7 +61,9 @@ class EscrowService:
         return tx
 
     @staticmethod
-    def release_funds(db: Session, job_id: str, worker_id: str) -> Transaction:
+    def release_funds(db: Session, job_id: str, worker_id: str,
+                      job_day_id: str | None = None,
+                      count_completed_job: bool = True) -> Transaction:
         # Flush before taking any lock below. populate_existing() overwrites
         # what is in the session with the row as the database has it, which is
         # the point — but it cannot tell a stale attribute from one the caller
@@ -66,11 +73,17 @@ class EscrowService:
         db.flush()
 
         # Find active escrow hold
-        tx = db.query(Transaction).filter(
+        query = db.query(Transaction).filter(
             Transaction.jobId == job_id,
             Transaction.type == "escrow_hold",
-            Transaction.status == "held"
-        ).populate_existing().with_for_update().first()
+            Transaction.status == "held",
+        )
+        if job_day_id:
+            # Exactly this day's money. Without the filter, finishing one day of
+            # a three-day shift would release whichever hold came back first —
+            # so a day could be paid twice and another not at all.
+            query = query.filter(Transaction.jobDayId == job_day_id)
+        tx = query.populate_existing().with_for_update().first()
 
         if not tx:
             raise HTTPException(status_code=404, detail="Ushbu ish uchun muzlatilgan mablag' topilmadi")
@@ -85,7 +98,11 @@ class EscrowService:
 
         # Credit worker balance
         worker.balance = (worker.balance or 0) + worker_payout
-        worker.completedJobsCount = (worker.completedJobsCount or 0) + 1
+        # A three-day shift is one job the worker did, not three. The counter
+        # is bumped once, when the posting as a whole finishes — otherwise a
+        # single week's work would read as a career.
+        if count_completed_job:
+            worker.completedJobsCount = (worker.completedJobsCount or 0) + 1
         db.add(worker)
 
         # Update escrow tx
@@ -171,7 +188,7 @@ class EscrowService:
         db.flush()
 
     @staticmethod
-    def refund_funds(db: Session, job_id: str) -> Transaction:
+    def refund_funds(db: Session, job_id: str) -> list[Transaction]:
         # Flush before taking any lock below. populate_existing() overwrites
         # what is in the session with the row as the database has it, which is
         # the point — but it cannot tell a stale attribute from one the caller
@@ -180,33 +197,52 @@ class EscrowService:
         # rating was silently thrown away.
         db.flush()
 
-        tx = db.query(Transaction).filter(
+        # Every hold still outstanding, not just the first one found. A
+        # multi-day posting has one hold per day, so cancelling it used to
+        # refund a single day and quietly keep the rest of the employer's money
+        # frozen against a job that no longer existed. Days already worked and
+        # released are not "held" and are correctly left alone.
+        holds = db.query(Transaction).filter(
             Transaction.jobId == job_id,
             Transaction.type == "escrow_hold",
             Transaction.status == "held"
-        ).populate_existing().with_for_update().first()
+        ).populate_existing().with_for_update().all()
 
-        if not tx:
+        if not holds:
             raise HTTPException(status_code=404, detail="Muzlatilgan mablag' topilmadi")
 
-        refund_amount = tx.amount // 100
-        employer = db.query(models.User).filter(models.User.id == tx.employerId).populate_existing().with_for_update().first()
-        if employer:
-            employer.balance = (employer.balance or 0) + refund_amount
-            db.add(employer)
+        # The employer is fetched once, outside the loop. populate_existing()
+        # overwrites the in-session row with what the database holds, so
+        # re-fetching per hold threw away the credit from the previous
+        # iteration: three days were marked refunded and reported refunded, and
+        # one day's money actually arrived.
+        employers: dict[str, models.User] = {}
+        for tx in holds:
+            refund_amount = tx.amount // 100
+            employer = employers.get(tx.employerId)
+            if employer is None:
+                employer = db.query(models.User).filter(
+                    models.User.id == tx.employerId
+                ).populate_existing().with_for_update().first()
+                if employer is not None:
+                    employers[tx.employerId] = employer
 
-        tx.status = "refunded"
-        db.add(tx)
+            if employer:
+                employer.balance = (employer.balance or 0) + refund_amount
+                db.add(employer)
 
-        ledger = AuditLedger(
-            userId=tx.employerId,
-            amountDelta=refund_amount,
-            balanceAfter=employer.balance if employer else 0,
-            entryType="refund",
-            referenceType="job",
-            referenceId=job_id,
-            description=f"Bekor qilingan ish bo'yicha mablag' qaytarildi ({refund_amount} so'm)"
-        )
-        db.add(ledger)
+            tx.status = "refunded"
+            db.add(tx)
+
+            db.add(AuditLedger(
+                userId=tx.employerId,
+                amountDelta=refund_amount,
+                balanceAfter=employer.balance if employer else 0,
+                entryType="refund",
+                referenceType="job",
+                referenceId=job_id,
+                description=f"Bekor qilingan ish bo'yicha mablag' qaytarildi ({refund_amount} so'm)"
+            ))
+
         db.flush()
-        return tx
+        return holds
