@@ -288,40 +288,101 @@ def _render_invoice(*, payout: JobPayout, job: models.Job, employer: User | None
         lines += ["", "IZOH", note]
     text = "\n".join(lines)
 
-    def table(pairs):
+    # Email HTML is not web HTML: flexbox and grid do not survive Outlook or
+    # the Gmail app, so the layout is tables with inline styles. Kept to one
+    # 600px column, which is what every client renders without horizontal
+    # scrolling on a phone.
+    def rows_html(pairs, muted="#6b7280", strong="#111827"):
         return "".join(
-            f'<tr><td style="padding:6px 14px 6px 0;color:#64748b">{k}</td>'
-            f'<td style="padding:6px 0;font-weight:600;color:#0f172a">{v}</td></tr>'
+            '<tr>'
+            f'<td style="padding:9px 16px 9px 0;color:{muted};font-size:13px;'
+            'vertical-align:top;white-space:nowrap">' + str(k) + '</td>'
+            f'<td style="padding:9px 0;color:{strong};font-size:13px;'
+            'font-weight:600;vertical-align:top">' + str(v) + '</td>'
+            '</tr>'
             for k, v in pairs
         )
 
-    # Built by concatenation rather than one big f-string: the bank heading
-    # contains an apostrophe ("To'lov"), and an escape inside an f-string is a
-    # syntax error before Python 3.12.
-    bank_html = ""
-    if bank:
-        bank_html = (
-            '<h3 style="margin:24px 0 8px;font-size:15px">To\'lov rekvizitlari</h3>'
-            '<table style="border-collapse:collapse;font-size:14px">'
-            + table(bank)
-            + "</table>"
-        )
-    note_html = ""
-    if note:
-        note_html = (
-            '<p style="margin:20px 0 0;padding:12px;background:#f8fafc;'
-            'border-radius:8px;font-size:14px">' + note + "</p>"
+    def section(title, pairs):
+        if not pairs:
+            return ""
+        return (
+            '<tr><td style="padding:24px 28px 0">'
+            '<div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;'
+            'color:#9ca3af;font-weight:700;padding-bottom:6px;'
+            'border-bottom:1px solid #e5e7eb">' + title + '</div>'
+            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+            'style="width:100%;border-collapse:collapse;margin-top:8px">'
+            + rows_html(pairs) +
+            '</table></td></tr>'
         )
 
+    issuer = (cfg.payoutCompanyName if cfg and cfg.payoutCompanyName else "Baito")
+
     html = (
-        '<div style="font-family:system-ui,-apple-system,sans-serif;'
-        'color:#0f172a;max-width:640px">'
-        '<h2 style="margin:0 0 4px">Hisob-faktura</h2>'
-        '<p style="margin:0 0 20px;color:#64748b">&#8470; ' + str(payout.invoiceNumber) + "</p>"
-        '<table style="border-collapse:collapse;font-size:14px">' + table(rows) + "</table>"
-        + bank_html
-        + note_html
-        + "</div>"
+        '<!DOCTYPE html><html lang="uz"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<title>Hisob-faktura ' + str(payout.invoiceNumber) + '</title></head>'
+        '<body style="margin:0;padding:24px 12px;background:#f3f4f6;'
+        'font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Arial,sans-serif">'
+
+        # A one-line summary for the inbox preview, hidden in the body itself.
+        '<div style="display:none;max-height:0;overflow:hidden;opacity:0">'
+        + amount + ' so\'m — ' + str(job.title) + '</div>'
+
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+        'style="width:100%;max-width:600px;margin:0 auto;background:#ffffff;'
+        'border:1px solid #e5e7eb;border-radius:12px;border-collapse:separate">'
+
+        # Header
+        '<tr><td style="padding:28px 28px 0">'
+        '<table role="presentation" width="100%"><tr>'
+        '<td style="font-size:18px;font-weight:800;color:#111827">' + issuer + '</td>'
+        '<td align="right" style="font-size:11px;letter-spacing:.08em;'
+        'text-transform:uppercase;color:#9ca3af;font-weight:700">Hisob-faktura</td>'
+        '</tr></table>'
+        '<div style="margin-top:2px;font-size:13px;color:#6b7280">'
+        '&#8470; ' + str(payout.invoiceNumber) + ' &middot; '
+        + datetime.now(timezone.utc).strftime("%Y-%m-%d") + '</div>'
+        '</td></tr>'
+
+        # The number the reader is looking for, given its own block.
+        '<tr><td style="padding:20px 28px 0">'
+        '<table role="presentation" width="100%" style="background:#f9fafb;'
+        'border:1px solid #e5e7eb;border-radius:10px"><tr>'
+        '<td style="padding:16px 18px">'
+        '<div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;'
+        'color:#9ca3af;font-weight:700">To\'lov summasi</div>'
+        '<div style="font-size:26px;font-weight:800;color:#111827;padding-top:2px">'
+        + amount + ' <span style="font-size:15px;font-weight:600;color:#6b7280">so\'m</span></div>'
+        '</td></tr></table></td></tr>'
+
+        + section("Ish ma\'lumotlari", [
+            ("Korxona", company),
+            ("Ish nomi", job.title),
+            ("Ish sanasi", job.workDate or "&mdash;"),
+            ("Ish vaqti", job.workTime or "&mdash;"),
+            ("Manzil", job.location or "&mdash;"),
+        ])
+        + section("To\'lov rekvizitlari", bank)
+    )
+
+    if note:
+        html += (
+            '<tr><td style="padding:20px 28px 0">'
+            '<div style="padding:12px 14px;background:#f9fafb;border-radius:8px;'
+            'font-size:13px;color:#374151;line-height:1.5">' + note + '</div>'
+            '</td></tr>'
+        )
+
+    html += (
+        '<tr><td style="padding:24px 28px 26px">'
+        '<div style="border-top:1px solid #e5e7eb;padding-top:14px;'
+        'font-size:12px;color:#9ca3af;line-height:1.6">'
+        'Ushbu hisob-faktura Baito tizimi tomonidan avtomatik shakllantirildi. '
+        'Savollar bo\'lsa, shu xatga javob yozing.'
+        '</div></td></tr>'
+        '</table></body></html>'
     )
     return text, html
 

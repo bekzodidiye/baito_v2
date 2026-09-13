@@ -13,6 +13,7 @@ import logging
 import smtplib
 import ssl
 from email.message import EmailMessage
+from email.utils import formatdate, make_msgid
 
 from fastapi import HTTPException
 
@@ -86,6 +87,16 @@ def send_email(*, to: str, subject: str, text_body: str, html_body: str | None =
     message["From"] = settings.SMTP_FROM
     message["To"] = recipient
     message["Subject"] = subject
+    # Date and Message-ID are not added by EmailMessage or by smtplib. Mail
+    # without them looks machine-generated in the way spam is machine-
+    # generated, and the first invoice this service sent went straight to the
+    # recipient's spam folder. Reply-To gives a human somewhere to answer.
+    message["Date"] = formatdate(localtime=True)
+    message["Message-ID"] = make_msgid(domain=settings.SMTP_FROM.split("@")[-1] or None)
+    message["Reply-To"] = settings.SMTP_FROM
+    # Says the message is a reply to nothing and expects no automatic reply —
+    # normal for a receipt, and filters read its absence as a small negative.
+    message["Auto-Submitted"] = "auto-generated"
     message.set_content(text_body)
     if html_body:
         message.add_alternative(html_body, subtype="html")
