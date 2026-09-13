@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ArrowLeft, CheckCheck, CircleDot } from 'lucide-react';
 import { NotificationItem } from './NotificationItem';
+import { notificationDestination } from './notificationKind';
 import { NotificationFilterPanel, NotificationCategory } from './NotificationFilterPanel';
 import { NotificationMobileChips } from './NotificationMobileChips';
 import { getNotificationTranslations } from './Notifications.data';
@@ -27,15 +28,11 @@ export const NotificationsScreen: React.FC = () => {
     const item = notifications.find(n => n.id === id);
     if (!item) return;
     
-    if (item.type === 'message') {
-      setCurrentScreen('messages');
-    } else if (item.type === 'job') {
-      setCurrentScreen('jobs');
-    } else if (item.type === 'apply') {
-      setCurrentScreen('calendar');
-    } else if (item.type === 'profile') {
-      setCurrentScreen('profile');
-    }
+    // Every kind now has a destination. This used to list four types and do
+    // nothing for the rest — and since almost everything arrived typed
+    // 'system', "Tafsilotlarni ko'rish" did nothing at all.
+    const to = notificationDestination(item.type);
+    if (to !== 'notifications') setCurrentScreen(to as any);
   };
 
   const todayNotifications = filteredNotifications.filter(n => n.group === 'today');

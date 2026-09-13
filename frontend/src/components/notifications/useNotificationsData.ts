@@ -5,6 +5,7 @@ import { useApp } from '../../context/AppContext';
 import { showToast } from '../../utils/toast';
 import { NotificationItemData } from './NotificationItem';
 import { NotificationCategory } from './NotificationFilterPanel';
+import { notificationKind } from './notificationKind';
 
 export const useNotificationsData = (
   activeCategory: NotificationCategory,
@@ -38,7 +39,7 @@ export const useNotificationsData = (
       timeRu: '10:00',
       timeEn: '10:00',
       isUnread: !n.isRead,
-      type: n.type === 'start_request' ? 'job' : n.type === 'apply' ? 'apply' : 'system',
+      type: notificationKind(n.type),
       group: 'today',
     }));
   }, [apiNotifs]);
@@ -68,7 +69,10 @@ export const useNotificationsData = (
     job: notifications.filter(n => n.type === 'job').length,
     apply: notifications.filter(n => n.type === 'apply').length,
     message: notifications.filter(n => n.type === 'message').length,
-    system: notifications.filter(n => n.type === 'system' || n.type === 'profile').length,
+    system: notifications.filter(
+      n => n.type === 'system' || n.type === 'profile'
+        || n.type === 'payment' || n.type === 'support'
+    ).length,
   };
 
   const filteredNotifications = notifications.filter(n => {
@@ -76,7 +80,10 @@ export const useNotificationsData = (
     if (activeCategory === 'job') return n.type === 'job';
     if (activeCategory === 'apply') return n.type === 'apply';
     if (activeCategory === 'message') return n.type === 'message';
-    if (activeCategory === 'system') return n.type === 'system' || n.type === 'profile';
+    if (activeCategory === 'system') {
+      return n.type === 'system' || n.type === 'profile'
+        || n.type === 'payment' || n.type === 'support';
+    }
     return true;
   });
 

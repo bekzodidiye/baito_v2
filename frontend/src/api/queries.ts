@@ -256,3 +256,24 @@ export const fetchTransactionsApi = async () => {
 export const incrementJobViewApi = async (jobId: string) => {
   return await apiClient(`/jobs/${jobId}/view`, { method: 'POST' });
 };
+
+/** The invoice a company opens from the button in its billing email.
+ *
+ *  Public on purpose — the person who pays a company's bills usually has no
+ *  account here, and the token in the URL is the credential. apiClient only
+ *  attempts a session refresh on 401, so an anonymous caller passes straight
+ *  through.
+ */
+export const fetchInvoiceApi = async (token: string) => {
+  return await apiClient(`/invoices/${encodeURIComponent(token)}`);
+};
+
+export const declareInvoicePaymentApi = async (
+  token: string,
+  data: { method: string; reference?: string },
+) => {
+  return await apiClient(`/invoices/${encodeURIComponent(token)}/pay`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};

@@ -47,6 +47,11 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS_RAW: str = os.getenv("CORS_ORIGINS", "")
 
+    # Where a link in an email points. Mail is read outside the application, so
+    # a relative path is worthless there — this has to be the absolute address
+    # the public actually reaches us on.
+    PUBLIC_APP_URL: str = os.getenv("PUBLIC_APP_URL", "")
+
     # Uzum E-Commerce Integration. Empty means "not configured" — the payment
     # endpoints fail closed rather than pretending to work.
     UZUM_TERMINAL_ID: str = os.getenv("UZUM_TERMINAL_ID", "")
@@ -155,6 +160,22 @@ class Settings(BaseSettings):
             "http://127.0.0.1:3000",
             "http://127.0.0.1:5173",
         ]
+
+    @property
+    def public_app_url(self) -> str:
+        """The address to put in an email, without a trailing slash.
+
+        Falls back to the first real https origin we accept, because that is
+        the same list the deployment already has to keep correct — one more
+        variable that can silently disagree with reality is one more way for a
+        link in an invoice to lead nowhere.
+        """
+        if self.PUBLIC_APP_URL:
+            return self.PUBLIC_APP_URL.rstrip("/")
+        for origin in self.cors_origins:
+            if origin.startswith("https://") and "localhost" not in origin:
+                return origin.rstrip("/")
+        return "https://baito.uz"
 
     @property
     def cookie_secure(self) -> bool:

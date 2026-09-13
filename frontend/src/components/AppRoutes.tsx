@@ -15,6 +15,7 @@ const PaymentsScreen = React.lazy(() => import('../features/payments/PaymentsScr
 const MyCardsScreen = React.lazy(() => import('../features/payments/MyCardsScreen').then(m => ({ default: m.MyCardsScreen })));
 const AddCardScreen = React.lazy(() => import('../features/payments/AddCardScreen').then(m => ({ default: m.AddCardScreen })));
 const TopUpScreen = React.lazy(() => import('../features/payments/TopUpScreen').then(m => ({ default: m.TopUpScreen })));
+const InvoicePayScreen = React.lazy(() => import('../features/payments/InvoicePayScreen').then(m => ({ default: m.InvoicePayScreen })));
 const PaymentResult = React.lazy(() => import('../features/worker/profile/PaymentResult').then(m => ({ default: m.PaymentResult })));
 const TaxesScreen = React.lazy(() => import('../features/worker/profile/TaxesScreen').then(m => ({ default: m.TaxesScreen })));
 const VerificationPendingScreen = React.lazy(() => import('./login/VerificationPendingScreen').then(m => ({ default: m.VerificationPendingScreen })));
@@ -92,6 +93,11 @@ export const AppRoutes = () => {
         <Route path="/payments/my-cards" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><MyCardsScreen /></ProtectedRoute>} />
         <Route path="/payments/add-card" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><AddCardScreen /></ProtectedRoute>} />
         <Route path="/payments/top-up" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><TopUpScreen /></ProtectedRoute>} />
+        {/* Public, and it has to stay that way: this is opened from the
+            button in a billing email by whoever pays that company's invoices,
+            who usually has no account here. The signed token in the path is
+            the credential, and it is worth exactly one invoice. */}
+        <Route path="/invoice/:token" element={<InvoicePayScreen />} />
         <Route path="/payments/success" element={<ProtectedRoute allowedRoles={['worker']}><PaymentResult /></ProtectedRoute>} />
         <Route path="/payments/error" element={<ProtectedRoute allowedRoles={['worker']}><PaymentResult /></ProtectedRoute>} />
         <Route path="/taxes" element={<ProtectedRoute allowedRoles={['worker']}><TaxesScreen /></ProtectedRoute>} />

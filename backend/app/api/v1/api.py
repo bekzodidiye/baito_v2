@@ -5,6 +5,7 @@ from app.api.v1.endpoints import (
     applications,
     auth,
     chats,
+    invoices,
     job_actions,
     jobs,
     media,
@@ -26,6 +27,9 @@ api_router.include_router(chats.router, prefix="/chats", tags=["chats"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
+# Public: opened from the button in an invoice email, by a person who very
+# likely has no account here. The token in the path is the credential.
+api_router.include_router(invoices.router, prefix="/invoices", tags=["invoices"])
 # Uzum Bank Merchant API. Uzum calls these; the path is what we register with
 # them at onboarding, so it is fixed by that agreement rather than by taste.
 api_router.include_router(

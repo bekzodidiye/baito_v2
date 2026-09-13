@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
+from html import escape
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -26,6 +27,7 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.api import deps
+from app.core import invoice_link
 from app.models.audit_ledger import AuditLedger
 from app.models.job import JobStatus
 from app.models.job_payout import JobPayout, PayoutStatus
@@ -76,6 +78,13 @@ def _serialise(p: JobPayout, job: models.Job | None = None, worker: User | None 
         "invoiceAmount": p.invoiceAmount,
         "invoiceSentTo": p.invoiceSentTo,
         "invoiceSentAt": p.invoiceSentAt.isoformat() if p.invoiceSentAt else None,
+        # What the company said back, from the link in the invoice email. Not
+        # a bank statement — the admin list labels it as their word.
+        "invoicePaidMethod": p.invoicePaidMethod,
+        "invoicePaidReference": p.invoicePaidReference,
+        "invoicePaidDeclaredAt": (
+            p.invoicePaidDeclaredAt.isoformat() if p.invoicePaidDeclaredAt else None
+        ),
     }
 
 
@@ -275,7 +284,8 @@ def confirm_payout(
 
 
 def _render_invoice(*, payout: JobPayout, job: models.Job, employer: User | None,
-                    cfg: models.SystemSetting | None, note: str | None) -> tuple[str, str]:
+                    cfg: models.SystemSetting | None, note: str | None,
+                    pay_url: str) -> tuple[str, str]:
     """The invoice, as text and as HTML. Same content both ways."""
     company = (employer.companyName if employer and employer.companyName else job.company) or "—"
     amount = f"{payout.invoiceAmount:,}".replace(",", " ")
@@ -307,6 +317,10 @@ def _render_invoice(*, payout: JobPayout, job: models.Job, employer: User | None
         lines += [f"{k}: {v}" for k, v in bank]
     if note:
         lines += ["", "IZOH", note]
+    # The plain-text part is what a client that refuses HTML shows, and what a
+    # spam filter reads when it wants to know whether the two halves agree. The
+    # link has to be in both.
+    lines += ["", "TO'LOVNI AMALGA OSHIRISH", pay_url]
     text = "\n".join(lines)
 
     # Email HTML is not web HTML: flexbox and grid do not survive Outlook or
@@ -314,12 +328,15 @@ def _render_invoice(*, payout: JobPayout, job: models.Job, employer: User | None
     # 600px column, which is what every client renders without horizontal
     # scrolling on a phone.
     def rows_html(pairs, muted="#6b7280", strong="#111827"):
+        # escape(), because a job title and a company name are typed by an
+        # employer. Unescaped, "<b>" in a job title reformats somebody else's
+        # invoice and an "<a>" in it points wherever the author liked.
         return "".join(
             '<tr>'
             f'<td style="padding:9px 16px 9px 0;color:{muted};font-size:13px;'
-            'vertical-align:top;white-space:nowrap">' + str(k) + '</td>'
+            'vertical-align:top;white-space:nowrap">' + escape(str(k)) + '</td>'
             f'<td style="padding:9px 0;color:{strong};font-size:13px;'
-            'font-weight:600;vertical-align:top">' + str(v) + '</td>'
+            'font-weight:600;vertical-align:top">' + escape(str(v)) + '</td>'
             '</tr>'
             for k, v in pairs
         )
@@ -349,7 +366,7 @@ def _render_invoice(*, payout: JobPayout, job: models.Job, employer: User | None
 
         # A one-line summary for the inbox preview, hidden in the body itself.
         '<div style="display:none;max-height:0;overflow:hidden;opacity:0">'
-        + amount + ' so\'m — ' + str(job.title) + '</div>'
+        + amount + ' so\'m — ' + escape(str(job.title)) + '</div>'
 
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
         'style="width:100%;max-width:600px;margin:0 auto;background:#ffffff;'
@@ -358,7 +375,7 @@ def _render_invoice(*, payout: JobPayout, job: models.Job, employer: User | None
         # Header
         '<tr><td style="padding:28px 28px 0">'
         '<table role="presentation" width="100%"><tr>'
-        '<td style="font-size:18px;font-weight:800;color:#111827">' + issuer + '</td>'
+        '<td style="font-size:18px;font-weight:800;color:#111827">' + escape(issuer) + '</td>'
         '<td align="right" style="font-size:11px;letter-spacing:.08em;'
         'text-transform:uppercase;color:#9ca3af;font-weight:700">Hisob-faktura</td>'
         '</tr></table>'
@@ -378,12 +395,30 @@ def _render_invoice(*, payout: JobPayout, job: models.Job, employer: User | None
         + amount + ' <span style="font-size:15px;font-weight:600;color:#6b7280">so\'m</span></div>'
         '</td></tr></table></td></tr>'
 
+        # The one thing the reader is meant to do, directly under the one
+        # number they came for. Built as a table with bgcolor rather than a
+        # styled <a>: Outlook drops border-radius and background on anchors,
+        # and a CTA that renders as bare blue underlined text is a CTA nobody
+        # presses.
+        '<tr><td align="center" style="padding:22px 28px 0">'
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0">'
+        '<tr><td align="center" bgcolor="#010766" style="border-radius:10px">'
+        '<a href="' + escape(pay_url, quote=True) + '" target="_blank" '
+        'style="display:inline-block;padding:15px 34px;font-size:15px;'
+        'font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;'
+        'font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Arial,'
+        'sans-serif">To\'lovni amalga oshirish</a>'
+        '</td></tr></table>'
+        '<div style="padding-top:8px;font-size:12px;color:#9ca3af">'
+        'Rekvizitlar va summa oldindan to\'ldirilgan &middot; havola 60 kun amal qiladi'
+        '</div></td></tr>'
+
         + section("Ish ma\'lumotlari", [
             ("Korxona", company),
             ("Ish nomi", job.title),
-            ("Ish sanasi", job.workDate or "&mdash;"),
-            ("Ish vaqti", job.workTime or "&mdash;"),
-            ("Manzil", job.location or "&mdash;"),
+            ("Ish sanasi", job.workDate or "—"),
+            ("Ish vaqti", job.workTime or "—"),
+            ("Manzil", job.location or "—"),
         ])
         + section("To\'lov rekvizitlari", bank)
     )
@@ -392,7 +427,7 @@ def _render_invoice(*, payout: JobPayout, job: models.Job, employer: User | None
         html += (
             '<tr><td style="padding:20px 28px 0">'
             '<div style="padding:12px 14px;background:#f9fafb;border-radius:8px;'
-            'font-size:13px;color:#374151;line-height:1.5">' + note + '</div>'
+            'font-size:13px;color:#374151;line-height:1.5">' + escape(note) + '</div>'
             '</td></tr>'
         )
 
@@ -453,8 +488,13 @@ def send_payout_invoice(
     payout.invoiceAmount = payload.amount
     payout.invoiceNumber = f"INV-{datetime.now(timezone.utc):%Y%m%d}-{payout.id[:8].upper()}"
 
+    # Built after invoiceNumber is set: the token is bound to it, so a
+    # re-issued invoice retires the link that went out with the old one.
+    pay_url = invoice_link.invoice_url(payout.id, payout.invoiceNumber)
+
     text_body, html_body = _render_invoice(
-        payout=payout, job=job, employer=employer, cfg=cfg, note=payload.note
+        payout=payout, job=job, employer=employer, cfg=cfg, note=payload.note,
+        pay_url=pay_url,
     )
 
     # Sent before the row is marked sent. If this raises, nothing is recorded

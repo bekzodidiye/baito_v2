@@ -172,6 +172,10 @@ services:
       - SMTP_PASSWORD=${SMTP_PASSWORD:-}
       - SMTP_FROM=${SMTP_FROM:-}
       - SMTP_STARTTLS=${SMTP_STARTTLS:-true}
+      # Where the "pay this invoice" button in that mail points. Read outside
+      # the app, so it has to be absolute. Left empty it falls back to the
+      # first real https origin in CORS_ORIGINS.
+      - PUBLIC_APP_URL=${PUBLIC_APP_URL:-}
       - SENTRY_DSN=${SENTRY_DSN:-}
       # Used by the error reporter, not just the backup bot.
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}

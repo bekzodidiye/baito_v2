@@ -1,4 +1,5 @@
 import { ToastContainer } from './components/ToastContainer';
+import { NotificationWatcher } from './components/notifications/NotificationWatcher';
 import React, { useState, useEffect, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
@@ -82,6 +83,8 @@ function AppContent() {
     }`}>
       <a href="#main-content" className="skip-link">{translations[language].skipToContent}</a>
       <ToastContainer />
+      {/* Watches for notifications on every screen, not just the list. */}
+      <NotificationWatcher />
       {isOffline && (
         <div className="bg-red-500 text-white text-center py-2 px-4 text-sm font-semibold z-[9999] fixed top-0 w-full flex items-center justify-center gap-2">
           <AlertCircle size={16} />

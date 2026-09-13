@@ -15,6 +15,10 @@ class PayoutStatus:
 
     PAID = "paid"            # money sent to the worker, receipt on file
     INVOICED = "invoiced"    # and the company has been billed for it
+    # The company opened the invoice and pressed pay. That is the payer's word,
+    # not a bank statement: it is recorded as a separate state precisely so
+    # nobody reads it as the money having arrived.
+    DECLARED = "payment_declared"
 
 
 class JobPayout(Base):
@@ -57,3 +61,10 @@ class JobPayout(Base):
     invoiceSentTo = Column(String, nullable=True)
     invoiceSentAt = Column(DateTime(timezone=True), nullable=True)
     invoiceSentByAdminId = Column(String, ForeignKey("users.id"), nullable=True)
+
+    # What the company said when it paid, from the link in the invoice email.
+    # Kept apart from the columns above because those are what we did and these
+    # are what they told us; reconciling the two is a person's job.
+    invoicePaidMethod = Column(String, nullable=True)       # bank_transfer, card
+    invoicePaidReference = Column(String, nullable=True)    # their payment order no.
+    invoicePaidDeclaredAt = Column(DateTime(timezone=True), nullable=True)

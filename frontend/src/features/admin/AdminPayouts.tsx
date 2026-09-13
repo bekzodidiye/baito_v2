@@ -41,6 +41,11 @@ interface JobPayout {
   invoiceAmount: number | null;
   invoiceSentTo: string | null;
   invoiceSentAt: string | null;
+  /** What the company said back through the link in its invoice email. Their
+   *  word, not a bank statement — the row labels it as such. */
+  invoicePaidMethod: string | null;
+  invoicePaidReference: string | null;
+  invoicePaidDeclaredAt: string | null;
 }
 
 interface BankDetails {
@@ -252,6 +257,15 @@ export const AdminPayouts: React.FC = () => {
                             <span className="block text-slate-400">
                               {money(p.invoiceAmount ?? 0)} · {p.invoiceSentTo}
                             </span>
+                            {p.invoicePaidDeclaredAt && (
+                              // "Says it paid", never "paid": nobody has looked
+                              // at a bank statement yet, and a row that reads
+                              // as settled is how an unpaid invoice gets closed.
+                              <span className="block mt-1 text-emerald-700 font-semibold">
+                                To'ladim dedi · {when(p.invoicePaidDeclaredAt)}
+                                {p.invoicePaidReference ? ` · №${p.invoicePaidReference}` : ''}
+                              </span>
+                            )}
                           </span>
                         ) : (
                           <span className="text-amber-600 font-semibold">Yuborilmagan</span>
