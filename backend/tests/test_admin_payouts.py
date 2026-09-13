@@ -73,6 +73,53 @@ def test_payout_debits_the_worker_and_records_the_receipt(client):
         assert payout is not None and payout.amount == 225_000
 
 
+def test_the_payout_appears_in_the_worker_transactions(client):
+    """The worker has to be able to see where the money went.
+
+    JobPayout records the transfer and AuditLedger records the balance move,
+    but the screens people look at — the worker's payments list and the admin
+    transaction list — both read Transaction. Without a row there, a worker
+    watched their balance drop with nothing to explain it."""
+    from app.models.transaction import Transaction
+
+    employer, worker, job = _completed_job_with_paid_worker(balance=225_000)
+    _admin(client)
+
+    resp = client.post(f"/api/v1/admin/jobs/{job.id}/payout",
+                       json={"amount": 225_000, "receiptUrl": RECEIPT})
+    assert resp.status_code == 200, resp.text
+
+    with SessionLocal() as db:
+        tx = (
+            db.query(Transaction)
+            .filter(Transaction.jobId == job.id, Transaction.type == "payout")
+            .first()
+        )
+        assert tx is not None, "payout wrote no transaction"
+        # Transaction.amount is in tiyin; JobPayout.amount is in so'm.
+        assert tx.amount == 225_000 * 100
+        assert tx.workerId == worker.id
+        assert tx.employerId == employer.id
+        assert tx.status == "paid"
+        assert tx.platformFee == 0
+
+
+def test_the_payout_transaction_reaches_the_worker_api(client):
+    """And it has to survive the endpoint the screen actually calls, which
+    converts tiyin back to so'm on the way out."""
+    employer, worker, job = _completed_job_with_paid_worker(balance=225_000)
+    _admin(client)
+    client.post(f"/api/v1/admin/jobs/{job.id}/payout",
+                json={"amount": 225_000, "receiptUrl": RECEIPT})
+
+    login(client, worker)
+    resp = client.get("/api/v1/payments/transactions")
+    assert resp.status_code == 200, resp.text
+    payouts = [t for t in resp.json() if t.get("type") == "payout"]
+    assert len(payouts) == 1, resp.text
+    assert payouts[0]["amount"] == 225_000
+
+
 def test_the_same_shift_cannot_be_paid_twice(client):
     """A double submit, or two administrators working the same list, would
     otherwise debit the worker twice for one shift."""

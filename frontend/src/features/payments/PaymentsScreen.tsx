@@ -57,6 +57,11 @@ export const PaymentsScreen: React.FC = () => {
   const myId = me?.id ?? user?.id;
   const isIncoming = (tx: any) => {
     if (tx.type === 'withdraw') return false;
+    // A payout is the admin having sent the money to the worker's bank
+    // account; the in-app balance goes down to match. Without this line the
+    // fallback below reads workerId === me and calls it income, so the worker
+    // would be shown a credit at the moment they were debited.
+    if (tx.type === 'payout') return false;
     if (tx.type === 'deposit') return true;
     return !!myId && tx.workerId === myId;
   };
@@ -83,7 +88,9 @@ export const PaymentsScreen: React.FC = () => {
   // One derivation of a row's title, used by both the list and the search, so
   // what a user reads is exactly what they can search for.
   const txLabel = (tx: any) =>
-    tx.type === 'withdraw'
+    tx.type === 'payout'
+      ? (language === 'uz' ? "Bank orqali to'lov" : language === 'ru' ? "Выплата на счёт" : "Bank payout")
+      : tx.type === 'withdraw'
       ? (language === 'uz' ? "Mablag' yechish" : language === 'ru' ? "Снятие средств" : "Withdrawal")
       : isIncoming(tx)
         ? (language === 'uz' ? "Kirim" : language === 'ru' ? "Поступление" : "Incoming")

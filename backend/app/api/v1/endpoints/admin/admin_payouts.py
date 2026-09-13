@@ -16,6 +16,7 @@ if the invoice email fails, nothing about the payment should unwind.
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -239,6 +240,26 @@ def confirm_payout(
         referenceType="job",
         referenceId=job.id,
         description=f"Qo'lda to'lov: {payload.amount} so'm ({job.title})",
+    ))
+
+    # The payout is also a transaction, and has to be written as one.
+    #
+    # JobPayout records the bank transfer and the invoice; AuditLedger records
+    # the balance movement for audit. Neither is read by the screens people
+    # actually look at: the worker's payments list and the admin transaction
+    # list both read Transaction. So a worker whose balance had just been paid
+    # out saw the money leave and nothing explaining where it went.
+    #
+    # amount is stored in tiyin here, unlike JobPayout, which is in so'm.
+    db.add(models.Transaction(
+        id=str(uuid.uuid4()),
+        jobId=job.id,
+        employerId=job.employerId,
+        workerId=worker.id,
+        amount=payload.amount * 100,
+        platformFee=0,
+        type="payout",
+        status="paid",
     ))
 
     record_admin_action(
