@@ -161,6 +161,17 @@ services:
       - UZUM_MERCHANT_SERVICE_ID=${UZUM_MERCHANT_SERVICE_ID:-0}
       - UZUM_MERCHANT_USERNAME=${UZUM_MERCHANT_USERNAME:-}
       - UZUM_MERCHANT_PASSWORD=${UZUM_MERCHANT_PASSWORD:-}
+      # SMTP, for the invoice a company is sent after a payout. These were
+      # added to app/core/config.py when the payout flow was built and never
+      # added here, so setting them in .env did nothing at all: the app kept
+      # answering "Pochta serveri sozlanmagan" with all four values present on
+      # disk. Exactly what the Uzum note above warns about.
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_FROM=${SMTP_FROM:-}
+      - SMTP_STARTTLS=${SMTP_STARTTLS:-true}
       - SENTRY_DSN=${SENTRY_DSN:-}
       # Used by the error reporter, not just the backup bot.
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
