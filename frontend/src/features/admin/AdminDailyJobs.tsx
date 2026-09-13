@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { parseWorkDates, toIsoDate } from '../../utils/workDates';
 import { AdminJob, AdminUser } from './types';
 import { Search, Trash2, MapPin, Building2, Briefcase, XCircle, Eye, Wallet } from 'lucide-react';
 import { RejectJobModal } from './RejectJobModal';
@@ -51,23 +52,26 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
       j.location.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'all' || j.status === statusFilter;
     
-    // Use actual job creation date or fallback to today
-    let jobDate = todayStr;
-    if (j.createdAt) {
-      try {
+    // A job belongs to every day it is worked, not to the day it was posted.
+    // This matched on createdAt, so a shift booked for 2, 3 and 4 September
+    // appeared only under the day the employer happened to create it, and the
+    // admin looking at the 3rd saw nothing.
+    //
+    // workDate is free text and often a list — "2026-09-02, 2026-09-03,
+    // 2026-09-04" — so it is parsed rather than compared.
+    const workDates = parseWorkDates(j.workDate);
+    let matchDate: boolean;
+    if (workDates.length > 0) {
+      matchDate = workDates.includes(selectedDate);
+    } else {
+      // No work date recorded: fall back to the posting date, as before.
+      let created = todayStr;
+      if (j.createdAt) {
         const d = new Date(j.createdAt);
-        if (!isNaN(d.getTime())) {
-          const jy = d.getFullYear();
-          const jm = String(d.getMonth() + 1).padStart(2, '0');
-          const jd = String(d.getDate()).padStart(2, '0');
-          jobDate = `${jy}-${jm}-${jd}`;
-        }
-      } catch (e) {
-        // Fallback
+        if (!isNaN(d.getTime())) created = toIsoDate(d);
       }
+      matchDate = created === selectedDate;
     }
-    
-    const matchDate = jobDate === selectedDate;
 
     return matchSearch && matchStatus && matchDate;
   });

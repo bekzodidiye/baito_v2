@@ -2,7 +2,7 @@ import logging
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -180,8 +180,28 @@ def read_jobs(
     elif is_employer:
         query = query.filter(models.Job.employerId == current_user.id)
     elif not is_admin:
-        # Job seekers only ever see live postings.
-        query = query.filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
+        # Job seekers see live postings — plus the jobs they are personally
+        # committed to, whatever state those have reached.
+        #
+        # Without the second half a worker's calendar was empty: the moment
+        # they were hired the posting left OPEN_STATUSES, so their own shift
+        # vanished from the only feed the calendar reads. A worker could not
+        # see the work they had been hired for, were in the middle of, or had
+        # finished.
+        #
+        # This widens visibility only to rows the caller already has an
+        # application on; nobody gains sight of anyone else's closed postings.
+        visible = models.Job.status.in_(JobStatus.OPEN_STATUSES)
+        if current_user:
+            own = (
+                db.query(models.Application.jobId)
+                .filter(models.Application.workerId.in_(
+                    [current_user.id, current_user.uid]
+                ))
+                .subquery()
+            )
+            visible = or_(visible, models.Job.id.in_(select(own.c.jobId)))
+        query = query.filter(visible)
 
     # createdAt alone is not a total order — several postings can share a
     # timestamp, and Postgres is then free to return the tied rows in any
