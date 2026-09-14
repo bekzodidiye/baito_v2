@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -98,7 +99,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     logger.warning("422 Validation error on %s: %s", request.url.path, exc.errors())
     return JSONResponse(
         status_code=422,
-        content={"detail": exc.errors()},
+        content={"detail": jsonable_encoder(exc.errors())},
     )
 
 app.add_exception_handler(SQLAlchemyError, sqlalchemy_exception_handler)
