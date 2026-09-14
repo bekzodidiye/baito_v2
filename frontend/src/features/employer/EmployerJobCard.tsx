@@ -10,6 +10,7 @@ interface EmployerJobCardProps {
   onSelect: (job: Job) => void;
   onComplete: (jobId: string) => void;
   onDelete: (jobId: string) => void;
+  onConfirmStart?: (jobId: string) => void;
 }
 
 export const getJobBannerImage = (job: Job): string => {
@@ -34,6 +35,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
   onSelect,
   onComplete,
   onDelete,
+  onConfirmStart,
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const hired = Number(job.hiredCount ?? 0);
@@ -121,7 +123,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
               <CheckCircle2 size={14} />
               {language === 'uz' ? "Yopildi" : language === 'ru' ? "Завершено" : "Closed"}
             </span>
-          ) : job.status === 'in_progress' || job.status === 'start_requested' ? (
+          ) : job.status === 'in_progress' ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -131,6 +133,17 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
             >
               <CheckCircle2 size={14} />
               {language === 'uz' ? "Yakunlash" : language === 'ru' ? "Завершить" : "Complete"}
+            </button>
+          ) : job.status === 'start_requested' ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onConfirmStart) onConfirmStart(job.id);
+              }}
+              className="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[12px] font-black transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <CheckCircle2 size={14} />
+              {language === 'uz' ? "Tasdiqlash" : language === 'ru' ? "Подтвердить" : "Confirm"}
             </button>
           ) : job.status === 'confirmed' ? (
             <span className="w-full py-2 rounded-lg bg-brand-primary/10 text-brand-primary text-[12px] font-black flex items-center justify-center gap-1.5">

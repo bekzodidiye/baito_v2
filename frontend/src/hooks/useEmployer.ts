@@ -138,6 +138,18 @@ export const useEmployer = () => {
     onError: handleError
   });
 
+  const confirmStartJobMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      return apiClient(`/jobs/${jobId}/confirm-start`, { method: 'POST' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employer-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['employer-applications'] });
+      handleSuccess("Ish boshlanishi tasdiqlandi!", "Начало работы подтверждено!", "Job start confirmed!");
+    },
+    onError: handleError
+  });
+
   const completeJobMutation = useMutation({
     mutationFn: async ({ jobId, data }: { jobId: string; data?: { rating?: number; review?: string; bonus?: number } }) => {
       return apiClient(`/jobs/${jobId}/complete`, { 
@@ -169,6 +181,7 @@ export const useEmployer = () => {
     balance,
     postNewJob: async (data: Partial<Job>) => { await postNewJobMutation.mutateAsync(data); return true; },
     updateApplicationStatus: async (appId: string, status: 'hired' | 'rejected') => updateApplicationMutation.mutate({ appId, status }),
+    confirmStartJob: async (jobId: string) => confirmStartJobMutation.mutate(jobId),
     completeJob: async (jobId: string, data?: { rating?: number; review?: string; bonus?: number }) => completeJobMutation.mutate({ jobId, data }),
     deleteJob: async (jobId: string) => deleteJobMutation.mutate(jobId),
     language,

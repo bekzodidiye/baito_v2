@@ -12,6 +12,7 @@ interface EmployerJobDetailModalProps {
   language: 'uz' | 'ru' | 'en';
   onComplete?: (jobId: string) => void;
   onDelete?: (jobId: string) => void;
+  onConfirmStart?: (jobId: string) => void;
 }
 
 export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
@@ -20,6 +21,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
   language,
   onComplete,
   onDelete,
+  onConfirmStart,
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
@@ -278,6 +280,22 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                     className="w-2/3 py-4 bg-brand-primary text-white font-black rounded-xl text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 cursor-pointer active:scale-[0.98] transition-all"
                   >
                     {language === 'uz' ? 'Ishni yakunlash' : 'Завершить работу'}
+                    <ChevronRight size={20} />
+                  </button>
+                </>
+              ) : job.status === 'start_requested' && onConfirmStart ? (
+                <>
+                  <button
+                    onClick={onClose}
+                    className="w-1/3 py-4 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
+                  >
+                    {language === 'uz' ? 'Yopish' : 'Закрыть'}
+                  </button>
+                  <button
+                    onClick={() => { onConfirmStart(job.id); onClose(); }}
+                    className="w-2/3 py-4 bg-amber-500 text-white font-black rounded-xl text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 cursor-pointer active:scale-[0.98] transition-all"
+                  >
+                    {language === 'uz' ? 'Boshlashni tasdiqlash' : 'Подтвердить начало'}
                     <ChevronRight size={20} />
                   </button>
                 </>

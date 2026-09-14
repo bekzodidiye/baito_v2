@@ -13,7 +13,7 @@ interface EmployerJobsProps {
 }
 
 export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) => {
-  const { postedJobs, language, completeJob, deleteJob } = useEmployer();
+  const { postedJobs, language, completeJob, deleteJob, confirmStartJob } = useEmployer();
   const [activeTab, setActiveTab] = useState<'open' | 'active' | 'history'>('open');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobToComplete, setJobToComplete] = useState<Job | null>(null);
@@ -167,8 +167,9 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
                   job={job}
                   language={language}
                   onSelect={setSelectedJob}
-                  onComplete={(id) => setJobToComplete(job)}
+                  onComplete={() => setJobToComplete(job)}
                   onDelete={deleteJob}
+                  onConfirmStart={() => confirmStartJob(job.id)}
                 />
               ))}
             </div>
@@ -194,6 +195,10 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
           if (j) setJobToComplete(j);
         }}
         onDelete={deleteJob}
+        onConfirmStart={(id) => {
+          confirmStartJob(id);
+          setSelectedJob(null);
+        }}
       />
 
       {/* Finish Job Modal */}

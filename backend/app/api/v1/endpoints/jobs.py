@@ -304,6 +304,13 @@ def read_jobs(
                 job_status = 'hired'
             elif app_item.status == 'applied':
                 job_status = 'applied'
+        elif current_user and job.employerId in (current_user.id, current_user.uid):
+            job_apps = [a for a in hired_apps if a.jobId == job.id]
+            if job.status not in (JobStatus.IN_PROGRESS, JobStatus.COMPLETED, JobStatus.CANCELLED):
+                if any(a.status == 'in_progress' for a in job_apps):
+                    job_status = 'in_progress'
+                elif any(a.status == 'start_requested' for a in job_apps):
+                    job_status = 'start_requested'
 
         job_dict = schemas.JobWithApplicationStatus.model_validate(job)
         job_dict.status = job_status
