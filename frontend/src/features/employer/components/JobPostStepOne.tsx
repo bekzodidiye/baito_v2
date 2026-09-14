@@ -138,10 +138,10 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
       <div className="flex flex-col gap-2">
         <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
           <Building size={14} className="text-brand-primary" />
-          {language === 'uz' ? "Tashkilot nomi" : "Company Name"}
+          {language === 'uz' ? "Tashkilot nomi (ixtiyoriy)" : "Company Name (Optional)"}
         </label>
         <input
-              aria-label="e.g. Murod Buildings" type="text" placeholder="e.g. Murod Buildings" className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={company} onChange={(e) => setCompany(e.target.value)} />
+              aria-label="Tashkilot nomi" type="text" placeholder={language === 'uz' ? "Tashkilot nomi (bo'sh qolsa ismingiz ko'rsatiladi)" : "Company name (optional)"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={company} onChange={(e) => setCompany(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-2">

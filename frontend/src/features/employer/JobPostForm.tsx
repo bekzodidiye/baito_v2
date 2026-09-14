@@ -55,9 +55,20 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
   }));
 
   const handleNext = () => {
-    if (step === 1 && (!title || !category || !responsibilities)) {
-      showToast(language === 'uz' ? "Ish nomi, kategoriya va vazifalarni to'ldiring!" : "Fill title, category and responsibilities!");
-      return;
+    if (step === 1) {
+      if (!title.trim() || title.trim().length < 3) {
+        showToast(language === 'uz' ? "Ish nomi kamida 3 ta belgidan iborat bo'lishi kerak!" : "Job title must be at least 3 characters!");
+        return;
+      }
+      if (!category) {
+        showToast(language === 'uz' ? "Kategoriyani tanlang!" : "Select category!");
+        return;
+      }
+      const rawDesc = (description || responsibilities || '').trim();
+      if (!rawDesc || rawDesc.length < 10) {
+        showToast(language === 'uz' ? "Ish vazifalarini batafsilroq yozing (kamida 10 ta belgi)!" : "Please provide more details in responsibilities (at least 10 chars)!");
+        return;
+      }
     }
     if (step === 2 && (!workDate || !startTime || !endTime || !hourlyRate)) {
       showToast(language === 'uz' ? "Ish sanasi, vaqti va to'lov summasini kiriting!" : "Enter date, time and salary!");
@@ -81,18 +92,35 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
       setIsSubmitting(true);
       const formattedSalary = hourlyRate.includes("so'm") || hourlyRate.includes("UZS") ? hourlyRate : `${hourlyRate} UZS`;
       const formattedTransport = transportRate ? (transportRate.includes("so'm") || transportRate.includes("UZS") ? transportRate : `${transportRate} UZS`) : "Yo'q";
+      const safeCompany = (company || companyName || "Ish beruvchi").trim();
+      const rawDesc = (description || responsibilities || '').trim();
+      const safeDesc = rawDesc.length >= 10 ? rawDesc : `${title}: ${rawDesc || "Batafsil ma'lumot olish uchun murojaat qiling."}`;
 
       await postNewJob({
-        title, company: company || companyName, imageUrl, category, salary: formattedSalary,
-        hourlyRate: formattedSalary, transportRate: formattedTransport,
-        location: `${city}, ${addressLine}`, rawLocation: `${city}, ${addressLine}`,
-        durationLabel, workDate, workTime: `${startTime} - ${endTime}`,
-        neededWorkers, responsibilities, description: description || responsibilities,
-        requirements, importantNote, tags, coordinates: { x: coordinateX, y: coordinateY }
+        title: title.trim(),
+        company: safeCompany,
+        imageUrl,
+        category,
+        salary: formattedSalary,
+        hourlyRate: formattedSalary,
+        transportRate: formattedTransport,
+        location: `${city}, ${addressLine}`,
+        rawLocation: `${city}, ${addressLine}`,
+        durationLabel,
+        workDate,
+        workTime: `${startTime} - ${endTime}`,
+        neededWorkers,
+        responsibilities: responsibilities || safeDesc,
+        description: safeDesc,
+        requirements,
+        importantNote,
+        tags,
+        coordinates: { x: coordinateX, y: coordinateY }
       });
       onSubmitSuccess();
-    } catch (err) {
-      showToast(language === 'uz' ? "Serverda xatolik yuz berdi. Qaytadan urinib ko'ring." : "An error occurred. Please try again.");
+    } catch (err: any) {
+      const msg = err?.message || (language === 'uz' ? "Serverda xatolik yuz berdi. Qaytadan urinib ko'ring." : "An error occurred. Please try again.");
+      showToast(msg);
     } finally {
       setIsSubmitting(false);
     }

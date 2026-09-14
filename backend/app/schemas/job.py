@@ -111,7 +111,7 @@ class JobCreate(JobBase):
     """
 
     title: str = Field(min_length=3, max_length=200)
-    company: str = Field(min_length=1, max_length=200)
+    company: str = Field(default="Ish beruvchi", min_length=1, max_length=200)
     salary: str = Field(min_length=1, max_length=100)
     location: str = Field(min_length=1, max_length=200)
     description: str = Field(min_length=10, max_length=5000)

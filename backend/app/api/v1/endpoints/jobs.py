@@ -361,6 +361,8 @@ def create_job(
     job_in_dict["employerId"] = current_user.id
     job_in_dict["status"] = JobStatus.OPEN
     job_in_dict["views"] = 0
+    if not job_in_dict.get("company") or job_in_dict["company"] == "Ish beruvchi":
+        job_in_dict["company"] = current_user.companyName or current_user.name or "Ish beruvchi"
 
     db_job = models.Job(**job_in_dict)
     db.add(db_job)

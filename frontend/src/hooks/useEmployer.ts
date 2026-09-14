@@ -8,8 +8,6 @@ export const useEmployer = () => {
   const { language, userProfile } = useApp();
   const queryClient = useQueryClient();
   
-  const companyName = userProfile?.firstName || 'Murod Buildings';
-
   // 1. Fetch Employer Profile (Balance)
   const { data: me } = useQuery({
     queryKey: ['me'],
@@ -17,6 +15,7 @@ export const useEmployer = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const companyName = me?.companyName || me?.name || userProfile?.firstName || 'Ish beruvchi';
   const balance = me?.balance || '0';
 
   // 2. Fetch Jobs
@@ -91,13 +90,13 @@ export const useEmployer = () => {
       return apiClient('/jobs', {
         method: 'POST',
         body: JSON.stringify({
-          title: newJobData.title || '',
-          company: newJobData.company || companyName,
+          title: (newJobData.title || '').trim(),
+          company: (newJobData.company || companyName || 'Ish beruvchi').trim(),
           salary: newJobData.salary || "200000 UZS",
           location: newJobData.location || 'Toshkent',
           rawLocation: newJobData.rawLocation || newJobData.location || 'Toshkent',
           durationLabel: newJobData.durationLabel || "1 kunlik",
-          description: newJobData.description || '',
+          description: (newJobData.description || newJobData.responsibilities || 'Batafsil ma\'lumot olish uchun bog\'laning.').trim(),
           workDate: newJobData.workDate || new Date().toISOString().split('T')[0],
           workTime: newJobData.workTime || '09:00 - 18:00',
           neededWorkers: newJobData.neededWorkers || '1',
