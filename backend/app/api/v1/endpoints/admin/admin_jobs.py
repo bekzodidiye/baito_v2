@@ -305,7 +305,7 @@ def change_job_worker(
         db.query(models.Application)
         .filter(
             models.Application.jobId == job_id,
-            models.Application.status.in_(["hired", "confirmed", "in_progress"]),
+            models.Application.status.in_(["hired", "confirmed", "in_progress", "start_requested", "completed"]),
         )
         .all()
     )
@@ -347,7 +347,7 @@ def change_job_worker(
             job.status = JobStatus.CONFIRMED
     else:
         job.hiredWorkerId = None
-        if job.status in [JobStatus.CONFIRMED, JobStatus.IN_PROGRESS]:
+        if job.status != JobStatus.CANCELLED:
             job.status = JobStatus.OPEN
 
     record_admin_action(
