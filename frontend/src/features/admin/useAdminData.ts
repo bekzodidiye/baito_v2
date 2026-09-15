@@ -138,6 +138,7 @@ export function useAdminData() {
       if (res !== undefined) {
         showToast("E'lon holati o'zgardi");
         fetchAllData();
+        queryClient.invalidateQueries({ queryKey: ['jobs'] });
       }
     } catch (e) {
       console.error(e);
@@ -152,6 +153,7 @@ export function useAdminData() {
       });
       if (res !== undefined) {
         fetchAllData();
+        queryClient.invalidateQueries({ queryKey: ['jobs'] });
       }
     } catch (e) {
       console.error(e);
@@ -166,6 +168,7 @@ export function useAdminData() {
       if (res !== undefined) {
         showToast("E'lon o'chirib tashlandi");
         fetchAllData();
+        queryClient.invalidateQueries({ queryKey: ['jobs'] });
       }
     } catch (e) {
       console.error(e);

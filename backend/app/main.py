@@ -75,10 +75,11 @@ def on_startup() -> None:
     if not settings.is_production:
         Base.metadata.create_all(bind=engine)
 
-    try:
-        create_bucket_if_not_exists(settings.AWS_BUCKET_NAME)
-    except Exception as e:
-        logger.warning("Could not prepare the media bucket: %s", e)
+    if settings.ENVIRONMENT != "test":
+        try:
+            create_bucket_if_not_exists(settings.AWS_BUCKET_NAME)
+        except Exception as e:
+            logger.warning("Could not prepare the media bucket: %s", e)
 
     try:
         with SessionLocal() as db:
