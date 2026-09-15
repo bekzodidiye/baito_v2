@@ -342,8 +342,13 @@ def change_job_worker(
             relatedJobId=job.id,
         ))
 
+        job.hiredWorkerId = new_worker_id
         if job.status == JobStatus.OPEN:
             job.status = JobStatus.CONFIRMED
+    else:
+        job.hiredWorkerId = None
+        if job.status in [JobStatus.CONFIRMED, JobStatus.IN_PROGRESS]:
+            job.status = JobStatus.OPEN
 
     record_admin_action(
         db, admin, "job.worker", target_type="job", target_id=job.id,
