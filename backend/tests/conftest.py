@@ -38,6 +38,8 @@ settings.SMS_DEV_ECHO_CODE = True
 settings.BCRYPT_ROUNDS = 4
 settings.UZUM_TERMINAL_ID = ""
 settings.UZUM_SECRET_KEY = ""
+settings.TELEGRAM_BOT_TOKEN = ""
+settings.TELEGRAM_CHAT_ID = ""
 limiter.enabled = False
 
 
