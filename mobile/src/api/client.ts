@@ -8,9 +8,9 @@ export const getApiBaseUrl = (): string => {
       (window.location.hostname === 'localhost' && !window.location.port) ||
       (window as any).Capacitor?.isNativePlatform?.())
   ) {
-    return 'https://baito.tail365b27.ts.net/api/v1';
+    return 'https://baito.uz/api/v1';
   }
-  return 'https://baito.tail365b27.ts.net/api/v1';
+  return 'https://baito.uz/api/v1';
 };
 
 export const getStoredToken = (): string | null => {
