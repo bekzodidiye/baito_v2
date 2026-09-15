@@ -147,8 +147,6 @@ class Settings(BaseSettings):
             return [o.strip() for o in self.CORS_ORIGINS_RAW.split(",") if o.strip()]
         return [
             "https://baito.uz",
-            "https://baito.tail365b27.ts.net",
-            "https://scarygun.tail365b27.ts.net",
             "http://localhost",
             "https://localhost",
             "http://localhost:3000",
