@@ -1,14 +1,23 @@
 import React from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const completeJobMock = vi.fn().mockResolvedValue({ success: true });
 
 vi.mock('../../context/AppContext', () => ({ useApp: () => ({ language: 'uz' }) }));
-vi.mock('../../api/queries', () => ({ requestStartJobApi: vi.fn() }));
+vi.mock('../../api/queries', () => ({
+  requestStartJobApi: vi.fn(),
+  completeJobApi: (...args: unknown[]) => completeJobMock(...args),
+}));
 
 import { JobDetailsFooter } from './JobDetailsFooter';
 import { Job } from '../../types';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  completeJobMock.mockClear();
+});
 
 const job = {
   id: 'job-1',
@@ -20,9 +29,14 @@ const job = {
   applied: false,
 } as unknown as Job;
 
-const renderFooter = () => {
+const renderFooter = (jobOverride = job) => {
   const applyToJob = vi.fn().mockResolvedValue(true);
-  render(<JobDetailsFooter selectedJob={job} applyToJob={applyToJob} />);
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={client}>
+      <JobDetailsFooter selectedJob={jobOverride} applyToJob={applyToJob} />
+    </QueryClientProvider>
+  );
   return { applyToJob };
 };
 
@@ -60,3 +74,22 @@ describe('JobDetailsFooter — applying asks before it commits the worker', () =
     await waitFor(() => expect(applyToJob).toHaveBeenCalledWith('job-1'));
   });
 });
+
+describe('JobDetailsFooter — worker finishing an in_progress job', () => {
+  it('allows worker to finish an in_progress job after confirmation', async () => {
+    const inProgressJob = { ...job, status: 'in_progress' } as unknown as Job;
+    renderFooter(inProgressJob);
+
+    const finishBtn = screen.getByRole('button', { name: /Ishni yakunlash/i });
+    expect(finishBtn).toBeTruthy();
+
+    fireEvent.click(finishBtn);
+    expect(completeJobMock).not.toHaveBeenCalled();
+
+    const confirmBtn = screen.getByRole('button', { name: /^Ha, yakunladim$/i });
+    fireEvent.click(confirmBtn);
+
+    await waitFor(() => expect(completeJobMock).toHaveBeenCalledWith('job-1'));
+  });
+});
+

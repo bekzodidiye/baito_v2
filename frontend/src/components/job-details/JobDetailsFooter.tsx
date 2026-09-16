@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Send, CheckCircle2, Clock, PlayCircle } from 'lucide-react';
 import { Job } from '../../types';
 import { useApp } from '../../context/AppContext';
@@ -6,7 +6,7 @@ import { translations } from '../../translations';
 import { showToast } from '../../utils/toast';
 import { requestStartJobApi, completeJobApi } from '../../api/queries';
 import { ConfirmModal } from '../common/ConfirmModal';
-import { useQueryClient } from '@tanstack/react-query';
+import { QueryClientContext } from '@tanstack/react-query';
 
 interface JobDetailsFooterProps {
   selectedJob: Job;
@@ -21,7 +21,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
 }) => {
   const { language } = useApp();
   const t = translations[language];
-  const queryClient = useQueryClient();
+  const queryClient = useContext(QueryClientContext);
   const [isStartedLocal, setIsStartedLocal] = useState<boolean>(
     selectedJob.status === 'in_progress' || selectedJob.status === 'start_requested'
   );
@@ -49,9 +49,9 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
           ? "Работа успешно завершена! Работодатель уведомлен."
           : "Job successfully completed! Employer has been notified."
       );
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      queryClient.invalidateQueries({ queryKey: ['calendarJobs'] });
-      queryClient.invalidateQueries({ queryKey: ['workerApplications'] });
+      queryClient?.invalidateQueries({ queryKey: ['jobs'] });
+      queryClient?.invalidateQueries({ queryKey: ['calendarJobs'] });
+      queryClient?.invalidateQueries({ queryKey: ['workerApplications'] });
       if (onApplied) (onApplied as any)('completed');
     } catch (e: any) {
       showToast(e?.message || (language === 'uz' ? "Ishni yakunlab bo'lmadi" : "Failed to complete job"), 'error');
