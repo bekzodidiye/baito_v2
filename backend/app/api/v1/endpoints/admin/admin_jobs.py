@@ -272,6 +272,38 @@ def change_job_status(
     previous = job.status
     job.status = payload.status
 
+    if payload.status == JobStatus.OPEN:
+        job.hiredWorkerId = None
+        active_apps = (
+            db.query(models.Application)
+            .filter(
+                models.Application.jobId == job_id,
+                models.Application.status.in_(["hired", "confirmed", "in_progress", "start_requested", "completed"]),
+            )
+            .all()
+        )
+        for app in active_apps:
+            app.status = "rejected"
+            db.add(models.Notification(
+                userId=app.workerId,
+                title="Ish holati o'zgardi",
+                message=f"'{job.title}' ishi qaytadan ochiq holatga o'tkazildi.",
+                type="system",
+                relatedJobId=job.id,
+            ))
+    elif payload.status == JobStatus.CANCELLED:
+        job.hiredWorkerId = None
+        active_apps = (
+            db.query(models.Application)
+            .filter(
+                models.Application.jobId == job_id,
+                models.Application.status.in_(["hired", "confirmed", "in_progress", "start_requested"]),
+            )
+            .all()
+        )
+        for app in active_apps:
+            app.status = "cancelled"
+
     record_admin_action(
         db, admin, "job.status", target_type="job", target_id=job.id,
         details={"from": previous, "to": payload.status},

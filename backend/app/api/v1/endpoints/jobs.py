@@ -321,13 +321,16 @@ def read_jobs(
 
         vacancies_num = _vacancies(job)
         hired_cnt = hired_counts.get(job.id, 0)
+        if job.status == JobStatus.OPEN and job.hiredWorkerId is None and vacancies_num <= 1:
+            hired_cnt = 0
 
         job_dict.hiredCount = hired_cnt
         job_dict.vacancies = vacancies_num
         job_dict.hiredWorkers = job_hired_workers.get(job.id, [])
 
-        is_filled = (hired_cnt >= vacancies_num) or (
-            job.status in (JobStatus.COMPLETED, JobStatus.IN_PROGRESS)
+        is_filled = (
+            (job.status != JobStatus.OPEN and hired_cnt >= vacancies_num)
+            or (job.status in (JobStatus.COMPLETED, JobStatus.IN_PROGRESS))
         )
 
         if not (is_admin or is_employer):

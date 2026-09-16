@@ -50,7 +50,7 @@ export function useMapFilterJobs({
     return jobs.filter(job => {
       const hired = Number(job.hiredCount ?? 0);
       const vac = Number(job.vacancies ?? (job.neededWorkers ? parseInt(job.neededWorkers) : 1));
-      const isFilled = (hired >= vac) || ['completed'].includes(job.status);
+      const isFilled = job.status !== 'open' && ((hired >= vac) || ['completed'].includes(job.status));
       const isHiredOrActive = ['hired', 'confirmed', 'todo', 'in_progress', 'completed'].includes(job.status);
       return !isFilled && !isHiredOrActive;
     });

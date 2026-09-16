@@ -605,3 +605,25 @@ def test_pagination_does_not_repeat_or_skip_tied_postings(client):
 
     assert len(seen) == len(set(seen)), "bir e'lon ikki sahifada chiqdi"
     assert set(seen) == created, "sahifalash e'lonni tushirib qoldirdi"
+
+
+def test_admin_status_change_to_open_clears_hired_worker_and_shows_in_feed(client):
+    admin = make_user(role="admin", phone="+998911111200")
+    employer = make_user(role="employer", phone="+998911111201")
+    worker = make_user(role="worker", phone="+998911111202")
+
+    job = make_job(employer.id, title="Ofitsiant", status=JobStatus.CONFIRMED, hiredWorkerId=worker.id)
+    with SessionLocal() as db:
+        app = Application(jobId=job.id, workerId=worker.id, status="start_requested")
+        db.add(app)
+        db.commit()
+
+    login(client, admin)
+    res = client.patch(f"/api/v1/admin/jobs/{job.id}/status", json={"status": "open"})
+    assert res.status_code == 200
+
+    # Unauthenticated visitor or other worker browsing jobs
+    client.cookies.clear()
+    jobs = client.get("/api/v1/jobs").json()
+    assert any(j["id"] == job.id for j in jobs)
+
