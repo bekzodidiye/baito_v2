@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ConfirmModalProps {
@@ -27,34 +28,38 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     return () => document.removeEventListener('keydown', onKey);
   }, [isOpen, onCancel]);
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div
           role="dialog"
           aria-modal="true"
           aria-label={title}
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
           onClick={(e) => { e.stopPropagation(); onCancel(); }}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.15 }}
             className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative"
             onClick={e => e.stopPropagation()}
           >
             <h3 className="text-lg font-black text-[#1A1A40] mb-2">{title}</h3>
-            <p className="text-slate-600 mb-6 font-medium text-[15px]">{message}</p>
+            <p className="text-slate-600 mb-6 font-medium text-[15px] leading-relaxed">{message}</p>
             <div className="flex gap-3">
               <button 
+                type="button"
                 onClick={(e) => { e.stopPropagation(); onCancel(); }} 
                 className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors cursor-pointer"
               >
                 {cancelText}
               </button>
               <button 
+                type="button"
                 onClick={(e) => { e.stopPropagation(); onConfirm(); onCancel(); }} 
                 className={`flex-1 py-3 rounded-xl font-bold text-white transition-colors cursor-pointer ${
                   isDestructive ? 'bg-rose-500 hover:bg-rose-600' : 'bg-brand-primary hover:bg-brand-primary/90'
@@ -66,6 +71,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };

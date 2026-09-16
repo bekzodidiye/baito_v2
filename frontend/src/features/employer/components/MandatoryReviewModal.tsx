@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Star, MessageSquare, PlusCircle, Award, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Application } from '../../../types';
@@ -22,7 +23,7 @@ export const MandatoryReviewModal: React.FC<MandatoryReviewModalProps> = ({
   const [hoveredStar, setHoveredStar] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!isOpen || !application) return null;
+  if (!isOpen || !application || typeof document === 'undefined') return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,9 +47,9 @@ export const MandatoryReviewModal: React.FC<MandatoryReviewModalProps> = ({
 
   const isReviewValid = review.trim().length >= 3;
 
-  return (
+  return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
         {/* Unclosable backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -237,6 +238,7 @@ export const MandatoryReviewModal: React.FC<MandatoryReviewModalProps> = ({
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
