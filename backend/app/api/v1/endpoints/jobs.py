@@ -136,6 +136,60 @@ def get_nearby_jobs(
     ]
 
 
+@router.get("/my", response_model=List[schemas.JobWithApplicationStatus])
+def get_my_jobs(
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=200),
+) -> Any:
+    """Retrieve all jobs posted by the currently authenticated employer only."""
+    employer_ids = [current_user.id]
+    if getattr(current_user, 'uid', None):
+        employer_ids.append(current_user.uid)
+
+    jobs = (
+        db.query(models.Job)
+        .filter(models.Job.employerId.in_(employer_ids))
+        .order_by(models.Job.createdAt.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    job_ids = [j.id for j in jobs]
+    apps = (
+        db.query(models.Application)
+        .filter(
+            models.Application.jobId.in_(job_ids),
+            models.Application.status.in_(["hired", "confirmed", "in_progress", "completed", "start_requested"]),
+        )
+        .all()
+    ) if job_ids else []
+
+    hired_counts = {}
+    for a in apps:
+        hired_counts[a.jobId] = hired_counts.get(a.jobId, 0) + 1
+
+    result = []
+    for job in jobs:
+        vacancies_num = int(job.neededWorkers) if (job.neededWorkers and job.neededWorkers.isdigit()) else 1
+        hired_cnt = hired_counts.get(job.id, 0)
+
+        job_data = schemas.Job.model_validate(job).model_dump()
+        job_data.update({
+            "applied": False,
+            "bookmarked": False,
+            "hiredCount": hired_cnt,
+            "vacancies": vacancies_num,
+            "appliedDate": None,
+            "hiredWorkers": [],
+        })
+        result.append(job_data)
+
+    return result
+
+
 @router.get("", response_model=List[schemas.JobWithApplicationStatus])
 def read_jobs(
     db: Session = Depends(deps.get_db),

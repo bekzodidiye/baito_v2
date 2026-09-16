@@ -18,19 +18,16 @@ export const useEmployer = () => {
   const companyName = me?.companyName || me?.name || userProfile?.firstName || 'Ish beruvchi';
   const balance = me?.balance || '0';
 
-  // 2. Fetch Jobs
+  // 2. Fetch Jobs (Strictly authenticated employer's own jobs)
   const { data: postedJobs = [], isLoading: isLoadingJobs } = useQuery({
-    queryKey: ['employer-jobs'],
+    queryKey: ['employer-jobs', me?.id || me?.uid],
+    enabled: !!(me?.id || me?.uid),
     queryFn: async () => {
-      const jobs = await apiClient('/jobs');
+      const jobs = await apiClient('/jobs/my');
       if (!jobs || !Array.isArray(jobs)) return [];
-      if (!me) return jobs as Job[];
-      const myJobs = jobs.filter((j: any) => 
-        j.employerId === me.id || 
-        j.employerId === me.uid
-      );
+      
       // Sort newest first, and active jobs before completed jobs
-      const sorted = [...myJobs].sort((a: any, b: any) => {
+      const sorted = [...jobs].sort((a: any, b: any) => {
         if (a.status !== 'completed' && b.status === 'completed') return -1;
         if (a.status === 'completed' && b.status !== 'completed') return 1;
         const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -43,12 +40,13 @@ export const useEmployer = () => {
         durationLabel: j.durationLabel || '1 kunlik'
       })) as Job[];
     },
-    refetchInterval: 30000,
+    refetchInterval: 15000,
   });
 
   // 3. Fetch Applications
   const { data: applications = [], isLoading: isLoadingApps } = useQuery({
-    queryKey: ['employer-applications'],
+    queryKey: ['employer-applications', me?.id || me?.uid],
+    enabled: !!(me?.id || me?.uid),
     queryFn: async () => {
       const apps = await apiClient('/applications/employer');
       if (!apps || !Array.isArray(apps)) return [];
@@ -67,10 +65,13 @@ export const useEmployer = () => {
         workerGender: a.workerGender,
         workerSkills: a.workerSkills,
         status: a.status,
+        rating: a.rating,
+        review: a.review,
+        bonus: a.bonus,
         appliedDate: a.appliedDate || new Date().toISOString()
       })) as Application[];
     },
-    refetchInterval: 30000,
+    refetchInterval: 15000,
   });
 
   const handleSuccess = (msgUz: string, msgRu: string, msgEn: string) => {
@@ -152,16 +153,47 @@ export const useEmployer = () => {
 
   const completeJobMutation = useMutation({
     mutationFn: async ({ jobId, data }: { jobId: string; data?: { rating?: number; review?: string; bonus?: number } }) => {
-      return apiClient(`/jobs/${jobId}/complete`, { 
+      try {
+        return await apiClient(`/jobs/${jobId}/complete`, { 
+          method: 'POST',
+          body: data ? JSON.stringify(data) : undefined
+        });
+      } catch (err: any) {
+        // If already completed by worker, and review data was provided, call review endpoint
+        if (data?.rating && (err?.message?.includes('allaqachon yakunlangan') || err?.status === 400)) {
+          return await apiClient(`/jobs/${jobId}/review`, {
+            method: 'POST',
+            body: JSON.stringify({
+              rating: data.rating,
+              review: data.review || "Ish bajarildi",
+              bonus: data.bonus || 0,
+            }),
+          });
+        }
+        throw err;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employer-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['employer-applications'] });
+      handleSuccess("Ish yakunlandi, pul ishchiga o'tkazildi!", "Работа завершена, деньги переведены!", "Job completed, money released!");
+    },
+    onError: handleError
+  });
+
+  const reviewJobMutation = useMutation({
+    mutationFn: async ({ jobId, data }: { jobId: string; data: { rating: number; review: string; bonus?: number } }) => {
+      return apiClient(`/jobs/${jobId}/review`, {
         method: 'POST',
-        body: data ? JSON.stringify(data) : undefined
+        body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employer-jobs'] });
-      handleSuccess("Ish yakunlandi, pul ishchiga o'tkazildi!", "Работа завершена, деньги переведены!", "Job completed, money released!");
+      queryClient.invalidateQueries({ queryKey: ['employer-applications'] });
+      handleSuccess("Sharhingiz qabul qilindi!", "Ваш отзыв принят!", "Your review has been submitted!");
     },
-    onError: handleError
+    onError: handleError,
   });
 
   const deleteJobMutation = useMutation({
@@ -183,6 +215,7 @@ export const useEmployer = () => {
     updateApplicationStatus: async (appId: string, status: 'hired' | 'rejected') => updateApplicationMutation.mutate({ appId, status }),
     confirmStartJob: async (jobId: string) => confirmStartJobMutation.mutate(jobId),
     completeJob: async (jobId: string, data?: { rating?: number; review?: string; bonus?: number }) => completeJobMutation.mutate({ jobId, data }),
+    reviewJob: async (jobId: string, data: { rating: number; review: string; bonus?: number }) => reviewJobMutation.mutateAsync({ jobId, data }),
     deleteJob: async (jobId: string) => deleteJobMutation.mutate(jobId),
     language,
     companyName,

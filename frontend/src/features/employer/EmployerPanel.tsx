@@ -11,11 +11,17 @@ import { EmployerAnalytics } from './EmployerAnalytics';
 import { Briefcase, FileText, MessageSquare, PlusCircle, LayoutDashboard, User, BarChart2, LogOut } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { MandatoryReviewModal } from './components/MandatoryReviewModal';
 
 export const EmployerPanel: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { language, employerSelectedChatId, logout } = useApp();
+  const { applications, reviewJob } = useEmployer();
   const [targetCandidate, setTargetCandidate] = useState<string | null>(null);
+
+  const pendingReviewApp = applications.find(
+    (app) => app.status === 'completed' && (!app.review || app.review.trim().length === 0)
+  );
 
   const handleApplicantsChat = (candidateName: string) => {
     setTargetCandidate(candidateName);
@@ -78,6 +84,16 @@ export const EmployerPanel: React.FC = () => {
     return (
       <div className="w-full min-h-screen bg-slate-50 overflow-y-auto">
         {renderContent()}
+        <MandatoryReviewModal
+          isOpen={!!pendingReviewApp}
+          application={pendingReviewApp || null}
+          onConfirm={async (data) => {
+            if (pendingReviewApp) {
+              await reviewJob(pendingReviewApp.jobId, data);
+            }
+          }}
+          language={language}
+        />
       </div>
     );
   }
@@ -193,6 +209,18 @@ export const EmployerPanel: React.FC = () => {
           </div>
         </nav>
       )}
+
+      {/* Mandatory Review Modal that blocks employer until review is submitted */}
+      <MandatoryReviewModal
+        isOpen={!!pendingReviewApp}
+        application={pendingReviewApp || null}
+        onConfirm={async (data) => {
+          if (pendingReviewApp) {
+            await reviewJob(pendingReviewApp.jobId, data);
+          }
+        }}
+        language={language}
+      />
     </div>
   );
 };

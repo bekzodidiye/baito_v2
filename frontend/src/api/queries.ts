@@ -291,3 +291,23 @@ export const completeJobDayApi = async (jobId: string, dayId: string) => {
   return await apiClient(`/jobs/${jobId}/days/${dayId}/complete`, { method: 'POST' });
 };
 
+export const completeJobApi = async (
+  jobId: string,
+  data: { rating?: number; review?: string; bonus?: number } = {},
+) => {
+  return await apiClient(`/jobs/${jobId}/complete`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const reviewJobApi = async (
+  jobId: string,
+  data: { rating: number; review: string; bonus?: number },
+) => {
+  return await apiClient(`/jobs/${jobId}/review`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+

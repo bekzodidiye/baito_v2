@@ -168,6 +168,8 @@ def get_employer_applications(
             "workerBio": worker.bio if worker else None,
             "status": app.status,
             "appliedDate": str(app.appliedDate) if app.appliedDate else None,
+            "rating": app.rating,
+            "review": app.review,
         })
     return result
 

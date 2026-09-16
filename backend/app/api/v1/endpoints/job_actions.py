@@ -28,6 +28,12 @@ class JobCompleteRequest(BaseModel):
     bonus: Optional[int] = Field(default=0, ge=0, le=50_000_000)
 
 
+class JobReviewRequest(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    review: str = Field(min_length=3, max_length=2000)
+    bonus: Optional[int] = Field(default=0, ge=0, le=50_000_000)
+
+
 def _get_job_or_404(db: Session, id: str) -> models.Job:
     job = crud.job.get(db=db, id=id)
     if not job:
@@ -411,8 +417,21 @@ def complete_job(
     """
     job = _get_job_or_404(db, id)
 
-    if job.employerId not in (current_user.id, current_user.uid) and current_user.role != 'admin':
-        raise HTTPException(status_code=403, detail="Faqat ish beruvchi ishni yakunlay oladi")
+    is_employer = job.employerId in (current_user.id, getattr(current_user, 'uid', None)) or current_user.role == 'admin'
+
+    caller_apps = (
+        db.query(models.Application)
+        .filter(
+            models.Application.jobId == id,
+            models.Application.workerId.in_([current_user.id, getattr(current_user, 'uid', None)]),
+            models.Application.status.in_(COMMITTED_APP_STATUSES),
+        )
+        .all()
+    )
+    is_hired_worker = bool(caller_apps)
+
+    if not is_employer and not is_hired_worker:
+        raise HTTPException(status_code=403, detail="Faqat ish beruvchi yoki tayinlangan ishchi ishni yakunlay oladi")
 
     if job.status == JobStatus.COMPLETED:
         raise HTTPException(status_code=400, detail="Bu ish allaqachon yakunlangan")
@@ -435,16 +454,8 @@ def complete_job(
     if not apps:
         raise HTTPException(status_code=400, detail="Yakunlash uchun yollangan ishchi yo'q")
 
-    # The bonus is paid to every hired worker, so a two-worker job costs twice
-    # what was typed. Nothing is escrowed for it — the wage was frozen at hire,
-    # the bonus is decided now — so the employer is debited at this moment, and
-    # that can fail.
-    #
-    # Checked here, before a single row changes. Refusing now costs the
-    # employer one retry with a smaller figure; refusing halfway would leave a
-    # job marked complete with some workers paid a bonus and others not, or
-    # leave the wage unpaid over an optional tip.
-    bonus_each = req.bonus or 0
+    # Bonus is only applicable if the employer calls this. Workers cannot debit employer's balance.
+    bonus_each = (req.bonus or 0) if is_employer else 0
     if bonus_each > 0:
         employer = (
             db.query(models.User)
@@ -550,6 +561,16 @@ def complete_job(
             message=message, type="completed", relatedJobId=id,
         ))
 
+    if is_hired_worker:
+        db.add(models.Notification(
+            id=str(uuid.uuid4()),
+            userId=job.employerId,
+            title="Ish yakunlandi",
+            message=f"'{job.title}' ishi ishchi tomonidan yakunlandi. Iltimos, ishchiga baho va sharh qoldiring.",
+            type="job_completed",
+            relatedJobId=id,
+        ))
+
     db.commit()
     return {
         "success": True,
@@ -559,6 +580,98 @@ def complete_job(
         "bonus_paid_workers": len(bonus_paid),
         "bonus_each": bonus_each,
     }
+
+
+@router.post("/{id}/review")
+def review_job(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: str,
+    req: JobReviewRequest,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """Employer reviews the hired worker(s) after job completion."""
+    job = _get_job_or_404(db, id)
+    is_employer = job.employerId in (current_user.id, getattr(current_user, 'uid', None)) or current_user.role == 'admin'
+    if not is_employer:
+        raise HTTPException(status_code=403, detail="Faqat ish beruvchi sharh qoldira oladi")
+
+    apps = (
+        db.query(models.Application)
+        .filter(
+            models.Application.jobId == id,
+            models.Application.status.in_(["completed", "in_progress", "hired", "confirmed"]),
+        )
+        .all()
+    )
+    if not apps:
+        raise HTTPException(status_code=400, detail="Sharh qoldirish uchun ariza topilmadi")
+
+    bonus_each = req.bonus or 0
+    if bonus_each > 0:
+        employer = (
+            db.query(models.User)
+            .filter(models.User.id.in_([job.employerId]))
+            .first()
+        )
+        total_bonus = bonus_each * len(apps)
+        if not employer or (employer.balance or 0) < total_bonus:
+            available = (employer.balance or 0) if employer else 0
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"{len(apps)} ta ishchiga {bonus_each:,} so'mdan bonus uchun "
+                    f"{total_bonus:,} so'm kerak, balansingizda {available:,} so'm bor. "
+                    "Bonusni kamaytiring yoki hisobni to'ldiring."
+                ).replace(",", " "),
+            )
+        employer.balance = (employer.balance or 0) - total_bonus
+        db.add(employer)
+
+    for app in apps:
+        app.status = "completed"
+        app.rating = req.rating
+        app.review = req.review
+        if bonus_each > 0:
+            app.bonus = (app.bonus or 0) + bonus_each
+            worker = db.query(models.User).filter(models.User.id == app.workerId).first()
+            if worker:
+                worker.balance = (worker.balance or 0) + bonus_each
+                db.add(worker)
+                db.add(models.Transaction(
+                    userId=app.workerId,
+                    employerId=job.employerId,
+                    jobId=job.id,
+                    amount=bonus_each,
+                    type="bonus",
+                    status="completed",
+                    description=f"Bonus: '{job.title}'",
+                ))
+        db.add(app)
+        db.flush()
+
+        worker = db.query(models.User).filter(models.User.id == app.workerId).first()
+        if worker and req.rating:
+            rated = (
+                db.query(models.Application.rating)
+                .filter(
+                    models.Application.workerId == worker.id,
+                    models.Application.rating.isnot(None),
+                )
+                .all()
+            )
+            values = [r[0] for r in rated if r[0]]
+            if values:
+                worker.rating = round(sum(values) / len(values), 2)
+            db.add(worker)
+
+    if job.status != JobStatus.COMPLETED:
+        job.status = JobStatus.COMPLETED
+        job.completedAt = datetime.now(timezone.utc)
+        db.add(job)
+
+    db.commit()
+    return {"success": True, "rating": req.rating, "review": req.review}
 
 
 @router.post("/{id}/bookmark")

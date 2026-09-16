@@ -627,3 +627,64 @@ def test_admin_status_change_to_open_clears_hired_worker_and_shows_in_feed(clien
     jobs = client.get("/api/v1/jobs").json()
     assert any(j["id"] == job.id for j in jobs)
 
+
+def test_get_my_jobs_only_returns_own_jobs(client):
+    emp_a = make_user(role="employer", phone="+998911111203")
+    emp_b = make_user(role="employer", phone="+998911111204")
+    job_a = make_job(emp_a.id, title="Ish A")
+    job_b = make_job(emp_b.id, title="Ish B")
+
+    login(client, emp_a)
+    resp_a = client.get("/api/v1/jobs/my")
+    assert resp_a.status_code == 200
+    ids_a = [j["id"] for j in resp_a.json()]
+    assert job_a.id in ids_a
+    assert job_b.id not in ids_a
+
+    login(client, emp_b)
+    resp_b = client.get("/api/v1/jobs/my")
+    assert resp_b.status_code == 200
+    ids_b = [j["id"] for j in resp_b.json()]
+    assert job_b.id in ids_b
+    assert job_a.id not in ids_b
+
+
+def test_worker_can_complete_job_and_employer_reviews(client):
+    employer = make_user(role="employer", phone="+998911111205", balance=1_000_000)
+    worker = make_user(role="worker", phone="+998911111206")
+    job = make_job(employer.id, title="Kuryerlik", salary="200000")
+
+    with SessionLocal() as db:
+        app = Application(jobId=job.id, workerId=worker.id, status="applied")
+        db.add(app)
+        db.commit()
+        app_id = app.id
+
+    # Employer hires and confirms start
+    login(client, employer)
+    assert client.post(f"/api/v1/applications/{app_id}/hire").status_code == 200
+    assert client.post(f"/api/v1/jobs/{job.id}/confirm-start").status_code == 200
+
+    # Worker completes the job
+    login(client, worker)
+    res_worker = client.post(f"/api/v1/jobs/{job.id}/complete", json={})
+    assert res_worker.status_code == 200
+    assert res_worker.json()["job_status"] == JobStatus.COMPLETED
+
+    # Employer submits review and rating
+    login(client, employer)
+    # Review with less than 3 chars should fail validation
+    assert client.post(f"/api/v1/jobs/{job.id}/review", json={"rating": 5, "review": "a"}).status_code == 422
+    # Valid review succeeds
+    res_review = client.post(f"/api/v1/jobs/{job.id}/review", json={"rating": 5, "review": "Ajoyib ishchi!"})
+    assert res_review.status_code == 200
+    assert res_review.json()["success"] is True
+
+    # Worker profile rating is updated
+    with SessionLocal() as db:
+        updated_worker = db.query(User).filter(User.id == worker.id).first()
+        assert updated_worker.rating == 5.0
+        updated_app = db.query(Application).filter(Application.id == app_id).first()
+        assert updated_app.review == "Ajoyib ishchi!"
+        assert updated_app.rating == 5
+

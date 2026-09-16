@@ -4,8 +4,9 @@ import { Job } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { showToast } from '../../utils/toast';
-import { requestStartJobApi } from '../../api/queries';
+import { requestStartJobApi, completeJobApi } from '../../api/queries';
 import { ConfirmModal } from '../common/ConfirmModal';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface JobDetailsFooterProps {
   selectedJob: Job;
@@ -18,8 +19,9 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
   applyToJob,
   onApplied,
 }) => {
-  const { language, } = useApp();
+  const { language } = useApp();
   const t = translations[language];
+  const queryClient = useQueryClient();
   const [isStartedLocal, setIsStartedLocal] = useState<boolean>(
     selectedJob.status === 'in_progress' || selectedJob.status === 'start_requested'
   );
@@ -27,10 +29,37 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
   // Applying commits the worker to turning up. It went through on one press,
   // which on a phone is one stray tap while scrolling a listing.
   const [confirmingApply, setConfirmingApply] = useState(false);
+  const [confirmingFinish, setConfirmingFinish] = useState(false);
 
   useEffect(() => {
     setIsStartedLocal(selectedJob.status === 'in_progress' || selectedJob.status === 'start_requested');
   }, [selectedJob.status]);
+
+  const handleFinishJob = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await completeJobApi(selectedJob.id);
+      selectedJob.status = 'completed';
+      setIsStartedLocal(false);
+      showToast(
+        language === 'uz'
+          ? "Ish muvaffaqiyatli yakunlandi! Ish beruvchiga xabar yuborildi."
+          : language === 'ru'
+          ? "Работа успешно завершена! Работодатель уведомлен."
+          : "Job successfully completed! Employer has been notified."
+      );
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['calendarJobs'] });
+      queryClient.invalidateQueries({ queryKey: ['workerApplications'] });
+      if (onApplied) (onApplied as any)('completed');
+    } catch (e: any) {
+      showToast(e?.message || (language === 'uz' ? "Ishni yakunlab bo'lmadi" : "Failed to complete job"), 'error');
+    } finally {
+      setIsSubmitting(false);
+      setConfirmingFinish(false);
+    }
+  };
 
   const handleApply = async () => {
     if (isSubmitting) return;
@@ -70,15 +99,31 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
               {t.completedSuccessfully || "Muvaffaqiyatli yakunlandi"}
             </button>
           );
-        } else if (isStartedLocal || selectedJob.status === 'in_progress' || selectedJob.status === 'start_requested') {
+        } else if (selectedJob.status === 'in_progress') {
+          return (
+            <button
+              onClick={() => setConfirmingFinish(true)}
+              disabled={isSubmitting}
+              aria-label="Ishni yakunlash"
+              className={`flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-lg transition-all flex items-center justify-center gap-2 ${
+                isSubmitting
+                  ? 'bg-emerald-400 cursor-not-allowed'
+                  : 'shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] cursor-pointer'
+              }`}
+            >
+              <CheckCircle2 size={18} />
+              {language === 'uz' ? "Ishni yakunlash" : language === 'ru' ? "Завершить работу" : "Complete Job"}
+            </button>
+          );
+        } else if (isStartedLocal || selectedJob.status === 'start_requested') {
           return (
             <button
               disabled
-              aria-label="Ish boshlandi"
-              className="flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-md bg-emerald-600 opacity-90 cursor-not-allowed flex items-center justify-center gap-2"
+              aria-label="Ish boshlanishi kutilmoqda"
+              className="flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-md bg-amber-600 opacity-90 cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <CheckCircle2 size={18} />
-              Ish boshlandi
+              <Clock size={18} />
+              {language === 'uz' ? "Tasdiqlanishi kutilmoqda" : language === 'ru' ? "Ожидает подтверждения" : "Waiting for confirmation"}
             </button>
           );
         } else if (isHiredOrConfirmed) {
@@ -147,6 +192,23 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
         isDestructive={false}
         onConfirm={handleApply}
         onCancel={() => setConfirmingApply(false)}
+      />
+
+      <ConfirmModal
+        isOpen={confirmingFinish}
+        title={language === 'uz' ? "Ishni yakunlash" : language === 'ru' ? "Завершить работу?" : "Complete Job?"}
+        message={
+          language === 'uz'
+            ? `«${selectedJob.title}» ishini haqiqatan ham yakunladingizmi? Ish beruvchiga xabar yuboriladi.`
+            : language === 'ru'
+            ? `Вы уверены, что завершили работу «${selectedJob.title}»? Работодатель получит уведомление.`
+            : `Are you sure you completed "${selectedJob.title}"? Employer will be notified.`
+        }
+        confirmText={language === 'uz' ? "Ha, yakunladim" : language === 'ru' ? "Да, завершил" : "Yes, complete"}
+        cancelText={language === 'uz' ? "Bekor qilish" : language === 'ru' ? "Отмена" : "Cancel"}
+        isDestructive={false}
+        onConfirm={handleFinishJob}
+        onCancel={() => setConfirmingFinish(false)}
       />
     </footer>
   );
