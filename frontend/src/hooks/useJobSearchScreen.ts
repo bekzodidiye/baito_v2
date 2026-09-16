@@ -5,7 +5,6 @@ import { useJobsData } from "../context/useJobsData";
 import { Job } from '../types';
 import { getTranslatedJob } from '../jobTranslations';
 import { translations, translateRegion } from '../translations';
-import { useUzbekistanGeoJson } from '../components/map/useUzbekistanGeoJson';
 import { useJobSearchFilters } from './useJobSearchFilters';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 import { useDebouncedValue } from './useDebouncedValue';
@@ -13,7 +12,6 @@ import { useDebouncedValue } from './useDebouncedValue';
 export function useJobSearchScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { districtsGeoJsonData } = useUzbekistanGeoJson();
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { filterLocation, setFilterLocation, setShowRegionSelector, language, activeCalendarDay } = useApp();
 
@@ -97,8 +95,7 @@ export function useJobSearchScreen() {
     filterType,
     filterCategory,
     sortBy,
-    userLocation,
-    districtsGeoJsonData
+    userLocation
   });
 
   const activeDesktopJob = selectedJob || sortedJobs[0] || null;

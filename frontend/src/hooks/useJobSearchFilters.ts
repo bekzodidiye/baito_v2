@@ -11,7 +11,7 @@ interface UseJobSearchFiltersProps {
   filterCategory: string;
   sortBy: 'yangilari' | 'maosh' | 'yaqin' | 'mos';
   userLocation: { lat: number, lng: number } | null;
-  districtsGeoJsonData: any;
+  districtsGeoJsonData?: any;
 }
 
 export function useJobSearchFilters({

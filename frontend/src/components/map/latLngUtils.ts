@@ -19,6 +19,11 @@ export const getLatLng = (job: Job, districtsGeoJson?: any) => {
 };
 
 const calculateLatLng = (job: Job, districtsGeoJson?: any) => {
+  const anyJob = job as any;
+  if (typeof anyJob.coordinateX === 'number' && typeof anyJob.coordinateY === 'number' && anyJob.coordinateX !== 0 && anyJob.coordinateY !== 0) {
+    return { lat: anyJob.coordinateX, lng: anyJob.coordinateY };
+  }
+
   const x = job.coordinates ? job.coordinates.x : 50;
   const y = job.coordinates ? job.coordinates.y : 50;
 

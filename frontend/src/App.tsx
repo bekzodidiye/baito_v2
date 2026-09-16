@@ -8,7 +8,7 @@ import { BottomNav } from './components/BottomNav';
 import { Drawer } from './components/Drawer';
 import { Sidebar } from './components/Sidebar';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { MapViewScreen } from './components/map/MapViewScreen';
+const MapViewScreen = React.lazy(() => import('./components/map/MapViewScreen').then(m => ({ default: m.MapViewScreen })));
 import { RegionSelector } from './components/RegionSelector';
 import { MenuModals } from './components/MenuModals';
 import { OnboardingTour } from './components/OnboardingTour';
@@ -42,7 +42,7 @@ function AppContent() {
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
 
   useEffect(() => {
-    if (currentScreen === 'jobs') {
+    if (currentScreen === 'jobs' && jobsView === 'map') {
       setHasOpenedMap(true);
     }
 
@@ -54,7 +54,7 @@ function AppContent() {
     if (mainContent) {
       mainContent.scrollTop = 0;
     }
-  }, [currentScreen]);
+  }, [currentScreen, jobsView]);
 
 
   
@@ -71,9 +71,8 @@ function AppContent() {
   // Screens nobody may reach while logged out; they bounce back to the landing.
   const isAuthGatedScreen = !isLoggedIn && !['landing', 'login', 'register', 'faq', 'terms', 'help', 'guide'].includes(currentScreen);
 
-  // The map is only reachable while logged in, so tie it to the session: on
-  // logout it unmounts instead of idling, hidden, behind the landing page.
-  const shouldMountMap = isLoggedIn && !isEmployer && (hasOpenedMap || currentScreen === 'jobs');
+  // The map is only reachable while logged in and only mounted once user switches to map view
+  const shouldMountMap = isLoggedIn && !isEmployer && (hasOpenedMap || (currentScreen === 'jobs' && jobsView === 'map'));
 
   return (
     <div className={`flex flex-col md:flex-row bg-brand-background text-brand-text antialiased font-sans selection:bg-brand-primary-container selection:text-white ${
@@ -127,7 +126,9 @@ function AppContent() {
           {shouldMountMap && (
             <ErrorBoundary>
               <div className={currentScreen === 'jobs' && jobsView === 'map' ? 'block' : 'hidden'}>
-                <MapViewScreen />
+                <Suspense fallback={null}>
+                  <MapViewScreen />
+                </Suspense>
               </div>
             </ErrorBoundary>
           )}
