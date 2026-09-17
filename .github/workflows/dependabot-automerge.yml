@@ -13,7 +13,7 @@ permissions:
 jobs:
   automerge:
     name: Auto-merge Passing Dependabot PRs
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, laptop-test-runner]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
