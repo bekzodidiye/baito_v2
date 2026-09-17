@@ -8,6 +8,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      dependencies:
+        dependency-type: "production"
+      devDependencies:
+        dependency-type: "development"
     open-pull-requests-limit: 10
 
   # Frontend React dependencies
@@ -15,6 +20,11 @@ updates:
     directory: "/frontend"
     schedule:
       interval: "weekly"
+    groups:
+      dependencies:
+        dependency-type: "production"
+      devDependencies:
+        dependency-type: "development"
     open-pull-requests-limit: 10
 
   # Mobile Capacitor dependencies
@@ -22,6 +32,11 @@ updates:
     directory: "/mobile"
     schedule:
       interval: "weekly"
+    groups:
+      dependencies:
+        dependency-type: "production"
+      devDependencies:
+        dependency-type: "development"
     open-pull-requests-limit: 10
 
   # Backend FastAPI / Python dependencies
@@ -29,6 +44,10 @@ updates:
     directory: "/backend"
     schedule:
       interval: "weekly"
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
     open-pull-requests-limit: 10
 
   # GitHub Actions CI/CD workflows
@@ -36,6 +55,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*"
     open-pull-requests-limit: 10
 
   # Docker dependencies (Backend)

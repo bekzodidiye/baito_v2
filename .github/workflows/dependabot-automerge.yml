@@ -1,0 +1,78 @@
+name: 🤖 Dependabot Auto-Merge
+
+on:
+  workflow_run:
+    workflows: ["🚀 Baito CI/CD & Deployment Pipeline"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    name: Auto-merge Passing Dependabot PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Auto-merge on successful workflow_run
+        if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PULL_REQUESTS: ${{ toJson(github.event.workflow_run.pull_requests) }}
+        run: |
+          PR_NUMBER=$(echo "$PULL_REQUESTS" | jq -r '.[0].number // empty')
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No PR number associated with this workflow run."
+            exit 0
+          fi
+
+          echo "Checking PR #$PR_NUMBER..."
+          PR_AUTHOR=$(gh pr view "$PR_NUMBER" --json author -q '.author.login' 2>/dev/null || true)
+          if [ "$PR_AUTHOR" != "dependabot[bot]" ] && [ "$PR_AUTHOR" != "app/dependabot" ]; then
+            echo "PR #$PR_NUMBER was opened by '$PR_AUTHOR', not Dependabot. Skipping."
+            exit 0
+          fi
+
+          PR_STATE=$(gh pr view "$PR_NUMBER" --json state -q '.state' 2>/dev/null || true)
+          if [ "$PR_STATE" != "OPEN" ]; then
+            echo "PR #$PR_NUMBER is in state '$PR_STATE'. Skipping."
+            exit 0
+          fi
+
+          echo "Approving PR #$PR_NUMBER..."
+          gh pr review "$PR_NUMBER" --approve || true
+
+          echo "Merging PR #$PR_NUMBER..."
+          gh pr merge "$PR_NUMBER" --squash --delete-branch
+          echo "Successfully merged PR #$PR_NUMBER!"
+
+      - name: Batch auto-merge on manual trigger
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fetching open Dependabot PRs..."
+          PRS=$(gh pr list --app dependabot --state open --json number -q '.[].number')
+          if [ -z "$PRS" ]; then
+            echo "No open Dependabot PRs found."
+            exit 0
+          fi
+
+          for PR in $PRS; do
+            echo "Inspecting PR #$PR checks..."
+            CHECKS=$(gh pr view "$PR" --json statusCheckRollup -q '.statusCheckRollup[]?.conclusion // empty')
+            TOTAL=$(echo "$CHECKS" | wc -w)
+            FAIL=$(echo "$CHECKS" | grep -v 'SUCCESS' | wc -w)
+
+            if [ "$TOTAL" -gt 0 ] && [ "$FAIL" -eq 0 ]; then
+              echo "PR #$PR passed all checks ($TOTAL checks). Merging..."
+              gh pr review "$PR" --approve || true
+              gh pr merge "$PR" --squash --delete-branch || true
+            else
+              echo "PR #$PR not ready or has failures. Skipping."
+            fi
+          done
