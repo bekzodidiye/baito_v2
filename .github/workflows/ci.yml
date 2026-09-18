@@ -61,7 +61,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Asked for by name rather than inherited. The runner's own python3 is
       # whatever the machine happens to have - on this self-hosted runner that
@@ -168,7 +168,7 @@ jobs:
     runs-on: [self-hosted, laptop-test-runner]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
 
 
@@ -277,7 +277,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Asked for by name rather than inherited. The runner's own python3 is
       # whatever the machine happens to have - on this self-hosted runner that
@@ -358,7 +358,7 @@ jobs:
           exit 1
 
       - name: Set up Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20
           # No cache: input. On a hosted runner the VM is thrown away, so
@@ -409,7 +409,7 @@ jobs:
 
       - name: Upload Report on Failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: frontend/playwright-report/
@@ -424,10 +424,10 @@ jobs:
     runs-on: [self-hosted, laptop-test-runner]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Validate Docker Compose Configuration
         env:
@@ -630,7 +630,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: 📥 Checkout Code on Server
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🔄 Sync Workspace
         run: |
