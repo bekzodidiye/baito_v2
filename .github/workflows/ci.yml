@@ -7,6 +7,21 @@ on:
   pull_request:
     branches: [ main ]
 
+# Pull request runs supersede each other. Dependabot force-pushes a branch
+# whenever it rebases, and every push used to queue a fresh set of four jobs
+# behind the ones already waiting - on a single self-hosted runner that is a
+# queue nobody drains, which is how sixteen PRs ended up cancelled en masse
+# with no runner ever having picked them up.
+#
+# The group is keyed on run_id for anything that is not a pull request, which
+# makes every push and manual dispatch its own group and so cancels nothing.
+# That is deliberate: main must keep the behaviour the deploy job's own
+# `production-deploy` group defines, and a half-finished deploy must never be
+# killed by a newer commit arriving.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # ==========================================================
   # 1. BACKEND TESTS

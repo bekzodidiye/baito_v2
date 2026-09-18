@@ -3,7 +3,16 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+# frontend/package-lock.json is gone: `workspaces: ["frontend"]` in the root
+# package.json means npm keeps one lockfile at the root, and that file was
+# never the one npm read. COPY would fail on the missing path, so it is
+# dropped here too.
+#
+# This build has no lockfile to pin against - it resolves straight from
+# package.json, as `npm install` already did even when the file was present.
+# Making the image reproducible means giving this stage the root lock, which
+# needs the compose build context widened past frontend/ first.
+COPY package.json ./
 RUN npm install
 
 COPY . .

@@ -9,6 +9,15 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # statusCheckRollup is a GraphQL field gated behind the checks and statuses
+  # scopes. Naming any permission in this block drops every unnamed one to
+  # `none`, so with only the two above, `gh pr view --json statusCheckRollup`
+  # came back with
+  #   GraphQL: Resource not accessible by integration
+  # and, under `bash -e`, took the whole batch step down on the first PR it
+  # looked at - every later PR went uninspected.
+  checks: read
+  statuses: read
 
 jobs:
   automerge:
@@ -64,7 +73,14 @@ jobs:
 
           for PR in $PRS; do
             echo "Inspecting PR #$PR checks..."
-            CHECKS=$(gh pr view "$PR" --json statusCheckRollup -q '.statusCheckRollup[]?.conclusion // empty')
+            # One unreadable PR must not end the batch. The step runs under
+            # `bash -e`, so a bare failing command substitution aborts the job
+            # rather than moving on to the next number in the list.
+            if ! CHECKS=$(gh pr view "$PR" --json statusCheckRollup \
+                            -q '.statusCheckRollup[]?.conclusion // empty'); then
+              echo "Could not read checks for PR #$PR. Skipping."
+              continue
+            fi
             TOTAL=$(echo "$CHECKS" | wc -w)
             FAIL=$(echo "$CHECKS" | grep -v 'SUCCESS' | wc -w)
 
