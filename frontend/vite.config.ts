@@ -58,10 +58,21 @@ export default defineConfig(() => {
     // server.proxy — so an end-to-end run against the real bundle had no way to
     // reach the API. The E2E suite runs against preview precisely so it
     // exercises what ships; without this it would exercise a 404.
+    //
+    // The port is overridable because 8000 is the port a developer's own API
+    // takes, and the CI runner is that same laptop. When both were up, the
+    // job's uvicorn could not bind, its health check answered from the
+    // developer's process instead, and the suite logged in against a database
+    // that had never heard of the seeded account:
+    //
+    //   POST /api/v1/auth/login -> 400 {"detail":"Telefon raqam yoki parol xato"}
+    //
+    // server.proxy above keeps 8000 unconditionally - that is the developer's
+    // own flow and should not move.
     preview: {
       proxy: {
         '/api': {
-          target: 'http://127.0.0.1:8000',
+          target: `http://127.0.0.1:${process.env.E2E_API_PORT || 8000}`,
           changeOrigin: true,
           ws: true,
         },
