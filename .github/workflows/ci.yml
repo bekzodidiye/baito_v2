@@ -270,14 +270,6 @@ jobs:
     env:
       DATABASE_URL: postgresql://baito:baito@localhost:5434/baito_e2e
       REDIS_URL: redis://localhost:6381/8
-      # Off vite's 5173 default, which belongs to whoever is running
-      # `npm run dev` on this machine - the runner shares it. Same reason
-      # postgres and redis are on 5434 and 6381 above.
-      E2E_PORT: "5175"
-      # Off 8000 for the same reason: that is the port a developer's own API
-      # binds, and uvicorn below cannot tell that the thing answering its
-      # health check is not the thing it just started.
-      E2E_API_PORT: "8010"
       SECRET_KEY: ci_only_secret_key_0123456789abcdef0123456789
       ENVIRONMENT: development
       BCRYPT_ROUNDS: "4"
@@ -333,6 +325,32 @@ jobs:
       # The password is generated here and exported to the job, never written
       # into a file and never printed. `::add-mask::` keeps it out of the log
       # even if a later step echoes it by accident.
+      # E2E_PORT and E2E_API_PORT are chosen here rather than written down,
+      # because a number written down does not survive this runner. It is also
+      # a developer workstation: 5173 belongs to whoever is running
+      # `npm run dev`, and 8000 to their API. Moving to fixed 5175 and 8010
+      # only bought one day - the next failure was 5175, still held by a
+      # preview server a previous job had not managed to kill, the same way
+      # uvicorn used to outlive its job here.
+      #
+      # These must not also appear in the job's `env:` block. Values written
+      # to GITHUB_ENV do not override a job-level env of the same name, so a
+      # leftover default there would silently win.
+      - name: Pick ports that are free right now
+        run: |
+          pick() {
+            for p in $(seq "$1" $(( $1 + 60 ))); do
+              ss -ltn "sport = :$p" 2>/dev/null | grep -q LISTEN || { echo "$p"; return 0; }
+            done
+            echo "::error title=No free port::Nothing free in $1-$(( $1 + 60 )) on this runner." >&2
+            return 1
+          }
+          E2E_PORT=$(pick 5175) || exit 1
+          E2E_API_PORT=$(pick 8010) || exit 1
+          echo "E2E_PORT=$E2E_PORT" >> "$GITHUB_ENV"
+          echo "E2E_API_PORT=$E2E_API_PORT" >> "$GITHUB_ENV"
+          echo "preview on $E2E_PORT, API on $E2E_API_PORT"
+
       - name: Seed a Throwaway Account
         working-directory: ./backend
         run: |
