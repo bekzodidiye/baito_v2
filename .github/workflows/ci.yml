@@ -473,6 +473,78 @@ jobs:
           fi
 
   # ==========================================================
+  # 3b. IMAGE BUILD
+  # ==========================================================
+  # `docker compose config` renders the compose file - it never opens a
+  # Dockerfile. So a build stage could be broken and every check still came
+  # back green, which is exactly how fd955ca went out: six green jobs, then
+  # `🔨 Build Images` failed on the server against backend/Dockerfile.bot, a
+  # file that commit never touched.
+  #
+  # Only on main. Building all three images costs upwards of ten minutes cold
+  # on this hardware, and Dependabot rewrites requirements.txt often enough
+  # that the layer cache misses regularly. Charging that to every pull request
+  # would roughly double a ten-minute pipeline; charging it once per merge,
+  # before the server is touched at all, buys the same protection.
+  #
+  # Deliberately on the laptop rather than baito-server. On the server this
+  # would only move the deploy's own `docker compose build` a few seconds
+  # earlier and tell us nothing new. On separate hardware it is an independent
+  # answer to "is this Dockerfile buildable at all", and the server is left
+  # alone until it is.
+  build-images:
+    name: 🏗️ 3b. Image Build
+    # validate-docker already gates on the three test jobs.
+    needs: [validate-docker]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: [self-hosted, laptop-test-runner]
+    # Cold builds are slow but not unbounded; this is the alarm for a build
+    # that has stopped making progress rather than a target to aim at.
+    timeout-minutes: 40
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🏗️ Build every image compose declares
+        env:
+          # compose refuses to render without these. Nothing here starts a
+          # container, so they are never read by anything.
+          SECRET_KEY: ci_placeholder
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          MINIO_ROOT_USER: ci
+          MINIO_ROOT_PASSWORD: ci_placeholder
+          TELEGRAM_BOT_TOKEN: ci_placeholder
+          TELEGRAM_CHAT_ID: "0"
+          # A tag of its own so a validation build never shadows whatever this
+          # runner happens to be holding, and so the images can be dropped
+          # afterwards by name.
+          IMAGE_TAG: ci-${{ github.sha }}
+        run: |
+          touch backend/.env
+          # The frontend's build context is ./frontend, so the root
+          # package.json holding the version is not visible from inside it.
+          # Mirrors what the deploy hands compose.
+          export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '')"
+          # Retried on network failures only - see the script's header.
+          bash scripts/docker-build.sh
+
+      - name: 🧹 Drop the validation images
+        if: always()
+        env:
+          IMAGE_TAG: ci-${{ github.sha }}
+        run: |
+          # Tags only. The buildkit layer cache is a separate store and stays
+          # put, so the next run still starts warm.
+          docker image rm -f \
+            "baito-backend:${IMAGE_TAG}" \
+            "baito-backup-bot:${IMAGE_TAG}" \
+            "baito-frontend:${IMAGE_TAG}" 2>/dev/null || true
+
+  # ==========================================================
   # 4. PRODUCTION DEPLOYMENT
   # ==========================================================
   # A deploy that never starts is the failure mode this pipeline is worst at
@@ -488,7 +560,7 @@ jobs:
   # hours, silently. This job is the missing alarm.
   deploy-watchdog:
     name: ⏱️ 4b. Deploy Runner Watchdog
-    needs: [test-backend, test-frontend, test-e2e, validate-docker]
+    needs: [test-backend, test-frontend, test-e2e, validate-docker, build-images]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: [self-hosted, laptop-test-runner]
     permissions:
@@ -526,7 +598,7 @@ jobs:
 
   deploy:
     name: 🚀 4. Production Deploy
-    needs: [test-backend, test-frontend, test-e2e, validate-docker]
+    needs: [test-backend, test-frontend, test-e2e, validate-docker, build-images]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     # The server has no public address — it is only reachable inside the
     # tailnet — so deployment has to run on the box itself. That makes the
@@ -600,7 +672,12 @@ jobs:
           # Read it here and hand it to compose as a build arg.
           export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '')"
           echo "Building frontend as version '${APP_VERSION}'"
-          docker compose build
+          # A deploy of fd955ca died here because Alpine's package index could
+          # not be fetched - nothing was wrong with the Dockerfile, and the
+          # same build went through minutes later. The script retries that and
+          # only that: a package that genuinely does not exist still fails on
+          # the first attempt.
+          bash scripts/docker-build.sh
 
       - name: 🗄️ Apply Database Migrations
         working-directory: /home/scarygun/IntellexGroup/Baito
