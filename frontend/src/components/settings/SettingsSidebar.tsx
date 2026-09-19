@@ -57,8 +57,13 @@ export const SettingsSidebar: React.FC = () => {
     },
   ];
 
+  // No h-full on the aside below. `height: 100%` needs a parent with a resolved
+  // height, and the card around it stopped having one when it was unpinned from
+  // the viewport - so this fell back to its own content and stopped 152px short
+  // of the panel beside it, leaving a step along the bottom edge. A flex row
+  // stretches its children by default, which is what was wanted all along.
   return (
-    <aside id="settings-internal-sidebar" className="hidden md:flex flex-col w-72 shrink-0 bg-white border-r border-slate-200/80 p-5 font-sans overflow-y-auto h-full">
+    <aside id="settings-internal-sidebar" className="hidden md:flex flex-col w-72 shrink-0 bg-white border-r border-slate-200/80 p-5 font-sans overflow-y-auto">
       {/* The "back to main menu" button that used to sit here existed because
           the app's own rail was hidden on these screens. The rail is next to
           this one now, so the button was a second way to do what it already
