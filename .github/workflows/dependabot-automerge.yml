@@ -31,11 +31,29 @@ jobs:
         if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PULL_REQUESTS: ${{ toJson(github.event.workflow_run.pull_requests) }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          PR_NUMBER=$(echo "$PULL_REQUESTS" | jq -r '.[0].number // empty')
+          # The PR number used to be read out of the event payload with jq.
+          # jq is not installed on this runner, and it was the first command
+          # in the step, so every run that actually got this far died on it:
+          #
+          #   jq: command not found
+          #   ##[error]Process completed with exit code 127
+          #
+          # Nothing said so, because the runs that looked green were the ones
+          # where the `if` above was false and the step never ran at all. So
+          # auto-merge had not merged anything on this runner, and the
+          # workflow's own history read as healthy.
+          #
+          # gh carries jq internally, so asking the API which pull request
+          # owns the commit keeps the dependency list at `gh` alone. It is
+          # also the more reliable source: workflow_run.pull_requests comes
+          # back empty for a fork's PR, which is most of what Dependabot
+          # opens on some setups.
+          PR_NUMBER=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${HEAD_SHA}/pulls" \
+                        --jq '.[0].number // empty' 2>/dev/null || true)
           if [ -z "$PR_NUMBER" ]; then
-            echo "No PR number associated with this workflow run."
+            echo "No PR is associated with commit ${HEAD_SHA}."
             exit 0
           fi
 
