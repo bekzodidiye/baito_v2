@@ -2,17 +2,7 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
-import { 
-  Settings,
-  Lock, 
-  HelpCircle, 
-  HelpCircle as FaqIcon, 
-  BookOpen, 
-  FileText, 
-  Headphones, 
-  ChevronRight,
-  ArrowLeft
-} from 'lucide-react';
+import { Settings, Lock, HelpCircle, HelpCircle as FaqIcon, BookOpen, FileText, Headphones, ChevronRight } from 'lucide-react';
 
 export const SettingsSidebar: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
@@ -69,15 +59,11 @@ export const SettingsSidebar: React.FC = () => {
 
   return (
     <aside id="settings-internal-sidebar" className="hidden md:flex flex-col w-72 shrink-0 bg-white border-r border-slate-200/80 p-5 font-sans overflow-y-auto h-full">
+      {/* The "back to main menu" button that used to sit here existed because
+          the app's own rail was hidden on these screens. The rail is next to
+          this one now, so the button was a second way to do what it already
+          does - and a reminder that the page had been somewhere else. */}
       <div className="mb-6 px-2 space-y-3">
-        <button
-          onClick={() => setCurrentScreen('jobs')}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-slate-600 hover:text-brand-primary hover:bg-slate-100/80 font-semibold text-xs transition-colors cursor-pointer border border-slate-200/80"
-        >
-          <ArrowLeft size={14} />
-          <span>{language === 'uz' ? 'Asosiy menyu' : language === 'ru' ? 'Главное меню' : 'Main Menu'}</span>
-        </button>
-
         <div>
           <h2 className="text-[17px] font-extrabold text-slate-900 tracking-tight">
             {language === 'uz' ? 'Sozlamalar va Yordam' : language === 'ru' ? 'Настройки и Помощь' : 'Settings & Help'}
