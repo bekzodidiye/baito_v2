@@ -5,14 +5,20 @@ import { motion } from 'motion/react';
 interface EmployerProfileInfoProps {
   companyName: string;
   phone: string;
+  /* Was a literal: every employer, whoever they were, was shown
+     "Toshkent sh., Yunusobod t., 14-kvartal". It is the account's own region
+     now, and empty says so rather than inventing an address. */
+  region?: string;
   language: 'uz' | 'ru' | 'en';
 }
 
 export const EmployerProfileInfo: React.FC<EmployerProfileInfoProps> = ({
   companyName,
   phone,
+  region,
   language,
 }) => {
+  const address = (region || '').trim();
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
@@ -50,7 +56,17 @@ export const EmployerProfileInfo: React.FC<EmployerProfileInfoProps> = ({
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
             {language === 'uz' ? "Manzil" : language === 'ru' ? "Адрес" : "Address"}
           </p>
-          <p className="text-sm font-black text-slate-800">Toshkent sh., Yunusobod t., 14-kvartal</p>
+          {address ? (
+            <p className="text-sm font-black text-slate-800">{address}</p>
+          ) : (
+            <p className="text-sm font-bold text-slate-400 italic">
+              {language === 'uz'
+                ? "Kiritilmagan"
+                : language === 'ru'
+                  ? 'Не указан'
+                  : 'Not set'}
+            </p>
+          )}
         </div>
       </div>
     </motion.div>

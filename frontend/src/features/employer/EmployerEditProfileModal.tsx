@@ -9,7 +9,9 @@ interface EmployerEditProfileModalProps {
   language: string;
   currentName: string;
   currentPhone: string;
-  onSave: (name: string, phone: string) => Promise<void>;
+  currentAbout: string;
+  currentRegion: string;
+  onSave: (fields: { name: string; phone: string; about: string; region: string }) => Promise<void>;
 }
 
 export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> = ({
@@ -18,11 +20,26 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
   language,
   currentName,
   currentPhone,
+  currentAbout,
+  currentRegion,
   onSave
 }) => {
   const [name, setName] = useState(currentName);
   const [phone, setPhone] = useState(currentPhone);
+  const [about, setAbout] = useState(currentAbout);
+  const [region, setRegion] = useState(currentRegion);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // useState only reads its argument on the first render. The profile arrives
+  // from /users/me after this component has already mounted, so without this
+  // the form opened showing whatever was known at mount - usually nothing.
+  React.useEffect(() => {
+    if (!isOpen) return;
+    setName(currentName);
+    setPhone(currentPhone);
+    setAbout(currentAbout);
+    setRegion(currentRegion);
+  }, [isOpen, currentName, currentPhone, currentAbout, currentRegion]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +50,12 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
     
     setIsSubmitting(true);
     try {
-      await onSave(name.trim(), phone.trim());
+      await onSave({
+        name: name.trim(),
+        phone: phone.trim(),
+        about: about.trim(),
+        region: region.trim(),
+      });
       showToast(language === 'uz' ? "Profil yangilandi!" : "Профиль обновлен!");
       onClose();
     } catch (err) {
@@ -59,7 +81,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
             initial={{ scale: 0.95, opacity: 0, y: 10 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 10 }}
-            className="bg-white w-full max-w-sm rounded-[24px] shadow-2xl border border-slate-100 overflow-hidden relative z-10 p-6 flex flex-col"
+            className="bg-white w-full max-w-md rounded-[24px] shadow-2xl border border-slate-100 overflow-hidden relative z-10 p-6 flex flex-col"
           >
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
               <h3 className="font-display font-black text-slate-800 text-sm">
@@ -102,6 +124,38 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
                   disabled={isSubmitting}
                   className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 text-slate-800 disabled:opacity-50"
                 />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">
+                  {language === 'uz' ? "Manzil" : language === 'ru' ? "Адрес" : 'Address'}
+                </label>
+                <input
+                  aria-label={language === 'uz' ? "Manzil" : language === 'ru' ? "Адрес" : 'Address'}
+                  type="text"
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                  disabled={isSubmitting}
+                  placeholder={language === 'uz' ? "Toshkent sh., Chilonzor t." : language === 'ru' ? "г. Ташкент, Чиланзар" : 'Tashkent, Chilonzor'}
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 text-slate-800 disabled:opacity-50 placeholder:font-medium placeholder:text-slate-400"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">
+                  {language === 'uz' ? "Kompaniya haqida" : language === 'ru' ? "О компании" : 'About the company'}
+                </label>
+                <textarea
+                  aria-label={language === 'uz' ? "Kompaniya haqida" : language === 'ru' ? "О компании" : 'About the company'}
+                  value={about}
+                  onChange={(e) => setAbout(e.target.value)}
+                  disabled={isSubmitting}
+                  rows={4}
+                  maxLength={2000}
+                  placeholder={language === 'uz' ? "Kompaniyangiz nima bilan shug'ullanadi?" : language === 'ru' ? "Чем занимается ваша компания?" : 'What does your company do?'}
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 text-slate-800 disabled:opacity-50 resize-none placeholder:font-medium placeholder:text-slate-400"
+                />
+                <p className="text-[10px] font-bold text-slate-400 px-1 text-right">{about.length}/2000</p>
               </div>
 
               <div className="flex gap-2 pt-3">
