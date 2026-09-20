@@ -147,12 +147,24 @@ export interface AdminTimelineEvent {
   icon: string;
 }
 
+/** One stage of the job's life, reached or not — see `_build_steps` on the API.
+ *  `timeline` only carries things that happened; this carries things that have
+ *  to happen, so a stage still ahead of the job is visible too. */
+export interface AdminJobStep {
+  key: string;
+  label: string;
+  state: 'done' | 'current' | 'pending' | 'skipped' | 'cancelled';
+  date?: string | null;
+  detail?: string | null;
+}
+
 export interface AdminJobDetailResponse {
   job: AdminJob & { employerPhone?: string };
   hiredWorker: AdminJobApplication | null;
   applications: AdminJobApplication[];
   transactions: AdminJobTransaction[];
   timeline: AdminTimelineEvent[];
+  steps?: AdminJobStep[];
 }
 
 export interface AdminTransaction {

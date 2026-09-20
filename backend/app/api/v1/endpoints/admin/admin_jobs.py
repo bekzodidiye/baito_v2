@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app import models
 from app.api import deps
 from app.models.job import JobStatus
+from app.models.job_payout import JobPayout
 
 from .admin_users import get_admin_user
 from .audit import record_admin_action
@@ -127,6 +128,103 @@ def get_admin_jobs(
     return {"total": total, "items": items}
 
 
+def _iso(value) -> Optional[str]:
+    return value.isoformat() if value else None
+
+
+def _build_steps(job, applications, hire_date, payout) -> list[dict]:
+    """The job's whole life as an ordered checklist, not a pile of events.
+
+    ``timeline`` answers "what happened and when", and only carries entries that
+    actually have a timestamp. That leaves the stages nobody recorded a time for
+    invisible, so a job sitting at "hired, waiting to start" looks identical to
+    one that never got that far. This answers the other question — where is this
+    job in its lifecycle — by listing every stage, reached or not.
+
+    Nothing here is derived from a stage's own timestamp: several of them have
+    none. Each is decided from the state that stage leaves behind, so a stage
+    without a recorded date still reads as done.
+    """
+    hired = bool(job.hiredWorkerId) or any(
+        a["status"] in ("hired", "completed") for a in applications
+    )
+    started = job.status in (JobStatus.IN_PROGRESS, JobStatus.COMPLETED)
+    completed = job.status == JobStatus.COMPLETED
+    first_applied = min(
+        (a["appliedDate"] for a in applications if a["appliedDate"]), default=None
+    )
+
+    stages = [
+        ("created", "E'lon joylandi", True, _iso(job.createdAt), None),
+        (
+            "applied",
+            "Ariza keldi",
+            bool(applications),
+            first_applied,
+            f"{len(applications)} ta ariza" if applications else None,
+        ),
+        ("hired", "Ishchi olindi", hired, hire_date, None),
+        ("started", "Ish boshlandi", started, None, None),
+        ("completed", "Ish yakunlandi", completed, _iso(job.completedAt), None),
+        (
+            "worker_paid",
+            "Ishchiga to'landi",
+            payout is not None,
+            _iso(payout.paidAt) if payout else None,
+            f"{payout.amount:,} so'm".replace(",", " ") if payout else None,
+        ),
+        (
+            "invoiced",
+            "Hisob-faktura yuborildi",
+            bool(payout and payout.invoiceSentAt),
+            _iso(payout.invoiceSentAt) if payout else None,
+            payout.invoiceNumber if payout and payout.invoiceSentAt else None,
+        ),
+        (
+            "payment_declared",
+            "Korxona to'ladim dedi",
+            bool(payout and payout.invoicePaidDeclaredAt),
+            _iso(payout.invoicePaidDeclaredAt) if payout else None,
+            payout.invoicePaidReference if payout and payout.invoicePaidDeclaredAt else None,
+        ),
+        (
+            "payment_confirmed",
+            "To'lov tasdiqlandi",
+            bool(payout and payout.invoiceConfirmedAt),
+            _iso(payout.invoiceConfirmedAt) if payout else None,
+            None,
+        ),
+    ]
+
+    # A cancelled job has not merely stopped advancing — the stages it never
+    # reached are never going to be reached, and calling one of them "current"
+    # would tell an administrator to wait for something that is not coming.
+    cancelled = job.status == JobStatus.CANCELLED
+    steps: list[dict] = []
+    current_taken = False
+    for key, label, done, date, detail in stages:
+        if done:
+            state = "done"
+        elif cancelled:
+            state = "skipped"
+        elif not current_taken:
+            state, current_taken = "current", True
+        else:
+            state = "pending"
+        steps.append({
+            "key": key, "label": label, "state": state,
+            "date": date, "detail": detail,
+        })
+
+    if cancelled:
+        steps.append({
+            "key": "cancelled", "label": "Bekor qilindi", "state": "cancelled",
+            "date": None, "detail": None,
+        })
+
+    return steps
+
+
 @router.get("/jobs/{job_id}/detail")
 def get_admin_job_detail(
     job_id: str,
@@ -203,6 +301,15 @@ def get_admin_job_detail(
             "date": job.createdAt.isoformat(), "icon": "plus",
         })
 
+    # Hiring is what puts the wage into escrow, so that transaction carries the
+    # moment it happened. The application row does not: it only knows when the
+    # worker applied, which is what this used to report as the hiring date.
+    hire_date = next(
+        (t["createdAt"] for t in sorted(txn_data, key=lambda x: x["createdAt"] or "")
+         if t["type"] == "escrow_hold"),
+        None,
+    )
+
     for app_d in sorted(apps_data, key=lambda x: x["appliedDate"] or ""):
         if app_d["appliedDate"]:
             timeline.append({
@@ -215,7 +322,7 @@ def get_admin_job_detail(
             timeline.append({
                 "event": "hired",
                 "label": f"{app_d['workerName']} tasdiqlandi",
-                "date": app_d["appliedDate"],
+                "date": hire_date or app_d["appliedDate"],
                 "icon": "check",
             })
 
@@ -235,6 +342,39 @@ def get_admin_job_detail(
                 "icon": "credit-card",
             })
 
+    if job.completedAt:
+        timeline.append({
+            "event": "completed", "label": "Ish yakunlandi",
+            "date": job.completedAt.isoformat(), "icon": "check",
+        })
+
+    # The settlement half. Everything above happens inside the app; these four
+    # are the money actually moving, and they were missing from the history an
+    # administrator reads when a company asks where its invoice stands.
+    payout = db.query(JobPayout).filter(JobPayout.jobId == job_id).first()
+    if payout:
+        amount = f"{payout.amount:,}".replace(",", " ")
+        timeline.append({
+            "event": "worker_paid", "label": f"Ishchiga to'landi: {amount} so'm",
+            "date": _iso(payout.paidAt), "icon": "dollar",
+        })
+        if payout.invoiceSentAt:
+            timeline.append({
+                "event": "invoiced",
+                "label": f"Hisob-faktura yuborildi: {payout.invoiceNumber}",
+                "date": _iso(payout.invoiceSentAt), "icon": "file",
+            })
+        if payout.invoicePaidDeclaredAt:
+            timeline.append({
+                "event": "payment_declared", "label": "Korxona to'ladim dedi",
+                "date": _iso(payout.invoicePaidDeclaredAt), "icon": "credit-card",
+            })
+        if payout.invoiceConfirmedAt:
+            timeline.append({
+                "event": "payment_confirmed", "label": "To'lov tasdiqlandi",
+                "date": _iso(payout.invoiceConfirmedAt), "icon": "check",
+            })
+
     timeline.sort(key=lambda x: x.get("date") or "")
 
     job_data = _serialize_job(job, employer_name=employer.name if employer else "")
@@ -246,6 +386,7 @@ def get_admin_job_detail(
         "applications": apps_data,
         "transactions": txn_data,
         "timeline": timeline,
+        "steps": _build_steps(job, apps_data, hire_date, payout),
     }
 
 
