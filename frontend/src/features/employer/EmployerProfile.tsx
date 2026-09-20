@@ -9,9 +9,11 @@ import { EmployerPageHeader } from './EmployerPageHeader';
 import { showToast } from '../../utils/toast';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { EmployerEditProfileModal } from './EmployerEditProfileModal';
+import { EmployerProfileStats } from './EmployerProfileStats';
+import { EmployerProfileCompletion } from './EmployerProfileCompletion';
 
 export const EmployerProfile: React.FC = () => {
-  const { language, balance } = useEmployer();
+  const { language, balance, postedJobs, applications } = useEmployer();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { userProfile, logout, setUserProfile } = useApp();
@@ -23,6 +25,11 @@ export const EmployerProfile: React.FC = () => {
   const isVerified = !!userProfile?.isVerified;
   const about = (userProfile?.aboutMe || '').trim();
   const region = (userProfile?.region || '').trim();
+
+  // Same counts the dashboard derives, from the same two queries - not a second
+  // source of truth, and no extra request for the profile page.
+  const activeJobsCount = postedJobs.filter((j: any) => j.status !== 'completed').length;
+  const hiredCount = postedJobs.reduce((sum: number, j: any) => sum + (Number(j.hiredCount) || 0), 0);
 
   return (
     <div className="w-full max-w-7xl mx-auto py-4 px-4 md:px-6 flex flex-col gap-6 pb-24 md:pb-6">
@@ -93,6 +100,12 @@ export const EmployerProfile: React.FC = () => {
             </div>
           </motion.div>
 
+          <EmployerProfileCompletion
+            userProfile={userProfile}
+            language={language}
+            onEdit={() => setIsEditModalOpen(true)}
+          />
+
           {/* Toggle Role Widget */}
           <motion.section 
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
@@ -147,6 +160,15 @@ export const EmployerProfile: React.FC = () => {
         </div>
 
         <div className="lg:col-span-7 flex flex-col gap-5 w-full">
+          <EmployerProfileStats
+            postedJobsCount={postedJobs.length}
+            activeJobsCount={activeJobsCount}
+            applicantsCount={applications.length}
+            hiredCount={hiredCount}
+            rating={userProfile?.rating}
+            language={language}
+          />
+
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-4">
             <motion.button onClick={() => setCurrentScreen('payments')} 
