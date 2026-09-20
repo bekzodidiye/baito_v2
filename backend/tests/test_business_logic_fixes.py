@@ -91,9 +91,13 @@ def test_hiring_holds_the_wage_in_escrow(client):
     resp = client.post(f"/api/v1/applications/{app_id}/hire")
     assert resp.status_code == 200
     assert resp.json()["escrow_held"] is True
+    # The wage the worker will be paid, and the commission the employer pays on
+    # top of it, are frozen together.
+    assert resp.json()["escrow_wage"] == 250_000
+    assert resp.json()["escrow_fee"] == 25_000
 
     with SessionLocal() as db:
-        assert db.query(User).filter(User.id == employer.id).first().balance == 750_000
+        assert db.query(User).filter(User.id == employer.id).first().balance == 725_000
 
 
 def test_rejected_applicant_is_notified(client):
@@ -190,8 +194,9 @@ def test_completion_pays_the_worker_and_updates_their_profile(client):
 
     with SessionLocal() as db:
         w = db.query(User).filter(User.id == worker.id).first()
-        # 250 000 minus the 10% platform fee.
-        assert w.balance == 225_000
+        # The posted wage, whole: the commission is the employer's, charged on
+        # top of it rather than taken out of what the worker was promised.
+        assert w.balance == 250_000
         assert w.completedJobsCount == 1
         assert w.rating == 5.0
 

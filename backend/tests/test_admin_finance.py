@@ -117,15 +117,17 @@ def test_admin_can_refund_a_frozen_wage(client):
     job = make_job(employer.id, salary="250000")
     _hire_with_escrow(client, employer, worker, job)
 
+    # 250 000 wage and the 10% commission the employer pays on top of it.
     with SessionLocal() as db:
-        assert db.query(User).filter(User.id == employer.id).first().balance == 750_000
+        assert db.query(User).filter(User.id == employer.id).first().balance == 725_000
 
     admin = make_user(role="admin", phone="+998921111112")
     login(client, admin)
     resp = client.post(f"/api/v1/admin/jobs/{job.id}/escrow",
                        json={"action": "refund", "reason": "Nizo ish beruvchi foydasiga"})
     assert resp.status_code == 200
-    assert resp.json()["amountUzs"] == 250_000
+    # Both halves come back — the employer paid both.
+    assert resp.json()["amountUzs"] == 275_000
 
     with SessionLocal() as db:
         assert db.query(User).filter(User.id == employer.id).first().balance == 1_000_000
@@ -146,7 +148,7 @@ def test_admin_can_release_a_frozen_wage_to_the_worker(client):
 
     with SessionLocal() as db:
         # 250 000 minus the 10% platform fee.
-        assert db.query(User).filter(User.id == worker.id).first().balance == 225_000
+        assert db.query(User).filter(User.id == worker.id).first().balance == 250_000
 
 
 def test_release_refuses_a_worker_who_was_never_hired_for_this_job(client):
@@ -176,7 +178,7 @@ def test_release_refuses_a_worker_who_was_never_hired_for_this_job(client):
                              "workerId": hired_worker.id})
     assert resp.status_code == 200
     with SessionLocal() as db:
-        assert db.query(User).filter(User.id == hired_worker.id).first().balance == 225_000
+        assert db.query(User).filter(User.id == hired_worker.id).first().balance == 250_000
 
 
 def test_escrow_holds_are_listed_for_admin(client):
@@ -217,8 +219,10 @@ def test_admin_transactions_list_reports_uzs_not_tiyin(client):
     rows = client.get("/api/v1/payments/transactions").json()
     assert len(rows) == 1
     assert rows[0]["amount"] == 250_000
-    assert rows[0]["platformFee"] == 0  # still held, so no fee taken yet
-    assert body["items"][0]["platformFee"] == 0
+    # The commission is charged to the employer when the wage is frozen, so it
+    # is on the row from the start rather than appearing at payout.
+    assert rows[0]["platformFee"] == 25_000
+    assert body["items"][0]["platformFee"] == 25_000
 
 
 # ── Transaction atomicity (TX-01) ──────────────────────────────────────────

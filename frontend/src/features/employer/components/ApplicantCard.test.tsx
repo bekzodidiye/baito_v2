@@ -63,6 +63,18 @@ describe('ApplicantCard — hiring asks before it freezes money', () => {
     expect(updateApplicationStatus).toHaveBeenCalledWith('app-1', 'hired');
   });
 
+  it('breaks the total into the wage and the commission on top of it', () => {
+    // The worker is paid the posted wage in full; the commission is the
+    // employer's, charged on top. Showing only the wage would understate what
+    // actually leaves their balance.
+    renderCard({ ...applicant, feeAmount: 40000 });
+    pressApprove();
+    const shown = screen.getByRole('dialog').textContent?.replace(/\u00a0/g, ' ') ?? '';
+    expect(shown).toContain('400 000');   // ish haqi
+    expect(shown).toContain('40 000');    // xizmat haqi
+    expect(shown).toContain('440 000');   // jami
+  });
+
   it('says so plainly when the listing names no figure', () => {
     renderCard({ ...applicant, wageAmount: 0 });
     pressApprove();

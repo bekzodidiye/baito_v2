@@ -636,7 +636,12 @@ def delete_job(
     # and once per day of a multi-day shift. refund_funds settles all of them
     # in one pass, so this is a single call rather than a counted loop.
     try:
-        refunded = sum(tx.amount // 100 for tx in EscrowService.refund_funds(db, job_id=job.id))
+        # Wage and commission both: the employer was charged for both when the
+        # day was frozen, and refund_funds puts both back.
+        refunded = sum(
+            (tx.amount + (tx.platformFee or 0)) // 100
+            for tx in EscrowService.refund_funds(db, job_id=job.id)
+        )
     except HTTPException:
         # Nothing was ever frozen — an unfilled posting, or one from before
         # escrow. Cancelling is still legitimate.

@@ -19,6 +19,10 @@ from .conftest import login, make_job, make_user
 
 THREE_DAYS = "2026-09-02, 2026-09-03, 2026-09-04"
 WAGE = 250_000
+# The commission is charged to the employer on top of the wage, so a day costs
+# the employer WAGE + FEE and pays the worker WAGE.
+FEE = 25_000            # 10%, the default rate
+DAY_COST = WAGE + FEE
 
 
 def _phone():
@@ -86,7 +90,7 @@ def test_hiring_freezes_the_wage_for_every_day(client):
 
     with SessionLocal() as db:
         assert db.query(User).filter(User.id == employer.id).first().balance == \
-            1_000_000 - WAGE * 3
+            1_000_000 - DAY_COST * 3
 
         holds = db.query(Transaction).filter(
             Transaction.jobId == job.id, Transaction.type == "escrow_hold").all()
@@ -103,18 +107,20 @@ def test_hiring_freezes_the_wage_for_every_day(client):
 def test_hiring_says_what_the_whole_run_costs_when_the_balance_is_short(client):
     """One day's wage is affordable, three is not. The employer is told the
     real figure before anything is frozen, not after day one succeeds."""
-    employer, worker, job, app_id = _posting(balance=WAGE + 1000)
+    employer, worker, job, app_id = _posting(balance=DAY_COST + 1000)
     login(client, employer)
 
     resp = client.post(f"/api/v1/applications/{app_id}/hire")
     assert resp.status_code == 400
     detail = resp.json()["detail"]
     assert "3 kunlik" in detail
-    assert "750 000" in detail
+    # The wage and the commission the employer pays on top of it, for all three
+    # days — the figure they actually have to cover.
+    assert "825 000" in detail
 
     with SessionLocal() as db:
         # Nothing frozen, nothing hired — the employer can top up and retry.
-        assert db.query(User).filter(User.id == employer.id).first().balance == WAGE + 1000
+        assert db.query(User).filter(User.id == employer.id).first().balance == DAY_COST + 1000
         assert db.query(Transaction).filter(Transaction.jobId == job.id).count() == 0
 
 
@@ -150,7 +156,7 @@ def test_finishing_one_day_pays_one_day_and_leaves_the_rest(client):
     with SessionLocal() as db:
         # One day's wage, less the platform's 10%.
         assert db.query(User).filter(User.id == worker.id).first().balance == \
-            WAGE - int(WAGE * 0.10)
+            WAGE
         held = db.query(Transaction).filter(
             Transaction.jobId == job.id, Transaction.type == "escrow_hold",
             Transaction.status == "held").count()
@@ -175,7 +181,7 @@ def test_the_posting_closes_only_when_its_last_day_does(client):
     with SessionLocal() as db:
         worker_row = db.query(User).filter(User.id == worker.id).first()
         # Three days of wages.
-        assert worker_row.balance == (WAGE - int(WAGE * 0.10)) * 3
+        assert worker_row.balance == (WAGE) * 3
         # But one job. A week's work is not a career.
         assert worker_row.completedJobsCount == 1
 
@@ -191,7 +197,7 @@ def test_a_day_cannot_be_finished_twice(client):
     with SessionLocal() as db:
         # Still one day's pay, not two.
         assert db.query(User).filter(User.id == worker.id).first().balance == \
-            WAGE - int(WAGE * 0.10)
+            WAGE
 
 
 def test_only_the_employer_may_finish_a_day(client):
@@ -217,7 +223,7 @@ def test_finishing_the_whole_posting_settles_every_remaining_day(client):
     assert {d[2] for d in _days(job.id)} == {JobDayStatus.COMPLETED}
     with SessionLocal() as db:
         worker_row = db.query(User).filter(User.id == worker.id).first()
-        assert worker_row.balance == (WAGE - int(WAGE * 0.10)) * 3
+        assert worker_row.balance == (WAGE) * 3
         assert worker_row.completedJobsCount == 1
 
 
@@ -232,7 +238,7 @@ def test_finishing_the_rest_after_one_day_pays_only_what_is_left(client):
     with SessionLocal() as db:
         # Three days total, not four: the day already paid is not paid again.
         assert db.query(User).filter(User.id == worker.id).first().balance == \
-            (WAGE - int(WAGE * 0.10)) * 3
+            (WAGE) * 3
 
 
 # --- calling it off --------------------------------------------------------
@@ -247,13 +253,13 @@ def test_cancelling_refunds_every_day_that_was_frozen(client):
 
     with SessionLocal() as db:
         assert db.query(User).filter(User.id == employer.id).first().balance == \
-            1_000_000 - WAGE * 3
+            1_000_000 - DAY_COST * 3
 
     # A started job cannot be called off — that guard is deliberate — so this
     # is the state a posting is actually cancelled from.
     resp = client.delete(f"/api/v1/jobs/{job.id}")
     assert resp.status_code == 200
-    assert resp.json()["refunded"] == WAGE * 3
+    assert resp.json()["refunded"] == DAY_COST * 3
 
     assert {d[2] for d in _days(job.id)} == {JobDayStatus.CANCELLED}
 
@@ -274,7 +280,7 @@ def test_a_single_day_posting_still_behaves_exactly_as_before(client):
 
     with SessionLocal() as db:
         assert db.query(User).filter(User.id == employer.id).first().balance == \
-            1_000_000 - WAGE
+            1_000_000 - DAY_COST
         j = db.query(Job).filter(Job.id == job.id).first()
         j.status = JobStatus.IN_PROGRESS
         db.add(j)
@@ -283,4 +289,4 @@ def test_a_single_day_posting_still_behaves_exactly_as_before(client):
     assert client.post(f"/api/v1/jobs/{job.id}/complete", json={"rating": 5}).status_code == 200
     with SessionLocal() as db:
         assert db.query(User).filter(User.id == worker.id).first().balance == \
-            WAGE - int(WAGE * 0.10)
+            WAGE

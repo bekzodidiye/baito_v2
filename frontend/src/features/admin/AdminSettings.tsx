@@ -38,11 +38,21 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
     { id: 'L-102', admin: 'Moderator Sardor', action: "ID #102 e'lonni tasdiqladi", ip: '213.230.88.5', time: '2026-07-24 09:15' },
   ]);
 
+  /** `parseFloat(x) || fallback` reads a typed 0 as falsy and silently swaps in
+   *  the fallback, so a 0% commission — a promotion, a pilot customer — could
+   *  not be saved at all. The API also takes whole numbers only, and a typed
+   *  "12.5" was sent through as 12.5 and rejected. */
+  const wholeNumber = (raw: string, fallback: number, min: number, max: number) => {
+    const n = Number.parseFloat(raw);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.min(max, Math.max(min, Math.round(n)));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onUpdateSettings({
-      platformFeePercent: parseFloat(fee) || 10,
-      minHourlyRate: parseFloat(minRate) || 15000,
+      platformFeePercent: wholeNumber(fee, 10, 0, 50),
+      minHourlyRate: wholeNumber(minRate, 15000, 0, 10_000_000),
       maintenanceMode: maint,
       autoApproveJobs: autoApprove,
       autoExpireJobs: autoExpire,
@@ -97,7 +107,11 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Platforma Komissiyasi (%)</label>
                 <input
-              aria-label="Platforma Komissiyasi (%)" type="number" value={fee} onChange={(e) => setFee(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border rounded-xl font-bold" />
+              aria-label="Platforma Komissiyasi (%)" type="number" min={0} max={50} step={1} value={fee} onChange={(e) => setFee(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border rounded-xl font-bold" />
+                <p className="text-[11px] text-slate-400 font-medium mt-1">
+                  Ishchiga ish haqi shu foiz ayirilgan holda o'tkaziladi. Yollash
+                  paytidagi foiz o'sha ish uchun saqlanadi.
+                </p>
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Minimal Soatlik Ish Haqi (UZS)</label>

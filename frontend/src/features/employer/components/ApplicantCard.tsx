@@ -25,8 +25,18 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
   const [confirmingHire, setConfirmingHire] = useState(false);
 
   const wage = Number(app.wageAmount ?? 0);
+  // The commission is the employer's, charged on top of the wage — the worker
+  // is paid what the posting advertised. So the figure that leaves this
+  // employer's balance is the sum of the two, and saying only the wage would
+  // understate it.
+  const fee = Number(app.feeAmount ?? 0);
+  const total = wage + fee;
+  const money = (n: number, locale: string) => n.toLocaleString(locale);
   const wageText = wage > 0
-    ? `${wage.toLocaleString('uz-UZ')} so'm hisobingizdan escrow'ga muzlatiladi`
+    ? (fee > 0
+        ? `${money(wage, 'uz-UZ')} so'm ish haqi va ${money(fee, 'uz-UZ')} so'm xizmat haqi — `
+          + `jami ${money(total, 'uz-UZ')} so'm hisobingizdan escrow'ga muzlatiladi`
+        : `${money(wage, 'uz-UZ')} so'm hisobingizdan escrow'ga muzlatiladi`)
     : "e'londa aniq summa yo'q (kelishilgan holda), shuning uchun hech narsa muzlatilmaydi";
 
   const hireCopy = {
@@ -38,13 +48,13 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
     },
     ru: {
       title: 'Подтвердите наём',
-      message: `${app.workerName || app.candidateName} — «${app.jobTitle}». ${wage > 0 ? `${wage.toLocaleString('ru-RU')} сум будет заморожено на эскроу.` : 'Сумма в объявлении не указана, эскроу не создаётся.'}`,
+      message: `${app.workerName || app.candidateName} — «${app.jobTitle}». ${wage > 0 ? `${money(total, 'ru-RU')} сум будет заморожено на эскроу${fee > 0 ? ` (${money(wage, 'ru-RU')} оплата труда + ${money(fee, 'ru-RU')} комиссия)` : ''}.` : 'Сумма в объявлении не указана, эскроу не создаётся.'}`,
       confirm: 'Нанять',
       cancel: 'Отмена',
     },
     en: {
       title: 'Confirm hire',
-      message: `${app.workerName || app.candidateName} — "${app.jobTitle}". ${wage > 0 ? `${wage.toLocaleString('en-US')} UZS will be frozen in escrow.` : 'The listing names no figure, so nothing is frozen.'}`,
+      message: `${app.workerName || app.candidateName} — "${app.jobTitle}". ${wage > 0 ? `${money(total, 'en-US')} UZS will be frozen in escrow${fee > 0 ? ` (${money(wage, 'en-US')} wage + ${money(fee, 'en-US')} commission)` : ''}.` : 'The listing names no figure, so nothing is frozen.'}`,
       confirm: 'Hire',
       cancel: 'Cancel',
     },
