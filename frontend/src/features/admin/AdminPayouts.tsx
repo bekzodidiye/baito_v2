@@ -100,7 +100,7 @@ export const AdminPayouts: React.FC = () => {
       apiClient(`/admin/jobs/${jobId}/payout/confirm-payment`, { method: 'POST' }),
     onSuccess: () => {
       showToast("To'lov tasdiqlandi");
-      queryClient.invalidateQueries({ queryKey: ['admin-payouts'] });
+      queryClient.invalidateQueries({ queryKey: ['adminJobPayouts'] });
     },
     onError: (e: any) => showToast(e?.message || 'Xatolik yuz berdi', 'error'),
   });
