@@ -1,3 +1,4 @@
+import { NotificationsScreen } from '../../components/notifications/NotificationsScreen';
 import React, { useState } from 'react';
 import { AdminTab } from './types';
 import { useAdminData } from './useAdminData';
@@ -151,6 +152,14 @@ export const AdminPanel: React.FC = () => {
 
           {activeTab === 'regions' && (
             <AdminRegions />
+          )}
+
+          {/* The inbox. notification_rules below it configures when messages go
+              out; this is where an admin reads the ones addressed to them. It
+              is the same component the worker and employer panels render at
+              /notifications - it takes no props and carries its own data. */}
+          {activeTab === 'notifications' && (
+            <NotificationsScreen />
           )}
 
           {activeTab === 'notification_rules' && (

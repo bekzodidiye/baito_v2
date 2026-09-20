@@ -23,6 +23,14 @@ export interface Job {
   category?: string;
   hiredCount?: number;
   vacancies?: number;
+  /* Invoice state, sent only on the employer's own listing (/jobs/my).
+     undefined means no invoice has been raised for this job - which the card
+     has to tell apart from an invoice raised and not yet paid. Values match
+     PayoutStatus on the backend: 'invoiced' | 'payment_declared' |
+     'payment_confirmed' | 'paid'. */
+  payoutStatus?: string | null;
+  invoiceNumber?: string | null;
+  invoiceAmount?: number | null;
   hiredWorkers?: {
     id: string;
     name: string;

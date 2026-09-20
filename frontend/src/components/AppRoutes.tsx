@@ -89,10 +89,33 @@ export const AppRoutes = () => {
         <Route path="/profile" element={<ProtectedRoute allowedRoles={['worker']}><ProfileScreen /></ProtectedRoute>} />
         <Route path="/applications" element={<ProtectedRoute allowedRoles={['worker']}><ApplicationsScreen /></ProtectedRoute>} />
         <Route path="/reviews" element={<ProtectedRoute allowedRoles={['worker']}><ReviewsScreen /></ProtectedRoute>} />
+        {/* ===================================================================
+            WALLET / CARDS / TOP-UP - PARKED, NOT ABANDONED. Do not delete.
+
+            These four screens are the in-app balance flow: a wallet, saved
+            cards, and topping it up. They are switched off while payment for
+            a finished job moves to an invoice-and-receipt flow instead: the
+            admin issues an invoice, the employer uploads the receipt, the
+            admin confirms it. That path does not need a stored balance or a
+            card on file, so shipping both at once would show users two ways
+            to pay and leave them guessing which one counts.
+
+            The screens, their components and their API calls in
+            api/queries.ts are all left intact and compiling. Re-enable by
+            uncommenting these routes and the three entry points that were
+            commented out with the same note - the worker wallet widget
+            (ProfileWidgets), the worker accordion row (ProfileAccordion), and
+            the employer balance tile (EmployerProfile).
+
+            /invoice/:token below is deliberately NOT parked - that is the
+            billing-email link and belongs to the flow that is taking over.
+            =================================================================== */}
+        {/*
         <Route path="/payments" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><PaymentsScreen /></ProtectedRoute>} />
         <Route path="/payments/my-cards" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><MyCardsScreen /></ProtectedRoute>} />
         <Route path="/payments/add-card" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><AddCardScreen /></ProtectedRoute>} />
         <Route path="/payments/top-up" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><TopUpScreen /></ProtectedRoute>} />
+        */}
         {/* Public, and it has to stay that way: this is opened from the
             button in a billing email by whoever pays that company's invoices,
             who usually has no account here. The signed token in the path is

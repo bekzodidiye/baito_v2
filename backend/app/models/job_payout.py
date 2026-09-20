@@ -19,6 +19,10 @@ class PayoutStatus:
     # not a bank statement: it is recorded as a separate state precisely so
     # nobody reads it as the money having arrived.
     DECLARED = "payment_declared"
+    # An administrator matched the declaration against the bank statement. This
+    # is the only state in which the money is known to have arrived, and it is
+    # what closes the job out - DECLARED above is still only the payer's word.
+    CONFIRMED = "payment_confirmed"
 
 
 class JobPayout(Base):
@@ -68,3 +72,13 @@ class JobPayout(Base):
     invoicePaidMethod = Column(String, nullable=True)       # bank_transfer, card
     invoicePaidReference = Column(String, nullable=True)    # their payment order no.
     invoicePaidDeclaredAt = Column(DateTime(timezone=True), nullable=True)
+    # The company's own receipt for the transfer it says it made. Same kind of
+    # value as receiptUrl above - an upload URL served through /media - but it
+    # belongs to the other side of the settlement: receiptUrl is our proof we
+    # paid the worker, this is their proof they paid us.
+    invoicePaidReceiptUrl = Column(String, nullable=True)
+    # Set only when an administrator has reconciled the declaration against the
+    # bank statement. Kept separate from invoicePaidDeclaredAt for the same
+    # reason the statuses are: one is a claim, the other is a verification.
+    invoiceConfirmedAt = Column(DateTime(timezone=True), nullable=True)
+    invoiceConfirmedByAdminId = Column(String, ForeignKey("users.id"), nullable=True)

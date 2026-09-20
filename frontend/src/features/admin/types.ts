@@ -321,6 +321,7 @@ export type AdminTab =
   | 'audit_logs'
   | 'promotions'
   | 'regions'
+  | 'notifications'
   | 'notification_rules'
   | 'auto_moderation'
   | 'auto_matching'

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
 import { apiClient } from '../../api/client';
+import { uploadFileApi } from '../../api/queries';
 import { useApp } from '../../context/AppContext';
-import { Settings, DollarSign, Building2, Phone, MapPin, Edit3, LogOut, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Settings, DollarSign, Building2, Phone, MapPin, Edit3, LogOut, ShieldCheck, HelpCircle, Camera } from 'lucide-react';
 import { EmployerProfileInfo } from './EmployerProfileInfo';
 import { motion } from 'motion/react';
 import { EmployerPageHeader } from './EmployerPageHeader';
@@ -28,6 +29,38 @@ export const EmployerProfile: React.FC = () => {
 
   // Same counts the dashboard derives, from the same two queries - not a second
   // source of truth, and no extra request for the profile page.
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  // Same shape as the worker's handlePhotoUpload: show the local file at once
+  // so the square does not sit empty while the upload runs, then swap in the
+  // stored URL once MinIO has it. A company had no way to set a logo at all
+  // before this - the square was always the first letter of the name.
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userProfile) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      if (ev.target?.result) {
+        setUserProfile({ ...userProfile, profileImage: ev.target.result as string });
+      }
+    };
+    reader.readAsDataURL(file);
+
+    try {
+      const uploadedUrl = await uploadFileApi(file, 'avatar');
+      await apiClient('/users/me', {
+        method: 'PUT',
+        body: JSON.stringify({ avatarUrl: uploadedUrl }),
+      });
+      setUserProfile({ ...userProfile, profileImage: uploadedUrl });
+      showToast(language === 'uz' ? "Logotip saqlandi!" : language === 'ru' ? 'Логотип сохранён!' : 'Logo saved!');
+    } catch (err) {
+      console.error('Logo upload failed:', err);
+      showToast(language === 'uz' ? "Logotipni yuklab bo'lmadi" : language === 'ru' ? 'Не удалось загрузить логотип' : 'Could not upload the logo');
+    }
+  };
+
   const activeJobsCount = postedJobs.filter((j: any) => j.status !== 'completed').length;
   const hiredCount = postedJobs.reduce((sum: number, j: any) => sum + (Number(j.hiredCount) || 0), 0);
 
@@ -65,8 +98,34 @@ export const EmployerProfile: React.FC = () => {
               </button>
             </div>
 
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-brand-primary to-brand-primary-container text-white flex items-center justify-center text-3xl font-display font-black shadow-md border-4 border-white shrink-0">
-              {companyName.charAt(0)}
+            <div className="relative shrink-0">
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-brand-primary to-brand-primary-container text-white flex items-center justify-center text-3xl font-display font-black shadow-md border-4 border-white overflow-hidden">
+                {userProfile?.profileImage ? (
+                  <img
+                    src={userProfile.profileImage}
+                    alt={companyName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  companyName.charAt(0)
+                )}
+              </div>
+              <button
+                onClick={() => logoInputRef.current?.click()}
+                aria-label={language === 'uz' ? 'Logotipni almashtirish' : language === 'ru' ? 'Изменить логотип' : 'Change logo'}
+                title={language === 'uz' ? 'Logotipni almashtirish' : language === 'ru' ? 'Изменить логотип' : 'Change logo'}
+                className="absolute -bottom-1 -right-1 w-8 h-8 flex items-center justify-center bg-brand-primary hover:bg-brand-primary/95 text-white rounded-full border-2 border-white shadow-xs cursor-pointer active:scale-90 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+              >
+                <Camera size={14} className="stroke-[2.2]" />
+              </button>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                aria-label={language === 'uz' ? 'Logotip faylini tanlash' : language === 'ru' ? 'Выбрать файл логотипа' : 'Choose a logo file'}
+                className="hidden"
+              />
             </div>
 
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left mt-2 sm:mt-0">
@@ -106,36 +165,8 @@ export const EmployerProfile: React.FC = () => {
             onEdit={() => setIsEditModalOpen(true)}
           />
 
-          {/* Toggle Role Widget */}
-          <motion.section 
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-            className="bg-slate-900 text-white rounded-2xl p-4.5 border border-slate-800 shadow-sm flex flex-col gap-2.5 shrink-0"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[9px] font-black uppercase text-brand-primary tracking-widest">
-                  {language === 'uz' ? "FAOLIYAT TURI" : language === 'ru' ? "РЕЖИМ АККАУНТА" : "ACCOUNT MODE"}
-                </p>
-                <h3 className="font-display font-extrabold text-[11px] mt-0.5 text-slate-200 leading-snug">
-                  {language === 'uz' ? "Ish beruvchi rejimi faol. Xodim rejimiga o'tish:" : language === 'ru' ? "Режим работодателя активен. Перейти в режим работника:" : "Employer mode is active. Switch to worker mode:"}
-                </h3>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                if (userProfile) {
-                  setUserProfile({ ...userProfile, selectedRole: 'worker' });
-                  (
-                    language === 'uz' ? "Tizimga Xodim sifatida kirdingiz" : language === 'ru' ? "Вы вошли как Работник" : "You logged in as Worker"
-                  );
-                  setCurrentScreen('jobs');
-                }
-              }}
-              className="w-full py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl font-display font-black text-xs transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 shadow-sm"
-            >
-              {language === 'uz' ? "Xodim rejimiga o'tish" : language === 'ru' ? "Режим работника" : "Worker Mode"}
-            </button>
-          </motion.section>
+          {/* The account-mode switch used to sit here - see the note in the
+              worker profile. Removed from both sides. */}
 
           {/* Support and Logout */}
           <div className="flex flex-col gap-3 mt-2">
@@ -171,6 +202,12 @@ export const EmployerProfile: React.FC = () => {
 
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-4">
+            {/* Balance tile parked with the rest of the balance flow - see the
+                note beside the /payments routes in components/AppRoutes.tsx.
+                Payment for a finished job is moving to invoice-and-receipt, so
+                an in-app balance would be a second, competing answer to "how do
+                I pay". */}
+            {/*
             <motion.button onClick={() => setCurrentScreen('payments')} 
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
               className="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col items-center sm:flex-row sm:justify-between gap-4 hover:shadow-md hover:border-brand-primary/20 transition-all cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
@@ -187,6 +224,7 @@ export const EmployerProfile: React.FC = () => {
                 </p>
               </div>
             </motion.button>
+            */}
 
             <motion.button onClick={() => setCurrentScreen("settings")}
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}

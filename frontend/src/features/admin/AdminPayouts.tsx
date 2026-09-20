@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Wallet, Lock, Check, X, Loader2, RefreshCw, Receipt, Landmark, Save } from 'lucide-react';
 import { apiClient, unwrapList } from '../../api/client';
 import { showToast } from '../../utils/toast';
@@ -46,6 +46,11 @@ interface JobPayout {
   invoicePaidMethod: string | null;
   invoicePaidReference: string | null;
   invoicePaidDeclaredAt: string | null;
+  /** Their receipt for the transfer, and whether an administrator has matched
+   *  it against the bank statement. Two separate facts on purpose: the first
+   *  is what to look at, the second is whether anyone has looked. */
+  invoicePaidReceiptUrl: string | null;
+  invoiceConfirmedAt: string | null;
 }
 
 interface BankDetails {
@@ -85,6 +90,19 @@ export const AdminPayouts: React.FC = () => {
   const escrow = useQuery({
     queryKey: ['adminEscrow'],
     queryFn: async () => unwrapList(await apiClient('/admin/escrow')) as EscrowHold[],
+  });
+
+  // Saying the money arrived. Deliberately a separate action from everything
+  // else on this screen: the rest of it records what we did, and this records
+  // that somebody checked a bank statement.
+  const confirmPayment = useMutation({
+    mutationFn: async (jobId: string) =>
+      apiClient(`/admin/jobs/${jobId}/payout/confirm-payment`, { method: 'POST' }),
+    onSuccess: () => {
+      showToast("To'lov tasdiqlandi");
+      queryClient.invalidateQueries({ queryKey: ['admin-payouts'] });
+    },
+    onError: (e: any) => showToast(e?.message || 'Xatolik yuz berdi', 'error'),
   });
 
   const payouts = useQuery({
@@ -266,6 +284,34 @@ export const AdminPayouts: React.FC = () => {
                                 {p.invoicePaidReference ? ` · №${p.invoicePaidReference}` : ''}
                               </span>
                             )}
+                            {p.invoicePaidReceiptUrl && (
+                              <a
+                                href={p.invoicePaidReceiptUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="block mt-1 text-brand-primary font-semibold underline underline-offset-2"
+                              >
+                                Chekni ochish
+                              </a>
+                            )}
+                            {p.invoiceConfirmedAt ? (
+                              <span className="block mt-1 text-emerald-700 font-bold">
+                                Tasdiqlandi · {when(p.invoiceConfirmedAt)}
+                              </span>
+                            ) : p.invoicePaidDeclaredAt ? (
+                              // The step that actually closes the job. Offered
+                              // only once there is a declaration to check, so
+                              // nobody can confirm a payment nobody claims to
+                              // have made.
+                              <button
+                                onClick={(e) => { e.stopPropagation(); confirmPayment.mutate(p.jobId); }}
+                                disabled={confirmPayment.isPending}
+                                className="mt-1.5 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-[11px] font-bold cursor-pointer disabled:cursor-not-allowed"
+                              >
+                                To'lovni tasdiqlash
+                              </button>
+                            ) : null}
                           </span>
                         ) : (
                           <span className="text-amber-600 font-semibold">Yuborilmagan</span>

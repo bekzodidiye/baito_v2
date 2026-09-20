@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app import crud, models
 from app.api import deps
 from app.models.job import JobStatus
+from app.models.job_payout import JobPayout, PayoutStatus
 from app.services.escrow_service import EscrowService
 from app.services import job_days as job_days_service
 from app.models.job_day import JobDay, JobDayStatus
@@ -696,3 +697,108 @@ def toggle_bookmark(
     db.add(models.Bookmark(jobId=id, userId=current_user.id))
     db.commit()
     return {"success": True, "bookmarked": True}
+
+
+class PayoutDeclarationRequest(BaseModel):
+    """What an employer says when settling an invoice from inside the app."""
+
+    method: str = Field(min_length=1, max_length=40)
+    reference: Optional[str] = Field(default=None, max_length=120)
+    receiptUrl: Optional[str] = Field(default=None, max_length=500)
+
+
+def _payout_state(payout: "JobPayout | None") -> dict:
+    """The shape the employer's job card reads.
+
+    Only what the payer needs: how much, which invoice, and where it has got
+    to. Deliberately not the worker-side columns - what we paid the worker and
+    the receipt for it are not the employer's business.
+    """
+    if payout is None or not payout.invoiceNumber:
+        return {"payoutStatus": None, "invoiceNumber": None, "invoiceAmount": None}
+    return {
+        "payoutStatus": payout.status,
+        "invoiceNumber": payout.invoiceNumber,
+        "invoiceAmount": payout.invoiceAmount or payout.amount,
+        "invoiceSentAt": payout.invoiceSentAt,
+        "invoicePaidDeclaredAt": payout.invoicePaidDeclaredAt,
+        "invoiceConfirmedAt": payout.invoiceConfirmedAt,
+    }
+
+
+@router.get("/{id}/payout")
+def get_job_payout_for_employer(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: str,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """Invoice state for one of the caller's own jobs."""
+    job = _get_job_or_404(db, id)
+    if job.employerId not in (current_user.id, getattr(current_user, "uid", None)) \
+            and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Bu e'lon sizga tegishli emas")
+
+    payout = (
+        db.query(models.JobPayout)
+        .filter(models.JobPayout.jobId == id)
+        .order_by(models.JobPayout.paidAt.desc())
+        .first()
+    )
+    return _payout_state(payout)
+
+
+@router.post("/{id}/payout/declare")
+def declare_job_payout(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: str,
+    req: PayoutDeclarationRequest,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """Record that the employer says this invoice is paid.
+
+    The same declaration the tokenised link in the invoice email makes, for the
+    employer who is already signed in and would rather do it from the job card
+    than go and find the email. Sets ``payment_declared``: this has the payer's
+    word and a receipt image, which is not the same as the money arriving, and
+    an administrator still has to reconcile it.
+    """
+    job = _get_job_or_404(db, id)
+    if job.employerId not in (current_user.id, getattr(current_user, "uid", None)):
+        raise HTTPException(status_code=403, detail="Bu e'lon sizga tegishli emas")
+
+    payout = (
+        db.query(models.JobPayout)
+        .filter(models.JobPayout.jobId == id)
+        .order_by(models.JobPayout.paidAt.desc())
+        .first()
+    )
+    if payout is None or not payout.invoiceNumber:
+        raise HTTPException(status_code=404, detail="Bu ish uchun hisob-faktura yuborilmagan")
+    if payout.invoicePaidDeclaredAt:
+        raise HTTPException(status_code=409, detail="To'lov allaqachon qayd etilgan")
+
+    payout.invoicePaidMethod = req.method.strip()
+    payout.invoicePaidReference = (req.reference or "").strip() or None
+    payout.invoicePaidReceiptUrl = (req.receiptUrl or "").strip() or None
+    payout.invoicePaidDeclaredAt = datetime.now(timezone.utc)
+    payout.status = PayoutStatus.DECLARED
+    db.add(payout)
+
+    amount = f"{payout.invoiceAmount or payout.amount:,}".replace(",", " ")
+    company = getattr(current_user, "companyName", None) or job.company or "Korxona"
+    for admin in db.query(models.User).filter(models.User.role == "admin").all():
+        db.add(models.Notification(
+            userId=admin.id,
+            title="Hisob-faktura to'landi deb belgilandi",
+            message=f"{company} — {payout.invoiceNumber} · {amount} so'm. "
+                    + ("Chek ilova qilingan. " if payout.invoicePaidReceiptUrl else "Chek ilova qilinmagan. ")
+                    + "Bank ko'chirmasi bilan solishtiring.",
+            type="payout",
+            relatedJobId=job.id,
+        ))
+
+    db.commit()
+    db.refresh(payout)
+    return _payout_state(payout)

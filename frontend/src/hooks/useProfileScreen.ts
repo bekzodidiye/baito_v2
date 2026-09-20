@@ -270,13 +270,10 @@ export const useProfileScreen = () => {
     showToast(t.logoutSuccess);
   };
 
-  const toggleRole = () => {
-    if (!userProfile) return;
-    const nextRole = userProfile.selectedRole === 'employer' ? 'worker' : 'employer';
-    setUserProfile({ ...userProfile, selectedRole: nextRole });
-    showToast(language === 'uz' ? `Tizimga ${nextRole === 'employer' ? "Ish beruvchi" : "Xodim"} sifatida kirdingiz` : `Switched to ${nextRole}`);
-    setCurrentScreen(nextRole === 'employer' ? 'employer-dashboard' : 'jobs');
-  };
+  // toggleRole lived here. Both profiles have dropped the switch - one person
+  // is either hiring or looking for work in a session, and a single tap could
+  // abandon a half-finished flow on the other side. Admins switch panels from
+  // the admin sidebar instead, which is a different thing.
 
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -307,7 +304,7 @@ export const useProfileScreen = () => {
     fileInputRef, expandedSection, setExpandedSection, activeDialog, setActiveDialog,
     withdrawAmount, setWithdrawAmount, withdrawSuccess, t, appliedJobsCount, showVerified, isVerifiedUser,
     profileName, profileRole, profileImage, balance, toggleLanguage, handlePhotoUpload,
-    handleSaveProfileSubmit, handleShare, handleLogout, handleWithdrawSubmit, toggleRole
+    handleSaveProfileSubmit, handleShare, handleLogout, handleWithdrawSubmit
   };
 };
 

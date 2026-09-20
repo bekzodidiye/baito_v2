@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Briefcase, MapPin, Navigation, Clock, Share2, Info, Users } from 'lucide-react';
 import { Job } from '../../types';
 import { getLatLng, calculateDistance } from './mapUtils';
 import { getJobShiftTime, getJobDuration } from '../../utils/jobTimeUtils';
 import { shareJob } from '../../utils/shareJob';
 import { translations, Language } from '../../translations';
+import { ConfirmModal } from '../common/ConfirmModal';
 
 interface JobCardItemProps {
   job: Job;
@@ -25,12 +26,27 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
   applied,
   applyToJob,
 }) => {
+  // This card sent the application on the first tap. Every other place a
+  // worker can apply asks first - JobDetailsFooter has done so all along - and
+  // an application cannot be withdrawn, so the one entry point that did not
+  // ask was the one that could not be taken back. Same wording as the footer,
+  // so the question reads the same wherever it is asked.
+  const [confirmingApply, setConfirmingApply] = useState(false);
+
   const t = translations[language];
   const jobLatLng = getLatLng(job);
   const displayTime = getJobShiftTime(job);
   const displayDuration = getJobDuration(job);
 
+  const shiftWhen = [(job as any).workDate, (job as any).workTime].filter(Boolean).join(', ');
+  const applyQuestion = {
+    ru: `«${job.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${job.salary ? `Оплата: ${job.salary}.` : ''} Работодатель увидит вашу заявку.`,
+    en: `"${job.title}"${shiftWhen ? ` — ${shiftWhen}` : ''}. ${job.salary ? `Pay: ${job.salary}.` : ''} The employer will see your application.`,
+    uz: `«${job.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${job.salary ? `To'lov: ${job.salary}.` : ''} Ish beruvchi arizangizni ko'radi.`,
+  }[language as 'uz' | 'ru' | 'en'] ?? `«${job.title}» uchun ariza topshirasizmi?`;
+
   return (
+    <>
     <div
       onClick={() => handleJobSelect(job)}
       className="group perspective-1000 snap-center shrink-0 min-w-[calc(100vw-64px)] max-w-[calc(100vw-64px)] sm:min-w-[250px] sm:max-w-[250px] h-[172px] relative cursor-pointer"
@@ -160,7 +176,8 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              applyToJob(job.id);
+              if (applied) return;
+              setConfirmingApply(true);
             }}
             className={`w-full min-h-[44px] py-2.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 shrink-0 border-none ${
               applied
@@ -179,5 +196,17 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
 
       </div>
     </div>
+
+    <ConfirmModal
+      isOpen={confirmingApply}
+      title={language === 'uz' ? 'Arizani tasdiqlang' : language === 'ru' ? 'Подтвердите заявку' : 'Confirm application'}
+      message={applyQuestion}
+      confirmText={language === 'uz' ? 'Ha, topshirish' : language === 'ru' ? 'Да, отправить' : 'Yes, apply'}
+      cancelText={language === 'uz' ? 'Bekor qilish' : language === 'ru' ? 'Отмена' : 'Cancel'}
+      isDestructive={false}
+      onConfirm={() => applyToJob(job.id)}
+      onCancel={() => setConfirmingApply(false)}
+    />
+    </>
   );
 };

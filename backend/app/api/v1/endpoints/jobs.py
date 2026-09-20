@@ -171,6 +171,20 @@ def get_my_jobs(
     for a in apps:
         hired_counts[a.jobId] = hired_counts.get(a.jobId, 0) + 1
 
+    # One query for every job on the page rather than one per card. Only jobs
+    # that have actually been invoiced appear here; the rest get None, which is
+    # what tells the card there is nothing to pay yet.
+    payouts = {}
+    if job_ids:
+        for p in (
+            db.query(models.JobPayout)
+            .filter(models.JobPayout.jobId.in_(job_ids))
+            .order_by(models.JobPayout.paidAt.asc())
+            .all()
+        ):
+            if p.invoiceNumber:
+                payouts[p.jobId] = p
+
     result = []
     for job in jobs:
         vacancies_num = int(job.neededWorkers) if (job.neededWorkers and job.neededWorkers.isdigit()) else 1
@@ -184,6 +198,13 @@ def get_my_jobs(
             "vacancies": vacancies_num,
             "appliedDate": None,
             "hiredWorkers": [],
+        })
+
+        payout = payouts.get(job.id)
+        job_data.update({
+            "payoutStatus": payout.status if payout else None,
+            "invoiceNumber": payout.invoiceNumber if payout else None,
+            "invoiceAmount": (payout.invoiceAmount or payout.amount) if payout else None,
         })
         result.append(job_data)
 

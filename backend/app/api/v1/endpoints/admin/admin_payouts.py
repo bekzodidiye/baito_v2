@@ -85,6 +85,13 @@ def _serialise(p: JobPayout, job: models.Job | None = None, worker: User | None 
         "invoicePaidDeclaredAt": (
             p.invoicePaidDeclaredAt.isoformat() if p.invoicePaidDeclaredAt else None
         ),
+        # Their receipt for the transfer, and - separately - whether anyone has
+        # matched it against the bank statement yet. The list needs both: the
+        # first is what to look at, the second is whether it has been looked at.
+        "invoicePaidReceiptUrl": p.invoicePaidReceiptUrl,
+        "invoiceConfirmedAt": (
+            p.invoiceConfirmedAt.isoformat() if p.invoiceConfirmedAt else None
+        ),
     }
 
 
@@ -523,3 +530,56 @@ def send_payout_invoice(
     db.commit()
     db.refresh(payout)
     return _serialise(payout, job, None)
+
+
+@router.post("/jobs/{job_id}/payout/confirm-payment")
+def confirm_invoice_payment(
+    job_id: str,
+    db: Session = Depends(deps.get_db),
+    admin: models.User = Depends(get_admin_user),
+) -> Any:
+    """Say that the company's declared payment has actually arrived.
+
+    This is the step the declaration deliberately does not do for itself.
+    ``payment_declared`` is the payer's word plus, usually, a receipt image;
+    this is a person having matched it against the bank statement. Only after
+    it is the job settled on both sides.
+
+    Refuses if nothing has been declared yet, rather than letting an
+    administrator confirm a payment nobody has claimed to have made.
+    """
+    payout = (
+        db.query(JobPayout)
+        .filter(JobPayout.jobId == job_id)
+        .order_by(JobPayout.paidAt.desc())
+        .first()
+    )
+    if not payout:
+        raise HTTPException(status_code=404, detail="Bu ish uchun to'lov topilmadi")
+    if not payout.invoicePaidDeclaredAt:
+        raise HTTPException(
+            status_code=409,
+            detail="Korxona hali to'lovni qayd etmagan",
+        )
+    if payout.invoiceConfirmedAt:
+        raise HTTPException(status_code=409, detail="To'lov allaqachon tasdiqlangan")
+
+    payout.invoiceConfirmedAt = datetime.now(timezone.utc)
+    payout.invoiceConfirmedByAdminId = admin.id
+    payout.status = PayoutStatus.CONFIRMED
+    db.add(payout)
+
+    # The employer has been waiting on this since they pressed pay; saying so
+    # is the whole point of the state existing.
+    amount = f"{payout.invoiceAmount or payout.amount:,}".replace(",", " ")
+    db.add(models.Notification(
+        userId=payout.employerId,
+        title="To'lov tasdiqlandi",
+        message=f"{payout.invoiceNumber} · {amount} so'm. Ish yakunlandi.",
+        type="payout",
+        relatedJobId=payout.jobId,
+    ))
+
+    db.commit()
+    db.refresh(payout)
+    return _serialise(payout)

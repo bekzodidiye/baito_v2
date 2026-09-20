@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { MapPin, CheckCircle2, Trash2, Users, Calendar } from 'lucide-react';
+import { MapPin, CheckCircle2, Trash2, Users, Calendar, Wallet, Hourglass } from 'lucide-react';
 import { Job } from '../../types';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 
@@ -11,6 +11,9 @@ interface EmployerJobCardProps {
   onComplete: (jobId: string) => void;
   onDelete: (jobId: string) => void;
   onConfirmStart?: (jobId: string) => void;
+  /* Settlement. Optional so the card still renders on screens that have no
+     invoice flow behind them - the dashboard shows these same cards. */
+  onPayInvoice?: (job: Job) => void;
 }
 
 export const getJobBannerImage = (job: Job): string => {
@@ -36,6 +39,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
   onComplete,
   onDelete,
   onConfirmStart,
+  onPayInvoice,
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const hired = Number(job.hiredCount ?? 0);
@@ -118,7 +122,32 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
       <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-50">
         {/* Status Button / Pill */}
         <div className="flex-1">
-          {job.status === 'completed' ? (
+          {/* Settlement is checked before job.status, because a job can be
+              finished and still owe money - "Yopildi" over an unpaid invoice
+              would be the wrong thing to say. */}
+          {job.payoutStatus === 'invoiced' ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onPayInvoice?.(job);
+              }}
+              disabled={!onPayInvoice}
+              className="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white text-[12px] font-black transition-all cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+            >
+              <Wallet size={14} className="stroke-[2.5]" />
+              {language === 'uz' ? "To'lov qilish" : language === 'ru' ? "Оплатить" : "Pay invoice"}
+            </button>
+          ) : job.payoutStatus === 'payment_declared' ? (
+            <span className="w-full py-2 rounded-lg bg-sky-50 text-sky-700 border border-sky-100 text-[12px] font-bold flex items-center justify-center gap-1.5">
+              <Hourglass size={14} />
+              {language === 'uz' ? "Tasdiqlanishi kutilmoqda" : language === 'ru' ? "Ожидает подтверждения" : "Awaiting confirmation"}
+            </span>
+          ) : job.payoutStatus === 'payment_confirmed' ? (
+            <span className="w-full py-2 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-[12px] font-bold flex items-center justify-center gap-1.5">
+              <CheckCircle2 size={14} />
+              {language === 'uz' ? "To'lov tasdiqlandi" : language === 'ru' ? "Оплата подтверждена" : "Payment confirmed"}
+            </span>
+          ) : job.status === 'completed' ? (
             <span className="w-full py-2 rounded-lg bg-slate-100 text-slate-600 text-[12px] font-bold flex items-center justify-center gap-1.5">
               <CheckCircle2 size={14} />
               {language === 'uz' ? "Yopildi" : language === 'ru' ? "Завершено" : "Closed"}

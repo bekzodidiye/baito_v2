@@ -135,6 +135,11 @@ class PaymentDeclaration(BaseModel):
     # Their payment order number, if they have one to hand. Optional because
     # requiring it would stop somebody who has genuinely paid from saying so.
     reference: Optional[str] = Field(default=None, max_length=120)
+    # Their receipt for the transfer. Optional for the same reason reference is:
+    # a company that has genuinely paid should not be blocked from saying so
+    # because the bank app has not emailed the PDF yet. An administrator can
+    # ask for it before confirming.
+    receiptUrl: Optional[str] = Field(default=None, max_length=500)
 
 
 @router.post("/{token}/pay")
@@ -163,6 +168,7 @@ def declare_payment(
 
     payout.invoicePaidMethod = payload.method
     payout.invoicePaidReference = (payload.reference or "").strip() or None
+    payout.invoicePaidReceiptUrl = (payload.receiptUrl or "").strip() or None
     payout.invoicePaidDeclaredAt = datetime.now(timezone.utc)
     payout.status = PayoutStatus.DECLARED
     db.add(payout)
@@ -183,7 +189,8 @@ def declare_payment(
             userId=admin.id,
             title="Hisob-faktura to'landi deb belgilandi",
             message=f"{company} — {payout.invoiceNumber} · {amount} so'm. "
-                    "Bank ko'chirmasi bilan solishtiring.",
+                    + ("Chek ilova qilingan. " if payout.invoicePaidReceiptUrl else "Chek ilova qilinmagan. ")
+                    + "Bank ko'chirmasi bilan solishtiring.",
             type="payout",
             relatedJobId=payout.jobId,
         ))
