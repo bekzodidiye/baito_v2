@@ -129,6 +129,14 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           <TagIcon size={14} className="text-brand-primary" />
           {language === 'uz' ? "Ish Teglari (Tags)" : "Job Tags"}
         </label>
+        {/* These drive the badges on the shift card. Without saying so, an
+            employer has no way to know that #TushlikBilan is what puts "🍲
+            Tushlik" in front of a candidate. */}
+        <p className="text-[11px] text-slate-400 font-medium -mt-1">
+          {language === 'uz'
+            ? "Tanlanganlari e'lon kartochkasida ko'rinadi — masalan #TushlikBilan → 🍲 Tushlik"
+            : 'The ones you pick appear as badges on the shift card'}
+        </p>
         <div className="flex flex-wrap gap-2">
           {PRESET_TAGS.map(t => {
             const isSel = tags.includes(t);
