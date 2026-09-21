@@ -109,7 +109,7 @@ export const uz = {
   allRegions: "Barcha hududlar",
   otherRegions: "Boshqa hududlar...",
   filters: "Filtrlar",
-  jobSchedule: "Ish grafigi",
+  jobSchedule: "Ish teglari",
   clearFilters: "Filtrlarni tozalash",
   done: "Tayyor",
   allJobs: "Barchasi",

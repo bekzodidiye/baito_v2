@@ -109,7 +109,7 @@ export const ru = {
   allRegions: "Все регионы",
   otherRegions: "Другие регионы...",
   filters: "Фильтры",
-  jobSchedule: "График работы",
+  jobSchedule: "Теги работы",
   clearFilters: "Сбросить фильтры",
   done: "Готово",
   allJobs: "Все",

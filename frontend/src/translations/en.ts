@@ -109,7 +109,7 @@ export const en = {
   allRegions: "All regions",
   otherRegions: "Other regions...",
   filters: "Filters",
-  jobSchedule: "Work schedule",
+  jobSchedule: "Job tags",
   clearFilters: "Clear filters",
   done: "Done",
   allJobs: "All",

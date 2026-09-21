@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Job } from '../types';
 import { areDistrictNamesEqual, getLatLng, calculateDistance } from '../components/map/mapUtils';
 import { getJobCategory } from '../utils/jobCategoryUtils';
+import { tagKey } from '../constants/perks';
 
 interface UseJobSearchFiltersProps {
   jobs: Job[];
@@ -35,14 +36,21 @@ export function useJobSearchFilters({
         job.title.toLowerCase().includes(term) ||
         job.company.toLowerCase().includes(term) ||
         job.description.toLowerCase().includes(term) ||
-        (job.rawLocation || job.location || '').toLowerCase().includes(term);
+        (job.rawLocation || job.location || '').toLowerCase().includes(term) ||
+        // Tags were left out, so searching "tushlik" or "tezkor" — the words the
+        // posting form puts on a job — found nothing.
+        (job.tags || []).some((tag: string) => tagKey(tag).includes(tagKey(term)));
       const matchesLocation =
         filterLocation === 'Barchasi' ||
         (job.rawLocation || job.location).toLowerCase().includes(filterLocation.toLowerCase()) ||
         areDistrictNamesEqual((job.rawLocation || job.location), filterLocation);
+      // Compared against "To'liq bandlik" and two other strings that nothing in
+      // the system ever writes, so this filter matched no job at all. It runs on
+      // the tags a posting is actually given, normalised so the leading '#' and
+      // the casing do not decide it.
       const matchesType =
         filterType === 'Barchasi' ||
-        job.tags.some(tag => tag.toLowerCase() === filterType.toLowerCase());
+        (job.tags || []).some((tag: string) => tagKey(tag) === tagKey(filterType));
 
       const jobCatInfo = getJobCategory(job);
       const matchesCategory =
