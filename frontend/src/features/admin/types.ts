@@ -93,6 +93,10 @@ export interface AdminJob {
   createdAt?: string;
   workDate?: string;
   workTime?: string;
+  /** What actually happened, as opposed to the shift that was advertised.
+   *  Null on jobs that ran before these were recorded. */
+  startedAt?: string | null;
+  completedAt?: string | null;
   workerId?: string;
   workerName?: string;
   category?: string;

@@ -56,5 +56,10 @@ class JobDay(Base):
     # is owed for a day already agreed.
     amount = Column(Integer, nullable=True)
 
+    # When this day's work actually began and ended. The posting's workTime is
+    # the shift that was advertised; these are what happened, and the gap
+    # between the two is the only way to see that somebody came in late or
+    # stayed on.
+    startedAt = Column(DateTime(timezone=True), nullable=True)
     completedAt = Column(DateTime(timezone=True), nullable=True)
     createdAt = Column(DateTime(timezone=True), server_default=func.now())

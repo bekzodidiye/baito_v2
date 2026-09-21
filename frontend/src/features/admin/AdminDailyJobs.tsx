@@ -4,6 +4,7 @@ import { AdminJob, AdminUser } from './types';
 import { Search, Trash2, MapPin, Building2, Briefcase, XCircle, Eye, Wallet } from 'lucide-react';
 import { RejectJobModal } from './RejectJobModal';
 import { UserDetailModal } from './UserDetailModal';
+import { workTimingOf, humanMinutes, LATE_THRESHOLD_MIN } from './workTiming';
 import { JobDetailModal } from './JobDetailModal';
 import { PayoutModal } from './PayoutModal';
 import { CustomSelect, CustomDatePicker, StatusSelect } from './AdminCustomControls';
@@ -304,6 +305,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                 <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">Vaqti</div>
                 <div className="flex flex-col">
                   <span className="font-bold text-slate-800">{j.workTime || '09:00 - 18:00'}</span>
+                  <ActualTiming job={j} />
                   {renderTimeWarning(j)}
                 </div>
               </div>
@@ -401,6 +403,67 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
               : undefined
           }
         />
+      )}
+    </div>
+  );
+};
+
+
+/* ===================== WHAT ACTUALLY HAPPENED ===================== */
+/** The advertised shift sits above this; these are the real clock times.
+ *
+ *  Nothing is inferred. A job that ran before these were recorded shows
+ *  "qayd etilmagan" rather than a guessed time — a made-up figure here would be
+ *  read as a measurement, and this is the screen where lateness gets decided. */
+const ActualTiming: React.FC<{ job: AdminJob }> = ({ job }) => {
+  const t = workTimingOf(job);
+
+  if (!t.startedAt && !t.finishedAt) {
+    // Only worth saying on a job that should have times by now. An open
+    // posting has not started, and that is not a gap in the record.
+    if (job.status !== 'in_progress' && job.status !== 'completed') return null;
+    return (
+      <span className="text-[11px] text-slate-400 font-medium mt-1">
+        Haqiqiy vaqt qayd etilmagan
+      </span>
+    );
+  }
+
+  const late = t.startDelayMin !== null && t.startDelayMin > LATE_THRESHOLD_MIN;
+  const early = t.startDelayMin !== null && t.startDelayMin < -LATE_THRESHOLD_MIN;
+  const ranOver = t.finishDelayMin !== null && t.finishDelayMin > LATE_THRESHOLD_MIN;
+  const leftEarly = t.finishDelayMin !== null && t.finishDelayMin < -LATE_THRESHOLD_MIN;
+
+  return (
+    <div className="mt-1 flex flex-col gap-0.5">
+      <div className="flex items-center gap-1.5 text-[11px] font-bold">
+        <span className="text-slate-400">Haqiqiy:</span>
+        <span className={late ? 'text-red-600' : 'text-emerald-600'}>
+          {t.startedAt ?? '—'}
+        </span>
+        <span className="text-slate-300">→</span>
+        <span className={ranOver ? 'text-amber-600' : 'text-slate-700'}>
+          {t.finishedAt ?? '—'}
+        </span>
+        {t.workedMin !== null && (
+          <span className="text-slate-400 font-medium">({humanMinutes(t.workedMin)})</span>
+        )}
+      </div>
+
+      {(late || early) && (
+        <span className={`text-[11px] font-bold ${late ? 'text-red-600' : 'text-emerald-600'}`}>
+          {late
+            ? `${humanMinutes(t.startDelayMin as number)} kech boshladi`
+            : `${humanMinutes(t.startDelayMin as number)} erta boshladi`}
+        </span>
+      )}
+
+      {(ranOver || leftEarly) && (
+        <span className={`text-[11px] font-bold ${ranOver ? 'text-amber-600' : 'text-slate-500'}`}>
+          {ranOver
+            ? `${humanMinutes(t.finishDelayMin as number)} kech tugatdi`
+            : `${humanMinutes(t.finishDelayMin as number)} erta tugatdi`}
+        </span>
       )}
     </div>
   );

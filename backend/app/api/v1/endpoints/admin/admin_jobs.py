@@ -30,6 +30,10 @@ class JobWorkerPayload(BaseModel):
     reason: Optional[str] = Field(default=None, max_length=500)
 
 
+def _iso(value) -> Optional[str]:
+    return value.isoformat() if value else None
+
+
 def _serialize_job(j: models.Job, employer_name: str = "", worker=None) -> dict:
     return {
         "id": j.id,
@@ -46,7 +50,12 @@ def _serialize_job(j: models.Job, employer_name: str = "", worker=None) -> dict:
         "durationLabel": j.durationLabel,
         "createdAt": str(j.createdAt) if j.createdAt else None,
         "workDate": j.workDate,
+        # The shift that was advertised, and what actually happened against it.
+        # Both are needed together: on their own, "09:00 - 18:00" says nothing
+        # about whether anyone turned up at nine.
         "workTime": j.workTime,
+        "startedAt": _iso(j.startedAt),
+        "completedAt": _iso(j.completedAt),
         "category": j.category,
         "tags": j.tags,
         "urgent": j.urgent,
@@ -128,10 +137,6 @@ def get_admin_jobs(
     return {"total": total, "items": items}
 
 
-def _iso(value) -> Optional[str]:
-    return value.isoformat() if value else None
-
-
 def _build_steps(job, applications, hire_date, payout) -> list[dict]:
     """The job's whole life as an ordered checklist, not a pile of events.
 
@@ -164,7 +169,7 @@ def _build_steps(job, applications, hire_date, payout) -> list[dict]:
             f"{len(applications)} ta ariza" if applications else None,
         ),
         ("hired", "Ishchi olindi", hired, hire_date, None),
-        ("started", "Ish boshlandi", started, None, None),
+        ("started", "Ish boshlandi", started, _iso(job.startedAt), None),
         ("completed", "Ish yakunlandi", completed, _iso(job.completedAt), None),
         (
             "worker_paid",
@@ -341,6 +346,12 @@ def get_admin_job_detail(
                 "date": tx["createdAt"],
                 "icon": "credit-card",
             })
+
+    if job.startedAt:
+        timeline.append({
+            "event": "started", "label": "Ish boshlandi",
+            "date": job.startedAt.isoformat(), "icon": "clock",
+        })
 
     if job.completedAt:
         timeline.append({

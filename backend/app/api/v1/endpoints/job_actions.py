@@ -222,7 +222,26 @@ def confirm_start_job(
         raise HTTPException(status_code=400, detail="Bu ishga hali hech kim yollanmagan")
 
     job.status = JobStatus.IN_PROGRESS
+    # The moment the work actually began, against which lateness is read. Only
+    # written once: a posting that is confirmed started twice — the endpoint is
+    # reachable while the job is in progress — must keep the first time, not
+    # move its start to whenever somebody last pressed the button.
+    if job.startedAt is None:
+        job.startedAt = datetime.now(timezone.utc)
     db.add(job)
+
+    # The day being worked gets the same stamp. On a multi-day posting the
+    # job-level one only ever describes the first day.
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    day = (
+        db.query(JobDay)
+        .filter(JobDay.jobId == job.id, JobDay.status == JobDayStatus.PENDING)
+        .order_by(JobDay.workDate)
+        .first()
+    )
+    if day is not None and day.startedAt is None and day.workDate <= today:
+        day.startedAt = datetime.now(timezone.utc)
+        db.add(day)
 
     job_dates = get_job_dates_set(job)
 
