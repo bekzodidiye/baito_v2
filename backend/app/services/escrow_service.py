@@ -37,7 +37,58 @@ def platform_fee_percent(db: Session) -> int:
     return max(0, min(100, int(percent)))
 
 
-def fee_for(amount_uzs: int, percent: int) -> int:
+def _region_of(location: str | None) -> str:
+    """The city a posting's address begins with.
+
+    ``location`` is built by the posting form as "<city>, <address>", so the
+    city is the first comma-separated part. Anything else — a free-text address
+    typed before the form asked for a city — simply will not match a region row,
+    and that job falls back to the category's rate alone.
+    """
+    if not location:
+        return ""
+    return location.split(",")[0].strip()
+
+
+def job_fee_percent(db: Session, job) -> float:
+    """The commission an employer pays on a job: what the work is, plus where.
+
+    A category carries a rate and a region carries a rate, and the employer is
+    charged their sum. Either half can be missing — a posting in a city nobody
+    has entered a rate for, a category an administrator has deleted — and a
+    missing half contributes nothing rather than blocking the hire.
+
+    When neither half resolves, the single platform-wide rate is used. That is
+    what a database with no categories and no regions behaves like, which is
+    every database before this was configured.
+    """
+    if job is None:
+        return platform_fee_percent(db)
+
+    category = (
+        db.query(models.Category)
+        .filter(models.Category.slug == (job.category or ""))
+        .first()
+    ) if job.category else None
+
+    region_name = _region_of(job.location)
+    region = (
+        db.query(models.Region)
+        .filter(models.Region.name == region_name)
+        .first()
+    ) if region_name else None
+
+    if category is None and region is None:
+        return platform_fee_percent(db)
+
+    total = (getattr(category, "commissionPercent", 0) or 0) + \
+            (getattr(region, "commissionPercent", 0) or 0)
+    # Same clamp as the platform-wide rate: a row edited by hand must not be
+    # able to pay a worker a negative wage.
+    return max(0.0, min(100.0, float(total)))
+
+
+def fee_for(amount_uzs: int, percent: float) -> int:
     """The commission on a wage, rounded down.
 
     The employer pays this on top of the wage — the worker is paid the figure
@@ -82,7 +133,10 @@ class EscrowService:
         # worker is paid what the posting advertised, and the platform's cut is
         # charged on top of it. So what leaves the employer's balance here is
         # wage + fee, and both halves are frozen together.
-        percent = platform_fee_percent(db)
+        #
+        # The rate is this job's own — its category's plus its region's.
+        job = db.query(models.Job).filter(models.Job.id == job_id).first()
+        percent = job_fee_percent(db, job)
         fee_uzs = fee_for(amount_uzs, percent)
         total_uzs = amount_uzs + fee_uzs
 

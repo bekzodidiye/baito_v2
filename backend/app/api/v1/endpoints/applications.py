@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app import crud, models
 from app.api import deps
 from app.core.money import parse_salary_amounts, salary_to_uzs
-from app.services.escrow_service import fee_for, platform_fee_percent, worker_share
+from app.services.escrow_service import fee_for, job_fee_percent, worker_share
 from app.models.job import JobStatus
 from app.services.escrow_service import EscrowService
 from app.services import job_days
@@ -155,8 +155,9 @@ def get_employer_applications(
         if w.uid:
             worker_map[w.uid] = w
 
-    # Read once for the whole list rather than per candidate.
-    employer_rate = platform_fee_percent(db)
+    # Each job carries its own rate — its category's plus its region's — so
+    # this is per job rather than one figure for the list.
+    rate_by_job = {j.id: job_fee_percent(db, j) for j in employer_jobs}
 
     result = []
     for app in apps:
@@ -174,7 +175,7 @@ def get_employer_applications(
             # taken out of their balance cannot drift apart — including the
             # commission, which the employer pays on top of the wage.
             "wageAmount": salary_to_uzs(job.salary) if job else 0,
-            "feeAmount": fee_for(salary_to_uzs(job.salary), employer_rate) if job else 0,
+            "feeAmount": fee_for(salary_to_uzs(job.salary), rate_by_job.get(job.id, 0)) if job else 0,
             "workerId": app.workerId,
             "workerName": worker.name if worker else "Ishchi",
             "workerPhone": (
@@ -265,7 +266,7 @@ def hire_applicant(
     # balance — the exact "day one froze, day two failed" split this check
     # exists to prevent.
     day_count = max(1, len(days))
-    fee_per_day = fee_for(wage, platform_fee_percent(db))
+    fee_per_day = fee_for(wage, job_fee_percent(db, job))
     total_due = (wage + fee_per_day) * day_count
     if wage > 0:
         employer = db.query(models.User).filter(models.User.id == job.employerId).first()

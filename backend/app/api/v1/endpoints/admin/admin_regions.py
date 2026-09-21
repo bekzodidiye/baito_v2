@@ -21,6 +21,7 @@ def get_regions(
             "type": r.type,
             "parentId": r.parentId,
             "isActive": r.isActive,
+            "commissionPercent": r.commissionPercent,
         })
     return result
 
@@ -35,6 +36,9 @@ def create_region(
         type=payload.get("type", "region"),
         parentId=payload.get("parentId"),
         isActive=payload.get("isActive", True),
+        # The region half of the employer's commission; the category carries the
+        # other half and a job is charged their sum.
+        commissionPercent=payload.get("commissionPercent", 0) or 0,
     )
     db.add(reg)
     db.commit()
@@ -45,6 +49,7 @@ def create_region(
         "type": reg.type,
         "parentId": reg.parentId,
         "isActive": reg.isActive,
+        "commissionPercent": reg.commissionPercent,
     }
 
 @router.delete("/regions/{region_id}")
@@ -73,6 +78,13 @@ def update_region(
         
     if "isActive" in payload:
         reg.isActive = payload["isActive"]
+    if "commissionPercent" in payload:
+        # Bounded the same way the platform-wide rate is: a value typed by hand
+        # must not be able to pay a worker a negative wage.
+        try:
+            reg.commissionPercent = max(0.0, min(100.0, float(payload["commissionPercent"])))
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="Komissiya foizi noto'g'ri")
     db.commit()
     db.refresh(reg)
     return {"success": True}

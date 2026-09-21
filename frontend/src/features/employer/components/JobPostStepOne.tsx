@@ -107,11 +107,20 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           <Building size={14} className="text-brand-primary" />
           {language === 'uz' ? "Kategoriya *" : "Category *"}
         </label>
-        <div className="flex flex-wrap gap-2">
+        {/* Fourteen categories as chips wrapped to four rows and pushed the rest
+            of the form off the screen. Exactly one can be picked, which is what
+            a select is for — and the city field further down the same form
+            already uses one. */}
+        <select
+          aria-label={language === 'uz' ? 'Kategoriya' : 'Category'}
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-extrabold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"
+        >
           {categories.map(c => (
-            <button key={c.id} type="button" onClick={() => setCategory(c.id)} className={`px-3 py-2 rounded-xl text-xs font-bold border cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${category === c.id ? 'bg-brand-primary text-white border-brand-primary' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>{c.label}</button>
+            <option key={c.id} value={c.id}>{c.label}</option>
           ))}
-        </div>
+        </select>
       </div>
 
       {/* Teglar (Tags) Section */}

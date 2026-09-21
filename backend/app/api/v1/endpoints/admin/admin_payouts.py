@@ -33,7 +33,7 @@ from app.models.job import JobStatus
 from app.models.job_payout import JobPayout, PayoutStatus
 from app.models.user import User
 from app.services import email_service
-from app.services.escrow_service import fee_for, platform_fee_percent
+from app.services.escrow_service import fee_for, job_fee_percent
 
 from .admin_users import get_admin_user
 from .audit import record_admin_action
@@ -178,7 +178,7 @@ def get_job_payout(
         # The commission the company is billed on top of the wage. Sent with the
         # context so the invoice step can show the rate and the total it adds up
         # to, instead of the administrator working it out on a calculator.
-        "platformFeePercent": platform_fee_percent(db),
+        "platformFeePercent": job_fee_percent(db, job),
     }
 
 
@@ -521,7 +521,7 @@ def send_payout_invoice(
     # for. The platform's commission is the company's, charged on top of it, so
     # the total billed is computed here rather than left to whoever is filling
     # the form to add up.
-    fee_percent = platform_fee_percent(db)
+    fee_percent = job_fee_percent(db, job)
     fee_amount = fee_for(payload.amount, fee_percent)
     payout.invoiceAmount = payload.amount + fee_amount
     payout.invoiceNumber = f"INV-{datetime.now(timezone.utc):%Y%m%d}-{payout.id[:8].upper()}"
