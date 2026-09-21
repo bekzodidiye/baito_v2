@@ -270,7 +270,9 @@ export interface CategoryItem {
   icon: string;
   description: string;
   commissionPercent: number;
-  skills: string[];
+  /** May be null on a row written outside the ORM — the type said string[] and
+   *  the screen trusted it. */
+  skills: string[] | null;
   activeWorkersCount: number;
   activeJobsCount: number;
 }

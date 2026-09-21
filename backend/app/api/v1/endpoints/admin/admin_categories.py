@@ -52,7 +52,9 @@ def get_categories(
             "icon": c.icon,
             "description": c.description,
             "commissionPercent": c.commissionPercent,
-            "skills": c.skills,
+            # Never null: the column is only defaulted on ORM inserts, and the
+            # seed wrote these rows with raw SQL. A null here crashed the panel.
+            "skills": c.skills or [],
             "activeWorkersCount": c.activeWorkersCount,
             "activeJobsCount": c.activeJobsCount,
         })
@@ -74,7 +76,7 @@ def create_category(
         icon=payload.get("icon"),
         description=payload.get("description"),
         commissionPercent=payload.get("commissionPercent", 0),
-        skills=payload.get("skills", []),
+        skills=payload.get("skills") or [],
         activeWorkersCount=payload.get("activeWorkersCount", 0),
         activeJobsCount=payload.get("activeJobsCount", 0),
     )
@@ -88,7 +90,7 @@ def create_category(
         "icon": cat.icon,
         "description": cat.description,
         "commissionPercent": cat.commissionPercent,
-        "skills": cat.skills,
+        "skills": cat.skills or [],
         "activeWorkersCount": cat.activeWorkersCount,
         "activeJobsCount": cat.activeJobsCount,
     }
