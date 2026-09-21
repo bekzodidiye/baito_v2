@@ -26,6 +26,8 @@ interface PayoutContext {
   payout: Payout | null;
   bankDetailsSet: boolean;
   smtpConfigured: boolean;
+  /** The rate the company is billed on top of the wage, from the admin panel. */
+  platformFeePercent: number;
 }
 
 interface Payout {
@@ -142,6 +144,14 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
       setSending(false);
     }
   };
+
+  // The commission the company is billed on top of the wage. The server adds it
+  // when the invoice goes out; this mirrors the same arithmetic so the
+  // administrator is not pressing send on a number they cannot see.
+  const feePercent = ctx?.platformFeePercent ?? 0;
+  const invoiceBase = Number(invoiceAmount) > 0 ? Number(invoiceAmount) : 0;
+  const invoiceFee = Math.floor(invoiceBase * (feePercent / 100));
+  const invoiceTotal = invoiceBase + invoiceFee;
 
   const balance = ctx?.worker?.balance ?? 0;
   const amountNum = Number(amount);
@@ -316,7 +326,7 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
 
                   <label className="block">
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Korxonadan undiriladigan summa *
+                      Ish haqi (korxona to'laydigan) *
                     </span>
                     <input type="number" inputMode="numeric" value={invoiceAmount} min={1}
                       onChange={(e) => setInvoiceAmount(e.target.value)}
@@ -324,6 +334,26 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
                     <span className="text-xs text-slate-400 mt-1 block">
                       Ishchi rejadagidan ko'proq ishlagan bo'lsa, shu yerda ko'proq yozing.
                     </span>
+
+                    {/* The commission is added on top server-side. Showing the
+                        rate and the total here means the figure the administrator
+                        presses send on is the figure the company receives. */}
+                    {invoiceBase > 0 && (
+                      <div className="mt-2.5 rounded-2xl bg-slate-50 border border-slate-200 p-3 space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Ish haqi</span>
+                          <span className="font-semibold tabular-nums">{som(invoiceBase)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Xizmat haqi ({feePercent}%)</span>
+                          <span className="font-semibold tabular-nums">{som(invoiceFee)}</span>
+                        </div>
+                        <div className="flex justify-between border-t border-slate-200 pt-1.5 mt-1.5">
+                          <span className="text-slate-600 font-bold">Korxonaga yuboriladi</span>
+                          <span className="font-black text-brand-primary tabular-nums">{som(invoiceTotal)}</span>
+                        </div>
+                      </div>
+                    )}
                   </label>
 
                   <label className="block">
@@ -355,9 +385,13 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
                           <span className="font-semibold">{ctx.job.title}</span></div>
                         <div className="flex justify-between"><span className="text-slate-500">Sana</span>
                           <span className="font-semibold">{ctx.job.workDate || '—'}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-500">Ish haqi</span>
+                          <span className="font-semibold tabular-nums">{som(invoiceBase)}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-500">Xizmat haqi ({feePercent}%)</span>
+                          <span className="font-semibold tabular-nums">{som(invoiceFee)}</span></div>
                         <div className="flex justify-between border-t border-slate-100 pt-2 mt-2">
                           <span className="text-slate-500 font-bold">Jami</span>
-                          <span className="font-black text-brand-primary tabular-nums">{som(Number(invoiceAmount))}</span></div>
+                          <span className="font-black text-brand-primary tabular-nums">{som(invoiceTotal)}</span></div>
                         <p className="text-xs text-slate-400 pt-1">
                           Bank rekvizitlari xatga avtomatik qo'shiladi.
                         </p>

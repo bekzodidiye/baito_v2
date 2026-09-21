@@ -270,3 +270,73 @@ def test_payouts_are_listed_for_the_payments_screen(client):
     assert len(mine) == 1
     assert mine[0]["amount"] == 90_000
     assert mine[0]["workerName"] == worker.name
+
+
+def test_the_invoice_bills_the_wage_plus_the_commission(client, monkeypatch):
+    """The figure typed is what the work cost; the company owes that plus our cut.
+
+    It used to be billed straight through, so the commission — which is the
+    company's, charged on top of the wage — was never actually invoiced to
+    anyone. An administrator would have had to add it by hand, on every
+    invoice, without the form ever mentioning a rate.
+    """
+    from app.models.system_setting import SystemSetting
+    from app.services import email_service
+
+    employer, worker, job = _completed_job_with_paid_worker()
+    _admin(client)
+    _set_bank_details()
+    with SessionLocal() as db:
+        cfg = db.query(SystemSetting).first()
+        cfg.platformFeePercent = 20
+        db.commit()
+
+    sent: dict = {}
+    monkeypatch.setattr(email_service, "missing_config", lambda: None)
+    monkeypatch.setattr(
+        email_service, "send_email",
+        lambda **kw: sent.update(kw),
+    )
+
+    assert client.post(f"/api/v1/admin/jobs/{job.id}/payout",
+                       json={"amount": 1000, "receiptUrl": RECEIPT}).status_code == 200
+
+    resp = client.post(f"/api/v1/admin/jobs/{job.id}/payout/invoice",
+                       json={"amount": 250_000, "email": "buxgalteriya@korxona.uz"})
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["invoiceAmount"] == 300_000  # 250 000 + 20%
+
+    # And the company is told what the figure is made of, not just the total.
+    body = sent["text_body"]
+    assert "250 000" in body
+    assert "Xizmat haqi (20%)" in body
+    assert "50 000" in body
+    assert "300 000" in body
+
+
+def test_a_zero_rate_bills_the_wage_and_says_nothing_about_a_fee(client, monkeypatch):
+    from app.models.system_setting import SystemSetting
+    from app.services import email_service
+
+    employer, worker, job = _completed_job_with_paid_worker()
+    _admin(client)
+    _set_bank_details()
+    with SessionLocal() as db:
+        cfg = db.query(SystemSetting).first()
+        cfg.platformFeePercent = 0
+        db.commit()
+
+    sent: dict = {}
+    monkeypatch.setattr(email_service, "missing_config", lambda: None)
+    monkeypatch.setattr(email_service, "send_email", lambda **kw: sent.update(kw))
+
+    assert client.post(f"/api/v1/admin/jobs/{job.id}/payout",
+                       json={"amount": 1000, "receiptUrl": RECEIPT}).status_code == 200
+    resp = client.post(f"/api/v1/admin/jobs/{job.id}/payout/invoice",
+                       json={"amount": 250_000, "email": "buxgalteriya@korxona.uz"})
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["invoiceAmount"] == 250_000
+    # No commission line at all rather than a "0%" one nobody needs to read.
+    assert "Xizmat haqi" not in sent["text_body"]
