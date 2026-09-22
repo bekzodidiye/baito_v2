@@ -58,22 +58,22 @@ export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRo
         </div>
 
         {/* Categories Matrix Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
           {categories.map((cat) => {
             const name = cat.name;
             return (
               <div
                 key={cat.slug}
                 onClick={() => handleCategoryClick(cat.slug)}
-                className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-2xs hover:shadow-xl hover:border-brand-primary/40 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-4 group"
+                className="bg-white rounded-3xl p-7 sm:p-6 border border-slate-200/90 shadow-2xs hover:shadow-xl hover:border-brand-primary/40 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-4 group"
               >
                 <div className="flex items-start justify-between">
-                  <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform text-2xl">
+                  <div className="w-14 h-14 sm:w-12 sm:h-12 rounded-2xl bg-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform text-3xl sm:text-2xl">
                     {cat.icon || getCategoryIcon('Briefcase')}
                   </div>
                   {/* A category with nothing posted says so rather than
                       advertising a number nobody counted. */}
-                  <span className={`px-3 py-1 rounded-full font-extrabold text-xs border ${
+                  <span className={`px-3 py-1 rounded-full font-extrabold text-sm sm:text-xs border ${
                     cat.activeJobsCount > 0
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
                       : 'bg-slate-50 text-slate-400 border-slate-200'
@@ -83,15 +83,15 @@ export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRo
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 group-hover:text-brand-primary transition-colors">
+                  <h3 className="text-xl sm:text-lg font-black text-slate-900 group-hover:text-brand-primary transition-colors">
                     {name}
                   </h3>
-                  <p className="text-xs font-bold text-slate-500 mt-1">
+                  <p className="text-sm sm:text-xs font-bold text-slate-500 mt-1">
                     {rateText(cat)}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-brand-primary">
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-sm sm:text-xs font-black text-brand-primary">
                   <span>Smenalarni tanlash</span>
                   <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
                 </div>

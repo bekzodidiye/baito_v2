@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../../api/client';
-import { JOB_CATEGORIES } from './LandingData';
+import { CATEGORIES_LIST } from '../../constants/categories';
 
 /** A category card on the landing page.
  *
@@ -54,19 +54,27 @@ export const useLandingCategories = (language: string) => {
     return () => { alive = false; };
   }, []);
 
-  const fallback: LandingCategory[] = JOB_CATEGORIES.map(c => ({
+  // The same fourteen categories the platform actually has, translated. This
+  // used to stand in with six from LandingData that existed nowhere else — so
+  // when the API was unreachable the page advertised categories no job could
+  // ever be filed under, which is the thing this whole change removed.
+  //
+  // No counts and no wage ranges: with no API there is nothing to have counted,
+  // and a figure invented here would read exactly like a measured one.
+  const fallback: LandingCategory[] = CATEGORIES_LIST.map(c => ({
     slug: c.id,
-    name: language === 'ru' ? c.nameRu : language === 'en' ? c.nameEn : c.nameUz,
+    name: language === 'ru' ? c.labelRu : language === 'en' ? c.labelEn : c.labelUz,
     icon: null,
-    description: c.rate,
+    description: null,
     activeJobsCount: 0,
     salaryFrom: null,
     salaryTo: null,
   }));
 
-  // Six is what the grid is laid out for — two rows of three.
+  // Eight — two full rows of four on desktop. Six left a two-card row with a
+  // gap beside it.
   return {
-    categories: (categories ?? fallback).slice(0, 6),
+    categories: (categories ?? fallback).slice(0, 8),
     isFallback: categories === null,
   };
 };
