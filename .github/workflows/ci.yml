@@ -465,10 +465,17 @@ jobs:
   # ==========================================================
   # 3. DOCKER ARCHITECTURE VALIDATION
   # ==========================================================
+  # On baito-server rather than the laptop. These two are the memory-hungry
+  # half of the pipeline and they need nothing but Docker, which the server
+  # obviously has — it is what production runs on. The three test jobs above
+  # need python3.11 and Node on the runner's PATH, and the server has neither,
+  # so they stay put until it does. Nothing here touches production: the build
+  # tags ci-<sha>, which cannot collide with `current`, and drops only those
+  # tags; validate-docker renders the compose file and starts nothing.
   validate-docker:
     name: 🐳 3. Docker Compose Validation
     needs: [test-backend, test-frontend, test-e2e]
-    runs-on: [self-hosted, laptop-test-runner]
+    runs-on: [self-hosted, baito-server]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -544,7 +551,7 @@ jobs:
     # validate-docker already gates on the three test jobs.
     needs: [validate-docker]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: [self-hosted, laptop-test-runner]
+    runs-on: [self-hosted, baito-server]
     # Cold builds are slow but not unbounded; this is the alarm for a build
     # that has stopped making progress rather than a target to aim at.
     timeout-minutes: 40
@@ -609,6 +616,10 @@ jobs:
     name: ⏱️ 4b. Deploy Runner Watchdog
     needs: [test-backend, test-frontend, test-e2e, validate-docker, build-images]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # The one job deliberately left on the laptop. Everything else moved to
+    # baito-server, but this is the alarm for "the deploy runner is not picking
+    # jobs up" — put it on the runner it watches and it sits in the same queue,
+    # silent, exactly when it is needed. It polls an API; it needs no memory.
     runs-on: [self-hosted, laptop-test-runner]
     permissions:
       actions: read
