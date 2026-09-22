@@ -1,7 +1,9 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app import models
+from app.models.job import JobStatus
 from app.api import deps
 from .admin_users import get_admin_user
 
@@ -13,6 +15,32 @@ def get_regions(
     _: models.User = Depends(get_admin_user),
 ) -> Any:
     regions = db.query(models.Region).all()
+    if not regions:
+        return []
+
+    # Worker and job counts are counts of other tables, so they are derived here
+    # rather than stored — a saved copy is wrong the moment anybody posts a job.
+    # Two grouped queries for the whole list, not two per region.
+    worker_counts = dict(
+        db.query(models.User.region, func.count(models.User.id))
+        .filter(models.User.role == "worker", models.User.region.isnot(None))
+        .group_by(models.User.region)
+        .all()
+    )
+
+    # A job's region is the first part of its address — the posting form writes
+    # "<city>, <address>" — so the city cannot be matched with a plain equality.
+    open_jobs = (
+        db.query(models.Job.location)
+        .filter(models.Job.status.in_(JobStatus.OPEN_STATUSES + (JobStatus.IN_PROGRESS,)))
+        .all()
+    )
+    job_counts: dict[str, int] = {}
+    for (location,) in open_jobs:
+        city = (location or "").split(",")[0].strip()
+        if city:
+            job_counts[city] = job_counts.get(city, 0) + 1
+
     result = []
     for r in regions:
         result.append({
@@ -22,6 +50,10 @@ def get_regions(
             "parentId": r.parentId,
             "isActive": r.isActive,
             "commissionPercent": r.commissionPercent,
+            "minSalary": r.minSalary,
+            "districtsCount": r.districtsCount,
+            "activeWorkersCount": worker_counts.get(r.name, 0),
+            "activeJobsCount": job_counts.get(r.name, 0),
         })
     return result
 
@@ -39,6 +71,8 @@ def create_region(
         # The region half of the employer's commission; the category carries the
         # other half and a job is charged their sum.
         commissionPercent=payload.get("commissionPercent", 0) or 0,
+        minSalary=payload.get("minSalary"),
+        districtsCount=payload.get("districtsCount"),
     )
     db.add(reg)
     db.commit()
@@ -50,6 +84,10 @@ def create_region(
         "parentId": reg.parentId,
         "isActive": reg.isActive,
         "commissionPercent": reg.commissionPercent,
+        "minSalary": reg.minSalary,
+        "districtsCount": reg.districtsCount,
+        "activeWorkersCount": 0,
+        "activeJobsCount": 0,
     }
 
 @router.delete("/regions/{region_id}")

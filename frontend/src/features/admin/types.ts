@@ -292,11 +292,16 @@ export interface PromoCode {
 export interface RegionConfig {
   id: string;
   name: string;
-  districtsCount: number;
+  /** Stored settings. Null on a region nobody has filled in. */
+  districtsCount?: number | null;
+  minSalary?: number | null;
+  /** The region half of the employer's commission. This was called
+   *  customCommission here and nothing on the server ever sent that name, so the
+   *  screen printed "undefined%". */
+  commissionPercent?: number | null;
+  /** Derived by the endpoint, never stored — a saved count goes stale. */
   activeWorkersCount: number;
   activeJobsCount: number;
-  minSalary: number;
-  customCommission: number;
   isActive: boolean;
 }
 
