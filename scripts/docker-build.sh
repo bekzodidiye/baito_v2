@@ -58,6 +58,19 @@ TRANSIENT="$TRANSIENT|[Cc]ould not connect to"
 TRANSIENT="$TRANSIENT|Hash Sum mismatch"
 TRANSIENT="$TRANSIENT|[Ff]ailed to fetch"
 TRANSIENT="$TRANSIENT|[Uu]nable to fetch"
+# pip speaks its own dialect, and none of the above matches it. A read timeout
+# against files.pythonhosted.org is the single most common way this build
+# fails, and it went unretried because every signature here was written from
+# Docker and apt output.
+TRANSIENT="$TRANSIENT|[Rr]ead timed out"
+TRANSIENT="$TRANSIENT|ReadTimeoutError"
+TRANSIENT="$TRANSIENT|read operation timed out"
+TRANSIENT="$TRANSIENT|HTTPSConnectionPool"
+TRANSIENT="$TRANSIENT|NewConnectionError"
+TRANSIENT="$TRANSIENT|IncompleteRead"
+TRANSIENT="$TRANSIENT|ProtocolError"
+TRANSIENT="$TRANSIENT|Max retries exceeded with url"
+TRANSIENT="$TRANSIENT|[Tt]emporary failure"
 
 log="$(mktemp)"
 trap 'rm -f "$log"' EXIT
