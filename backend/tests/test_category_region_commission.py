@@ -249,3 +249,50 @@ def test_the_region_list_hides_the_ones_an_administrator_switched_off(client):
     names = [r["name"] for r in client.get("/api/v1/regions").json()]
 
     assert names == ["Toshkent"]
+
+
+# --- what the landing page reads off the catalogue ---------------------------
+
+def test_the_category_list_counts_the_work_actually_posted(client):
+    """The landing block advertised "1,240+ e'lon" for categories that existed
+    nowhere but in a constants file."""
+    _clean()
+    _category("logistics", 1, name="Ombor")
+    _category("it", 3, name="IT")
+
+    employer = make_user(role="employer", phone=_phone())
+    make_job(employer.id, category="logistics", salary="200000", status=JobStatus.OPEN)
+    make_job(employer.id, category="logistics", salary="350000", status=JobStatus.OPEN)
+    # Finished work is not on offer and must not be counted.
+    make_job(employer.id, category="logistics", salary="900000", status=JobStatus.COMPLETED)
+
+    body = {c["slug"]: c for c in client.get("/api/v1/categories").json()}
+
+    assert body["logistics"]["activeJobsCount"] == 2
+    assert body["it"]["activeJobsCount"] == 0
+
+
+def test_the_wage_range_spans_both_ends_of_what_is_posted(client):
+    _clean()
+    _category("logistics", 1)
+
+    employer = make_user(role="employer", phone=_phone())
+    make_job(employer.id, category="logistics", salary="200000", status=JobStatus.OPEN)
+    make_job(employer.id, category="logistics", salary="350000", status=JobStatus.OPEN)
+
+    row = next(c for c in client.get("/api/v1/categories").json() if c["slug"] == "logistics")
+
+    assert row["salaryFrom"] == 200_000
+    assert row["salaryTo"] == 350_000
+
+
+def test_a_category_with_no_postings_reports_no_range_rather_than_zero(client):
+    """Null, not 0 — the card has to tell "no work here" from "pays nothing"."""
+    _clean()
+    _category("logistics", 1)
+
+    row = next(c for c in client.get("/api/v1/categories").json() if c["slug"] == "logistics")
+
+    assert row["activeJobsCount"] == 0
+    assert row["salaryFrom"] is None
+    assert row["salaryTo"] is None

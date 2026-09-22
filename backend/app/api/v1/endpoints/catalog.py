@@ -19,28 +19,65 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.api import deps
+from app.core.money import parse_salary_amounts
+from app.models.job import JobStatus
 
 router = APIRouter()
 
 
 @router.get("/categories")
 def list_categories(db: Session = Depends(deps.get_db)) -> Any:
-    """Every category, in the order an administrator would read them."""
+    """Every category, with how much work is actually going in it.
+
+    The landing page's "Ommabop yo'nalishlar" block carried six invented
+    categories with invented counts — "1,240+ e'lon" — and invented wage ranges.
+    None of it came from anywhere. The counts and ranges below are read off the
+    open postings, so a category with no work says so.
+    """
     rows = db.query(models.Category).order_by(models.Category.name).all()
-    return [
-        {
+    if not rows:
+        return []
+
+    # One pass over the open postings rather than two queries per category.
+    open_jobs = (
+        db.query(models.Job.category, models.Job.salary)
+        .filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
+        .all()
+    )
+    counts: dict[str, int] = {}
+    wages: dict[str, list[int]] = {}
+    for category, salary in open_jobs:
+        key = (category or "").strip()
+        if not key:
+            continue
+        counts[key] = counts.get(key, 0) + 1
+        # Both ends of a range, not just the lower one: the card shows a span,
+        # and salary_to_uzs deliberately reports only the guaranteed figure.
+        amounts = parse_salary_amounts(salary)
+        if amounts:
+            wages.setdefault(key, []).extend(amounts)
+
+    result = []
+    for c in rows:
+        if not c.name:
+            continue
+        # Rows added through the admin panel before slugs existed have none; the
+        # id keeps them selectable rather than dropping them off the form.
+        slug = c.slug or c.id
+        amounts = wages.get(slug, [])
+        result.append({
             "id": c.id,
-            # What a job stores. Rows added through the admin panel before slugs
-            # existed have none; the id keeps them selectable rather than
-            # dropping them off the form.
-            "slug": c.slug or c.id,
+            "slug": slug,
             "name": c.name,
             "icon": c.icon,
             "description": c.description,
-        }
-        for c in rows
-        if c.name
-    ]
+            "activeJobsCount": counts.get(slug, 0),
+            # Null rather than zero when nothing is posted — the card has to be
+            # able to tell "no work here" from "work that pays nothing".
+            "salaryFrom": min(amounts) if amounts else None,
+            "salaryTo": max(amounts) if amounts else None,
+        })
+    return result
 
 
 @router.get("/regions")

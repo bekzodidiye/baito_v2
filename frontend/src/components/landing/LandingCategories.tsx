@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { LANDING_TEXTS, JOB_CATEGORIES } from './LandingData';
+import { LANDING_TEXTS } from './LandingData';
+import { useLandingCategories, rateText, countText } from './useLandingCategories';
 import { Truck, Utensils, Package, HardHat, ShoppingBag, Briefcase, ArrowRight, Layers } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
@@ -10,8 +11,9 @@ interface LandingCategoriesProps {
 
 export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRole }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, isLoggedIn, requireAuth, setFilterType } = useApp();
+  const { language, isLoggedIn, requireAuth, setFilterCategory } = useApp();
   const t = LANDING_TEXTS[language as keyof typeof LANDING_TEXTS] || LANDING_TEXTS.uz;
+  const { categories } = useLandingCategories(language);
 
   const getCategoryIcon = (iconName: string) => {
     switch (iconName) {
@@ -24,12 +26,11 @@ export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRo
     }
   };
 
-  const handleCategoryClick = (catId: string) => {
-    const cat = JOB_CATEGORIES.find(c => c.id === catId);
-    if (cat) {
-      const name = language === 'ru' ? cat.nameRu : language === 'en' ? cat.nameEn : cat.nameUz;
-      setFilterType(name);
-    }
+  const handleCategoryClick = (slug: string) => {
+    // The slug is what a job stores, so this actually narrows the list. It used
+    // to set the tag filter to a category's display name, which matched nothing
+    // — and the search screen never read that filter from the store anyway.
+    setFilterCategory(slug);
     setCurrentScreen('login');
   };
 
@@ -58,20 +59,26 @@ export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRo
 
         {/* Categories Matrix Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {JOB_CATEGORIES.map((cat) => {
-            const name = language === 'ru' ? cat.nameRu : language === 'en' ? cat.nameEn : cat.nameUz;
+          {categories.map((cat) => {
+            const name = cat.name;
             return (
               <div
-                key={cat.id}
-                onClick={() => handleCategoryClick(cat.id)}
+                key={cat.slug}
+                onClick={() => handleCategoryClick(cat.slug)}
                 className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-2xs hover:shadow-xl hover:border-brand-primary/40 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-4 group"
               >
                 <div className="flex items-start justify-between">
-                  <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    {getCategoryIcon(cat.iconName)}
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform text-2xl">
+                    {cat.icon || getCategoryIcon('Briefcase')}
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-extrabold text-xs border border-emerald-200/80">
-                    {cat.count} e'lon
+                  {/* A category with nothing posted says so rather than
+                      advertising a number nobody counted. */}
+                  <span className={`px-3 py-1 rounded-full font-extrabold text-xs border ${
+                    cat.activeJobsCount > 0
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+                      : 'bg-slate-50 text-slate-400 border-slate-200'
+                  }`}>
+                    {countText(cat)}
                   </span>
                 </div>
 
@@ -80,7 +87,7 @@ export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRo
                     {name}
                   </h3>
                   <p className="text-xs font-bold text-slate-500 mt-1">
-                    {cat.rate}
+                    {rateText(cat)}
                   </p>
                 </div>
 

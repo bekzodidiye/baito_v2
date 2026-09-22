@@ -13,7 +13,8 @@ export function useJobSearchScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { filterLocation, setFilterLocation, setShowRegionSelector, language, activeCalendarDay } = useApp();
+  const { filterLocation, setFilterLocation, setShowRegionSelector, language, activeCalendarDay,
+          filterCategory: pendingCategory, setFilterCategory: setPendingCategory } = useApp();
 
   const [searchTerm, setSearchTerm] = useState('');
   // The server does the matching, so a posting past the first page is still
@@ -30,6 +31,16 @@ export function useJobSearchScreen() {
 
   const [filterType, setFilterType] = useState('Barchasi');
   const [filterCategory, setFilterCategory] = useState('Barchasi');
+
+  // A category picked on the landing page. It is handed over once and then
+  // cleared, so returning to search later does not silently re-apply it.
+  useEffect(() => {
+    if (pendingCategory && pendingCategory !== 'Barchasi') {
+      setFilterCategory(pendingCategory);
+      setPendingCategory('Barchasi');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [sortBy, setSortBy] = useState<'yangilari' | 'maosh' | 'yaqin' | 'mos'>('yangilari');
   
   const selectedJob = useMemo(() => {
