@@ -25,6 +25,17 @@
 # tries again - `no such package` on its own is a real error and is treated
 # as one.
 #
+# Images are built one at a time, not all at once. `docker compose build` runs
+# them concurrently, and on the self-hosted runner that is what the failure
+#
+#   The self-hosted runner lost communication with the server. [...] Anything in
+#   your workflow that [...] starves it for CPU/Memory [...] can cause this error
+#
+# actually was: three concurrent builds on a 15 GB laptop that was already at
+# 12 GB with 5 GB of swap in use. Nothing was retried, because nothing had
+# failed - the runner process itself went away mid-build. Sequential builds
+# take longer in the best case and finish in the case that matters.
+#
 # Usage, from the repository root or the deploy directory:
 #
 #   bash scripts/docker-build.sh              # everything compose declares
@@ -75,30 +86,67 @@ TRANSIENT="$TRANSIENT|[Tt]emporary failure"
 log="$(mktemp)"
 trap 'rm -f "$log"' EXIT
 
-for attempt in $(seq 1 "$ATTEMPTS"); do
-  if [ "$attempt" -gt 1 ]; then
-    echo "▸ Build attempt ${attempt}/${ATTEMPTS}"
-  fi
+# The services compose declares a build for. Read out of the rendered config
+# rather than hard-coded, so a service added to docker-compose.yml is built
+# without anybody remembering to add it here too. Four of these share one image
+# tag, so the three after the first cost seconds of cache lookup, not a build.
+build_services() {
+  docker compose config 2>/dev/null | awk '
+    $0 == "services:" { in_s = 1; next }
+    in_s && $0 ~ /^[^ ]/ { in_s = 0 }
+    in_s && $0 ~ /^  [a-zA-Z0-9_-]+:[ \t]*$/ { svc = $1; sub(/:$/, "", svc); next }
+    in_s && svc != "" && $0 ~ /^    build:/ { print svc; svc = "" }
+  '
+}
 
-  # tee so a twelve-minute build still streams; a silent job looks hung.
-  docker compose build "$@" 2>&1 | tee "$log"
-  status="${PIPESTATUS[0]}"
+# One service, with the retry around it. Retrying per service rather than per
+# pass means a network blip on the last image does not rebuild the first five.
+build_one() {
+  service="$1"
 
-  if [ "$status" -eq 0 ]; then
-    exit 0
-  fi
+  for attempt in $(seq 1 "$ATTEMPTS"); do
+    if [ "$attempt" -gt 1 ]; then
+      echo "▸ ${service}: attempt ${attempt}/${ATTEMPTS}"
+    fi
 
-  if ! grep -qE "$TRANSIENT" "$log"; then
-    echo "::error title=Image build failed::The build failed for a reason that is not a network error, so it was not retried. See the output above."
-    exit "$status"
-  fi
+    # tee so a twelve-minute build still streams; a silent job looks hung.
+    docker compose build "$service" 2>&1 | tee "$log"
+    status="${PIPESTATUS[0]}"
 
-  if [ "$attempt" -lt "$ATTEMPTS" ]; then
-    backoff=$((attempt * 30))
-    echo "::warning title=Transient build failure::Could not reach a registry or package mirror (attempt ${attempt}/${ATTEMPTS}); retrying in ${backoff}s."
-    sleep "$backoff"
-  fi
+    if [ "$status" -eq 0 ]; then
+      return 0
+    fi
+
+    if ! grep -qE "$TRANSIENT" "$log"; then
+      echo "::error title=Image build failed::${service} failed for a reason that is not a network error, so it was not retried. See the output above."
+      return "$status"
+    fi
+
+    if [ "$attempt" -lt "$ATTEMPTS" ]; then
+      backoff=$((attempt * 30))
+      echo "::warning title=Transient build failure::${service} could not reach a registry or package mirror (attempt ${attempt}/${ATTEMPTS}); retrying in ${backoff}s."
+      sleep "$backoff"
+    fi
+  done
+
+  echo "::error title=Image build failed::${service} could not reach a registry or package mirror after ${ATTEMPTS} attempts."
+  return 1
+}
+
+if [ "$#" -gt 0 ]; then
+  services="$*"
+else
+  services="$(build_services)"
+fi
+
+if [ -z "${services// /}" ]; then
+  echo "::error title=Image build failed::compose declares no service with a build section."
+  exit 1
+fi
+
+for service in $services; do
+  echo "▸ Building ${service}"
+  build_one "$service" || exit $?
 done
 
-echo "::error title=Image build failed::Could not reach a registry or package mirror after ${ATTEMPTS} attempts."
-exit 1
+echo "▸ All images built."
