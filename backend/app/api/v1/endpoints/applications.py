@@ -170,6 +170,11 @@ def get_employer_applications(
             "id": app.id,
             "jobId": app.jobId,
             "jobTitle": job.title if job else "Ish e'loni",
+            # The card offers "confirm start" off the application's own status,
+            # which stays at start_requested forever. Without the job's status
+            # beside it the button was still being offered on a shift that had
+            # already finished, and the server answered 400 to every press.
+            "jobStatus": job.status if job else None,
             # What hiring will actually freeze. Computed the same way /hire
             # computes it, so the confirmation the employer reads and the sum
             # taken out of their balance cannot drift apart — including the

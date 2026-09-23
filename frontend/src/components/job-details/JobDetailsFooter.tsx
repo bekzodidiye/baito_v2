@@ -30,6 +30,9 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
   // which on a phone is one stray tap while scrolling a listing.
   const [confirmingApply, setConfirmingApply] = useState(false);
   const [confirmingFinish, setConfirmingFinish] = useState(false);
+  // Starting a shift is a commitment the employer is told about immediately,
+  // and this button sits under a thumb on a phone. It fired on the first tap.
+  const [confirmingStart, setConfirmingStart] = useState(false);
 
   useEffect(() => {
     setIsStartedLocal(selectedJob.status === 'in_progress' || selectedJob.status === 'start_requested');
@@ -58,6 +61,28 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
     } finally {
       setIsSubmitting(false);
       setConfirmingFinish(false);
+    }
+  };
+
+  const handleStart = async () => {
+    setConfirmingStart(false);
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      setIsStartedLocal(true);
+      // The worker asks to start; the employer confirms. This used to call
+      // confirm-start, the employer's own endpoint, which answers 403 to a
+      // worker — so the button reverted itself and said nothing, and no worker
+      // could ever start a job here.
+      selectedJob.status = 'start_requested';
+      const success = await requestStartJobApi(selectedJob.id);
+      if (success && onApplied) (onApplied as any)('start_requested');
+    } catch (e) {
+      setIsStartedLocal(false);
+      selectedJob.status = 'hired'; // Revert back
+      showToast(t.startJobFailed || "Ishni boshlab bo'lmadi. Qaytadan urinib ko'ring.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -129,26 +154,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
         } else if (isHiredOrConfirmed) {
           return (
             <button
-              onClick={async () => {
-                if (isSubmitting) return;
-                setIsSubmitting(true);
-                try {
-                  setIsStartedLocal(true);
-                  // The worker asks to start; the employer confirms. This used
-                  // to call confirm-start, the employer's own endpoint, which
-                  // answers 403 to a worker — so the button reverted itself and
-                  // said nothing, and no worker could ever start a job here.
-                  selectedJob.status = 'start_requested';
-                  const success = await requestStartJobApi(selectedJob.id);
-                  if (success && onApplied) (onApplied as any)('start_requested');
-                } catch (e) {
-                  setIsStartedLocal(false);
-                  selectedJob.status = 'hired'; // Revert back
-                  showToast(t.startJobFailed || "Ishni boshlab bo'lmadi. Qaytadan urinib ko'ring.");
-                } finally {
-                  setIsSubmitting(false);
-                }
-              }}
+              onClick={() => { if (!isSubmitting) setConfirmingStart(true); }}
               disabled={isSubmitting}
               aria-label="Ishni boshlash"
               className={`flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-lg transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'bg-emerald-400 cursor-not-allowed' : 'shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] cursor-pointer'}`}
@@ -192,6 +198,21 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
         isDestructive={false}
         onConfirm={handleApply}
         onCancel={() => setConfirmingApply(false)}
+      />
+
+      <ConfirmModal
+        isOpen={confirmingStart}
+        title={language === 'ru' ? 'Начать работу?' : language === 'en' ? 'Start this shift?' : "Ishni boshlaysizmi?"}
+        message={language === 'ru'
+          ? 'Работодатель сразу увидит, что вы на месте и готовы начать.'
+          : language === 'en'
+          ? 'The employer is told straight away that you have arrived and are ready to begin.'
+          : "Ish beruvchiga darhol xabar boradi: siz yetib keldingiz va boshlashga tayyorsiz."}
+        confirmText={language === 'ru' ? 'Начать' : language === 'en' ? 'Start' : 'Boshlash'}
+        cancelText={language === 'ru' ? 'Отмена' : language === 'en' ? 'Cancel' : 'Bekor qilish'}
+        isDestructive={false}
+        onConfirm={handleStart}
+        onCancel={() => setConfirmingStart(false)}
       />
 
       <ConfirmModal

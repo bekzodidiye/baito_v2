@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Check, X, Star, Briefcase, MapPin, Clock, CheckCircle } from 'lucide-react';
+import { Check, X, Star, Briefcase, MapPin, Clock, CheckCircle, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { confirmStartJobApi } from '../../../api/queries';
 import { ConfirmModal } from '../../../components/common/ConfirmModal';
+import { showToast } from '../../../utils/toast';
 
 interface ApplicantCardProps {
   app: any;
@@ -23,6 +24,11 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
   // crowded list of candidates that is a lot of money to move on one stray
   // press, so it says whose shift and how much before it does anything.
   const [confirmingHire, setConfirmingHire] = useState(false);
+  // The same treatment for confirming a start. This button had none of it: one
+  // tap fired the request, a second tap fired another, and a rejection from the
+  // server surfaced only as an unhandled promise in the console.
+  const [confirmingStart, setConfirmingStart] = useState(false);
+  const [startingWork, setStartingWork] = useState(false);
 
   const wage = Number(app.wageAmount ?? 0);
   // The commission is the employer's, charged on top of the wage — the worker
@@ -62,6 +68,30 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
     title: 'Yollashni tasdiqlang', message: '', confirm: 'Yollash', cancel: 'Bekor qilish',
   };
   
+  const handleConfirmStart = async () => {
+    setConfirmingStart(false);
+    if (startingWork) return;
+    setStartingWork(true);
+    try {
+      await confirmStartJobApi(app.jobId);
+      // Was window.location.reload(), which threw the whole page away and hid
+      // any failure behind it. The list re-reads itself instead.
+      updateApplicationStatus(app.id, 'hired');
+      showToast(language === 'ru' ? 'Работа начата' : language === 'en' ? 'Work started' : "Ish boshlandi", 'success');
+    } catch (e: any) {
+      // The server refuses a start on a job that is already finished or
+      // cancelled. That answer used to reach nobody: no catch, so it surfaced
+      // as an unhandled promise in the console and the button sat there
+      // inviting another press.
+      showToast(
+        e?.message || (language === 'ru' ? 'Не удалось начать работу' : language === 'en' ? 'Could not start the work' : "Ishni boshlab bo'lmadi"),
+        'error',
+      );
+    } finally {
+      setStartingWork(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -212,18 +242,24 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
         </div>
       </div>
 
-      {/* Action Buttons */}
-      {(app.status === 'start_requested' || app.status === 'applied') && (
+      {/* Action Buttons.
+          The application's own status is not enough to decide these: it stays
+          at start_requested for good, so a finished shift kept offering
+          "confirm start" and the server answered 400 to every press. */}
+      {(app.status === 'start_requested' || app.status === 'applied')
+        && !['completed', 'cancelled', 'in_progress'].includes(app.jobStatus) && (
         <div className="mt-1 flex gap-2">
           {app.status === 'start_requested' ? (
             <button
-              onClick={async () => {
-                await confirmStartJobApi(app.jobId);
-                window.location.reload();
-              }}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow-[0_4px_12px_rgba(245,158,11,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer animate-pulse"
+              onClick={() => { if (!startingWork) setConfirmingStart(true); }}
+              disabled={startingWork}
+              className={`w-full py-3 text-white rounded-xl text-xs font-black shadow-[0_4px_12px_rgba(245,158,11,0.2)] transition-all flex items-center justify-center gap-2 ${
+                startingWork
+                  ? 'bg-amber-400 cursor-not-allowed'
+                  : 'bg-amber-500 hover:bg-amber-600 active:scale-95 cursor-pointer animate-pulse'
+              }`}
             >
-              <Check size={16} className="stroke-[3]" />
+              {startingWork ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} className="stroke-[3]" />}
               <span>{language === 'uz' ? "Ishni boshlashni tasdiqlash" : language === 'ru' ? "Подтвердить начало работы" : "Confirm Start Job"}</span>
             </button>
           ) : (
@@ -255,6 +291,23 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
         isDestructive={false}
         onConfirm={() => updateApplicationStatus(app.id, 'hired')}
         onCancel={() => setConfirmingHire(false)}
+      />
+
+      <ConfirmModal
+        isOpen={confirmingStart}
+        title={language === 'ru' ? 'Начать работу?' : language === 'en' ? 'Start the work?' : "Ishni boshlaysizmi?"}
+        message={
+          language === 'ru'
+            ? `${app.workerName || app.candidateName} на месте. После подтверждения смена считается начатой.`
+            : language === 'en'
+            ? `${app.workerName || app.candidateName} has arrived. Confirming marks the shift as under way.`
+            : `${app.workerName || app.candidateName} yetib keldi. Tasdiqlasangiz, smena boshlangan hisoblanadi.`
+        }
+        confirmText={language === 'ru' ? 'Подтвердить' : language === 'en' ? 'Confirm' : 'Tasdiqlash'}
+        cancelText={language === 'ru' ? 'Отмена' : language === 'en' ? 'Cancel' : 'Bekor qilish'}
+        isDestructive={false}
+        onConfirm={handleConfirmStart}
+        onCancel={() => setConfirmingStart(false)}
       />
     </motion.div>
   );
