@@ -2,14 +2,12 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Logo } from '../Logo';
 import { LanguageSelector } from '../LanguageSelector';
-import { ArrowRight, Menu, X, UserCheck, Building2, Sparkles } from 'lucide-react';
+import { ArrowRight, Menu, X, LogIn } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
-interface LandingNavbarProps {
-  onSelectRole: (role: 'worker' | 'employer') => void;
-}
+interface LandingNavbarProps {}
 
-export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onSelectRole }) => {
+export const LandingNavbar: React.FC<LandingNavbarProps> = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { language, isLoggedIn, userProfile, requireAuth } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -140,20 +138,30 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onSelectRole }) =>
             >
               {navs.exploreJobs}
             </button>
+            {/* The same two the header offers on a wide screen. This used to be
+                "Ishchiman" / "Ish beruvchiman", which asked a visitor to pick a
+                role before signing in — a different question from the one the
+                desktop asks, and one an existing user has already answered. */}
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => { setMobileMenuOpen(false); onSelectRole('worker'); }}
-                className="py-3 rounded-xl bg-brand-primary text-white font-extrabold text-xs flex items-center justify-center gap-1.5"
+                onClick={() => { setMobileMenuOpen(false); setCurrentScreen('login'); }}
+                className="py-3 rounded-xl text-brand-primary border border-brand-primary/25 font-extrabold text-xs flex items-center justify-center gap-1.5"
               >
-                <UserCheck size={15} />
-                <span>Ishchiman</span>
+                <LogIn size={15} />
+                <span>{navs.login}</span>
               </button>
               <button
-                onClick={() => { setMobileMenuOpen(false); onSelectRole('employer'); }}
-                className="py-3 rounded-xl bg-brand-secondary text-white font-extrabold text-xs flex items-center justify-center gap-1.5"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  // Same preselection the desktop button makes, so the register
+                  // screen opens on the worker form either way.
+                  try { localStorage.setItem('baito_preselected_role', 'worker'); } catch(e){}
+                  setCurrentScreen('register');
+                }}
+                className="py-3 rounded-xl bg-brand-primary text-white font-extrabold text-xs flex items-center justify-center gap-1.5"
               >
-                <Building2 size={15} />
-                <span>Ish beruvchiman</span>
+                <span>{navs.registerWorker}</span>
+                <ArrowRight size={15} />
               </button>
             </div>
           </div>
