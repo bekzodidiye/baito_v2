@@ -142,7 +142,14 @@ def _hire(db, job_id, worker_id, status="hired"):
     return app.id
 
 
-def test_worker_cannot_start_a_job_alone(client):
+def test_a_hired_worker_starts_the_job_themselves(client):
+    """The employer's confirmation step is gone.
+
+    It used to stand between a worker arriving and the work counting as begun.
+    It moved no money — the wage is frozen at hiring and released at completion
+    — so all it could do was leave a worker on site unable to show they had
+    started. The guard that still matters is below: being hired.
+    """
     employer = make_user(role="employer", phone="+998911111126")
     job = make_job(employer.id)
     worker = make_user(role="worker", phone="+998911111127")
@@ -152,12 +159,16 @@ def test_worker_cannot_start_a_job_alone(client):
     login(client, worker)
     resp = client.post(f"/api/v1/jobs/{job.id}/request-start")
     assert resp.status_code == 200
-    assert resp.json()["status"] == "start_requested"
+    assert resp.json()["status"] == JobStatus.IN_PROGRESS
 
     with SessionLocal() as db:
-        assert db.query(Job).filter(Job.id == job.id).first().status != JobStatus.IN_PROGRESS
+        assert db.query(Job).filter(Job.id == job.id).first().status == JobStatus.IN_PROGRESS
 
-    # Only the employer can confirm.
+    # Somebody who was never hired still cannot, and neither can they confirm
+    # on the employer's route.
+    stranger = make_user(role="worker", phone="+998911111135")
+    login(client, stranger)
+    assert client.post(f"/api/v1/jobs/{job.id}/request-start").status_code == 403
     assert client.post(f"/api/v1/jobs/{job.id}/confirm-start").status_code == 403
 
 

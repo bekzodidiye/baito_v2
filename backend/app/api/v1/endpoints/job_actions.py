@@ -164,12 +164,19 @@ def request_start_job(
     id: str,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    """Worker signals they have arrived and are ready to begin.
+    """The worker starts the shift. Nobody confirms it afterwards.
 
-    ``request-start``, ``confirm-start`` and ``start`` were all bound to a
-    single handler that immediately flipped the job to ``in_progress``, so the
-    employer's confirmation step did not exist — a worker could start a job on
-    their own.
+    This used to only raise a hand: the application went to ``start_requested``
+    and waited for the employer to press a button before the work counted as
+    begun. The wait bought nothing. The wage is frozen at hiring and released at
+    completion, so the employer's press moved no money and could withhold none.
+    What it did do was leave a worker standing on site unable to show they had
+    started, and leave every application nobody confirmed stuck at
+    ``start_requested`` for good.
+
+    The route keeps its name so an older client still reaches it, and an
+    application left at ``start_requested`` by the old flow is moved on by the
+    same call.
     """
     job = _get_job_or_404(db, id)
 
@@ -177,19 +184,71 @@ def request_start_job(
     if not app:
         raise HTTPException(status_code=403, detail="Siz bu ishga yollanmagansiz")
 
+    if job.status in JobStatus.CLOSED_STATUSES:
+        raise HTTPException(status_code=400, detail="Bu ish allaqachon yakunlangan")
+
     if app.status == 'in_progress':
         return {"success": True, "status": "in_progress"}
 
-    app.status = 'start_requested'
+    # This worker has begun — deliberately not every hired worker on the
+    # posting. On a multi-vacancy shift one person arriving says nothing about
+    # the others, and marking them all started would put a time against people
+    # who are not there. That is what confirm-start does, and why it is still
+    # the employer's route rather than this one.
+    app.status = 'in_progress'
     db.add(app)
+
+    job.status = JobStatus.IN_PROGRESS
+    # Written once, by whoever arrives first: the posting began when the first
+    # person started on it, not when the last one did.
+    if job.startedAt is None:
+        job.startedAt = datetime.now(timezone.utc)
+    db.add(job)
+
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    day = (
+        db.query(JobDay)
+        .filter(JobDay.jobId == job.id, JobDay.status == JobDayStatus.PENDING)
+        .order_by(JobDay.workDate)
+        .first()
+    )
+    if day is not None and day.startedAt is None and day.workDate <= today:
+        day.startedAt = datetime.now(timezone.utc)
+        db.add(day)
+
+    # Free this worker's day: withdraw their own pending applications that
+    # collide with it. Marked withdrawn rather than deleted, so they can still
+    # see what happened.
+    job_dates = get_job_dates_set(job)
+    if job_dates:
+        others = (
+            db.query(models.Application)
+            .filter(
+                models.Application.workerId == app.workerId,
+                models.Application.jobId != id,
+                models.Application.status == "applied",
+            )
+            .all()
+        )
+        other_jobs = {
+            j.id: j
+            for j in db.query(models.Job)
+            .filter(models.Job.id.in_({a.jobId for a in others}))
+            .all()
+        } if others else {}
+        for other in others:
+            if job_dates & get_job_dates_set(other_jobs.get(other.jobId)):
+                other.status = "withdrawn"
+                db.add(other)
+
     db.add(models.Notification(
         id=str(uuid.uuid4()), userId=job.employerId,
-        title="Ishchi ishni boshlashga tayyor",
-        message=f"'{job.title}' ishi bo'yicha ishchi boshlashni so'radi. Tasdiqlang.",
-        type="start_requested", relatedJobId=id,
+        title="Ish boshlandi",
+        message=f"'{job.title}' ishi bo'yicha ishchi ishni boshladi.",
+        type="start_confirmed", relatedJobId=id,
     ))
     db.commit()
-    return {"success": True, "status": "start_requested"}
+    return {"success": True, "status": JobStatus.IN_PROGRESS}
 
 
 @router.post("/{id}/confirm-start")
@@ -200,7 +259,13 @@ def confirm_start_job(
     id: str,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    """Employer confirms the work has begun."""
+    """Start the shift on the workers' behalf.
+
+    No longer a gate the work waits behind — the worker starts it themselves.
+    This stays for what the other route cannot cover: a worker who cannot reach
+    their phone, and an administrator putting a job right. It advances every
+    hired worker at once, which is exactly why it is not what a worker calls.
+    """
     job = _get_job_or_404(db, id)
 
     is_employer = job.employerId in (current_user.id, current_user.uid)

@@ -249,6 +249,10 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
       {(app.status === 'start_requested' || app.status === 'applied')
         && !['completed', 'cancelled', 'in_progress'].includes(app.jobStatus) && (
         <div className="mt-1 flex gap-2">
+          {/* A worker starts their own shift now, so nothing new arrives at
+              start_requested. What is left are the applications the old
+              two-step flow stranded there, and the employer can move those on
+              — as an action, not a gate the work is waiting behind. */}
           {app.status === 'start_requested' ? (
             <button
               onClick={() => { if (!startingWork) setConfirmingStart(true); }}
@@ -260,7 +264,7 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
               }`}
             >
               {startingWork ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} className="stroke-[3]" />}
-              <span>{language === 'uz' ? "Ishni boshlashni tasdiqlash" : language === 'ru' ? "Подтвердить начало работы" : "Confirm Start Job"}</span>
+              <span>{language === 'uz' ? "Ishni boshlash" : language === 'ru' ? "Начать работу" : "Start the work"}</span>
             </button>
           ) : (
             <>
@@ -298,10 +302,10 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
         title={language === 'ru' ? 'Начать работу?' : language === 'en' ? 'Start the work?' : "Ishni boshlaysizmi?"}
         message={
           language === 'ru'
-            ? `${app.workerName || app.candidateName} на месте. После подтверждения смена считается начатой.`
+            ? `Смена ${app.workerName || app.candidateName} будет отмечена как начатая.`
             : language === 'en'
-            ? `${app.workerName || app.candidateName} has arrived. Confirming marks the shift as under way.`
-            : `${app.workerName || app.candidateName} yetib keldi. Tasdiqlasangiz, smena boshlangan hisoblanadi.`
+            ? `${app.workerName || app.candidateName}'s shift will be marked as under way.`
+            : `${app.workerName || app.candidateName} smenasi boshlangan deb belgilanadi.`
         }
         confirmText={language === 'ru' ? 'Подтвердить' : language === 'en' ? 'Confirm' : 'Tasdiqlash'}
         cancelText={language === 'ru' ? 'Отмена' : language === 'en' ? 'Cancel' : 'Bekor qilish'}

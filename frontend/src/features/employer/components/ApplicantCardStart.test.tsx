@@ -37,12 +37,12 @@ const renderCard = (over: Record<string, unknown> = {}) => {
   return { updateApplicationStatus };
 };
 
-const startButton = () => screen.getByRole('button', { name: /Ishni boshlashni tasdiqlash/i });
+const startButton = () => screen.getByRole('button', { name: /Ishni boshlash/i });
 
 /** This button fired the request on the first tap, had no in-flight state, and
  *  no catch — so a refusal from the server reached nobody and the button sat
  *  there inviting another press. Production logged the same 400 fifteen times. */
-describe('ApplicantCard — confirming a start asks first and reports back', () => {
+describe('ApplicantCard — starting a shift asks first and reports back', () => {
   it('does not call the API on the first press', () => {
     renderCard();
     fireEvent.click(startButton());
@@ -84,11 +84,11 @@ describe('ApplicantCard — confirming a start asks first and reports back', () 
 
   it('is not offered at all once the shift has finished', () => {
     renderCard({ jobStatus: 'completed' });
-    expect(screen.queryByRole('button', { name: /Ishni boshlashni tasdiqlash/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Ishni boshlash/i })).toBeNull();
   });
 
   it('is not offered on a cancelled shift either', () => {
     renderCard({ jobStatus: 'cancelled' });
-    expect(screen.queryByRole('button', { name: /Ishni boshlashni tasdiqlash/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Ishni boshlash/i })).toBeNull();
   });
 });

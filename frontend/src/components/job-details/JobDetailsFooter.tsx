@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Send, CheckCircle2, Clock, PlayCircle } from 'lucide-react';
+import { Send, CheckCircle2, PlayCircle } from 'lucide-react';
 import { Job } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
@@ -23,7 +23,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
   const t = translations[language];
   const queryClient = useContext(QueryClientContext);
   const [isStartedLocal, setIsStartedLocal] = useState<boolean>(
-    selectedJob.status === 'in_progress' || selectedJob.status === 'start_requested'
+    selectedJob.status === 'in_progress'
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Applying commits the worker to turning up. It went through on one press,
@@ -35,7 +35,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
   const [confirmingStart, setConfirmingStart] = useState(false);
 
   useEffect(() => {
-    setIsStartedLocal(selectedJob.status === 'in_progress' || selectedJob.status === 'start_requested');
+    setIsStartedLocal(selectedJob.status === 'in_progress');
   }, [selectedJob.status]);
 
   const handleFinishJob = async () => {
@@ -70,13 +70,12 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
     setIsSubmitting(true);
     try {
       setIsStartedLocal(true);
-      // The worker asks to start; the employer confirms. This used to call
-      // confirm-start, the employer's own endpoint, which answers 403 to a
-      // worker — so the button reverted itself and said nothing, and no worker
-      // could ever start a job here.
-      selectedJob.status = 'start_requested';
+      // The worker starts the shift; nobody confirms it afterwards. An
+      // application the old two-step flow left at start_requested arrives here
+      // too, and the same call moves it on.
+      selectedJob.status = 'in_progress';
       const success = await requestStartJobApi(selectedJob.id);
-      if (success && onApplied) (onApplied as any)('start_requested');
+      if (success && onApplied) (onApplied as any)('in_progress');
     } catch (e) {
       setIsStartedLocal(false);
       selectedJob.status = 'hired'; // Revert back
@@ -140,18 +139,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
               {language === 'uz' ? "Ishni yakunlash" : language === 'ru' ? "Завершить работу" : "Complete Job"}
             </button>
           );
-        } else if (isStartedLocal || selectedJob.status === 'start_requested') {
-          return (
-            <button
-              disabled
-              aria-label="Ish boshlanishi kutilmoqda"
-              className="flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-md bg-amber-600 opacity-90 cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <Clock size={18} />
-              {language === 'uz' ? "Tasdiqlanishi kutilmoqda" : language === 'ru' ? "Ожидает подтверждения" : "Waiting for confirmation"}
-            </button>
-          );
-        } else if (isHiredOrConfirmed) {
+        } else if (isHiredOrConfirmed || selectedJob.status === 'start_requested') {
           return (
             <button
               onClick={() => { if (!isSubmitting) setConfirmingStart(true); }}
