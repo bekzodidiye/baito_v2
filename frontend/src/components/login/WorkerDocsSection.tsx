@@ -47,19 +47,19 @@ export const WorkerDocsSection: React.FC<WorkerDocsSectionProps> = (props) => {
         <div className="col-span-4 space-y-1">
           <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block px-1">{t.series}</label>
           <input
-              aria-label={t.series} type="text" required maxLength={2} value={passportSeries} onChange={(e) => setPassportSeries(e.target.value.toUpperCase())} placeholder="AB" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3 text-xs font-black text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary" />
+              aria-label={t.series} type="text" required maxLength={2} value={passportSeries} onChange={(e) => setPassportSeries(e.target.value.toUpperCase())} placeholder="AB" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3 text-xs font-black text-center focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary/40" />
         </div>
         <div className="col-span-8 space-y-1">
           <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block px-1">{t.passportNumber}</label>
           <input
-              aria-label={t.passportNumber} type="text" required maxLength={7} value={passportNumber} onChange={(e) => setPassportNumber(e.target.value.replace(/\D/g, ''))} placeholder="1234567" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary" />
+              aria-label={t.passportNumber} type="text" required maxLength={7} value={passportNumber} onChange={(e) => setPassportNumber(e.target.value.replace(/\D/g, ''))} placeholder="1234567" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary/40" />
         </div>
       </div>
 
       <div className="space-y-1">
         <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block px-1">{t.jshshir}</label>
         <input
-              aria-label={t.jshshir} type="text" required maxLength={14} value={jshshir} onChange={(e) => setJshshir(e.target.value.replace(/\D/g, ''))} placeholder="12345678901234" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary" />
+              aria-label={t.jshshir} type="text" required maxLength={14} value={jshshir} onChange={(e) => setJshshir(e.target.value.replace(/\D/g, ''))} placeholder="12345678901234" className="w-full bg-white border border-slate-200/80 rounded-xl py-2.5 px-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary/40" />
       </div>
 
       <div className="space-y-2 pt-1">
