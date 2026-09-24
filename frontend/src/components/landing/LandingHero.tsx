@@ -162,7 +162,16 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-5 text-xs font-extrabold text-slate-700 pt-1">
               <span className="flex items-center gap-1.5"><BadgeCheck size={17} className="text-blue-600 shrink-0" /> Tasdiqlangan ID</span>
               <span className="flex items-center gap-1.5"><Wallet size={17} className="text-blue-600 shrink-0" /> Bir zumda to'lov</span>
-              <span className="flex items-center gap-1.5"><Percent size={17} className="text-blue-600 shrink-0" /> 0% komissiya</span>
+              {/* Sat outside the activeTab switch, so an employer was told they
+                  pay no commission — true of a worker, who receives the posted
+                  wage in full, and not of an employer, who pays the category's
+                  rate plus the region's on top of it. */}
+              <span className="flex items-center gap-1.5">
+                <Percent size={17} className="text-blue-600 shrink-0" />
+                {activeTab === 'worker'
+                  ? (language === 'ru' ? '0% комиссии' : language === 'en' ? 'No commission' : "0% komissiya")
+                  : (language === 'ru' ? 'Комиссия сверх оплаты' : language === 'en' ? 'Commission on top of the wage' : "Komissiya ish haqi ustiga")}
+              </span>
             </div>
           </div>
 
