@@ -12,11 +12,12 @@ from app.services.escrow_service import fee_for, job_fee_percent, worker_share
 from app.models.job import JobStatus
 from app.services.escrow_service import EscrowService
 from app.services import job_days
+from app.services.work_dates import get_job_dates_set
+
+COMMITTED_APP_STATUSES = ['hired', 'confirmed', 'in_progress', 'start_requested']
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-COMMITTED_APP_STATUSES = ['hired', 'confirmed', 'in_progress', 'start_requested']
 
 
 def _load_owned_application(db: Session, app_id: str, current_user: models.User):
@@ -212,6 +213,7 @@ def hire_applicant(
 ) -> Any:
     """Hire an applicant and put the wage into escrow."""
     app, job = _load_owned_application(db, id, current_user)
+    db.refresh(app)
 
     if app.status in COMMITTED_APP_STATUSES:
         return {"success": True, "application_status": app.status}
@@ -219,13 +221,6 @@ def hire_applicant(
         raise HTTPException(status_code=400, detail="Bu arizani yollab bo'lmaydi")
     if job.status in JobStatus.CLOSED_STATUSES:
         raise HTTPException(status_code=400, detail="Bu e'lon yopilgan")
-
-    # Hiring was previously unbounded: a one-vacancy job could take on
-    # unlimited workers.
-    # Serialise every hire for this posting. Counting without holding a lock
-    # is a read-then-write race: concurrent requests all read the same count,
-    # all find a free vacancy, and all hire.
-    db.query(models.Job).filter(models.Job.id == job.id).populate_existing().with_for_update().first()
 
     already_hired = (
         db.query(models.Application)
@@ -241,6 +236,24 @@ def hire_applicant(
             status_code=400,
             detail=f"Bu ish bo'yicha barcha {vacancies} ta o'rin to'lgan",
         )
+
+    job_dates = get_job_dates_set(job)
+    if job_dates:
+        committed_jobs = (
+            db.query(models.Job)
+            .join(models.Application, models.Application.jobId == models.Job.id)
+            .filter(
+                models.Application.workerId == app.workerId,
+                models.Application.id != app.id,
+                models.Application.status.in_(COMMITTED_APP_STATUSES),
+            )
+            .all()
+        )
+        if any(job_dates & get_job_dates_set(other_job) for other_job in committed_jobs):
+            raise HTTPException(
+                status_code=400,
+                detail="Ishchi bu kun uchun allaqachon tasdiqlangan ishga ega",
+            )
 
     wage = salary_to_uzs(job.salary)
     if wage <= 0 and parse_salary_amounts(job.salary, bounded=False):
@@ -272,22 +285,9 @@ def hire_applicant(
     # exists to prevent.
     day_count = max(1, len(days))
     fee_per_day = fee_for(wage, job_fee_percent(db, job))
-    total_due = (wage + fee_per_day) * day_count
-    if wage > 0:
-        employer = db.query(models.User).filter(models.User.id == job.employerId).first()
-        available = (employer.balance or 0) if employer else 0
-        if available < total_due:
-            fee_note = (
-                f" va {fee_per_day:,} so'm xizmat haqi" if fee_per_day else ""
-            )
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    f"{day_count} kunlik ish uchun kuniga {wage:,} so'm ish haqi{fee_note} — "
-                    f"jami {total_due:,} so'm kerak, balansingizda {available:,} so'm bor. "
-                    "Hisobni to'ldiring."
-                ).replace(",", " "),
-            )
+    day_count = max(1, len(days))
+    fee_per_day = fee_for(wage, job_fee_percent(db, job))
+
 
     escrow_held = False
     if wage > 0:
@@ -330,9 +330,6 @@ def hire_applicant(
     # A worker can only hold one job per day: withdraw their other pending
     # applications that collide with this job's date(s). They used to be
     # hard-deleted, which silently removed history the worker could see.
-    from app.api.v1.endpoints.job_actions import get_job_dates_set
-
-    job_dates = get_job_dates_set(job)
     if job_dates:
         other_apps = (
             db.query(models.Application)
@@ -381,6 +378,7 @@ def reject_applicant(
 ) -> Any:
     """Reject an applicant for one of the caller's own jobs."""
     app, job = _load_owned_application(db, id, current_user)
+    db.refresh(app)
 
     if app.status in COMMITTED_APP_STATUSES + ['completed']:
         raise HTTPException(

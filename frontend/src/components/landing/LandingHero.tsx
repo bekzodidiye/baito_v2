@@ -33,8 +33,17 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
   })), [jobs, language]);
 
   const displayShifts = useMemo(() => {
-    return realShifts.slice(0, 6);
-  }, [realShifts]);
+    if (!searchQuery.trim()) {
+      return realShifts.slice(0, 6);
+    }
+    const q = searchQuery.toLowerCase().trim();
+    return realShifts.filter(j => 
+      j.titleUz.toLowerCase().includes(q) || 
+      j.titleRu.toLowerCase().includes(q) || 
+      j.company.toLowerCase().includes(q) ||
+      j.district.toLowerCase().includes(q)
+    ).slice(0, 6);
+  }, [realShifts, searchQuery]);
 
   const isFirstRender = useRef(true);
 
@@ -46,10 +55,16 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
     e.preventDefault();
     if (activeTab === 'employer') {
       try { localStorage.setItem('baito_preselected_role', 'employer'); } catch (e) { }
+      setCurrentScreen('login');
     } else {
       try { localStorage.setItem('baito_preselected_role', 'worker'); } catch (e) { }
+      const mapSection = document.getElementById('map-preview');
+      if (mapSection) {
+        const yOffset = -80;
+        const y = mapSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
     }
-    setCurrentScreen('login');
   };
 
   return (

@@ -186,6 +186,7 @@ export const uz = {
   send: "Yuborish",
   refresh: "Yangilash",
   refreshing: "Yangilanmoqda...",
+  mapLoading: "Xarita yuklanmoqda...",
   zoomIn: "Yaqinlashtirish",
   zoomOut: "Uzoqlashtirish",
   settingsAccount: "Hisob",

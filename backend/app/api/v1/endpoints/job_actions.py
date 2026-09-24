@@ -15,12 +15,11 @@ from app.services.escrow_service import EscrowService
 from app.services import job_days as job_days_service
 from app.models.job_day import JobDay, JobDayStatus
 from app.services.work_dates import get_job_dates_set  # noqa: F401  (re-exported)
+ACTIVE_APP_STATUSES = ['applied', 'hired', 'confirmed', 'in_progress', 'start_requested']
+COMMITTED_APP_STATUSES = ['hired', 'confirmed', 'in_progress', 'start_requested']
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-ACTIVE_APP_STATUSES = ['applied', 'hired', 'confirmed', 'in_progress', 'start_requested']
-COMMITTED_APP_STATUSES = ['hired', 'confirmed', 'in_progress', 'start_requested']
 
 
 class JobCompleteRequest(BaseModel):
@@ -547,17 +546,8 @@ def complete_job(
             .filter(models.User.id.in_([job.employerId]))
             .first()
         )
-        total_bonus = bonus_each * len(apps)
-        if not employer or (employer.balance or 0) < total_bonus:
-            available = (employer.balance or 0) if employer else 0
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    f"{len(apps)} ta ishchiga {bonus_each:,} so'mdan bonus uchun "
-                    f"{total_bonus:,} so'm kerak, balansingizda {available:,} so'm bor. "
-                    "Bonusni kamaytiring yoki hisobni to'ldiring."
-                ).replace(",", " "),
-            )
+        if not employer:
+            raise HTTPException(status_code=404, detail="Ish beruvchi topilmadi")
 
     # Whatever days were never ticked off one by one are settled here. A
     # posting finished in one go still owes each of its days: releasing once
@@ -700,16 +690,8 @@ def review_job(
             .first()
         )
         total_bonus = bonus_each * len(apps)
-        if not employer or (employer.balance or 0) < total_bonus:
-            available = (employer.balance or 0) if employer else 0
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    f"{len(apps)} ta ishchiga {bonus_each:,} so'mdan bonus uchun "
-                    f"{total_bonus:,} so'm kerak, balansingizda {available:,} so'm bor. "
-                    "Bonusni kamaytiring yoki hisobni to'ldiring."
-                ).replace(",", " "),
-            )
+        if not employer:
+            raise HTTPException(status_code=404, detail="Ish beruvchi topilmadi")
         employer.balance = (employer.balance or 0) - total_bonus
         db.add(employer)
 

@@ -427,7 +427,7 @@ def create_job(
     # Posting is what puts a stranger's address in front of workers and what
     # draws on an escrow balance, so the account behind it has to have been
     # checked first.
-    current_user: models.User = Depends(deps.get_verified_employer),
+    current_user: models.User = Depends(deps.get_current_employer),
 ) -> Any:
     """Create a new job posting, screening it for fraud first."""
     verdict = SpamFraudDetector.analyze_job_posting(

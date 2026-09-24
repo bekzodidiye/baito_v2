@@ -11,7 +11,8 @@ interface EmployerEditProfileModalProps {
   currentPhone: string;
   currentAbout: string;
   currentRegion: string;
-  onSave: (fields: { name: string; phone: string; about: string; region: string }) => Promise<void>;
+  currentAvatarUrl?: string | null;
+  onSave: (fields: { name: string; phone: string; about: string; region: string; avatarUrl?: string | null }) => Promise<void>;
 }
 
 export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> = ({
@@ -22,6 +23,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
   currentPhone,
   currentAbout,
   currentRegion,
+  currentAvatarUrl,
   onSave
 }) => {
   const [name, setName] = useState(currentName);
@@ -55,6 +57,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
         phone: phone.trim(),
         about: about.trim(),
         region: region.trim(),
+        avatarUrl: currentAvatarUrl,
       });
       showToast(language === 'uz' ? "Profil yangilandi!" : "Профиль обновлен!");
       onClose();

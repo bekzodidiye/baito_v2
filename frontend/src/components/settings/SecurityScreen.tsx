@@ -11,9 +11,7 @@ export const SecurityScreen: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { userProfile, setUserProfile, language } = useApp();
 
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(userProfile?.two_factor_enabled ?? false);
-  const [biometricsEnabled, setBiometricsEnabled] = useState(userProfile?.biometrics_enabled ?? false);
-  const [isUpdating, setIsUpdating] = useState(false);
+
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   
   const [passData, setPassData] = useState({ current: '', newPass: '', confirm: '' });
@@ -91,22 +89,7 @@ export const SecurityScreen: React.FC = () => {
     }
   };
 
-  const handleToggleSetting = async (key: 'two_factor_enabled' | 'biometrics_enabled', value: boolean, setter: (val: boolean) => void) => {
-    setter(value);
-    setIsUpdating(true);
-    try {
-      await updateUserProfileApi({ [key]: value });
-      if (userProfile) {
-        setUserProfile({ ...userProfile, [key]: value });
-      }
-    } catch (error) {
-      console.error(`Failed to update ${key}:`, error);
-      setter(!value); // Revert on failure
-      window.dispatchEvent(new CustomEvent("global-toast", { detail: "Saqlashda xatolik yuz berdi" }));
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+
 
   return (
     <div className="flex-1 flex flex-col h-full w-full bg-brand-background text-brand-text">
@@ -149,44 +132,7 @@ export const SecurityScreen: React.FC = () => {
               </div>
               <ChevronRight className="text-brand-outline-variant" size={20} />
             </button>
-            <div className="h-px bg-brand-outline-variant/30 ml-[72px]"></div>
 
-            {/* 2FA */}
-            <div className="flex items-center p-4">
-              <div className="w-10 h-10 bg-brand-primary-container/10 rounded-xl flex items-center justify-center mr-4 shrink-0">
-                <ShieldCheck className="text-brand-primary" size={20} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-[15px] font-semibold text-brand-text">Ikki bosqichli autentifikatsiya</h3>
-                <p className="text-[13px] text-brand-text-variant">{twoFactorEnabled ? 'Yoqilgan' : 'O\'chirilgan'}</p>
-              </div>
-              <button 
-                className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${twoFactorEnabled ? 'bg-brand-primary' : 'bg-slate-300'} ${isUpdating ? 'opacity-50' : ''}`}
-                onClick={() => handleToggleSetting('two_factor_enabled', !twoFactorEnabled, setTwoFactorEnabled)}
-                disabled={isUpdating}
-              >
-                <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-0.5 transition-all ${twoFactorEnabled ? 'right-0.5' : 'left-0.5'}`} />
-              </button>
-            </div>
-            <div className="h-px bg-brand-outline-variant/30 ml-[72px]"></div>
-
-            {/* Biometrics */}
-            <div className="flex items-center p-4">
-              <div className="w-10 h-10 bg-brand-primary-container/10 rounded-xl flex items-center justify-center mr-4 shrink-0">
-                <Fingerprint className="text-brand-primary" size={20} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-[15px] font-semibold text-brand-text">Biometrik kirish</h3>
-                <p className="text-[13px] text-brand-text-variant">{biometricsEnabled ? 'Face ID / Barmoq izi' : 'O\'chirilgan'}</p>
-              </div>
-              <button 
-                className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${biometricsEnabled ? 'bg-brand-primary' : 'bg-slate-300'} ${isUpdating ? 'opacity-50' : ''}`}
-                onClick={() => handleToggleSetting('biometrics_enabled', !biometricsEnabled, setBiometricsEnabled)}
-                disabled={isUpdating}
-              >
-                <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-0.5 transition-all ${biometricsEnabled ? 'right-0.5' : 'left-0.5'}`} />
-              </button>
-            </div>
           </div>
         </div>
 

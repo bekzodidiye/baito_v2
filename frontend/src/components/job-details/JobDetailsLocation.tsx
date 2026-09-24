@@ -22,7 +22,7 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
   isLocating,
 }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, setMapFocusedJobId } = useApp();
+  const { language, setMapFocusedJobId, setJobsView } = useApp();
   const t = translations[language];
 
   const handleMapButtonClick = () => {
@@ -30,6 +30,7 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
       onOpenOnMap();
     } else {
       setMapFocusedJobId(selectedJob.id);
+      setJobsView('map');
       setCurrentScreen('jobs');
     }
   };

@@ -99,6 +99,21 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
     if (state.selectedRole) state.setMode('profile-info');
   };
 
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const calculateAge = (day: string, month: string, year: string) => {
+    const today = new Date();
+    const birthDate = new Date(Number(year), Number(month) - 1, Number(day));
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const handleProfileSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (state.selectedRole === 'worker') {
@@ -106,9 +121,26 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
         showToast(t.errorRequired);
         return;
       }
+      if (state.firstName.trim().length < 2 || state.lastName.trim().length < 2) {
+        showToast(language === 'uz' ? "Ism va familiya kamida 2 ta harfdan iborat bo'lishi kerak" : language === 'ru' ? "Имя и фамилия должны содержать минимум 2 буквы" : "Name and surname must be at least 2 characters long");
+        return;
+      }
+      if (state.email && !isValidEmail(state.email)) {
+        showToast(language === 'uz' ? "Noto'g'ri email formati" : language === 'ru' ? "Неверный формат email" : "Invalid email format");
+        return;
+      }
+      const age = calculateAge(state.birthDay, state.birthMonth, state.birthYear);
+      if (age < 16) {
+        showToast(language === 'uz' ? "Yosh kamida 16 da bo'lishi kerak" : language === 'ru' ? "Возраст должен быть не менее 16 лет" : "Age must be at least 16");
+        return;
+      }
     } else {
       if (!state.companyName || !state.industry || !state.location) {
         showToast(t.errorRequired);
+        return;
+      }
+      if (state.companyName.trim().length < 2) {
+        showToast(language === 'uz' ? "Kompaniya nomi kamida 2 ta belgidan iborat bo'lishi kerak" : language === 'ru' ? "Название компании должно содержать минимум 2 символа" : "Company name must be at least 2 characters long");
         return;
       }
     }
@@ -120,6 +152,14 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
     if (state.selectedRole === 'worker') {
       if (!state.passportSeries || !state.passportNumber || !state.jshshir || !state.docFileName1 || !state.docFileName2 || !state.docFileName3) {
         showToast(t.errorRequired);
+        return;
+      }
+      if (!/^[A-Za-z]{2}$/.test(state.passportSeries.trim())) {
+        showToast(language === 'uz' ? "Pasport seriyasi 2 ta harfdan iborat bo'lishi kerak (masalan, AB)" : language === 'ru' ? "Серия паспорта должна состоять из 2 букв (например, AB)" : "Passport series must be 2 letters (e.g., AB)");
+        return;
+      }
+      if (!/^\d{7}$/.test(state.passportNumber.trim())) {
+        showToast(language === 'uz' ? "Pasport raqami 7 ta raqamdan iborat bo'lishi kerak" : language === 'ru' ? "Номер паспорта должен состоять из 7 цифр" : "Passport number must be 7 digits");
         return;
       }
       if (state.jshshir.trim().length !== 14 || isNaN(Number(state.jshshir.trim()))) {

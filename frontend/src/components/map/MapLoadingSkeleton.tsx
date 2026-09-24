@@ -1,8 +1,12 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Loader2 } from 'lucide-react';
+import { useApp } from '../../context/AppContext';
+import { translations } from '../../translations';
 
 export const MapLoadingSkeleton: React.FC = () => {
+  const { language } = useApp();
+  const t = translations[language];
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -25,7 +29,7 @@ export const MapLoadingSkeleton: React.FC = () => {
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
         <div className="px-5 py-3.5 rounded-2xl bg-slate-900/95 border border-slate-700/90 shadow-2xl flex items-center gap-3 text-white pointer-events-auto">
           <Loader2 className="w-5 h-5 text-amber-400 animate-spin shrink-0" />
-          <span className="text-xs font-black tracking-wide text-slate-100">Xarita yuklanmoqda...</span>
+          <span className="text-xs font-black tracking-wide text-slate-100">{t.mapLoading}</span>
         </div>
       </div>
 

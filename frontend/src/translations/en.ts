@@ -186,6 +186,7 @@ export const en = {
   send: "Send",
   refresh: "Refresh",
   refreshing: "Refreshing...",
+  mapLoading: "Map loading...",
   zoomIn: "Zoom In",
   zoomOut: "Zoom Out",
   settingsAccount: "Account",
