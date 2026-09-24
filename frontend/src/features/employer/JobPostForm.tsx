@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
+import { useApp } from '../../context/AppContext';
 import { apiClient } from '../../api/client';
 import { ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
@@ -17,6 +18,10 @@ interface JobPostFormProps {
 
 export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSuccess }) => {
   const { postNewJob, language, companyName } = useEmployer();
+  // The server refuses a posting from an unverified account. Checking here
+  // means the refusal arrives before three steps of form, not after them.
+  const { userProfile } = useApp();
+  const isVerified = !!userProfile?.isVerified;
   const [step, setStep] = useState(1);
   
   // Step 1 State
@@ -122,6 +127,16 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
   };
 
   const handleSubmit = async () => {
+    if (!isVerified) {
+      showToast(
+        language === 'ru'
+          ? 'Ваши документы ещё не подтверждены — объявление опубликовать нельзя.'
+          : language === 'en'
+          ? 'Your documents have not been verified yet, so the posting cannot go up.'
+          : "Hujjatlaringiz hali tasdiqlanmagan — e'lon joylab bo'lmaydi.",
+      );
+      return;
+    }
     if (!addressLine || !city) {
       showToast(language === 'uz' ? "Manzilni kiriting!" : "Enter address!");
       return;

@@ -63,12 +63,12 @@ def apply_to_job(
     *,
     db: Session = Depends(deps.get_db),
     id: str,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    # Being a worker is no longer enough: the documents have to have been
+    # checked. A worker turns up at a stranger's address, and the employer is
+    # entitled to know somebody looked at who that is.
+    current_user: models.User = Depends(deps.get_verified_worker),
 ) -> Any:
     job = _get_job_or_404(db, id)
-
-    if current_user.role != 'worker':
-        raise HTTPException(status_code=403, detail="Faqat ishchilar ariza topshira oladi")
 
     # Applying to a cancelled or finished posting was previously allowed.
     if job.status not in JobStatus.OPEN_STATUSES:

@@ -19,7 +19,10 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
   applyToJob,
   onApplied,
 }) => {
-  const { language } = useApp();
+  const { language, userProfile } = useApp();
+  // The server refuses an application from an unverified account. Saying so
+  // before the press is the difference between an explanation and a rejection.
+  const isVerified = !!userProfile?.isVerified;
   const t = translations[language];
   const queryClient = useContext(QueryClientContext);
   const [isStartedLocal, setIsStartedLocal] = useState<boolean>(
@@ -87,6 +90,18 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
 
   const handleApply = async () => {
     if (isSubmitting) return;
+    if (!isVerified) {
+      setConfirmingApply(false);
+      showToast(
+        language === 'ru'
+          ? 'Ваши документы ещё не подтверждены.'
+          : language === 'en'
+          ? 'Your documents have not been verified yet.'
+          : "Hujjatlaringiz hali tasdiqlanmagan.",
+        'error',
+      );
+      return;
+    }
     setIsSubmitting(true);
     try {
       const success = await applyToJob(selectedJob.id);
