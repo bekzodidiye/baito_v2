@@ -14,12 +14,10 @@ from app.services.escrow_service import EscrowService
 from app.services import job_days as job_days_service
 from app.models.job_day import JobDay, JobDayStatus
 from app.services.work_dates import get_job_dates_set  # noqa: F401  (re-exported)
+from app.services.scheduling import ACTIVE_APP_STATUSES, COMMITTED_APP_STATUSES, lock_worker_job
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-ACTIVE_APP_STATUSES = ['applied', 'hired', 'confirmed', 'in_progress', 'start_requested']
-COMMITTED_APP_STATUSES = ['hired', 'confirmed', 'in_progress', 'start_requested']
 
 
 class JobCompleteRequest(BaseModel):
@@ -64,10 +62,13 @@ def apply_to_job(
     id: str,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    job = _get_job_or_404(db, id)
-
     if current_user.role != 'worker':
         raise HTTPException(status_code=403, detail="Faqat ishchilar ariza topshira oladi")
+
+    # Serialize all requests for this worker, including applications to other
+    # postings and hires by other employers. The job lock also keeps the
+    # vacancy check consistent with hiring.
+    job = lock_worker_job(db, current_user.id, id)
 
     # Applying to a cancelled or finished posting was previously allowed.
     if job.status not in JobStatus.OPEN_STATUSES:
@@ -463,16 +464,8 @@ def complete_job(
             .first()
         )
         total_bonus = bonus_each * len(apps)
-        if not employer or (employer.balance or 0) < total_bonus:
-            available = (employer.balance or 0) if employer else 0
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    f"{len(apps)} ta ishchiga {bonus_each:,} so'mdan bonus uchun "
-                    f"{total_bonus:,} so'm kerak, balansingizda {available:,} so'm bor. "
-                    "Bonusni kamaytiring yoki hisobni to'ldiring."
-                ).replace(",", " "),
-            )
+        if not employer:
+            raise HTTPException(status_code=404, detail="Ish beruvchi topilmadi")
 
     # Whatever days were never ticked off one by one are settled here. A
     # posting finished in one go still owes each of its days: releasing once
@@ -615,16 +608,8 @@ def review_job(
             .first()
         )
         total_bonus = bonus_each * len(apps)
-        if not employer or (employer.balance or 0) < total_bonus:
-            available = (employer.balance or 0) if employer else 0
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    f"{len(apps)} ta ishchiga {bonus_each:,} so'mdan bonus uchun "
-                    f"{total_bonus:,} so'm kerak, balansingizda {available:,} so'm bor. "
-                    "Bonusni kamaytiring yoki hisobni to'ldiring."
-                ).replace(",", " "),
-            )
+        if not employer:
+            raise HTTPException(status_code=404, detail="Ish beruvchi topilmadi")
         employer.balance = (employer.balance or 0) - total_bonus
         db.add(employer)
 

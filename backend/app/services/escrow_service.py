@@ -25,8 +25,8 @@ class EscrowService:
         employer = (db.query(models.User).filter(models.User.id == employer_id)
                     .populate_existing()
                     .with_for_update().first())
-        if not employer or (employer.balance or 0) < amount_uzs:
-            raise HTTPException(status_code=400, detail="Ish beruvchi balansida yetarli mablag' mavjud emas (Escrow HOLD)")
+        if not employer:
+            raise HTTPException(status_code=404, detail="Ish beruvchi topilmadi")
 
         # Deduct and freeze
         employer.balance = (employer.balance or 0) - amount_uzs
