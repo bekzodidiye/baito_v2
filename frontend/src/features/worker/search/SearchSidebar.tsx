@@ -95,24 +95,22 @@ const SearchSidebarComponent: React.FC<SearchSidebarProps> = ({
 
       {/* Regions */}
       <div>
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="font-display font-bold text-sm text-brand-primary uppercase tracking-wider">{t.regions}</h3>
-          <button onClick={() => setShowRegionSelector(true)} className="text-[11px] text-brand-primary font-bold hover:underline cursor-pointer">
-            {t.otherRegions}
-          </button>
-        </div>
-        <div className="flex flex-col gap-1.5 max-h-[140px] overflow-y-auto pr-1 no-scrollbar border border-slate-50 p-2 rounded-xl bg-slate-50/50">
-          {REGIONS_LIST.map(loc => (
-            <button
-              key={loc}
-              onClick={() => setFilterLocation(loc)}
-              className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between cursor-pointer transition-all ${
-                filterLocation === loc ? 'bg-brand-primary text-white shadow-xs' : 'text-slate-600 hover:bg-white hover:text-slate-900'
-              }`}
-            >
-              <span className="truncate">{getRegionDisplayName(loc, language)}</span>
-            </button>
-          ))}
+        <h3 className="font-display font-bold text-sm text-brand-primary uppercase tracking-wider mb-3">{t.regions}</h3>
+        <div className="relative">
+          <select
+            value={filterLocation}
+            onChange={(e) => setFilterLocation(e.target.value)}
+            className="w-full bg-slate-50 hover:bg-slate-100/70 text-slate-700 text-xs font-semibold rounded-xl px-3 py-2.5 pr-8 border border-transparent focus:border-brand-primary/30 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all cursor-pointer appearance-none"
+          >
+            {REGIONS_LIST.map(loc => (
+              <option key={loc} value={loc}>
+                {getRegionDisplayName(loc, language)}
+              </option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+          </div>
         </div>
       </div>
 
