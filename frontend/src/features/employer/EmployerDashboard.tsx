@@ -23,7 +23,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
   const { postedJobs, applications, language } = useEmployer();
   
   // Stats
-  const activeJobsCount = postedJobs.filter(j => j.status !== 'completed').length;
+  const activeJobsCount = postedJobs.filter(j => !(['completed', 'cancelled', 'closed'].includes(j.status) && j.payoutStatus !== 'invoiced' && j.payoutStatus !== 'payment_declared')).length;
   const pendingApplicantsCount = applications.filter(a => a.status === 'applied').length;
   // These two were fixed at 1204 and 85 — an employer with no postings at all
   // was still shown 1,204 views and an 85% fill rate as their own figures.
