@@ -97,38 +97,14 @@ def test_losing_verification_takes_the_ability_with_it(client):
 
 # --- an employer posting -----------------------------------------------------
 
-def test_an_unverified_employer_cannot_post(client):
+def test_an_employer_can_post_regardless_of_verification(client):
     employer = make_user(role="employer", phone=_phone())
     _set_verified(employer.id, False)
-
-    login(client, employer)
-    resp = client.post("/api/v1/jobs", json=JOB_BODY)
-
-    assert resp.status_code == 403
-    assert "tasdiqlanmagan" in resp.json()["detail"]
-
-
-def test_a_verified_employer_still_can(client):
-    employer = make_user(role="employer", phone=_phone())
-    _set_verified(employer.id, True)
 
     login(client, employer)
     resp = client.post("/api/v1/jobs", json=JOB_BODY)
 
     assert resp.status_code == 200, resp.text
-
-
-def test_no_posting_is_created_when_it_is_refused(client):
-    from app.models.job import Job
-
-    employer = make_user(role="employer", phone=_phone())
-    _set_verified(employer.id, False)
-
-    login(client, employer)
-    client.post("/api/v1/jobs", json=JOB_BODY)
-
-    with SessionLocal() as db:
-        assert db.query(Job).filter(Job.employerId == employer.id).count() == 0
 
 
 # --- and the people doing the verifying ---------------------------------------
@@ -146,14 +122,3 @@ def test_an_administrator_is_not_held_up_by_it(client):
     resp = client.post("/api/v1/jobs", json=JOB_BODY)
 
     assert resp.status_code == 200, resp.text
-
-
-def test_the_refusal_says_what_to_do_about_it(client):
-    employer = make_user(role="employer", phone=_phone())
-    _set_verified(employer.id, False)
-
-    login(client, employer)
-    detail = client.post("/api/v1/jobs", json=JOB_BODY).json()["detail"]
-
-    # Not a bare "forbidden": the account can fix this, and is told so.
-    assert "Hujjat" in detail and "tasdiq" in detail.lower()
