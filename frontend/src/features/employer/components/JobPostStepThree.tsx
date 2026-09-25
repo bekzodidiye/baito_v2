@@ -88,7 +88,7 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
       <div className="flex flex-col gap-2">
         <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
           <MapPin size={14} className="text-brand-primary" />
-          {language === 'uz' ? "Shahar / Viloyat *" : "City / Region *"}
+          {language === 'uz' ? "Shahar / Viloyat *" : language === 'ru' ? "City / Region *" : "City / Region *"}
         </label>
         <select className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-extrabold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20" value={city} onChange={(e) => handleCityChange(e.target.value)}>
           {Object.keys(CITY_COORDINATES).map(c => <option key={c} value={c}>{c}</option>)}
@@ -114,13 +114,13 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
       <div className="flex flex-col gap-2 relative">
         <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
           <MapPin size={14} className="text-brand-primary" />
-          {language === 'uz' ? `Aniq manzil (Ko'cha nomi va bino/uy №) *` : "Exact Address & Building # *"}
+          {language === 'uz' ? `Aniq manzil (Ko'cha nomi va bino/uy №) *` : language === 'ru' ? 'Точный адрес (Название улицы и № здания/дома) *' : "Exact Address & Building # *"}
         </label>
         <div className="relative">
           <input
-              aria-label={language === 'uz' ? "Masalan: Ibn Sino ko'chasi, 17A" : "e.g. Ibn Sino street, 17A"}
+              aria-label={language === 'uz' ? "Masalan: Ibn Sino ko'chasi, 17A" : language === 'ru' ? "e.g. Ibn Sino street, 17A" : "e.g. Ibn Sino street, 17A"}
             type="text"
-            placeholder={language === 'uz' ? "Masalan: Ibn Sino ko'chasi, 17A" : "e.g. Ibn Sino street, 17A"}
+            placeholder={language === 'uz' ? "Masalan: Ibn Sino ko'chasi, 17A" : language === 'ru' ? "e.g. Ibn Sino street, 17A" : "e.g. Ibn Sino street, 17A"}
             className="w-full bg-slate-50 border rounded-xl px-4 py-3 pl-10 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"
             value={addressLine}
             onChange={(e) => { setAddressLine(e.target.value); setShowDropdown(true); }}
@@ -153,14 +153,14 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5">
             <Compass size={14} className="text-brand-primary" />
-            <span>{language === 'uz' ? "Yandex Xarita *" : "Yandex Map *"}</span>
+            <span>{language === 'uz' ? "Yandex Xarita *" : language === 'ru' ? "Yandex Map *" : "Yandex Map *"}</span>
           </label>
           <span className="text-[10px] text-brand-primary font-extrabold px-2 py-0.5 bg-brand-primary/10 rounded-full">Yandex Maps Official</span>
         </div>
 
         <div className="flex items-center gap-1.5 p-2.5 bg-purple-50/70 border border-purple-100 rounded-xl text-purple-900 text-xs font-semibold">
           <Info size={15} className="text-brand-primary shrink-0" />
-          <span>{language === 'uz' ? "Maslahat: Xaritadagi pin'ni sudrab yoki bosib aniq bino va eshikni belgilang" : "Tip: Drag pin to mark entrance"}</span>
+          <span>{language === 'uz' ? "Maslahat: Xaritadagi pin'ni sudrab yoki bosib aniq bino va eshikni belgilang" : language === 'ru' ? "Tip: Drag pin to mark entrance" : "Tip: Drag pin to mark entrance"}</span>
         </div>
 
         <JobLocationYandexMap lat={currentCoords.lat} lon={currentCoords.lon} city={city} onLocationSelect={handleLocationSelectFromMap} />

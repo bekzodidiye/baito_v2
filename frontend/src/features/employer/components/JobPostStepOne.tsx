@@ -73,16 +73,16 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
       <div className="flex flex-col gap-2">
         <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
           <Briefcase size={14} className="text-brand-primary" />
-          {language === 'uz' ? "Ish / Vazifa nomi *" : "Job Title *"}
+          {language === 'uz' ? "Ish / Vazifa nomi *" : language === 'ru' ? "Job Title *" : "Job Title *"}
         </label>
         <input
-              aria-label={language === 'uz' ? "Masalan: Omborda yuk tashuvchi / Kassir" : "e.g. Warehouse Loader"} type="text" placeholder={language === 'uz' ? "Masalan: Omborda yuk tashuvchi / Kassir" : "e.g. Warehouse Loader"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20" value={title} onChange={(e) => setTitle(e.target.value)} />
+              aria-label={language === 'uz' ? "Masalan: Omborda yuk tashuvchi / Kassir" : language === 'ru' ? "e.g. Warehouse Loader" : "e.g. Warehouse Loader"} type="text" placeholder={language === 'uz' ? "Masalan: Omborda yuk tashuvchi / Kassir" : language === 'ru' ? "e.g. Warehouse Loader" : "e.g. Warehouse Loader"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20" value={title} onChange={(e) => setTitle(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-2">
         <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
           <ImageIcon size={14} className="text-brand-primary" />
-          {language === 'uz' ? "Ish rasmi (Banner / Rasm)" : "Job Image"}
+          {language === 'uz' ? "Ish rasmi (Banner / Rasm)" : language === 'ru' ? "Job Image" : "Job Image"}
         </label>
         {imageUrl ? (
           <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-slate-200 group">
@@ -95,7 +95,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
         ) : (
           <div {...clickable(() => fileInputRef.current?.click())} className="w-full h-32 border-2 border-dashed border-slate-200 bg-slate-50/60 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-100/50">
             <Upload size={22} className="text-brand-primary/70" />
-            <span className="text-xs font-bold text-slate-600">{language === 'uz' ? "Rasm yuklash uchun bosing" : "Click to upload image"}</span>
+            <span className="text-xs font-bold text-slate-600">{language === 'uz' ? "Rasm yuklash uchun bosing" : language === 'ru' ? "Click to upload image" : "Click to upload image"}</span>
           </div>
         )}
         <input
@@ -105,14 +105,14 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
       <div className="flex flex-col gap-2">
         <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
           <Building size={14} className="text-brand-primary" />
-          {language === 'uz' ? "Kategoriya *" : "Category *"}
+          {language === 'uz' ? "Kategoriya *" : language === 'ru' ? "Category *" : "Category *"}
         </label>
         {/* Fourteen categories as chips wrapped to four rows and pushed the rest
             of the form off the screen. Exactly one can be picked, which is what
             a select is for — and the city field further down the same form
             already uses one. */}
         <select
-          aria-label={language === 'uz' ? 'Kategoriya' : 'Category'}
+          aria-label={language === 'uz' ? 'Kategoriya' : language === 'ru' ? 'Category' : 'Category'}
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-extrabold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"
@@ -127,7 +127,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
       <div className="flex flex-col gap-2.5">
         <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
           <TagIcon size={14} className="text-brand-primary" />
-          {language === 'uz' ? "Ish Teglari (Tags)" : "Job Tags"}
+          {language === 'uz' ? "Ish Teglari (Tags)" : language === 'ru' ? "Job Tags" : "Job Tags"}
         </label>
         {/* These drive the badges on the shift card. Without saying so, an
             employer has no way to know that #TushlikBilan is what puts "🍲
@@ -135,7 +135,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
         <p className="text-[11px] text-slate-400 font-medium -mt-1">
           {language === 'uz'
             ? "Tanlanganlari e'lon kartochkasida ko'rinadi — masalan #TushlikBilan → 🍲 Tushlik"
-            : 'The ones you pick appear as badges on the shift card'}
+            : language === 'ru' ? 'The ones you pick appear as badges on the shift card' : 'The ones you pick appear as badges on the shift card'}
         </p>
         <div className="flex flex-wrap gap-2">
           {PRESET_TAGS.map(t => {
@@ -147,34 +147,34 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
         </div>
         <div className="flex items-center gap-2 mt-1">
           <input
-              aria-label={language === 'uz' ? "Yangi teg qo'shish (#Student, #Bo'shVaqt)..." : "Add custom tag..."} type="text" placeholder={language === 'uz' ? "Yangi teg qo'shish (#Student, #Bo'shVaqt)..." : "Add custom tag..."} className="flex-1 bg-slate-50 border rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={customTag} onChange={(e) => setCustomTag(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddCustomTag(e)} />
-          <button type="button" onClick={() => handleAddCustomTag()} className="px-3.5 py-2 bg-brand-primary text-white text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer"><Plus size={14} /> {language === 'uz' ? "Qo'shish" : "Add"}</button>
+              aria-label={language === 'uz' ? "Yangi teg qo'shish (#Student, #Bo'shVaqt)..." : language === 'ru' ? "Add custom tag..." : "Add custom tag..."} type="text" placeholder={language === 'uz' ? "Yangi teg qo'shish (#Student, #Bo'shVaqt)..." : language === 'ru' ? "Add custom tag..." : "Add custom tag..."} className="flex-1 bg-slate-50 border rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={customTag} onChange={(e) => setCustomTag(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddCustomTag(e)} />
+          <button type="button" onClick={() => handleAddCustomTag()} className="px-3.5 py-2 bg-brand-primary text-white text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer"><Plus size={14} /> {language === 'uz' ? "Qo'shish" : language === 'ru' ? "Add" : "Add"}</button>
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
         <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
           <Building size={14} className="text-brand-primary" />
-          {language === 'uz' ? "Tashkilot nomi (ixtiyoriy)" : "Company Name (Optional)"}
+          {language === 'uz' ? "Tashkilot nomi (ixtiyoriy)" : language === 'ru' ? "Company Name (Optional)" : "Company Name (Optional)"}
         </label>
         <input
-              aria-label="Tashkilot nomi" type="text" placeholder={language === 'uz' ? "Tashkilot nomi (bo'sh qolsa ismingiz ko'rsatiladi)" : "Company name (optional)"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={company} onChange={(e) => setCompany(e.target.value)} />
+              aria-label="Tashkilot nomi" type="text" placeholder={language === 'uz' ? "Tashkilot nomi (bo'sh qolsa ismingiz ko'rsatiladi)" : language === 'ru' ? "Company name (optional)" : "Company name (optional)"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={company} onChange={(e) => setCompany(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-2">
         <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
           <ClipboardList size={14} className="text-brand-primary" />
-          {language === 'uz' ? "Ish vazifalari *" : "Job Responsibilities *"}
+          {language === 'uz' ? "Ish vazifalari *" : language === 'ru' ? "Job Responsibilities *" : "Job Responsibilities *"}
         </label>
-        <textarea rows={3} placeholder={language === 'uz' ? "1. Yuklarni tushirish va joylash..." : "1. Unloading goods"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={responsibilities} onChange={(e) => setResponsibilities(e.target.value)} />
+        <textarea rows={3} placeholder={language === 'uz' ? "1. Yuklarni tushirish va joylash..." : language === 'ru' ? "1. Unloading goods" : "1. Unloading goods"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={responsibilities} onChange={(e) => setResponsibilities(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-2">
         <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
           <FileText size={14} className="text-brand-primary" />
-          {language === 'uz' ? "Qo'shimcha ma'lumot" : "Additional Description"}
+          {language === 'uz' ? "Qo'shimcha ma'lumot" : language === 'ru' ? "Additional Description" : "Additional Description"}
         </label>
-        <textarea rows={2} placeholder={language === 'uz' ? "Ish sharoitlari haqida..." : "General info..."} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={description} onChange={(e) => setDescription(e.target.value)} />
+        <textarea rows={2} placeholder={language === 'uz' ? "Ish sharoitlari haqida..." : language === 'ru' ? "General info..." : "General info..."} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
     </motion.div>
   );

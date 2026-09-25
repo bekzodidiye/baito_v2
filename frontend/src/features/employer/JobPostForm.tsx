@@ -101,21 +101,20 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
   const handleNext = () => {
     if (step === 1) {
       if (!title.trim() || title.trim().length < 3) {
-        showToast(language === 'uz' ? "Ish nomi kamida 3 ta belgidan iborat bo'lishi kerak!" : "Job title must be at least 3 characters!");
+        showToast(language === 'uz' ? "Ish nomi kamida 3 ta belgidan iborat bo'lishi kerak!" : language === 'ru' ? "Job title must be at least 3 characters!" : "Job title must be at least 3 characters!");
         return;
       }
       if (!category) {
-        showToast(language === 'uz' ? "Kategoriyani tanlang!" : "Select category!");
+        showToast(language === 'uz' ? "Kategoriyani tanlang!" : language === 'ru' ? "Select category!" : "Select category!");
         return;
       }
-      const rawDesc = (description || responsibilities || '').trim();
-      if (!rawDesc || rawDesc.length < 10) {
-        showToast(language === 'uz' ? "Ish vazifalarini batafsilroq yozing (kamida 10 ta belgi)!" : "Please provide more details in responsibilities (at least 10 chars)!");
+      if (!responsibilities.trim() || responsibilities.trim().length < 10) {
+        showToast(language === 'uz' ? "Ish vazifalarini batafsilroq yozing (kamida 10 ta belgi)!" : language === 'ru' ? "Please provide more details in responsibilities (at least 10 chars)!" : "Please provide more details in responsibilities (at least 10 chars)!");
         return;
       }
     }
-    if (step === 2 && (!workDate || !startTime || !endTime || !hourlyRate)) {
-      showToast(language === 'uz' ? "Ish sanasi, vaqti va to'lov summasini kiriting!" : "Enter date, time and salary!");
+    if (step === 2 && (!workDate || !startTime || !endTime || !hourlyRate || Number(hourlyRate) <= 0 || !neededWorkers || Number(neededWorkers) <= 0)) {
+      showToast(language === 'uz' ? "Ish sanasi, vaqti, ishchilar soni va to'lov summasini to'g'ri kiriting!" : language === 'ru' ? "Enter valid date, time, workers count and salary!" : "Enter valid date, time, workers count and salary!");
       return;
     }
     setStep(s => s + 1);
@@ -128,7 +127,7 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
 
   const handleSubmit = async () => {
     if (!addressLine || !city) {
-      showToast(language === 'uz' ? "Manzilni kiriting!" : "Enter address!");
+      showToast(language === 'uz' ? "Manzilni kiriting!" : language === 'ru' ? "Enter address!" : "Enter address!");
       return;
     }
 
@@ -163,7 +162,7 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
       });
       onSubmitSuccess();
     } catch (err: any) {
-      const msg = err?.message || (language === 'uz' ? "Serverda xatolik yuz berdi. Qaytadan urinib ko'ring." : "An error occurred. Please try again.");
+      const msg = err?.message || (language === 'uz' ? "Serverda xatolik yuz berdi. Qaytadan urinib ko'ring." : language === 'ru' ? "An error occurred. Please try again." : "An error occurred. Please try again.");
       showToast(msg);
     } finally {
       setIsSubmitting(false);
@@ -220,17 +219,17 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
             {isSubmitting ? (
               <>
                 <Loader2 size={18} className="animate-spin stroke-[2.5]" />
-                <span>{language === 'uz' ? "Yuborilmoqda..." : "Publishing..."}</span>
+                <span>{language === 'uz' ? "Yuborilmoqda..." : language === 'ru' ? "Publishing..." : "Publishing..."}</span>
               </>
             ) : step < 3 ? (
               <>
-                <span>{language === 'uz' ? 'Davom etish' : 'Continue'}</span>
+                <span>{language === 'uz' ? 'Davom etish' : language === 'ru' ? 'Continue' : 'Continue'}</span>
                 <ArrowRight size={18} className="stroke-[2.5]" />
               </>
             ) : (
               <>
                 <CheckCircle2 size={18} className="stroke-[2.5]" />
-                <span>{language === 'uz' ? 'E\'lon qilish' : 'Publish'}</span>
+                <span>{language === 'uz' ? 'E\'lon qilish' : language === 'ru' ? 'Опубликовать' : 'Publish'}</span>
               </>
             )}
           </button>

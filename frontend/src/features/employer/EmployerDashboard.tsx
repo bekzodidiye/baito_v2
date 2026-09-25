@@ -105,7 +105,7 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
                 }`}
               >
                 <span className={`text-[11px] font-bold uppercase tracking-wider mb-1 ${isActive ? 'text-white/90' : 'text-slate-400'}`}>
-                  {d.isToday ? (language === 'uz' ? 'Bugun' : 'Сегодня') : d.dayStr}
+                  {d.isToday ? (language === 'uz' ? 'Bugun' : language === 'ru' ? 'Сегодня' : 'Today') : d.dayStr}
                 </span>
                 <span className={`font-display font-black text-2xl leading-none ${isActive ? 'text-white' : 'text-slate-800'}`}>
                   {d.dateNum}

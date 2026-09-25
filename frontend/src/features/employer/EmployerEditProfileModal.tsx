@@ -46,7 +46,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      showToast(language === 'uz' ? "Kompaniya nomini kiriting" : "Введите название компании");
+      showToast(language === 'uz' ? "Kompaniya nomini kiriting" : language === 'ru' ? "Введите название компании" : "Enter company name");
       return;
     }
     
@@ -59,10 +59,10 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
         region: region.trim(),
         avatarUrl: currentAvatarUrl,
       });
-      showToast(language === 'uz' ? "Profil yangilandi!" : "Профиль обновлен!");
+      showToast(language === 'uz' ? "Profil yangilandi!" : language === 'ru' ? "Профиль обновлен!" : "Profile updated!");
       onClose();
     } catch (err) {
-      showToast(language === 'uz' ? "Xatolik yuz berdi" : "Произошла ошибка");
+      showToast(language === 'uz' ? "Xatolik yuz berdi" : language === 'ru' ? "Произошла ошибка" : "An error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -88,7 +88,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
           >
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
               <h3 className="font-display font-black text-slate-800 text-sm">
-                {language === 'uz' ? "Profilni tahrirlash" : "Редактировать профиль"}
+                {language === 'uz' ? "Profilni tahrirlash" : language === 'ru' ? "Редактировать профиль" : "Edit Profile"}
               </h3>
               <button 
                 onClick={onClose}
@@ -102,10 +102,10 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">
-                  {language === 'uz' ? "Kompaniya nomi" : "Название компании"}
+                  {language === 'uz' ? "Kompaniya nomi" : language === 'ru' ? "Название компании" : "Company name"}
                 </label>
                 <input
-              aria-label={language === 'uz' ? "Kompaniya nomi" : "Название компании"} 
+              aria-label={language === 'uz' ? "Kompaniya nomi" : language === 'ru' ? "Название компании" : "Company name"} 
                   type="text"
                   required
                   value={name}
@@ -117,10 +117,10 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
 
               <div className="space-y-1">
                 <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">
-                  {language === 'uz' ? "Telefon raqam" : "Номер телефона"}
+                  {language === 'uz' ? "Telefon raqam" : language === 'ru' ? "Номер телефона" : "Phone number"}
                 </label>
                 <input
-              aria-label={language === 'uz' ? "Telefon raqam" : "Номер телефона"} 
+              aria-label={language === 'uz' ? "Telefon raqam" : language === 'ru' ? "Номер телефона" : "Phone number"} 
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -168,7 +168,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
                   disabled={isSubmitting}
                   className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {language === 'uz' ? "Bekor qilish" : "Отмена"}
+                  {language === 'uz' ? "Bekor qilish" : language === 'ru' ? "Отмена" : "Cancel"}
                 </button>
                 <button 
                   type="submit"
@@ -180,7 +180,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
                   ) : (
                     <Check size={14} className="stroke-[2.5]" />
                   )}
-                  <span>{language === 'uz' ? "Saqlash" : "Сохранить"}</span>
+                  <span>{language === 'uz' ? "Saqlash" : language === 'ru' ? "Сохранить" : "Save"}</span>
                 </button>
               </div>
             </form>
