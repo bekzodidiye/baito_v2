@@ -113,7 +113,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                   12 soat muddatgacha
                 </div>
                 <div className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg text-[13px] font-bold flex items-center gap-1.5 border border-indigo-100/50">
-                  <Users size={16} strokeWidth={2.5} /> {language === 'uz' ? 'Ishchilar:' : 'Workers:'} {hired}/{vac}
+                  <Users size={16} strokeWidth={2.5} /> {language === 'uz' ? 'Ishchilar:' : language === 'ru' ? 'Workers:' : 'Workers:'} {hired}/{vac}
                 </div>
                 <div className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-[13px] font-bold">
                   #Tezkor
@@ -130,7 +130,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                  </div>
                  <div className="min-w-0">
                     <span className="text-[12px] font-semibold text-slate-400 block mb-0.5">
-                      {language === 'uz' ? 'Joylashuv' : 'Локация'}
+                      {language === 'uz' ? 'Joylashuv' : language === 'ru' ? 'Локация' : 'Location'}
                     </span>
                     <span className="text-[14px] font-bold text-[#1A1A40] truncate block">
                       {job.rawLocation || job.location}
@@ -144,7 +144,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                 <div className="p-3.5 border border-slate-200/80 rounded-[16px] flex flex-col gap-1.5 bg-white">
                   <div className="flex items-center gap-1.5 text-slate-400">
                     <span className="text-lg leading-none font-bold">$</span>
-                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Maosh' : 'Зарплата'}</span>
+                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Maosh' : language === 'ru' ? 'Зарплата' : 'Salary'}</span>
                   </div>
                   <div className="text-[15px] font-black text-[#1A1A40]">{job.salary}</div>
                 </div>
@@ -153,7 +153,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                 <div className="p-3.5 border border-slate-200/80 rounded-[16px] flex flex-col gap-1.5 bg-white">
                   <div className="flex items-center gap-1.5 text-slate-400">
                     <Zap size={18} strokeWidth={2.2} />
-                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Soatlik' : 'Почасовая'}</span>
+                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Soatlik' : language === 'ru' ? 'Почасовая' : 'Hourly'}</span>
                   </div>
                   <div className="text-[15px] font-black text-[#1A1A40]">
                     {job.salary}
@@ -167,7 +167,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                 <div className="p-3.5 border border-slate-200/80 rounded-[16px] flex flex-col gap-1.5 bg-white">
                   <div className="flex items-center gap-1.5 text-slate-400">
                     <Calendar size={18} strokeWidth={2.2} />
-                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Sana' : 'Дата'}</span>
+                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Sana' : language === 'ru' ? 'Дата' : 'Date'}</span>
                   </div>
                   <div className="text-[15px] font-black text-[#1A1A40]">{job.workDate || '2026-08-22'}</div>
                 </div>
@@ -176,7 +176,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                 <div className="p-3.5 border border-slate-200/80 rounded-[16px] flex flex-col gap-1.5 bg-white">
                   <div className="flex items-center gap-1.5 text-slate-400">
                     <Clock size={18} strokeWidth={2.2} />
-                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Vaqt' : 'Время'}</span>
+                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Vaqt' : language === 'ru' ? 'Время' : 'Time'}</span>
                   </div>
                   <div className="text-[15px] font-black text-[#1A1A40]">
                     {job.workTime || '09:00 - 18:00'}
@@ -188,7 +188,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
               {(job.hiredWorkers || []).length > 0 && (
                 <div className="mb-8">
                   <h3 className="text-[17px] font-black text-[#1A1A40] mb-4">
-                    {language === 'uz' ? 'Qabul qilingan ishchilar' : 'Принятые работники'}
+                    {language === 'uz' ? 'Qabul qilingan ishchilar' : language === 'ru' ? 'Принятые работники' : 'Hired workers'}
                   </h3>
                   <div className="space-y-3">
                     {job.hiredWorkers!.map((worker) => (
@@ -214,7 +214,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
               {/* Responsibilities */}
               <div className="mb-8">
                 <h3 className="text-[17px] font-black text-[#1A1A40] mb-4">
-                  {language === 'uz' ? 'Vazifalar' : 'Обязанности'}
+                  {language === 'uz' ? 'Vazifalar' : language === 'ru' ? 'Обязанности' : 'Responsibilities'}
                 </h3>
                 <div className="bg-white p-5 rounded-[16px] border border-slate-200/80 shadow-sm">
                   <ul className="space-y-4">
@@ -231,7 +231,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
               {/* Requirements */}
               <div>
                 <h3 className="text-[17px] font-black text-[#1A1A40] mb-4">
-                  {language === 'uz' ? 'Talablar' : 'Требования'}
+                  {language === 'uz' ? 'Talablar' : language === 'ru' ? 'Требования' : 'Requirements'}
                 </h3>
                 <div className="bg-white p-5 rounded-[16px] border border-slate-200/80 shadow-sm">
                   <ul className="space-y-4">
@@ -258,13 +258,13 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                     className="flex-1 py-4 px-4 bg-rose-50 text-rose-600 font-bold rounded-xl text-[15px] flex items-center justify-center gap-2 cursor-pointer border border-rose-100 active:scale-[0.98] transition-all"
                   >
                     <Trash2 size={20} />
-                    <span>{language === 'uz' ? "O'chirish" : 'Удалить'}</span>
+                    <span>{language === 'uz' ? "O'chirish" : language === 'ru' ? 'Удалить' : 'Delete'}</span>
                   </button>
                   <button
                     onClick={onClose}
                     className="flex-1 py-4 px-6 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
                   >
-                    {language === 'uz' ? 'Yopish' : 'Закрыть'}
+                    {language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                   </button>
                 </>
               ) : job.status === 'in_progress' && onComplete ? (
@@ -273,13 +273,13 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                     onClick={onClose}
                     className="w-1/3 py-4 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
                   >
-                    {language === 'uz' ? 'Yopish' : 'Закрыть'}
+                    {language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                   </button>
                   <button
                     onClick={() => { onComplete(job.id); onClose(); }}
                     className="w-2/3 py-4 bg-brand-primary text-white font-black rounded-xl text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 cursor-pointer active:scale-[0.98] transition-all"
                   >
-                    {language === 'uz' ? 'Ishni yakunlash' : 'Завершить работу'}
+                    {language === 'uz' ? 'Ishni yakunlash' : language === 'ru' ? 'Завершить работу' : 'Complete job'}
                     <ChevronRight size={20} />
                   </button>
                 </>
@@ -289,13 +289,13 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                     onClick={onClose}
                     className="w-1/3 py-4 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
                   >
-                    {language === 'uz' ? 'Yopish' : 'Закрыть'}
+                    {language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                   </button>
                   <button
                     onClick={() => { onConfirmStart(job.id); onClose(); }}
                     className="w-2/3 py-4 bg-amber-500 text-white font-black rounded-xl text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 cursor-pointer active:scale-[0.98] transition-all"
                   >
-                    {language === 'uz' ? 'Boshlashni tasdiqlash' : 'Подтвердить начало'}
+                    {language === 'uz' ? 'Boshlashni tasdiqlash' : language === 'ru' ? 'Подтвердить начало' : 'Confirm start'}
                     <ChevronRight size={20} />
                   </button>
                 </>
@@ -304,7 +304,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                   onClick={onClose}
                   className="w-full py-4 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
                 >
-                  {language === 'uz' ? 'Yopish' : 'Закрыть'}
+                  {language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                 </button>
               )}
             </div>

@@ -139,14 +139,14 @@ export const MandatoryReviewModal: React.FC<MandatoryReviewModalProps> = ({
               </div>
               <span className="text-xs font-bold text-slate-700">
                 {rating === 5
-                  ? (language === 'uz' ? "A'lo darajada (5/5)" : "Отлично (5/5)")
+                  ? (language === 'uz' ? "A'lo darajada (5/5)" : language === 'ru' ? "Отлично (5/5)" : "Отлично (5/5)")
                   : rating === 4
-                  ? (language === 'uz' ? "Yaxshi (4/5)" : "Хорошо (4/5)")
+                  ? (language === 'uz' ? "Yaxshi (4/5)" : language === 'ru' ? "Хорошо (4/5)" : "Хорошо (4/5)")
                   : rating === 3
-                  ? (language === 'uz' ? "Qoniqarli (3/5)" : "Удовлетворительно (3/5)")
+                  ? (language === 'uz' ? "Qoniqarli (3/5)" : language === 'ru' ? "Удовлетворительно (3/5)" : "Удовлетворительно (3/5)")
                   : rating === 2
-                  ? (language === 'uz' ? "Yomon (2/5)" : "Плохо (2/5)")
-                  : (language === 'uz' ? "Juda yomon (1/5)" : "Очень плохо (1/5)")}
+                  ? (language === 'uz' ? "Yomon (2/5)" : language === 'ru' ? "Плохо (2/5)" : "Плохо (2/5)")
+                  : (language === 'uz' ? "Juda yomon (1/5)" : language === 'ru' ? "Очень плохо (1/5)" : "Очень плохо (1/5)")}
               </span>
             </div>
 
@@ -159,7 +159,7 @@ export const MandatoryReviewModal: React.FC<MandatoryReviewModalProps> = ({
                   <span className="text-rose-500 font-black">*</span>
                 </span>
                 <span className={`text-[11px] font-semibold ${isReviewValid ? 'text-emerald-600' : 'text-slate-400'}`}>
-                  {review.trim().length} / {language === 'uz' ? 'min 3 ta belgi' : 'мин 3 символа'}
+                  {review.trim().length} / {language === 'uz' ? 'min 3 ta belgi' : language === 'ru' ? 'мин 3 символа' : 'мин 3 символа'}
                 </span>
               </label>
               <textarea
@@ -177,7 +177,7 @@ export const MandatoryReviewModal: React.FC<MandatoryReviewModalProps> = ({
               />
               {!isReviewValid && review.length > 0 && (
                 <p className="text-xs text-rose-500 font-medium">
-                  {language === 'uz' ? "Sharh kamida 3 ta belgidan iborat bo'lishi shart" : "Отзыв должен содержать минимум 3 символа"}
+                  {language === 'uz' ? "Sharh kamida 3 ta belgidan iborat bo'lishi shart" : language === 'ru' ? "Отзыв должен содержать минимум 3 символа" : "Отзыв должен содержать минимум 3 символа"}
                 </p>
               )}
             </div>
@@ -229,7 +229,7 @@ export const MandatoryReviewModal: React.FC<MandatoryReviewModalProps> = ({
               {isSubmitting ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
-                  {language === 'uz' ? 'Yuborilmoqda...' : 'Отправка...'}
+                  {language === 'uz' ? 'Yuborilmoqda...' : language === 'ru' ? 'Отправка...' : 'Отправка...'}
                 </>
               ) : (
                 language === 'uz' ? 'Sharhni yuborish va tasdiqlash' : language === 'ru' ? 'Отправить отзыв и подтвердить' : 'Submit Review'

@@ -49,7 +49,7 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
             className="px-4 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl text-white text-xs font-bold transition-all active:scale-95 cursor-pointer border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex items-center gap-2"
           >
             <Activity size={14} className="stroke-[2.5]" />
-            {language === 'uz' ? "Statistika" : "Аналитика"}
+            {language === 'uz' ? "Statistika" : language === 'ru' ? "Аналитика" : "Analytics"}
           </button>
         </div>
 

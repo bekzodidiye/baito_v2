@@ -182,7 +182,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
           ) : (
             <span className="w-full py-2 rounded-lg bg-blue-50 text-blue-600 text-[12px] font-bold flex items-center justify-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-              {language === 'uz' ? "Kutilyapti" : "Ожидание"}
+              {language === 'uz' ? "Kutilyapti" : language === 'ru' ? "Ожидание" : "Waiting"}
             </span>
           )}
         </div>

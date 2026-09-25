@@ -151,7 +151,7 @@ export const EmployerAnalytics: React.FC = () => {
               {language === 'uz' ? "Oxirgi 7 kun ichida tushgan arizalar dinamikasi" : language === 'ru' ? "Динамика поступивших заявок за последние 7 дней" : "Dynamics of applications received over the last 7 days"}
             </p>
           </div>
-          <button onClick={() => window.dispatchEvent(new CustomEvent("global-toast", { detail: language === 'uz' ? "Statistika har kuni soat 00:00 da yangilanadi" : "Статистика обновляется ежедневно" }))} className="text-slate-400 hover:text-brand-primary transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" title="Ma'lumot">
+          <button onClick={() => window.dispatchEvent(new CustomEvent("global-toast", { detail: language === 'uz' ? "Statistika har kuni soat 00:00 da yangilanadi" : language === 'ru' ? "Статистика обновляется ежедневно" : "Статистика обновляется ежедневно" }))} className="text-slate-400 hover:text-brand-primary transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" title="Ma'lumot">
             <Info size={18} />
           </button>
         </div>
