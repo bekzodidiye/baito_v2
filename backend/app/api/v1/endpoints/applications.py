@@ -285,10 +285,8 @@ def hire_applicant(
     # exists to prevent.
     day_count = max(1, len(days))
     fee_per_day = fee_for(wage, job_fee_percent(db, job))
-    total_due = (wage + fee_per_day) * day_count
-    if wage > 0:
-        employer = db.query(models.User).filter(models.User.id == job.employerId).first()
-        available = (employer.balance or 0) if employer else 0
+    day_count = max(1, len(days))
+    fee_per_day = fee_for(wage, job_fee_percent(db, job))
 
 
     escrow_held = False

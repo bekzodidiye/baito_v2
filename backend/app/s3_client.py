@@ -5,7 +5,7 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 try:
-    import boto3
+    import boto3  # noqa: F401
     from botocore.exceptions import ClientError
     HAS_BOTO3 = True
 except ImportError:
@@ -20,7 +20,8 @@ class LocalStorageClient:
         os.makedirs(self.upload_dir, exist_ok=True)
 
     def upload_fileobj(self, file_obj, bucket, filename, ExtraArgs=None):
-        import os, shutil
+        import os
+        import shutil
         filepath = os.path.join(self.upload_dir, filename)
         with open(filepath, "wb") as f:
             shutil.copyfileobj(file_obj, f)

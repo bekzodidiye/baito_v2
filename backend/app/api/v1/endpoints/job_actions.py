@@ -546,7 +546,6 @@ def complete_job(
             .filter(models.User.id.in_([job.employerId]))
             .first()
         )
-        total_bonus = bonus_each * len(apps)
         if not employer:
             raise HTTPException(status_code=404, detail="Ish beruvchi topilmadi")
 
