@@ -271,7 +271,9 @@ def decide_escrow(
         refunded = EscrowService.refund_funds(db, job_id=job.id)
         # Every outstanding day, not just one of them.
         tx = refunded[-1]
-        refund_total = sum(t.amount // 100 for t in refunded)
+        # What goes back is what came out: the wage and the commission the
+        # employer was charged on top of it.
+        refund_total = sum((t.amount + (t.platformFee or 0)) // 100 for t in refunded)
         db.add(models.Notification(
             userId=job.employerId,
             title="Mablag' qaytarildi",

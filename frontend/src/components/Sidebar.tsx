@@ -51,6 +51,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
     { id: 'employer-post', label: language === 'uz' ? "E'lon joylash" : language === 'ru' ? "Новое объявление" : "Post Job", icon: PlusCircle, screen: 'employer-post' as ScreenType, active: currentScreen === 'employer-post' },
     { id: 'employer-applicants', label: language === 'uz' ? "Arizalar" : language === 'ru' ? "Заявки" : "Applicants", icon: FileText, screen: 'employer-applicants' as ScreenType, active: currentScreen === 'employer-applicants' },
     { id: 'employer-chats', label: language === 'uz' ? "Suhbatlar" : language === 'ru' ? "Чаты" : "Chats", icon: MessageSquare, screen: 'employer-chats' as ScreenType, active: currentScreen === 'employer-chats' },
+    // An employer gets notified about the same things a worker does - someone
+    // applied, a shift was confirmed, an invoice was issued - and the screen
+    // and its unread count were already built and already reachable at
+    // /notifications for any signed-in role. Only the way in was missing.
+    { id: 'notifications', label: language === 'uz' ? "Bildirishnomalar" : language === 'ru' ? "Уведомления" : "Notifications", icon: Bell, screen: 'notifications' as ScreenType, active: currentScreen === 'notifications', badge: unreadNotificationsCount },
   ];
 
   const activeNavItems = isEmployer ? employerNav : workerNav;

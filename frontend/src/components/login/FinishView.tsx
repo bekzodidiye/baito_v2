@@ -101,7 +101,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
               onChange={(e) => setRegPhone(e.target.value)}
               disabled={isCodeSent}
               placeholder={t.phonePlaceholder}
-              className={`w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-24 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs ${isCodeSent ? 'text-slate-400 bg-slate-50 border-transparent cursor-not-allowed' : 'text-slate-755'}`}
+              className={`w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-24 text-xs font-semibold focus:border-brand-primary/40 focus:ring-2 focus:ring-brand-primary/20 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all placeholder:text-slate-350 shadow-3xs ${isCodeSent ? 'text-slate-400 bg-slate-50 border-transparent cursor-not-allowed' : 'text-slate-755'}`}
             />
             {!isCodeSent && (
               <button
@@ -143,7 +143,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
                 onChange={(e) => setRegCode(e.target.value)}
                 placeholder="1234"
                 maxLength={6}
-                className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-4 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+                className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-4 text-xs font-semibold focus:border-brand-primary/40 focus:ring-2 focus:ring-brand-primary/20 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
               />
             </div>
             <div className="flex justify-end pt-1 pr-1">
@@ -175,7 +175,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
               value={regPassword}
               onChange={(e) => setRegPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-11 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-11 text-xs font-semibold focus:border-brand-primary/40 focus:ring-2 focus:ring-brand-primary/20 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
             />
             <button
               type="button"
@@ -203,7 +203,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
               value={regConfirmPassword}
               onChange={(e) => setRegConfirmPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-11 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-11 text-xs font-semibold focus:border-brand-primary/40 focus:ring-2 focus:ring-brand-primary/20 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
             />
             <button
               type="button"

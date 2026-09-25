@@ -6,6 +6,7 @@ import { Briefcase, Building2, Search, ArrowRight, Wallet, CheckCircle2, BadgeCh
 import { LandingHeroBackground } from './LandingHeroBackground';
 import { LandingHeroShiftPreview } from './LandingHeroShiftPreview';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { perksForJob } from '../../constants/perks';
 
 interface LandingHeroProps {
   onSelectRole: (role: 'worker' | 'employer') => void;
@@ -27,8 +28,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
     urgent: j.urgent || false,
     descriptionUz: j.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
     descriptionRu: j.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
-    perksUz: ["⚡ Kunlik to'lov", "🛡️ Baito Kafolati", "🍲 Tushlik"]
-  })), [jobs]);
+    // The employer's own tags, not the same three strings on every card.
+    perksUz: perksForJob(j.tags, language)
+  })), [jobs, language]);
 
   const displayShifts = useMemo(() => {
     return realShifts.slice(0, 6);
@@ -160,7 +162,16 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-5 text-xs font-extrabold text-slate-700 pt-1">
               <span className="flex items-center gap-1.5"><BadgeCheck size={17} className="text-blue-600 shrink-0" /> Tasdiqlangan ID</span>
               <span className="flex items-center gap-1.5"><Wallet size={17} className="text-blue-600 shrink-0" /> Bir zumda to'lov</span>
-              <span className="flex items-center gap-1.5"><Percent size={17} className="text-blue-600 shrink-0" /> 0% komissiya</span>
+              {/* Sat outside the activeTab switch, so an employer was told they
+                  pay no commission — true of a worker, who receives the posted
+                  wage in full, and not of an employer, who pays the category's
+                  rate plus the region's on top of it. */}
+              <span className="flex items-center gap-1.5">
+                <Percent size={17} className="text-blue-600 shrink-0" />
+                {activeTab === 'worker'
+                  ? (language === 'ru' ? '0% комиссии' : language === 'en' ? 'No commission' : "0% komissiya")
+                  : (language === 'ru' ? 'Комиссия сверх оплаты' : language === 'en' ? 'Commission on top of the wage' : "Komissiya ish haqi ustiga")}
+              </span>
             </div>
           </div>
 

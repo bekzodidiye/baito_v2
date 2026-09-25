@@ -192,3 +192,9 @@ class JobWithApplicationStatus(Job):
     vacancies: int = 1
     appliedDate: Optional[datetime] = None
     hiredWorkers: Optional[List[HiredWorkerInfo]] = []
+    # Invoice state, present only on the employer's own listing. None means no
+    # invoice has been raised for this job yet, which is not the same as an
+    # invoice sitting unpaid - the job card needs to tell those apart.
+    payoutStatus: Optional[str] = None
+    invoiceNumber: Optional[str] = None
+    invoiceAmount: Optional[int] = None

@@ -134,11 +134,13 @@ def test_cancelling_a_job_returns_the_escrow_to_the_employer(client):
     apps = client.get("/api/v1/applications/employer").json()
     app_id = next(a["id"] for a in apps if a.get("jobId") == job.id)
     assert client.post(f"/api/v1/applications/{app_id}/hire", json={}).status_code == 200
-    assert client.get("/api/v1/users/me").json()["balance"] == 800_000
+    # 200 000 wage plus the 10% commission the employer pays on top.
+    assert client.get("/api/v1/users/me").json()["balance"] == 780_000
 
     resp = client.delete(f"/api/v1/jobs/{job.id}")
     assert resp.status_code == 200
-    assert resp.json()["refunded"] == 200_000
+    # Both halves come back: the employer was charged for both.
+    assert resp.json()["refunded"] == 220_000
     assert client.get("/api/v1/users/me").json()["balance"] == 1_000_000
 
 
@@ -157,10 +159,11 @@ def test_cancelling_returns_every_hold_not_just_the_first(client):
             if a.get("jobId") == job.id]
     for a in apps:
         assert client.post(f"/api/v1/applications/{a['id']}/hire", json={}).status_code == 200
-    assert client.get("/api/v1/users/me").json()["balance"] == 1_000_000 - 100_000 * len(apps)
+    # Each hire freezes the wage and the commission charged on top of it.
+    assert client.get("/api/v1/users/me").json()["balance"] == 1_000_000 - 110_000 * len(apps)
 
     resp = client.delete(f"/api/v1/jobs/{job.id}")
-    assert resp.json()["refunded"] == 100_000 * len(apps)
+    assert resp.json()["refunded"] == 110_000 * len(apps)
     assert client.get("/api/v1/users/me").json()["balance"] == 1_000_000
 
 

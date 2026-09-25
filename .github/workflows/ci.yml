@@ -7,6 +7,21 @@ on:
   pull_request:
     branches: [ main ]
 
+# Pull request runs supersede each other. Dependabot force-pushes a branch
+# whenever it rebases, and every push used to queue a fresh set of four jobs
+# behind the ones already waiting - on a single self-hosted runner that is a
+# queue nobody drains, which is how sixteen PRs ended up cancelled en masse
+# with no runner ever having picked them up.
+#
+# The group is keyed on run_id for anything that is not a pull request, which
+# makes every push and manual dispatch its own group and so cancels nothing.
+# That is deliberate: main must keep the behaviour the deploy job's own
+# `production-deploy` group defines, and a half-finished deploy must never be
+# killed by a newer commit arriving.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # ==========================================================
   # 1. BACKEND TESTS
@@ -46,7 +61,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Asked for by name rather than inherited. The runner's own python3 is
       # whatever the machine happens to have - on this self-hosted runner that
@@ -153,7 +168,7 @@ jobs:
     runs-on: [self-hosted, laptop-test-runner]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
 
 
@@ -262,7 +277,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Asked for by name rather than inherited. The runner's own python3 is
       # whatever the machine happens to have - on this self-hosted runner that
@@ -310,6 +325,32 @@ jobs:
       # The password is generated here and exported to the job, never written
       # into a file and never printed. `::add-mask::` keeps it out of the log
       # even if a later step echoes it by accident.
+      # E2E_PORT and E2E_API_PORT are chosen here rather than written down,
+      # because a number written down does not survive this runner. It is also
+      # a developer workstation: 5173 belongs to whoever is running
+      # `npm run dev`, and 8000 to their API. Moving to fixed 5175 and 8010
+      # only bought one day - the next failure was 5175, still held by a
+      # preview server a previous job had not managed to kill, the same way
+      # uvicorn used to outlive its job here.
+      #
+      # These must not also appear in the job's `env:` block. Values written
+      # to GITHUB_ENV do not override a job-level env of the same name, so a
+      # leftover default there would silently win.
+      - name: Pick ports that are free right now
+        run: |
+          pick() {
+            for p in $(seq "$1" $(( $1 + 60 ))); do
+              ss -ltn "sport = :$p" 2>/dev/null | grep -q LISTEN || { echo "$p"; return 0; }
+            done
+            echo "::error title=No free port::Nothing free in $1-$(( $1 + 60 )) on this runner." >&2
+            return 1
+          }
+          E2E_PORT=$(pick 5175) || exit 1
+          E2E_API_PORT=$(pick 8010) || exit 1
+          echo "E2E_PORT=$E2E_PORT" >> "$GITHUB_ENV"
+          echo "E2E_API_PORT=$E2E_API_PORT" >> "$GITHUB_ENV"
+          echo "preview on $E2E_PORT, API on $E2E_API_PORT"
+
       - name: Seed a Throwaway Account
         working-directory: ./backend
         run: |
@@ -333,17 +374,38 @@ jobs:
       - name: Start the API
         working-directory: ./backend
         run: |
-          uvicorn app.main:app --host 127.0.0.1 --port 8000 &
-          echo "API_PID=$!" >> "$GITHUB_ENV"
+          # Refuse to start if the port is already taken. This is the check
+          # that actually holds: everything after uvicorn launches is a race
+          # against how long it takes to die, and a fixed sleep does not win
+          # that race reliably - measured, not assumed.
+          if ss -ltn "sport = :${E2E_API_PORT}" 2>/dev/null | grep -q LISTEN; then
+            echo "::error title=Port already in use::Something is already listening on ${E2E_API_PORT}. uvicorn would fail to bind, and the health check below would be answered by that other process - which is how a suite once signed in against a stranger's database and reported the password wrong." >&2
+            ss -ltnp "sport = :${E2E_API_PORT}" 2>/dev/null >&2 || true
+            exit 1
+          fi
+
+          uvicorn app.main:app --host 127.0.0.1 --port "$E2E_API_PORT" &
+          API_PID=$!
+          echo "API_PID=$API_PID" >> "$GITHUB_ENV"
           for i in $(seq 1 60); do
-            curl -sf -o /dev/null http://127.0.0.1:8000/docs && exit 0
+            # Liveness first. A bind failure kills uvicorn immediately, and
+            # curl would then be answered by whatever else holds the port -
+            # which is how a suite once signed in against a stranger's
+            # database and reported the password wrong. Asking whether the
+            # process we started is still alive is the only question that
+            # distinguishes the two.
+            if ! kill -0 "$API_PID" 2>/dev/null; then
+              echo "::error title=API did not start::uvicorn exited - most likely port ${E2E_API_PORT} was already taken. Anything still answering on it belongs to something else." >&2
+              exit 1
+            fi
+            curl -sf -o /dev/null "http://127.0.0.1:${E2E_API_PORT}/docs" && exit 0
             sleep 1
           done
           echo "API did not come up within 60s" >&2
           exit 1
 
       - name: Set up Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20
           # No cache: input. On a hosted runner the VM is thrown away, so
@@ -394,7 +456,7 @@ jobs:
 
       - name: Upload Report on Failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: frontend/playwright-report/
@@ -403,16 +465,23 @@ jobs:
   # ==========================================================
   # 3. DOCKER ARCHITECTURE VALIDATION
   # ==========================================================
+  # On baito-server rather than the laptop. These two are the memory-hungry
+  # half of the pipeline and they need nothing but Docker, which the server
+  # obviously has — it is what production runs on. The three test jobs above
+  # need python3.11 and Node on the runner's PATH, and the server has neither,
+  # so they stay put until it does. Nothing here touches production: the build
+  # tags ci-<sha>, which cannot collide with `current`, and drops only those
+  # tags; validate-docker renders the compose file and starts nothing.
   validate-docker:
     name: 🐳 3. Docker Compose Validation
     needs: [test-backend, test-frontend, test-e2e]
-    runs-on: [self-hosted, laptop-test-runner]
+    runs-on: [self-hosted, baito-server]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Validate Docker Compose Configuration
         env:
@@ -458,6 +527,78 @@ jobs:
           fi
 
   # ==========================================================
+  # 3b. IMAGE BUILD
+  # ==========================================================
+  # `docker compose config` renders the compose file - it never opens a
+  # Dockerfile. So a build stage could be broken and every check still came
+  # back green, which is exactly how fd955ca went out: six green jobs, then
+  # `🔨 Build Images` failed on the server against backend/Dockerfile.bot, a
+  # file that commit never touched.
+  #
+  # Only on main. Building all three images costs upwards of ten minutes cold
+  # on this hardware, and Dependabot rewrites requirements.txt often enough
+  # that the layer cache misses regularly. Charging that to every pull request
+  # would roughly double a ten-minute pipeline; charging it once per merge,
+  # before the server is touched at all, buys the same protection.
+  #
+  # Deliberately on the laptop rather than baito-server. On the server this
+  # would only move the deploy's own `docker compose build` a few seconds
+  # earlier and tell us nothing new. On separate hardware it is an independent
+  # answer to "is this Dockerfile buildable at all", and the server is left
+  # alone until it is.
+  build-images:
+    name: 🏗️ 3b. Image Build
+    # validate-docker already gates on the three test jobs.
+    needs: [validate-docker]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: [self-hosted, baito-server]
+    # Cold builds are slow but not unbounded; this is the alarm for a build
+    # that has stopped making progress rather than a target to aim at.
+    timeout-minutes: 40
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: 🏗️ Build every image compose declares
+        env:
+          # compose refuses to render without these. Nothing here starts a
+          # container, so they are never read by anything.
+          SECRET_KEY: ci_placeholder
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          MINIO_ROOT_USER: ci
+          MINIO_ROOT_PASSWORD: ci_placeholder
+          TELEGRAM_BOT_TOKEN: ci_placeholder
+          TELEGRAM_CHAT_ID: "0"
+          # A tag of its own so a validation build never shadows whatever this
+          # runner happens to be holding, and so the images can be dropped
+          # afterwards by name.
+          IMAGE_TAG: ci-${{ github.sha }}
+        run: |
+          touch backend/.env
+          # The frontend's build context is ./frontend, so the root
+          # package.json holding the version is not visible from inside it.
+          # Mirrors what the deploy hands compose.
+          export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '')"
+          # Retried on network failures only - see the script's header.
+          bash scripts/docker-build.sh
+
+      - name: 🧹 Drop the validation images
+        if: always()
+        env:
+          IMAGE_TAG: ci-${{ github.sha }}
+        run: |
+          # Tags only. The buildkit layer cache is a separate store and stays
+          # put, so the next run still starts warm.
+          docker image rm -f \
+            "baito-backend:${IMAGE_TAG}" \
+            "baito-backup-bot:${IMAGE_TAG}" \
+            "baito-frontend:${IMAGE_TAG}" 2>/dev/null || true
+
+  # ==========================================================
   # 4. PRODUCTION DEPLOYMENT
   # ==========================================================
   # A deploy that never starts is the failure mode this pipeline is worst at
@@ -473,8 +614,12 @@ jobs:
   # hours, silently. This job is the missing alarm.
   deploy-watchdog:
     name: ⏱️ 4b. Deploy Runner Watchdog
-    needs: [test-backend, test-frontend, test-e2e, validate-docker]
+    needs: [test-backend, test-frontend, test-e2e, validate-docker, build-images]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # The one job deliberately left on the laptop. Everything else moved to
+    # baito-server, but this is the alarm for "the deploy runner is not picking
+    # jobs up" — put it on the runner it watches and it sits in the same queue,
+    # silent, exactly when it is needed. It polls an API; it needs no memory.
     runs-on: [self-hosted, laptop-test-runner]
     permissions:
       actions: read
@@ -511,7 +656,7 @@ jobs:
 
   deploy:
     name: 🚀 4. Production Deploy
-    needs: [test-backend, test-frontend, test-e2e, validate-docker]
+    needs: [test-backend, test-frontend, test-e2e, validate-docker, build-images]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     # The server has no public address — it is only reachable inside the
     # tailnet — so deployment has to run on the box itself. That makes the
@@ -543,7 +688,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: 📥 Checkout Code on Server
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 🔄 Sync Workspace
         run: |
@@ -585,7 +730,12 @@ jobs:
           # Read it here and hand it to compose as a build arg.
           export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '')"
           echo "Building frontend as version '${APP_VERSION}'"
-          docker compose build
+          # A deploy of fd955ca died here because Alpine's package index could
+          # not be fetched - nothing was wrong with the Dockerfile, and the
+          # same build went through minutes later. The script retries that and
+          # only that: a package that genuinely does not exist still fails on
+          # the first attempt.
+          bash scripts/docker-build.sh
 
       - name: 🗄️ Apply Database Migrations
         working-directory: /home/scarygun/IntellexGroup/Baito

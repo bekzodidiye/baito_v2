@@ -95,7 +95,7 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
             {language === 'uz' ? "Kompaniya nomi *" : language === 'ru' ? "Название компании *" : "Company Name *"}
           </label>
           <input
-              aria-label={language === 'uz' ? "Kompaniya nomi *" : language === 'ru' ? "Название компании *" : "Company Name *"} type="text" required value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Masalan: Korzinka.uz" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+              aria-label={language === 'uz' ? "Kompaniya nomi *" : language === 'ru' ? "Название компании *" : "Company Name *"} type="text" required value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Masalan: Korzinka.uz" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
         </div>
 
         <div className="space-y-1">
@@ -111,7 +111,7 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
           </label>
           <input
               aria-label={language === 'uz' ? "Manzil *" : language === 'ru' ? "Адрес *" : "Location *"}
-              type="text" required value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Toshkent, Chilonzor" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+              type="text" required value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Toshkent, Chilonzor" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -120,14 +120,14 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
               {language === 'uz' ? "Xodimlar soni" : "Employees"}
             </label>
             <input
-              aria-label={language === 'uz' ? "Xodimlar soni" : "Employees"} type="text" value={employeesCount} onChange={(e) => setEmployeesCount(e.target.value)} placeholder="100-500" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+              aria-label={language === 'uz' ? "Xodimlar soni" : "Employees"} type="text" value={employeesCount} onChange={(e) => setEmployeesCount(e.target.value)} placeholder="100-500" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">
               {language === 'uz' ? "Tashkil topgan yil" : "Founded Year"}
             </label>
             <input
-              aria-label={language === 'uz' ? "Tashkil topgan yil" : "Founded Year"} type="number" value={foundedYear} onChange={(e) => setFoundedYear(e.target.value)} placeholder="2006" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+              aria-label={language === 'uz' ? "Tashkil topgan yil" : "Founded Year"} type="number" value={foundedYear} onChange={(e) => setFoundedYear(e.target.value)} placeholder="2006" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
           </div>
         </div>
 
@@ -136,14 +136,14 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
             {language === 'uz' ? "Vebsayt" : "Website"}
           </label>
           <input
-              aria-label={language === 'uz' ? "Vebsayt" : "Website"} type="url" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="company.uz" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+              aria-label={language === 'uz' ? "Vebsayt" : "Website"} type="url" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="company.uz" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
         </div>
 
         <div className="space-y-1">
           <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">
             {language === 'uz' ? "Kompaniya haqida" : "Company Bio"}
           </label>
-          <textarea value={companyBio} onChange={(e) => setCompanyBio(e.target.value)} placeholder="Kompaniyangiz haqida ma'lumot..." rows={3} className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" />
+          <textarea value={companyBio} onChange={(e) => setCompanyBio(e.target.value)} placeholder="Kompaniyangiz haqida ma'lumot..." rows={3} className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 resize-none" />
         </div>
       </form>
     </motion.div>

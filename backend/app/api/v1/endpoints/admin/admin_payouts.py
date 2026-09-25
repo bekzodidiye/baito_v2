@@ -33,6 +33,7 @@ from app.models.job import JobStatus
 from app.models.job_payout import JobPayout, PayoutStatus
 from app.models.user import User
 from app.services import email_service
+from app.services.escrow_service import fee_for, job_fee_percent
 
 from .admin_users import get_admin_user
 from .audit import record_admin_action
@@ -53,6 +54,8 @@ class PayoutCreate(BaseModel):
 
 
 class InvoiceSend(BaseModel):
+    # What the work cost — the wage the worker was paid for. The platform's
+    # commission is added to this server-side; the caller does not send a total.
     amount: int = Field(gt=0, le=MAX_PAYOUT_UZS)
     # Defaults to the employer's own address; overridable because the person
     # who pays invoices is often not the person who posted the shift.
@@ -84,6 +87,13 @@ def _serialise(p: JobPayout, job: models.Job | None = None, worker: User | None 
         "invoicePaidReference": p.invoicePaidReference,
         "invoicePaidDeclaredAt": (
             p.invoicePaidDeclaredAt.isoformat() if p.invoicePaidDeclaredAt else None
+        ),
+        # Their receipt for the transfer, and - separately - whether anyone has
+        # matched it against the bank statement yet. The list needs both: the
+        # first is what to look at, the second is whether it has been looked at.
+        "invoicePaidReceiptUrl": p.invoicePaidReceiptUrl,
+        "invoiceConfirmedAt": (
+            p.invoiceConfirmedAt.isoformat() if p.invoiceConfirmedAt else None
         ),
     }
 
@@ -165,6 +175,10 @@ def get_job_payout(
         # admin fills in an invoice, rather than after.
         "bankDetailsSet": bool(settings_row and settings_row.payoutBankAccount),
         "smtpConfigured": email_service.is_configured(),
+        # The commission the company is billed on top of the wage. Sent with the
+        # context so the invoice step can show the rate and the total it adds up
+        # to, instead of the administrator working it out on a calculator.
+        "platformFeePercent": job_fee_percent(db, job),
     }
 
 
@@ -285,10 +299,14 @@ def confirm_payout(
 
 def _render_invoice(*, payout: JobPayout, job: models.Job, employer: User | None,
                     cfg: models.SystemSetting | None, note: str | None,
-                    pay_url: str) -> tuple[str, str]:
+                    pay_url: str, base_amount: int = 0, fee_amount: int = 0,
+                    fee_percent: int = 0) -> tuple[str, str]:
     """The invoice, as text and as HTML. Same content both ways."""
     company = (employer.companyName if employer and employer.companyName else job.company) or "—"
-    amount = f"{payout.invoiceAmount:,}".replace(",", " ")
+    def money(n: int) -> str:
+        return f"{n:,}".replace(",", " ")
+
+    amount = money(payout.invoiceAmount)
 
     rows = [
         ("Hisob-faktura raqami", payout.invoiceNumber),
@@ -298,8 +316,16 @@ def _render_invoice(*, payout: JobPayout, job: models.Job, employer: User | None
         ("Ish sanasi", job.workDate or "—"),
         ("Ish vaqti", job.workTime or "—"),
         ("Manzil", job.location or "—"),
-        ("To'lov summasi", f"{amount} so'm"),
     ]
+    # A single "to'lov summasi" line left the company to guess what the figure
+    # was made of. The commission is ours and it is charged on top of the wage,
+    # so the invoice says which part is which and what the rate was.
+    if fee_amount:
+        rows += [
+            ("Ish haqi", f"{money(base_amount)} so'm"),
+            (f"Xizmat haqi ({fee_percent}%)", f"{money(fee_amount)} so'm"),
+        ]
+    rows.append(("Jami to'lov summasi", f"{amount} so'm"))
     bank = [
         ("Qabul qiluvchi", cfg.payoutCompanyName if cfg else None),
         ("Bank", cfg.payoutBankName if cfg else None),
@@ -390,10 +416,16 @@ def _render_invoice(*, payout: JobPayout, job: models.Job, employer: User | None
         'border:1px solid #e5e7eb;border-radius:10px"><tr>'
         '<td style="padding:16px 18px">'
         '<div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;'
-        'color:#9ca3af;font-weight:700">To\'lov summasi</div>'
+        'color:#9ca3af;font-weight:700">Jami to\'lov summasi</div>'
         '<div style="font-size:26px;font-weight:800;color:#111827;padding-top:2px">'
         + amount + ' <span style="font-size:15px;font-weight:600;color:#6b7280">so\'m</span></div>'
-        '</td></tr></table></td></tr>'
+        # What the total is made of, right under it. Without this the company
+        # sees one figure and has to ask us how it was arrived at.
+        + ('<div style="font-size:12px;color:#6b7280;padding-top:6px">'
+           'Ish haqi ' + money(base_amount) + ' so\'m &nbsp;+&nbsp; '
+           'xizmat haqi ' + str(fee_percent) + '% — ' + money(fee_amount) + ' so\'m</div>'
+           if fee_amount else '')
+        + '</td></tr></table></td></tr>'
 
         # The one thing the reader is meant to do, directly under the one
         # number they came for. Built as a table with bgcolor rather than a
@@ -485,7 +517,13 @@ def send_payout_invoice(
     if smtp_problem:
         raise HTTPException(status_code=503, detail=smtp_problem)
 
-    payout.invoiceAmount = payload.amount
+    # ``amount`` is what the work itself cost — the figure the worker was paid
+    # for. The platform's commission is the company's, charged on top of it, so
+    # the total billed is computed here rather than left to whoever is filling
+    # the form to add up.
+    fee_percent = job_fee_percent(db, job)
+    fee_amount = fee_for(payload.amount, fee_percent)
+    payout.invoiceAmount = payload.amount + fee_amount
     payout.invoiceNumber = f"INV-{datetime.now(timezone.utc):%Y%m%d}-{payout.id[:8].upper()}"
 
     # Built after invoiceNumber is set: the token is bound to it, so a
@@ -494,7 +532,8 @@ def send_payout_invoice(
 
     text_body, html_body = _render_invoice(
         payout=payout, job=job, employer=employer, cfg=cfg, note=payload.note,
-        pay_url=pay_url,
+        pay_url=pay_url, base_amount=payload.amount, fee_amount=fee_amount,
+        fee_percent=fee_percent,
     )
 
     # Sent before the row is marked sent. If this raises, nothing is recorded
@@ -523,3 +562,56 @@ def send_payout_invoice(
     db.commit()
     db.refresh(payout)
     return _serialise(payout, job, None)
+
+
+@router.post("/jobs/{job_id}/payout/confirm-payment")
+def confirm_invoice_payment(
+    job_id: str,
+    db: Session = Depends(deps.get_db),
+    admin: models.User = Depends(get_admin_user),
+) -> Any:
+    """Say that the company's declared payment has actually arrived.
+
+    This is the step the declaration deliberately does not do for itself.
+    ``payment_declared`` is the payer's word plus, usually, a receipt image;
+    this is a person having matched it against the bank statement. Only after
+    it is the job settled on both sides.
+
+    Refuses if nothing has been declared yet, rather than letting an
+    administrator confirm a payment nobody has claimed to have made.
+    """
+    payout = (
+        db.query(JobPayout)
+        .filter(JobPayout.jobId == job_id)
+        .order_by(JobPayout.paidAt.desc())
+        .first()
+    )
+    if not payout:
+        raise HTTPException(status_code=404, detail="Bu ish uchun to'lov topilmadi")
+    if not payout.invoicePaidDeclaredAt:
+        raise HTTPException(
+            status_code=409,
+            detail="Korxona hali to'lovni qayd etmagan",
+        )
+    if payout.invoiceConfirmedAt:
+        raise HTTPException(status_code=409, detail="To'lov allaqachon tasdiqlangan")
+
+    payout.invoiceConfirmedAt = datetime.now(timezone.utc)
+    payout.invoiceConfirmedByAdminId = admin.id
+    payout.status = PayoutStatus.CONFIRMED
+    db.add(payout)
+
+    # The employer has been waiting on this since they pressed pay; saying so
+    # is the whole point of the state existing.
+    amount = f"{payout.invoiceAmount or payout.amount:,}".replace(",", " ")
+    db.add(models.Notification(
+        userId=payout.employerId,
+        title="To'lov tasdiqlandi",
+        message=f"{payout.invoiceNumber} · {amount} so'm. Ish yakunlandi.",
+        type="payout",
+        relatedJobId=payout.jobId,
+    ))
+
+    db.commit()
+    db.refresh(payout)
+    return _serialise(payout)

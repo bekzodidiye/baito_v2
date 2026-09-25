@@ -8,14 +8,15 @@ import { EmployerChats } from './EmployerChats';
 import { EmployerProfile } from './EmployerProfile';
 import { JobPostForm } from './JobPostForm';
 import { EmployerAnalytics } from './EmployerAnalytics';
-import { Briefcase, FileText, MessageSquare, PlusCircle, LayoutDashboard, User, BarChart2, LogOut } from 'lucide-react';
+import { Briefcase, FileText, MessageSquare, PlusCircle, LayoutDashboard, User, BarChart2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { MandatoryReviewModal } from './components/MandatoryReviewModal';
+import { Sidebar } from '../../components/Sidebar';
 
 export const EmployerPanel: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, employerSelectedChatId, logout } = useApp();
+  const { language, employerSelectedChatId } = useApp();
   const { applications, reviewJob } = useEmployer();
   const [targetCandidate, setTargetCandidate] = useState<string | null>(null);
 
@@ -112,51 +113,17 @@ export const EmployerPanel: React.FC = () => {
   return (
     <div className="flex h-screen overflow-hidden w-full bg-brand-background">
       {/* ===== DESKTOP SIDEBAR (md: 768px+) ===== */}
-      <aside className="hidden md:flex md:flex-col w-56 shrink-0 bg-white border-r border-slate-100 h-screen sticky top-0 shadow-xs">
-        {/* Logo */}
-        <div className="p-4 border-b border-slate-100 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-brand-primary flex items-center justify-center text-white font-black text-sm shrink-0">B</div>
-          <div>
-            <p className="text-sm font-extrabold text-slate-900 leading-tight">Baito</p>
-            <p className="text-[10px] font-bold text-brand-primary">
-              {language === 'uz' ? 'Ish beruvchi' : language === 'ru' ? 'Работодатель' : 'Employer'}
-            </p>
-          </div>
-        </div>
+      {/* The shared Sidebar, not a second one built here. It already
+          switches to the employer menu on its own (it reads the role from
+          AppContext), so the panel was maintaining a narrower copy that had
+          drifted: no language selector, no Menyu / Hisob & Sozlamalar
+          headings, and missing E'lon joylash, Sozlamalar and Yordam.
 
-        {/* Nav Items */}
-        <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-          {navItems.map((item) => {
-            const active = currentScreen === item.id;
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setCurrentScreen(item.id as any)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                  active
-                    ? 'bg-brand-primary text-white shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-                }`}
-              >
-                <Icon size={16} className="shrink-0" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Logout Button */}
-        <div className="p-3 border-t border-slate-100">
-          <button
-            onClick={() => logout()}
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 transition-colors cursor-pointer text-xs font-bold rounded-xl shadow-xs"
-          >
-            <LogOut size={14} className="stroke-[2.5]" />
-            <span>{language === 'uz' ? "Tizimdan chiqish" : language === 'ru' ? "Выйти из системы" : "Log out"}</span>
-          </button>
-        </div>
-      </aside>
+          It renders `hidden md:flex`, so the mobile bottom nav below is
+          untouched - this replaces the desktop rail only. onOpenModal is not
+          passed because the only thing Sidebar uses it for is the logged-out
+          'auth' prompt, which an employer never reaches. */}
+      <Sidebar />
 
       {/* ===== MAIN CONTENT AREA ===== */}
       <div className={`flex-1 overflow-y-auto ${isChatOpenOnMobile ? 'pb-0' : 'pb-24 md:pb-0'}`}>

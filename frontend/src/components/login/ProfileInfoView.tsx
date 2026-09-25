@@ -86,12 +86,12 @@ export const ProfileInfoView: React.FC<ProfileInfoViewProps> = (props) => {
           <div className="space-y-1">
             <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">{t.name}</label>
             <input
-              aria-label={t.name} type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Aziz" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+              aria-label={t.name} type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Aziz" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">{t.surname}</label>
             <input
-              aria-label={t.surname} type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Aliyev" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+              aria-label={t.surname} type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Aliyev" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
           </div>
         </div>
 
@@ -119,7 +119,7 @@ export const ProfileInfoView: React.FC<ProfileInfoViewProps> = (props) => {
         <div className="space-y-1">
           <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">{t.email}</label>
           <input
-              aria-label={t.email} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="aziz@example.com" className="w-full bg-white border border-slate-200/80/80 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" />
+              aria-label={t.email} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="aziz@example.com" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
         </div>
       </form>
     </motion.div>

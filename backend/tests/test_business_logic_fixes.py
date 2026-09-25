@@ -91,9 +91,13 @@ def test_hiring_holds_the_wage_in_escrow(client):
     resp = client.post(f"/api/v1/applications/{app_id}/hire")
     assert resp.status_code == 200
     assert resp.json()["escrow_held"] is True
+    # The wage the worker will be paid, and the commission the employer pays on
+    # top of it, are frozen together.
+    assert resp.json()["escrow_wage"] == 250_000
+    assert resp.json()["escrow_fee"] == 25_000
 
     with SessionLocal() as db:
-        assert db.query(User).filter(User.id == employer.id).first().balance == 750_000
+        assert db.query(User).filter(User.id == employer.id).first().balance == 725_000
 
 
 def test_rejected_applicant_is_notified(client):
@@ -138,7 +142,14 @@ def _hire(db, job_id, worker_id, status="hired"):
     return app.id
 
 
-def test_worker_cannot_start_a_job_alone(client):
+def test_a_hired_worker_starts_the_job_themselves(client):
+    """The employer's confirmation step is gone.
+
+    It used to stand between a worker arriving and the work counting as begun.
+    It moved no money — the wage is frozen at hiring and released at completion
+    — so all it could do was leave a worker on site unable to show they had
+    started. The guard that still matters is below: being hired.
+    """
     employer = make_user(role="employer", phone="+998911111126")
     job = make_job(employer.id)
     worker = make_user(role="worker", phone="+998911111127")
@@ -148,12 +159,16 @@ def test_worker_cannot_start_a_job_alone(client):
     login(client, worker)
     resp = client.post(f"/api/v1/jobs/{job.id}/request-start")
     assert resp.status_code == 200
-    assert resp.json()["status"] == "start_requested"
+    assert resp.json()["status"] == JobStatus.IN_PROGRESS
 
     with SessionLocal() as db:
-        assert db.query(Job).filter(Job.id == job.id).first().status != JobStatus.IN_PROGRESS
+        assert db.query(Job).filter(Job.id == job.id).first().status == JobStatus.IN_PROGRESS
 
-    # Only the employer can confirm.
+    # Somebody who was never hired still cannot, and neither can they confirm
+    # on the employer's route.
+    stranger = make_user(role="worker", phone="+998911111135")
+    login(client, stranger)
+    assert client.post(f"/api/v1/jobs/{job.id}/request-start").status_code == 403
     assert client.post(f"/api/v1/jobs/{job.id}/confirm-start").status_code == 403
 
 
@@ -190,8 +205,9 @@ def test_completion_pays_the_worker_and_updates_their_profile(client):
 
     with SessionLocal() as db:
         w = db.query(User).filter(User.id == worker.id).first()
-        # 250 000 minus the 10% platform fee.
-        assert w.balance == 225_000
+        # The posted wage, whole: the commission is the employer's, charged on
+        # top of it rather than taken out of what the worker was promised.
+        assert w.balance == 250_000
         assert w.completedJobsCount == 1
         assert w.rating == 5.0
 

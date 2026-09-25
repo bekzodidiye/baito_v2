@@ -69,3 +69,52 @@ describe('EmployerJobCard — deleting a posting asks first', () => {
     expect(onDelete).not.toHaveBeenCalled();
   });
 });
+
+describe('EmployerJobCard — settlement is shown before the job status', () => {
+  afterEach(cleanup);
+
+  const renderWith = (over: Partial<Job>, onPayInvoice = vi.fn()) => {
+    render(
+      <EmployerJobCard
+        job={{ ...job, ...over } as Job}
+        language="uz"
+        onSelect={vi.fn()}
+        onComplete={vi.fn()}
+        onDelete={vi.fn()}
+        onPayInvoice={onPayInvoice}
+      />,
+    );
+    return { onPayInvoice };
+  };
+
+  it('offers to pay once an invoice has been raised', () => {
+    const { onPayInvoice } = renderWith({ status: 'completed', payoutStatus: 'invoiced' });
+    const btn = screen.getByText("To'lov qilish");
+    fireEvent.click(btn);
+    expect(onPayInvoice).toHaveBeenCalledTimes(1);
+  });
+
+  it('says it is waiting once the employer has declared', () => {
+    renderWith({ status: 'completed', payoutStatus: 'payment_declared' });
+    expect(screen.getByText('Tasdiqlanishi kutilmoqda')).toBeTruthy();
+    expect(screen.queryByText("To'lov qilish")).toBeNull();
+  });
+
+  it('says confirmed once an administrator has checked it', () => {
+    renderWith({ status: 'completed', payoutStatus: 'payment_confirmed' });
+    expect(screen.getByText("To'lov tasdiqlandi")).toBeTruthy();
+  });
+
+  /* The one that matters: a finished job with an unpaid invoice must not read
+     as closed. "Yopildi" over money still owed is the failure this ordering
+     exists to prevent. */
+  it('does not call a finished job closed while its invoice is unpaid', () => {
+    renderWith({ status: 'completed', payoutStatus: 'invoiced' });
+    expect(screen.queryByText('Yopildi')).toBeNull();
+  });
+
+  it('still says closed when there was never an invoice', () => {
+    renderWith({ status: 'completed', payoutStatus: null });
+    expect(screen.getByText('Yopildi')).toBeTruthy();
+  });
+});

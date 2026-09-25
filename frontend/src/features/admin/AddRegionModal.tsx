@@ -11,7 +11,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
   const [name, setName] = useState('');
   const [districtsCount, setDistrictsCount] = useState(10);
   const [minSalary, setMinSalary] = useState(100000);
-  const [customCommission, setCustomCommission] = useState(4);
+  const [commissionPercent, setCommissionPercent] = useState(2);
   const [isActive, setIsActive] = useState(true);
 
   if (!isOpen) return null;
@@ -27,7 +27,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
       activeWorkersCount: 0,
       activeJobsCount: 0,
       minSalary,
-      customCommission,
+      commissionPercent,
       isActive,
     };
 
@@ -74,8 +74,8 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
               step="0.5"
               min="0"
               max="20"
-              value={customCommission}
-              onChange={(e) => setCustomCommission(Number(e.target.value))}
+              value={commissionPercent}
+              onChange={(e) => setCommissionPercent(Number(e.target.value))}
               className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs"
             />
           </div>

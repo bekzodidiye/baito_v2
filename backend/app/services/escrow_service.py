@@ -5,7 +5,114 @@ from app.models.audit_ledger import AuditLedger
 from app.models.transaction import Transaction
 import uuid
 
-PLATFORM_FEE_PERCENT = 10 # 10% platform fee
+# Used only when nothing has been configured — a fresh database with no
+# settings row yet. The live rate is the one an administrator set, and
+# ``platform_fee_percent`` below is the only thing that should be read.
+DEFAULT_PLATFORM_FEE_PERCENT = 10
+
+# Kept for callers that imported it before the rate became configurable.
+PLATFORM_FEE_PERCENT = DEFAULT_PLATFORM_FEE_PERCENT
+
+
+def platform_fee_percent(db: Session) -> int:
+    """The commission rate an administrator set, from the settings row.
+
+    This used to be a module constant, so the "Platforma Komissiyasi (%)" field
+    in the admin panel wrote a number that nothing ever read: every payout took
+    10% no matter what was saved there.
+
+    Falls back to the default when there is no settings row at all, which is
+    only the case on a database nobody has configured yet.
+    """
+    row = (
+        db.query(models.SystemSetting)
+        .filter(models.SystemSetting.id == "singleton")
+        .first()
+    ) or db.query(models.SystemSetting).first()
+    percent = getattr(row, "platformFeePercent", None)
+    if percent is None:
+        return DEFAULT_PLATFORM_FEE_PERCENT
+    # The settings endpoint bounds this to 0..50 on the way in; clamp on the way
+    # out too, so a row edited by hand cannot pay a worker a negative wage.
+    return max(0, min(100, int(percent)))
+
+
+def _region_of(location: str | None) -> str:
+    """The city a posting's address begins with.
+
+    ``location`` is built by the posting form as "<city>, <address>", so the
+    city is the first comma-separated part. Anything else — a free-text address
+    typed before the form asked for a city — simply will not match a region row,
+    and that job falls back to the category's rate alone.
+    """
+    if not location:
+        return ""
+    return location.split(",")[0].strip()
+
+
+def job_fee_percent(db: Session, job) -> float:
+    """The commission an employer pays on a job: what the work is, plus where.
+
+    A category carries a rate and a region carries a rate, and the employer is
+    charged their sum. Either half can be missing — a posting in a city nobody
+    has entered a rate for, a category an administrator has deleted — and a
+    missing half contributes nothing rather than blocking the hire.
+
+    When neither half resolves, the single platform-wide rate is used. That is
+    what a database with no categories and no regions behaves like, which is
+    every database before this was configured.
+    """
+    if job is None:
+        return platform_fee_percent(db)
+
+    category = (
+        db.query(models.Category)
+        .filter(models.Category.slug == (job.category or ""))
+        .first()
+    ) if job.category else None
+
+    region_name = _region_of(job.location)
+    region = (
+        db.query(models.Region)
+        .filter(models.Region.name == region_name)
+        .first()
+    ) if region_name else None
+
+    if category is None and region is None:
+        return platform_fee_percent(db)
+
+    total = (getattr(category, "commissionPercent", 0) or 0) + \
+            (getattr(region, "commissionPercent", 0) or 0)
+    # Same clamp as the platform-wide rate: a row edited by hand must not be
+    # able to pay a worker a negative wage.
+    return max(0.0, min(100.0, float(total)))
+
+
+def fee_for(amount_uzs: int, percent: float) -> int:
+    """The commission on a wage, rounded down.
+
+    The employer pays this on top of the wage — the worker is paid the figure
+    the posting advertised, in full.
+    """
+    return int(amount_uzs * (percent / 100.0))
+
+
+def worker_share(tx, db: Session) -> int:
+    """What a hold owes the worker, in so'm.
+
+    Holds taken since the commission moved onto the employer's side carry the
+    fee in ``platformFee`` and were funded for wage + fee, so the whole of
+    ``amount`` belongs to the worker. Older holds froze the wage alone and the
+    fee came out of it; those are honoured on the terms they were made under
+    rather than retroactively repriced.
+    """
+    total = tx.amount // 100
+    if tx.feePercent is not None:
+        return total
+    if tx.platformFee:
+        # A legacy hold that has already been released records what was taken.
+        return total - tx.platformFee // 100
+    return total - fee_for(total, platform_fee_percent(db))
 
 class EscrowService:
     """Escrow vault for the marketplace.
@@ -22,6 +129,17 @@ class EscrowService:
     @staticmethod
     def hold_funds(db: Session, employer_id: str, job_id: str, amount_uzs: int,
                    job_day_id: str | None = None) -> Transaction:
+        # The commission is the employer's, not a deduction from the wage: the
+        # worker is paid what the posting advertised, and the platform's cut is
+        # charged on top of it. So what leaves the employer's balance here is
+        # wage + fee, and both halves are frozen together.
+        #
+        # The rate is this job's own — its category's plus its region's.
+        job = db.query(models.Job).filter(models.Job.id == job_id).first()
+        percent = job_fee_percent(db, job)
+        fee_uzs = fee_for(amount_uzs, percent)
+        total_uzs = amount_uzs + fee_uzs
+
         employer = (db.query(models.User).filter(models.User.id == employer_id)
                     .populate_existing()
                     .with_for_update().first())
@@ -29,7 +147,7 @@ class EscrowService:
             raise HTTPException(status_code=404, detail="Ish beruvchi topilmadi")
 
         # Deduct and freeze
-        employer.balance = (employer.balance or 0) - amount_uzs
+        employer.balance = (employer.balance or 0) - total_uzs
         db.add(employer)
 
         tx = Transaction(
@@ -40,7 +158,14 @@ class EscrowService:
             # before days existed, which still has a single hold for the lot.
             jobDayId=job_day_id,
             employerId=employer.id,
+            # The wage alone. All of it is the worker's — the fee sits beside it
+            # rather than inside it, so nothing has to be unpicked at payout.
             amount=amount_uzs * 100,
+            platformFee=fee_uzs * 100,
+            # Pinned here, not read again at payout: this is the rate the
+            # employer was charged under, and a later change to the setting must
+            # not reach back into money already frozen.
+            feePercent=percent,
             type="escrow_hold",
             status="held"
         )
@@ -49,12 +174,16 @@ class EscrowService:
         # Audit ledger record
         ledger = AuditLedger(
             userId=employer.id,
-            amountDelta=-amount_uzs,
+            amountDelta=-total_uzs,
             balanceAfter=employer.balance,
             entryType="escrow_hold",
             referenceType="job",
             referenceId=job_id,
-            description=f"Ish e'loni uchun mablag' muzlatildi ({amount_uzs} so'm)"
+            description=(
+                f"Ish e'loni uchun mablag' muzlatildi ({amount_uzs} so'm ish haqi"
+                + (f" + {fee_uzs} so'm xizmat haqi" if fee_uzs else "")
+                + ")"
+            ),
         )
         db.add(ledger)
         db.flush()
@@ -89,8 +218,15 @@ class EscrowService:
             raise HTTPException(status_code=404, detail="Ushbu ish uchun muzlatilgan mablag' topilmadi")
 
         total_amount = tx.amount // 100 # convert tiyin to UZS
-        platform_fee = int(total_amount * (PLATFORM_FEE_PERCENT / 100.0))
-        worker_payout = total_amount - platform_fee
+        # The employer was charged the commission on top of the wage when this
+        # was frozen, so the wage passes to the worker whole and the fee is
+        # already recorded. A hold with no rate on it predates that and was
+        # funded for the wage alone; it is settled the old way rather than
+        # paying out money nobody deposited.
+        worker_payout = worker_share(tx, db)
+        if tx.feePercent is None:
+            platform_fee = total_amount - worker_payout
+            tx.platformFee = platform_fee * 100
 
         worker = db.query(models.User).filter(models.User.id == worker_id).populate_existing().with_for_update().first()
         if not worker:
@@ -105,10 +241,11 @@ class EscrowService:
             worker.completedJobsCount = (worker.completedJobsCount or 0) + 1
         db.add(worker)
 
-        # Update escrow tx
+        # Update escrow tx. platformFee is not written here: a hold taken under
+        # the current rules recorded it when the money was frozen, and a legacy
+        # one has had it set just above.
         tx.status = "released"
         tx.workerId = worker.id
-        tx.platformFee = platform_fee * 100
         db.add(tx)
 
         # Ledger for worker
@@ -218,7 +355,11 @@ class EscrowService:
         # one day's money actually arrived.
         employers: dict[str, models.User] = {}
         for tx in holds:
-            refund_amount = tx.amount // 100
+            # Wage and commission both left the employer's balance when this was
+            # frozen, so both come back. A legacy hold carries no fee at this
+            # point — platformFee is only written when it is released — so the
+            # same sum is right for those too.
+            refund_amount = (tx.amount + (tx.platformFee or 0)) // 100
             employer = employers.get(tx.employerId)
             if employer is None:
                 employer = db.query(models.User).filter(

@@ -8,13 +8,13 @@ export const VerificationPendingScreen: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 bg-brand-background md:p-6 lg:p-8 flex items-center justify-center font-sans overflow-hidden">
-      <div className="w-full h-full flex flex-col overflow-hidden relative bg-white mx-auto max-w-md md:h-[85vh] md:max-h-[850px] md:rounded-[24px] md:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] md:border md:border-slate-200/80/50">
+      <div className="w-full h-full flex flex-col overflow-hidden relative bg-white mx-auto max-w-md md:h-[85vh] md:max-h-[850px] md:rounded-[24px] md:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] md:border md:border-slate-200/50">
       {/* Top Navigation */}
       <header className="w-full shrink-0 bg-white border-b border-slate-200/80 z-40 flex justify-between items-center px-4 h-16 shadow-3xs rounded-t-[20px] md:rounded-t-[24px]">
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setCurrentScreen('profile')}
-            className="p-2 hover:bg-slate-50 transition-colors rounded-full text-brand-navy cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-95"
+            className="p-2 hover:bg-slate-50 transition-colors rounded-full text-brand-navy cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary/20 active:scale-95"
           >
             <ArrowLeft size={18} className="stroke-[2.5]" />
           </button>
@@ -29,7 +29,7 @@ export const VerificationPendingScreen: React.FC = () => {
           <button 
             type="button"
             onClick={() => setCurrentScreen('profile')}
-            className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 group"
+            className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary/20 group"
           >
             <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-black text-xs shadow-3xs transition-all duration-300 group-hover:scale-105">
               <Check size={14} className="stroke-[3]" />
@@ -43,7 +43,7 @@ export const VerificationPendingScreen: React.FC = () => {
           <button 
             type="button"
             onClick={() => setCurrentScreen('profile')}
-            className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 group"
+            className="flex flex-col items-center relative z-10 bg-transparent border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary/20 group"
           >
             <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-black text-xs shadow-3xs transition-all duration-300 group-hover:scale-105">
               <Check size={14} className="stroke-[3]" />
@@ -80,7 +80,7 @@ export const VerificationPendingScreen: React.FC = () => {
             
             <div className="flex items-center gap-4 relative z-10 text-left">
               {/* Premium Animated Biometric ID Card Container */}
-              <div className="relative w-20 h-14 bg-slate-50 border border-slate-200/80/80 rounded-lg p-2 flex flex-col justify-between overflow-hidden shrink-0 shadow-inner">
+              <div className="relative w-20 h-14 bg-slate-50 border border-slate-200 rounded-lg p-2 flex flex-col justify-between overflow-hidden shrink-0 shadow-inner">
                 {/* Horizontal Neon Laser Scanner Line */}
                 <div className="absolute left-0 right-0 h-[2px] bg-brand-primary shadow-[0_0_8px_var(--color-brand-primary)] opacity-80 animate-scan-laser"></div>
                 
@@ -162,7 +162,7 @@ export const VerificationPendingScreen: React.FC = () => {
         <div className="flex flex-col gap-3 max-w-[288px] mx-auto">
           <button 
             onClick={handleDashboardClick}
-            className="w-full h-[50px] bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl flex items-center justify-center gap-2 font-display font-black text-xs active:scale-[0.98] transition-transform shadow-[0_8px_25px_rgba(0,6,102,0.18)] cursor-pointer border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+            className="w-full h-[50px] bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl flex items-center justify-center gap-2 font-display font-black text-xs active:scale-[0.98] transition-transform shadow-[0_8px_25px_rgba(0,6,102,0.18)] cursor-pointer border-none focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
           >
             <span>{t.btnDashboard}</span>
             <ArrowRight size={15} className="stroke-[2.5]" />

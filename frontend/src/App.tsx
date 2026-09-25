@@ -68,6 +68,16 @@ function AppContent() {
   const isSettingsOrHelp = ['settings', 'security', 'help', 'faq', 'guide', 'terms', 'support-chat'].includes(currentScreen);
   const showNavigation = currentScreen !== 'admin' && currentScreen !== 'verification' && currentScreen !== 'login' && currentScreen !== 'register' && currentScreen !== 'landing' && !currentScreen.startsWith('employer-') && !isSettingsOrHelp;
 
+  // The settings screens kept the app's own rail hidden and offered a "back to
+  // main menu" button in its place, which is why they read as a separate site
+  // on a desktop rather than a page of this one. They get the rail back.
+  //
+  // Only the rail. Sidebar is `hidden md:flex`, so this changes nothing below
+  // md - and Header and Drawer stay on the original condition on purpose,
+  // because SettingsScreen draws its own `md:hidden` header and two of them
+  // would stack.
+  const showSidebar = showNavigation || isSettingsOrHelp;
+
   // Screens nobody may reach while logged out; they bounce back to the landing.
   const isAuthGatedScreen = !isLoggedIn && !['landing', 'login', 'register', 'faq', 'terms', 'help', 'guide'].includes(currentScreen);
 
@@ -92,7 +102,7 @@ function AppContent() {
       )}
 
       {/* Desktop Permanent Sidebar */}
-      {showNavigation && <Sidebar onOpenModal={handleOpenModal} />}
+      {showSidebar && <Sidebar onOpenModal={handleOpenModal} />}
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Dynamic Header */}

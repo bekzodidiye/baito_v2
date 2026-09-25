@@ -171,6 +171,20 @@ def get_my_jobs(
     for a in apps:
         hired_counts[a.jobId] = hired_counts.get(a.jobId, 0) + 1
 
+    # One query for every job on the page rather than one per card. Only jobs
+    # that have actually been invoiced appear here; the rest get None, which is
+    # what tells the card there is nothing to pay yet.
+    payouts = {}
+    if job_ids:
+        for p in (
+            db.query(models.JobPayout)
+            .filter(models.JobPayout.jobId.in_(job_ids))
+            .order_by(models.JobPayout.paidAt.asc())
+            .all()
+        ):
+            if p.invoiceNumber:
+                payouts[p.jobId] = p
+
     result = []
     for job in jobs:
         vacancies_num = int(job.neededWorkers) if (job.neededWorkers and job.neededWorkers.isdigit()) else 1
@@ -184,6 +198,13 @@ def get_my_jobs(
             "vacancies": vacancies_num,
             "appliedDate": None,
             "hiredWorkers": [],
+        })
+
+        payout = payouts.get(job.id)
+        job_data.update({
+            "payoutStatus": payout.status if payout else None,
+            "invoiceNumber": payout.invoiceNumber if payout else None,
+            "invoiceAmount": (payout.invoiceAmount or payout.amount) if payout else None,
         })
         result.append(job_data)
 
@@ -403,7 +424,10 @@ def create_job(
     *,
     db: Session = Depends(deps.get_db),
     job_in: schemas.JobCreate,
-    current_user: models.User = Depends(deps.get_current_employer),
+    # Posting is what puts a stranger's address in front of workers and what
+    # draws on an escrow balance, so the account behind it has to have been
+    # checked first.
+    current_user: models.User = Depends(deps.get_verified_employer),
 ) -> Any:
     """Create a new job posting, screening it for fraud first."""
     verdict = SpamFraudDetector.analyze_job_posting(
@@ -615,7 +639,12 @@ def delete_job(
     # and once per day of a multi-day shift. refund_funds settles all of them
     # in one pass, so this is a single call rather than a counted loop.
     try:
-        refunded = sum(tx.amount // 100 for tx in EscrowService.refund_funds(db, job_id=job.id))
+        # Wage and commission both: the employer was charged for both when the
+        # day was frozen, and refund_funds puts both back.
+        refunded = sum(
+            (tx.amount + (tx.platformFee or 0)) // 100
+            for tx in EscrowService.refund_funds(db, job_id=job.id)
+        )
     except HTTPException:
         # Nothing was ever frozen — an unfilled posting, or one from before
         # escrow. Cancelling is still legitimate.

@@ -71,7 +71,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               value={loginPhone}
               onChange={(e) => setLoginPhone(e.target.value)}
               placeholder={t.phonePlaceholder || '+998 (90) 123-45-67'}
-              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-4 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-4 text-xs font-semibold focus:border-brand-primary/40 focus:ring-2 focus:ring-brand-primary/20 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
             />
           </div>
         </div>
@@ -92,7 +92,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               value={loginPassword}
               onChange={(e) => setLoginPassword(e.target.value)}
               placeholder={t.passwordPlaceholder || 'Parolingizni kiriting'}
-              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-11 text-xs font-semibold focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-11 text-xs font-semibold focus:border-brand-primary/40 focus:ring-2 focus:ring-brand-primary/20 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
             />
             <button
               type="button"

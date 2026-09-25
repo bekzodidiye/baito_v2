@@ -2,7 +2,7 @@ import React from 'react';
 import { AdminTab } from './types';
 import {
   Wallet, LayoutDashboard, Users, Briefcase, FileCheck, DollarSign, AlertTriangle, Send, Sliders, X, User,
-  Building2, Headphones, BarChart3, FolderTree, ShieldAlert, Ticket, MapPin, BellRing, Bot, Zap, FileText, ShieldCheck,
+  Building2, Headphones, BarChart3, FolderTree, ShieldAlert, Ticket, MapPin, Bell, BellRing, Bot, Zap, FileText, ShieldCheck,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
@@ -36,6 +36,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
         { id: 'daily_jobs' as AdminTab, labelUz: 'Ishlar', labelRu: 'Ежедневные работы', labelEn: 'Daily Jobs', icon: Briefcase },
         { id: 'jobs' as AdminTab, labelUz: 'E\'lonlar va Vakansiyalar', labelRu: 'Объявления и вакансии', labelEn: 'Jobs & Moderation', icon: Briefcase, badge: badge(jobs.length) },
         { id: 'categories' as AdminTab, labelUz: 'Kategoriyalar', labelRu: 'Категории', labelEn: 'Categories', icon: FolderTree },
+        // The inbox, not the rules. 'notification_rules' further down decides
+        // when notifications get sent; this is where an admin reads the ones
+        // addressed to them - the same screen and the same unread count the
+        // worker and employer panels use.
+        { id: 'notifications' as AdminTab, labelUz: 'Bildirishnomalar', labelRu: 'Уведомления', labelEn: 'Notifications', icon: Bell },
       ],
     },
     {

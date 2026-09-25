@@ -123,6 +123,37 @@ def get_current_employer(
         raise HTTPException(status_code=403, detail="Ish beruvchi huquqi talab etiladi")
     return current_user
 
+
+# What "verified" means here is that an administrator has looked at the
+# documents the account uploaded and marked it so. It is not a formality: a
+# worker turns up at a stranger's address, and an employer's posting moves
+# money out of an escrow balance. Editing a document field clears the flag
+# again (see users.py), so this cannot be passed once and then changed.
+#
+# Administrators are exempt. They are created by scripts/create_accounts.py,
+# which has no document step, and they are the ones doing the verifying.
+def _require_verified(user: models.User) -> models.User:
+    if user.role == "admin" or user.isVerified:
+        return user
+    raise HTTPException(
+        status_code=403,
+        detail="Hujjatlaringiz hali tasdiqlanmagan. Tasdiqlangach davom etishingiz mumkin.",
+    )
+
+
+def get_verified_worker(
+    current_user: models.User = Depends(get_current_active_user),
+) -> models.User:
+    if current_user.role not in ("worker", "admin"):
+        raise HTTPException(status_code=403, detail="Faqat ishchilar ariza topshira oladi")
+    return _require_verified(current_user)
+
+
+def get_verified_employer(
+    current_user: models.User = Depends(get_current_employer),
+) -> models.User:
+    return _require_verified(current_user)
+
 def get_current_admin(
     current_user: models.User = Depends(get_current_active_user),
 ) -> models.User:

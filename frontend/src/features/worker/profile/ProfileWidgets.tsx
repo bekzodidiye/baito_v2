@@ -27,6 +27,10 @@ export const ProfileWidgets: React.FC<ProfileWidgetsProps> = ({
   return (
     <section className="flex flex-col gap-4 shrink-0">
       {/* Wallet Balance widget */}
+      {/* Wallet parked with the rest of the balance flow - see the long note
+          beside the /payments routes in components/AppRoutes.tsx. Uncomment
+          together with those. */}
+      {/*
       <div className="bg-gradient-to-tr from-brand-primary to-brand-primary-container p-5 rounded-2xl border border-brand-primary/10 relative overflow-hidden shadow-md">
         <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/5 rounded-full blur-xl" />
         <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-white/5 rounded-full blur-xl" />
@@ -45,6 +49,7 @@ export const ProfileWidgets: React.FC<ProfileWidgetsProps> = ({
           </button>
         </div>
       </div>
+      */}
 
       {/* Verification Widget Card */}
       {!isVerifiedUser && (

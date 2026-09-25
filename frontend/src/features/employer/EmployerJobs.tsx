@@ -1,10 +1,12 @@
+import { useQueryClient } from '@tanstack/react-query';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
-import { Briefcase, History, Clock } from 'lucide-react';
+import { Briefcase, History, Clock, Wallet, Hourglass } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EmployerPageHeader } from './EmployerPageHeader';
 import { EmployerJobDetailModal } from './EmployerJobDetailModal';
 import { EmployerJobCard } from './EmployerJobCard';
+import { EmployerPayInvoiceModal } from './EmployerPayInvoiceModal';
 import { FinishJobModal } from './components/FinishJobModal';
 import { Job } from '../../types';
 
@@ -14,9 +16,13 @@ interface EmployerJobsProps {
 
 export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) => {
   const { postedJobs, language, completeJob, deleteJob, confirmStartJob } = useEmployer();
-  const [activeTab, setActiveTab] = useState<'open' | 'active' | 'history'>('open');
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<
+    'open' | 'active' | 'awaiting_payment' | 'awaiting_confirmation' | 'history'
+  >('open');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobToComplete, setJobToComplete] = useState<Job | null>(null);
+  const [jobToPay, setJobToPay] = useState<Job | null>(null);
 
   const handleFinishConfirm = async (data: { rating: number; review: string; bonus: number }) => {
     if (jobToComplete) {
@@ -38,9 +44,37 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
         return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       });
   }, [postedJobs]);
-  const historyJobs = useMemo(() => postedJobs.filter(j => ['completed', 'cancelled', 'closed'].includes(j.status)), [postedJobs]);
-  
-  const displayJobs = activeTab === 'open' ? openJobs : activeTab === 'active' ? activeJobs : historyJobs;
+  // Settlement, which runs on after the work itself is done. A finished job
+  // sits in awaiting_payment from the moment an administrator raises the
+  // invoice, moves to awaiting_confirmation when the employer says they have
+  // paid, and only reaches history once an administrator has matched that
+  // against the bank statement. Driven by payoutStatus rather than job.status,
+  // because the work being over and the bill being settled are two different
+  // facts about the same job.
+  const awaitingPaymentJobs = useMemo(
+    () => postedJobs.filter(j => j.payoutStatus === 'invoiced'),
+    [postedJobs],
+  );
+  const awaitingConfirmationJobs = useMemo(
+    () => postedJobs.filter(j => j.payoutStatus === 'payment_declared'),
+    [postedJobs],
+  );
+  // A job whose bill is still open belongs in one of the two buckets above, not
+  // in history - otherwise it looks finished while money is outstanding.
+  const historyJobs = useMemo(
+    () => postedJobs.filter(j =>
+      ['completed', 'cancelled', 'closed'].includes(j.status)
+      && j.payoutStatus !== 'invoiced'
+      && j.payoutStatus !== 'payment_declared'),
+    [postedJobs],
+  );
+
+  const displayJobs =
+    activeTab === 'open' ? openJobs
+    : activeTab === 'active' ? activeJobs
+    : activeTab === 'awaiting_payment' ? awaitingPaymentJobs
+    : activeTab === 'awaiting_confirmation' ? awaitingConfirmationJobs
+    : historyJobs;
 
   useEffect(() => {
     setVisibleCount(12);
@@ -69,50 +103,41 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
         onPostJobClick={onPostJobClick}
       />
 
-      {/* Tabs */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex p-1.5 bg-slate-100/80 rounded-2xl w-full max-w-xl mx-auto mt-2 mb-2 relative z-10">
-        <button
-          onClick={() => setActiveTab('open')}
-          className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-2 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
-            activeTab === 'open' 
-              ? 'bg-white text-brand-primary shadow-sm' 
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
-          }`}
-        >
-          <Clock size={16} className={`shrink-0 ${activeTab === 'open' ? 'stroke-[2.5]' : ''}`} />
-          <span className="truncate">{language === 'uz' ? "Ochiq" : language === 'ru' ? "Открытые" : "Open"}</span>
-          <span className={`ml-0.5 sm:ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'open' ? 'bg-brand-primary/10 text-brand-primary' : 'bg-slate-200 text-slate-500'}`}>
-            {openJobs.length}
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveTab('active')}
-          className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-2 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
-            activeTab === 'active' 
-              ? 'bg-white text-emerald-600 shadow-sm' 
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
-          }`}
-        >
-          <Briefcase size={16} className={`shrink-0 ${activeTab === 'active' ? 'stroke-[2.5]' : ''}`} />
-          <span className="truncate">{language === 'uz' ? "Jarayonda" : language === 'ru' ? "В процессе" : "Active"}</span>
-          <span className={`ml-0.5 sm:ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-200 text-slate-500'}`}>
-            {activeJobs.length}
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveTab('history')}
-          className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 px-1 sm:px-2 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
-            activeTab === 'history' 
-              ? 'bg-white text-slate-800 shadow-sm' 
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
-          }`}
-        >
-          <History size={16} className={`shrink-0 ${activeTab === 'history' ? 'stroke-[2.5]' : ''}`} />
-          <span className="truncate">{language === 'uz' ? "Tarix" : language === 'ru' ? "История" : "History"}</span>
-          <span className={`ml-0.5 sm:ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${activeTab === 'history' ? 'bg-slate-100 text-slate-800' : 'bg-slate-200 text-slate-500'}`}>
-            {historyJobs.length}
-          </span>
-        </button>
+      {/* Tabs. Five of them now, so they come from a list rather than five
+          near-identical blocks - the pair in the middle is settlement, which
+          runs on after the work is finished. Scrolls sideways below sm; five
+          fixed columns would be unreadable on a phone. */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex gap-1 p-1.5 bg-slate-100/80 rounded-2xl w-full max-w-3xl mx-auto mt-2 mb-2 relative z-10 overflow-x-auto">
+        {([
+          { id: 'open' as const, icon: Clock, count: openJobs.length, tone: 'text-brand-primary', badge: 'bg-brand-primary/10 text-brand-primary',
+            label: language === 'uz' ? "Ochiq" : language === 'ru' ? "Открытые" : "Open" },
+          { id: 'active' as const, icon: Briefcase, count: activeJobs.length, tone: 'text-emerald-600', badge: 'bg-emerald-50 text-emerald-600',
+            label: language === 'uz' ? "Jarayonda" : language === 'ru' ? "В процессе" : "Active" },
+          { id: 'awaiting_payment' as const, icon: Wallet, count: awaitingPaymentJobs.length, tone: 'text-amber-600', badge: 'bg-amber-50 text-amber-600',
+            label: language === 'uz' ? "To'lov kutilmoqda" : language === 'ru' ? "Ожидает оплаты" : "Awaiting payment" },
+          { id: 'awaiting_confirmation' as const, icon: Hourglass, count: awaitingConfirmationJobs.length, tone: 'text-sky-600', badge: 'bg-sky-50 text-sky-600',
+            label: language === 'uz' ? "Tasdiqlanishi kutilmoqda" : language === 'ru' ? "Ожидает подтверждения" : "Awaiting confirmation" },
+          { id: 'history' as const, icon: History, count: historyJobs.length, tone: 'text-slate-800', badge: 'bg-slate-100 text-slate-800',
+            label: language === 'uz' ? "Tarix" : language === 'ru' ? "История" : "History" },
+        ]).map(tab => {
+          const Icon = tab.icon;
+          const on = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 min-w-fit whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
+                on ? `bg-white ${tab.tone} shadow-sm` : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+              }`}
+            >
+              <Icon size={16} className={`shrink-0 ${on ? 'stroke-[2.5]' : ''}`} />
+              <span className="truncate">{tab.label}</span>
+              <span className={`ml-0.5 sm:ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${on ? tab.badge : 'bg-slate-200 text-slate-500'}`}>
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
       </motion.div>
 
       {/* Job Grid */}
@@ -170,6 +195,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
                   onComplete={() => setJobToComplete(job)}
                   onDelete={deleteJob}
                   onConfirmStart={() => confirmStartJob(job.id)}
+                  onPayInvoice={setJobToPay}
                 />
               ))}
             </div>
@@ -209,6 +235,17 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
         jobTitle={jobToComplete?.title || ''}
         jobId={jobToComplete?.id}
         language={language}
+      />
+
+      {/* Settling an invoice. Refetching employer-jobs on success is what moves
+          the card out of "To'lov kutilmoqda" and into "Tasdiqlanishi
+          kutilmoqda" - the tab it belongs to is derived from payoutStatus, so
+          the list has to be reloaded rather than patched locally. */}
+      <EmployerPayInvoiceModal
+        job={jobToPay}
+        language={language}
+        onClose={() => setJobToPay(null)}
+        onDeclared={() => queryClient.invalidateQueries({ queryKey: ['employer-jobs'] })}
       />
     </div>
   );

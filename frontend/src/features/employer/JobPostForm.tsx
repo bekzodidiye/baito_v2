@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
+import { useApp } from '../../context/AppContext';
+import { apiClient } from '../../api/client';
 import { ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { JobPostHeader } from './components/JobPostHeader';
@@ -16,6 +18,10 @@ interface JobPostFormProps {
 
 export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSuccess }) => {
   const { postNewJob, language, companyName } = useEmployer();
+  // The server refuses a posting from an unverified account. Checking here
+  // means the refusal arrives before three steps of form, not after them.
+  const { userProfile } = useApp();
+  const isVerified = !!userProfile?.isVerified;
   const [step, setStep] = useState(1);
   
   // Step 1 State
@@ -49,10 +55,48 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
   
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const categories = CATEGORIES_LIST.map(c => ({
-    id: c.id,
-    label: language === 'uz' ? c.labelUz : language === 'ru' ? c.labelRu : c.labelEn
-  }));
+  // The categories an administrator maintains. The form used to carry its own
+  // hard-coded copy, so anything added in the admin panel never appeared here.
+  const [adminCategories, setAdminCategories] = useState<{ slug: string; name: string }[] | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    apiClient('/categories')
+      .then((rows: { slug: string; name: string }[]) => {
+        if (alive && Array.isArray(rows) && rows.length > 0) setAdminCategories(rows);
+      })
+      // A failed request leaves this null and the built-in list stands in. An
+      // employer must never be shown an empty category picker — that is a form
+      // they cannot submit at all.
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  const translated = (slug: string, name: string) => {
+    // The table stores one name. For the categories that shipped with the app
+    // the built-in list still holds the Russian and English wording, so a
+    // non-Uzbek reader keeps it; anything an administrator added has only the
+    // one name they typed.
+    const known = CATEGORIES_LIST.find(c => c.id === slug);
+    if (!known) return name;
+    return language === 'uz' ? known.labelUz : language === 'ru' ? known.labelRu : known.labelEn;
+  };
+
+  const categories = adminCategories
+    ? adminCategories.map(c => ({ id: c.slug, label: translated(c.slug, c.name) }))
+    : CATEGORIES_LIST.map(c => ({
+        id: c.id,
+        label: language === 'uz' ? c.labelUz : language === 'ru' ? c.labelRu : c.labelEn
+      }));
+
+  // The form opens on 'retail'. If an administrator has removed that category,
+  // a select shows its first option while the state still says 'retail' — and
+  // the job would be filed under a category that no longer exists.
+  useEffect(() => {
+    if (categories.length > 0 && !categories.some(c => c.id === category)) {
+      setCategory(categories[0].id);
+    }
+  }, [adminCategories]);
 
   const handleNext = () => {
     if (step === 1) {
@@ -83,6 +127,16 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
   };
 
   const handleSubmit = async () => {
+    if (!isVerified) {
+      showToast(
+        language === 'ru'
+          ? 'Ваши документы ещё не подтверждены — объявление опубликовать нельзя.'
+          : language === 'en'
+          ? 'Your documents have not been verified yet, so the posting cannot go up.'
+          : "Hujjatlaringiz hali tasdiqlanmagan — e'lon joylab bo'lmaydi.",
+      );
+      return;
+    }
     if (!addressLine || !city) {
       showToast(language === 'uz' ? "Manzilni kiriting!" : "Enter address!");
       return;

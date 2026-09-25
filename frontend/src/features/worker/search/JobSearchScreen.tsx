@@ -1,3 +1,4 @@
+import { PRESET_TAGS, tagLabel } from '../../../constants/perks';
 import React from 'react';
 import { Briefcase, Loader2 } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
@@ -34,11 +35,13 @@ export const JobSearchScreen: React.FC = () => {
     rootMargin: '250px',
   });
 
+  // These were "To'liq bandlik", "Smenali grafik" and "Erkin grafik" — three
+  // strings nothing in the system writes to a job, so picking any of them
+  // emptied the list. The tags a posting is actually given are what this
+  // narrows by now.
   const SCHEDULE_FILTERS = [
     { key: 'Barchasi', label: t.allJobs },
-    { key: "To'liq bandlik", label: t.fullTime },
-    { key: "Smenali grafik", label: t.shiftSchedule },
-    { key: "Erkin grafik", label: t.freeSchedule }
+    ...PRESET_TAGS.map(tag => ({ key: tag, label: tagLabel(tag, language) })),
   ];
 
   return (

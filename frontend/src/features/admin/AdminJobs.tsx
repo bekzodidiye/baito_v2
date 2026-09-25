@@ -3,6 +3,7 @@ import { AdminJob } from './types';
 import { Search, Trash2, MapPin, Building2, DollarSign, XCircle } from 'lucide-react';
 import { RejectJobModal } from './RejectJobModal';
 import { AdminJobsAutoDeleteBanner } from './AdminJobsAutoDeleteBanner';
+import { JobDetailModal } from './JobDetailModal';
 
 interface AdminJobsProps {
   jobs: AdminJob[];
@@ -14,6 +15,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [rejectingJob, setRejectingJob] = useState<AdminJob | null>(null);
+  const [openJob, setOpenJob] = useState<AdminJob | null>(null);
   const [autoDeleteEnabled, setAutoDeleteEnabled] = useState(true);
 
   const filteredJobs = jobs.filter((j) => {
@@ -98,13 +100,26 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
           filteredJobs.map((j) => (
             <div
               key={j.id}
-              className="bg-white p-5 rounded-2xl border border-slate-200/80 hover:border-slate-300 transition-all shadow-xs flex flex-col justify-between gap-4"
+              role="button"
+              tabIndex={0}
+              aria-label={`${j.title} — batafsil`}
+              onClick={() => setOpenJob(j)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setOpenJob(j);
+                }
+              }}
+              className="bg-white p-5 rounded-2xl border border-slate-200/80 hover:border-slate-300 hover:shadow-md transition-all shadow-xs flex flex-col justify-between gap-4 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             >
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <select
                       value={j.status}
+                      // The whole card opens the detail now; the controls on it
+                      // keep doing their own job instead.
+                      onClick={(e) => e.stopPropagation()}
                       onChange={(e) => onChangeJobStatus(j.id, e.target.value)}
                       className={`px-2.5 py-1 rounded-md text-[11px] font-extrabold uppercase tracking-wider mb-2 border cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
                         j.status === 'open'
@@ -126,7 +141,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                     <h3 className="font-extrabold text-slate-900 text-base leading-snug">{j.title}</h3>
                   </div>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => setRejectingJob(j)}
                       className="p-2 text-amber-600 hover:bg-amber-50 rounded-xl transition-colors cursor-pointer"
@@ -177,6 +192,8 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
           ))
         )}
       </div>
+
+      {openJob && <JobDetailModal job={openJob} onClose={() => setOpenJob(null)} />}
 
       {rejectingJob && (
         <RejectJobModal

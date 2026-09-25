@@ -11,12 +11,12 @@ import pytest
 
 from app import models
 from app.db.session import SessionLocal
-from app.services.escrow_service import PLATFORM_FEE_PERCENT
 from tests.conftest import login, make_job, make_user
 
 WAGE = 275_000
-FEE = int(WAGE * (PLATFORM_FEE_PERCENT / 100.0))
-NET_WAGE = WAGE - FEE
+# The commission is charged to the employer on top of the wage, so what the
+# worker receives is the posted figure itself.
+NET_WAGE = WAGE
 
 
 def _balance(user_id: str) -> int:

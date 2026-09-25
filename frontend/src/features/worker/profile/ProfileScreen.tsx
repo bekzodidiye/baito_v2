@@ -40,8 +40,7 @@ export const ProfileScreen: React.FC = () => {
     handleLogout,
     handleWithdrawSubmit,
     editForm,
-    setEditForm,
-    toggleRole
+    setEditForm
   } = useProfileScreen();
   const tGlobal = translations[language];
 
@@ -109,31 +108,11 @@ export const ProfileScreen: React.FC = () => {
           {/* Profile Reviews Widget */}
           <ProfileReviewsWidget language={language} />
 
-          {/* Toggle Role Widget */}
-          <section className="bg-slate-900 text-white rounded-2xl p-4.5 border border-slate-800 shadow-sm flex flex-col gap-2.5 shrink-0">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[9px] font-black uppercase text-brand-primary tracking-widest">
-                  {language === 'uz' ? "FAOLIYAT TURI" : language === 'ru' ? "РЕЖИМ АККАУНТА" : "ACCOUNT MODE"}
-                </p>
-                <h3 className="font-display font-extrabold text-[11px] mt-0.5 text-slate-200 leading-snug">
-                  {userProfile?.selectedRole === 'employer' 
-                    ? (language === 'uz' ? "Ish beruvchi rejimi faol. Xodim rejimiga o'tish:" : language === 'ru' ? "Режим работодателя активен. Перейти в режим работника:" : "Employer mode is active. Switch to worker mode:")
-                    : (language === 'uz' ? "Xodim rejimi faol. Ish beruvchi rejimiga o'tish:" : language === 'ru' ? "Режим работника активен. Перейти в режим работодателя:" : "Worker mode is active. Switch to employer mode:")
-                  }
-                </h3>
-              </div>
-            </div>
-            <button
-              onClick={toggleRole}
-              className="w-full min-h-[44px] py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl font-display font-black text-xs transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 shadow-sm"
-            >
-              {userProfile?.selectedRole === 'employer'
-                ? (language === 'uz' ? "Xodim rejimiga o'tish" : language === 'ru' ? "Режим работника" : "Worker Mode")
-                : (language === 'uz' ? "Ish beruvchi rejimiga o'tish" : language === 'ru' ? "Режим работодателя" : "Employer Mode")
-              }
-            </button>
-          </section>
+          {/* The account-mode switch used to sit here. One person is either
+              hiring or looking for work in a given session, and the switch let
+              a half-finished flow on one side be abandoned by a single tap
+              into the other. Removed from both profiles; admins still switch
+              panels from the admin sidebar, which is a different job. */}
         </div>
 
         {/* Right Column: Widgets, Accordion & Logout */}

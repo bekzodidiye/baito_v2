@@ -8,12 +8,13 @@ from sqlalchemy.orm import Session
 from app import crud, models
 from app.api import deps
 from app.core.money import parse_salary_amounts, salary_to_uzs
-from app.services.escrow_service import PLATFORM_FEE_PERCENT
+from app.services.escrow_service import fee_for, job_fee_percent, worker_share
 from app.models.job import JobStatus
 from app.services.escrow_service import EscrowService
 from app.services import job_days
-from app.services.scheduling import COMMITTED_APP_STATUSES, lock_worker_job
 from app.services.work_dates import get_job_dates_set
+
+COMMITTED_APP_STATUSES = ['hired', 'confirmed', 'in_progress', 'start_requested']
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -65,6 +66,23 @@ def get_worker_applications(
     jobs = db.query(models.Job).filter(models.Job.id.in_(job_ids)).all()
     job_map = {j.id: j for j in jobs}
 
+    # The commission is the employer's: a worker is paid the wage the posting
+    # advertised, in full. What is read back here is the escrow hold, which
+    # knows exactly what it owes — including for the jobs hired before the fee
+    # moved off the worker's side, which are still settled on their old terms.
+    # One query for the lot rather than one per application.
+    holds = (
+        db.query(models.Transaction)
+        .filter(
+            models.Transaction.jobId.in_(job_ids),
+            models.Transaction.type == "escrow_hold",
+        )
+        .all()
+    ) if job_ids else []
+    owed_by_hold: dict[str, int] = {}
+    for h in holds:
+        owed_by_hold[h.jobId] = owed_by_hold.get(h.jobId, 0) + worker_share(h, db)
+
     result = []
     for app in apps:
         job = job_map.get(app.jobId)
@@ -75,11 +93,12 @@ def get_worker_applications(
         # string together, so "1 500 000 - 2 000 000" became 15000002000000.
         base_salary = salary_to_uzs(job.salary)
         # What the worker is told they earned has to be what reached their
-        # balance. release_funds credits the wage less the platform fee, and
-        # the bonus is paid in full on top; reporting the gross wage overstated
-        # every completed job by the fee, and the Reviews screen sums this
-        # field into a lifetime total, so the gap compounded.
-        net_wage = base_salary - int(base_salary * (PLATFORM_FEE_PERCENT / 100.0))
+        # balance. The commission is charged to the employer on top of the wage,
+        # so for anyone hired since that changed the two are simply the posted
+        # salary. The escrow hold is still the source: a job hired under the old
+        # arrangement pays what it promised then, and quoting the posting's
+        # figure for it would overstate what actually arrived.
+        net_wage = owed_by_hold.get(job.id, base_salary)
 
         result.append({
             "id": app.id,
@@ -137,6 +156,10 @@ def get_employer_applications(
         if w.uid:
             worker_map[w.uid] = w
 
+    # Each job carries its own rate — its category's plus its region's — so
+    # this is per job rather than one figure for the list.
+    rate_by_job = {j.id: job_fee_percent(db, j) for j in employer_jobs}
+
     result = []
     for app in apps:
         worker = worker_map.get(app.workerId)
@@ -148,10 +171,17 @@ def get_employer_applications(
             "id": app.id,
             "jobId": app.jobId,
             "jobTitle": job.title if job else "Ish e'loni",
+            # The card offers "confirm start" off the application's own status,
+            # which stays at start_requested forever. Without the job's status
+            # beside it the button was still being offered on a shift that had
+            # already finished, and the server answered 400 to every press.
+            "jobStatus": job.status if job else None,
             # What hiring will actually freeze. Computed the same way /hire
             # computes it, so the confirmation the employer reads and the sum
-            # taken out of their balance cannot drift apart.
+            # taken out of their balance cannot drift apart — including the
+            # commission, which the employer pays on top of the wage.
             "wageAmount": salary_to_uzs(job.salary) if job else 0,
+            "feeAmount": fee_for(salary_to_uzs(job.salary), rate_by_job.get(job.id, 0)) if job else 0,
             "workerId": app.workerId,
             "workerName": worker.name if worker else "Ishchi",
             "workerPhone": (
@@ -249,10 +279,18 @@ def hire_applicant(
     # figure once instead of watching day one freeze and day two fail. A
     # three-day shift costs three times the posted wage, and that is not
     # obvious from a form that asks for one number.
-    total_due = wage * max(1, len(days))
+    # The wage is the worker's in full; the platform's commission is charged to
+    # the employer on top of it. Leaving the fee out of this check would let
+    # hiring pass here and then fail inside hold_funds on the employer's
+    # balance — the exact "day one froze, day two failed" split this check
+    # exists to prevent.
+    day_count = max(1, len(days))
+    fee_per_day = fee_for(wage, job_fee_percent(db, job))
+    total_due = (wage + fee_per_day) * day_count
     if wage > 0:
         employer = db.query(models.User).filter(models.User.id == job.employerId).first()
         available = (employer.balance or 0) if employer else 0
+
 
     escrow_held = False
     if wage > 0:
@@ -326,7 +364,11 @@ def hire_applicant(
         "success": True,
         "application_status": "hired",
         "escrow_held": escrow_held,
-        "escrow_amount": wage if escrow_held else 0,
+        # What actually left the employer's balance: the wage plus the
+        # commission charged on top of it, for every day of the posting.
+        "escrow_amount": (wage + fee_per_day) * day_count if escrow_held else 0,
+        "escrow_wage": wage * day_count if escrow_held else 0,
+        "escrow_fee": fee_per_day * day_count if escrow_held else 0,
     }
 
 

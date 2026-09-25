@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, Column, String, DateTime, ForeignKey, Integer
+from sqlalchemy import BigInteger, Column, String, DateTime, Float, ForeignKey, Integer
 from sqlalchemy.sql import func
 from app.db.base_class import Base
 from .user import generate_uuid
@@ -15,6 +15,12 @@ class Transaction(Base):
     workerId = Column(String, ForeignKey("users.id"))
     amount = Column(Integer, nullable=False)
     platformFee = Column(Integer, nullable=False, default=0)
+    # The commission rate this hold was taken under. An administrator can change
+    # the rate, and the worker is quoted their net wage when they apply — so the
+    # rate has to be the one in force when the money was frozen, not whatever it
+    # happens to be on payout day. Null on holds made before this existed, and
+    # on everything that is not an escrow hold.
+    feePercent = Column(Float, nullable=True)
     type = Column(String, nullable=False) # 'deposit' | 'withdraw' | 'payment'
     status = Column(String, nullable=False, default='pending') # 'pending' | 'paid' | 'canceled'
     createdAt = Column(DateTime(timezone=True), server_default=func.now())

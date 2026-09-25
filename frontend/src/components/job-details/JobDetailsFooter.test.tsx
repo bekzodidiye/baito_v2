@@ -4,8 +4,13 @@ import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/re
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const completeJobMock = vi.fn().mockResolvedValue({ success: true });
+const showToast = vi.hoisted(() => vi.fn());
+vi.mock('../../utils/toast', () => ({ showToast }));
 
-vi.mock('../../context/AppContext', () => ({ useApp: () => ({ language: 'uz' }) }));
+// A verified worker: applying is refused otherwise, which is its own case below.
+vi.mock('../../context/AppContext', () => ({
+  useApp: () => ({ language: 'uz', userProfile: { isVerified: true } }),
+}));
 vi.mock('../../api/queries', () => ({
   requestStartJobApi: vi.fn(),
   completeJobApi: (...args: unknown[]) => completeJobMock(...args),
@@ -93,3 +98,26 @@ describe('JobDetailsFooter — worker finishing an in_progress job', () => {
   });
 });
 
+
+/** The server refuses an application from an unverified account. Saying so on
+ *  the press is the difference between an explanation and a rejection. */
+describe('JobDetailsFooter — an unverified worker is told, not rejected', () => {
+  it('does not call the API and says why', async () => {
+    vi.resetModules();
+    showToast.mockClear();
+    vi.doMock('../../context/AppContext', () => ({
+      useApp: () => ({ language: 'uz', userProfile: { isVerified: false } }),
+    }));
+    vi.doMock('../../utils/toast', () => ({ showToast }));
+    const { JobDetailsFooter: Unverified } = await import('./JobDetailsFooter');
+    const applyToJob = vi.fn();
+
+    render(<Unverified selectedJob={{ ...job, status: 'open' } as Job} applyToJob={applyToJob} />);
+    fireEvent.click(screen.getByRole('button', { name: /Ariza topshirish/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Topshirish$/i }));
+
+    await waitFor(() => expect(showToast).toHaveBeenCalled());
+    expect(applyToJob).not.toHaveBeenCalled();
+    expect(String(showToast.mock.calls[0][0])).toContain('tasdiqlanmagan');
+  });
+});

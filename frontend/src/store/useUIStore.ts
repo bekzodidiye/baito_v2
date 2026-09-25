@@ -13,7 +13,11 @@ interface UIState {
   filterLocation: string;
   setFilterLocation: (location: string) => void;
   filterType: string;
+  /** Set from the landing page's category cards, read by the search screen
+   *  when it mounts. filterType was being used for this and nothing read it. */
+  filterCategory: string;
   setFilterType: (type: string) => void;
+  setFilterCategory: (category: string) => void;
   sortBy: 'yangilari' | 'maosh';
   setSortBy: (sort: 'yangilari' | 'maosh') => void;
   showRegionSelector: boolean;
@@ -54,6 +58,8 @@ export const useUIStore = create<UIState>((set) => ({
   
   filterType: 'Barchasi',
   setFilterType: (type) => set({ filterType: type }),
+  filterCategory: 'Barchasi',
+  setFilterCategory: (category) => set({ filterCategory: category }),
   
   sortBy: 'yangilari',
   setSortBy: (sort) => set({ sortBy: sort }),

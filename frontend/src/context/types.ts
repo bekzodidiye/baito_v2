@@ -46,6 +46,8 @@ export interface AppContextType {
   setFilterLocation: (loc: string) => void;
   filterType: string;
   setFilterType: (type: string) => void;
+  filterCategory: string;
+  setFilterCategory: (category: string) => void;
   sortBy: 'yangilari' | 'maosh';
   setSortBy: (sort: 'yangilari' | 'maosh') => void;
 

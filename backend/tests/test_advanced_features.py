@@ -92,18 +92,23 @@ def escrow_pair():
         yield db, employer, worker, job
 
 
-def test_escrow_holds_then_releases_minus_the_platform_fee(escrow_pair):
+def test_escrow_holds_the_wage_plus_the_employers_commission(escrow_pair):
+    """The worker is paid the posted wage; the platform's cut is the employer's.
+
+    Both halves are frozen together, so the employer cannot be billed the
+    commission later for a shift whose money has already gone.
+    """
     db, employer, worker, job = escrow_pair
 
     held = EscrowService.hold_funds(db, employer.id, job.id, 200000)
     assert held.status == "held"
     db.refresh(employer)
-    assert employer.balance == 300000
+    assert employer.balance == 280000  # 500,000 less 200,000 wage and 20,000 fee
 
     released = EscrowService.release_funds(db, job.id, worker.id)
     assert released.status == "released"
     db.refresh(worker)
-    assert worker.balance == 180000  # 200,000 less the 10% platform fee
+    assert worker.balance == 200000  # the posted wage, whole
 
 
 def test_fiscal_receipt_is_confirmed_and_points_at_soliq():
@@ -125,5 +130,5 @@ def test_referral_bonus_credits_both_sides(escrow_pair):
     GrowthEngine.apply_referral_bonus_on_first_job(db, worker, employer.id)
     db.refresh(employer)
     db.refresh(worker)
-    assert employer.balance == 320000  # 300,000 + 20,000
-    assert worker.balance == 200000    # 180,000 + 20,000
+    assert employer.balance == 300000  # 280,000 + 20,000
+    assert worker.balance == 220000    # 200,000 + 20,000

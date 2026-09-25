@@ -10,11 +10,13 @@ from sqlalchemy.orm import Session
 from app import crud, models
 from app.api import deps
 from app.models.job import JobStatus
+from app.models.job_payout import JobPayout, PayoutStatus
 from app.services.escrow_service import EscrowService
 from app.services import job_days as job_days_service
 from app.models.job_day import JobDay, JobDayStatus
 from app.services.work_dates import get_job_dates_set  # noqa: F401  (re-exported)
-from app.services.scheduling import ACTIVE_APP_STATUSES, COMMITTED_APP_STATUSES, lock_worker_job
+ACTIVE_APP_STATUSES = ['applied', 'hired', 'confirmed', 'in_progress', 'start_requested']
+COMMITTED_APP_STATUSES = ['hired', 'confirmed', 'in_progress', 'start_requested']
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -60,15 +62,12 @@ def apply_to_job(
     *,
     db: Session = Depends(deps.get_db),
     id: str,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    # Being a worker is no longer enough: the documents have to have been
+    # checked. A worker turns up at a stranger's address, and the employer is
+    # entitled to know somebody looked at who that is.
+    current_user: models.User = Depends(deps.get_verified_worker),
 ) -> Any:
-    if current_user.role != 'worker':
-        raise HTTPException(status_code=403, detail="Faqat ishchilar ariza topshira oladi")
-
-    # Serialize all requests for this worker, including applications to other
-    # postings and hires by other employers. The job lock also keeps the
-    # vacancy check consistent with hiring.
-    job = lock_worker_job(db, current_user.id, id)
+    job = _get_job_or_404(db, id)
 
     # Applying to a cancelled or finished posting was previously allowed.
     if job.status not in JobStatus.OPEN_STATUSES:
@@ -164,12 +163,19 @@ def request_start_job(
     id: str,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    """Worker signals they have arrived and are ready to begin.
+    """The worker starts the shift. Nobody confirms it afterwards.
 
-    ``request-start``, ``confirm-start`` and ``start`` were all bound to a
-    single handler that immediately flipped the job to ``in_progress``, so the
-    employer's confirmation step did not exist — a worker could start a job on
-    their own.
+    This used to only raise a hand: the application went to ``start_requested``
+    and waited for the employer to press a button before the work counted as
+    begun. The wait bought nothing. The wage is frozen at hiring and released at
+    completion, so the employer's press moved no money and could withhold none.
+    What it did do was leave a worker standing on site unable to show they had
+    started, and leave every application nobody confirmed stuck at
+    ``start_requested`` for good.
+
+    The route keeps its name so an older client still reaches it, and an
+    application left at ``start_requested`` by the old flow is moved on by the
+    same call.
     """
     job = _get_job_or_404(db, id)
 
@@ -177,19 +183,71 @@ def request_start_job(
     if not app:
         raise HTTPException(status_code=403, detail="Siz bu ishga yollanmagansiz")
 
+    if job.status in JobStatus.CLOSED_STATUSES:
+        raise HTTPException(status_code=400, detail="Bu ish allaqachon yakunlangan")
+
     if app.status == 'in_progress':
         return {"success": True, "status": "in_progress"}
 
-    app.status = 'start_requested'
+    # This worker has begun — deliberately not every hired worker on the
+    # posting. On a multi-vacancy shift one person arriving says nothing about
+    # the others, and marking them all started would put a time against people
+    # who are not there. That is what confirm-start does, and why it is still
+    # the employer's route rather than this one.
+    app.status = 'in_progress'
     db.add(app)
+
+    job.status = JobStatus.IN_PROGRESS
+    # Written once, by whoever arrives first: the posting began when the first
+    # person started on it, not when the last one did.
+    if job.startedAt is None:
+        job.startedAt = datetime.now(timezone.utc)
+    db.add(job)
+
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    day = (
+        db.query(JobDay)
+        .filter(JobDay.jobId == job.id, JobDay.status == JobDayStatus.PENDING)
+        .order_by(JobDay.workDate)
+        .first()
+    )
+    if day is not None and day.startedAt is None and day.workDate <= today:
+        day.startedAt = datetime.now(timezone.utc)
+        db.add(day)
+
+    # Free this worker's day: withdraw their own pending applications that
+    # collide with it. Marked withdrawn rather than deleted, so they can still
+    # see what happened.
+    job_dates = get_job_dates_set(job)
+    if job_dates:
+        others = (
+            db.query(models.Application)
+            .filter(
+                models.Application.workerId == app.workerId,
+                models.Application.jobId != id,
+                models.Application.status == "applied",
+            )
+            .all()
+        )
+        other_jobs = {
+            j.id: j
+            for j in db.query(models.Job)
+            .filter(models.Job.id.in_({a.jobId for a in others}))
+            .all()
+        } if others else {}
+        for other in others:
+            if job_dates & get_job_dates_set(other_jobs.get(other.jobId)):
+                other.status = "withdrawn"
+                db.add(other)
+
     db.add(models.Notification(
         id=str(uuid.uuid4()), userId=job.employerId,
-        title="Ishchi ishni boshlashga tayyor",
-        message=f"'{job.title}' ishi bo'yicha ishchi boshlashni so'radi. Tasdiqlang.",
-        type="start_requested", relatedJobId=id,
+        title="Ish boshlandi",
+        message=f"'{job.title}' ishi bo'yicha ishchi ishni boshladi.",
+        type="start_confirmed", relatedJobId=id,
     ))
     db.commit()
-    return {"success": True, "status": "start_requested"}
+    return {"success": True, "status": JobStatus.IN_PROGRESS}
 
 
 @router.post("/{id}/confirm-start")
@@ -200,7 +258,13 @@ def confirm_start_job(
     id: str,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    """Employer confirms the work has begun."""
+    """Start the shift on the workers' behalf.
+
+    No longer a gate the work waits behind — the worker starts it themselves.
+    This stays for what the other route cannot cover: a worker who cannot reach
+    their phone, and an administrator putting a job right. It advances every
+    hired worker at once, which is exactly why it is not what a worker calls.
+    """
     job = _get_job_or_404(db, id)
 
     is_employer = job.employerId in (current_user.id, current_user.uid)
@@ -222,7 +286,26 @@ def confirm_start_job(
         raise HTTPException(status_code=400, detail="Bu ishga hali hech kim yollanmagan")
 
     job.status = JobStatus.IN_PROGRESS
+    # The moment the work actually began, against which lateness is read. Only
+    # written once: a posting that is confirmed started twice — the endpoint is
+    # reachable while the job is in progress — must keep the first time, not
+    # move its start to whenever somebody last pressed the button.
+    if job.startedAt is None:
+        job.startedAt = datetime.now(timezone.utc)
     db.add(job)
+
+    # The day being worked gets the same stamp. On a multi-day posting the
+    # job-level one only ever describes the first day.
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    day = (
+        db.query(JobDay)
+        .filter(JobDay.jobId == job.id, JobDay.status == JobDayStatus.PENDING)
+        .order_by(JobDay.workDate)
+        .first()
+    )
+    if day is not None and day.startedAt is None and day.workDate <= today:
+        day.startedAt = datetime.now(timezone.utc)
+        db.add(day)
 
     job_dates = get_job_dates_set(job)
 
@@ -681,3 +764,108 @@ def toggle_bookmark(
     db.add(models.Bookmark(jobId=id, userId=current_user.id))
     db.commit()
     return {"success": True, "bookmarked": True}
+
+
+class PayoutDeclarationRequest(BaseModel):
+    """What an employer says when settling an invoice from inside the app."""
+
+    method: str = Field(min_length=1, max_length=40)
+    reference: Optional[str] = Field(default=None, max_length=120)
+    receiptUrl: Optional[str] = Field(default=None, max_length=500)
+
+
+def _payout_state(payout: "JobPayout | None") -> dict:
+    """The shape the employer's job card reads.
+
+    Only what the payer needs: how much, which invoice, and where it has got
+    to. Deliberately not the worker-side columns - what we paid the worker and
+    the receipt for it are not the employer's business.
+    """
+    if payout is None or not payout.invoiceNumber:
+        return {"payoutStatus": None, "invoiceNumber": None, "invoiceAmount": None}
+    return {
+        "payoutStatus": payout.status,
+        "invoiceNumber": payout.invoiceNumber,
+        "invoiceAmount": payout.invoiceAmount or payout.amount,
+        "invoiceSentAt": payout.invoiceSentAt,
+        "invoicePaidDeclaredAt": payout.invoicePaidDeclaredAt,
+        "invoiceConfirmedAt": payout.invoiceConfirmedAt,
+    }
+
+
+@router.get("/{id}/payout")
+def get_job_payout_for_employer(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: str,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """Invoice state for one of the caller's own jobs."""
+    job = _get_job_or_404(db, id)
+    if job.employerId not in (current_user.id, getattr(current_user, "uid", None)) \
+            and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Bu e'lon sizga tegishli emas")
+
+    payout = (
+        db.query(models.JobPayout)
+        .filter(models.JobPayout.jobId == id)
+        .order_by(models.JobPayout.paidAt.desc())
+        .first()
+    )
+    return _payout_state(payout)
+
+
+@router.post("/{id}/payout/declare")
+def declare_job_payout(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: str,
+    req: PayoutDeclarationRequest,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """Record that the employer says this invoice is paid.
+
+    The same declaration the tokenised link in the invoice email makes, for the
+    employer who is already signed in and would rather do it from the job card
+    than go and find the email. Sets ``payment_declared``: this has the payer's
+    word and a receipt image, which is not the same as the money arriving, and
+    an administrator still has to reconcile it.
+    """
+    job = _get_job_or_404(db, id)
+    if job.employerId not in (current_user.id, getattr(current_user, "uid", None)):
+        raise HTTPException(status_code=403, detail="Bu e'lon sizga tegishli emas")
+
+    payout = (
+        db.query(models.JobPayout)
+        .filter(models.JobPayout.jobId == id)
+        .order_by(models.JobPayout.paidAt.desc())
+        .first()
+    )
+    if payout is None or not payout.invoiceNumber:
+        raise HTTPException(status_code=404, detail="Bu ish uchun hisob-faktura yuborilmagan")
+    if payout.invoicePaidDeclaredAt:
+        raise HTTPException(status_code=409, detail="To'lov allaqachon qayd etilgan")
+
+    payout.invoicePaidMethod = req.method.strip()
+    payout.invoicePaidReference = (req.reference or "").strip() or None
+    payout.invoicePaidReceiptUrl = (req.receiptUrl or "").strip() or None
+    payout.invoicePaidDeclaredAt = datetime.now(timezone.utc)
+    payout.status = PayoutStatus.DECLARED
+    db.add(payout)
+
+    amount = f"{payout.invoiceAmount or payout.amount:,}".replace(",", " ")
+    company = getattr(current_user, "companyName", None) or job.company or "Korxona"
+    for admin in db.query(models.User).filter(models.User.role == "admin").all():
+        db.add(models.Notification(
+            userId=admin.id,
+            title="Hisob-faktura to'landi deb belgilandi",
+            message=f"{company} — {payout.invoiceNumber} · {amount} so'm. "
+                    + ("Chek ilova qilingan. " if payout.invoicePaidReceiptUrl else "Chek ilova qilinmagan. ")
+                    + "Bank ko'chirmasi bilan solishtiring.",
+            type="payout",
+            relatedJobId=job.id,
+        ))
+
+    db.commit()
+    db.refresh(payout)
+    return _payout_state(payout)

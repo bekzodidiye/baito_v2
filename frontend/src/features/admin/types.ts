@@ -93,6 +93,10 @@ export interface AdminJob {
   createdAt?: string;
   workDate?: string;
   workTime?: string;
+  /** What actually happened, as opposed to the shift that was advertised.
+   *  Null on jobs that ran before these were recorded. */
+  startedAt?: string | null;
+  completedAt?: string | null;
   workerId?: string;
   workerName?: string;
   category?: string;
@@ -147,12 +151,24 @@ export interface AdminTimelineEvent {
   icon: string;
 }
 
+/** One stage of the job's life, reached or not — see `_build_steps` on the API.
+ *  `timeline` only carries things that happened; this carries things that have
+ *  to happen, so a stage still ahead of the job is visible too. */
+export interface AdminJobStep {
+  key: string;
+  label: string;
+  state: 'done' | 'current' | 'pending' | 'skipped' | 'cancelled';
+  date?: string | null;
+  detail?: string | null;
+}
+
 export interface AdminJobDetailResponse {
   job: AdminJob & { employerPhone?: string };
   hiredWorker: AdminJobApplication | null;
   applications: AdminJobApplication[];
   transactions: AdminJobTransaction[];
   timeline: AdminTimelineEvent[];
+  steps?: AdminJobStep[];
 }
 
 export interface AdminTransaction {
@@ -254,7 +270,9 @@ export interface CategoryItem {
   icon: string;
   description: string;
   commissionPercent: number;
-  skills: string[];
+  /** May be null on a row written outside the ORM — the type said string[] and
+   *  the screen trusted it. */
+  skills: string[] | null;
   activeWorkersCount: number;
   activeJobsCount: number;
 }
@@ -274,11 +292,16 @@ export interface PromoCode {
 export interface RegionConfig {
   id: string;
   name: string;
-  districtsCount: number;
+  /** Stored settings. Null on a region nobody has filled in. */
+  districtsCount?: number | null;
+  minSalary?: number | null;
+  /** The region half of the employer's commission. This was called
+   *  customCommission here and nothing on the server ever sent that name, so the
+   *  screen printed "undefined%". */
+  commissionPercent?: number | null;
+  /** Derived by the endpoint, never stored — a saved count goes stale. */
   activeWorkersCount: number;
   activeJobsCount: number;
-  minSalary: number;
-  customCommission: number;
   isActive: boolean;
 }
 
@@ -321,6 +344,7 @@ export type AdminTab =
   | 'audit_logs'
   | 'promotions'
   | 'regions'
+  | 'notifications'
   | 'notification_rules'
   | 'auto_moderation'
   | 'auto_matching'

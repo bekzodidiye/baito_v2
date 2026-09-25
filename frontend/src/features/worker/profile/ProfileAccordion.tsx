@@ -86,6 +86,9 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
 
 
 
+                {/* Earnings row parked with the balance flow - see the note beside
+                    the /payments routes in components/AppRoutes.tsx. */}
+                {/*
                 <div 
                   onClick={() => setCurrentScreen('payments')}
                   className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
@@ -96,6 +99,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
                   </div>
                   <ChevronRight size={14} className="text-slate-350" />
                 </div>
+                */}
 
                 <div 
                   onClick={() => {

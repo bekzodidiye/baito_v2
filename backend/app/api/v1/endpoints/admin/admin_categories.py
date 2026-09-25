@@ -1,3 +1,5 @@
+import re
+import unicodedata
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -6,6 +8,34 @@ from app.api import deps
 from .admin_users import get_admin_user
 
 router = APIRouter()
+
+
+def _slugify(name: str) -> str:
+    """A url-safe key for a category name.
+
+    Jobs store this, not the uuid: the value is displayed and filtered on all
+    over the app, and a uuid in those places is unreadable. Uzbek apostrophes
+    and the like are stripped rather than transliterated - the slug only has to
+    be stable and unique, never pretty.
+    """
+    ascii_name = (
+        unicodedata.normalize("NFKD", name or "")
+        .encode("ascii", "ignore")
+        .decode("ascii")
+        .lower()
+    )
+    slug = re.sub(r"[^a-z0-9]+", "-", ascii_name).strip("-")
+    return slug or "kategoriya"
+
+
+def _unique_slug(db: Session, name: str) -> str:
+    """Append a counter rather than colliding: the column is unique, and a
+    second "Qurilish" must not fail the request an administrator just made."""
+    base = _slugify(name)
+    slug, n = base, 2
+    while db.query(models.Category).filter(models.Category.slug == slug).first():
+        slug, n = f"{base}-{n}", n + 1
+    return slug
 
 @router.get("/categories")
 def get_categories(
@@ -17,11 +47,14 @@ def get_categories(
     for c in cats:
         result.append({
             "id": c.id,
+            "slug": c.slug,
             "name": c.name,
             "icon": c.icon,
             "description": c.description,
             "commissionPercent": c.commissionPercent,
-            "skills": c.skills,
+            # Never null: the column is only defaulted on ORM inserts, and the
+            # seed wrote these rows with raw SQL. A null here crashed the panel.
+            "skills": c.skills or [],
             "activeWorkersCount": c.activeWorkersCount,
             "activeJobsCount": c.activeJobsCount,
         })
@@ -33,12 +66,17 @@ def create_category(
     db: Session = Depends(deps.get_db),
     _: models.User = Depends(get_admin_user),
 ) -> Any:
+    name = (payload.get("name") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Kategoriya nomi kiritilmagan")
+
     cat = models.Category(
-        name=payload.get("name"),
+        slug=_unique_slug(db, name),
+        name=name,
         icon=payload.get("icon"),
         description=payload.get("description"),
         commissionPercent=payload.get("commissionPercent", 0),
-        skills=payload.get("skills", []),
+        skills=payload.get("skills") or [],
         activeWorkersCount=payload.get("activeWorkersCount", 0),
         activeJobsCount=payload.get("activeJobsCount", 0),
     )
@@ -47,11 +85,12 @@ def create_category(
     db.refresh(cat)
     return {
         "id": cat.id,
+        "slug": cat.slug,
         "name": cat.name,
         "icon": cat.icon,
         "description": cat.description,
         "commissionPercent": cat.commissionPercent,
-        "skills": cat.skills,
+        "skills": cat.skills or [],
         "activeWorkersCount": cat.activeWorkersCount,
         "activeJobsCount": cat.activeJobsCount,
     }

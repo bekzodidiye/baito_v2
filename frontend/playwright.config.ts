@@ -11,6 +11,23 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
+/* 5173 is vite's default, so it is also the port a developer's `npm run dev`
+   takes - and the CI runner is that same laptop. A dev server started between
+   two runs is enough to fail the suite outright:
+
+     Error: http://localhost:5173 is already used, make sure that nothing is
+     running on the port/url or set reuseExistingServer:true in config.webServer
+
+   which is exactly what happened to 5bdb5a7 on main, nine minutes after the
+   same suite passed on the pull request.
+
+   reuseExistingServer stays false under CI on purpose: testing against
+   whatever happens to be listening is worse than failing. So CI is handed a
+   port of its own instead, the same way the postgres and redis services are
+   already shifted off their defaults. Locally the default stays 5173, where
+   reusing a dev server that is already up is the point. */
+const E2E_PORT = Number(process.env.E2E_PORT) || 5173;
+
 export default defineConfig({
   testDir: './tests',
   /* Run tests in files in parallel */
@@ -25,8 +42,12 @@ export default defineConfig({
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'http://localhost:5173',
+    /* Base URL to use in actions like `await page.goto('')`. Must track the
+       webServer port below. When it did not, the suite started a preview on
+       its own port and then drove the browser at 5173 anyway - straight into
+       whatever dev server happened to be running - and reported 14 passes
+       against it before one test disagreed. */
+    baseURL: `http://localhost:${E2E_PORT}`,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -37,8 +58,8 @@ export default defineConfig({
      Building and previewing, rather than `npm run dev`, so CI exercises the
      bundle that actually ships. */
   webServer: {
-    command: 'npm run build && npm run preview -- --port 5173 --strictPort',
-    url: 'http://localhost:5173',
+    command: `npm run build && npm run preview -- --port ${E2E_PORT} --strictPort`,
+    url: `http://localhost:${E2E_PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },

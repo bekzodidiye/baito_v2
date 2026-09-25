@@ -26,8 +26,11 @@ import {
   Plus,
   UserCheck,
   Banknote,
+  Circle,
+  XCircle,
+  ListChecks,
 } from 'lucide-react';
-import { AdminJob, AdminJobDetailResponse, AdminJobApplication, AdminJobTransaction, AdminTimelineEvent } from './types';
+import { AdminJob, AdminJobDetailResponse, AdminJobApplication, AdminJobTransaction, AdminTimelineEvent, AdminJobStep } from './types';
 import { useApp } from '../../context/AppContext';
 
 interface JobDetailModalProps {
@@ -198,6 +201,81 @@ interface InfoTabProps {
   detail: AdminJobDetailResponse | null;
 }
 
+/* ========================= LIFECYCLE STEPS ========================= */
+/** Every stage of the job, reached or not.
+ *
+ *  The history tab lists what happened. This lists what has to happen, so a
+ *  stage still ahead of the job is on screen next to the ones behind it — the
+ *  question an administrator opens a job to answer is "where is this now", and
+ *  an event log alone cannot show a stage nobody has reached yet. */
+const stepStyles: Record<AdminJobStep['state'], { ring: string; fill: string; label: string; date: string }> = {
+  done:      { ring: 'border-emerald-500 bg-emerald-500', fill: 'text-white',        label: 'text-slate-800', date: 'text-slate-400' },
+  current:   { ring: 'border-brand-primary bg-white',     fill: 'text-brand-primary', label: 'text-brand-primary', date: 'text-brand-primary/70' },
+  pending:   { ring: 'border-slate-200 bg-white',         fill: 'text-slate-300',    label: 'text-slate-400', date: 'text-slate-300' },
+  skipped:   { ring: 'border-slate-200 bg-slate-50',      fill: 'text-slate-300',    label: 'text-slate-300', date: 'text-slate-300' },
+  cancelled: { ring: 'border-red-300 bg-red-50',          fill: 'text-red-500',      label: 'text-red-600',   date: 'text-red-400' },
+};
+
+const JobSteps: React.FC<{ steps: AdminJobStep[] }> = ({ steps }) => {
+  if (steps.length === 0) return null;
+  const done = steps.filter(s => s.state === 'done').length;
+  const total = steps.filter(s => s.state !== 'cancelled').length;
+
+  return (
+    <div className="bg-white rounded-xl p-4 border border-slate-200/60 shadow-sm mb-3">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-[13px] font-bold text-slate-800 flex items-center gap-1.5">
+          <ListChecks size={15} className="text-brand-primary" /> Ish jarayoni
+        </h3>
+        <span className="text-[11px] font-bold text-slate-400">{done} / {total}</span>
+      </div>
+
+      <ol className="relative">
+        {steps.map((step, idx) => {
+          const st = stepStyles[step.state] || stepStyles.pending;
+          const last = idx === steps.length - 1;
+          return (
+            <li key={step.key} className="flex gap-3 pb-3 last:pb-0 relative">
+              {/* The connector stops at the last row so the line does not hang
+                  below the final step. */}
+              {!last && (
+                <span
+                  aria-hidden="true"
+                  className={`absolute left-[9px] top-5 bottom-0 w-px ${
+                    step.state === 'done' ? 'bg-emerald-200' : 'bg-slate-200'
+                  }`}
+                />
+              )}
+              <span
+                className={`w-[19px] h-[19px] rounded-full border-2 flex items-center justify-center shrink-0 z-10 ${st.ring}`}
+              >
+                {step.state === 'done' ? (
+                  <CheckCircle2 size={11} className={st.fill} strokeWidth={3} />
+                ) : step.state === 'cancelled' ? (
+                  <XCircle size={11} className={st.fill} strokeWidth={3} />
+                ) : (
+                  <Circle size={7} className={st.fill} fill="currentColor" />
+                )}
+              </span>
+              <div className="min-w-0 flex-1 -mt-0.5">
+                <p className={`text-[12.5px] font-bold leading-snug ${st.label}`}>{step.label}</p>
+                {(step.date || step.detail) && (
+                  <p className={`text-[10.5px] font-medium mt-0.5 ${st.date}`}>
+                    {step.detail && <span>{step.detail}</span>}
+                    {step.detail && step.date && <span className="mx-1">·</span>}
+                    {step.date && <span>{formatDate(step.date)}</span>}
+                  </p>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+};
+
+
 const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, detail }) => (
   <div className="pb-6">
     {/* Banner */}
@@ -233,6 +311,8 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
           ))}
         </div>
       </div>
+
+      <JobSteps steps={detail?.steps || []} />
 
       {/* Employer & Worker Info */}
       <div className="grid grid-cols-1 gap-2 mb-3">
@@ -353,6 +433,7 @@ const timelineIcons: Record<string, { icon: React.ReactNode; color: string }> = 
   'check': { icon: <UserCheck size={14} />, color: 'bg-emerald-100 text-emerald-600' },
   'dollar': { icon: <Banknote size={14} />, color: 'bg-amber-100 text-amber-600' },
   'credit-card': { icon: <CreditCard size={14} />, color: 'bg-green-100 text-green-600' },
+  'file': { icon: <FileText size={14} />, color: 'bg-violet-100 text-violet-600' },
 };
 
 const TimelineTab: React.FC<{ timeline: AdminTimelineEvent[] }> = ({ timeline }) => (

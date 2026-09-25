@@ -27,7 +27,7 @@ export const LandingScreen: React.FC = () => {
 
   return (
     <div id="baito-landing-page" className="min-h-screen bg-white font-sans flex flex-col selection:bg-brand-primary selection:text-white">
-      <LandingNavbar onSelectRole={handleSelectRole} />
+      <LandingNavbar />
       <main className="flex-1">
         <LandingHero onSelectRole={handleSelectRole} />
         <LandingFeatures />

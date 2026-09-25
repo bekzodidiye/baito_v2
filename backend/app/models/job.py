@@ -46,6 +46,11 @@ class Job(Base):
     views = Column(Integer, default=0)
     hiredWorkerId = Column(String, ForeignKey("users.id"))
     createdAt = Column(DateTime(timezone=True), server_default=func.now())
+    # When the work actually began. ``workTime`` is the shift the posting
+    # advertised — "09:00 - 18:00" — and it says nothing about whether anyone
+    # turned up at nine. This is the moment the start was confirmed, which is
+    # what makes lateness a thing anybody can see.
+    startedAt = Column(DateTime(timezone=True), nullable=True)
     # When the employer marked the work done. The auto-release timer counts
     # from here, and there was nothing recording it.
     completedAt = Column(DateTime(timezone=True), nullable=True)

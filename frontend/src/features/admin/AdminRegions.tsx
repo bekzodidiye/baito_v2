@@ -93,7 +93,7 @@ export const AdminRegions: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="font-bold text-slate-800 text-sm">{region.name}</h3>
-                <span className="text-[11px] text-slate-400">{region.districtsCount} tuman / shahar</span>
+                <span className="text-[11px] text-slate-400">{region.districtsCount ?? 0} tuman / shahar</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -136,7 +136,7 @@ export const AdminRegions: React.FC = () => {
               <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                 <span className="text-[10px] text-slate-400 block font-medium">Komissiya</span>
                 <span className="text-xs font-bold text-red-600 flex items-center gap-1 mt-0.5">
-                  {region.customCommission}%
+                  {region.commissionPercent ?? 0}%
                 </span>
               </div>
             </div>

@@ -1,11 +1,13 @@
 import React from 'react';
-import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
+import { useApp } from '../../../context/AppContext';
 
 interface MapViewCalloutProps {
   setCurrentScreen: (screen: any) => void;
 }
 
 export const MapViewCallout: React.FC<MapViewCalloutProps> = ({ setCurrentScreen }) => {
+  const { setJobsView } = useApp();
+
   return (
     <div className="md:col-span-2 lg:col-span-3 bg-white rounded-2xl overflow-hidden flex flex-col md:flex-row items-center relative mt-4 border border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.02),_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-[0_12px_28px_rgba(26,35,126,0.07),_0_4px_10px_rgba(26,35,126,0.03)] hover:border-brand-primary/10 transition-all duration-300">
       <div className="p-6 md:w-1/2 flex flex-col gap-3 z-10">
@@ -14,7 +16,10 @@ export const MapViewCallout: React.FC<MapViewCalloutProps> = ({ setCurrentScreen
           Lokatsiya bo'yicha qidiruv orqali uyingizga eng yaqin ish joylarini toping va yo'lga ketadigan vaqtni tejang.
         </p>
         <button
-          onClick={() => setCurrentScreen('jobs')}
+          onClick={() => {
+            setCurrentScreen('jobs');
+            setJobsView('map');
+          }}
           className="bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-xs py-2.5 px-6 rounded-xl w-fit transition-all mt-2 cursor-pointer shadow-sm active:scale-95 duration-200"
         >
           Xaritani ochish
