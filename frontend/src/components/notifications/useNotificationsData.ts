@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchNotificationsApi, markAllNotificationsReadApi } from '../../api/queries';
 import { useApp } from '../../context/AppContext';
 import { showToast } from '../../utils/toast';
+import { translateNotification } from '../../utils/notificationTranslator';
 import { NotificationItemData } from './NotificationItem';
 import { NotificationCategory } from './NotificationFilterPanel';
 import { notificationKind } from './notificationKind';
@@ -12,6 +13,7 @@ export const useNotificationsData = (
   setUnreadNotificationsCount: (count: number) => void
 ) => {
   const { language } = useApp();
+  const queryClient = useQueryClient();
 
   const { data: apiNotifs = [], refetch } = useQuery({
     queryKey: ['notifications'],
@@ -26,12 +28,12 @@ export const useNotificationsData = (
     if (!apiNotifs || apiNotifs.length === 0) return [];
     return apiNotifs.map((n: any) => ({
       id: n.id,
-      titleUz: n.title,
-      titleRu: n.title,
-      titleEn: n.title,
-      descUz: n.message,
-      descRu: n.message,
-      descEn: n.message,
+      titleUz: translateNotification(n.title, 'uz'),
+      titleRu: translateNotification(n.title, 'ru'),
+      titleEn: translateNotification(n.title, 'en'),
+      descUz: translateNotification(n.message, 'uz'),
+      descRu: translateNotification(n.message, 'ru'),
+      descEn: translateNotification(n.message, 'en'),
       timeAgoUz: 'Hozirgina',
       timeAgoRu: 'Только что',
       timeAgoEn: 'Just now',
@@ -50,6 +52,7 @@ export const useNotificationsData = (
     // unread, and they reappeared on the next refresh with no explanation.
     try {
       await markAllNotificationsReadApi();
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       setUnreadNotificationsCount(0);
     } catch (e) {
       console.error('Could not mark notifications as read', e);

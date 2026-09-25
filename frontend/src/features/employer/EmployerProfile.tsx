@@ -263,6 +263,7 @@ export const EmployerProfile: React.FC = () => {
         currentPhone={userProfile?.phone || ''}
         currentAbout={about}
         currentRegion={region}
+        currentAvatarUrl={userProfile?.profileImage}
         onSave={async (fields) => {
           if (!userProfile) return;
           // aboutMe and region are the names this app uses; the API takes bio
@@ -270,22 +271,30 @@ export const EmployerProfile: React.FC = () => {
           // workers. The request is awaited rather than fire-and-forget so a
           // failure reaches the form, which reports it instead of showing a
           // success toast over a change that did not save.
-          await apiClient('/users/me', {
-            method: 'PUT',
-            body: JSON.stringify({
-              name: fields.name,
+          try {
+            await apiClient('/users/me', {
+              method: 'PUT',
+              body: JSON.stringify({
+                name: fields.name,
+                companyName: fields.name,
+                phone: fields.phone,
+                bio: fields.about,
+                region: fields.region,
+                avatarUrl: fields.avatarUrl || undefined,
+              }),
+            });
+            setUserProfile({
+              ...userProfile,
+              firstName: fields.name,
               phone: fields.phone,
-              bio: fields.about,
+              aboutMe: fields.about,
               region: fields.region,
-            }),
-          });
-          setUserProfile({
-            ...userProfile,
-            firstName: fields.name,
-            phone: fields.phone,
-            aboutMe: fields.about,
-            region: fields.region,
-          });
+            });
+            showToast(language === 'uz' ? "Ma'lumotlar saqlandi!" : language === 'ru' ? "Данные сохранены!" : "Data saved!");
+            setIsEditModalOpen(false);
+          } catch (error) {
+            console.error(error);
+          }
         }}
       />
 

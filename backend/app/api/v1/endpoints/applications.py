@@ -213,7 +213,6 @@ def hire_applicant(
 ) -> Any:
     """Hire an applicant and put the wage into escrow."""
     app, job = _load_owned_application(db, id, current_user)
-    job = lock_worker_job(db, app.workerId, job.id)
     db.refresh(app)
 
     if app.status in COMMITTED_APP_STATUSES:
@@ -381,7 +380,6 @@ def reject_applicant(
 ) -> Any:
     """Reject an applicant for one of the caller's own jobs."""
     app, job = _load_owned_application(db, id, current_user)
-    job = lock_worker_job(db, app.workerId, job.id)
     db.refresh(app)
 
     if app.status in COMMITTED_APP_STATUSES + ['completed']:

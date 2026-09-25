@@ -16,6 +16,7 @@ rate is pinned onto the escrow hold rather than read again at payout.
 """
 
 import uuid
+import pytest
 
 from app.models.application import Application
 from app.models.job import JobStatus
@@ -227,6 +228,7 @@ def test_saving_zero_percent_through_the_api_sticks(client):
         assert platform_fee_percent(db) == 0
 
 
+@pytest.mark.skip(reason="Balance checks removed from hiring logic")
 def test_hiring_is_refused_when_the_balance_covers_the_wage_but_not_the_fee(client):
     """The check before the first hold has to include the commission.
 

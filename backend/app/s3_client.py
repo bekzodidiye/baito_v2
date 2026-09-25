@@ -13,31 +13,40 @@ except ImportError:
     ClientError = Exception
 
 
-class MockS3Client:
+class LocalStorageClient:
+    def __init__(self, upload_dir="uploads"):
+        import os
+        self.upload_dir = upload_dir
+        os.makedirs(self.upload_dir, exist_ok=True)
+
     def upload_fileobj(self, file_obj, bucket, filename, ExtraArgs=None):
-        logger.info(f"[MockS3] Uploaded file {filename} to bucket {bucket}")
+        import os, shutil
+        filepath = os.path.join(self.upload_dir, filename)
+        with open(filepath, "wb") as f:
+            shutil.copyfileobj(file_obj, f)
+        logger.info(f"[LocalStorage] Saved file {filename} locally")
         return True
 
     def head_bucket(self, Bucket):
         return True
 
     def get_object(self, Bucket, Key):
-        raise FileNotFoundError(f"[MockS3] no object {Key}")
+        import os
+        filepath = os.path.join(self.upload_dir, Key)
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"[LocalStorage] no object {Key}")
+        return {"Body": open(filepath, "rb")}
 
     def delete_object(self, Bucket, Key):
+        import os
+        filepath = os.path.join(self.upload_dir, Key)
+        if os.path.exists(filepath):
+            os.remove(filepath)
         return True
 
 
 def get_s3_client():
-    if HAS_BOTO3:
-        return boto3.client(
-            's3',
-            endpoint_url=settings.AWS_ENDPOINT_URL if settings.AWS_ENDPOINT_URL else None,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_REGION,
-        )
-    return MockS3Client()
+    return LocalStorageClient()
 
 
 def _error_code(exc) -> str:

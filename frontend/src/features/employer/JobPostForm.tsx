@@ -127,16 +127,6 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
   };
 
   const handleSubmit = async () => {
-    if (!isVerified) {
-      showToast(
-        language === 'ru'
-          ? 'Ваши документы ещё не подтверждены — объявление опубликовать нельзя.'
-          : language === 'en'
-          ? 'Your documents have not been verified yet, so the posting cannot go up.'
-          : "Hujjatlaringiz hali tasdiqlanmagan — e'lon joylab bo'lmaydi.",
-      );
-      return;
-    }
     if (!addressLine || !city) {
       showToast(language === 'uz' ? "Manzilni kiriting!" : "Enter address!");
       return;
