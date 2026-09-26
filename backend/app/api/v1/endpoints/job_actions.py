@@ -564,11 +564,15 @@ def complete_job(
     
     # If the worker is completing the job, they might be completing just a single shift of a multi-day job.
     worker_completing_single_day = False
-    if not is_employer and remaining:
+    
+    # An admin acting as a worker (e.g. testing) should trigger the single-day logic if they have an application.
+    if is_hired_worker and remaining:
         original_remaining_count = len(remaining)
+        today_str = now.strftime("%Y-%m-%d")
         
-        # For workers, if it's a multi-day job, only complete the first uncompleted day
-        first_day = remaining[0]
+        # For workers, if it's a multi-day job, complete the day corresponding to today, or fallback to the first
+        first_day = next((d for d in remaining if d.workDate == today_str), remaining[0])
+        
         first_day.status = JobDayStatus.COMPLETED
         first_day.completedAt = now
         db.add(first_day)
