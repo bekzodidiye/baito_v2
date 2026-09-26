@@ -54,7 +54,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
             <CalendarIcon size={14} className="stroke-[2.5] text-brand-primary" />
-            {language === 'uz' ? "Ish sanasi *" : language === 'ru' ? "Work Date *" : "Work Date *"}
+            {language === 'uz' ? "Ish sanasi *" : language === 'ru' ? "Дата работы *" : "Work Date *"}
           </label>
           <div
             onClick={() => setIsPickerOpen(true)}
@@ -69,7 +69,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
             <Clock size={14} className="stroke-[2.5] text-brand-primary" />
-            {language === 'uz' ? "Ish muddati *" : language === 'ru' ? "Duration *" : "Duration *"}
+            {language === 'uz' ? "Ish muddati *" : language === 'ru' ? "Продолжительность *" : "Duration *"}
           </label>
           <div
             onClick={() => setIsPickerOpen(true)}
@@ -86,7 +86,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
             <Clock size={14} className="stroke-[2.5] text-brand-primary" />
-            {language === 'uz' ? "Boshlanish vaqti *" : language === 'ru' ? "Start Time *" : "Start Time *"}
+            {language === 'uz' ? "Boshlanish vaqti *" : language === 'ru' ? "Время начала *" : "Start Time *"}
           </label>
           <div
             onClick={() => setIsPickerOpen(true)}
@@ -100,7 +100,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
             <Clock size={14} className="stroke-[2.5] text-brand-primary" />
-            {language === 'uz' ? "Tugash vaqti *" : language === 'ru' ? "End Time *" : "End Time *"}
+            {language === 'uz' ? "Tugash vaqti *" : language === 'ru' ? "Время окончания *" : "End Time *"}
           </label>
           <div
             onClick={() => setIsPickerOpen(true)}
@@ -117,7 +117,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
             <Users size={14} className="stroke-[2.5] text-brand-primary" />
-            {language === 'uz' ? "Kerakli ishchilar soni *" : language === 'ru' ? "Workers needed *" : "Workers needed *"}
+            {language === 'uz' ? "Kerakli ishchilar soni *" : language === 'ru' ? "Количество работников *" : "Workers needed *"}
           </label>
           <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-1.5 w-max">
             <button type="button" onClick={() => setNeededWorkers(String(Math.max(1, parseInt(neededWorkers || '1') - 1)))} className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-600 active:scale-95">-</button>
@@ -132,7 +132,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
             {/* Not "umumiy": a three-day shift takes this figure three
                 times over, once per day, and the employer's balance has to
                 cover all of it at the moment they hire. */}
-            {language === 'uz' ? "Bir kunlik to'lov (so'm) *" : language === 'ru' ? "Daily Pay (UZS) *" : "Daily Pay (UZS) *"}
+            {language === 'uz' ? "Bir kunlik to'lov (so'm) *" : language === 'ru' ? "Ежедневная оплата (UZS) *" : "Daily Pay (UZS) *"}
           </label>
           <input
               aria-label="200000" type="number" placeholder="200000" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} />
@@ -156,7 +156,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
           <Truck size={14} className="stroke-[2.5] text-brand-primary" />
-          {language === 'uz' ? "Transport xarajati (so'm)" : language === 'ru' ? "Transport Expenses" : "Transport Expenses"}
+          {language === 'uz' ? "Transport xarajati (so'm)" : language === 'ru' ? "Транспортные расходы" : "Transport Expenses"}
         </label>
         <input
               aria-label="15000" type="number" placeholder="15000" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={transportRate} onChange={(e) => setTransportRate(e.target.value)} />
@@ -166,7 +166,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
           <CheckCircle size={14} className="stroke-[2.5] text-emerald-600" />
-          {language === 'uz' ? "Talablar va shartlar" : language === 'ru' ? "Requirements" : "Requirements"}
+          {language === 'uz' ? "Talablar va shartlar" : language === 'ru' ? "Требования" : "Requirements"}
         </label>
         <textarea rows={2} placeholder={language === 'uz' ? "1. Yosh 18-35\n2. Intizomli bo'lish" : language === 'ru' ? "1. Age 18-35" : "1. Age 18-35"} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={requirements} onChange={(e) => setRequirements(e.target.value)} />
       </div>
@@ -175,7 +175,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
           <AlertTriangle size={14} className="stroke-[2.5] text-amber-600" />
-          {language === 'uz' ? "Muhim eslatma (ishchilar uchun)" : language === 'ru' ? "Important Note" : "Important Note"}
+          {language === 'uz' ? "Muhim eslatma (ishchilar uchun)" : language === 'ru' ? "Важное примечание" : "Important Note"}
         </label>
         <textarea rows={2} placeholder={language === 'uz' ? "Pasport asli nusxasi bilan kelish shart." : language === 'ru' ? "Passport required." : "Passport required."} className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-amber-950 focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={importantNote} onChange={(e) => setImportantNote(e.target.value)} />
       </div>

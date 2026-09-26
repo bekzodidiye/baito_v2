@@ -101,20 +101,20 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
   const handleNext = () => {
     if (step === 1) {
       if (!title.trim() || title.trim().length < 3) {
-        showToast(language === 'uz' ? "Ish nomi kamida 3 ta belgidan iborat bo'lishi kerak!" : language === 'ru' ? "Job title must be at least 3 characters!" : "Job title must be at least 3 characters!");
+        showToast(language === 'uz' ? "Ish nomi kamida 3 ta belgidan iborat bo'lishi kerak!" : language === 'ru' ? "Название вакансии должно содержать не менее 3 символов!" : "Job title must be at least 3 characters!");
         return;
       }
       if (!category) {
-        showToast(language === 'uz' ? "Kategoriyani tanlang!" : language === 'ru' ? "Select category!" : "Select category!");
+        showToast(language === 'uz' ? "Kategoriyani tanlang!" : language === 'ru' ? "Выберите категорию!" : "Select category!");
         return;
       }
       if (!responsibilities.trim() || responsibilities.trim().length < 10) {
-        showToast(language === 'uz' ? "Ish vazifalarini batafsilroq yozing (kamida 10 ta belgi)!" : language === 'ru' ? "Please provide more details in responsibilities (at least 10 chars)!" : "Please provide more details in responsibilities (at least 10 chars)!");
+        showToast(language === 'uz' ? "Ish vazifalarini batafsilroq yozing (kamida 10 ta belgi)!" : language === 'ru' ? "Пожалуйста, опишите обязанности подробнее (не менее 10 символов)!" : "Please provide more details in responsibilities (at least 10 chars)!");
         return;
       }
     }
-    if (step === 2 && (!workDate || !startTime || !endTime || !hourlyRate || Number(hourlyRate) <= 0 || !neededWorkers || Number(neededWorkers) <= 0)) {
-      showToast(language === 'uz' ? "Ish sanasi, vaqti, ishchilar soni va to'lov summasini to'g'ri kiriting!" : language === 'ru' ? "Enter valid date, time, workers count and salary!" : "Enter valid date, time, workers count and salary!");
+    if (step === 2 && (!workDate || !startTime || !endTime || !hourlyRate || isNaN(Number(hourlyRate)) || Number(hourlyRate) <= 0 || !neededWorkers || isNaN(Number(neededWorkers)) || Number(neededWorkers) <= 0)) {
+      showToast(language === 'uz' ? "Ish sanasi, vaqti, ishchilar soni va to'lov summasini to'g'ri kiriting!" : language === 'ru' ? "Введите корректные дату, время, количество работников и зарплату!" : "Enter valid date, time, workers count and salary!");
       return;
     }
     setStep(s => s + 1);
@@ -126,8 +126,8 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
   };
 
   const handleSubmit = async () => {
-    if (!addressLine || !city) {
-      showToast(language === 'uz' ? "Manzilni kiriting!" : language === 'ru' ? "Enter address!" : "Enter address!");
+    if (!addressLine || !addressLine.trim() || !city) {
+      showToast(language === 'uz' ? "Manzilni kiriting!" : language === 'ru' ? "Введите адрес!" : "Enter address!");
       return;
     }
 
@@ -162,7 +162,7 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
       });
       onSubmitSuccess();
     } catch (err: any) {
-      const msg = err?.message || (language === 'uz' ? "Serverda xatolik yuz berdi. Qaytadan urinib ko'ring." : language === 'ru' ? "An error occurred. Please try again." : "An error occurred. Please try again.");
+      const msg = err?.message || (language === 'uz' ? "Serverda xatolik yuz berdi. Qaytadan urinib ko'ring." : language === 'ru' ? "Произошла ошибка. Пожалуйста, попробуйте еще раз." : "An error occurred. Please try again.");
       showToast(msg);
     } finally {
       setIsSubmitting(false);
@@ -219,11 +219,11 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
             {isSubmitting ? (
               <>
                 <Loader2 size={18} className="animate-spin stroke-[2.5]" />
-                <span>{language === 'uz' ? "Yuborilmoqda..." : language === 'ru' ? "Publishing..." : "Publishing..."}</span>
+                <span>{language === 'uz' ? "Yuborilmoqda..." : language === 'ru' ? "Публикация..." : "Publishing..."}</span>
               </>
             ) : step < 3 ? (
               <>
-                <span>{language === 'uz' ? 'Davom etish' : language === 'ru' ? 'Continue' : 'Continue'}</span>
+                <span>{language === 'uz' ? 'Davom etish' : language === 'ru' ? 'Продолжить' : 'Continue'}</span>
                 <ArrowRight size={18} className="stroke-[2.5]" />
               </>
             ) : (

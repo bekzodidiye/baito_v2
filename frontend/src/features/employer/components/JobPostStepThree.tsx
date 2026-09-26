@@ -88,7 +88,7 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
       <div className="flex flex-col gap-2">
         <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
           <MapPin size={14} className="text-brand-primary" />
-          {language === 'uz' ? "Shahar / Viloyat *" : language === 'ru' ? "City / Region *" : "City / Region *"}
+          {language === 'uz' ? "Shahar / Viloyat *" : language === 'ru' ? "Город / Регион *" : "City / Region *"}
         </label>
         <select className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-extrabold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20" value={city} onChange={(e) => handleCityChange(e.target.value)}>
           {Object.keys(CITY_COORDINATES).map(c => <option key={c} value={c}>{c}</option>)}
@@ -153,7 +153,7 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5">
             <Compass size={14} className="text-brand-primary" />
-            <span>{language === 'uz' ? "Yandex Xarita *" : language === 'ru' ? "Yandex Map *" : "Yandex Map *"}</span>
+            <span>{language === 'uz' ? "Yandex Xarita *" : language === 'ru' ? "Яндекс Карта *" : "Yandex Map *"}</span>
           </label>
           <span className="text-[10px] text-brand-primary font-extrabold px-2 py-0.5 bg-brand-primary/10 rounded-full">Yandex Maps Official</span>
         </div>
