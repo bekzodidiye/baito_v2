@@ -3,10 +3,10 @@ import { Briefcase } from 'lucide-react';
 import { Job } from '../../types';
 import { MapActionButtons } from './MapActionButtons';
 import { JobCardSkeleton } from './JobCardSkeleton';
-import { useApp } from '../../context/AppContext';
 import { useJobsData } from "../../context/useJobsData";
 import { translations, translateRegion } from '../../translations';
 import { JobCardItem } from './JobCardItem';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface JobSummaryCardProps {
   isPanelExpanded: boolean;
@@ -43,7 +43,7 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
   mapType,
   setMapType,
 }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const { jobs, applyToJob } = useJobsData();
   const t = translations[language];
   const [isAtBeginning, setIsAtBeginning] = useState(true);

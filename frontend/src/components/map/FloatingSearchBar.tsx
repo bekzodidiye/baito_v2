@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, MapPin } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface FloatingSearchBarProps {
   setShowRegionSelector: (show: boolean) => void;
@@ -10,7 +10,7 @@ interface FloatingSearchBarProps {
 export const FloatingSearchBar: React.FC<FloatingSearchBarProps> = ({
   setShowRegionSelector,
 }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
 
   return (

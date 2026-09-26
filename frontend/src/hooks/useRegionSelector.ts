@@ -1,14 +1,18 @@
 import { useState, useMemo } from 'react';
-import { useApp } from '../context/AppContext';
 import { useUzbekistanGeoJson, getDistrictMetaList } from '../components/map/useUzbekistanGeoJson';
 import { translateRegion, Language } from '../translations';
 import { 
   REGIONS_LIST, 
   RegionListItem 
 } from '../components/map/regionData';
+import { useUIStore } from "../store/useUIStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 export const useRegionSelector = () => {
-  const { showRegionSelector, setShowRegionSelector, setFilterLocation, language } = useApp();
+  const showRegionSelector = useUIStore(s => s.showRegionSelector);
+    const setShowRegionSelector = useUIStore(s => s.setShowRegionSelector);
+    const setFilterLocation = useUIStore(s => s.setFilterLocation);
+    const language = useAuthStore(s => s.language);
 
   const { districtsGeoJsonData } = useUzbekistanGeoJson();
   const [searchText, setSearchText] = useState('');

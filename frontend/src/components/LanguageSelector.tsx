@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useApp } from '../context/AppContext';
 import { ChevronDown, Check, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { translations } from '../translations';
+import { useAuthStore } from "../store/useAuthStore";
 
 const LANGUAGES = [
   { code: 'uz', name: "O'zbekcha", short: "O'zb", flag: '🇺🇿' },
@@ -11,7 +11,8 @@ const LANGUAGES = [
 ] as const;
 
 export const LanguageSelector: React.FC<{ align?: 'left' | 'right' }> = ({ align = 'right' }) => {
-  const { language, setLanguage } = useApp();
+  const language = useAuthStore(s => s.language);
+    const setLanguage = useAuthStore(s => s.setLanguage);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const t = translations[language];

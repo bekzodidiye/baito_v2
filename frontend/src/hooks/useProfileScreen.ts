@@ -7,10 +7,15 @@ import { useCurrentScreen } from '../hooks/useCurrentScreen';
 import { requestWithdrawalApi, uploadFileApi } from '../api/queries';
 import { apiClient } from '../api/client';
 import { useQuery } from '@tanstack/react-query';
+import { useAuthStore } from "../store/useAuthStore";
 
 export const useProfileScreen = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { userProfile, setUserProfile, logout, language, setLanguage } = useApp();
+  const userProfile = useAuthStore(s => s.userProfile);
+    const setUserProfile = useAuthStore(s => s.setUserProfile);
+    const logout = useApp().logout;
+    const language = useAuthStore(s => s.language);
+    const setLanguage = useAuthStore(s => s.setLanguage);
   const { jobs } = useJobsData();
   const [balance, setBalance] = useState('0');
 

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useApp } from '../context/AppContext';
 import { useJobsData } from "../context/useJobsData";
 import { Job } from '../types';
 import { getTranslatedJob } from '../jobTranslations';
@@ -15,10 +14,18 @@ import { useMapFilterJobs } from '../components/map/useMapFilterJobs';
 import { useMapLocationAction } from '../components/map/useMapLocationAction';
 import { useOpenJobDetail } from '../components/map/useOpenJobDetail';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
+import { useUIStore } from "../store/useUIStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 export function useMapViewScreen() {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { filterLocation, setFilterLocation, showRegionSelector, setShowRegionSelector, mapFocusedJobId, setMapFocusedJobId, language } = useApp();
+  const filterLocation = useUIStore(s => s.filterLocation);
+    const setFilterLocation = useUIStore(s => s.setFilterLocation);
+    const showRegionSelector = useUIStore(s => s.showRegionSelector);
+    const setShowRegionSelector = useUIStore(s => s.setShowRegionSelector);
+    const mapFocusedJobId = useUIStore(s => s.mapFocusedJobId);
+    const setMapFocusedJobId = useUIStore(s => s.setMapFocusedJobId);
+    const language = useAuthStore(s => s.language);
   const { jobs: rawJobs, toggleBookmark, applyToJob } = useJobsData();
 
   const jobs = useMemo(() => {

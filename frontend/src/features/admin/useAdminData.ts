@@ -1,11 +1,11 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient, unwrapList } from '../../api/client';
 import { AdminStats, AdminUser, AdminJob, AdminTransaction, SystemSettings } from './types';
-import { useApp } from '../../context/AppContext';
+
 import { showToast as globalToast } from '../../utils/toast';
 
 export function useAdminData() {
-  const { } = useApp();
+
   const queryClient = useQueryClient();
 
   const { data, isLoading: loading, refetch: fetchAllData } = useQuery({

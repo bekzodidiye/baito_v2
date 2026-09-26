@@ -1,7 +1,7 @@
-import { useApp } from '../../../context/AppContext';
 import { translations } from '../../../translations';
 import React from 'react';
 import { Camera, MapPin, Briefcase, Star, Award, Edit2 } from 'lucide-react';
+import { useAuthStore } from "../../../store/useAuthStore";
 
 interface ProfileHeroProps {
   profileName: string;
@@ -28,7 +28,7 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
   onEditClick,
   region
 }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const tGlobal = translations[language];
 
   return (

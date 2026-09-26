@@ -4,9 +4,9 @@ import {
   Wallet, LayoutDashboard, Users, Briefcase, FileCheck, DollarSign, AlertTriangle, Send, Sliders, X, User,
   Building2, Headphones, BarChart3, FolderTree, ShieldAlert, Ticket, MapPin, Bell, BellRing, Bot, Zap, FileText, ShieldCheck,
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useAdminData } from './useAdminData';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface AdminSidebarProps {
   activeTab: AdminTab;
@@ -17,7 +17,9 @@ interface AdminSidebarProps {
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab, isOpen, onClose }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, userProfile, setUserProfile } = useApp();
+  const language = useAuthStore(s => s.language);
+    const userProfile = useAuthStore(s => s.userProfile);
+    const setUserProfile = useAuthStore(s => s.setUserProfile);
 
   // These three counts were the literals '12', '3' and '7'. They never moved,
   // so an administrator was shown seven support tickets and three disputes

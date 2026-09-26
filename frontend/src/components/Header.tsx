@@ -1,10 +1,11 @@
 import React from 'react';
-import { useApp } from '../context/AppContext';
 import { Menu, Map, Bell, Search, LayoutList, ShieldCheck, User, Calendar, Mail, Briefcase, FileText, MessageSquare, LayoutDashboard } from 'lucide-react';
 import { Logo } from './Logo';
 import { LanguageSelector } from './LanguageSelector';
 import { translations } from '../translations';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
+import { useUIStore } from "../store/useUIStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 interface HeaderProps {
   onOpenModal?: (type: 'profile' | 'settings' | 'help' | 'auth') => void;
@@ -12,7 +13,17 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { setDrawerOpen, unreadNotificationsCount, messagesSearchOpen, setMessagesSearchOpen, language, isLoggedIn, userProfile, employerSelectedChatId, selectedChatId, jobsView, setJobsView } = useApp();
+  const setDrawerOpen = useUIStore(s => s.setDrawerOpen);
+    const unreadNotificationsCount = useUIStore(s => s.unreadNotificationsCount);
+    const messagesSearchOpen = useUIStore(s => s.messagesSearchOpen);
+    const setMessagesSearchOpen = useUIStore(s => s.setMessagesSearchOpen);
+    const language = useAuthStore(s => s.language);
+    const isLoggedIn = useAuthStore(s => s.isLoggedIn);
+    const userProfile = useAuthStore(s => s.userProfile);
+    const employerSelectedChatId = useUIStore(s => s.employerSelectedChatId);
+    const selectedChatId = useUIStore(s => s.selectedChatId);
+    const jobsView = useUIStore(s => s.jobsView);
+    const setJobsView = useUIStore(s => s.setJobsView);
   const t = translations[language];
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
 

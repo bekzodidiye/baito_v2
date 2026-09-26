@@ -3,15 +3,15 @@ import { Calendar, Timer, DollarSign, Zap, Truck, Users } from 'lucide-react';
 import { Job } from '../../types';
 import { getJobDateDisplay, getJobShiftTime, getJobDuration } from '../../utils/jobTimeUtils';
 import { getJobCategory } from '../../utils/jobCategoryUtils';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface JobDetailsCardProps {
   selectedJob: Job;
 }
 
 export const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ selectedJob }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
   const category = getJobCategory(selectedJob);
   const categoryName = language === 'ru' ? category.nameRu : language === 'en' ? category.nameEn : category.nameUz;

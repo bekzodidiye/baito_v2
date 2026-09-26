@@ -20,10 +20,16 @@ import { AlertCircle, CheckCircle } from 'lucide-react';
 import { AppRoutes } from './components/AppRoutes';
 import { useCurrentScreen } from './hooks/useCurrentScreen';
 import { translations } from './translations';
+import { useUIStore } from "./store/useUIStore";
+import { useAuthStore } from "./store/useAuthStore";
 
 function AppContent() {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { isLoggedIn, userProfile, requireAuth, jobsView, language } = useApp();
+  const isLoggedIn = useAuthStore(s => s.isLoggedIn);
+    const userProfile = useAuthStore(s => s.userProfile);
+    const requireAuth = useApp().requireAuth;
+    const jobsView = useUIStore(s => s.jobsView);
+    const language = useAuthStore(s => s.language);
   const [hasOpenedMap, setHasOpenedMap] = useState(false);
   const [activeModal, setActiveModal] = useState<'profile' | 'settings' | 'help' | 'auth' | null>(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
 import { translateRegion } from '../../translations';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface MapBreadcrumbsProps {
   breadcrumbItems: string[];
@@ -12,7 +12,7 @@ export const MapBreadcrumbs: React.FC<MapBreadcrumbsProps> = ({
   breadcrumbItems,
   handleBreadcrumbBack,
 }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   return (
     <div 
       onClick={(e) => e.stopPropagation()}

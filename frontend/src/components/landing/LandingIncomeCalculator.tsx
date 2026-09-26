@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import { LANDING_TEXTS } from './LandingData';
 import { Calculator, DollarSign, Calendar, Clock, ArrowRight, Zap, CheckCircle2 } from 'lucide-react';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface LandingIncomeCalculatorProps {
   onSelectRole: (role: 'worker' | 'employer') => void;
 }
 
 export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = ({ onSelectRole }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = LANDING_TEXTS[language as keyof typeof LANDING_TEXTS] || LANDING_TEXTS.uz;
 
   const [hourlyRate, setHourlyRate] = useState<number>(35000); // 35,000 so'm/soat

@@ -1,7 +1,7 @@
-import { useApp } from '../context/AppContext';
 import { LOCAL_TEXTS } from '../components/login/LoginPromptScreen.utils';
 import { useLoginState } from './login-prompt/useLoginState';
 import { useLoginHandlers } from './login-prompt/useLoginHandlers';
+import { useAuthStore } from "../store/useAuthStore";
 
 export interface UseLoginPromptProps {
   isModal: boolean;
@@ -10,7 +10,7 @@ export interface UseLoginPromptProps {
 }
 
 export const useLoginPrompt = ({ isModal, onClose, initialMode }: UseLoginPromptProps) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = LOCAL_TEXTS[language as 'uz' | 'ru' | 'en'] || LOCAL_TEXTS.uz;
 
   const state = useLoginState(isModal, initialMode);

@@ -1,12 +1,12 @@
 import React from 'react';
-import { useApp } from '../../../context/AppContext';
+import { useUIStore } from "../../../store/useUIStore";
 
 interface MapViewCalloutProps {
   setCurrentScreen: (screen: any) => void;
 }
 
 export const MapViewCallout: React.FC<MapViewCalloutProps> = ({ setCurrentScreen }) => {
-  const { setJobsView } = useApp();
+  const setJobsView = useUIStore(s => s.setJobsView);
 
   return (
     <div className="md:col-span-2 lg:col-span-3 bg-white rounded-2xl overflow-hidden flex flex-col md:flex-row items-center relative mt-4 border border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.02),_0_2px_4px_rgba(0,0,0,0.01)] hover:shadow-[0_12px_28px_rgba(26,35,126,0.07),_0_4px_10px_rgba(26,35,126,0.03)] hover:border-brand-primary/10 transition-all duration-300">

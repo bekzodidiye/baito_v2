@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { X, User, ClipboardList, Settings, HelpCircle, ChevronRight, LogOut, LayoutDashboard, Briefcase, Users, MessageSquare, ShieldCheck } from 'lucide-react';
 import { Logo } from './Logo';
@@ -8,6 +8,8 @@ import { LanguageSelector } from './LanguageSelector';
 import { DrawerMenuItem } from './DrawerMenuItem';
 import { showToast } from '../utils/toast';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
+import { useUIStore } from "../store/useUIStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 interface DrawerProps {
   onOpenModal: (type: 'profile' | 'settings' | 'help' | 'auth') => void;
@@ -15,7 +17,13 @@ interface DrawerProps {
 
 export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { drawerOpen, setDrawerOpen, setActiveCalendarFilter, language, isLoggedIn, logout, userProfile } = useApp();
+  const drawerOpen = useUIStore(s => s.drawerOpen);
+    const setDrawerOpen = useUIStore(s => s.setDrawerOpen);
+    const setActiveCalendarFilter = useUIStore(s => s.setActiveCalendarFilter);
+    const language = useAuthStore(s => s.language);
+    const isLoggedIn = useAuthStore(s => s.isLoggedIn);
+    const logout = useApp().logout;
+    const userProfile = useAuthStore(s => s.userProfile);
   const t = translations[language];
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
   const isAdmin = isLoggedIn && userProfile?.selectedRole === 'admin';
@@ -25,6 +33,14 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
     setActiveCalendarFilter('applied');
     setDrawerOpen(false);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && drawerOpen) setDrawerOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [drawerOpen, setDrawerOpen]);
 
   const handleModalOpen = (type: 'profile' | 'settings' | 'help' | 'auth') => {
     setDrawerOpen(false);
@@ -159,6 +175,9 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
 
           {/* Drawer content */}
           <motion.nav
+            role="dialog"
+            aria-modal="true"
+            aria-label="Sidebar Menu"
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}

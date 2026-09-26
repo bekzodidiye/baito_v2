@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { perksForJob } from '../../constants/perks';
-import { useApp } from '../../context/AppContext';
 import { useJobsData } from "../../context/useJobsData";
 import { LANDING_TEXTS } from './LandingData';
 import { Compass, MapPin, Building2, Clock, ArrowRight, Info, CheckCircle2 } from 'lucide-react';
 import { MapViewScreen } from '../map/MapViewScreen';
 import { motion } from 'motion/react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface LandingInteractiveMapPreviewProps {
   onSelectRole: (role: 'worker' | 'employer') => void;
@@ -14,7 +14,7 @@ interface LandingInteractiveMapPreviewProps {
 
 export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreviewProps> = ({ onSelectRole }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const { jobs } = useJobsData();
   const [activeShift, setActiveShift] = useState<any>(null);
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);

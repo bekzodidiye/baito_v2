@@ -37,11 +37,11 @@ const SuspenseFallback = () => (
     <div className="animate-pulse w-8 h-8 rounded-full bg-slate-300"></div>
   </div>
 );
-
-import { useApp } from '../context/AppContext';
+import { useAuthStore } from "../store/useAuthStore";
 
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) => {
-  const { isLoggedIn, userProfile } = useApp();
+  const isLoggedIn = useAuthStore(s => s.isLoggedIn);
+    const userProfile = useAuthStore(s => s.userProfile);
   
   if (!isLoggedIn) return <Navigate to="/login" replace />;
   
@@ -62,7 +62,8 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
 };
 
 const AuthGuestRoute = ({ mode }: { mode: 'login' | 'register' }) => {
-  const { isLoggedIn, userProfile } = useApp();
+  const isLoggedIn = useAuthStore(s => s.isLoggedIn);
+    const userProfile = useAuthStore(s => s.userProfile);
   if (isLoggedIn) {
     if (userProfile?.selectedRole === 'employer') return <Navigate to="/employer-dashboard" replace />;
     if (userProfile?.selectedRole === 'admin') return <Navigate to="/admin" replace />;

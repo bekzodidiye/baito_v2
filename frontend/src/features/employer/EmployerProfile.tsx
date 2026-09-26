@@ -12,12 +12,15 @@ import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { EmployerEditProfileModal } from './EmployerEditProfileModal';
 import { EmployerProfileStats } from './EmployerProfileStats';
 import { EmployerProfileCompletion } from './EmployerProfileCompletion';
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const EmployerProfile: React.FC = () => {
   const { language, balance, postedJobs, applications } = useEmployer();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { userProfile, logout, setUserProfile } = useApp();
+  const userProfile = useAuthStore(s => s.userProfile);
+    const logout = useApp().logout;
+    const setUserProfile = useAuthStore(s => s.setUserProfile);
 
   // The fallback used to be 'Korzinka.uz' — a real retail brand, shown to any
   // employer who had not set a name yet.

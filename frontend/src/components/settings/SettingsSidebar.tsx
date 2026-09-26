@@ -1,12 +1,12 @@
 import React from 'react';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { Settings, Lock, HelpCircle, HelpCircle as FaqIcon, BookOpen, FileText, Headphones, ChevronRight } from 'lucide-react';
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const SettingsSidebar: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
 
   const navItems = [

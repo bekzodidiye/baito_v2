@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { ArrowLeft, Lock, Globe, Bell, Info, HelpCircle, ChevronRight, Briefcase, MessageSquare, Loader2 } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { updateUserProfileApi } from '../../api/queries';
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const SettingsScreen: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, setLanguage, userProfile, setUserProfile } = useApp();
+  const language = useAuthStore(s => s.language);
+    const setLanguage = useAuthStore(s => s.setLanguage);
+    const userProfile = useAuthStore(s => s.userProfile);
+    const setUserProfile = useAuthStore(s => s.setUserProfile);
   const t = translations[language];
 
   const [newJobsNotifications, setNewJobsNotifications] = useState(userProfile?.notify_new_jobs ?? true);

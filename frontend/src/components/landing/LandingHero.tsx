@@ -7,6 +7,7 @@ import { LandingHeroBackground } from './LandingHeroBackground';
 import { LandingHeroShiftPreview } from './LandingHeroShiftPreview';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { perksForJob } from '../../constants/perks';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface LandingHeroProps {
   onSelectRole: (role: 'worker' | 'employer') => void;
@@ -14,7 +15,9 @@ interface LandingHeroProps {
 
 export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, isLoggedIn, requireAuth } = useApp();
+  const language = useAuthStore(s => s.language);
+    const isLoggedIn = useAuthStore(s => s.isLoggedIn);
+    const requireAuth = useApp().requireAuth;
   const { jobs, isLoading } = useJobsData();
   const [activeTab, setActiveTab] = useState<'worker' | 'employer'>('worker');
   const [searchQuery, setSearchQuery] = useState('');

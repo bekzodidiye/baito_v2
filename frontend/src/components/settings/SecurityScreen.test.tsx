@@ -1,12 +1,12 @@
+vi.mock('../../store/useUIStore', () => ({ useUIStore: vi.fn((sel) => sel({})) }));
+vi.mock('../../store/useAuthStore', () => ({ useAuthStore: vi.fn((sel) => sel({ language: 'uz', userProfile: { isVerified: true, role: 'worker', selectedRole: 'worker' } })) }));
 import React from 'react';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 
 const logoutAllOtherSessionsApi = vi.fn().mockResolvedValue({ success: true });
 
-vi.mock('../../context/AppContext', () => ({
-  useApp: () => ({ userProfile: {}, setUserProfile: vi.fn(), language: 'uz' }),
-}));
+
 vi.mock('../../hooks/useCurrentScreen', () => ({
   useCurrentScreen: () => ({ currentScreen: 'security', setCurrentScreen: vi.fn() }),
 }));

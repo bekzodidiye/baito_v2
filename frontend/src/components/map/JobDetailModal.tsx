@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Job } from '../../types';
-import { useApp } from '../../context/AppContext';
 import { getJobDetails } from '../../utils/jobDetailHelpers';
 import { JobDetailsHeader } from '../job-details/JobDetailsHeader';
 import { JobDetailsHero } from '../job-details/JobDetailsHero';
@@ -10,6 +9,7 @@ import { JobDetailsLocation } from '../job-details/JobDetailsLocation';
 import { JobDetailsTasks } from '../job-details/JobDetailsTasks';
 import { JobDetailsRequirements } from '../job-details/JobDetailsRequirements';
 import { JobDetailsFooter } from '../job-details/JobDetailsFooter';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface JobDetailModalProps {
   selectedJob: Job;
@@ -31,8 +31,16 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   isLocating,
   onOpenOnMap,
 }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const jobDetails = getJobDetails(selectedJob.title, language);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedJob(null);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [setSelectedJob]);
 
   return (
     <div className="absolute inset-0 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -48,6 +56,9 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
 
       {/* Modal Container */}
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="job-detail-title"
         initial={{ y: '100%', opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: '100%', opacity: 0 }}

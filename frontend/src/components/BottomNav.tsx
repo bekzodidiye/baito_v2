@@ -4,10 +4,15 @@ import { Calendar, Map, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
 import { translations } from '../translations';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
+import { useUIStore } from "../store/useUIStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 export const BottomNav: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, requireAuth, selectedChatId, employerSelectedChatId } = useApp();
+  const language = useAuthStore(s => s.language);
+    const requireAuth = useApp().requireAuth;
+    const selectedChatId = useUIStore(s => s.selectedChatId);
+    const employerSelectedChatId = useUIStore(s => s.employerSelectedChatId);
   const t = translations[language];
 
   if (

@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
 import { Search, SlidersHorizontal, MapPin, Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useApp } from '../../../context/AppContext';
 import { translations, translateRegion } from '../../../translations';
 import { CATEGORIES_CONFIG, CATEGORY_FILTERS_LIST } from '../../../utils/jobCategoryUtils';
 import { REGIONS_LIST } from './JobSearchScreen.utils';
+import { useAuthStore } from "../../../store/useAuthStore";
 
 interface SearchFilterSectionProps {
   searchTerm: string;
@@ -22,7 +22,7 @@ const SearchFilterSectionComponent: React.FC<SearchFilterSectionProps> = ({
   searchTerm, setSearchTerm, filterLocation, setFilterLocation,
   filterType, setFilterType, filterCategory, setFilterCategory, setShowRegionSelector
 }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
 
   const [showFilters, setShowFilters] = useState(false);

@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Job } from '../../../types';
-import { useApp } from '../../../context/AppContext';
 import { getJobDetails } from '../../../utils/jobDetailHelpers';
 import { JobDetailsHeader } from '../../../components/job-details/JobDetailsHeader';
 import { JobDetailsHero } from '../../../components/job-details/JobDetailsHero';
@@ -10,6 +9,7 @@ import { JobDetailsLocation } from '../../../components/job-details/JobDetailsLo
 import { JobDetailsTasks } from '../../../components/job-details/JobDetailsTasks';
 import { JobDetailsRequirements } from '../../../components/job-details/JobDetailsRequirements';
 import { JobDetailsFooter } from '../../../components/job-details/JobDetailsFooter';
+import { useAuthStore } from "../../../store/useAuthStore";
 
 interface JobSearchModalDetailProps {
   selectedJob: Job;
@@ -23,7 +23,7 @@ export const JobSearchModalDetail: React.FC<JobSearchModalDetailProps> = ({
   setSelectedJob,
   applyToJob,
 }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const modalScrollRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {

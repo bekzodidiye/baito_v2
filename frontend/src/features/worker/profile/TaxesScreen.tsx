@@ -1,10 +1,10 @@
 import React from 'react';
 import { ArrowLeft, FileText, Download, CheckCircle2, FileJson, Clock } from 'lucide-react';
-import { useApp } from '../../../context/AppContext';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
+import { useAuthStore } from "../../../store/useAuthStore";
 
 export const TaxesScreen: React.FC = () => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const { setCurrentScreen } = useCurrentScreen();
 
   const t = {

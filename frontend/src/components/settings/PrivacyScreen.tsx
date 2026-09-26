@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { ChevronDown, Check, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatLongDate } from '../../utils/dateFormat';
+import { useAuthStore } from "../../store/useAuthStore";
 
 const SECTIONS = [
   {
@@ -200,7 +200,7 @@ interface PrivacyScreenProps {
 }
 
 export const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack, onConfirm }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
   const navigate = useNavigate();
   

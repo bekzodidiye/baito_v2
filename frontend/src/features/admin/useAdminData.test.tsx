@@ -1,3 +1,5 @@
+vi.mock('../../store/useUIStore', () => ({ useUIStore: vi.fn((sel) => sel({})) }));
+vi.mock('../../store/useAuthStore', () => ({ useAuthStore: vi.fn((sel) => sel({ language: 'uz', userProfile: { isVerified: true, role: 'worker', selectedRole: 'worker' } })) }));
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
@@ -9,7 +11,7 @@ vi.mock('../../api/client', () => ({
   apiClient: (...args: unknown[]) => apiClient(...(args as [])),
   unwrapList: (x: unknown) => (Array.isArray(x) ? x : []),
 }));
-vi.mock('../../context/AppContext', () => ({ useApp: () => ({}) }));
+
 
 import { useAdminData } from './useAdminData';
 

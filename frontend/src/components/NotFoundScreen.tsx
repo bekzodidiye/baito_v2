@@ -1,11 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Home, Search } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { useAuthStore } from "../store/useAuthStore";
 
 export const NotFoundScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">

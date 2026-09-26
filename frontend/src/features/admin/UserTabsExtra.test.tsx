@@ -1,8 +1,10 @@
+vi.mock('../../store/useUIStore', () => ({ useUIStore: vi.fn((sel) => sel({})) }));
+vi.mock('../../store/useAuthStore', () => ({ useAuthStore: vi.fn((sel) => sel({ language: 'uz', userProfile: { isVerified: true, role: 'worker', selectedRole: 'worker' } })) }));
 import React from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 
-vi.mock('../../context/AppContext', () => ({ useApp: () => ({ language: 'uz' }) }));
+
 vi.mock('../../api/client', () => ({ apiClient: vi.fn().mockResolvedValue({}) }));
 
 import { UserTabsExtra } from './UserTabsExtra';

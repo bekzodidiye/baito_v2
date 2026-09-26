@@ -1,10 +1,10 @@
 import React from 'react';
 import { BookOpen, AlertCircle, PhoneCall } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
 import { MODAL_TRANSLATIONS } from './MenuTranslations';
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const HelpContent: React.FC = () => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = MODAL_TRANSLATIONS[language];
 
   return (

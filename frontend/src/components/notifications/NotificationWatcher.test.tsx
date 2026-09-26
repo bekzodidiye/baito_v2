@@ -1,3 +1,7 @@
+vi.mock('../../store/useUIStore', () => ({ useUIStore: vi.fn() }));
+vi.mock('../../store/useAuthStore', () => ({ useAuthStore: vi.fn() }));
+import { useUIStore } from '../../store/useUIStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import React from 'react';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
@@ -11,13 +15,7 @@ const chime = vi.fn();
 vi.mock('../../api/queries', () => ({
   fetchNotificationsApi: () => Promise.resolve(rows),
 }));
-vi.mock('../../context/AppContext', () => ({
-  useApp: () => ({
-    get isLoggedIn() { return loggedIn; },
-    language: 'uz',
-    setUnreadNotificationsCount,
-  }),
-}));
+
 vi.mock('../../hooks/useCurrentScreen', () => ({
   useCurrentScreen: () => ({ setCurrentScreen: vi.fn() }),
 }));
@@ -44,6 +42,8 @@ beforeEach(() => {
   loggedIn = true;
   setUnreadNotificationsCount.mockClear();
   chime.mockClear();
+  vi.mocked(useUIStore).mockImplementation((sel: any) => sel({ setUnreadNotificationsCount }));
+  vi.mocked(useAuthStore).mockImplementation((sel: any) => sel({ isLoggedIn: loggedIn, language: 'uz' }));
 });
 afterEach(cleanup);
 
@@ -108,6 +108,8 @@ describe('NotificationWatcher', () => {
     // came back with a new identity, the effect fired again. Logged out — the
     // landing page, and now the public invoice page — that never terminated.
     loggedIn = false;
+    vi.mocked(useAuthStore).mockImplementation((sel: any) => sel({ isLoggedIn: loggedIn, language: 'uz' }));
+
     const { rerender } = renderWatcher();
 
     for (let i = 0; i < 5; i++) {

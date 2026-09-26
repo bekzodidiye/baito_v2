@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Lock, ShieldCheck, Plus, CreditCard } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
-import { useApp } from '../../context/AppContext';
 import { useQuery } from '@tanstack/react-query';
 import { fetchPaymentCardsApi, fetchUserProfileApi } from '../../api/queries';
 import { getBankName } from '../../utils/cardUtils';
 
 export const TopUpScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const user = useAuthStore((state) => state.userProfile);
 
   const [amount, setAmount] = useState<number | string>(500000);

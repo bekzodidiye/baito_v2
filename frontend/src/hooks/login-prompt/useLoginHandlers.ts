@@ -1,12 +1,12 @@
-import { useApp } from '../../context/AppContext';
 import { LOCAL_TEXTS } from '../../components/login/LoginPromptScreen.translations';
 import { useLoginApiHandlers } from './useLoginApiHandlers';
 import { showToast } from '../../utils/toast';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => void) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = LOCAL_TEXTS[language as 'uz' | 'ru' | 'en'] || LOCAL_TEXTS.uz;
   
   const { handleFinishSubmit, handleLoginSubmit, handleSendVerificationCode } = useLoginApiHandlers(state, isModal, onClose);

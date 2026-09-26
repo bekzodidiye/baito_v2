@@ -1,8 +1,9 @@
 import React from 'react';
 import { RefreshCw, Compass, Plus, Minus, LayoutList } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { MapTypeSelector } from './MapTypeSelector';
+import { useUIStore } from "../../store/useUIStore";
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface MapActionButtonsProps {
   isRefreshing: boolean;
@@ -23,7 +24,8 @@ export const MapActionButtons: React.FC<MapActionButtonsProps> = ({
   mapType,
   setMapType,
 }) => {
-  const { language, setJobsView } = useApp();
+  const language = useAuthStore(s => s.language);
+    const setJobsView = useUIStore(s => s.setJobsView);
   const t = translations[language];
 
   return (

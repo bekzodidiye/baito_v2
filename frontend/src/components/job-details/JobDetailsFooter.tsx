@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Send, CheckCircle2, PlayCircle } from 'lucide-react';
 import { Job } from '../../types';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { showToast } from '../../utils/toast';
 import { requestStartJobApi, completeJobApi } from '../../api/queries';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { QueryClientContext } from '@tanstack/react-query';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface JobDetailsFooterProps {
   selectedJob: Job;
@@ -19,7 +19,8 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
   applyToJob,
   onApplied,
 }) => {
-  const { language, userProfile } = useApp();
+  const language = useAuthStore(s => s.language);
+    const userProfile = useAuthStore(s => s.userProfile);
   // The server refuses an application from an unverified account. Saying so
   // before the press is the difference between an explanation and a rejection.
   const isVerified = !!userProfile?.isVerified;
