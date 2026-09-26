@@ -565,6 +565,8 @@ def complete_job(
     # If the worker is completing the job, they might be completing just a single shift of a multi-day job.
     worker_completing_single_day = False
     if not is_employer and remaining:
+        original_remaining_count = len(remaining)
+        
         # For workers, if it's a multi-day job, only complete the first uncompleted day
         first_day = remaining[0]
         first_day.status = JobDayStatus.COMPLETED
@@ -573,7 +575,7 @@ def complete_job(
         
         remaining = [first_day] # Process only this day for escrow
         
-        if len(job_days_service.payable_days(db, job.id)) > 1: # There are still more days after this one
+        if original_remaining_count > 1: # There are still more days after this one
             worker_completing_single_day = True
             job.status = JobStatus.CONFIRMED
             # do not set job.completedAt
