@@ -470,6 +470,13 @@ def complete_job_day(
             app.status = "completed"
             db.add(app)
         db.add(job)
+    else:
+        # Reset back to confirmed so the next day can be started
+        job.status = JobStatus.CONFIRMED
+        for app in apps:
+            app.status = "confirmed"
+            db.add(app)
+        db.add(job)
 
     db.commit()
     return {
@@ -521,7 +528,7 @@ def complete_job(
         raise HTTPException(status_code=400, detail="Bu ish allaqachon yakunlangan")
     if job.status == JobStatus.CANCELLED:
         raise HTTPException(status_code=400, detail="Bekor qilingan ishni yakunlab bo'lmaydi")
-    if job.status != JobStatus.IN_PROGRESS:
+    if job.status not in (JobStatus.IN_PROGRESS, JobStatus.CONFIRMED):
         raise HTTPException(
             status_code=400,
             detail="Ishni yakunlash uchun avval uni boshlash kerak",
@@ -554,21 +561,45 @@ def complete_job(
     # would pay a three-day shift as though it had been one.
     remaining = job_days_service.payable_days(db, job.id)
     now = datetime.now(timezone.utc)
-    for day in remaining:
-        day.status = JobDayStatus.COMPLETED
-        day.completedAt = now
-        db.add(day)
+    
+    # If the worker is completing the job, they might be completing just a single shift of a multi-day job.
+    worker_completing_single_day = False
+    if not is_employer and remaining:
+        # For workers, if it's a multi-day job, only complete the first uncompleted day
+        first_day = remaining[0]
+        first_day.status = JobDayStatus.COMPLETED
+        first_day.completedAt = now
+        db.add(first_day)
+        
+        remaining = [first_day] # Process only this day for escrow
+        
+        if len(job_days_service.payable_days(db, job.id)) > 1: # There are still more days after this one
+            worker_completing_single_day = True
+            job.status = JobStatus.CONFIRMED
+            # do not set job.completedAt
+        else:
+            job.status = JobStatus.COMPLETED
+            job.completedAt = now
+        db.add(job)
+    else:
+        for day in remaining:
+            day.status = JobDayStatus.COMPLETED
+            day.completedAt = now
+            db.add(day)
 
-    job.status = JobStatus.COMPLETED
-    job.completedAt = now
-    db.add(job)
+        job.status = JobStatus.COMPLETED
+        job.completedAt = now
+        db.add(job)
 
     paid, unpaid, bonus_paid = [], [], []
     for app in apps:
-        app.status = "completed"
-        app.rating = req.rating
-        app.review = req.review
-        app.bonus = req.bonus or 0
+        if worker_completing_single_day:
+            app.status = "confirmed"
+        else:
+            app.status = "completed"
+            app.rating = req.rating
+            app.review = req.review
+            app.bonus = req.bonus or 0
         db.add(app)
         # SessionLocal is created with autoflush=False, so the rating just set
         # above is invisible to the aggregate query below without this.
@@ -649,7 +680,8 @@ def complete_job(
     db.commit()
     return {
         "success": True,
-        "job_status": JobStatus.COMPLETED,
+        "job_status": job.status,
+        "worker_completing_single_day": worker_completing_single_day,
         "paid_workers": len(paid),
         "unpaid_workers": len(unpaid),
         "bonus_paid_workers": len(bonus_paid),

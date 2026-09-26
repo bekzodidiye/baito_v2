@@ -36,8 +36,9 @@ def upgrade() -> None:
     bind = op.get_bind()
     if "transactions" not in set(inspect(bind).get_table_names()):
         return
-    op.alter_column("transactions", "performTime", type_=sa.BigInteger(), existing_nullable=True)
-    op.alter_column("transactions", "cancelTime", type_=sa.BigInteger(), existing_nullable=True)
+    with op.batch_alter_table("transactions") as batch_op:
+        batch_op.alter_column("performTime", type_=sa.BigInteger(), existing_nullable=True)
+        batch_op.alter_column("cancelTime", type_=sa.BigInteger(), existing_nullable=True)
 
 
 def downgrade() -> None:
@@ -45,5 +46,6 @@ def downgrade() -> None:
     if "transactions" not in set(inspect(bind).get_table_names()):
         return
     # Going back narrows the column, so any row written since would not fit.
-    op.alter_column("transactions", "performTime", type_=sa.Integer(), existing_nullable=True)
-    op.alter_column("transactions", "cancelTime", type_=sa.Integer(), existing_nullable=True)
+    with op.batch_alter_table("transactions") as batch_op:
+        batch_op.alter_column("performTime", type_=sa.Integer(), existing_nullable=True)
+        batch_op.alter_column("cancelTime", type_=sa.Integer(), existing_nullable=True)

@@ -148,7 +148,7 @@ def test_finishing_one_day_pays_one_day_and_leaves_the_rest(client):
     body = resp.json()
     assert body["remaining_days"] == 2
     # The posting is emphatically not finished.
-    assert body["job_status"] == JobStatus.IN_PROGRESS
+    assert body["job_status"] == JobStatus.CONFIRMED
 
     statuses = [d[2] for d in _days(job.id)]
     assert statuses == [JobDayStatus.COMPLETED, JobDayStatus.PENDING, JobDayStatus.PENDING]
@@ -172,7 +172,7 @@ def test_the_posting_closes_only_when_its_last_day_does(client):
 
     with SessionLocal() as db:
         assert db.query(Job).filter(Job.id == job.id).first().status \
-            == JobStatus.IN_PROGRESS
+            == JobStatus.CONFIRMED
 
     last = client.post(f"/api/v1/jobs/{job.id}/days/{day_ids[-1]}/complete")
     assert last.status_code == 200

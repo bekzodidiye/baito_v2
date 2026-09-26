@@ -45,9 +45,10 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      await completeJobApi(selectedJob.id);
-      selectedJob.status = 'completed';
-      setIsStartedLocal(false);
+      const response = await completeJobApi(selectedJob.id);
+      const newStatus = response?.job_status || 'completed';
+      selectedJob.status = newStatus;
+      setIsStartedLocal(false); // Should be false even if it went to 'confirmed' so the button becomes 'Ishni boshlash'
       showToast(
         language === 'uz'
           ? "Ish muvaffaqiyatli yakunlandi! Ish beruvchiga xabar yuborildi."
@@ -58,7 +59,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
       queryClient?.invalidateQueries({ queryKey: ['jobs'] });
       queryClient?.invalidateQueries({ queryKey: ['calendarJobs'] });
       queryClient?.invalidateQueries({ queryKey: ['workerApplications'] });
-      if (onApplied) (onApplied as any)('completed');
+      if (onApplied) (onApplied as any)(newStatus);
     } catch (e: any) {
       showToast(e?.message || (language === 'uz' ? "Ishni yakunlab bo'lmadi" : "Failed to complete job"), 'error');
     } finally {
