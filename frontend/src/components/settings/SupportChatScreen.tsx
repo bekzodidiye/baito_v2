@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { ArrowLeft, Send, User } from 'lucide-react';
 import { Logo } from '../Logo';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { fetchSupportConversationApi, sendSupportMessageApi } from '../../api/queries';
 import { showToast } from '../../utils/toast';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface ChatMessage {
   id: string;
@@ -36,7 +36,7 @@ const clockTime = (iso?: string | null): string => {
 };
 
 export const SupportChatScreen: React.FC = () => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   

@@ -1,11 +1,12 @@
-import { useApp } from '../context/AppContext';
 import { getTranslations } from '../components/login/VerificationPendingScreen.utils';
 import { showToast } from '../utils/toast';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
+import { useAuthStore } from "../store/useAuthStore";
 
 export const useVerificationPending = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, userProfile } = useApp();
+  const language = useAuthStore(s => s.language);
+    const userProfile = useAuthStore(s => s.userProfile);
   const { t, stepT } = getTranslations(language);
 
   const handleDashboardClick = () => {

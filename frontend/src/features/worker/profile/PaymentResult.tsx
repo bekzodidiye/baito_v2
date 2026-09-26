@@ -1,13 +1,13 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
-import { useApp } from '../../../context/AppContext';
 import { translations } from '../../../translations';
+import { useAuthStore } from "../../../store/useAuthStore";
 
 export const PaymentResult: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
   
   // Every string here used to be `language === 'uz' ? uz : ru`, so English —

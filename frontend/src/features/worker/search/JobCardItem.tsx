@@ -6,7 +6,7 @@ import { translations } from '../../../translations';
 import { getJobShiftTime, getJobDuration } from '../../../utils/jobTimeUtils';
 import { getJobCategory } from '../../../utils/jobCategoryUtils';
 import { shareJob } from '../../../utils/shareJob';
-import { useApp } from '../../../context/AppContext';
+import { useAuthStore } from "../../../store/useAuthStore";
 
 interface JobCardItemProps {
   job: Job;
@@ -40,7 +40,7 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
   toggleBookmark,
   isActive = false,
 }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
   const category = getJobCategory(job);
   const categoryName = language === 'ru' ? category.nameRu : language === 'en' ? category.nameEn : category.nameUz;

@@ -4,6 +4,8 @@ import { LANDING_TEXTS } from './LandingData';
 import { useLandingCategories, rateText, countText } from './useLandingCategories';
 import { Truck, Utensils, Package, HardHat, ShoppingBag, Briefcase, ArrowRight, Layers } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useUIStore } from "../../store/useUIStore";
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface LandingCategoriesProps {
   onSelectRole: (role: 'worker' | 'employer') => void;
@@ -11,7 +13,10 @@ interface LandingCategoriesProps {
 
 export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRole }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, isLoggedIn, requireAuth, setFilterCategory } = useApp();
+  const language = useAuthStore(s => s.language);
+    const isLoggedIn = useAuthStore(s => s.isLoggedIn);
+    const requireAuth = useApp().requireAuth;
+    const setFilterCategory = useUIStore(s => s.setFilterCategory);
   const t = LANDING_TEXTS[language as keyof typeof LANDING_TEXTS] || LANDING_TEXTS.uz;
   const { categories } = useLandingCategories(language);
 

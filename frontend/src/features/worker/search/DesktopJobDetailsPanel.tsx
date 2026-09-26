@@ -2,7 +2,6 @@ import React, { memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Briefcase } from 'lucide-react';
 import { Job } from '../../../types';
-import { useApp } from '../../../context/AppContext';
 import { translations } from '../../../translations';
 import { getJobDetails } from '../../../utils/jobDetailHelpers';
 import { JobDetailsHero } from '../../../components/job-details/JobDetailsHero';
@@ -11,6 +10,7 @@ import { JobDetailsLocation } from '../../../components/job-details/JobDetailsLo
 import { JobDetailsTasks } from '../../../components/job-details/JobDetailsTasks';
 import { JobDetailsRequirements } from '../../../components/job-details/JobDetailsRequirements';
 import { JobDetailsFooter } from '../../../components/job-details/JobDetailsFooter';
+import { useAuthStore } from "../../../store/useAuthStore";
 
 interface DesktopJobDetailsPanelProps {
   activeJob: Job | null;
@@ -26,7 +26,7 @@ const DesktopJobDetailsPanelComponent: React.FC<DesktopJobDetailsPanelProps> = (
   selectedJob,
   setSelectedJob,
 }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
 
   if (!activeJob) {

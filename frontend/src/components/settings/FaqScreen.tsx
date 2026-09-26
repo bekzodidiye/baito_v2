@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const FaqScreen: React.FC = () => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   

@@ -7,13 +7,12 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPaymentCardsApi, deletePaymentCardApi, updatePaymentCardApi } from '../../api/queries';
-import { useApp } from '../../context/AppContext';
 import { getBankName, getBankColors } from '../../utils/cardUtils';
 
 export const MyCardsScreen: React.FC = () => {
   const navigate = useNavigate();
   const { setCurrentScreen } = useCurrentScreen();
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const user = useAuthStore(state => state.userProfile);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; type: 'delete' | 'freeze'; cardId: string | null; isActive?: boolean }>({ isOpen: false, type: 'delete', cardId: null });

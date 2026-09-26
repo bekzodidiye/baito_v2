@@ -1,3 +1,5 @@
+vi.mock('../../store/useUIStore', () => ({ useUIStore: vi.fn((sel) => sel({})) }));
+vi.mock('../../store/useAuthStore', () => ({ useAuthStore: vi.fn((sel) => sel({ language: 'uz', userProfile: { isVerified: true, role: 'worker', selectedRole: 'worker' } })) }));
 import React from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
@@ -8,9 +10,7 @@ const showToast = vi.hoisted(() => vi.fn());
 vi.mock('../../utils/toast', () => ({ showToast }));
 
 // A verified worker: applying is refused otherwise, which is its own case below.
-vi.mock('../../context/AppContext', () => ({
-  useApp: () => ({ language: 'uz', userProfile: { isVerified: true } }),
-}));
+
 vi.mock('../../api/queries', () => ({
   requestStartJobApi: vi.fn(),
   completeJobApi: (...args: unknown[]) => completeJobMock(...args),
@@ -105,8 +105,8 @@ describe('JobDetailsFooter — an unverified worker is told, not rejected', () =
   it('does not call the API and says why', async () => {
     vi.resetModules();
     showToast.mockClear();
-    vi.doMock('../../context/AppContext', () => ({
-      useApp: () => ({ language: 'uz', userProfile: { isVerified: false } }),
+    vi.doMock('../../store/useAuthStore', () => ({
+      useAuthStore: vi.fn((sel) => sel({ language: 'uz', userProfile: { isVerified: false, role: 'worker', selectedRole: 'worker' } })),
     }));
     vi.doMock('../../utils/toast', () => ({ showToast }));
     const { JobDetailsFooter: Unverified } = await import('./JobDetailsFooter');

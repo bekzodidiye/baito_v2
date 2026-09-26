@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useApp, getJobDates } from '../context/AppContext';
+import { getJobDates } from '../context/AppContext';
 import { useJobsData } from "../context/useJobsData";
 import { Job } from '../types';
 import { getTranslatedJob } from '../jobTranslations';
@@ -8,13 +8,20 @@ import { translations, translateRegion } from '../translations';
 import { useJobSearchFilters } from './useJobSearchFilters';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 import { useDebouncedValue } from './useDebouncedValue';
+import { useUIStore } from "../store/useUIStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 export function useJobSearchScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { filterLocation, setFilterLocation, setShowRegionSelector, language, activeCalendarDay,
-          filterCategory: pendingCategory, setFilterCategory: setPendingCategory } = useApp();
+  const filterLocation = useUIStore(s => s.filterLocation);
+    const setFilterLocation = useUIStore(s => s.setFilterLocation);
+    const setShowRegionSelector = useUIStore(s => s.setShowRegionSelector);
+    const language = useAuthStore(s => s.language);
+    const activeCalendarDay = useUIStore(s => s.activeCalendarDay);
+    const pendingCategory = useUIStore(s => s.filterCategory);
+    const setPendingCategory = useUIStore(s => s.setFilterCategory);
 
   const [searchTerm, setSearchTerm] = useState('');
   // The server does the matching, so a posting past the first page is still

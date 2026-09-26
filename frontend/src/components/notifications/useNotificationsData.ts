@@ -1,18 +1,18 @@
 import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchNotificationsApi, markAllNotificationsReadApi } from '../../api/queries';
-import { useApp } from '../../context/AppContext';
 import { showToast } from '../../utils/toast';
 import { translateNotification } from '../../utils/notificationTranslator';
 import { NotificationItemData } from './NotificationItem';
 import { NotificationCategory } from './NotificationFilterPanel';
 import { notificationKind } from './notificationKind';
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const useNotificationsData = (
   activeCategory: NotificationCategory,
   setUnreadNotificationsCount: (count: number) => void
 ) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const queryClient = useQueryClient();
 
   const { data: apiNotifs = [], refetch } = useQuery({

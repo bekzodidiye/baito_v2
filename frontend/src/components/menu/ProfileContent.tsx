@@ -3,6 +3,7 @@ import { Mail, Phone, MapPin, Briefcase, LogOut } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { MODAL_TRANSLATIONS } from './MenuTranslations';
 import { showToast } from '../../utils/toast';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface ProfileContentProps {
   onClose: () => void;
@@ -13,7 +14,9 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({ onClose }) => {
   // phone number, plus 12 completed jobs and a 4.9 rating. Nothing is wired to
   // open this panel today, so none of it reached a user, but it should read
   // the signed-in profile if it ever does.
-  const { language, logout, userProfile } = useApp();
+  const language = useAuthStore(s => s.language);
+    const logout = useApp().logout;
+    const userProfile = useAuthStore(s => s.userProfile);
   const fullName = [userProfile?.firstName, userProfile?.lastName].filter(Boolean).join(' ');
   const displayName = fullName || (language === 'ru' ? 'Пользователь' : language === 'en' ? 'User' : 'Foydalanuvchi');
   const initials = displayName.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();

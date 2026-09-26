@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckCircle, AlertTriangle } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface JobDetailsRequirementsProps {
   requirements: string[];
@@ -12,7 +12,7 @@ export const JobDetailsRequirements: React.FC<JobDetailsRequirementsProps> = ({
   requirements,
   warning,
 }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
 
   return (

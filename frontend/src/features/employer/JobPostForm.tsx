@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
-import { useApp } from '../../context/AppContext';
 import { apiClient } from '../../api/client';
 import { ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
@@ -10,6 +9,7 @@ import { JobPostStepTwo } from './components/JobPostStepTwo';
 import { JobPostStepThree } from './components/JobPostStepThree';
 import { CATEGORIES_LIST } from '../../constants/categories';
 import { showToast } from '../../utils/toast';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface JobPostFormProps {
   onBack: () => void;
@@ -20,7 +20,7 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
   const { postNewJob, language, companyName } = useEmployer();
   // The server refuses a posting from an unverified account. Checking here
   // means the refusal arrives before three steps of form, not after them.
-  const { userProfile } = useApp();
+  const userProfile = useAuthStore(s => s.userProfile);
   const isVerified = !!userProfile?.isVerified;
   const [step, setStep] = useState(1);
   

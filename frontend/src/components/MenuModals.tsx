@@ -1,11 +1,11 @@
 import React, { Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Shield, HelpCircle } from 'lucide-react';
-import { useApp } from '../context/AppContext';
 import { MODAL_TRANSLATIONS } from './menu/MenuTranslations';
 import { ProfileContent } from './menu/ProfileContent';
 import { SettingsContent } from './menu/SettingsContent';
 import { HelpContent } from './menu/HelpContent';
+import { useAuthStore } from "../store/useAuthStore";
 
 const LoginPromptScreen = React.lazy(() => import('./login/LoginPromptScreen').then(m => ({ default: m.LoginPromptScreen })));
 
@@ -16,7 +16,7 @@ interface MenuModalProps {
 }
 
 export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   if (!isOpen || !type) return null;
 
   const t = MODAL_TRANSLATIONS[language];

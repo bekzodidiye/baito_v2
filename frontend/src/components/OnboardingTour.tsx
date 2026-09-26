@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Map, Search, Calendar, User, ChevronRight, X } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { useUIStore } from "../store/useUIStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 export const OnboardingTour: React.FC = () => {
-  const { hasSeenTour, setHasSeenTour, language } = useApp();
+  const hasSeenTour = useUIStore(s => s.hasSeenTour);
+    const setHasSeenTour = useUIStore(s => s.setHasSeenTour);
+    const language = useAuthStore(s => s.language);
   const [currentStep, setCurrentStep] = useState(0);
 
   if (hasSeenTour) return null;

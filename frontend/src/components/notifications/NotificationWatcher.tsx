@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useQuery } from '@tanstack/react-query';
 import { Bell, X } from 'lucide-react';
 import { fetchNotificationsApi } from '../../api/queries';
-import { useApp } from '../../context/AppContext';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { chime } from '../../utils/chime';
+import { useUIStore } from "../../store/useUIStore";
+import { useAuthStore } from "../../store/useAuthStore";
 
 /**
  * Announces a notification the moment it arrives.
@@ -27,7 +28,9 @@ import { chime } from '../../utils/chime';
  *  whole app down, landing page included. */
 const NONE: any[] = [];
 export const NotificationWatcher: React.FC = () => {
-  const { isLoggedIn, setUnreadNotificationsCount, language } = useApp();
+  const isLoggedIn = useAuthStore(s => s.isLoggedIn);
+    const setUnreadNotificationsCount = useUIStore(s => s.setUnreadNotificationsCount);
+    const language = useAuthStore(s => s.language);
   const { setCurrentScreen } = useCurrentScreen();
   const [banner, setBanner] = React.useState<{ id: string; title: string; message: string } | null>(null);
 

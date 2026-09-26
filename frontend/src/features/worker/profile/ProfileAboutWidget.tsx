@@ -1,13 +1,13 @@
 import React from 'react';
 import { Briefcase, MapPin } from 'lucide-react';
-import { useApp } from '../../../context/AppContext';
+import { useAuthStore } from "../../../store/useAuthStore";
 
 interface ProfileAboutWidgetProps {
   language: 'uz' | 'ru' | 'en';
 }
 
 export const ProfileAboutWidget: React.FC<ProfileAboutWidgetProps> = ({ language }) => {
-  const { userProfile } = useApp();
+  const userProfile = useAuthStore(s => s.userProfile);
 
   if (!userProfile) return null;
 

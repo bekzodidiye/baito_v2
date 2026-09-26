@@ -2,15 +2,15 @@ import React from 'react';
 import { Clock } from 'lucide-react';
 import { Job } from '../../types';
 import { getJobHeroImage } from '../../utils/jobDetailHelpers';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface JobDetailsHeroProps {
   selectedJob: Job;
 }
 
 export const JobDetailsHero: React.FC<JobDetailsHeroProps> = ({ selectedJob }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
 
   const heroImage = getJobHeroImage(selectedJob);

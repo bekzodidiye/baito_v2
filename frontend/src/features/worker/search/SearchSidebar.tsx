@@ -1,9 +1,9 @@
 import React, { memo } from 'react';
 import { Search, MapPin, Loader2, Tag, Map } from 'lucide-react';
-import { useApp } from '../../../context/AppContext';
 import { REGIONS_LIST, getRegionDisplayName } from './JobSearchScreen.utils';
 import { Language } from '../../../translations';
 import { CATEGORIES_CONFIG, CATEGORY_FILTERS_LIST } from '../../../utils/jobCategoryUtils';
+import { useUIStore } from "../../../store/useUIStore";
 
 interface SearchSidebarProps {
   t: any;
@@ -30,7 +30,7 @@ const SearchSidebarComponent: React.FC<SearchSidebarProps> = ({
   filterType, setFilterType, filterCategory, setFilterCategory, sortBy, setSortBy,
   clearFilters, language, SCHEDULE_FILTERS, requestLocation, isRequestingLocation
 }) => {
-  const { setJobsView } = useApp();
+  const setJobsView = useUIStore(s => s.setJobsView);
 
   return (
     <aside className="col-span-3 min-w-0 bg-white p-5 lg:p-6 rounded-2xl shadow-xs flex flex-col gap-5 lg:gap-6 sticky top-4 h-[calc(100vh-32px)] overflow-y-auto no-scrollbar">

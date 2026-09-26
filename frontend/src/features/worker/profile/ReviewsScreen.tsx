@@ -3,15 +3,15 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { apiClient } from '../../../api/client';
 import { Application } from '../../../types';
-import { useApp } from '../../../context/AppContext';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 import { SummaryCard, ReviewCard, EmptyReviews, ReviewsSkeleton } from './ReviewsScreen.components';
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchWorkerApplicationsApi } from '../../../api/queries';
+import { useAuthStore } from "../../../store/useAuthStore";
 
 export const ReviewsScreen: React.FC = () => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const tGlobal = translations[language];
   const { setCurrentScreen } = useCurrentScreen();
 

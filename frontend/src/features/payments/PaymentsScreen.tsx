@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPaymentCardsApi, addPaymentCardApi, fetchTransactionsApi, requestWithdrawalApi, fetchUserProfileApi } from '../../api/queries';
@@ -15,7 +14,7 @@ import { PaymentModals, PaymentModalType } from './PaymentModals';
 export const PaymentsScreen: React.FC = () => {
   const { setCurrentScreen } = useCurrentScreen();
   const navigate = useNavigate();
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const user = useAuthStore(state => state.userProfile);
   const queryClient = useQueryClient();
 

@@ -1,7 +1,7 @@
 import React from 'react';
-import { useApp } from '../context/AppContext';
 import { LockKeyhole, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useAuthStore } from "../store/useAuthStore";
 
 interface GatedLockScreenProps {
   onOpenAuth: () => void;
@@ -26,7 +26,7 @@ const GATED_TEXTS = {
 };
 
 export const GatedLockScreen: React.FC<GatedLockScreenProps> = ({ onOpenAuth }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = GATED_TEXTS[language] || GATED_TEXTS.uz;
 
   return (

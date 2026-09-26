@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import { ArrowLeft, CheckCheck, CircleDot } from 'lucide-react';
 import { NotificationItem } from './NotificationItem';
 import { notificationDestination } from './notificationKind';
@@ -8,10 +7,13 @@ import { NotificationMobileChips } from './NotificationMobileChips';
 import { getNotificationTranslations } from './Notifications.data';
 import { useNotificationsData } from './useNotificationsData';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useUIStore } from "../../store/useUIStore";
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const NotificationsScreen: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, setUnreadNotificationsCount } = useApp();
+  const language = useAuthStore(s => s.language);
+    const setUnreadNotificationsCount = useUIStore(s => s.setUnreadNotificationsCount);
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>('all');
 
   const {

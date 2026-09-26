@@ -1,8 +1,8 @@
 import React from 'react';
 import { Target, ChevronRight, AlertCircle, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useApp } from '../../../context/AppContext';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
+import { useAuthStore } from "../../../store/useAuthStore";
 
 interface ProfileCompletionWidgetProps {
   language: 'uz' | 'ru' | 'en';
@@ -13,7 +13,7 @@ export const ProfileCompletionWidget: React.FC<ProfileCompletionWidgetProps> = (
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   
   
-  const { userProfile } = useApp();
+  const userProfile = useAuthStore(s => s.userProfile);
   
   // Calculate completion based on actual user profile data
   const fieldsToCheck = [

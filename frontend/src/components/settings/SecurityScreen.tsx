@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../../context/AppContext';
 import { ArrowLeft, ChevronRight, Shield, Lock, ShieldCheck, Fingerprint, Smartphone, Monitor, Tablet, ShieldAlert, Loader2 } from 'lucide-react';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { ConfirmModal } from '../common/ConfirmModal';
@@ -9,7 +8,9 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { formatShortDate } from '../../utils/dateFormat';
 export const SecurityScreen: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { userProfile, setUserProfile, language } = useApp();
+  const userProfile = useAuthStore(s => s.userProfile);
+    const setUserProfile = useAuthStore(s => s.setUserProfile);
+    const language = useAuthStore(s => s.language);
 
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);

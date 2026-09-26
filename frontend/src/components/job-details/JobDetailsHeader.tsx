@@ -1,8 +1,8 @@
 import React from 'react';
 import { ArrowLeft, Share2, MoreVertical } from 'lucide-react';
 import { Job } from '../../types';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface JobDetailsHeaderProps {
   selectedJob: Job;
@@ -13,7 +13,7 @@ export const JobDetailsHeader: React.FC<JobDetailsHeaderProps> = ({
   selectedJob,
   onClose,
 }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
 
   const handleShare = () => {

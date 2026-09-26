@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../../context/AppContext';
 import { useEmployerChat } from '../../hooks/useEmployerChat';
 import { EmployerChatList } from './components/EmployerChatList';
 import { EmployerChatWindow } from './components/EmployerChatWindow';
-
+import { useUIStore } from "../../store/useUIStore";
 
 interface EmployerChatsProps {
   initialTargetCandidate?: string | null;
@@ -14,7 +13,9 @@ export const EmployerChats: React.FC<EmployerChatsProps> = ({
   initialTargetCandidate,
   onClearTargetCandidate
 }) => {
-  const { setEmployerSelectedChatId, messagesSearchOpen, setMessagesSearchOpen } = useApp();
+  const setEmployerSelectedChatId = useUIStore(s => s.setEmployerSelectedChatId);
+    const messagesSearchOpen = useUIStore(s => s.messagesSearchOpen);
+    const setMessagesSearchOpen = useUIStore(s => s.setMessagesSearchOpen);
   
   const {
     sessions,

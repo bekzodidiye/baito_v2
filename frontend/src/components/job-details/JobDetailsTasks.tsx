@@ -1,14 +1,14 @@
 import React from 'react';
 import { ClipboardList } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface JobDetailsTasksProps {
   tasks: string[];
 }
 
 export const JobDetailsTasks: React.FC<JobDetailsTasksProps> = ({ tasks }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
 
   return (

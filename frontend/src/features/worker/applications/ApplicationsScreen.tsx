@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Inbox, BriefcaseBusiness, CheckCircle2, XCircle, Clock3 } from 'lucide-react';
-import { useApp } from '../../../context/AppContext';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 import { translations } from '../../../translations';
 import { fetchWorkerApplicationsApi } from '../../../api/queries';
@@ -8,10 +7,11 @@ import { ApplicationCard } from './ApplicationCard';
 import { WorkerApplication } from '../../../types';
 
 import { useQuery } from '@tanstack/react-query';
+import { useAuthStore } from "../../../store/useAuthStore";
 
 export const ApplicationsScreen: React.FC = () => {
   const { setCurrentScreen } = useCurrentScreen();
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = translations[language];
   
   // Tab state

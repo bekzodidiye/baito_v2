@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import { LANDING_TEXTS, FAQ_ITEMS } from './LandingData';
 import { HelpCircle, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const LandingFAQ: React.FC = () => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const t = LANDING_TEXTS[language as keyof typeof LANDING_TEXTS] || LANDING_TEXTS.uz;
 

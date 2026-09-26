@@ -1,7 +1,7 @@
 import React from 'react';
 import { AdminTab } from './types';
 import { RefreshCw, Menu, ShieldCheck, Globe } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface AdminHeaderProps {
   activeTab: AdminTab;
@@ -16,7 +16,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   loading,
   onOpenSidebar,
 }) => {
-  const { language, setLanguage } = useApp();
+  const language = useAuthStore(s => s.language);
+    const setLanguage = useAuthStore(s => s.setLanguage);
 
   const getTabTitle = (tab: AdminTab) => {
     if (language === 'ru') {

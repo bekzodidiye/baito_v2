@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
 import { useChatsData } from "../context/useChatsData";
 import { getTranslatedChat } from '../chatTranslations';
 import { translations } from '../translations';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 import { uploadFileApi } from '../api/queries';
 import { showToast } from '../utils/toast';
+import { useAuthStore } from "../store/useAuthStore";
 
 export interface AttachedFileData {
   name: string;
@@ -30,7 +30,7 @@ export function useChatScreen(displayedChatId?: string | null) {
   const activeChatId = routeChatId || displayedChatId || undefined;
   const navigate = useNavigate();
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const { chats, sendMessage, setActiveChatId } = useChatsData(language);
   const [inputText, setInputText] = useState('');
   const [attachedFile, setAttachedFile] = useState<AttachedFileData | null>(null);

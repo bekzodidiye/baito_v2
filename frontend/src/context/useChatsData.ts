@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 import { Chat, Message } from '../types';
-import { useApp } from './AppContext';
 import { openChatSocket, SocketMessage } from '../api/chatSocket';
 import {
   fetchChats,
@@ -11,6 +10,7 @@ import {
   fetchSupportConversationApi,
   sendSupportMessageApi,
 } from '../api/queries';
+import { useAuthStore } from "../store/useAuthStore";
 
 /**
  * Conversations, from the server.
@@ -112,7 +112,8 @@ const toChat = (c: ApiChat, messages: Message[], unknownName: string): Chat => {
 };
 
 export function useChatsData(language: 'uz' | 'ru' | 'en') {
-  const { userProfile, isLoggedIn } = useApp();
+  const userProfile = useAuthStore(s => s.userProfile);
+    const isLoggedIn = useAuthStore(s => s.isLoggedIn);
   const queryClient = useQueryClient();
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
 

@@ -4,10 +4,14 @@ import { apiClient } from '../../api/client';
 import { LOCAL_TEXTS } from '../../components/login/LoginPromptScreen.translations';
 import { showToast } from '../../utils/toast';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () => void) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, setIsLoggedIn, setUserProfile, executePendingRedirect } = useApp();
+  const language = useAuthStore(s => s.language);
+    const setIsLoggedIn = useAuthStore(s => s.setIsLoggedIn);
+    const setUserProfile = useAuthStore(s => s.setUserProfile);
+    const executePendingRedirect = useApp().executePendingRedirect;
   const t = LOCAL_TEXTS[language as 'uz' | 'ru' | 'en'] || LOCAL_TEXTS.uz;
 
   const handleFinishSubmit = async (e?: React.FormEvent) => {

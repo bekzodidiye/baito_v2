@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, PlusCircle, Wallet, CreditCard, CheckCircle2, AlertCircle, Trash2, Star, ChevronDown } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { requestWithdrawalApi } from '../../api/queries';
 import { showToast } from '../../utils/toast';
+import { useAuthStore } from "../../store/useAuthStore";
 
 export type PaymentModalType = 'deposit' | 'withdraw' | 'addCard' | 'myCards' | null;
 
@@ -17,7 +17,7 @@ interface PaymentModalsProps {
 }
 
 export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, type, currentBalance, savedCards }) => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const [amount, setAmount] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');

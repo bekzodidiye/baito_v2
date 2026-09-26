@@ -1,11 +1,12 @@
-import { useApp } from '../context/AppContext';
 import { Job, Application } from '../types';
 import { apiClient } from '../api/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showToast } from '../utils/toast';
+import { useAuthStore } from "../store/useAuthStore";
 
 export const useEmployer = () => {
-  const { language, userProfile } = useApp();
+  const language = useAuthStore(s => s.language);
+    const userProfile = useAuthStore(s => s.userProfile);
   const queryClient = useQueryClient();
   
   // 1. Fetch Employer Profile (Balance)

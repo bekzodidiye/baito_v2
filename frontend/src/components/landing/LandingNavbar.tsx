@@ -4,12 +4,16 @@ import { Logo } from '../Logo';
 import { LanguageSelector } from '../LanguageSelector';
 import { ArrowRight, Menu, X, LogIn } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface LandingNavbarProps {}
 
 export const LandingNavbar: React.FC<LandingNavbarProps> = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, isLoggedIn, userProfile, requireAuth } = useApp();
+  const language = useAuthStore(s => s.language);
+    const isLoggedIn = useAuthStore(s => s.isLoggedIn);
+    const userProfile = useAuthStore(s => s.userProfile);
+    const requireAuth = useApp().requireAuth;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleExploreJobs = () => {

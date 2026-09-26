@@ -11,6 +11,8 @@ import { translations } from '../translations';
 import { LanguageSelector } from './LanguageSelector';
 import { showToast } from '../utils/toast';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
+import { useUIStore } from "../store/useUIStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 interface SidebarProps {
   onOpenModal?: (type: 'profile' | 'settings' | 'help' | 'auth') => void;
@@ -27,7 +29,12 @@ interface NavItem {
 
 export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, isLoggedIn, logout, userProfile, unreadNotificationsCount, requireAuth } = useApp();
+  const language = useAuthStore(s => s.language);
+    const isLoggedIn = useAuthStore(s => s.isLoggedIn);
+    const logout = useApp().logout;
+    const userProfile = useAuthStore(s => s.userProfile);
+    const unreadNotificationsCount = useUIStore(s => s.unreadNotificationsCount);
+    const requireAuth = useApp().requireAuth;
 
   const t = translations[language];
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';

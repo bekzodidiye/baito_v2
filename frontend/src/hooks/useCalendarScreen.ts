@@ -1,7 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-
-
-import { useApp } from '../context/AppContext';
 import { useJobsData } from "../context/useJobsData";
 import { Job } from '../types';
 import { getTranslatedJob } from '../jobTranslations';
@@ -11,9 +8,14 @@ import {
   isOverlappingWithActiveJob, 
   getDayStatusForList
 } from '../features/worker/calendar/CalendarScreen.utils';
+import { useUIStore } from "../store/useUIStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 export function useCalendarScreen() {
-  const { activeCalendarFilter, setActiveCalendarFilter, language, activeCalendarDay } = useApp();
+  const activeCalendarFilter = useUIStore(s => s.activeCalendarFilter);
+    const setActiveCalendarFilter = useUIStore(s => s.setActiveCalendarFilter);
+    const language = useAuthStore(s => s.language);
+    const activeCalendarDay = useUIStore(s => s.activeCalendarDay);
   const { jobs: rawJobs, toggleBookmark, applyToJob } = useJobsData();
 
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);

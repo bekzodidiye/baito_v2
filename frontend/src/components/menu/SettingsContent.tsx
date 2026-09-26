@@ -1,12 +1,13 @@
 import React from 'react';
 import { Bell, Globe, Shield } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
 import { MODAL_TRANSLATIONS } from './MenuTranslations';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const SettingsContent: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, setLanguage } = useApp();
+  const language = useAuthStore(s => s.language);
+    const setLanguage = useAuthStore(s => s.setLanguage);
   const t = MODAL_TRANSLATIONS[language];
 
   return (

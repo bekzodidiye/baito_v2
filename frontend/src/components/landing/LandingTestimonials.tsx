@@ -1,10 +1,10 @@
 import React from 'react';
-import { useApp } from '../../context/AppContext';
 import { LANDING_TEXTS } from './LandingData';
 import { Star, Quote, CheckCircle2, User } from 'lucide-react';
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const LandingTestimonials: React.FC = () => {
-  const { language } = useApp();
+  const language = useAuthStore(s => s.language);
   const t = LANDING_TEXTS[language as keyof typeof LANDING_TEXTS] || LANDING_TEXTS.uz;
 
   const reviews = [

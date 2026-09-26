@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import { useEmployer } from '../../hooks/useEmployer';
 import { EmployerDashboard } from './EmployerDashboard';
 import { EmployerJobs } from './EmployerJobs';
@@ -13,10 +12,13 @@ import { motion } from 'motion/react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { MandatoryReviewModal } from './components/MandatoryReviewModal';
 import { Sidebar } from '../../components/Sidebar';
+import { useUIStore } from "../../store/useUIStore";
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const EmployerPanel: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, employerSelectedChatId } = useApp();
+  const language = useAuthStore(s => s.language);
+    const employerSelectedChatId = useUIStore(s => s.employerSelectedChatId);
   const { applications, reviewJob } = useEmployer();
   const [targetCandidate, setTargetCandidate] = useState<string | null>(null);
 

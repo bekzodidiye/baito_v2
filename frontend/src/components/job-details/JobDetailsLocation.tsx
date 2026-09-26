@@ -2,9 +2,10 @@ import React from 'react';
 import { MapPin, ExternalLink, Navigation } from 'lucide-react';
 import { Job } from '../../types';
 import { getLatLng } from '../map/mapUtils';
-import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useUIStore } from "../../store/useUIStore";
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface JobDetailsLocationProps {
   selectedJob: Job;
@@ -22,7 +23,9 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
   isLocating,
 }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, setMapFocusedJobId, setJobsView } = useApp();
+  const language = useAuthStore(s => s.language);
+    const setMapFocusedJobId = useUIStore(s => s.setMapFocusedJobId);
+    const setJobsView = useUIStore(s => s.setJobsView);
   const t = translations[language];
 
   const handleMapButtonClick = () => {
