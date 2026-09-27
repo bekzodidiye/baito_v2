@@ -14,6 +14,8 @@ import { MandatoryReviewModal } from './components/MandatoryReviewModal';
 import { Sidebar } from '../../components/Sidebar';
 import { useUIStore } from "../../store/useUIStore";
 import { useAuthStore } from "../../store/useAuthStore";
+import { isProfileComplete } from '../../utils/profileCompleteness';
+import { showToast } from '../../utils/toast';
 
 export const EmployerPanel: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
@@ -33,6 +35,17 @@ export const EmployerPanel: React.FC = () => {
 
   const handleClearTarget = () => {
     setTargetCandidate(null);
+  };
+
+  const userProfile = useAuthStore(s => s.userProfile);
+
+  const handlePostJobClick = () => {
+    if (!isProfileComplete(userProfile)) {
+      showToast(language === 'uz' ? "Iltimos, e'lon berishdan oldin profilingizni to'liq to'ldiring (kompaniya nomi, telefon, manzil, email, haqida)." : language === 'ru' ? "Пожалуйста, полностью заполните профиль перед публикацией (название компании, телефон, адрес, email, о компании)." : "Please complete your profile before posting a job (company name, phone, address, email, about).");
+      setCurrentScreen('employer-profile');
+      return;
+    }
+    setCurrentScreen('employer-post');
   };
 
   const renderContent = () => {
@@ -64,14 +77,14 @@ export const EmployerPanel: React.FC = () => {
       case 'employer-jobs':
         return (
           <EmployerJobs 
-             onPostJobClick={() => setCurrentScreen('employer-post')}
+             onPostJobClick={handlePostJobClick}
           />
         );
       case 'employer-dashboard':
       default:
         return (
           <EmployerDashboard 
-            onPostJobClick={() => setCurrentScreen('employer-post')}
+            onPostJobClick={handlePostJobClick}
             onViewApplicantsClick={() => setCurrentScreen('employer-applicants')}
             onViewChatsClick={() => setCurrentScreen('employer-chats')}
             onViewAllJobsClick={() => setCurrentScreen('employer-jobs')}

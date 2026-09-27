@@ -14,6 +14,9 @@ import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll';
 import { SearchSidebar } from './SearchSidebar';
 import { JobSortHeader } from './JobSortHeader';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
+import { useAuthStore } from '../../../store/useAuthStore';
+import { isProfileComplete } from '../../../utils/profileCompleteness';
+import { showToast } from '../../../utils/toast';
 
 export const JobSearchScreen: React.FC = () => {
   const {
@@ -25,6 +28,17 @@ export const JobSearchScreen: React.FC = () => {
     hasActiveJobToday, applicationsTodayCount, getJobsCountSummary,
     handleLoadMore, clearFilters, requestLocation, isRequestingLocation
   } = useJobSearchScreen();
+
+  const userProfile = useAuthStore(s => s.userProfile);
+
+  const handleApply = async (id: string) => {
+    if (!isProfileComplete(userProfile)) {
+      showToast(language === 'uz' ? "Iltimos, ishga topshirishdan oldin profilingizni to'liq to'ldiring (ism, familiya, telefon, manzil, email)." : language === 'ru' ? "Пожалуйста, полностью заполните профиль перед подачей заявки (имя, фамилия, телефон, адрес, email)." : "Please complete your profile before applying (name, surname, phone, address, email).");
+      setCurrentScreen('profile');
+      return false;
+    }
+    return applyToJob(id);
+  };
 
   const hasMore = visibleCount < sortedJobs.length;
 
@@ -178,7 +192,7 @@ export const JobSearchScreen: React.FC = () => {
           <DesktopJobDetailsPanel 
             activeJob={activeDesktopJob}
             toggleBookmark={toggleBookmark}
-            applyToJob={applyToJob}
+            applyToJob={handleApply}
             selectedJob={selectedJob}
             setSelectedJob={setSelectedJob}
           />
@@ -193,7 +207,7 @@ export const JobSearchScreen: React.FC = () => {
               selectedJob={selectedJob}
               setSelectedJob={setSelectedJob}
               toggleBookmark={toggleBookmark}
-              applyToJob={applyToJob}
+              applyToJob={handleApply}
             />
           </div>
         )}

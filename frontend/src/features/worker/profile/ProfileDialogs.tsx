@@ -221,10 +221,11 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">Email (Ixtiyoriy)</label>
+                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">Email *</label>
                       <input 
                         id="input-email"
                         type="email"
+                        required
                         value={editForm.email}
                         onChange={(e) => setEditForm({...editForm, email: e.target.value})}
                         disabled={isEditing}

@@ -11,8 +11,9 @@ interface EmployerEditProfileModalProps {
   currentPhone: string;
   currentAbout: string;
   currentRegion: string;
+  currentEmail: string;
   currentAvatarUrl?: string | null;
-  onSave: (fields: { name: string; phone: string; about: string; region: string; avatarUrl?: string | null }) => Promise<void>;
+  onSave: (fields: { name: string; phone: string; about: string; region: string; email: string; avatarUrl?: string | null }) => Promise<void>;
 }
 
 export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> = ({
@@ -23,6 +24,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
   currentPhone,
   currentAbout,
   currentRegion,
+  currentEmail,
   currentAvatarUrl,
   onSave
 }) => {
@@ -30,6 +32,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
   const [phone, setPhone] = useState(currentPhone);
   const [about, setAbout] = useState(currentAbout);
   const [region, setRegion] = useState(currentRegion);
+  const [email, setEmail] = useState(currentEmail);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // useState only reads its argument on the first render. The profile arrives
@@ -41,7 +44,8 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
     setPhone(currentPhone);
     setAbout(currentAbout);
     setRegion(currentRegion);
-  }, [isOpen, currentName, currentPhone, currentAbout, currentRegion]);
+    setEmail(currentEmail);
+  }, [isOpen, currentName, currentPhone, currentAbout, currentRegion, currentEmail]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +61,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
         phone: phone.trim(),
         about: about.trim(),
         region: region.trim(),
+        email: email.trim(),
         avatarUrl: currentAvatarUrl,
       });
       showToast(language === 'uz' ? "Profil yangilandi!" : language === 'ru' ? "Профиль обновлен!" : "Profile updated!");
@@ -124,6 +129,21 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  disabled={isSubmitting}
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 text-slate-800 disabled:opacity-50"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">
+                  Email *
+                </label>
+                <input
+                  aria-label="Email" 
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   disabled={isSubmitting}
                   className="w-full bg-slate-50 border border-slate-200 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 text-slate-800 disabled:opacity-50"
                 />

@@ -29,6 +29,7 @@ export const EmployerProfile: React.FC = () => {
   const isVerified = !!userProfile?.isVerified;
   const about = (userProfile?.aboutMe || '').trim();
   const region = (userProfile?.region || '').trim();
+  const email = (userProfile?.email || '').trim();
 
   // Same counts the dashboard derives, from the same two queries - not a second
   // source of truth, and no extra request for the profile page.
@@ -266,6 +267,7 @@ export const EmployerProfile: React.FC = () => {
         currentPhone={userProfile?.phone || ''}
         currentAbout={about}
         currentRegion={region}
+        currentEmail={email}
         currentAvatarUrl={userProfile?.profileImage}
         onSave={async (fields) => {
           if (!userProfile) return;
@@ -281,6 +283,7 @@ export const EmployerProfile: React.FC = () => {
                 name: fields.name,
                 companyName: fields.name,
                 phone: fields.phone,
+                email: fields.email,
                 bio: fields.about,
                 region: fields.region,
                 avatarUrl: fields.avatarUrl || undefined,
@@ -290,6 +293,7 @@ export const EmployerProfile: React.FC = () => {
               ...userProfile,
               firstName: fields.name,
               phone: fields.phone,
+              email: fields.email,
               aboutMe: fields.about,
               region: fields.region,
             });

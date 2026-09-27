@@ -45,6 +45,10 @@ MEDIA_DIR="$LOCAL_BACKUP_DIR/media"
 mkdir -p "$MEDIA_DIR"
 aws --endpoint-url "$AWS_ENDPOINT_URL" s3 sync "s3://baito-bucket/" "$MEDIA_DIR" --exclude "backups/*" --only-show-errors 2>/dev/null || true
 
+
 # 3. Faqat eng so'nggi 5 ta baza faylini saqlash (eskilarini tozalash)
+
 ls -tp | grep -v '/$' | tail -n +6 | xargs -I {} rm -f -- {} 2>/dev/null || true
+
+
 
