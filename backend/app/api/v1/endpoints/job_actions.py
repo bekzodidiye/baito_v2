@@ -556,21 +556,18 @@ def complete_job(
         if not employer:
             raise HTTPException(status_code=404, detail="Ish beruvchi topilmadi")
 
-    # Whatever days were never ticked off one by one are settled here. A
-    # posting finished in one go still owes each of its days: releasing once
-    # would pay a three-day shift as though it had been one.
+    # Whatever days were never ticked off one by one are settled here. 
+    # For multi-day jobs, we complete only one day at a time.
     remaining = job_days_service.payable_days(db, job.id)
     now = datetime.now(timezone.utc)
     
-    # If the worker is completing the job, they might be completing just a single shift of a multi-day job.
-    worker_completing_single_day = False
+    is_single_day_completion = False
     
-    # An admin acting as a worker (e.g. testing) should trigger the single-day logic if they have an application.
-    if is_hired_worker and remaining:
+    if remaining:
         original_remaining_count = len(remaining)
         today_str = now.strftime("%Y-%m-%d")
         
-        # For workers, if it's a multi-day job, complete the day corresponding to today, or fallback to the first
+        # Complete the day corresponding to today, or fallback to the first uncompleted day
         first_day = next((d for d in remaining if d.workDate == today_str), remaining[0])
         
         first_day.status = JobDayStatus.COMPLETED
@@ -580,7 +577,7 @@ def complete_job(
         remaining = [first_day] # Process only this day for escrow
         
         if original_remaining_count > 1: # There are still more days after this one
-            worker_completing_single_day = True
+            is_single_day_completion = True
             job.status = JobStatus.CONFIRMED
             # do not set job.completedAt
         else:
@@ -588,18 +585,14 @@ def complete_job(
             job.completedAt = now
         db.add(job)
     else:
-        for day in remaining:
-            day.status = JobDayStatus.COMPLETED
-            day.completedAt = now
-            db.add(day)
-
+        # no remaining days (might be a legacy job without job days)
         job.status = JobStatus.COMPLETED
         job.completedAt = now
         db.add(job)
 
     paid, unpaid, bonus_paid = [], [], []
     for app in apps:
-        if worker_completing_single_day:
+        if is_single_day_completion:
             app.status = "confirmed"
         else:
             app.status = "completed"
@@ -687,7 +680,7 @@ def complete_job(
     return {
         "success": True,
         "job_status": job.status,
-        "worker_completing_single_day": worker_completing_single_day,
+        "is_single_day_completion": is_single_day_completion,
         "paid_workers": len(paid),
         "unpaid_workers": len(unpaid),
         "bonus_paid_workers": len(bonus_paid),
