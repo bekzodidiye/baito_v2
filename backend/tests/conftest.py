@@ -99,7 +99,7 @@ def make_user(role="worker", phone="+998901112233", email=None, **kwargs) -> Use
         user = User(
             id=str(uuid.uuid4()),
             uid=str(uuid.uuid4()),
-            email=email,
+            email=email or f"test_{uuid.uuid4().hex[:8]}@example.com",
             phone=phone,
             name=kwargs.pop("name", f"Test {role}"),
             role=role,
@@ -107,6 +107,9 @@ def make_user(role="worker", phone="+998901112233", email=None, **kwargs) -> Use
             balance=kwargs.pop("balance", 0),
             isVerified=True,
             isBanned=False,
+            region=kwargs.pop("region", "Toshkent"),
+            bio=kwargs.pop("bio", "Test bio"),
+            companyName=kwargs.pop("companyName", "Test Company" if role == "employer" else None),
             **kwargs,
         )
         db.add(user)
