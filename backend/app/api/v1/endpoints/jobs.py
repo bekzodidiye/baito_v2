@@ -423,7 +423,7 @@ def parse_work_dates(work_date_str: str) -> List[str]:
     e.g., '2026-06-10~12' -> ['2026-06-10', '2026-06-11', '2026-06-12']
     """
     if not work_date_str or "~" not in work_date_str:
-        return [work_date_str] if work_date_str else []
+        return [work_date_str]
     
     start_str, end_day_str = work_date_str.split("~")
     parts = start_str.split("-")
