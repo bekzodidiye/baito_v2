@@ -417,6 +417,31 @@ def read_jobs(
     return result
 
 
+def parse_work_dates(work_date_str: str) -> List[str]:
+    """Parse a workDate string into individual dates.
+    
+    e.g., '2026-06-10~12' -> ['2026-06-10', '2026-06-11', '2026-06-12']
+    """
+    if not work_date_str or "~" not in work_date_str:
+        return [work_date_str] if work_date_str else []
+    
+    start_str, end_day_str = work_date_str.split("~")
+    parts = start_str.split("-")
+    if len(parts) != 3:
+        return [work_date_str]
+        
+    try:
+        year, month, start_day = int(parts[0]), int(parts[1]), int(parts[2])
+        end_day = int(end_day_str)
+        
+        dates = []
+        for d in range(start_day, end_day + 1):
+            dates.append(f"{year:04d}-{month:02d}-{d:02d}")
+        return dates
+    except Exception:
+        return [work_date_str]
+
+
 @router.post("", response_model=schemas.Job)
 @limiter.limit("20/hour")
 def create_job(
@@ -452,16 +477,29 @@ def create_job(
     if not job_in_dict.get("company") or job_in_dict["company"] == "Ish beruvchi":
         job_in_dict["company"] = current_user.companyName or current_user.name or "Ish beruvchi"
 
-    db_job = models.Job(**job_in_dict)
-    db.add(db_job)
-    db.flush()
-    # A three-day posting becomes three day rows here, not at hire: the
-    # calendar and the employer's own list need to show the days before
-    # anybody has been taken on.
-    job_days.sync_days(db, db_job)
+    work_dates = parse_work_dates(job_in_dict.get("workDate", ""))
+    
+    first_job = None
+    for w_date in work_dates:
+        single_job_dict = job_in_dict.copy()
+        single_job_dict["workDate"] = w_date
+        # Multi-day jobs are now split into separate single-day jobs
+        single_job_dict["durationLabel"] = "1 kunlik"
+        
+        db_job = models.Job(**single_job_dict)
+        db.add(db_job)
+        db.flush()
+        
+        # We still sync days to create the single JobDay record for EscrowService.
+        job_days.sync_days(db, db_job)
+        
+        if not first_job:
+            first_job = db_job
+
     db.commit()
-    db.refresh(db_job)
-    return db_job
+    if first_job:
+        db.refresh(first_job)
+    return first_job
 
 
 @router.get("/{job_id}", response_model=schemas.Job)

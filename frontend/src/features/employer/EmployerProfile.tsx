@@ -253,6 +253,7 @@ export const EmployerProfile: React.FC = () => {
             companyName={companyName}
             phone={userProfile?.phone || '+998 ** *** ** **'}
             region={region}
+            email={email}
             language={language}
           />
 

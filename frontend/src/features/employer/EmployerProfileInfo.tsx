@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Phone, MapPin } from 'lucide-react';
+import { Building2, Phone, MapPin, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface EmployerProfileInfoProps {
@@ -9,6 +9,7 @@ interface EmployerProfileInfoProps {
      "Toshkent sh., Yunusobod t., 14-kvartal". It is the account's own region
      now, and empty says so rather than inventing an address. */
   region?: string;
+  email?: string;
   language: 'uz' | 'ru' | 'en';
 }
 
@@ -16,9 +17,11 @@ export const EmployerProfileInfo: React.FC<EmployerProfileInfoProps> = ({
   companyName,
   phone,
   region,
+  email,
   language,
 }) => {
   const address = (region || '').trim();
+  const emailAddr = (email || '').trim();
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
@@ -58,6 +61,28 @@ export const EmployerProfileInfo: React.FC<EmployerProfileInfoProps> = ({
           </p>
           {address ? (
             <p className="text-sm font-black text-slate-800">{address}</p>
+          ) : (
+            <p className="text-sm font-bold text-slate-400 italic">
+              {language === 'uz'
+                ? "Kiritilmagan"
+                : language === 'ru'
+                  ? 'Не указан'
+                  : 'Not set'}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="p-4 sm:p-5 flex items-center gap-4 hover:bg-slate-50/50 transition-colors">
+        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+          <Mail size={18} />
+        </div>
+        <div className="flex-1">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+            Email
+          </p>
+          {emailAddr ? (
+            <p className="text-sm font-black text-slate-800">{emailAddr}</p>
           ) : (
             <p className="text-sm font-bold text-slate-400 italic">
               {language === 'uz'
