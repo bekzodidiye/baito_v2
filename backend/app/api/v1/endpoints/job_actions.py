@@ -67,6 +67,17 @@ def apply_to_job(
     # entitled to know somebody looked at who that is.
     current_user: models.User = Depends(deps.get_verified_worker),
 ) -> Any:
+    if not all([current_user.name, current_user.phone, current_user.region, current_user.email]):
+        raise HTTPException(
+            status_code=403,
+            detail="Iltimos, ariza topshirishdan oldin profilingizni to'liq to'ldiring"
+        )
+    if len(current_user.name.split()) < 2:
+        raise HTTPException(
+            status_code=403,
+            detail="Iltimos, ism va familiyangizni to'liq kiriting"
+        )
+
     job = _get_job_or_404(db, id)
 
     # Applying to a cancelled or finished posting was previously allowed.

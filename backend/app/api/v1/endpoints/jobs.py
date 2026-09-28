@@ -418,28 +418,20 @@ def read_jobs(
 
 
 def parse_work_dates(work_date_str: str) -> List[str]:
-    """Parse a workDate string into individual dates.
-    
-    e.g., '2026-06-10~12' -> ['2026-06-10', '2026-06-11', '2026-06-12']
-    """
-    if not work_date_str or "~" not in work_date_str:
+    """Parse a workDate string into individual dates using the global parser."""
+    if not work_date_str:
         return [work_date_str]
     
-    start_str, end_day_str = work_date_str.split("~")
-    parts = start_str.split("-")
-    if len(parts) != 3:
-        return [work_date_str]
-        
-    try:
-        year, month, start_day = int(parts[0]), int(parts[1]), int(parts[2])
-        end_day = int(end_day_str)
-        
-        dates = []
-        for d in range(start_day, end_day + 1):
-            dates.append(f"{year:04d}-{month:02d}-{d:02d}")
-        return dates
-    except Exception:
-        return [work_date_str]
+    from app.services.work_dates import get_job_dates_set
+    
+    class _Dummy:
+        pass
+    
+    d = _Dummy()
+    d.workDate = work_date_str
+    dates = get_job_dates_set(d)
+    
+    return sorted(dates) if dates else [work_date_str]
 
 
 @router.post("", response_model=schemas.Job)
@@ -455,6 +447,11 @@ def create_job(
     current_user: models.User = Depends(deps.get_current_employer),
 ) -> Any:
     """Create a new job posting, screening it for fraud first."""
+    if not all([current_user.name, current_user.phone, current_user.region, current_user.email, current_user.bio]):
+        raise HTTPException(
+            status_code=403,
+            detail="Iltimos, ish yaratishdan oldin profilingizni to'liq to'ldiring"
+        )
     verdict = SpamFraudDetector.analyze_job_posting(
         job_in.title, job_in.description, job_in.salary,
         keywords=keywords_from_settings(db),

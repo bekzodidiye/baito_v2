@@ -51,7 +51,7 @@ def _days(job_id):
 
 # --- the days themselves ---------------------------------------------------
 
-def test_a_three_day_posting_has_three_days(client):
+def test_a_three_day_posting_creates_three_separate_jobs(client):
     employer = make_user(role="employer", phone=_phone(), balance=1_000_000)
     login(client, employer)
 
@@ -61,10 +61,18 @@ def test_a_three_day_posting_has_three_days(client):
         "workDate": THREE_DAYS, "neededWorkers": "1",
     })
     assert resp.status_code == 200
-    job_id = resp.json()["id"]
 
-    assert [d[1] for d in _days(job_id)] == ["2026-09-02", "2026-09-03", "2026-09-04"]
-    assert {d[2] for d in _days(job_id)} == {JobDayStatus.PENDING}
+    # We expect three separate jobs to be created in the database
+    with SessionLocal() as db:
+        jobs = db.query(Job).filter(Job.employerId == employer.id).order_by(Job.workDate).all()
+        assert len(jobs) == 3
+
+        # Each job has only one day
+        assert [j.workDate for j in jobs] == ["2026-09-02", "2026-09-03", "2026-09-04"]
+        for j in jobs:
+            days = _days(j.id)
+            assert len(days) == 1
+            assert days[0][1] == j.workDate
 
 
 def test_editing_the_dates_moves_the_days(client):
@@ -211,34 +219,44 @@ def test_only_the_employer_may_finish_a_day(client):
 
 # --- finishing the whole posting -------------------------------------------
 
-def test_finishing_the_whole_posting_settles_every_remaining_day(client):
-    """The employer wraps it up in one go rather than day by day. All three
-    days are still owed, and releasing once would pay for one."""
+def test_finishing_the_whole_posting_settles_one_day(client):
+    """The employer wraps it up, but it only completes one day per call now."""
     employer, worker, job = _hired_and_started(client)
 
     resp = client.post(f"/api/v1/jobs/{job.id}/complete",
                        json={"rating": 5, "review": "Yaxshi"})
-    assert resp.status_code == 200
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["paid_workers"] == 1
+    assert resp.json()["is_single_day_completion"] is True
 
-    assert {d[2] for d in _days(job.id)} == {JobDayStatus.COMPLETED}
+    # Still confirmed because there are remaining days
+    assert resp.json()["job_status"] == JobStatus.CONFIRMED
+
     with SessionLocal() as db:
-        worker_row = db.query(User).filter(User.id == worker.id).first()
-        assert worker_row.balance == (WAGE) * 3
-        assert worker_row.completedJobsCount == 1
+        db_job = db.query(Job).filter(Job.id == job.id).first()
+        assert db_job.status == JobStatus.CONFIRMED
+        
+        # Balance only increased by one wage
+        assert db.query(User).filter(User.id == worker.id).first().balance == WAGE
 
 
 def test_finishing_the_rest_after_one_day_pays_only_what_is_left(client):
     employer, worker, job = _hired_and_started(client)
-    first_day = _days(job.id)[0][0]
-    assert client.post(f"/api/v1/jobs/{job.id}/days/{first_day}/complete").status_code == 200
 
-    assert client.post(f"/api/v1/jobs/{job.id}/complete",
-                       json={"rating": 5}).status_code == 200
+    day_one = _days(job.id)[0]
+    resp = client.post(f"/api/v1/jobs/{job.id}/days/{day_one[0]}/complete")
+    assert resp.status_code == 200, resp.text
+
+    # Complete the next day
+    resp = client.post(f"/api/v1/jobs/{job.id}/complete",
+                       json={"rating": 5, "review": "Zor"})
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["is_single_day_completion"] is True
 
     with SessionLocal() as db:
-        # Three days total, not four: the day already paid is not paid again.
+        # Two days paid total
         assert db.query(User).filter(User.id == worker.id).first().balance == \
-            (WAGE) * 3
+            (WAGE) * 2
 
 
 # --- calling it off --------------------------------------------------------
