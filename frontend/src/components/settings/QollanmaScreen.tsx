@@ -1,5 +1,6 @@
 import React from 'react';
 import { translations } from '../../translations';
+import { QOLLANMA } from './QollanmaScreen.content';
 import { ArrowLeft, BookOpen, Search, UserCheck, Briefcase } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useAuthStore } from "../../store/useAuthStore";
@@ -7,6 +8,7 @@ import { useAuthStore } from "../../store/useAuthStore";
 export const QollanmaScreen: React.FC = () => {
   const language = useAuthStore(s => s.language);
   const t = translations[language];
+  const g = QOLLANMA[language];
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   
 
@@ -21,7 +23,7 @@ export const QollanmaScreen: React.FC = () => {
           <ArrowLeft size={24} className="text-brand-text-variant" />
         </button>
         <h1 className="text-[18px] font-semibold text-brand-primary absolute left-1/2 transform -translate-x-1/2">
-          Qo'llanma
+          {g.title}
         </h1>
         <div className="w-10 h-10"></div>
       </header>
@@ -30,9 +32,9 @@ export const QollanmaScreen: React.FC = () => {
         
         <div className="bg-brand-primary-container text-white p-6 rounded-3xl shadow-lg relative overflow-hidden mb-8">
           <div className="relative z-10">
-            <h2 className="text-[20px] font-bold mb-2">Baito'ga xush kelibsiz!</h2>
+            <h2 className="text-[20px] font-bold mb-2">{g.welcomeTitle}</h2>
             <p className="text-white/90 text-[14px]">
-              Bu qisqacha qo'llanma orqali ilovadan qanday qilib to'g'ri foydalanishni bilib olishingiz mumkin.
+              {g.welcomeBody}
             </p>
           </div>
           <BookOpen className="absolute -bottom-4 -right-4 w-32 h-32 text-white/10 pointer-events-none" />
@@ -44,9 +46,9 @@ export const QollanmaScreen: React.FC = () => {
               <UserCheck className="text-brand-primary" size={24} />
             </div>
             <div>
-              <h3 className="text-[16px] font-bold text-brand-text mb-1">1. Profilingizni to'ldiring</h3>
+              <h3 className="text-[16px] font-bold text-brand-text mb-1">{g.step1Title}</h3>
               <p className="text-[14px] text-brand-text-variant leading-relaxed">
-                Ish beruvchilar e'tiborini jalb qilish uchun shaxsiy ma'lumotlaringiz, ta'lim, ko'nikmalar va tajribalaringizni aniq ko'rsating.
+                {g.step1Body}
               </p>
             </div>
           </section>
@@ -56,9 +58,9 @@ export const QollanmaScreen: React.FC = () => {
               <Search className="text-brand-primary" size={24} />
             </div>
             <div>
-              <h3 className="text-[16px] font-bold text-brand-text mb-1">2. Ish qidiring</h3>
+              <h3 className="text-[16px] font-bold text-brand-text mb-1">{g.step2Title}</h3>
               <p className="text-[14px] text-brand-text-variant leading-relaxed">
-                Qidiruv oynasidan yoki maxsus filtrlardan foydalanib o'zingizga qulay grafikdagi va yo'nalishdagi ishlarni toping.
+                {g.step2Body}
               </p>
             </div>
           </section>
@@ -68,9 +70,9 @@ export const QollanmaScreen: React.FC = () => {
               <Briefcase className="text-brand-primary" size={24} />
             </div>
             <div>
-              <h3 className="text-[16px] font-bold text-brand-text mb-1">3. Ariza topshiring</h3>
+              <h3 className="text-[16px] font-bold text-brand-text mb-1">{g.step3Title}</h3>
               <p className="text-[14px] text-brand-text-variant leading-relaxed">
-                Mos keladigan ishni topgach "Ariza topshirish" tugmasini bosing va ish beruvchi javobini kuting. Natijalar xabarlar bo'limiga keladi.
+                {g.step3Body}
               </p>
             </div>
           </section>

@@ -128,8 +128,8 @@ export const SecurityScreen: React.FC = () => {
                 <Lock className="text-brand-primary" size={20} />
               </div>
               <div className="flex-1 text-left">
-                <h3 className="text-[15px] font-semibold text-brand-text">Parolni o'zgartirish</h3>
-                <p className="text-[13px] text-brand-text-variant">Xavfsizlikni oshirish uchun yangilang</p>
+                <h3 className="text-[15px] font-semibold text-brand-text">{language === 'ru' ? 'Смена пароля' : language === 'en' ? 'Change password' : "Parolni o'zgartirish"}</h3>
+                <p className="text-[13px] text-brand-text-variant">{language === 'ru' ? 'Обновите его, чтобы повысить безопасность' : language === 'en' ? 'Update it to keep your account secure' : 'Xavfsizlikni oshirish uchun yangilang'}</p>
               </div>
               <ChevronRight className="text-brand-outline-variant" size={20} />
             </button>
@@ -203,10 +203,10 @@ export const SecurityScreen: React.FC = () => {
         <div className="mb-10">
           <div className="bg-brand-primary-container text-white p-5 rounded-2xl relative overflow-hidden">
             <div className="relative z-10">
-              <h3 className="text-[16px] font-bold mb-1">Shubhali faollikni ko'rdingizmi?</h3>
-              <p className="text-white/90 text-[12px] mb-3">Barcha boshqa qurilmalardan bitta tugma bilan chiqing.</p>
+              <h3 className="text-[16px] font-bold mb-1">{language === 'ru' ? 'Заметили подозрительную активность?' : language === 'en' ? 'Noticed anything suspicious?' : "Shubhali faollikni ko'rdingizmi?"}</h3>
+              <p className="text-white/90 text-[12px] mb-3">{language === 'ru' ? 'Выйдите со всех остальных устройств одной кнопкой.' : language === 'en' ? 'Sign out of every other device with one button.' : 'Barcha boshqa qurilmalardan bitta tugma bilan chiqing.'}</p>
               <button onClick={() => setConfirmLogoutAll(true)} className="bg-white text-brand-primary px-4 py-2 rounded-xl font-bold text-xs active:scale-95 transition-transform cursor-pointer">
-                Barcha qurilmalardan chiqish
+                {language === 'ru' ? 'Выйти со всех устройств' : language === 'en' ? 'Sign out everywhere' : 'Barcha qurilmalardan chiqish'}
               </button>
             </div>
             <ShieldAlert className="absolute -bottom-6 -right-6 w-28 h-28 text-white/10 pointer-events-none" />

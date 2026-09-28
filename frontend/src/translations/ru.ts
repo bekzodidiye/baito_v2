@@ -216,6 +216,12 @@ export const ru = {
   helpFaqLink: "Часто задаваемые вопросы",
   helpGuideLink: "Руководство",
   helpTermsLink: "Условия предоставления услуг",
+  // Change password
+  changePasswordTitle: "Смена пароля",
+  currentPassword: "Текущий пароль",
+  newPassword: "Новый пароль",
+  confirmNewPassword: "Подтвердите новый пароль",
+  cancel: "Отмена",
 
   // Payment result
   paymentSuccessTitle: "Оплата прошла успешно!",

@@ -216,6 +216,12 @@ export const uz = {
   helpFaqLink: "Ko'p so'raladigan savollar",
   helpGuideLink: "Qo'llanma",
   helpTermsLink: "Xizmat ko'rsatish shartlari",
+  // Change password
+  changePasswordTitle: "Parolni o'zgartirish",
+  currentPassword: "Joriy parol",
+  newPassword: "Yangi parol",
+  confirmNewPassword: "Yangi parolni tasdiqlang",
+  cancel: "Bekor qilish",
 
   // Payment result
   paymentSuccessTitle: "To'lov muvaffaqiyatli!",
