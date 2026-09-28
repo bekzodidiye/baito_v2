@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { Logo } from '../Logo';
+import { LANDING_TEXTS } from './LandingData';
 import { ShieldCheck, Heart, Send, Phone, Mail, MapPin } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useAuthStore } from "../../store/useAuthStore";
@@ -12,6 +13,7 @@ interface LandingFooterProps {
 export const LandingFooter: React.FC<LandingFooterProps> = ({ onSelectRole }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const language = useAuthStore(s => s.language);
+  const t = LANDING_TEXTS[language as keyof typeof LANDING_TEXTS] || LANDING_TEXTS.uz;
     const requireAuth = useApp().requireAuth;
 
   return (
@@ -26,13 +28,13 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ onSelectRole }) =>
             </p>
             <div className="flex items-center gap-2 text-xs font-extrabold text-sky-300">
               <ShieldCheck size={16} className="text-sky-400" />
-              <span>Tasdiqlangan ID va Xavfsiz To'lovlar</span>
+              <span>{t.footerTrust}</span>
             </div>
           </div>
 
           {/* Quick Links */}
           <div className="md:col-span-3 space-y-3">
-            <h4 className="text-xs font-black text-white uppercase tracking-wider">Bo'limlar</h4>
+            <h4 className="text-xs font-black text-white uppercase tracking-wider">{t.footerSections}</h4>
             <ul className="space-y-2 text-xs font-semibold text-slate-400">
               <li>
                 <button onClick={() => setCurrentScreen('login')} className="hover:text-white transition-colors cursor-pointer">
@@ -59,7 +61,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ onSelectRole }) =>
 
           {/* Contact & Support */}
           <div className="md:col-span-4 space-y-3">
-            <h4 className="text-xs font-black text-white uppercase tracking-wider">Bog'lanish</h4>
+            <h4 className="text-xs font-black text-white uppercase tracking-wider">{t.footerContact}</h4>
             <ul className="space-y-2 text-xs font-semibold text-slate-400">
               <li className="flex items-center gap-2">
                 <Phone size={14} className="text-sky-400" />
@@ -82,7 +84,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ onSelectRole }) =>
             © {new Date().getFullYear()} Baito Platformasi. Barcha huquqlar himoyalangan.
           </div>
           <div className="flex items-center gap-1">
-            <span>O'zbekistonda tayyorlangan</span>
+            <span>{t.footerMadeIn}</span>
             <Heart size={13} className="text-rose-500 fill-rose-500" />
           </div>
         </div>

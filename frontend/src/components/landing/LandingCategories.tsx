@@ -47,7 +47,7 @@ export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRo
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-black">
               <Layers size={14} />
-              <span>Sohalar bo'yicha</span>
+              <span>{t.catBadge}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-black text-slate-900">{t.catTitle}</h2>
             <p className="text-xs sm:text-sm text-slate-600 font-medium">{t.catSubtitle}</p>
@@ -57,7 +57,7 @@ export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRo
             onClick={() => setCurrentScreen('login')}
             className="self-start md:self-auto px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-brand-primary font-black text-xs hover:bg-slate-100 transition-all cursor-pointer flex items-center gap-2 shadow-2xs"
           >
-            <span>Barcha smenalarni ko'rish</span>
+            <span>{t.catViewAll}</span>
             <ArrowRight size={14} />
           </button>
         </div>

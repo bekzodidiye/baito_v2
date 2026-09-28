@@ -94,7 +94,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-8 sm:mb-10 px-2">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-brand-primary text-xs font-black shadow-2xs">
             <Compass size={14} className="text-brand-primary" />
-            <span>Xaritalar va Masofa</span>
+            <span>{t.mapBadge}</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">{t.mapTitle}</h2>
           <p className="text-sm sm:text-base font-semibold text-slate-600">{t.mapSubtitle}</p>
@@ -192,7 +192,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
 
                 <div className="text-base sm:text-lg font-black text-blue-700 pt-2 border-t border-slate-200/60 flex items-center justify-between">
                   <span>{activeShift.pay}</span>
-                  <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">Kunlik to'lov</span>
+                  <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">{t.shiftDailyPay}</span>
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-600 font-semibold pt-2 border-t border-slate-200/60">
@@ -207,7 +207,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
                 </div>
 
                 <div className="pt-1.5 border-t border-slate-200/60 space-y-1">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">Qulayliklar va imtiyozlar</span>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">{t.mapPerksTitle}</span>
                   <div className="flex flex-wrap gap-1">
                     {((activeShift as any).perksUz || []).map((perk: string, i: number) => (
                       <span key={i} className="text-[10px] font-bold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-md shadow-2xs">{perk}</span>
@@ -217,7 +217,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
 
                 <div className="pt-1.5 text-[10px] sm:text-[11px] text-slate-600 font-medium bg-blue-50/90 p-2 rounded-xl border border-blue-100 flex items-center gap-1.5">
                   <CheckCircle2 size={13} className="text-brand-primary shrink-0" />
-                  <span>Smena tugashi bilan maosh kartaga o'tkaziladi</span>
+                  <span>{t.mapPayNote}</span>
                 </div>
               </motion.div>
             </div>
@@ -232,7 +232,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
                 }}
                 className="w-full py-3 rounded-xl bg-brand-primary hover:bg-blue-700 text-white text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 active:scale-[0.98]"
               >
-                <span>Ushbu smenaga ariza topshirish</span>
+                <span>{t.shiftApplyCta}</span>
                 <ArrowRight size={15} />
               </button>
             </div>

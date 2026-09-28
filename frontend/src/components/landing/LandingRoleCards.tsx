@@ -53,7 +53,7 @@ export const LandingRoleCards: React.FC<LandingRoleCardsProps> = ({ onSelectRole
               }`}
             >
               <UserCheck size={16} />
-              <span>Ishchilar uchun 👷‍♂️</span>
+              <span>{t.rolesWorkerTab} 👷‍♂️</span>
             </button>
             <button
               onClick={() => setActiveRole('employer')}
@@ -64,7 +64,7 @@ export const LandingRoleCards: React.FC<LandingRoleCardsProps> = ({ onSelectRole
               }`}
             >
               <Building2 size={16} />
-              <span>Ish beruvchilar uchun 🏢</span>
+              <span>{t.rolesEmployerTab} 🏢</span>
             </button>
           </div>
         </div>
@@ -86,7 +86,7 @@ export const LandingRoleCards: React.FC<LandingRoleCardsProps> = ({ onSelectRole
           <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-xs font-extrabold text-slate-700">
               <ShieldCheck size={18} className="text-emerald-500 shrink-0" />
-              <span>Barcha xizmatlar xavfsiz va shaffof shartnoma asosida ishlaydi</span>
+              <span>{t.rolesContractNote}</span>
             </div>
 
             <button

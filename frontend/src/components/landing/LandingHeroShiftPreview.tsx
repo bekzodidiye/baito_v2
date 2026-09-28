@@ -116,7 +116,7 @@ export const LandingHeroShiftPreview: React.FC<LandingHeroShiftPreviewProps> = (
 
                   <div className="text-base sm:text-lg font-black text-brand-primary pt-2.5 border-t border-slate-200/60 flex items-center justify-between">
                     <span>{currentShift.pay || currentShift.salary}</span>
-                    <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">Kunlik to'lov</span>
+                    <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">{t.shiftDailyPay}</span>
                   </div>
 
                   <div className="space-y-2 text-xs text-slate-600 font-semibold pt-2 border-t border-slate-200/60">
@@ -143,7 +143,7 @@ export const LandingHeroShiftPreview: React.FC<LandingHeroShiftPreviewProps> = (
 
                 <button onClick={() => onSelectRole('worker')} className="w-full py-3 rounded-xl bg-brand-primary hover:bg-blue-700 text-white text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98] shadow-lg shadow-blue-600/20">
                   <CheckCircle2 size={16} className="text-white shrink-0" />
-                  <span>Ushbu smenaga ariza topshirish</span>
+                  <span>{t.shiftApplyCta}</span>
                 </button>
               </motion.div>
             ) : (
@@ -157,9 +157,9 @@ export const LandingHeroShiftPreview: React.FC<LandingHeroShiftPreviewProps> = (
                 <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mb-2">
                   <Clock size={24} className="text-slate-400" />
                 </div>
-                <h3 className="text-lg font-black text-slate-700">Hozircha faol smenalar yo'q</h3>
+                <h3 className="text-lg font-black text-slate-700">{t.shiftNoneActive}</h3>
                 <p className="text-xs font-bold text-slate-500 max-w-[200px]">
-                  Yangi ish o'rinlari tez orada qo'shiladi.
+                  {t.shiftNoneActiveBody}
                 </p>
                 <button onClick={() => onSelectRole('employer')} className="mt-4 px-6 py-2.5 rounded-xl bg-white border border-slate-200 hover:border-brand-primary text-slate-700 hover:text-brand-primary text-xs font-black transition-all cursor-pointer shadow-sm">
                   Birinchi bo'lib e'lon bering
