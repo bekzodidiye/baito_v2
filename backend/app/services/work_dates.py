@@ -48,12 +48,17 @@ def _parse_single_date(token: str, reference: date) -> Optional[date]:
     return None
 
 
-def get_job_dates_set(job: Any) -> set:
+def get_job_dates_set(job_or_string: Any) -> set:
     """Every calendar day a job occupies, as ``YYYY-MM-DD`` strings."""
-    if not job or not job.workDate:
+    if not job_or_string:
         return set()
 
-    date_str = str(job.workDate).strip()
+    if isinstance(job_or_string, str):
+        date_str = job_or_string.strip()
+    else:
+        if not hasattr(job_or_string, 'workDate') or not job_or_string.workDate:
+            return set()
+        date_str = str(job_or_string.workDate).strip()
     reference = date.today()
     dates: set[str] = set()
 

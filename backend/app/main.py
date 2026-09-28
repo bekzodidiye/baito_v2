@@ -1,5 +1,6 @@
 import logging
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -55,17 +56,8 @@ if settings.SENTRY_DSN:
             "check that SENTRY_DSN is a full DSN URL.", e
         )
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    openapi_url=None if settings.is_production else f"{settings.API_V1_STR}/openapi.json",
-    docs_url=None if settings.is_production else "/docs",
-    redoc_url=None,
-)
-
-
-@app.on_event("startup")
-def on_startup() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """Prepare storage and schema.
 
     In production the schema is owned by Alembic (``alembic upgrade head`` runs
@@ -86,6 +78,20 @@ def on_startup() -> None:
             init_db(db)
     except Exception as e:
         logger.warning("Demo data seeding skipped: %s", e)
+        
+    yield
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    openapi_url=None if settings.is_production else f"{settings.API_V1_STR}/openapi.json",
+    docs_url=None if settings.is_production else "/docs",
+    redoc_url=None,
+    lifespan=lifespan,
+)
+
+
+
 
 
 # Rate limiting

@@ -35,9 +35,6 @@ def _load_owned_application(db: Session, app_id: str, current_user: models.User)
     return app, job
 
 
-def _vacancies(job: models.Job) -> int:
-    raw = (job.neededWorkers or "1").strip()
-    return int(raw) if raw.isdigit() and int(raw) > 0 else 1
 
 
 def _mask_phone(phone: str | None) -> str:
@@ -235,7 +232,7 @@ def hire_applicant(
         )
         .count()
     )
-    vacancies = _vacancies(job)
+    vacancies = job.vacancies
     if already_hired >= vacancies:
         raise HTTPException(
             status_code=400,

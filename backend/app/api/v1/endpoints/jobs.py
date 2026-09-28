@@ -16,6 +16,7 @@ from app.services.escrow_service import EscrowService
 from app.services import job_days
 from app.models.job_day import JobDayStatus
 from app.services.spam_detector import SpamFraudDetector, keywords_from_settings
+from app.core.money import salary_to_uzs
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -26,9 +27,6 @@ HIRED_STATUSES = ['hired', 'confirmed', 'completed', 'in_progress', 'start_reque
 VIEW_DEDUPE_TTL_SECONDS = 3600
 
 
-def _vacancies(job: models.Job) -> int:
-    raw = (job.neededWorkers or "1").strip()
-    return int(raw) if raw.isdigit() and int(raw) > 0 else 1
 
 
 @router.get("/bookmarked", response_model=List[schemas.Job])
@@ -187,7 +185,7 @@ def get_my_jobs(
 
     result = []
     for job in jobs:
-        vacancies_num = int(job.neededWorkers) if (job.neededWorkers and job.neededWorkers.isdigit()) else 1
+        vacancies_num = job.vacancies
         hired_cnt = hired_counts.get(job.id, 0)
 
         job_data = schemas.Job.model_validate(job).model_dump()
@@ -364,9 +362,14 @@ def read_jobs(
                 avatarUrl=user.avatarUrl,
             ))
 
+    worker_apps_map = {a.jobId: a for a in worker_apps}
+    job_hired_apps_map = {}
+    for a in hired_apps:
+        job_hired_apps_map.setdefault(a.jobId, []).append(a)
+
     result = []
     for job in jobs:
-        app_item = next((a for a in worker_apps if a.jobId == job.id), None)
+        app_item = worker_apps_map.get(job.id)
         job_status = job.status
         if app_item:
             if app_item.status == 'in_progress' or job.status == JobStatus.IN_PROGRESS:
@@ -380,7 +383,7 @@ def read_jobs(
             elif app_item.status == 'applied':
                 job_status = 'applied'
         elif current_user and job.employerId in (current_user.id, current_user.uid):
-            job_apps = [a for a in hired_apps if a.jobId == job.id]
+            job_apps = job_hired_apps_map.get(job.id, [])
             if job.status not in (JobStatus.IN_PROGRESS, JobStatus.COMPLETED, JobStatus.CANCELLED):
                 if any(a.status == 'in_progress' for a in job_apps):
                     job_status = 'in_progress'
@@ -394,7 +397,7 @@ def read_jobs(
         if app_item:
             job_dict.appliedDate = app_item.appliedDate
 
-        vacancies_num = _vacancies(job)
+        vacancies_num = job.vacancies
         hired_cnt = hired_counts.get(job.id, 0)
         if job.status == JobStatus.OPEN and job.hiredWorkerId is None and vacancies_num <= 1:
             hired_cnt = 0
@@ -424,14 +427,11 @@ def parse_work_dates(work_date_str: str) -> List[str]:
     
     from app.services.work_dates import get_job_dates_set
     
-    class _Dummy:
-        pass
+    dates = get_job_dates_set(work_date_str)
     
-    d = _Dummy()
-    d.workDate = work_date_str
-    dates = get_job_dates_set(d)
-    
-    return sorted(dates) if dates else [work_date_str]
+    if dates:
+        return sorted(list(dates))
+    return [work_date_str]
 
 
 @router.post("", response_model=schemas.Job)
@@ -482,6 +482,9 @@ def create_job(
         single_job_dict["workDate"] = w_date
         # Multi-day jobs are now split into separate single-day jobs
         single_job_dict["durationLabel"] = "1 kunlik"
+        single_job_dict["salaryInt"] = salary_to_uzs(single_job_dict.get("salary"))
+        single_job_dict["hourlyRateInt"] = salary_to_uzs(single_job_dict.get("hourlyRate"))
+        single_job_dict["transportRateInt"] = salary_to_uzs(single_job_dict.get("transportRate"))
         
         db_job = models.Job(**single_job_dict)
         db.add(db_job)
@@ -571,6 +574,10 @@ def update_job(
 
     for field, value in update_data.items():
         setattr(job, field, value)
+
+    job.salaryInt = salary_to_uzs(job.salary)
+    job.hourlyRateInt = salary_to_uzs(job.hourlyRate)
+    job.transportRateInt = salary_to_uzs(job.transportRate)
 
     db.add(job)
     if "workDate" in update_data:

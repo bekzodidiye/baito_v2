@@ -148,6 +148,11 @@ class EscrowService:
 
         # Deduct and freeze
         employer.balance = (employer.balance or 0) - total_uzs
+        if employer.balance < 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Balansda yetarli mablag' yo'q. Kerak: {total_uzs} so'm, mavjud: {(employer.balance or 0) + total_uzs} so'm",
+            )
         db.add(employer)
 
         tx = Transaction(

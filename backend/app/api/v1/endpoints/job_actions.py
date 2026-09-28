@@ -52,9 +52,6 @@ def _hired_count(db: Session, job_id: str) -> int:
     )
 
 
-def _vacancies(job: models.Job) -> int:
-    raw = (job.neededWorkers or "1").strip()
-    return int(raw) if raw.isdigit() and int(raw) > 0 else 1
 
 
 @router.post("/{id}/apply")
@@ -84,7 +81,7 @@ def apply_to_job(
     if job.status not in JobStatus.OPEN_STATUSES:
         raise HTTPException(status_code=400, detail="Bu e'lon endi ariza qabul qilmaydi")
 
-    if _hired_count(db, job.id) >= _vacancies(job):
+    if _hired_count(db, job.id) >= job.vacancies:
         raise HTTPException(status_code=400, detail="Bu ish bo'yicha o'rinlar to'lgan")
 
     existing_app = (

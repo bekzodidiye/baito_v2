@@ -5,9 +5,9 @@ from .user import generate_uuid
 
 class Application(Base):
     id = Column(String, primary_key=True, default=generate_uuid, index=True)
-    jobId = Column(String, ForeignKey("jobs.id"), nullable=False)
-    workerId = Column(String, ForeignKey("users.id"), nullable=False)
-    status = Column(String, nullable=False, default='applied')
+    jobId = Column(String, ForeignKey("jobs.id"), nullable=False, index=True)
+    workerId = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    status = Column(String, nullable=False, default='applied', index=True)
     appliedDate = Column(DateTime(timezone=True), server_default=func.now())
     rating = Column(Integer)
     review = Column(String)

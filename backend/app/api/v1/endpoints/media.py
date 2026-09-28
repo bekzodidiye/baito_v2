@@ -1,22 +1,11 @@
-"""Authenticated media delivery.
-
-The storage bucket used to carry a ``PublicRead`` policy covering ``bucket/*``,
-which made every uploaded passport scan — and the backup bot's database
-archives under ``backups/`` — downloadable by anyone. The bucket is private
-now and this endpoint is the only way in.
-
-Legacy objects predating the ``media_files`` table have no ownership record, so
-they are matched against the user columns that hold identity documents; if an
-object is referenced there it is treated as private.
-"""
-
 import logging
 import re
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
+from starlette.responses import StreamingResponse
 
 from app import models
 from app.api import deps
@@ -38,6 +27,8 @@ CONTENT_TYPES = {
     "gif": "image/gif",
     "pdf": "application/pdf",
 }
+
+STREAM_CHUNK_SIZE = 64 * 1024  # 64 KB chunks
 
 
 def _is_identity_document(db: Session, object_key: str) -> Optional[str]:
@@ -76,6 +67,18 @@ def _shares_a_chat(db: Session, viewer_id: str, owner_id: str) -> bool:
     )
 
 
+def _stream_body(body_obj):
+    """Yield the S3 body in chunks to avoid loading the full file into RAM."""
+    try:
+        while True:
+            chunk = body_obj.read(STREAM_CHUNK_SIZE)
+            if not chunk:
+                break
+            yield chunk
+    finally:
+        body_obj.close()
+
+
 @router.get("/{object_key}")
 def get_media(
     object_key: str,
@@ -111,7 +114,7 @@ def get_media(
 
     try:
         obj = get_s3_client().get_object(Bucket=settings.AWS_BUCKET_NAME, Key=object_key)
-        body = obj["Body"].read()
+        body_stream = obj["Body"]
         content_type = obj.get("ContentType")
     except Exception as e:
         logger.warning("Media fetch failed for %s: %s", object_key, e)
@@ -128,8 +131,8 @@ def get_media(
         else "private, no-store"
     )
 
-    return Response(
-        content=body,
+    return StreamingResponse(
+        _stream_body(body_stream),
         media_type=content_type,
         headers={
             "Cache-Control": cache_control,
