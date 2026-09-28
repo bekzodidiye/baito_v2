@@ -206,6 +206,17 @@ export const ru = {
   goBack: "Назад",
   showAll: "Показать все",
 
+  // Help centre
+  helpContactSection: "Связаться с нами",
+  helpByPhone: "По телефону",
+  helpByEmail: "Электронная почта",
+  helpLiveChat: "Живой чат",
+  helpLiveChatDesc: "Разговор с оператором",
+  helpResourcesSection: "Полезные материалы",
+  helpFaqLink: "Часто задаваемые вопросы",
+  helpGuideLink: "Руководство",
+  helpTermsLink: "Условия предоставления услуг",
+
   // Payment result
   paymentSuccessTitle: "Оплата прошла успешно!",
   paymentSuccessBody: "Ваш счет успешно пополнен.",

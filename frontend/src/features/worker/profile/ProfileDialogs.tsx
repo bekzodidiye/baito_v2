@@ -97,7 +97,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                   <div className="flex flex-col items-center justify-center mb-6">
                     <div className="w-[88px] h-[88px] rounded-full border border-dashed border-slate-300 hover:border-brand-primary/40 flex items-center justify-center relative bg-white cursor-pointer transition-all active:scale-95 group shadow-3xs">
                       <input
-              aria-label="Hujjat rasmini yuklash" 
+              aria-label={t.uploadPhoto} 
                         type="file"
                         accept="image/*"
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 rounded-full"
@@ -133,12 +133,12 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                         <Plus size={12} className="stroke-[3]" />
                       </div>
                     </div>
-                    <p className="mt-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">PROFIL RASM (IXTIYORIY)</p>
+                    <p className="mt-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{t.fieldPhoto}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">Ism *</label>
+                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">{t.fieldFirstName}</label>
                       <input 
                         id="input-firstName"
                         type="text"
@@ -150,7 +150,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">Familiya *</label>
+                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">{t.fieldLastName}</label>
                       <input 
                         id="input-lastName"
                         type="text"
@@ -164,52 +164,52 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">Tug'ilgan sana *</label>
+                    <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">{t.fieldBirthDate}</label>
                     <div className="grid grid-cols-3 gap-2">
                       <CustomSelect 
                         value={editForm.birthDay} 
                         onChange={(val) => setEditForm({...editForm, birthDay: val})} 
-                        placeholder="Kun" 
+                        placeholder={t.pickDay} 
                         options={Array.from({ length: 31 }, (_, i) => i + 1).map(d => ({ value: String(d), label: String(d) }))} 
                       />
                       <CustomSelect 
                         value={editForm.birthMonth} 
                         onChange={(val) => setEditForm({...editForm, birthMonth: val})} 
-                        placeholder="Oy" 
+                        placeholder={t.pickMonth} 
                         options={(MONTHS[language as 'uz' | 'ru' | 'en'] || MONTHS.uz).map((m, idx) => ({ value: String(idx + 1), label: m }))} 
                       />
                       <CustomSelect 
                         value={editForm.birthYear} 
                         onChange={(val) => setEditForm({...editForm, birthYear: val})} 
-                        placeholder="Yil" 
+                        placeholder={t.pickYear} 
                         options={Array.from({ length: 55 }, (_, i) => 2012 - i).map(y => ({ value: String(y), label: String(y) }))} 
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">Jinsi *</label>
+                    <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">{t.fieldGender}</label>
                     <div className="grid grid-cols-2 gap-4">
                       <button 
                         type="button" 
                         onClick={() => setEditForm({...editForm, gender: 'male'})} 
                         className={`flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl border font-bold text-xs cursor-pointer ${editForm.gender === 'male' ? 'border-brand-primary bg-brand-primary/5 text-brand-primary' : 'border-slate-200 bg-white text-slate-600'}`}
                       >
-                        <span>👨🏻</span><span>Erkak</span>
+                        <span>👨🏻</span><span>{t.genderMale}</span>
                       </button>
                       <button 
                         type="button" 
                         onClick={() => setEditForm({...editForm, gender: 'female'})} 
                         className={`flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl border font-bold text-xs cursor-pointer ${editForm.gender === 'female' ? 'border-brand-primary bg-brand-primary/5 text-brand-primary' : 'border-slate-200 bg-white text-slate-600'}`}
                       >
-                        <span>👩🏻</span><span>Ayol</span>
+                        <span>👩🏻</span><span>{t.genderFemale}</span>
                       </button>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">Telefon *</label>
+                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">{t.fieldPhone}</label>
                       <input 
                         id="input-phone"
                         type="tel"
@@ -221,7 +221,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">Email *</label>
+                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">{t.fieldEmail}</label>
                       <input 
                         id="input-email"
                         type="email"
@@ -236,7 +236,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">Manzil (Viloyat) *</label>
+                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">{t.fieldRegion}</label>
                       <input 
                         id="input-region"
                         type="text"
@@ -248,7 +248,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">Kasb (Mutaxassislik) *</label>
+                      <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">{t.fieldProfession}</label>
                       <input 
                         id="input-profession"
                         type="text"
@@ -262,7 +262,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">O'zim haqimda *</label>
+                    <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">{t.fieldAboutMe}</label>
                     <textarea 
                       id="input-aboutMe"
                       required
@@ -275,7 +275,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">Ko'nikmalar (vergul bilan) *</label>
+                    <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider block">{t.fieldSkills}</label>
                     <input 
                       id="input-skills"
                       type="text"
@@ -283,7 +283,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                       value={editForm.skills}
                       onChange={(e) => setEditForm({...editForm, skills: e.target.value})}
                       disabled={isEditing}
-                      placeholder="Masalan: Tezkor, Mas'uliyatli"
+                      placeholder={t.skillsPlaceholder}
                       className="w-full bg-white border border-slate-200/80 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 text-slate-800"
                     />
                   </div>

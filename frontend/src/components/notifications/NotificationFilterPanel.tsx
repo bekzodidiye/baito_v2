@@ -42,7 +42,9 @@ export const NotificationFilterPanel: React.FC<NotificationFilterPanelProps> = (
             <div>
               <h2 className="font-sans font-bold text-sm text-slate-900">{t.title || 'Bildirishnomalar'}</h2>
               <p className="text-xs text-slate-400 font-medium">
-                {unreadCount > 0 ? `${unreadCount} ta o'qilmagan` : 'Barchasi o\'qilgan'}
+                {unreadCount > 0
+                  ? (t.unreadCountText || "{count} ta o'qilmagan").replace('{count}', String(unreadCount))
+                  : t.allRead}
               </p>
             </div>
           </div>

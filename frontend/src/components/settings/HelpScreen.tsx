@@ -22,7 +22,7 @@ export const HelpScreen: React.FC = () => {
           <ArrowLeft size={24} className="text-brand-text-variant" />
         </button>
         <h1 className="text-[18px] font-semibold text-brand-primary absolute left-1/2 transform -translate-x-1/2">
-          Yordam markazi
+          {t.settingsHelpCenter}
         </h1>
         <div className="w-10 h-10"></div>
       </header>
@@ -32,7 +32,7 @@ export const HelpScreen: React.FC = () => {
         
         {/* Contact Support */}
         <section>
-          <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">Biz bilan bog'lanish</h2>
+          <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">{t.helpContactSection}</h2>
           <div className="bg-brand-surface-lowest rounded-3xl shadow-[0_4px_20px_rgba(0,6,102,0.05),0_1px_3px_rgba(0,6,102,0.02)] overflow-hidden">
             
             <a href="tel:+998901234567" className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group border-b border-slate-100">
@@ -41,7 +41,7 @@ export const HelpScreen: React.FC = () => {
                   <Phone size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">Telefon orqali</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{t.helpByPhone}</p>
                   <p className="text-[13px] text-brand-text-variant font-medium">+998 90 123 45 67</p>
                 </div>
               </div>
@@ -54,7 +54,7 @@ export const HelpScreen: React.FC = () => {
                   <Mail size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">Elektron pochta</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{t.helpByEmail}</p>
                   <p className="text-[13px] text-brand-text-variant font-medium">support@baito.uz</p>
                 </div>
               </div>
@@ -67,8 +67,8 @@ export const HelpScreen: React.FC = () => {
                   <MessageCircle size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">Jonli chat</p>
-                  <p className="text-[13px] text-brand-text-variant font-medium">Operatorlar bilan suhbat</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{t.helpLiveChat}</p>
+                  <p className="text-[13px] text-brand-text-variant font-medium">{t.helpLiveChatDesc}</p>
                 </div>
               </div>
               <ChevronRight size={22} className="text-brand-text-variant group-hover:text-brand-primary transition-colors" />
@@ -78,7 +78,7 @@ export const HelpScreen: React.FC = () => {
 
         {/* Resources */}
         <section>
-          <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">Foydali manbalar</h2>
+          <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">{t.helpResourcesSection}</h2>
           <div className="bg-brand-surface-lowest rounded-3xl shadow-[0_4px_20px_rgba(0,6,102,0.05),0_1px_3px_rgba(0,6,102,0.02)] overflow-hidden">
             
             <button onClick={() => setCurrentScreen('faq')} className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group border-b border-slate-100">
@@ -87,7 +87,7 @@ export const HelpScreen: React.FC = () => {
                   <HelpCircle size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">Ko'p so'raladigan savollar</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{t.helpFaqLink}</p>
                 </div>
               </div>
               <ChevronRight size={22} className="text-brand-text-variant group-hover:text-brand-primary transition-colors" />
@@ -99,7 +99,7 @@ export const HelpScreen: React.FC = () => {
                   <FileText size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">Qo'llanma</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{t.helpGuideLink}</p>
                 </div>
               </div>
               <ChevronRight size={22} className="text-brand-text-variant group-hover:text-brand-primary transition-colors" />
@@ -111,7 +111,7 @@ export const HelpScreen: React.FC = () => {
                   <FileText size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">Xizmat ko'rsatish shartlari</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{t.helpTermsLink}</p>
                 </div>
               </div>
               <ChevronRight size={22} className="text-brand-text-variant group-hover:text-brand-primary transition-colors" />

@@ -206,6 +206,17 @@ export const en = {
   goBack: "Back",
   showAll: "Show All",
 
+  // Help centre
+  helpContactSection: "Contact us",
+  helpByPhone: "By phone",
+  helpByEmail: "Email",
+  helpLiveChat: "Live chat",
+  helpLiveChatDesc: "Chat with an operator",
+  helpResourcesSection: "Useful resources",
+  helpFaqLink: "Frequently asked questions",
+  helpGuideLink: "Guide",
+  helpTermsLink: "Terms of service",
+
   // Payment result
   paymentSuccessTitle: "Payment successful",
   paymentSuccessBody: "Your balance has been topped up.",
