@@ -646,15 +646,6 @@ def complete_job(
                 # predates day records and still holds one lump for the lot.
                 EscrowService.release_funds(db, job_id=job.id, worker_id=app.workerId)
             paid.append(app.workerId)
-            # The wage is released first: it is owed for work already done and
-            # must not be held up by an optional tip. The balance check above
-            # means this cannot fail for want of funds.
-            if bonus_each > 0:
-                EscrowService.pay_completion_bonus(
-                    db, job_id=job.id, employer_id=job.employerId,
-                    worker_id=app.workerId, amount_uzs=bonus_each,
-                )
-                bonus_paid.append(app.workerId)
         except HTTPException as e:
             # No escrow was held for this job (it predates escrow, or the
             # employer never funded it). Complete the job anyway, but say so
@@ -662,6 +653,23 @@ def complete_job(
             logger.warning("Escrow release skipped for job %s / worker %s: %s",
                            job.id, app.workerId, e.detail)
             unpaid.append(app.workerId)
+
+        # The wage is released first: it is owed for work already done and must
+        # not be held up by an optional tip. The tip is settled in its own try
+        # for the same reason in reverse - it shares nothing with the wage, and
+        # while it sat inside the block above a failing bonus put the worker
+        # into `unpaid` as well as `paid`, reporting the wage as unpaid when it
+        # had already gone out.
+        if bonus_each > 0:
+            try:
+                EscrowService.pay_completion_bonus(
+                    db, job_id=job.id, employer_id=job.employerId,
+                    worker_id=app.workerId, amount_uzs=bonus_each,
+                )
+                bonus_paid.append(app.workerId)
+            except HTTPException as e:
+                logger.warning("Completion bonus skipped for job %s / worker %s: %s",
+                               job.id, app.workerId, e.detail)
 
         if app.workerId in paid:
             message = f"'{job.title}' ishi bo'yicha to'lov hisobingizga o'tkazildi."

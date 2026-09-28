@@ -130,8 +130,8 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
             <DollarSign size={14} className="stroke-[2.5] text-brand-primary" />
             {/* Not "umumiy": a three-day shift takes this figure three
-                times over, once per day, and the employer's balance has to
-                cover all of it at the moment they hire. */}
+                times over, once per day, and all three are charged to the
+                employer. Nothing has to be in an in-app balance first. */}
             {language === 'uz' ? "Bir kunlik to'lov (so'm) *" : language === 'ru' ? "Ежедневная оплата (UZS) *" : "Daily Pay (UZS) *"}
           </label>
           <input

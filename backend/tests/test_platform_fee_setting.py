@@ -16,7 +16,6 @@ rate is pinned onto the escrow hold rather than read again at payout.
 """
 
 import uuid
-import pytest
 
 from app.models.application import Application
 from app.models.job import JobStatus
@@ -228,13 +227,13 @@ def test_saving_zero_percent_through_the_api_sticks(client):
         assert platform_fee_percent(db) == 0
 
 
-@pytest.mark.skip(reason="Balance checks removed from hiring logic")
-def test_hiring_is_refused_when_the_balance_covers_the_wage_but_not_the_fee(client):
-    """The check before the first hold has to include the commission.
+def test_the_commission_is_still_charged_when_the_balance_cannot_cover_it(client):
+    """Hiring on a balance that covers the wage but not the fee.
 
-    Leaving it out let hiring pass this gate and then fail inside hold_funds on
-    the employer's balance — which on a multi-day posting is the "day one
-    froze, day two failed" split the pre-flight check exists to prevent.
+    This used to be a refusal, and was skipped rather than rewritten when the
+    refusal went. What it was really guarding is still worth guarding: that the
+    commission is charged on top of the wage and pinned onto the hold. Dropping
+    the gate must not quietly drop the fee with it.
     """
     _set_rate(10)
     employer = make_user(role="employer", phone=_phone(), balance=WAGE)
@@ -248,11 +247,12 @@ def test_hiring_is_refused_when_the_balance_covers_the_wage_but_not_the_fee(clie
     login(client, employer)
     resp = client.post(f"/api/v1/applications/{applied.json()['id']}/hire")
 
-    assert resp.status_code == 400
-    detail = resp.json()["detail"]
-    assert "330 000" in detail          # 300 000 wage + 30 000 commission
-    assert "xizmat haqi" in detail
-    # Nothing was frozen and nobody was hired.
-    assert _balance(employer.id) == WAGE
+    assert resp.status_code == 200, resp.text
+    # 300 000 wage + 30 000 commission, against a balance holding 300 000. The
+    # shortfall is what the employer owes; the invoice collects it.
+    assert _balance(employer.id) == -30_000
     with SessionLocal() as db:
-        assert db.query(Transaction).filter(Transaction.jobId == job.id).count() == 0
+        tx = db.query(Transaction).filter(Transaction.jobId == job.id).one()
+        assert tx.amount == WAGE * 100
+        assert tx.platformFee == 30_000 * 100
+        assert tx.feePercent == 10

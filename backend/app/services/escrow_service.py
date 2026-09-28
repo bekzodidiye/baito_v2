@@ -277,19 +277,20 @@ class EscrowService:
         to the worker's balance — and taking a cut would make that sentence
         false.
 
-        Callers must check the employer can cover the total before changing
-        any state; this raises rather than paying a partial bonus.
+        The debit is allowed to take the employer's balance negative, as the
+        wage hold is. Hiring no longer requires a funded balance, so by the time
+        anybody reaches this the employer is normally already in debt for the
+        wage — a check here could only ever refuse, which is how a bonus the
+        employer had entered came to be dropped while they were told the
+        completion had succeeded.
         """
         if amount_uzs <= 0:
             return
 
         employer = (db.query(models.User).filter(models.User.id == employer_id)
                     .populate_existing().with_for_update().first())
-        if not employer or (employer.balance or 0) < amount_uzs:
-            raise HTTPException(
-                status_code=400,
-                detail="Bonus uchun ish beruvchi balansida yetarli mablag' yo'q",
-            )
+        if not employer:
+            raise HTTPException(status_code=404, detail="Ish beruvchi topilmadi")
 
         worker = (db.query(models.User).filter(models.User.id == worker_id)
                   .populate_existing().with_for_update().first())
