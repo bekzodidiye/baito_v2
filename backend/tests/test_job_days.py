@@ -51,7 +51,15 @@ def _days(job_id):
 
 # --- the days themselves ---------------------------------------------------
 
-def test_a_three_day_posting_creates_three_separate_jobs(client):
+def test_a_three_day_posting_is_one_posting_with_three_days(client):
+    """One row in Job, three in JobDay.
+
+    It was briefly the other way round — three Job rows, one per day, each
+    labelled "1 kunlik" — which put three identical cards in front of every
+    worker searching and asked them to apply three times for one piece of work.
+    The day rows are what make a day finishable on its own; splitting the
+    posting was never needed for that.
+    """
     employer = make_user(role="employer", phone=_phone(), balance=1_000_000)
     login(client, employer)
 
@@ -62,17 +70,51 @@ def test_a_three_day_posting_creates_three_separate_jobs(client):
     })
     assert resp.status_code == 200
 
-    # We expect three separate jobs to be created in the database
     with SessionLocal() as db:
-        jobs = db.query(Job).filter(Job.employerId == employer.id).order_by(Job.workDate).all()
-        assert len(jobs) == 3
+        jobs = db.query(Job).filter(Job.employerId == employer.id).all()
+        assert len(jobs) == 1
+        assert jobs[0].workDate == THREE_DAYS
 
-        # Each job has only one day
-        assert [j.workDate for j in jobs] == ["2026-09-02", "2026-09-03", "2026-09-04"]
-        for j in jobs:
-            days = _days(j.id)
-            assert len(days) == 1
-            assert days[0][1] == j.workDate
+    assert [d[1] for d in _days(resp.json()["id"])] == \
+        ["2026-09-02", "2026-09-03", "2026-09-04"]
+
+
+def test_a_range_written_with_a_tilde_is_still_one_posting(client):
+    """"2026-09-02~04" is the other way the form writes a run of days."""
+    employer = make_user(role="employer", phone=_phone(), balance=1_000_000)
+    login(client, employer)
+
+    resp = client.post("/api/v1/jobs", json={
+        "title": "Omborxona", "company": "Korzinka", "salary": str(WAGE),
+        "location": "Toshkent", "description": "Yuk ortish",
+        "workDate": "2026-09-02~04", "neededWorkers": "1",
+    })
+    assert resp.status_code == 200
+
+    with SessionLocal() as db:
+        assert db.query(Job).filter(Job.employerId == employer.id).count() == 1
+    assert [d[1] for d in _days(resp.json()["id"])] == \
+        ["2026-09-02", "2026-09-03", "2026-09-04"]
+
+
+def test_one_application_covers_the_whole_run(client):
+    """The worker applies once, not once per day."""
+    from app.models.application import Application
+
+    employer = make_user(role="employer", phone=_phone(), balance=1_000_000)
+    login(client, employer)
+    job_id = client.post("/api/v1/jobs", json={
+        "title": "Omborxona", "company": "Korzinka", "salary": str(WAGE),
+        "location": "Toshkent", "description": "Yuk ortish",
+        "workDate": THREE_DAYS, "neededWorkers": "1",
+    }).json()["id"]
+
+    worker = make_user(role="worker", phone=_phone())
+    login(client, worker)
+    assert client.post(f"/api/v1/jobs/{job_id}/apply").status_code == 200
+
+    with SessionLocal() as db:
+        assert db.query(Application).filter(Application.workerId == worker.id).count() == 1
 
 
 def test_editing_the_dates_moves_the_days(client):
@@ -308,3 +350,77 @@ def test_a_single_day_posting_still_behaves_exactly_as_before(client):
     with SessionLocal() as db:
         assert db.query(User).filter(User.id == worker.id).first().balance == \
             WAGE
+
+
+# --- finishing a run one day at a time --------------------------------------
+#
+# The reported behaviour, stated as tests: a five-day shift is one posting, the
+# worker finishes Monday, and Tuesday to Friday are still there tomorrow.
+
+FIVE_DAYS = "2026-09-02, 2026-09-03, 2026-09-04, 2026-09-05, 2026-09-06"
+
+
+def _five_day_run(client):
+    employer, worker, job, app_id = _posting(work_date=FIVE_DAYS)
+    login(client, employer)
+    assert client.post(f"/api/v1/applications/{app_id}/hire").status_code == 200
+    with SessionLocal() as db:
+        row = db.query(Job).filter(Job.id == job.id).first()
+        row.status = JobStatus.IN_PROGRESS
+        db.commit()
+    return employer, worker, job
+
+
+def test_a_five_day_run_is_one_posting_with_five_days(client):
+    _employer, _worker, job = _five_day_run(client)
+    with SessionLocal() as db:
+        assert db.query(Job).filter(Job.id == job.id).count() == 1
+    assert len(_days(job.id)) == 5
+
+
+def test_finishing_the_first_day_leaves_the_other_four(client):
+    _employer, worker, job = _five_day_run(client)
+
+    resp = client.post(f"/api/v1/jobs/{job.id}/complete", json={"rating": 5})
+    assert resp.status_code == 200, resp.text
+
+    statuses = [d[2] for d in _days(job.id)]
+    assert statuses.count(JobDayStatus.COMPLETED) == 1
+    assert statuses.count(JobDayStatus.PENDING) == 4
+
+
+def test_the_posting_is_not_finished_until_the_last_day(client):
+    """The whole run must not close because one day did."""
+    _employer, _worker, job = _five_day_run(client)
+
+    client.post(f"/api/v1/jobs/{job.id}/complete", json={"rating": 5})
+
+    with SessionLocal() as db:
+        row = db.query(Job).filter(Job.id == job.id).first()
+        assert row.status != JobStatus.COMPLETED
+        assert row.completedAt is None
+
+
+def test_the_worker_is_paid_for_the_day_they_worked_and_no_more(client):
+    _employer, worker, job = _five_day_run(client)
+
+    client.post(f"/api/v1/jobs/{job.id}/complete", json={"rating": 5})
+
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == worker.id).first().balance == WAGE
+
+
+def test_five_days_finished_one_at_a_time_close_the_posting_and_pay_five(client):
+    _employer, worker, job = _five_day_run(client)
+
+    for _ in range(5):
+        assert client.post(f"/api/v1/jobs/{job.id}/complete",
+                           json={"rating": 5}).status_code == 200
+
+    assert [d[2] for d in _days(job.id)] == [JobDayStatus.COMPLETED] * 5
+    with SessionLocal() as db:
+        assert db.query(Job).filter(Job.id == job.id).first().status == JobStatus.COMPLETED
+        worker_row = db.query(User).filter(User.id == worker.id).first()
+        assert worker_row.balance == WAGE * 5
+        # Five days of one posting is one job done, not five.
+        assert worker_row.completedJobsCount == 1

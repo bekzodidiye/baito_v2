@@ -417,23 +417,6 @@ def read_jobs(
     return result
 
 
-def parse_work_dates(work_date_str: str) -> List[str]:
-    """Parse a workDate string into individual dates using the global parser."""
-    if not work_date_str:
-        return [work_date_str]
-    
-    from app.services.work_dates import get_job_dates_set
-    
-    class _Dummy:
-        pass
-    
-    d = _Dummy()
-    d.workDate = work_date_str
-    dates = get_job_dates_set(d)
-    
-    return sorted(dates) if dates else [work_date_str]
-
-
 @router.post("", response_model=schemas.Job)
 @limiter.limit("20/hour")
 def create_job(
@@ -474,29 +457,25 @@ def create_job(
     if not job_in_dict.get("company") or job_in_dict["company"] == "Ish beruvchi":
         job_in_dict["company"] = current_user.companyName or current_user.name or "Ish beruvchi"
 
-    work_dates = parse_work_dates(job_in_dict.get("workDate", ""))
-    
-    first_job = None
-    for w_date in work_dates:
-        single_job_dict = job_in_dict.copy()
-        single_job_dict["workDate"] = w_date
-        # Multi-day jobs are now split into separate single-day jobs
-        single_job_dict["durationLabel"] = "1 kunlik"
-        
-        db_job = models.Job(**single_job_dict)
-        db.add(db_job)
-        db.flush()
-        
-        # We still sync days to create the single JobDay record for EscrowService.
-        job_days.sync_days(db, db_job)
-        
-        if not first_job:
-            first_job = db_job
-
+    # One posting, however many days it runs for.
+    #
+    # A five-day shift was briefly created as five separate Job rows, one per
+    # day, each labelled "1 kunlik". That put five identical cards in front of
+    # every worker searching, asked them to apply five times for one piece of
+    # work, and made five escrow holds against five postings that were really
+    # one — none of which the splitting was needed for. The day rows below
+    # already carry a day's status and a day's wage, which is what lets a
+    # worker finish Monday without finishing Tuesday.
+    db_job = models.Job(**job_in_dict)
+    db.add(db_job)
+    db.flush()
+    # A five-day posting becomes five day rows here, not at hire: the calendar,
+    # the admin's day-by-day view and the employer's own list all need the days
+    # before anybody has been taken on.
+    job_days.sync_days(db, db_job)
     db.commit()
-    if first_job:
-        db.refresh(first_job)
-    return first_job
+    db.refresh(db_job)
+    return db_job
 
 
 @router.get("/{job_id}", response_model=schemas.Job)

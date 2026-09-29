@@ -36,7 +36,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
   const t = translations[language];
   const jobLatLng = getLatLng(job);
   const displayTime = getJobShiftTime(job);
-  const displayDuration = getJobDuration(job);
+  const displayDuration = getJobDuration(job, language as 'uz' | 'ru' | 'en');
 
   const shiftWhen = [(job as any).workDate, (job as any).workTime].filter(Boolean).join(', ');
   const applyQuestion = {

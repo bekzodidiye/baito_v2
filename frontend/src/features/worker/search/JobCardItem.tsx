@@ -117,7 +117,7 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
             </p>
             <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0" />
             <p className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
-              {getJobDuration(job)}
+              {getJobDuration(job, language as 'uz' | 'ru' | 'en')}
             </p>
           </div>
         </div>

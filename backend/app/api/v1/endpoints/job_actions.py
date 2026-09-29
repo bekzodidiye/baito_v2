@@ -638,8 +638,14 @@ def complete_job(
                 for index, day in enumerate(remaining):
                     EscrowService.release_funds(
                         db, job_id=job.id, worker_id=app.workerId, job_day_id=day.id,
-                        # One posting, one completed job on the profile.
-                        count_completed_job=(index == 0),
+                        # One posting is one completed job on a worker's
+                        # profile, however many days it ran for — counted when
+                        # the last day lands, the same rule /days/{id}/complete
+                        # follows. `index == 0` was enough while this endpoint
+                        # settled every remaining day in one go; it now settles
+                        # one day per call, so on a five-day run that counted
+                        # five completed jobs for one shift.
+                        count_completed_job=(index == 0 and not is_single_day_completion),
                     )
             else:
                 # Either every day was already ticked off, or the posting
