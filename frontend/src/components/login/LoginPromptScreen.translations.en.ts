@@ -32,6 +32,7 @@ export const en = {
   email: "EMAIL (OPTIONAL)",
 
   // Step 2 Documents
+  docExtraFileAria: "Additional document",
   docTitle: "Upload Documents",
   docSubtitle: "Confirm your identity and qualifications",
   docWorkerPassport: "Passport or ID Card Copy *",

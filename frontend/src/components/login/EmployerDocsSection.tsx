@@ -158,7 +158,7 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           }`}
         >
           <input
-              aria-label="Qo'shimcha hujjat fayli"
+              aria-label={t.docExtraFileAria}
             type="file"
             ref={doc2InputRef}
             onChange={handleDoc2Upload}

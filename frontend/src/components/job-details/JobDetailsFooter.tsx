@@ -133,7 +133,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
           return (
             <button
               disabled
-              aria-label="Ish muvaffaqiyatli yakunlandi"
+              aria-label={t.jobCompletedAria}
               className="flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-md bg-brand-primary opacity-90 cursor-not-allowed flex items-center justify-center gap-2"
             >
               <CheckCircle2 size={18} />
@@ -145,7 +145,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
             <button
               onClick={() => setConfirmingFinish(true)}
               disabled={isSubmitting}
-              aria-label="Ishni yakunlash"
+              aria-label={t.completeJob}
               className={`flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-lg transition-all flex items-center justify-center gap-2 ${
                 isSubmitting
                   ? 'bg-emerald-400 cursor-not-allowed'
@@ -153,7 +153,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
               }`}
             >
               <CheckCircle2 size={18} />
-              {language === 'uz' ? "Ishni yakunlash" : language === 'ru' ? "Завершить работу" : "Complete Job"}
+              {t.completeJob}
             </button>
           );
         } else if (isHiredOrConfirmed || selectedJob.status === 'start_requested') {
@@ -161,7 +161,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
             <button
               onClick={() => { if (!isSubmitting) setConfirmingStart(true); }}
               disabled={isSubmitting}
-              aria-label="Ishni boshlash"
+              aria-label={t.startJob}
               className={`flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-lg transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'bg-emerald-400 cursor-not-allowed' : 'shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] cursor-pointer'}`}
             >
               <PlayCircle size={18} />
@@ -172,7 +172,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
           return (
             <button
               disabled
-              aria-label="Ariza topshirilgan"
+              aria-label={t.alreadyApplied}
               className="flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-md bg-amber-600 opacity-90 cursor-not-allowed flex items-center justify-center gap-2"
             >
               <Send size={18} />
@@ -184,7 +184,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
             <button
               onClick={() => setConfirmingApply(true)}
               disabled={isSubmitting}
-              aria-label="Ushbu ishga ariza topshirish"
+              aria-label={t.applyToThisJob}
               className={`flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-black shadow-lg transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'bg-brand-primary/50 cursor-not-allowed' : 'bg-brand-primary hover:bg-brand-primary/90 shadow-brand-primary/20 active:scale-[0.98] cursor-pointer'}`}
             >
               <Send size={18} />

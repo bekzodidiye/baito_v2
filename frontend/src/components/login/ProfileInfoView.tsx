@@ -76,7 +76,7 @@ export const ProfileInfoView: React.FC<ProfileInfoViewProps> = (props) => {
           </div>
         </div>
         <input
-              aria-label="Profil rasmini yuklash" type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
+              aria-label={language === 'ru' ? "Загрузить фото профиля" : language === 'en' ? "Upload a profile photo" : "Profil rasmini yuklash"} type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
         <p className="mt-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{t.uploadPhoto}</p>
       </div>
 

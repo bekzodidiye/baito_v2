@@ -14,7 +14,7 @@ interface DateTimePickerModalProps {
 }
 
 export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
-  isOpen, onClose, workDateValue, startTimeValue, endTimeValue, onSave
+  isOpen, onClose, workDateValue, startTimeValue, endTimeValue, onSave, language = 'uz'
 }) => {
   if (!isOpen) return null;
 
@@ -99,7 +99,7 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
 
             <div className="md:col-span-5 flex flex-col justify-between border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-5">
               <div>
-                <span className="text-[10px] font-extrabold uppercase text-slate-400 block mb-2">Ish vaqti (24-soat)</span>
+                <span className="text-[10px] font-extrabold uppercase text-slate-400 block mb-2">{language === 'ru' ? "Время работы (24 ч)" : language === 'en' ? "Working hours (24h)" : "Ish vaqti (24-soat)"}</span>
                 <div className="flex p-1 bg-slate-100 rounded-xl mb-4">
                   <button onClick={() => setTimeTab('start')} className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg ${timeTab === 'start' ? 'bg-white text-brand-primary shadow-xs' : 'text-slate-500'}`}>Boshlanish ({String(startHour).padStart(2, '0')}:{String(startMin).padStart(2, '0')})</button>
                   <button onClick={() => setTimeTab('end')} className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg ${timeTab === 'end' ? 'bg-white text-brand-primary shadow-xs' : 'text-slate-500'}`}>Tugash ({String(endHour).padStart(2, '0')}:{String(endMin).padStart(2, '0')})</button>
@@ -119,7 +119,7 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
                 </div>
               </div>
 
-              <button onClick={handleDone} className="mt-6 md:mt-5 w-full py-3.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-black text-xs rounded-2xl shadow-md cursor-pointer shrink-0">Saqlash</button>
+              <button onClick={handleDone} className="mt-6 md:mt-5 w-full py-3.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-black text-xs rounded-2xl shadow-md cursor-pointer shrink-0">{language === 'ru' ? "Сохранить" : language === 'en' ? "Save" : "Saqlash"}</button>
             </div>
           </div>
         </motion.div>

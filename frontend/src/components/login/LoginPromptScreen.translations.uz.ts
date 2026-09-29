@@ -32,6 +32,7 @@ export const uz = {
   email: "EMAIL (IXTIYORIY)",
 
   // Step 2 Documents
+  docExtraFileAria: "Qo'shimcha hujjat fayli",
   docTitle: "Hujjatlarni yuklash",
   docSubtitle: "Shaxsingiz va kasbiy ma'lumotingizni tasdiqlang",
   docWorkerPassport: "Pasport yoki ID-karta nusxasi *",

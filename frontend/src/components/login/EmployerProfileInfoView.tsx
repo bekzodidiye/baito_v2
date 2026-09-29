@@ -82,7 +82,7 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
           </div>
         </div>
         <input
-              aria-label="Kompaniya logotipini yuklash" type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
+              aria-label={language === 'ru' ? "Загрузить логотип компании" : language === 'en' ? "Upload a company logo" : "Kompaniya logotipini yuklash"} type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
         <p className="mt-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
           {language === 'uz' ? "Profil rasmi (ixtiyoriy)" : language === 'ru' ? "Фото профиля (необязательно)" : "Profile photo (optional)"}
         </p>

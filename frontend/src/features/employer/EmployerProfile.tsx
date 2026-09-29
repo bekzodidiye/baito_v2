@@ -96,7 +96,7 @@ export const EmployerProfile: React.FC = () => {
               <button
                 onClick={() => setIsEditModalOpen(true)} 
                 className="p-2 text-slate-400 hover:text-brand-primary bg-slate-50 hover:bg-brand-primary/10 rounded-xl transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-                title="Tahrirlash"
+                title={language === 'ru' ? 'Редактировать' : language === 'en' ? 'Edit' : 'Tahrirlash'}
               >
                 <Edit3 size={16} />
               </button>

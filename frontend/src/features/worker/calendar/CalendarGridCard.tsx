@@ -77,14 +77,14 @@ export const CalendarGridCard: React.FC<CalendarGridCardProps> = ({
           <button
             onClick={handlePrevMonth}
             className="w-11 h-11 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer active:scale-95"
-            aria-label="Oldingi oy"
+            aria-label={language === 'ru' ? 'Предыдущий месяц' : language === 'en' ? 'Previous month' : 'Oldingi oy'}
           >
             <ChevronLeft size={18} />
           </button>
           <button
             onClick={handleNextMonth}
             className="w-11 h-11 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer active:scale-95"
-            aria-label="Keyingi oy"
+            aria-label={language === 'ru' ? 'Следующий месяц' : language === 'en' ? 'Next month' : 'Keyingi oy'}
           >
             <ChevronRight size={18} />
           </button>

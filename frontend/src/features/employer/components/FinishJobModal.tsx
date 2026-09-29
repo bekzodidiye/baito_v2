@@ -229,7 +229,7 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
                 </label>
                 <div className="relative">
                   <input
-              aria-label="Qo'shimcha bonus summasi"
+              aria-label={language === 'ru' ? "Сумма дополнительного бонуса" : language === 'en' ? "Bonus amount" : "Qo'shimcha bonus summasi"}
                     type="text"
                     value={bonus}
                     onChange={(e) => {

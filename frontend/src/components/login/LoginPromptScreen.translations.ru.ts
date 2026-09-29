@@ -32,6 +32,7 @@ export const ru = {
   email: "EMAIL (НЕОБЯЗАТЕЛЬНО)",
 
   // Step 2 Documents
+  docExtraFileAria: "Дополнительный документ",
   docTitle: "Загрузка документов",
   docSubtitle: "Подтвердите вашу личность и квалификацию",
   docWorkerPassport: "Копия паспорта или ID-карты *",

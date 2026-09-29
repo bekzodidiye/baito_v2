@@ -23,8 +23,8 @@ export const LoginPromptHeader: React.FC<LoginPromptHeaderProps> = ({
         <button
           onClick={handleBack}
           className="p-1 hover:bg-slate-50 transition-colors rounded-lg text-slate-600 hover:text-slate-755 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 border-0 bg-transparent flex items-center justify-center"
-          title="Orqaga"
-         aria-label="Orqaga">
+          title={t.goBack || 'Orqaga'}
+         aria-label={t.goBack || 'Orqaga'}>
 <ArrowLeft size={17} className="stroke-[2.2]" />
         </button>
         <span className="text-xs font-bold text-slate-755">

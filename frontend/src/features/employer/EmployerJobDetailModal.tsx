@@ -86,7 +86,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
               ) : (
                 <div className="absolute top-4 left-4 bg-[#FF004D] text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold text-[13px] shadow-sm">
                   <Clock size={16} strokeWidth={2.5} />
-                  <span>12 soat qoldi</span>
+                  <span>{language === 'ru' ? '12 часов осталось' : language === 'en' ? '12 hours left' : '12 soat qoldi'}</span>
                 </div>
               )}
             </div>
