@@ -147,7 +147,13 @@ export const AppRoutes = () => {
         <Route path="/employer-post" element={<ProtectedRoute allowedRoles={['employer']}><EmployerPanel /></ProtectedRoute>} />
         
         {/* Admin */}
-        <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminPanel /></ProtectedRoute>} />
+        {/* Every admin section has its own address — /admin/jobs,
+            /admin/daily-jobs, /admin/settings and the rest. The panel used to
+            be this one route with the section in component state, so nothing
+            in it could be linked to and every reload landed on the overview.
+            Bare /admin keeps working and lands on the overview. */}
+        <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />
+        <Route path="/admin/:tab" element={<ProtectedRoute allowedRoles={['admin']}><AdminPanel /></ProtectedRoute>} />
         <Route path="*" element={<NotFoundScreen />} />
       </Routes>
     </Suspense>
