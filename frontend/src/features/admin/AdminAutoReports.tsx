@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { FileText, Send, CheckCircle2, Clock, Download, MessageSquare, Sparkles } from 'lucide-react';
 
 import { AdminStats, SystemSettings } from './types';
@@ -12,6 +14,8 @@ interface AdminAutoReportsProps {
 }
 
 export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, settings, onUpdateSettings }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   // A Celery task posts the digest to this channel every morning; the field
   // used to hold a placeholder that went nowhere.
   const [dailyDigest, setDailyDigest] = useState(settings.telegramDigestEnabled ?? false);
@@ -92,7 +96,7 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
         <div>
           <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
             <FileText size={22} className="text-indigo-600" />
-            <span>Avto-Hisobot va Telegram Digest Bot</span>
+            <span>{a.autoReportsTitle}</span>
           </h2>
           <p className="text-xs text-slate-500 font-medium mt-1">
             Har kunlik hamda haftalik moliyaviy va operatsion hisobotlarni avtomatik shakllantirish va Telegram botga yuborish
@@ -105,7 +109,7 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
             className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition cursor-pointer"
           >
             <Download size={15} />
-            <span>CSV Yuklash</span>
+            <span>{a.csvDownload}</span>
           </button>
           <button
             onClick={handleSendTelegramDigest}
@@ -171,11 +175,11 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
             </div>
             <div className="text-slate-300">
               ─────────────────────────────<br />
-              💰 <b>Kunlik Platforma Sof Daromadi:</b> {reportData.totalRevenue}<br />
+              💰 <b>{a.dailyNetRevenue}</b> {reportData.totalRevenue}<br />
               🔒 <b>Escrow Muzlatilgan Balans:</b> {reportData.escrowHeld}<br />
-              👥 <b>Yangi Ro'yxatdan O'tganlar:</b> +{reportData.newUsers} ta<br />
-              🛠️ <b>Aktiv Ishlar:</b> {reportData.activeJobs} ta<br />
-              ✅ <b>Tugatilgan Ishlar:</b> {reportData.completedJobs} ta<br />
+              👥 <b>{a.newSignups}</b> +{reportData.newUsers} ta<br />
+              🛠️ <b>{a.activeJobs}</b> {reportData.activeJobs} ta<br />
+              ✅ <b>{a.finishedJobs}</b> {reportData.completedJobs} ta<br />
               ─────────────────────────────
             </div>
             <div className="text-slate-400 text-[11px] font-sans">

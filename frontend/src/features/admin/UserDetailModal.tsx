@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { AdminUser, AdminUserDetailResponse } from './types';
 import {
   X,
@@ -36,6 +38,8 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   onToggleBan,
   onConfirmAssignment,
 }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [activeTab, setActiveTab] = useState<number>(1);
   const [showBanModal, setShowBanModal] = useState(false);
   
@@ -124,7 +128,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
             <div>
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <h2 className="text-xl font-black text-slate-900">{user.name}</h2>
-                {user.isVerified && <span className="bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Tasdiqlangan</span>}
+                {user.isVerified && <span className="bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full">{a.verifiedLabel}</span>}
                 {user.isBanned && <span className="bg-red-50 text-red-600 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Bloklangan</span>}
               </div>
               <p className="text-slate-500 text-[12px] font-medium">{user.phone || '+998 90 123 45 67'} • <span className="font-bold text-slate-700">{user.role === 'worker' ? 'Ishchi' : 'Ish beruvchi'}</span></p>
@@ -162,7 +166,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
               <UserTabsExtra detail={detail} activeTab={activeTab} onAddBalance={handleAddBalance} />
             </>
           ) : (
-            <div className="text-center text-slate-500 py-10">Ma'lumot topilmadi</div>
+            <div className="text-center text-slate-500 py-10">{a.noDataFound}</div>
           )}
         </div>
 
@@ -171,8 +175,8 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-500">Rol:</span>
             <select value={user.role} onChange={(e) => handleChangeRole(user.id, e.target.value)} className="bg-slate-50 font-bold text-slate-700 px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all">
-              <option value="worker">Ishchi</option>
-              <option value="employer">Ish beruvchi</option>
+              <option value="worker">{a.roleWorker}</option>
+              <option value="employer">{a.roleEmployer}</option>
               <option value="admin">Admin</option>
             </select>
           </div>

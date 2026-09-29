@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { apiClient } from '../../api/client';
 import { showToast } from '../../utils/toast';
 import { AdminTransaction } from './types';
@@ -11,6 +13,8 @@ interface AdminTransactionsProps {
 }
 
 export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactions, onRefresh }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [activeTab, setActiveTab] = useState<'tx' | 'withdrawals' | 'commission'>('tx');
 
   // Computed properties from transactions
@@ -85,7 +89,7 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
         <div>
           <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
             <DollarSign size={20} className="text-emerald-600" />
-            <span>Moliya va Pul Boshqaruvi</span>
+            <span>{a.financeTitle}</span>
           </h2>
           <p className="text-xs text-slate-500 mt-1 font-medium">
             Depozitlar, komissiya daromadi va ishchilarning pul chiqarish so'rovlari
@@ -145,10 +149,10 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase">
-                <th className="p-4">Ishchi</th>
+                <th className="p-4">{a.roleWorker}</th>
                 <th className="p-4">Karta</th>
                 <th className="p-4">Summa</th>
-                <th className="p-4">So'ralgan sana</th>
+                <th className="p-4">{a.requestedDate}</th>
                 <th className="p-4">Holat</th>
                 <th className="p-4 text-right">Amallar</th>
               </tr>
@@ -201,7 +205,7 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
             <div className="text-xl font-black text-emerald-600 mt-1">{formatSum(monthCommission)}</div>
           </div>
           <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase">O'rtacha Komissiya Stavkasi</span>
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase">{a.averageCommission}</span>
             <div className="text-xl font-black text-slate-900 mt-1">{avgCommissionRate.toFixed(1)}%</div>
           </div>
         </div>

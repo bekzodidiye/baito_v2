@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import {
   X, Wallet, Receipt, Send, CheckCircle2, AlertTriangle, Loader2, FileText, Building2,
 } from 'lucide-react';
@@ -45,6 +47,8 @@ interface Props {
 const som = (n: number) => `${n.toLocaleString('ru-RU').replace(/,/g, ' ')} so'm`;
 
 export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [ctx, setCtx] = useState<PayoutContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<1 | 2>(1);
@@ -207,7 +211,7 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
                 <>
                   <div className="bg-slate-50 rounded-2xl p-4 flex items-center justify-between">
                     <div className="min-w-0">
-                      <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">Ishchi</p>
+                      <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">{a.roleWorker}</p>
                       <p className="font-bold text-slate-900 truncate">{ctx.worker.name}</p>
                       <p className="text-xs text-slate-500">{ctx.worker.phone}</p>
                     </div>
@@ -276,7 +280,7 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
                   </p>
                   {ctx.payout?.receiptUrl && (
                     <a href={ctx.payout.receiptUrl} target="_blank" rel="noreferrer"
-                      className="text-xs text-emerald-700 underline">Chekni ochish</a>
+                      className="text-xs text-emerald-700 underline">{a.openReceipt}</a>
                   )}
                 </div>
               </div>
@@ -341,7 +345,7 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
                     {invoiceBase > 0 && (
                       <div className="mt-2.5 rounded-2xl bg-slate-50 border border-slate-200 p-3 space-y-1 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-slate-500">Ish haqi</span>
+                          <span className="text-slate-500">{a.wageLabel}</span>
                           <span className="font-semibold tabular-nums">{som(invoiceBase)}</span>
                         </div>
                         <div className="flex justify-between">
@@ -381,11 +385,11 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
                       <div className="p-4 space-y-1.5 text-sm">
                         <div className="flex justify-between"><span className="text-slate-500">Korxona</span>
                           <span className="font-semibold">{ctx.employer?.companyName || ctx.job.company}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Ish</span>
+                        <div className="flex justify-between"><span className="text-slate-500">{a.jobLabel}</span>
                           <span className="font-semibold">{ctx.job.title}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Sana</span>
+                        <div className="flex justify-between"><span className="text-slate-500">{a.dateLabel}</span>
                           <span className="font-semibold">{ctx.job.workDate || '—'}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Ish haqi</span>
+                        <div className="flex justify-between"><span className="text-slate-500">{a.wageLabel}</span>
                           <span className="font-semibold tabular-nums">{som(invoiceBase)}</span></div>
                         <div className="flex justify-between"><span className="text-slate-500">Xizmat haqi ({feePercent}%)</span>
                           <span className="font-semibold tabular-nums">{som(invoiceFee)}</span></div>

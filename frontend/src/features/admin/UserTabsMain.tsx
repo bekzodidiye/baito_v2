@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { AdminUser } from './types';
 import { Phone, Mail, MapPin, EyeOff, Eye, MonitorSmartphone, Target, CreditCard, Sparkles } from 'lucide-react';
 import { UserDocumentsSection } from './UserDocumentsSection';
@@ -9,6 +11,8 @@ interface UserTabsMainProps {
 }
 
 export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [showPassport, setShowPassport] = useState(false);
 
   if (activeTab === 1) {
@@ -21,7 +25,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
               <Phone size={18} />
             </div>
             <div>
-              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">Telefon raqam</span>
+              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">{a.phoneNumber}</span>
               <div className="text-[13px] font-black text-slate-900">{user.phone || '+998 90 123 45 67'}</div>
             </div>
           </div>
@@ -31,7 +35,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
               <Mail size={18} />
             </div>
             <div>
-              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">Email manzil</span>
+              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">{a.emailAddress}</span>
               <div className="text-[13px] font-bold text-slate-900">{user.email || 'Kiritilmagan'}</div>
             </div>
           </div>
@@ -41,7 +45,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
               <MapPin size={18} />
             </div>
             <div>
-              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">Viloyat</span>
+              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">{a.regionLabel}</span>
               <div className="text-[13px] font-bold text-slate-900">{user.region || 'Kiritilmagan'}</div>
             </div>
           </div>
@@ -61,7 +65,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
               <Target size={18} />
             </div>
             <div>
-              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">Manba</span>
+              <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">{a.sourceLabel}</span>
               <div className="text-[13px] font-bold text-slate-900">{(!user.sourceApp || user.sourceApp === 'Web') ? 'Veb sayt' : user.sourceApp}</div>
             </div>
           </div>
@@ -80,7 +84,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
         {/* Company Name (Employer only) */}
         {user.role === 'employer' && (
           <div className="p-5 bg-white rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50">
-            <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">Kompaniya Nomi:</span>
+            <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">{a.companyNameLabel}</span>
             <strong className="text-[15px] font-black text-slate-900">{user.companyName || 'Kiritilmagan'}</strong>
           </div>
         )}
@@ -112,12 +116,12 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
       <div className="space-y-4">
         <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50 p-5 space-y-5">
           <div>
-            <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">Kasb & Mutaxassislik</span>
+            <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">{a.professionAndSpeciality}</span>
             <div className="text-[15px] font-black text-brand-primary">{user.category || 'Qurilish Ustasi'}</div>
           </div>
           
           <div>
-            <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-2">Ko'nikmalar</span>
+            <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-2">{a.skillsLabel}</span>
             {(() => {
               // skills is declared as string[] but the API may still hand back
               // a JSON string or a comma-separated list, so widen it here.
@@ -153,18 +157,18 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
           
           <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-4">
             <div>
-              <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">Tugatilgan ishlar</span>
+              <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">{a.completedJobsLabel}</span>
               <div className="text-[13px] font-bold text-slate-900">{user.completedJobsCount || 0} ta</div>
             </div>
             <div>
-              <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">Reyting</span>
+              <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">{a.ratingLabel}</span>
               <div className="text-[13px] font-bold text-slate-900">⭐ {Number(user.rating || 0).toFixed(1)}</div>
             </div>
           </div>
           
           {user.bio && (
             <div className="pt-4 border-t border-slate-100">
-              <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-2">O'zi haqida</span>
+              <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-2">{a.aboutThemLabel}</span>
               <p className="p-4 bg-slate-50 rounded-2xl text-[13px] leading-relaxed text-slate-700 font-medium">
                 {user.bio}
               </p>

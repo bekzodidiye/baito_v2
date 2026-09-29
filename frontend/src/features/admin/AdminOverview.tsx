@@ -1,4 +1,6 @@
 import React from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { AdminStats } from './types';
 import { Users, Briefcase, DollarSign, ArrowUpRight, Clock, CheckCircle2, ShieldCheck, FileCheck } from 'lucide-react';
 
@@ -8,6 +10,8 @@ interface AdminOverviewProps {
 }
 
 export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   if (loading && !stats) {
     return (
       <div className="p-8 text-center text-slate-500 font-medium">
@@ -47,13 +51,13 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
             </div>
           </div>
           <div className="text-2xl font-black text-emerald-400">{formatSum(stats?.totalEscrowHeld)}</div>
-          <p className="text-[11px] text-slate-400 mt-2 font-medium">Ish vaqtida xavfsiz saqlanayotgan mablag'</p>
+          <p className="text-[11px] text-slate-400 mt-2 font-medium">{a.escrowHeld}</p>
         </div>
 
         {/* Users Metric */}
         <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Foydalanuvchilar</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{a.usersLabel}</span>
             <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
               <Users size={18} />
             </div>
@@ -68,7 +72,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
         {/* Jobs Metric */}
         <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Jami E'lonlar</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{a.totalPostings}</span>
             <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
               <Briefcase size={18} />
             </div>
@@ -90,7 +94,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
           </div>
           <div>
             <div className="text-lg font-bold text-slate-900">{stats?.completedJobsCount || 0} E'lon</div>
-            <p className="text-xs text-slate-500 font-medium">Muvaffaqiyatli yakunlangan va to'langan</p>
+            <p className="text-xs text-slate-500 font-medium">{a.completedAndPaid}</p>
           </div>
         </div>
 
@@ -100,7 +104,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
           </div>
           <div>
             <div className="text-lg font-bold text-slate-900">{stats?.totalApplications || 0} Ariza</div>
-            <p className="text-xs text-slate-500 font-medium">Ishchilar tomonidan topshirilgan arizalar</p>
+            <p className="text-xs text-slate-500 font-medium">{a.applicationsFromWorkers}</p>
           </div>
         </div>
 

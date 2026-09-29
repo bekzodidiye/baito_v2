@@ -1,4 +1,6 @@
 import React from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { AdminUser } from './types';
 import {
   X,
@@ -26,6 +28,8 @@ export const VerificationDetailModal: React.FC<VerificationDetailModalProps> = (
   onClose,
   onVerify,
 }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const formattedDate = user.createdAt ? formatLongDate(user.createdAt, 'uz') : 'Yaqinda';
 
   return (
@@ -73,7 +77,7 @@ export const VerificationDetailModal: React.FC<VerificationDetailModalProps> = (
             <div className="grid sm:grid-cols-2 gap-2.5 text-slate-700">
               <div className="flex items-center gap-2">
                 <Phone size={14} className="text-slate-400 shrink-0" />
-                <span>Telefon: <strong className="text-slate-900">{user.phone || 'Biriktirilmagan'}</strong></span>
+                <span>{a.phoneColon} <strong className="text-slate-900">{user.phone || 'Biriktirilmagan'}</strong></span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail size={14} className="text-slate-400 shrink-0" />
@@ -81,7 +85,7 @@ export const VerificationDetailModal: React.FC<VerificationDetailModalProps> = (
               </div>
               <div className="flex items-center gap-2">
                 <MapPin size={14} className="text-slate-400 shrink-0" />
-                <span>Hudud / Manzil: <strong className="text-slate-900">{user.region || 'Toshkent v.'}</strong></span>
+                <span>{a.regionAddressColon} <strong className="text-slate-900">{user.region || 'Toshkent v.'}</strong></span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar size={14} className="text-slate-400 shrink-0" />
@@ -89,7 +93,7 @@ export const VerificationDetailModal: React.FC<VerificationDetailModalProps> = (
               </div>
               <div className="flex items-center gap-2 sm:col-span-2">
                 <Briefcase size={14} className="text-slate-400 shrink-0" />
-                <span>Roli & Kategoriya: <strong className="text-slate-900">{user.role === 'worker' ? 'Ishchi' : 'Ish beruvchi'} ({user.category || 'Mutaxassis'})</strong></span>
+                <span>{a.roleCategoryColon} <strong className="text-slate-900">{user.role === 'worker' ? 'Ishchi' : 'Ish beruvchi'} ({user.category || 'Mutaxassis'})</strong></span>
               </div>
             </div>
 

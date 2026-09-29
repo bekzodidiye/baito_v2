@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Wallet, Lock, Check, X, Loader2, RefreshCw, Receipt, Landmark, Save } from 'lucide-react';
 import { apiClient, unwrapList } from '../../api/client';
@@ -77,6 +79,8 @@ const money = (n: number) => new Intl.NumberFormat('uz-UZ').format(n) + " so'm";
 const when = (s: string | null) => (s ? new Date(s).toLocaleString('uz-UZ') : '—');
 
 export const AdminPayouts: React.FC = () => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<'withdrawals' | 'escrow' | 'payouts' | 'bank'>('withdrawals');
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -217,9 +221,9 @@ export const AdminPayouts: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-2 bg-white p-3 rounded-2xl border border-slate-200/80">
-        <Tab id="withdrawals" label="Yechish so'rovlari" count={withdrawals.data?.length ?? 0} />
+        <Tab id="withdrawals" label={a.withdrawalRequests} count={withdrawals.data?.length ?? 0} />
         <Tab id="escrow" label="Escrow" count={escrow.data?.length ?? 0} />
-        <Tab id="payouts" label="Qo'lda to'lovlar" count={payouts.data?.length ?? 0} />
+        <Tab id="payouts" label={a.manualPayouts} count={payouts.data?.length ?? 0} />
         <Tab id="bank" label="Bank rekvizitlari" />
         <button
           onClick={refreshAll}
@@ -238,12 +242,12 @@ export const AdminPayouts: React.FC = () => {
             <table className="w-full text-xs">
               <thead className="bg-slate-50 text-slate-500">
                 <tr>
-                  <th className="text-left font-semibold px-4 py-3">Ish</th>
-                  <th className="text-left font-semibold px-4 py-3">Ishchi</th>
-                  <th className="text-left font-semibold px-4 py-3">To'langan</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.jobLabel}</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.roleWorker}</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.paidLabel}</th>
                   <th className="text-left font-semibold px-4 py-3">Chek</th>
                   <th className="text-left font-semibold px-4 py-3">Hisob-faktura</th>
-                  <th className="text-left font-semibold px-4 py-3">Sana</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.dateLabel}</th>
                 </tr>
               </thead>
               <tbody>
@@ -327,10 +331,10 @@ export const AdminPayouts: React.FC = () => {
             <table className="w-full text-xs">
               <thead className="bg-slate-50 text-slate-500">
                 <tr>
-                  <th className="text-left font-semibold px-4 py-3">Ishchi</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.roleWorker}</th>
                   <th className="text-left font-semibold px-4 py-3">Summa</th>
                   <th className="text-left font-semibold px-4 py-3">Karta</th>
-                  <th className="text-left font-semibold px-4 py-3">Sana</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.dateLabel}</th>
                   <th className="text-right font-semibold px-4 py-3">Qaror</th>
                 </tr>
               </thead>
@@ -381,10 +385,10 @@ export const AdminPayouts: React.FC = () => {
             <table className="w-full text-xs">
               <thead className="bg-slate-50 text-slate-500">
                 <tr>
-                  <th className="text-left font-semibold px-4 py-3">Ish e'loni</th>
-                  <th className="text-left font-semibold px-4 py-3">Ish beruvchi</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.jobPostingLabel}</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.roleEmployer}</th>
                   <th className="text-left font-semibold px-4 py-3">Summa</th>
-                  <th className="text-left font-semibold px-4 py-3">Sana</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.dateLabel}</th>
                   <th className="text-right font-semibold px-4 py-3">Qaror</th>
                 </tr>
               </thead>
@@ -445,6 +449,8 @@ export const AdminPayouts: React.FC = () => {
  *  wrong for months because nothing ever reads it back.
  */
 const BankDetailsForm: React.FC<{ data?: BankDetails; onSaved: () => void }> = ({ data, onSaved }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [form, setForm] = useState<BankDetails>({
     payoutCompanyName: '', payoutBankName: '', payoutBankAccount: '',
     payoutBankMfo: '', payoutCompanyInn: '', payoutCompanyAddress: '',
@@ -496,7 +502,7 @@ const BankDetailsForm: React.FC<{ data?: BankDetails; onSaved: () => void }> = (
     <div className="p-5">
       <div className="flex items-center gap-2 mb-1">
         <Landmark size={16} className="text-slate-500" />
-        <h3 className="font-bold text-slate-900 text-sm">To'lov rekvizitlarimiz</h3>
+        <h3 className="font-bold text-slate-900 text-sm">{a.ourPaymentDetails}</h3>
       </div>
       <p className="text-xs text-slate-500 mb-4">
         Korxonaga yuboriladigan hisob-fakturada shu ma'lumotlar chiqadi.

@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { ShieldAlert, Bot, Plus, Trash2, ToggleLeft, ToggleRight, AlertTriangle, AlertCircle } from 'lucide-react';
 import { SystemSettings } from './types';
 
@@ -19,6 +21,8 @@ export const AdminAutoModeration: React.FC<AdminAutoModerationProps> = ({
   settings,
   onUpdateSettings,
 }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   // These used to start from hard-coded values and live only in React state,
   // so the list an administrator curated vanished on reload and the job
   // screener never saw it.
@@ -79,7 +83,7 @@ export const AdminAutoModeration: React.FC<AdminAutoModerationProps> = ({
         <div>
           <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
             <Bot size={22} className="text-red-600" />
-            <span>Avto-Shtraf va Spam Moderatsiya Boti</span>
+            <span>{a.autoModerationTitle}</span>
           </h2>
           <p className="text-xs text-slate-500 font-medium mt-1">
             Qoidabuzar e'lonlar va spam kontentni avtomatik aniqlash, ogohlantirish hamda hisobni bloklash bot-algoritmi
@@ -120,9 +124,9 @@ export const AdminAutoModeration: React.FC<AdminAutoModerationProps> = ({
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Avto-Bloklash Davomiyligi (Soat)</label>
+              <label className="font-bold text-slate-700 block mb-1">{a.autoBanDuration}</label>
               <input
-              aria-label="Avto-Bloklash Davomiyligi (Soat)"
+              aria-label={a.autoBanDuration}
                 type="number"
                 value={autoBanHours}
                 onChange={(e) => setAutoBanHours(Number(e.target.value))}
@@ -150,11 +154,11 @@ export const AdminAutoModeration: React.FC<AdminAutoModerationProps> = ({
 
           <form onSubmit={handleAddWord} className="flex gap-2">
             <input
-              aria-label="Yangi taqiqlangan so'z"
+              aria-label={a.newBannedWord}
               type="text"
               value={newWord}
               onChange={(e) => setNewWord(e.target.value)}
-              placeholder="Yangi taqiqlangan so'z kiriting..."
+              placeholder={a.newBannedWordPlaceholder}
               className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-red-500"
             />
             <button

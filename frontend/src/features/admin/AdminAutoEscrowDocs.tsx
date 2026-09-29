@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { ShieldCheck, FileCheck, Clock, Download, CheckCircle2, ToggleLeft, ToggleRight, QrCode, FileText, Sparkles } from 'lucide-react';
 
 import { SystemSettings } from './types';
@@ -9,6 +11,8 @@ interface AdminAutoEscrowDocsProps {
 }
 
 export const AdminAutoEscrowDocs: React.FC<AdminAutoEscrowDocsProps> = ({ settings, onUpdateSettings }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   // These drive a Celery task that releases escrow on completed jobs. They
   // used to be local state, so the timer an administrator set never reached it.
   const [autoReleaseHours, setAutoReleaseHours] = useState(settings.escrowAutoReleaseHours ?? 24);
@@ -55,7 +59,7 @@ export const AdminAutoEscrowDocs: React.FC<AdminAutoEscrowDocsProps> = ({ settin
         <div>
           <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
             <ShieldCheck size={22} className="text-emerald-600" />
-            <span>Avto-Escrow Garantiya va Daloatnoma Generator</span>
+            <span>{a.escrowDocsTitle}</span>
           </h2>
           <p className="text-xs text-slate-500 font-medium mt-1">
             Ish yakunlangach raqamli tamg'ali Bajarilgan Ishlar Daloatnomasini avto-yaratish va Escrow pullarini taymer bo'yicha yechish
@@ -107,7 +111,7 @@ export const AdminAutoEscrowDocs: React.FC<AdminAutoEscrowDocsProps> = ({ settin
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between">
                 <div>
                   <span className="font-bold text-slate-900 block">Avto-Release Algoritmi</span>
-                  <span className="text-[10px] text-slate-500">Avtomatik pul o'tkazish rejimi</span>
+                  <span className="text-[10px] text-slate-500">{a.autoTransferMode}</span>
                 </div>
                 <button onClick={() => setAutoReleaseEnabled(!autoReleaseEnabled)} className="cursor-pointer">
                   {autoReleaseEnabled ? <ToggleRight size={26} className="text-emerald-600" /> : <ToggleLeft size={26} className="text-slate-400" />}
@@ -117,7 +121,7 @@ export const AdminAutoEscrowDocs: React.FC<AdminAutoEscrowDocsProps> = ({ settin
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between">
                 <div>
                   <span className="font-bold text-slate-900 block">Soliq / Chek Avto-Generatsiya</span>
-                  <span className="text-[10px] text-slate-500">Kassa va fiskal cheklarga tayyorlash</span>
+                  <span className="text-[10px] text-slate-500">{a.fiscalReceiptPrep}</span>
                 </div>
                 <button onClick={() => setAutoChekEnabled(!autoChekEnabled)} className="cursor-pointer">
                   {autoChekEnabled ? <ToggleRight size={26} className="text-emerald-600" /> : <ToggleLeft size={26} className="text-slate-400" />}
@@ -135,14 +139,14 @@ export const AdminAutoEscrowDocs: React.FC<AdminAutoEscrowDocsProps> = ({ settin
                 <div className="font-extrabold text-emerald-900 text-xs mb-1 flex items-center gap-1.5">
                   <CheckCircle2 size={14} /> 100% Himoyalangan Hamyon
                 </div>
-                <p className="text-[11px] text-emerald-800/80">Mablag' Baito trast hamyonida muzlatiladi. Usta ishni yakunlamaguncha berilmaydi.</p>
+                <p className="text-[11px] text-emerald-800/80">{a.escrowFrozenNote}</p>
               </div>
 
               <div className="p-3.5 bg-blue-50/60 border border-blue-200 rounded-xl">
                 <div className="font-extrabold text-blue-900 text-xs mb-1 flex items-center gap-1.5">
                   <FileCheck size={14} /> Avto-QR Daloatnoma
                 </div>
-                <p className="text-[11px] text-blue-800/80">Ish topshirilishi tasdiqlangach, pul ustaga o'tadi va QR daloatnoma beriladi.</p>
+                <p className="text-[11px] text-blue-800/80">{a.escrowReleaseNote}</p>
               </div>
             </div>
           </div>
@@ -154,7 +158,7 @@ export const AdminAutoEscrowDocs: React.FC<AdminAutoEscrowDocsProps> = ({ settin
           <div className="flex items-center justify-between border-b pb-3">
             <div className="flex items-center gap-2">
               <FileText size={20} className="text-blue-600" />
-              <h3 className="font-extrabold text-slate-900 text-sm">Bajarilgan Ishlar va Qabul Qilish Daloatnomasi</h3>
+              <h3 className="font-extrabold text-slate-900 text-sm">{a.acceptanceActTitle}</h3>
             </div>
             <button
               onClick={handlePrintAct}
@@ -185,13 +189,13 @@ export const AdminAutoEscrowDocs: React.FC<AdminAutoEscrowDocsProps> = ({ settin
 
             <div className="space-y-2">
               <div>
-                <span className="text-slate-500 font-semibold block text-[10px]">BUYURTMA VA ISH NOMI:</span>
+                <span className="text-slate-500 font-semibold block text-[10px]">{a.orderAndJobName}</span>
                 <span className="font-extrabold text-slate-900">{sampleContract.jobTitle}</span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200">
                 <div>
-                  <span className="text-slate-500 font-semibold block text-[10px]">BUYURTMACHI (ISH BERUVCHI):</span>
+                  <span className="text-slate-500 font-semibold block text-[10px]">{a.customerEmployer}</span>
                   <span className="font-bold text-slate-900">{sampleContract.employer}</span>
                 </div>
                 <div>
@@ -216,7 +220,7 @@ export const AdminAutoEscrowDocs: React.FC<AdminAutoEscrowDocsProps> = ({ settin
               <div className="flex items-center gap-3">
                 <QrCode size={40} className="text-slate-800 shrink-0" />
                 <div>
-                  <div className="font-extrabold text-slate-900 text-[11px]">Raqamli Raqamlashtirilgan Tamg'a (QR Stamp)</div>
+                  <div className="font-extrabold text-slate-900 text-[11px]">{a.qrStamp}</div>
                   <div className="text-[10px] text-slate-400 font-mono">{sampleContract.qrVerificationCode}</div>
                 </div>
               </div>

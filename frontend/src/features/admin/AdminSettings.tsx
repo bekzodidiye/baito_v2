@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { SystemSettings } from './types';
 import { Sliders, Save, CheckCircle2, ShieldAlert, ToggleLeft, ToggleRight, Plus } from 'lucide-react';
 
@@ -8,6 +10,8 @@ interface AdminSettingsProps {
 }
 
 export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdateSettings }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [activeTab, setActiveTab] = useState<'general' | 'admins' | 'logs'>('general');
   const [fee, setFee] = useState(settings.platformFeePercent.toString());
   const [minRate, setMinRate] = useState(settings.minHourlyRate.toString());
@@ -76,16 +80,16 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
         <div>
           <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
             <Sliders size={20} className="text-indigo-600" />
-            <span>Platforma Sozlamalari va Boshqaruv</span>
+            <span>{a.settingsTitle}</span>
           </h2>
-          <p className="text-xs text-slate-500 mt-1 font-medium">Tizim parametrlari, admin rollari va audit jurnali</p>
+          <p className="text-xs text-slate-500 mt-1 font-medium">{a.settingsSubtitle}</p>
         </div>
 
         <div className="flex items-center gap-1">
           {[
-            { id: 'general', label: 'Sozlamalar' },
-            { id: 'admins', label: 'Admin Rollari' },
-            { id: 'logs', label: 'Audit Loglari' },
+            { id: 'general', label: a.tabGeneral },
+            { id: 'admins', label: a.tabAdmins },
+            { id: 'logs', label: a.tabLogs },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -105,26 +109,25 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Platforma Komissiyasi (%)</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">{a.platformFeeLabel}</label>
                 <input
-              aria-label="Platforma Komissiyasi (%)" type="number" min={0} max={50} step={1} value={fee} onChange={(e) => setFee(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border rounded-xl font-bold" />
+              aria-label={a.platformFeeLabel} type="number" min={0} max={50} step={1} value={fee} onChange={(e) => setFee(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border rounded-xl font-bold" />
                 <p className="text-[11px] text-slate-400 font-medium mt-1">
-                  Ishchiga ish haqi shu foiz ayirilgan holda o'tkaziladi. Yollash
-                  paytidagi foiz o'sha ish uchun saqlanadi.
+                  {a.platformFeeHelp}
                 </p>
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Minimal Soatlik Ish Haqi (UZS)</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">{a.minHourlyRate}</label>
                 <input
-              aria-label="Minimal Soatlik Ish Haqi (UZS)" type="number" value={minRate} onChange={(e) => setMinRate(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border rounded-xl font-bold" />
+              aria-label={a.minHourlyRate} type="number" value={minRate} onChange={(e) => setMinRate(e.target.value)} className="w-full px-4 py-2 bg-slate-50 border rounded-xl font-bold" />
               </div>
             </div>
 
             <div className="space-y-2.5 pt-3 border-t border-slate-100">
               <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200/80">
                 <div>
-                  <div className="text-xs font-extrabold text-slate-900">E'lonlarni Avto-Tasdiqlash</div>
-                  <div className="text-[11px] text-slate-500">Moderatsiyasiz darhol e'lonlar xaritada ko'rinadi</div>
+                  <div className="text-xs font-extrabold text-slate-900">{a.autoApproveTitle}</div>
+                  <div className="text-[11px] text-slate-500">{a.autoApproveDesc}</div>
                 </div>
                 <button type="button" onClick={() => setAutoApprove(!autoApprove)} className="cursor-pointer">
                   {autoApprove ? <ToggleRight size={30} className="text-emerald-600" /> : <ToggleLeft size={30} className="text-slate-400" />}
@@ -133,8 +136,8 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
 
               <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200/80">
                 <div>
-                  <div className="text-xs font-extrabold text-slate-900">E'lonlarni Avto-O'chirish (Auto-Expiration)</div>
-                  <div className="text-[11px] text-slate-500">14 kundan ortiq eskirgan e'lonlarni avto-o'chirish/arxivlash</div>
+                  <div className="text-xs font-extrabold text-slate-900">{a.autoExpireTitle}</div>
+                  <div className="text-[11px] text-slate-500">{a.autoExpireDesc}</div>
                 </div>
                 <button type="button" onClick={() => setAutoExpire(!autoExpire)} className="cursor-pointer">
                   {autoExpire ? <ToggleRight size={30} className="text-emerald-600" /> : <ToggleLeft size={30} className="text-slate-400" />}
@@ -143,8 +146,8 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
 
               <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200/80">
                 <div>
-                  <div className="text-xs font-extrabold text-slate-900">Spam / Qoidabuzar E'lonlarni Avto-O'chirish</div>
-                  <div className="text-[11px] text-slate-500">Shubhali so'zlar aniqlanganda avtomatik o'chirish</div>
+                  <div className="text-xs font-extrabold text-slate-900">{a.autoDeleteSpamTitle}</div>
+                  <div className="text-[11px] text-slate-500">{a.autoDeleteSpamDesc}</div>
                 </div>
                 <button type="button" onClick={() => setAutoDeleteSpam(!autoDeleteSpam)} className="cursor-pointer">
                   {autoDeleteSpam ? <ToggleRight size={30} className="text-emerald-600" /> : <ToggleLeft size={30} className="text-slate-400" />}
@@ -153,8 +156,8 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
 
               <div className="flex items-center justify-between p-3 bg-red-50/50 rounded-xl border border-red-100">
                 <div>
-                  <div className="text-xs font-extrabold text-red-900 flex items-center gap-1.5"><ShieldAlert size={15} className="text-red-600" /> Maintenance Rejimi</div>
-                  <div className="text-[11px] text-red-700/80">Yangi e'lon va to'lovlar vaqtincha to'xtatiladi</div>
+                  <div className="text-xs font-extrabold text-red-900 flex items-center gap-1.5"><ShieldAlert size={15} className="text-red-600" /> {a.maintenanceTitle}</div>
+                  <div className="text-[11px] text-red-700/80">{a.maintenanceDesc}</div>
                 </div>
                 <button type="button" onClick={() => setMaint(!maint)} className="cursor-pointer">
                   {maint ? <ToggleRight size={30} className="text-red-600" /> : <ToggleLeft size={30} className="text-slate-400" />}

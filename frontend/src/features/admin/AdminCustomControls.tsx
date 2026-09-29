@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { ChevronDown, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const CustomSelect = ({ 
   value, 
   onChange, 
   options, 
-  placeholder = "Tanlang", 
+  placeholder,
   className = "",
   containerClassName = ""
 }: { 
@@ -16,6 +18,9 @@ export const CustomSelect = ({
   className?: string;
   containerClassName?: string;
 }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
+  const placeholderText = placeholder ?? a.chooseLabel;
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -38,7 +43,7 @@ export const CustomSelect = ({
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all ${className}`}
       >
-        <span className="truncate">{selectedOption ? selectedOption.label : <span className="text-slate-400 italic">{placeholder}</span>}</span>
+        <span className="truncate">{selectedOption ? selectedOption.label : <span className="text-slate-400 italic">{placeholderText}</span>}</span>
         <ChevronDown size={16} className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       

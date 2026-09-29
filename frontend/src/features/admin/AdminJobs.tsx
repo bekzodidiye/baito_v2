@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { AdminJob } from './types';
 import { Search, Trash2, MapPin, Building2, DollarSign, XCircle } from 'lucide-react';
 import { RejectJobModal } from './RejectJobModal';
@@ -12,6 +14,8 @@ interface AdminJobsProps {
 }
 
 export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, onDeleteJob }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [rejectingJob, setRejectingJob] = useState<AdminJob | null>(null);
@@ -58,9 +62,9 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
         <div className="relative w-full sm:w-80">
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
-              aria-label="Sarlavha, kompaniya yoki manzil..."
+              aria-label={a.searchJobsPlaceholder}
             type="text"
-            placeholder="Sarlavha, kompaniya yoki manzil..."
+            placeholder={a.searchJobsPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"
@@ -135,7 +139,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                       <option value="in_progress">Jarayonda (Active)</option>
                       <option value="completed">Bajarildi (Completed)</option>
                       <option value="dispute">Nizo (Dispute)</option>
-                      <option value="cancelled">Bekor qilindi / Rad etildi</option>
+                      <option value="cancelled">{a.cancelledOrRejected}</option>
                     </select>
 
                     <h3 className="font-extrabold text-slate-900 text-base leading-snug">{j.title}</h3>
@@ -145,7 +149,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                     <button
                       onClick={() => setRejectingJob(j)}
                       className="p-2 text-amber-600 hover:bg-amber-50 rounded-xl transition-colors cursor-pointer"
-                      title="Rad etish (Sabab bilan)"
+                      title="{a.rejectWithReason}"
                     >
                       <XCircle size={18} />
                     </button>
@@ -160,7 +164,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                         }
                       }}
                       className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
-                      title="E'lonni o'chirish"
+                      title="{a.deletePosting}"
                     >
                       <Trash2 size={18} />
                     </button>

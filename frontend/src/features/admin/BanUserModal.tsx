@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { AlertTriangle, X, Ban } from 'lucide-react';
 
 interface BanUserModalProps {
@@ -12,6 +14,8 @@ export const BanUserModal: React.FC<BanUserModalProps> = ({
   onClose,
   onConfirmBan,
 }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [reason, setReason] = useState<string>('Qoidabuzarlik');
   const [details, setDetails] = useState<string>('');
 
@@ -46,15 +50,15 @@ export const BanUserModal: React.FC<BanUserModalProps> = ({
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             >
               <option value="Qoidabuzarlik">Platforma qoidalarini buzish</option>
-              <option value="Spam / Reklama">Spam yoki ruxsatsiz reklama</option>
-              <option value="Firibgarlik">Soxta e'lon / Firibgarlik shubhasi</option>
-              <option value="Haqorat / Noto'g'ri xulq">Haqoratli muomala yoki tahdid</option>
+              <option value="Spam / Reklama">{a.banSpam}</option>
+              <option value="Firibgarlik">{a.banFraud}</option>
+              <option value="Haqorat / Noto'g'ri xulq">{a.banAbuse}</option>
               <option value="Boshqa">Boshqa sabab</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-slate-700 font-bold mb-1">Qo'shimcha izoh (Foydalanuvchiga yuboriladi):</label>
+            <label className="block text-slate-700 font-bold mb-1">{a.banExtraNote}</label>
             <textarea
               rows={3}
               value={details}

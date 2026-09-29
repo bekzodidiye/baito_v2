@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { AdminUser } from './types';
 import { ShieldCheck, FileText, CheckCircle2, XCircle, User, Eye } from 'lucide-react';
 
@@ -12,6 +14,8 @@ interface AdminVerificationsProps {
 }
 
 export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, onRefresh }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
 
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
@@ -36,7 +40,7 @@ export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, o
       <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
         <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
           <ShieldCheck size={20} className="text-blue-600" />
-          <span>Foydalanuvchilar va Hujjatlarni Verifikatsiya Qilish</span>
+          <span>{a.verificationTitle}</span>
         </h2>
         <p className="text-xs text-slate-500 mt-1 font-medium">
           Shaxsni tasdiqlovchi hujjat (Pasport / ID) topshirgan foydalanuvchilar ro'yxati. Tasdiqlashdan oldin barcha hujjatlarni ko'rib chiqing.
