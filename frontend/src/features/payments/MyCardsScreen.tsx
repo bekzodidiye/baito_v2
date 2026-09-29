@@ -211,7 +211,7 @@ export const MyCardsScreen: React.FC = () => {
               <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center text-red-600 shadow-sm group-hover:bg-red-100 transition-colors group-active:scale-95">
                 <Trash2 className="w-7 h-7" />
               </div>
-              <span className="text-[13px] font-bold text-red-600">O'chirish</span>
+              <span className="text-[13px] font-bold text-red-600">{language === 'ru' ? 'Удалить' : language === 'en' ? 'Delete' : "O'chirish"}</span>
             </button>
           </div>
         )}

@@ -223,6 +223,16 @@ export const ru = {
   confirmNewPassword: "Подтвердите новый пароль",
   cancel: "Отмена",
 
+  // Cards (parked wallet flow)
+  addNewCard: "Добавить новую карту",
+  cardHolder: "Держатель карты",
+  cardHolderFull: "Держатель карты (имя и фамилия)",
+  cardExpiry: "Срок действия",
+  cardNumber: "Номер карты",
+  saveCard: "Сохранить карту",
+  saveCardHint: "Удобно для будущих платежей",
+  deleteAction: "Удалить",
+
   // Payment result
   paymentSuccessTitle: "Оплата прошла успешно!",
   paymentSuccessBody: "Ваш счет успешно пополнен.",

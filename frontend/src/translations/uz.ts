@@ -223,6 +223,16 @@ export const uz = {
   confirmNewPassword: "Yangi parolni tasdiqlang",
   cancel: "Bekor qilish",
 
+  // Cards (parked wallet flow)
+  addNewCard: "Yangi karta qo'shish",
+  cardHolder: "Karta egasi",
+  cardHolderFull: "Karta egasi (Ism sharif)",
+  cardExpiry: "Muddati",
+  cardNumber: "Karta raqami",
+  saveCard: "Kartani saqlash",
+  saveCardHint: "Kelgusi to'lovlar uchun qulay",
+  deleteAction: "O'chirish",
+
   // Payment result
   paymentSuccessTitle: "To'lov muvaffaqiyatli!",
   paymentSuccessBody: "Hisobingiz muvaffaqiyatli to'ldirildi.",

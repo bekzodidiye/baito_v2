@@ -223,6 +223,16 @@ export const en = {
   confirmNewPassword: "Confirm the new password",
   cancel: "Cancel",
 
+  // Cards (parked wallet flow)
+  addNewCard: "Add a new card",
+  cardHolder: "Cardholder",
+  cardHolderFull: "Cardholder (name as printed)",
+  cardExpiry: "Expires",
+  cardNumber: "Card number",
+  saveCard: "Save this card",
+  saveCardHint: "Handy for future payments",
+  deleteAction: "Delete",
+
   // Payment result
   paymentSuccessTitle: "Payment successful",
   paymentSuccessBody: "Your balance has been topped up.",
