@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiClient } from '../../api/client';
 import { CATEGORIES_LIST } from '../../constants/categories';
+import { CATEGORY_DESCRIPTIONS } from '../../constants/categoryDescriptions';
 
 /** A category card on the landing page.
  *
@@ -40,8 +41,21 @@ const NO_POSTINGS: Record<Lang, string> = {
   uz: "e'lon yo'q", ru: 'нет объявлений', en: 'no postings',
 };
 
+/** The line under a category's name when nothing is posted in it.
+ *
+ *  Like the name, it comes from the database as one Uzbek string. Translated
+ *  by slug, falling back to whatever an administrator wrote for a category the
+ *  frontend does not ship.
+ */
+export const categoryDescription = (c: LandingCategory, language: Lang): string => {
+  // Same rule as the name: the row's own text for an Uzbek reader, the shipped
+  // translation for the other two, and the row's text when we ship none.
+  if (language === 'uz') return c.description || CATEGORY_DESCRIPTIONS[c.slug]?.uz || '';
+  return CATEGORY_DESCRIPTIONS[c.slug]?.[language] || c.description || '';
+};
+
 export const rateText = (c: LandingCategory, language: Lang = 'uz'): string => {
-  if (c.salaryFrom == null) return c.description || '';
+  if (c.salaryFrom == null) return categoryDescription(c, language);
   const unit = PER_DAY[language] ?? PER_DAY.uz;
   if (c.salaryTo == null || c.salaryTo === c.salaryFrom) {
     return `${money(c.salaryFrom)} ${unit}`;
@@ -64,9 +78,14 @@ export const countText = (c: LandingCategory, language: Lang = 'uz'): string =>
  *  name they gave it.
  */
 export const categoryName = (c: LandingCategory, language: Lang): string => {
+  // An Uzbek reader gets the row's own name. It is written in Uzbek, and an
+  // administrator may have edited it — a shipped string must not overwrite
+  // that. For the other two languages there is no translated column, so the
+  // shipped name for that slug is the best available.
+  if (language === 'uz') return c.name;
   const known = CATEGORIES_LIST.find(k => k.id === c.slug);
   if (!known) return c.name;
-  return language === 'ru' ? known.labelRu : language === 'en' ? known.labelEn : known.labelUz;
+  return language === 'ru' ? known.labelRu : known.labelEn;
 };
 
 export const useLandingCategories = (language: string) => {
