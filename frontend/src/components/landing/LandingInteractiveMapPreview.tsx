@@ -36,7 +36,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
       if (foundJob) {
         targetShift = {
           id: foundJob.id, titleUz: foundJob.title, titleRu: foundJob.title, company: foundJob.company, district: foundJob.location,
-          pay: foundJob.salary || "280,000 so'm/smena", payNum: 280000, time: foundJob.time || "09:00 - 18:00 (8 soat)", category: 'general',
+          pay: foundJob.salary || "280,000 so'm/smena", payNum: 280000, time: foundJob.time || `09:00 - 18:00 (8 ${t.hoursSuffix})`, category: 'general',
           lat: 0, lng: 0, badge: foundJob.urgent ? 'Tezkor' : 'Aktiv', urgent: foundJob.urgent || false,
           descriptionUz: foundJob.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
           descriptionRu: foundJob.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
@@ -59,7 +59,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
     const updateActiveShift = () => {
       const realShifts = jobs.map(j => ({
         id: j.id, titleUz: j.title, titleRu: j.title, company: j.company, district: j.location,
-        pay: j.salary || "280,000 so'm/smena", payNum: 280000, time: j.time || "09:00 - 18:00 (8 soat)", category: 'general',
+        pay: j.salary || "280,000 so'm/smena", payNum: 280000, time: j.time || `09:00 - 18:00 (8 ${t.hoursSuffix})`, category: 'general',
         lat: 0, lng: 0, badge: j.urgent ? 'Tezkor' : 'Aktiv', urgent: j.urgent || false,
         descriptionUz: j.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
         descriptionRu: j.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
@@ -158,7 +158,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
               <div className="flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-1.5 text-brand-primary text-xs font-black">
                   <Info size={15} />
-                  <span>Tanlangan Smena Tafsiloti</span>
+                  <span>{t.mapSelectedShift}</span>
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-wider text-brand-primary bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
                   {activeShift.badge || 'BUGUN'}
@@ -177,7 +177,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
                 <div>
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-[10px] font-extrabold text-brand-primary bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
-                      {activeShift.urgent ? 'BUGUN • AKTIV SMENA' : 'REJALASHTIRILGAN'}
+                      {activeShift.urgent ? t.heroShiftBadge : t.mapPlanned}
                     </span>
                     <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1 bg-white px-2 py-0.5 rounded-full border border-slate-200">
                       ⭐ 4.9 <span className="text-slate-400 font-normal">(120+)</span>

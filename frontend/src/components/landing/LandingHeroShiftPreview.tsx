@@ -97,7 +97,7 @@ export const LandingHeroShiftPreview: React.FC<LandingHeroShiftPreviewProps> = (
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="px-2.5 py-1 rounded-md bg-blue-50 text-brand-primary text-[10px] font-black uppercase border border-blue-200/80">
-                      {currentShift.badge || 'Smena'} • Kunlik smena
+                      {t.heroShiftBadge}
                     </span>
                     <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1 bg-white px-2.5 py-0.5 rounded-full border border-slate-200 shadow-2xs">
                       ⭐ 4.9 <span className="text-slate-400 font-normal">(120+)</span>

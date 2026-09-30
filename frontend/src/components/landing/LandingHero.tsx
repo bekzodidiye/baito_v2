@@ -27,7 +27,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
   const realShifts = useMemo(() => (jobs || []).map(j => ({
     id: j.id, titleUz: j.title, titleRu: j.title, company: j.company,
     district: j.location, pay: j.salary || "280,000 so'm/smena",
-    time: j.time || "09:00 - 18:00 (8 soat)", badge: j.urgent ? 'Aktiv' : 'Aktiv',
+    // The hour count reads in the visitor's language; the badge comes from the
+    // table now, so "Aktiv" is not hardcoded twice over for both branches.
+    time: j.time || `09:00 - 18:00 (8 ${t.hoursSuffix})`, badge: t.statusActive,
     urgent: j.urgent || false,
     descriptionUz: j.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
     descriptionRu: j.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",

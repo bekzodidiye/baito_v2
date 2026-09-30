@@ -26,17 +26,48 @@ const money = (n: number) => n.toLocaleString('uz-UZ').replace(/[,\u00a0\u202f]/
 /** "180 000 - 350 000 so'm/kun", or the category's own description when nothing
  *  is posted in it. Never an invented range: a number on this card is either
  *  measured or absent. */
-export const rateText = (c: LandingCategory): string => {
-  if (c.salaryFrom == null) return c.description || '';
-  if (c.salaryTo == null || c.salaryTo === c.salaryFrom) {
-    return `${money(c.salaryFrom)} so'm/kun`;
-  }
-  return `${money(c.salaryFrom)} - ${money(c.salaryTo)} so'm/kun`;
+export type Lang = 'uz' | 'ru' | 'en';
+
+const PER_DAY: Record<Lang, string> = {
+  uz: "so'm/kun", ru: 'сум/день', en: 'UZS/day',
+};
+const POSTINGS: Record<Lang, (n: number) => string> = {
+  uz: n => `${n} e'lon`,
+  ru: n => `${n} объявл.`,
+  en: n => (n === 1 ? '1 posting' : `${n} postings`),
+};
+const NO_POSTINGS: Record<Lang, string> = {
+  uz: "e'lon yo'q", ru: 'нет объявлений', en: 'no postings',
 };
 
-/** "12 e'lon", or "hozircha e'lon yo'q". The old card always said "1,240+". */
-export const countText = (c: LandingCategory): string =>
-  c.activeJobsCount > 0 ? `${c.activeJobsCount} e'lon` : "e'lon yo'q";
+export const rateText = (c: LandingCategory, language: Lang = 'uz'): string => {
+  if (c.salaryFrom == null) return c.description || '';
+  const unit = PER_DAY[language] ?? PER_DAY.uz;
+  if (c.salaryTo == null || c.salaryTo === c.salaryFrom) {
+    return `${money(c.salaryFrom)} ${unit}`;
+  }
+  return `${money(c.salaryFrom)} - ${money(c.salaryTo)} ${unit}`;
+};
+
+/** "12 e'lon", or "e'lon yo'q". The old card always said "1,240+". */
+export const countText = (c: LandingCategory, language: Lang = 'uz'): string =>
+  c.activeJobsCount > 0
+    ? (POSTINGS[language] ?? POSTINGS.uz)(c.activeJobsCount)
+    : (NO_POSTINGS[language] ?? NO_POSTINGS.uz);
+
+/** The name to show for a category the API returned.
+ *
+ *  Categories come from the database, where a row carries one name and it is
+ *  written in Uzbek. The slugs are the same fourteen the frontend already has
+ *  translated in CATEGORIES_LIST, so a known category is shown in the reader's
+ *  language and anything an administrator has added since falls back to the
+ *  name they gave it.
+ */
+export const categoryName = (c: LandingCategory, language: Lang): string => {
+  const known = CATEGORIES_LIST.find(k => k.id === c.slug);
+  if (!known) return c.name;
+  return language === 'ru' ? known.labelRu : language === 'en' ? known.labelEn : known.labelUz;
+};
 
 export const useLandingCategories = (language: string) => {
   const [categories, setCategories] = useState<LandingCategory[] | null>(null);

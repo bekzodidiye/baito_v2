@@ -1,5 +1,6 @@
 import React from 'react';
 import { LANDING_TEXTS } from './LandingData';
+import { TESTIMONIALS } from './LandingTestimonials.content';
 import { Star, Quote, CheckCircle2, User } from 'lucide-react';
 import { useAuthStore } from "../../store/useAuthStore";
 
@@ -7,29 +8,8 @@ export const LandingTestimonials: React.FC = () => {
   const language = useAuthStore(s => s.language);
   const t = LANDING_TEXTS[language as keyof typeof LANDING_TEXTS] || LANDING_TEXTS.uz;
 
-  const reviews = [
-    {
-      name: "Sardor Karimov",
-      role: "Kuryer (Chilonzor)",
-      text: "Baito tufayli darsdan bo'sh vaqtimda kuniga 250,000 - 300,000 so'm topaman. Eng asosiysi smena tugashi bilan kartamga pul tushadi!",
-      rating: 5,
-      date: "Kecha"
-    },
-    {
-      name: "Dilnoza Rahimova",
-      role: "Menejer — 'Safia Bakery'",
-      text: "Dam olish kunlari uchun tezkor 3 nafar ofitsiant kerak bo'ldi. Baito orqali 20 daqiqada tasdiqlangan va tajribali xodimlarni topdik.",
-      rating: 5,
-      date: "3 kun oldin"
-    },
-    {
-      name: "Javohir Toshmatov",
-      role: "Omborxona ishchisi (Sergeli)",
-      text: "Xaritadan uyim yonidagi omborni topdim. Haftasiga 5 kun 8 soatdan ishlayman, oylik daromadim 7.5 mln so'mdan oshdi.",
-      rating: 5,
-      date: "Bugun"
-    }
-  ];
+  const reviews = (TESTIMONIALS[language as keyof typeof TESTIMONIALS] || TESTIMONIALS.uz)
+    .map(r => ({ ...r, rating: 5 }));
 
   return (
     <section className="py-12 lg:py-16 bg-slate-50 font-sans border-b border-slate-200 min-h-[calc(100vh-4.5rem)] sm:min-h-[calc(100vh-5rem)] flex flex-col justify-center">

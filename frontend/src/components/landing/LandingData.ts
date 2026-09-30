@@ -75,7 +75,33 @@ export const LANDING_TEXTS = {
     mapBadge: "Xaritalar va Masofa",
     mapPerksTitle: "Qulayliklar va imtiyozlar",
     mapPayNote: "Smena tugashi bilan maosh kartaga o'tkaziladi",
-    shiftNoneActiveBody: "Yangi ish o'rinlari tez orada qo'shiladi."
+    shiftNoneActiveBody: "Yangi ish o'rinlari tez orada qo'shiladi.",
+    catPickShifts: "Smenalarni tanlash",
+    dualPlatformBadge: "Ikki tomonlama platforma",
+    calcBadge: "Interaktiv kalkulyator",
+    mapSelectedShift: "Tanlangan smena tafsiloti",
+    statusActive: "AKTIV",
+    heroShiftBadge: "AKTIV • KUNLIK SMENA",
+    hoursSuffix: "soat",
+    footerAbout: "Baito — O'zbekistondagi tezkor soatbay smena va kunlik ishlar platformasi. Ishchilar va tashkilotlar uchun qulay hamda ishonchli xizmat.",
+    footerAllShifts: "Barcha smenalar",
+    footerMapView: "Xaritada ko'rish",
+    footerJoinWorker: "Ishchi bo'lib kirish",
+    footerEmployerService: "Ish beruvchi xizmati",
+    footerRights: "Baito Platformasi. Barcha huquqlar himoyalangan.",
+    stepsWorker: [
+      { title: "Profil va ID tasdiqlash", desc: "Pasport yoki ID ma'lumotlar bilan 2 daqiqada tasdiqlash" },
+      { title: "Smena va xarita", desc: "Yaqin masofadagi mos smenani tanlash va bir bosishda ariza" },
+      { title: "Smenani bajarish", desc: "Belgilangan manzilga borib vaqtida ishni topshirish" },
+      { title: "Darhol pul olish", desc: "Ish beruvchi tasdiqlashi bilan maosh to'g'ridan-to'g'ri kartaga" }
+    ],
+    stepsEmployer: [
+      { title: "E'lon va smena joylash", desc: "Vaqt, joylashuv, talablar va smena maoshini kiritish" },
+      { title: "Top nomzodlar ro'yxati", desc: "Reytingi baland, tasdiqlangan ID ga ega nomzodlar bilan chat" },
+      { title: "Smenaga qabul qilish", desc: "Nomzodni tanlash va avtomatik bildirishnoma yuborish" },
+      { title: "Smena yakuni va baholash", desc: "Ishni qabul qilib, bir bosishda maosh o'tkazish" }
+    ],
+    mapPlanned: "REJALASHTIRILGAN"
   },
   ru: {
     heroBadge: "#1 Платформа подработок и смен в Узбекистане",
@@ -153,7 +179,33 @@ export const LANDING_TEXTS = {
     mapBadge: "Карта и расстояние",
     mapPerksTitle: "Условия и льготы",
     mapPayNote: "Как только смена закончится, оплата уходит на карту",
-    shiftNoneActiveBody: "Новые вакансии появятся совсем скоро."
+    shiftNoneActiveBody: "Новые вакансии появятся совсем скоро.",
+    catPickShifts: "Выбрать смены",
+    dualPlatformBadge: "Платформа для обеих сторон",
+    calcBadge: "Интерактивный калькулятор",
+    mapSelectedShift: "Детали выбранной смены",
+    statusActive: "АКТИВНА",
+    heroShiftBadge: "АКТИВНА • СМЕНА НА ДЕНЬ",
+    hoursSuffix: "ч",
+    footerAbout: "Baito — платформа почасовых смен и подработки в Узбекистане. Удобный и надёжный сервис для работников и организаций.",
+    footerAllShifts: "Все смены",
+    footerMapView: "Смотреть на карте",
+    footerJoinWorker: "Войти как работник",
+    footerEmployerService: "Работодателям",
+    footerRights: "Платформа Baito. Все права защищены.",
+    stepsWorker: [
+      { title: "Профиль и проверка ID", desc: "Подтверждение по паспорту или ID за 2 минуты" },
+      { title: "Смена и карта", desc: "Выберите подходящую смену рядом и подайте заявку в один клик" },
+      { title: "Выполнение смены", desc: "Приезжайте по адресу и сдайте работу вовремя" },
+      { title: "Моментальная оплата", desc: "Как только работодатель подтвердит — оплата прямо на карту" }
+    ],
+    stepsEmployer: [
+      { title: "Размещение смены", desc: "Укажите время, адрес, требования и оплату за смену" },
+      { title: "Список лучших кандидатов", desc: "Чат с кандидатами с высоким рейтингом и проверенным ID" },
+      { title: "Приём на смену", desc: "Выберите кандидата — уведомление уйдёт автоматически" },
+      { title: "Завершение и оценка", desc: "Примите работу и переведите оплату в один клик" }
+    ],
+    mapPlanned: "ЗАПЛАНИРОВАНА"
   },
   en: {
     heroBadge: "#1 Daily Shift & Hourly Work Platform in Uzbekistan",
@@ -231,7 +283,33 @@ export const LANDING_TEXTS = {
     mapBadge: "Map and distance",
     mapPerksTitle: "Perks and benefits",
     mapPayNote: "The wage reaches your card as soon as the shift ends",
-    shiftNoneActiveBody: "New shifts are added all the time."
+    shiftNoneActiveBody: "New shifts are added all the time.",
+    catPickShifts: "Browse shifts",
+    dualPlatformBadge: "Both sides, one platform",
+    calcBadge: "Interactive calculator",
+    mapSelectedShift: "Selected shift",
+    statusActive: "ACTIVE",
+    heroShiftBadge: "ACTIVE • DAY SHIFT",
+    hoursSuffix: "h",
+    footerAbout: "Baito is Uzbekistan's platform for hourly shifts and day work — straightforward and dependable for workers and organisations alike.",
+    footerAllShifts: "All shifts",
+    footerMapView: "See on the map",
+    footerJoinWorker: "Join as a worker",
+    footerEmployerService: "For employers",
+    footerRights: "Baito Platform. All rights reserved.",
+    stepsWorker: [
+      { title: "Profile and ID check", desc: "Verified from a passport or ID in two minutes" },
+      { title: "Shift and map", desc: "Pick a shift near you and apply in one tap" },
+      { title: "Work the shift", desc: "Turn up at the address and hand the work over on time" },
+      { title: "Get paid straight away", desc: "The employer confirms and the wage goes to your card" }
+    ],
+    stepsEmployer: [
+      { title: "Post a shift", desc: "Set the time, the address, the requirements and the pay" },
+      { title: "Your shortlist", desc: "Chat to highly rated candidates with a verified ID" },
+      { title: "Take someone on", desc: "Pick a candidate — they are notified automatically" },
+      { title: "Finish and rate", desc: "Accept the work and send the wage in one tap" }
+    ],
+    mapPlanned: "SCHEDULED"
   }
 };
 

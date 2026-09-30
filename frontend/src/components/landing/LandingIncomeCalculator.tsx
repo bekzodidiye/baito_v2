@@ -40,7 +40,7 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-12">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-brand-primary text-xs font-black shadow-2xs">
             <Calculator size={14} className="text-brand-primary" />
-            <span>Interactive Kalkulyator</span>
+            <span>{t.calcBadge}</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">{t.calcTitle}</h2>
           <p className="text-sm sm:text-base font-semibold text-slate-600">{t.calcSubtitle}</p>
