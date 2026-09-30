@@ -101,7 +101,8 @@ export const LANDING_TEXTS = {
       { title: "Smenaga qabul qilish", desc: "Nomzodni tanlash va avtomatik bildirishnoma yuborish" },
       { title: "Smena yakuni va baholash", desc: "Ishni qabul qilib, bir bosishda maosh o'tkazish" }
     ],
-    mapPlanned: "REJALASHTIRILGAN"
+    mapPlanned: "REJALASHTIRILGAN",
+    statusUrgent: "TEZKOR"
   },
   ru: {
     heroBadge: "#1 Платформа подработок и смен в Узбекистане",
@@ -205,7 +206,8 @@ export const LANDING_TEXTS = {
       { title: "Приём на смену", desc: "Выберите кандидата — уведомление уйдёт автоматически" },
       { title: "Завершение и оценка", desc: "Примите работу и переведите оплату в один клик" }
     ],
-    mapPlanned: "ЗАПЛАНИРОВАНА"
+    mapPlanned: "ЗАПЛАНИРОВАНА",
+    statusUrgent: "СРОЧНО"
   },
   en: {
     heroBadge: "#1 Daily Shift & Hourly Work Platform in Uzbekistan",
@@ -309,7 +311,8 @@ export const LANDING_TEXTS = {
       { title: "Take someone on", desc: "Pick a candidate — they are notified automatically" },
       { title: "Finish and rate", desc: "Accept the work and send the wage in one tap" }
     ],
-    mapPlanned: "SCHEDULED"
+    mapPlanned: "SCHEDULED",
+    statusUrgent: "URGENT"
   }
 };
 

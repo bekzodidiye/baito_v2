@@ -37,7 +37,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
         targetShift = {
           id: foundJob.id, titleUz: foundJob.title, titleRu: foundJob.title, company: foundJob.company, district: foundJob.location,
           pay: foundJob.salary || "280,000 so'm/smena", payNum: 280000, time: foundJob.time || `09:00 - 18:00 (8 ${t.hoursSuffix})`, category: 'general',
-          lat: 0, lng: 0, badge: foundJob.urgent ? 'Tezkor' : 'Aktiv', urgent: foundJob.urgent || false,
+          lat: 0, lng: 0, urgent: foundJob.urgent || false,
           descriptionUz: foundJob.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
           descriptionRu: foundJob.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
           perksUz: perksForJob(foundJob.tags, language)
@@ -60,7 +60,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
       const realShifts = jobs.map(j => ({
         id: j.id, titleUz: j.title, titleRu: j.title, company: j.company, district: j.location,
         pay: j.salary || "280,000 so'm/smena", payNum: 280000, time: j.time || `09:00 - 18:00 (8 ${t.hoursSuffix})`, category: 'general',
-        lat: 0, lng: 0, badge: j.urgent ? 'Tezkor' : 'Aktiv', urgent: j.urgent || false,
+        lat: 0, lng: 0, urgent: j.urgent || false,
         descriptionUz: j.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
         descriptionRu: j.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
         perksUz: perksForJob(j.tags, language)
@@ -161,7 +161,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
                   <span>{t.mapSelectedShift}</span>
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-wider text-brand-primary bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
-                  {activeShift.badge || 'BUGUN'}
+                  {activeShift.urgent ? t.statusUrgent : t.statusActive}
                 </span>
               </div>
 
