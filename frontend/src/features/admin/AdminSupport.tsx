@@ -105,7 +105,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
                 activeTab === tab ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              {tab === 'all' ? 'Barchasi' : tab === 'new' ? 'Yangi' : tab === 'open' ? 'Jarayonda' : 'Hal etildi'}
+              {tab === 'all' ? a.statusAll : tab === 'new' ? a.ticketNew : tab === 'open' ? a.chipInProgress : a.ticketResolved}
             </button>
           ))}
         </div>

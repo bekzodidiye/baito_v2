@@ -34,7 +34,7 @@ export const AdminJobsAutoDeleteBanner: React.FC<AdminJobsAutoDeleteBannerProps>
             </span>
           </div>
           <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-            Eskirgan yoki rad etilgan e'lonlar belgilangan muddatdan so'ng avtomatik tozalanadi
+            {a.autoDeleteBannerDesc}
           </p>
         </div>
       </div>

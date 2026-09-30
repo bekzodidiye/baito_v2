@@ -383,7 +383,7 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
                         Hisob-faktura (oldindan ko'rish)
                       </div>
                       <div className="p-4 space-y-1.5 text-sm">
-                        <div className="flex justify-between"><span className="text-slate-500">Korxona</span>
+                        <div className="flex justify-between"><span className="text-slate-500">{a.companyColumn}</span>
                           <span className="font-semibold">{ctx.employer?.companyName || ctx.job.company}</span></div>
                         <div className="flex justify-between"><span className="text-slate-500">{a.jobLabel}</span>
                           <span className="font-semibold">{ctx.job.title}</span></div>

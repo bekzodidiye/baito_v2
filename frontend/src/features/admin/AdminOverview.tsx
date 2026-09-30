@@ -31,21 +31,21 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
         {/* Total Revenue Card */}
         <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg shadow-blue-500/10">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-blue-100 uppercase tracking-wider">Komissiya Daromadi</span>
+            <span className="text-xs font-semibold text-blue-100 uppercase tracking-wider">{a.commissionRevenue}</span>
             <div className="p-2 rounded-xl bg-white/10 backdrop-blur-md">
               <DollarSign size={18} />
             </div>
           </div>
           <div className="text-2xl font-black">{formatSum(stats?.totalRevenue)}</div>
           <p className="text-[11px] text-blue-200 mt-2 font-medium flex items-center gap-1">
-            <ArrowUpRight size={14} /> 10% platforma komissiyasi
+            <ArrowUpRight size={14} /> {a.platformCommissionNote}
           </p>
         </div>
 
         {/* Total Escrow Held */}
         <div className="p-5 rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-900/10 border border-slate-800">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Muzlatilgan Escrow</span>
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{a.escrowFrozen}</span>
             <div className="p-2 rounded-xl bg-slate-800 text-emerald-400">
               <ShieldCheck size={18} />
             </div>
@@ -64,8 +64,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
           </div>
           <div className="text-2xl font-black text-slate-900">{stats?.totalUsers || 0}</div>
           <div className="flex items-center gap-3 mt-2 text-xs font-semibold">
-            <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">{stats?.workersCount || 0} Ishchi</span>
-            <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{stats?.employersCount || 0} Ish beruvchi</span>
+            <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">{stats?.workersCount || 0} {a.workersShort}</span>
+            <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{stats?.employersCount || 0} {a.employersShort}</span>
           </div>
         </div>
 
@@ -79,9 +79,9 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
           </div>
           <div className="text-2xl font-black text-slate-900">{stats?.totalJobs || 0}</div>
           <div className="flex items-center gap-2 mt-2 text-[11px] font-semibold text-slate-500">
-            <span className="text-emerald-600">{stats?.openJobsCount || 0} Ochiq</span>
+            <span className="text-emerald-600">{stats?.openJobsCount || 0} {a.openShort}</span>
             <span>•</span>
-            <span className="text-amber-600">{stats?.activeJobsCount || 0} Jarayonda</span>
+            <span className="text-amber-600">{stats?.activeJobsCount || 0} {a.inProgressShort}</span>
           </div>
         </div>
       </div>
@@ -93,7 +93,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
             <CheckCircle2 size={20} />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900">{stats?.completedJobsCount || 0} E'lon</div>
+            <div className="text-lg font-bold text-slate-900">{stats?.completedJobsCount || 0} {a.postingsShort}</div>
             <p className="text-xs text-slate-500 font-medium">{a.completedAndPaid}</p>
           </div>
         </div>
@@ -103,7 +103,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
             <Clock size={20} />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900">{stats?.totalApplications || 0} Ariza</div>
+            <div className="text-lg font-bold text-slate-900">{stats?.totalApplications || 0} {a.applicationsShort}</div>
             <p className="text-xs text-slate-500 font-medium">{a.applicationsFromWorkers}</p>
           </div>
         </div>
@@ -113,8 +113,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
             <FileCheck size={20} />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900">{stats?.totalTransactions || 0} O'tkazma</div>
-            <p className="text-xs text-slate-500 font-medium">Bajarilgan moliyaviy tranzaksiyalar</p>
+            <div className="text-lg font-bold text-slate-900">{stats?.totalTransactions || 0} {a.transfersShort}</div>
+            <p className="text-xs text-slate-500 font-medium">{a.financialTransactionsDone}</p>
           </div>
         </div>
       </div>

@@ -73,12 +73,12 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
 
         <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto no-scrollbar">
           {[
-            { id: 'all', label: 'Barchasi' },
-            { id: 'open', label: 'Ochiq' },
-            { id: 'in_progress', label: 'Jarayonda' },
-            { id: 'completed', label: 'Bajarilgan' },
-            { id: 'dispute', label: 'Nizo' },
-            { id: 'cancelled', label: 'Bekor/Rad' },
+            { id: 'all', label: a.statusAll },
+            { id: 'open', label: a.chipOpen },
+            { id: 'in_progress', label: a.chipInProgress },
+            { id: 'completed', label: a.chipDone },
+            { id: 'dispute', label: a.chipDispute },
+            { id: 'cancelled', label: a.chipCancelledRejected },
           ].map((st) => (
             <button
               key={st.id}
@@ -135,10 +135,10 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                           : 'bg-slate-100 text-slate-600 border-slate-200'
                       }`}
                     >
-                      <option value="open">Ochiq (Open)</option>
-                      <option value="in_progress">Jarayonda (Active)</option>
-                      <option value="completed">Bajarildi (Completed)</option>
-                      <option value="dispute">Nizo (Dispute)</option>
+                      <option value="open">{a.chipOpen}</option>
+                      <option value="in_progress">{a.chipInProgress}</option>
+                      <option value="completed">{a.chipDone}</option>
+                      <option value="dispute">{a.chipDispute}</option>
                       <option value="cancelled">{a.cancelledOrRejected}</option>
                     </select>
 

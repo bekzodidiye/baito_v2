@@ -192,9 +192,9 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
           <div className="relative w-full sm:w-64">
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
-              aria-label="Qidiruv..."
+              aria-label={a.searchShort}
               type="text"
-              placeholder="Qidiruv..."
+              placeholder={a.searchShort}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
@@ -204,12 +204,12 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
 
         <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto no-scrollbar">
           {[
-            { id: 'all', label: 'Barchasi' },
-            { id: 'open', label: 'Ariza ochiq' },
-            { id: 'confirmed', label: 'Ishchi olindi' },
-            { id: 'in_progress', label: 'Ish boshlandi' },
-            { id: 'completed', label: 'Ish tugatildi' },
-            { id: 'cancelled', label: 'Bekor qilingan' }
+            { id: 'all', label: a.statusAll },
+            { id: 'open', label: a.statusOpen },
+            { id: 'confirmed', label: a.statusHired },
+            { id: 'in_progress', label: a.statusStarted },
+            { id: 'completed', label: a.statusFinished },
+            { id: 'cancelled', label: a.statusCancelledShort }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -251,7 +251,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
 
               {/* Employer Info */}
               <div className="flex-1 min-w-0 w-40 shrink">
-                <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">Korxona</div>
+                <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">{a.companyColumn}</div>
                 <div 
                   onClick={() => handleUserClick(j.employerId)} 
                   className="font-bold text-slate-800 cursor-pointer hover:text-blue-600 transition-colors flex items-center gap-2"
@@ -282,7 +282,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                         }
                       }}
                       options={[
-                        { value: '', label: 'Tayinlanmagan' },
+                        { value: '', label: a.unassigned },
                         ...users.filter(u => u.role === 'worker').map(w => ({
                           value: w.id,
                           label: w.name || 'Ismsiz ishchi'
@@ -306,7 +306,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
 
               {/* Date & Time */}
               <div className="flex-1 min-w-0 shrink">
-                <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">Vaqti</div>
+                <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">{a.timeColumn}</div>
                 <div className="flex flex-col">
                   <span className="font-bold text-slate-800">{j.workTime || '09:00 - 18:00'}</span>
                   <ActualTiming job={j} />

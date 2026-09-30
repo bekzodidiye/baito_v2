@@ -80,3 +80,51 @@ describe('ADMIN_TEXTS — the three locales stay in step', () => {
     expect(cyrillic).toEqual([]);
   });
 });
+
+/** Found by walking the deployed panel in Russian. The section headings had
+ *  been translated; the filter chips, the status dropdowns and the numbers on
+ *  the overview tiles had not — they live in arrays and in interpolated JSX,
+ *  which is exactly what a grep-based sweep does not see. */
+describe('Status labels and overview tiles follow the language too', () => {
+  const STATUS_KEYS = [
+    'statusAll', 'statusOpen', 'statusHired', 'statusStarted',
+    'statusFinished', 'statusCancelledJob', 'statusCancelledShort',
+  ] as const;
+
+  it('translates every job status', () => {
+    for (const key of STATUS_KEYS) {
+      expect(ADMIN_TEXTS.ru[key]).not.toBe(ADMIN_TEXTS.uz[key]);
+      expect(ADMIN_TEXTS.en[key]).not.toBe(ADMIN_TEXTS.uz[key]);
+    }
+  });
+
+  it('leaves no Uzbek orthography in the Russian status labels', () => {
+    for (const key of STATUS_KEYS) {
+      expect(ADMIN_TEXTS.ru[key]).not.toMatch(/[o'g']|sh\b/);
+    }
+  });
+
+  it('translates the overview tiles', () => {
+    for (const key of ['commissionRevenue', 'escrowFrozen', 'workersShort',
+                       'employersShort', 'postingsShort', 'applicationsShort',
+                       'transfersShort'] as const) {
+      expect(ADMIN_TEXTS.ru[key]).not.toBe(ADMIN_TEXTS.uz[key]);
+    }
+  });
+});
+
+/** The revenue tile read "10% platforma komissiyasi". The commission has not
+ *  been a flat 10% since it became the category's rate plus the region's, set
+ *  per category in this very panel — so the tile was quoting a number the
+ *  system no longer uses, in a language half its readers do not have. */
+describe('The revenue tile no longer quotes a rate that is not the rate', () => {
+  it.each(['uz', 'ru', 'en'] as const)('names no fixed percentage in %s', (lang) => {
+    expect(ADMIN_TEXTS[lang].platformCommissionNote).not.toMatch(/\d\s*%/);
+  });
+
+  it('still says what the figure is', () => {
+    expect(ADMIN_TEXTS.ru.platformCommissionNote.toLowerCase()).toContain('комисси');
+    expect(ADMIN_TEXTS.en.platformCommissionNote.toLowerCase()).toContain('commission');
+    expect(ADMIN_TEXTS.uz.platformCommissionNote.toLowerCase()).toContain('komissiya');
+  });
+});

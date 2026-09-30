@@ -189,12 +189,13 @@ export const StatusSelect = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const t = ADMIN_TEXTS[useAuthStore.getState().language] || ADMIN_TEXTS.uz;
   const options = [
-    { value: 'open', label: 'Ariza ochiq', color: 'bg-slate-50 text-slate-700 border-slate-200' },
-    { value: 'confirmed', label: 'Ishchi olindi', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-    { value: 'in_progress', label: 'Ish boshlandi', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-    { value: 'completed', label: 'Ish tugatildi', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    { value: 'cancelled', label: 'Ish bekor qilindi', color: 'bg-red-50 text-red-700 border-red-200' },
+    { value: 'open', label: t.statusOpen, color: 'bg-slate-50 text-slate-700 border-slate-200' },
+    { value: 'confirmed', label: t.statusHired, color: 'bg-blue-50 text-blue-700 border-blue-200' },
+    { value: 'in_progress', label: t.statusStarted, color: 'bg-amber-50 text-amber-700 border-amber-200' },
+    { value: 'completed', label: t.statusFinished, color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    { value: 'cancelled', label: t.statusCancelledJob, color: 'bg-red-50 text-red-700 border-red-200' },
   ];
 
   const currentOption = options.find(o => o.value === value) || options[0];
