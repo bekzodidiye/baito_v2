@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { apiClient } from '../../api/client';
 import { CATEGORIES_LIST } from '../../constants/categories';
 import { CATEGORY_DESCRIPTIONS } from '../../constants/categoryDescriptions';
+import { counted } from '../../utils/plural';
 
 /** A category card on the landing page.
  *
@@ -32,10 +33,13 @@ export type Lang = 'uz' | 'ru' | 'en';
 const PER_DAY: Record<Lang, string> = {
   uz: "so'm/kun", ru: 'сум/день', en: 'UZS/day',
 };
-const POSTINGS: Record<Lang, (n: number) => string> = {
-  uz: n => `${n} e'lon`,
-  ru: n => `${n} объявл.`,
-  en: n => (n === 1 ? '1 posting' : `${n} postings`),
+// The badge said "9 объявл." — an abbreviation standing in for agreement the
+// code was not doing. Russian wants объявление / объявления / объявлений by the
+// last digit; Uzbek does not inflect after a numeral at all.
+const POSTING_FORMS: Record<Lang, readonly string[]> = {
+  uz: ["e'lon"],
+  ru: ['объявление', 'объявления', 'объявлений'],
+  en: ['posting', 'postings'],
 };
 const NO_POSTINGS: Record<Lang, string> = {
   uz: "e'lon yo'q", ru: 'нет объявлений', en: 'no postings',
@@ -66,7 +70,7 @@ export const rateText = (c: LandingCategory, language: Lang = 'uz'): string => {
 /** "12 e'lon", or "e'lon yo'q". The old card always said "1,240+". */
 export const countText = (c: LandingCategory, language: Lang = 'uz'): string =>
   c.activeJobsCount > 0
-    ? (POSTINGS[language] ?? POSTINGS.uz)(c.activeJobsCount)
+    ? counted(c.activeJobsCount, POSTING_FORMS[language] ?? POSTING_FORMS.uz, language)
     : (NO_POSTINGS[language] ?? NO_POSTINGS.uz);
 
 /** The name to show for a category the API returned.

@@ -11,6 +11,7 @@ vi.mock('../../store/useAuthStore', () => ({
 
 import { AdminOverview } from './AdminOverview';
 import { ADMIN_TEXTS } from './admin.i18n';
+import { counted } from '../../utils/plural';
 
 afterEach(cleanup);
 beforeEach(() => { language.current = 'ru'; });
@@ -104,12 +105,34 @@ describe('Status labels and overview tiles follow the language too', () => {
     }
   });
 
-  it('translates the overview tiles', () => {
-    for (const key of ['commissionRevenue', 'escrowFrozen', 'workersShort',
-                       'employersShort', 'postingsShort', 'applicationsShort',
-                       'transfersShort'] as const) {
+  it('translates the overview tile captions', () => {
+    for (const key of ['commissionRevenue', 'escrowFrozen'] as const) {
       expect(ADMIN_TEXTS.ru[key]).not.toBe(ADMIN_TEXTS.uz[key]);
     }
+  });
+
+  /** The counted ones hold forms rather than one string, because a number in
+   *  front of them changes the noun in Russian. Comparing the arrays by
+   *  reference would pass on any two arrays, so compare what is in them. */
+  it('translates the counted nouns, and gives Russian all three forms', () => {
+    for (const key of ['workersShort', 'employersShort', 'postingsShort',
+                       'applicationsShort', 'transfersShort'] as const) {
+      expect(ADMIN_TEXTS.ru[key].join('|')).not.toBe(ADMIN_TEXTS.uz[key].join('|'));
+      expect(ADMIN_TEXTS.ru[key]).toHaveLength(3);
+      expect(ADMIN_TEXTS.en[key]).toHaveLength(2);
+      expect(ADMIN_TEXTS.uz[key]).toHaveLength(1);
+      // Three distinct forms, or the picking is pointless.
+      expect(new Set(ADMIN_TEXTS.ru[key]).size).toBe(3);
+    }
+  });
+
+  it('reads correctly at one, two and five in Russian', () => {
+    const w = ADMIN_TEXTS.ru.workersShort;
+    expect(counted(1, w, 'ru')).toBe('1 работник');
+    expect(counted(2, w, 'ru')).toBe('2 работника');
+    expect(counted(8, w, 'ru')).toBe('8 работников');
+    expect(counted(8, ADMIN_TEXTS.uz.workersShort, 'uz')).toBe('8 ishchi');
+    expect(counted(8, ADMIN_TEXTS.en.workersShort, 'en')).toBe('8 workers');
   });
 });
 

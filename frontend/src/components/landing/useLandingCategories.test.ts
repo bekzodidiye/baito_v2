@@ -77,11 +77,15 @@ describe('The category cards read in the visitor’s language', () => {
     expect(categoryName(custom, 'ru')).toBe('Dron uchirish');
   });
 
-  it('counts postings in the right language', () => {
-    expect(countText(retail({ activeJobsCount: 9 }), 'ru')).toBe('9 объявл.');
+  it('counts postings in the right language, and agrees with the number', () => {
+    expect(countText(retail({ activeJobsCount: 9 }), 'ru')).toBe('9 объявлений');
+    expect(countText(retail({ activeJobsCount: 1 }), 'ru')).toBe('1 объявление');
+    expect(countText(retail({ activeJobsCount: 2 }), 'ru')).toBe('2 объявления');
+    expect(countText(retail({ activeJobsCount: 11 }), 'ru')).toBe('11 объявлений');
     expect(countText(retail({ activeJobsCount: 9 }), 'en')).toBe('9 postings');
     expect(countText(retail({ activeJobsCount: 1 }), 'en')).toBe('1 posting');
     expect(countText(retail({ activeJobsCount: 9 }), 'uz')).toBe("9 e'lon");
+    expect(countText(retail({ activeJobsCount: 1 }), 'uz')).toBe("1 e'lon");
   });
 
   it('says there are none in the right language', () => {

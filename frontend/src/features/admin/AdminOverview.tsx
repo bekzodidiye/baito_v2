@@ -1,5 +1,6 @@
 import React from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
+import { counted } from '../../utils/plural';
 import { useAuthStore } from '../../store/useAuthStore';
 import { AdminStats } from './types';
 import { Users, Briefcase, DollarSign, ArrowUpRight, Clock, CheckCircle2, ShieldCheck, FileCheck } from 'lucide-react';
@@ -64,8 +65,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
           </div>
           <div className="text-2xl font-black text-slate-900">{stats?.totalUsers || 0}</div>
           <div className="flex items-center gap-3 mt-2 text-xs font-semibold">
-            <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">{stats?.workersCount || 0} {a.workersShort}</span>
-            <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{stats?.employersCount || 0} {a.employersShort}</span>
+            <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">{counted(stats?.workersCount || 0, a.workersShort, language)}</span>
+            <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{counted(stats?.employersCount || 0, a.employersShort, language)}</span>
           </div>
         </div>
 
@@ -93,7 +94,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
             <CheckCircle2 size={20} />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900">{stats?.completedJobsCount || 0} {a.postingsShort}</div>
+            <div className="text-lg font-bold text-slate-900">{counted(stats?.completedJobsCount || 0, a.postingsShort, language)}</div>
             <p className="text-xs text-slate-500 font-medium">{a.completedAndPaid}</p>
           </div>
         </div>
@@ -103,7 +104,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
             <Clock size={20} />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900">{stats?.totalApplications || 0} {a.applicationsShort}</div>
+            <div className="text-lg font-bold text-slate-900">{counted(stats?.totalApplications || 0, a.applicationsShort, language)}</div>
             <p className="text-xs text-slate-500 font-medium">{a.applicationsFromWorkers}</p>
           </div>
         </div>
@@ -113,7 +114,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
             <FileCheck size={20} />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900">{stats?.totalTransactions || 0} {a.transfersShort}</div>
+            <div className="text-lg font-bold text-slate-900">{counted(stats?.totalTransactions || 0, a.transfersShort, language)}</div>
             <p className="text-xs text-slate-500 font-medium">{a.financialTransactionsDone}</p>
           </div>
         </div>
