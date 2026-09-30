@@ -317,26 +317,34 @@ export const FAQ_ITEMS = [
   {
     qUz: "Baito platformasi orqali maosh qachon to'lanadi?",
     qRu: "Когда выплачивается зарплата на Baito?",
+    qEn: "When does Baito pay out?",
     aUz: "Smena tugashi bilan ish beruvchi topshiriq bajarilganini tasdiqlaydi va pul mablag'lari darhol bankingiz kartasiga o'tkaziladi.",
-    aRu: "Сразу после окончания смены работодатель подтверждает выполнение работы, и деньги моментально поступают на вашу карту."
+    aRu: "Сразу после окончания смены работодатель подтверждает выполнение работы, и деньги моментально поступают на вашу карту.",
+    aEn: "As soon as the shift ends the employer confirms the work was done, and the money reaches your bank card straight away."
   },
   {
     qUz: "Ishchilar va Ish beruvchilar qanday va qaysi mezon bilan tekshiriladi?",
     qRu: "Как проверяются работники и работодатели?",
+    qEn: "How are workers and employers checked?",
     aUz: "Har bir foydalanuvchi pasport/ID verification bosqichidan o'tadi. Har bir smena yakunida ikki tomonlama shaffof reyting tizimi mavjud.",
-    aRu: "Каждый пользователь проходит верификацию по паспорту/ID. После каждой смены действует двусторонняя система рейтинга."
+    aRu: "Каждый пользователь проходит верификацию по паспорту/ID. После каждой смены действует двусторонняя система рейтинга.",
+    aEn: "Every user passes passport or ID verification. After each shift both sides rate each other, openly."
   },
   {
     qUz: "E'lon berish qancha turadi?",
     qRu: "Сколько стоит размещение объявления?",
+    qEn: "What does posting a shift cost?",
     aUz: "Ish beruvchilar uchun dastlabki 3 ta e'lon mutlaqo bepul. Keyinchalik ham juda qulay tariflar amal qiladi.",
-    aRu: "Для работодателей первые 3 объявления абсолютно бесплатны. Далее действуют выгодные пакеты подписки."
+    aRu: "Для работодателей первые 3 объявления абсолютно бесплатны. Далее действуют выгодные пакеты подписки.",
+    aEn: "An employer's first three postings are free. After that there are straightforward subscription packages."
   },
   {
     qUz: "Keng tarqalgan sohalar qaysilar?",
     qRu: "Какие сферы наиболее популярны?",
+    qEn: "Which fields are most in demand?",
     aUz: "Kuryerlik, Restoran/Kafe xizmati, Omborxona va Logistika, Qurilish va Tozalash xizmatlari eng yuqori talabga ega.",
-    aRu: "Курьерская доставка, общепит, складская логистика, ремонт и клининг пользуются наибольшим спросом."
+    aRu: "Курьерская доставка, общепит, складская логистика, ремонт и клининг пользуются наибольшим спросом.",
+    aEn: "Courier work, restaurants and cafés, warehousing and logistics, construction and cleaning see the most demand."
   }
 ];
 

@@ -27,8 +27,10 @@ export const LandingFAQ: React.FC = () => {
 
         <div className="space-y-3">
           {FAQ_ITEMS.map((item, idx) => {
-            const q = language === 'ru' ? item.qRu : item.qUz;
-            const a = language === 'ru' ? item.aRu : item.aUz;
+            // English was missing from FAQ_ITEMS, so `language === 'ru' ? ru : uz`
+            // handed an English reader the Uzbek question and the Uzbek answer.
+            const q = language === 'ru' ? item.qRu : language === 'en' ? item.qEn : item.qUz;
+            const a = language === 'ru' ? item.aRu : language === 'en' ? item.aEn : item.aUz;
             const isOpen = openIndex === idx;
 
             return (
