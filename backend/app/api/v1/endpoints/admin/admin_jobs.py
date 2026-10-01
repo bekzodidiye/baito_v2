@@ -445,12 +445,23 @@ def change_job_status(
             )
             .count()
         )
-        if payable and held:
+        # Frozen money is the whole reason to refuse, so it alone decides. This
+        # asked for unfinished days as well, and a posting old enough to have no
+        # day rows at all went straight through: `ish` (ccf3d143) is marked
+        # completed in production with 200 000 UZS still held against it, paid
+        # to nobody and returned to nobody. The day count only shapes the
+        # sentence the administrator reads.
+        if held:
+            days_note = (
+                f"Bu ishning {len(payable)} kuni hali yakunlanmagan va puli "
+                if payable
+                else "Bu ishning puli "
+            )
             raise HTTPException(
                 status_code=400,
                 detail=(
-                    f"Bu ishning {len(payable)} kuni hali yakunlanmagan va puli "
-                    "escrow'da muzlatilgan. Holatni shu yerdan o'zgartirish pulni "
+                    days_note
+                    + "escrow'da muzlatilgan. Holatni shu yerdan o'zgartirish pulni "
                     "muzlatilgan holda qoldiradi. Ishni kunlar bo'yicha yakunlang "
                     "yoki bekor qiling."
                 ),

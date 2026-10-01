@@ -184,3 +184,46 @@ def test_cancelling_a_posting_that_never_held_money_still_works(client):
 
     assert resp.status_code == 200
     assert _status(job.id) == JobStatus.CANCELLED
+
+
+def test_money_frozen_against_a_posting_with_no_day_rows_still_refuses(client):
+    """The case that stranded 200 000 UZS in production.
+
+    ``ish`` (ccf3d143) predates JobDay and has no day rows at all. The guard
+    asked for unfinished days *and* frozen money, so a posting like it went
+    straight through: marked completed, the hold never released, the worker
+    never paid and the employer never refunded.
+    """
+    employer, _worker, job = _hired_three_day_job(client)
+
+    # Strip the day rows, leaving the holds — the shape the old record has.
+    with SessionLocal() as db:
+        db.query(JobDay).filter(JobDay.jobId == job.id).delete()
+        db.commit()
+    assert _days(job.id) == []
+    assert _held(job.id) > 0
+
+    admin = make_user(role="admin", phone=_phone())
+    login(client, admin)
+    resp = client.patch(f"/api/v1/admin/jobs/{job.id}/status",
+                        json={"status": JobStatus.COMPLETED})
+
+    assert resp.status_code == 400
+    assert _status(job.id) != JobStatus.COMPLETED
+    assert _held(job.id) > 0
+
+
+def test_that_refusal_does_not_mention_days_it_cannot_count(client):
+    _employer, _worker, job = _hired_three_day_job(client)
+    with SessionLocal() as db:
+        db.query(JobDay).filter(JobDay.jobId == job.id).delete()
+        db.commit()
+
+    admin = make_user(role="admin", phone=_phone())
+    login(client, admin)
+    detail = client.patch(f"/api/v1/admin/jobs/{job.id}/status",
+                          json={"status": JobStatus.COMPLETED}).json()["detail"]
+
+    assert "0 kuni" not in detail
+    assert "muzlatilgan" in detail
+    assert "bekor qiling" in detail
