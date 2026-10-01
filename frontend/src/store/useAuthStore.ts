@@ -29,7 +29,22 @@ const applyDocumentLanguage = (lang: 'uz' | 'ru' | 'en') => {
   }
 };
 
-const initialLanguage = (safeGetItem('baito_language') as 'uz' | 'ru' | 'en') || 'uz';
+export type Language = 'uz' | 'ru' | 'en';
+
+const LANGUAGES: readonly Language[] = ['uz', 'ru', 'en'];
+
+/** The stored language, or Uzbek if it is not one we ship.
+ *
+ *  This was a cast, not a check: whatever string sat in localStorage became
+ *  the app's language. `translations[language]` is then undefined and every
+ *  screen that reads a key off it throws on render — a blank app from one
+ *  stale key, with no way for the reader to get back. */
+const readLanguage = (): Language => {
+  const stored = safeGetItem('baito_language');
+  return LANGUAGES.includes(stored as Language) ? (stored as Language) : 'uz';
+};
+
+const initialLanguage = readLanguage();
 applyDocumentLanguage(initialLanguage);
 
 export const useAuthStore = create<AuthState>((set) => ({
