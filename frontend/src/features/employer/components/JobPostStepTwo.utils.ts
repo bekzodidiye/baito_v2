@@ -1,9 +1,19 @@
-export const formatDateDisplay = (rawDates: string): string => {
-  if (!rawDates) return '2026-08-05';
-  const dates = rawDates.split(', ').filter(Boolean).sort();
-  if (dates.length === 0) return '2026-08-05';
+type Lang = 'uz' | 'ru' | 'en';
 
-  const monthShorts = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+// The month was abbreviated in Uzbek whatever the employer had chosen, so a
+// Russian form showed "20 - 22 Sen, 2026".
+const MONTH_SHORTS: Record<Lang, string[]> = {
+  uz: ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'],
+  ru: ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+};
+
+export const formatDateDisplay = (rawDates: string, language: Lang = 'uz'): string => {
+  if (!rawDates) return '';
+  const dates = rawDates.split(', ').filter(Boolean).sort();
+  if (dates.length === 0) return '';
+
+  const monthShorts = MONTH_SHORTS[language] ?? MONTH_SHORTS.uz;
 
   if (dates.length === 1) {
     const parts = dates[0].split('-');

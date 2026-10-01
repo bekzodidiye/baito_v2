@@ -99,7 +99,7 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
         <div className="flex flex-col gap-1.5">
           <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1">
             <Sparkles size={13} className="text-amber-500" />
-            {city} bo'yicha mashhur joylar:
+            {language === 'ru' ? `Популярные места — ${city}:` : language === 'en' ? `Popular places in ${city}:` : `${city} bo'yicha mashhur joylar:`}
           </span>
           <div className="flex flex-wrap gap-1.5">
             {districts.map(d => (
@@ -120,7 +120,7 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
           <input
               aria-label={language === 'uz' ? "Masalan: Ibn Sino ko'chasi, 17A" : language === 'ru' ? "e.g. Ibn Sino street, 17A" : "e.g. Ibn Sino street, 17A"}
             type="text"
-            placeholder={language === 'uz' ? "Masalan: Ibn Sino ko'chasi, 17A" : language === 'ru' ? "e.g. Ibn Sino street, 17A" : "e.g. Ibn Sino street, 17A"}
+            placeholder={language === 'ru' ? "Например: улица Ибн Сино, 17А" : language === 'en' ? "For example: Ibn Sino street, 17A" : "Masalan: Ibn Sino ko'chasi, 17A"}
             className="w-full bg-slate-50 border rounded-xl px-4 py-3 pl-10 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"
             value={addressLine}
             onChange={(e) => { setAddressLine(e.target.value); setShowDropdown(true); }}
@@ -146,7 +146,11 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
 
       <button type="button" onClick={handleGetCurrentLocation} disabled={isLocating} className="w-full py-3 px-4 bg-brand-primary/10 hover:bg-brand-primary/15 text-brand-primary font-bold text-xs rounded-xl border border-brand-primary/20 flex items-center justify-center gap-2 cursor-pointer">
         {isLocating ? <Navigation size={16} className="animate-spin" /> : gpsSuccess ? <CheckCircle2 size={16} className="text-emerald-600" /> : <Crosshair size={16} />}
-        <span>{isLocating ? "GPS joylashuv..." : gpsSuccess ? "GPS belgilandi!" : "📍 Hozirgi joylashuvimni belgilash (GPS)"}</span>
+        <span>{isLocating
+            ? (language === 'ru' ? 'Определяем...' : language === 'en' ? 'Locating...' : 'GPS joylashuv...')
+            : gpsSuccess
+            ? (language === 'ru' ? 'Местоположение отмечено!' : language === 'en' ? 'Location marked' : 'GPS belgilandi!')
+            : (language === 'ru' ? '📍 Отметить моё текущее местоположение (GPS)' : language === 'en' ? '📍 Use my current location (GPS)' : '📍 Hozirgi joylashuvimni belgilash (GPS)')}</span>
       </button>
 
       <div className="flex flex-col gap-2">
@@ -160,7 +164,7 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
 
         <div className="flex items-center gap-1.5 p-2.5 bg-purple-50/70 border border-purple-100 rounded-xl text-purple-900 text-xs font-semibold">
           <Info size={15} className="text-brand-primary shrink-0" />
-          <span>{language === 'uz' ? "Maslahat: Xaritadagi pin'ni sudrab yoki bosib aniq bino va eshikni belgilang" : language === 'ru' ? "Tip: Drag pin to mark entrance" : "Tip: Drag pin to mark entrance"}</span>
+          <span>{language === 'ru' ? 'Подсказка: перетащите метку на карте, чтобы отметить вход' : language === 'en' ? 'Tip: drag the pin to mark the entrance' : "Maslahat: Xaritadagi pin'ni sudrab yoki bosib aniq bino va eshikni belgilang"}</span>
         </div>
 
         <JobLocationYandexMap lat={currentCoords.lat} lon={currentCoords.lon} city={city} onLocationSelect={handleLocationSelectFromMap} />
@@ -168,7 +172,7 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
         {addressLine && (
           <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-center gap-2 text-emerald-900 text-xs font-bold">
             <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-            <span className="truncate">Tanlangan manzil: {city}, {addressLine}</span>
+            <span className="truncate">{language === 'ru' ? 'Выбранный адрес' : language === 'en' ? 'Selected address' : 'Tanlangan manzil'}: {city}, {addressLine}</span>
           </div>
         )}
       </div>

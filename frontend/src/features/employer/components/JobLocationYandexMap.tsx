@@ -68,7 +68,7 @@ export const JobLocationYandexMap: React.FC<JobLocationYandexMapProps> = ({
     // This used to poll for window.ymaps every 300ms with no end and no error
     // state, so a script that never arrived left an employer staring at an
     // empty grey box for as long as they cared to wait.
-    loadYandexMaps()
+    loadYandexMaps(language)
       .then(initMap)
       .catch(() => { if (!cancelled) setFailed(true); });
 

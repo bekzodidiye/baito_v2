@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X } from 'lucide-react';
-import { MONTH_NAMES_UZ, WEEKDAYS_UZ, parseInitial24hTime, getDaysInMonth, getFirstDayOfWeek } from './DateTimePickerModal.utils';
+import { monthNames, weekdayNames, parseInitial24hTime, getDaysInMonth, getFirstDayOfWeek } from './DateTimePickerModal.utils';
+import { DateLanguage } from '../../utils/dateFormat';
 
 interface DateTimePickerModalProps {
   isOpen: boolean;
@@ -16,6 +17,9 @@ interface DateTimePickerModalProps {
 export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
   isOpen, onClose, workDateValue, startTimeValue, endTimeValue, onSave, language = 'uz'
 }) => {
+  const lang = (language as DateLanguage);
+  const L = (uz: string, ru: string, en: string) =>
+    lang === 'ru' ? ru : lang === 'en' ? en : uz;
   if (!isOpen) return null;
 
   const initialDates = workDateValue ? workDateValue.split(', ').filter(Boolean) : [new Date().toISOString().split('T')[0]];
@@ -67,9 +71,9 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-3xl shadow-2xl border w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
           <div className="p-4 px-6 bg-gradient-to-r from-purple-50 to-indigo-50 border-b flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 bg-brand-primary text-white text-[10px] font-black uppercase rounded-full">{selectedDates.length} KUNLIK ISH</span>
+              <span className="px-3 py-1 bg-brand-primary text-white text-[10px] font-black uppercase rounded-full">{L(`${selectedDates.length} KUNLIK ISH`, `СМЕНА НА ${selectedDates.length} ДН.`, `${selectedDates.length}-DAY SHIFT`)}</span>
               <span className="text-xs font-black text-slate-800 flex items-center gap-2">
-                <CalendarIcon size={15} className="text-brand-primary" /> {selectedDates.length} ta kun | <Clock size={15} className="text-brand-primary" /> {String(startHour).padStart(2, '0')}:{String(startMin).padStart(2, '0')} - {String(endHour).padStart(2, '0')}:{String(endMin).padStart(2, '0')}
+                <CalendarIcon size={15} className="text-brand-primary" /> {L(`${selectedDates.length} ta kun`, `${selectedDates.length} дн.`, selectedDates.length === 1 ? '1 day' : `${selectedDates.length} days`)} | <Clock size={15} className="text-brand-primary" /> {String(startHour).padStart(2, '0')}:{String(startMin).padStart(2, '0')} - {String(endHour).padStart(2, '0')}:{String(endMin).padStart(2, '0')}
               </span>
             </div>
             <button onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-200 text-slate-400 cursor-pointer shrink-0 ml-2"><X size={18} /></button>
@@ -79,12 +83,12 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
             <div className="md:col-span-7 flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <button onClick={() => setCurrMonth(m => (m === 0 ? 11 : m - 1))} className="p-1.5 rounded-xl hover:bg-slate-100 cursor-pointer"><ChevronLeft size={18} /></button>
-                <span className="font-extrabold text-slate-800 text-sm">{MONTH_NAMES_UZ[currMonth]} {currYear}</span>
+                <span className="font-extrabold text-slate-800 text-sm">{monthNames(lang)[currMonth]} {currYear}</span>
                 <button onClick={() => setCurrMonth(m => (m === 11 ? 0 : m + 1))} className="p-1.5 rounded-xl hover:bg-slate-100 cursor-pointer"><ChevronRight size={18} /></button>
               </div>
 
               <div className="grid grid-cols-7 gap-1 text-center">
-                {WEEKDAYS_UZ.map((wd, i) => (<span key={i} className="text-[10px] font-extrabold text-slate-400 py-1">{wd}</span>))}
+                {weekdayNames(lang).map((wd, i) => (<span key={i} className="text-[10px] font-extrabold text-slate-400 py-1">{wd}</span>))}
                 {Array.from({ length: firstDayOfWeek }).map((_, i) => (<div key={`empty-${i}`} className="h-8" />))}
                 {Array.from({ length: daysInMonth }).map((_, i) => {
                   const dNum = i + 1;
@@ -101,8 +105,8 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
               <div>
                 <span className="text-[10px] font-extrabold uppercase text-slate-400 block mb-2">{language === 'ru' ? "Время работы (24 ч)" : language === 'en' ? "Working hours (24h)" : "Ish vaqti (24-soat)"}</span>
                 <div className="flex p-1 bg-slate-100 rounded-xl mb-4">
-                  <button onClick={() => setTimeTab('start')} className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg ${timeTab === 'start' ? 'bg-white text-brand-primary shadow-xs' : 'text-slate-500'}`}>Boshlanish ({String(startHour).padStart(2, '0')}:{String(startMin).padStart(2, '0')})</button>
-                  <button onClick={() => setTimeTab('end')} className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg ${timeTab === 'end' ? 'bg-white text-brand-primary shadow-xs' : 'text-slate-500'}`}>Tugash ({String(endHour).padStart(2, '0')}:{String(endMin).padStart(2, '0')})</button>
+                  <button onClick={() => setTimeTab('start')} className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg ${timeTab === 'start' ? 'bg-white text-brand-primary shadow-xs' : 'text-slate-500'}`}>{L('Boshlanish', 'Начало', 'Start')} ({String(startHour).padStart(2, '0')}:{String(startMin).padStart(2, '0')})</button>
+                  <button onClick={() => setTimeTab('end')} className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg ${timeTab === 'end' ? 'bg-white text-brand-primary shadow-xs' : 'text-slate-500'}`}>{L('Tugash', 'Конец', 'End')} ({String(endHour).padStart(2, '0')}:{String(endMin).padStart(2, '0')})</button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-center">
