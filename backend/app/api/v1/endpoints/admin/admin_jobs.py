@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.api import deps
+from app.core.money import salary_to_uzs
 from app.models.job import JobStatus
 from app.models.job_day import JobDayStatus
 from app.models.job_payout import JobPayout
@@ -579,10 +580,55 @@ def change_job_worker(
         job.hiredWorkerId = new_worker_id
         if job.status == JobStatus.OPEN:
             job.status = JobStatus.CONFIRMED
+
+        # Assigning a worker marked them hired and moved the posting to
+        # CONFIRMED without freezing a som. They would then work the shift
+        # against nothing, and at completion release_funds would find no hold,
+        # log "escrow release skipped" and report them unpaid.
+        #
+        # Hiring through /applications/{id}/hire has always frozen the wage per
+        # day. Assigning from here is the same act and now means the same
+        # thing. Days already held are skipped, so re-assigning the same worker
+        # does not charge the employer twice.
+        wage = salary_to_uzs(job.salary)
+        if wage > 0:
+            days = job_days.sync_days(db, job)
+            held_day_ids = {
+                tx.jobDayId
+                for tx in db.query(models.Transaction).filter(
+                    models.Transaction.jobId == job.id,
+                    models.Transaction.type == "escrow_hold",
+                    models.Transaction.status == "held",
+                ).all()
+            }
+            if days:
+                for day in days:
+                    if day.id in held_day_ids:
+                        continue
+                    EscrowService.hold_funds(
+                        db, employer_id=job.employerId, job_id=job.id,
+                        amount_uzs=wage, job_day_id=day.id,
+                    )
+                    # The wage as it stood when the day was agreed: editing the
+                    # posting afterwards must not change what is owed for it.
+                    day.amount = wage
+                    db.add(day)
+            elif not held_day_ids:
+                EscrowService.hold_funds(
+                    db, employer_id=job.employerId, job_id=job.id, amount_uzs=wage
+                )
     else:
         job.hiredWorkerId = None
         if job.status != JobStatus.CANCELLED:
             job.status = JobStatus.OPEN
+
+        # Taking the worker off gives the employer their money back, the same
+        # way cancelling does. Leaving it frozen against a posting with nobody
+        # on it is how money goes missing.
+        try:
+            EscrowService.refund_funds(db, job_id=job.id)
+        except HTTPException:
+            pass
 
     record_admin_action(
         db, admin, "job.worker", target_type="job", target_id=job.id,
