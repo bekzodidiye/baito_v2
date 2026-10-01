@@ -7,7 +7,10 @@ from sqlalchemy.orm import Session
 from app import models
 from app.api import deps
 from app.models.job import JobStatus
+from app.models.job_day import JobDayStatus
 from app.models.job_payout import JobPayout
+from app.services import job_days
+from app.services.escrow_service import EscrowService
 
 from .admin_users import get_admin_user
 from .audit import record_admin_action
@@ -421,6 +424,37 @@ def change_job_status(
             detail=f"Noma'lum holat. Ruxsat etilgan: {', '.join(sorted(VALID_STATUSES))}",
         )
 
+    # Marking a posting finished from this dropdown used to set the column and
+    # nothing else: the day rows stayed pending, the escrow stayed frozen and
+    # the worker was never paid. The posting read as done while the money sat
+    # still — production has one in exactly that state.
+    #
+    # Rather than pay somebody from a status dropdown, this refuses and points
+    # at the flow that settles the money properly. Completing a day is what
+    # releases that day's wage, and only the employer finishing the work can
+    # say it happened.
+    if payload.status == JobStatus.COMPLETED and job.status != JobStatus.COMPLETED:
+        payable = job_days.payable_days(db, job.id)
+        held = (
+            db.query(models.Transaction)
+            .filter(
+                models.Transaction.jobId == job.id,
+                models.Transaction.type == "escrow_hold",
+                models.Transaction.status == "held",
+            )
+            .count()
+        )
+        if payable and held:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Bu ishning {len(payable)} kuni hali yakunlanmagan va puli "
+                    "escrow'da muzlatilgan. Holatni shu yerdan o'zgartirish pulni "
+                    "muzlatilgan holda qoldiradi. Ishni kunlar bo'yicha yakunlang "
+                    "yoki bekor qiling."
+                ),
+            )
+
     previous = job.status
     job.status = payload.status
 
@@ -455,6 +489,22 @@ def change_job_status(
         )
         for app in active_apps:
             app.status = "cancelled"
+
+        # Cancelling left the money frozen too. The employer's own cancel
+        # refunds it and closes the days; doing it from here has to mean the
+        # same thing, or an admin cancelling a posting strands the employer's
+        # money instead of the worker's.
+        try:
+            EscrowService.refund_funds(db, job_id=job.id)
+        except HTTPException:
+            # Nothing was ever frozen: an unfilled posting, or one from before
+            # escrow existed. Cancelling is still legitimate.
+            pass
+
+        for day in job_days.days_of(db, job.id):
+            if day.status == JobDayStatus.PENDING:
+                day.status = JobDayStatus.CANCELLED
+                db.add(day)
 
     record_admin_action(
         db, admin, "job.status", target_type="job", target_id=job.id,
