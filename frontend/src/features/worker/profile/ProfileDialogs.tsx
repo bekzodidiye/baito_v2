@@ -125,7 +125,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                         disabled={isEditing}
                       />
                       {editForm.profileImage ? (
-                        <img src={editForm.profileImage} alt="Avatar Preview" className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
+                        <img src={editForm.profileImage} alt={t.fieldPhoto} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
                       ) : (
                         <Camera size={30} className="text-slate-400 group-hover:text-brand-primary transition-colors stroke-[2.2]" />
                       )}

@@ -114,8 +114,8 @@ export const SupportChatScreen: React.FC = () => {
           <ArrowLeft size={24} className="text-brand-text-variant" />
         </button>
         <div className="flex flex-col items-center">
-          <h1 className="text-[16px] font-bold text-brand-primary">Jonli chat</h1>
-          <span className="text-[11px] text-green-600 font-medium">Tarmoqda</span>
+          <h1 className="text-[16px] font-bold text-brand-primary">{t.liveChatTitle}</h1>
+          <span className="text-[11px] text-green-600 font-medium">{t.onlineStatus}</span>
         </div>
         <div className="w-10 h-10 flex items-center justify-center bg-brand-primary-container/10 rounded-full text-brand-primary">
           <Logo sizeClassName="text-[14px]" />

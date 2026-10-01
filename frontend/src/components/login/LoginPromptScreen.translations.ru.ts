@@ -32,6 +32,11 @@ export const ru = {
   email: "EMAIL (НЕОБЯЗАТЕЛЬНО)",
 
   // Step 2 Documents
+  orgNamePlaceholder: "Например: Perfect Jobs MCHJ",
+  licenceFileAria: "Файл свидетельства",
+  passportPhotos: "ФОТО ПАСПОРТА *",
+  selfieFileAria: "Файл селфи",
+  agreeToTermsAria: "Я согласен с условиями использования",
   docExtraFileAria: "Дополнительный документ",
   docTitle: "Загрузка документов",
   docSubtitle: "Подтвердите вашу личность и квалификацию",

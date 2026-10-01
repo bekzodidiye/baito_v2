@@ -87,7 +87,7 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
           }}
           className="p-1.5 rounded-full hover:bg-brand-primary/10 text-slate-400 hover:text-brand-primary transition-colors cursor-pointer shrink-0 bg-slate-50/50 border border-slate-100"
           type="button"
-          title="Share"
+          title={t.share}
         >
           <Share2 size={14} />
         </button>

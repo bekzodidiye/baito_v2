@@ -190,7 +190,7 @@ export const MandatoryReviewModal: React.FC<MandatoryReviewModalProps> = ({
               </label>
               <div className="relative">
                 <input
-                  aria-label="Bonus miqdori"
+                  aria-label={language === 'ru' ? "Сумма бонуса" : language === 'en' ? "Bonus amount" : "Bonus miqdori"}
                   type="text"
                   value={bonus}
                   onChange={(e) => {

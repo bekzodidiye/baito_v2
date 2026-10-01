@@ -6,7 +6,7 @@ export const LandingHeroBackground: React.FC = () => {
       {/* Background photo - authentic active shift workforce atmosphere */}
       <img
         src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=2000&q=80"
-        alt="Baito active daily shift work atmosphere"
+        alt=""
         referrerPolicy="no-referrer"
         className="w-full h-full object-cover opacity-10 filter brightness-105 contrast-105 object-center mix-blend-multiply transition-all duration-500"
       />

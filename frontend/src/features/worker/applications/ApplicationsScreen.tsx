@@ -125,7 +125,7 @@ export const ApplicationsScreen: React.FC = () => {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center p-8 bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-rose-100 max-w-sm mx-auto">
               <XCircle size={48} className="text-rose-400 mx-auto mb-4" />
-              <p className="text-slate-700 font-bold mb-1">Oops!</p>
+              <p className="text-slate-700 font-bold mb-1">{language === 'ru' ? "Упс!" : language === 'en' ? "Oops!" : "Voy!"}</p>
               <p className="text-slate-500 font-medium text-sm mb-6">{error}</p>
               <button 
                 onClick={() => refetch()}

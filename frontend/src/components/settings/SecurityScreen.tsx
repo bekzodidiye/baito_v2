@@ -102,7 +102,7 @@ export const SecurityScreen: React.FC = () => {
         >
           <ArrowLeft className="text-brand-primary" />
         </button>
-        <h1 className="text-[20px] font-semibold text-brand-primary">Xavfsizlik</h1>
+        <h1 className="text-[20px] font-semibold text-brand-primary">{language === 'ru' ? 'Безопасность' : language === 'en' ? 'Security' : 'Xavfsizlik'}</h1>
         <span className="w-10" aria-hidden="true" />
       </header>
 
@@ -120,7 +120,7 @@ export const SecurityScreen: React.FC = () => {
 
         {/* Security Main Settings */}
         <div className="mb-6">
-          <h2 className="text-[12px] uppercase tracking-wider text-brand-text-variant mb-3 px-2 font-bold">Asosiy himoya</h2>
+          <h2 className="text-[12px] uppercase tracking-wider text-brand-text-variant mb-3 px-2 font-bold">{language === 'ru' ? 'Базовая защита' : language === 'en' ? 'Basic protection' : 'Asosiy himoya'}</h2>
           <div className="bg-brand-surface-lowest rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
             
             <button onClick={() => setShowPasswordModal(true)} className="w-full flex items-center p-4 hover:bg-brand-surface-low transition-colors active:scale-95 cursor-pointer">
@@ -140,7 +140,7 @@ export const SecurityScreen: React.FC = () => {
         {/* Active Sessions */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3 px-2">
-            <h2 className="text-[12px] uppercase tracking-wider text-brand-text-variant font-bold">Faol seanslar</h2>
+            <h2 className="text-[12px] uppercase tracking-wider text-brand-text-variant font-bold">{language === 'ru' ? 'Активные сессии' : language === 'en' ? 'Active sessions' : 'Faol seanslar'}</h2>
             <span className="bg-brand-primary-container text-white text-[10px] px-2 py-0.5 rounded-full font-bold">{activeSessions.length} TA QURILMA</span>
           </div>
           <div className="bg-brand-surface-lowest rounded-2xl border border-slate-100 shadow-xs overflow-hidden">

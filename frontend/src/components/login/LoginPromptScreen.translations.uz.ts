@@ -32,6 +32,11 @@ export const uz = {
   email: "EMAIL (IXTIYORIY)",
 
   // Step 2 Documents
+  orgNamePlaceholder: "Masalan: Perfect Jobs MCHJ",
+  licenceFileAria: "Guvohnoma fayli",
+  passportPhotos: "PASSPORT RASMLARI *",
+  selfieFileAria: "Selfi fayli",
+  agreeToTermsAria: "Foydalanish shartlariga roziman",
   docExtraFileAria: "Qo'shimcha hujjat fayli",
   docTitle: "Hujjatlarni yuklash",
   docSubtitle: "Shaxsingiz va kasbiy ma'lumotingizni tasdiqlang",

@@ -81,7 +81,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
               {job.status === 'in_progress' ? (
                 <div className="absolute top-4 left-4 bg-emerald-600 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold text-[13px] shadow-sm">
                   <Clock size={16} strokeWidth={2.5} />
-                  <span>Jarayonda</span>
+                  <span>{language === 'ru' ? "В работе" : language === 'en' ? "In progress" : "Jarayonda"}</span>
                 </div>
               ) : (
                 <div className="absolute top-4 left-4 bg-[#FF004D] text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold text-[13px] shadow-sm">

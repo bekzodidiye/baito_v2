@@ -158,7 +158,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
               >
                 <div className="flex items-center gap-3">
                   <ShieldCheck size={18} className="stroke-[2.2]" />
-                  <span>Admin Panel</span>
+                  <span>{t.adminPanel}</span>
                 </div>
               </button>}
 
@@ -189,7 +189,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
           )}
 
           <div className="text-center pt-1">
-            <p className="text-[10px] font-bold text-brand-primary">Baito Uzbekistan</p>
+            <p className="text-[10px] font-bold text-brand-primary">{t.brandCountry}</p>
           </div>
         </div>
       </div>

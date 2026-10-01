@@ -73,7 +73,7 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
           className="w-[88px] h-[88px] rounded-full border border-dashed border-slate-300 hover:border-brand-primary/40 flex items-center justify-center relative bg-white cursor-pointer transition-all active:scale-95 group shadow-3xs"
         >
           {profileImage ? (
-            <img src={profileImage} alt="Avatar Preview" className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
+            <img src={profileImage} alt={language === 'ru' ? "Предпросмотр фото профиля" : language === 'en' ? "Profile photo preview" : "Profil rasmi ko'rinishi"} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
           ) : (
             <Camera size={30} className="text-slate-400 group-hover:text-brand-primary transition-colors stroke-[2.2]" />
           )}
@@ -111,7 +111,7 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
           </label>
           <input
               aria-label={language === 'uz' ? "Manzil *" : language === 'ru' ? "Адрес *" : "Location *"}
-              type="text" required value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Toshkent, Chilonzor" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+              type="text" required value={location} onChange={(e) => setLocation(e.target.value)} placeholder={language === 'ru' ? "Например: Ташкент, Чиланзар" : language === 'en' ? "For example: Tashkent, Chilonzor" : "Masalan: Toshkent, Chilonzor"} className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -143,7 +143,7 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
           <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">
             {language === 'uz' ? "Kompaniya haqida" : "Company Bio"}
           </label>
-          <textarea value={companyBio} onChange={(e) => setCompanyBio(e.target.value)} placeholder="Kompaniyangiz haqida ma'lumot..." rows={3} className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 resize-none" />
+          <textarea value={companyBio} onChange={(e) => setCompanyBio(e.target.value)} placeholder={language === 'ru' ? "Информация о вашей компании..." : language === 'en' ? "About your company..." : "Kompaniyangiz haqida ma'lumot..."} rows={3} className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 resize-none" />
         </div>
       </form>
     </motion.div>

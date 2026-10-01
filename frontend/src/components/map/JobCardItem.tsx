@@ -67,7 +67,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
               void shareJob(job, language);
             }}
             className="absolute top-3 right-3 w-11 h-11 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-brand-primary transition-all duration-200 cursor-pointer z-10"
-            title="Share"
+            title={t.share}
           >
             <Share2 size={13} />
           </button>

@@ -55,14 +55,14 @@ export const JobDetailsHeader: React.FC<JobDetailsHeaderProps> = ({
         <button 
           onClick={handleShare}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
-          title="Ulashish"
+          title={t.share}
         >
           <Share2 size={18} />
         </button>
         <button 
           onClick={handleCopyLink} 
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
-          title="Nusxa olish"
+          title={t.copyLabel}
         >
           <MoreVertical size={18} />
         </button>

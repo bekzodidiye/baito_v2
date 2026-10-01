@@ -32,6 +32,11 @@ export const en = {
   email: "EMAIL (OPTIONAL)",
 
   // Step 2 Documents
+  orgNamePlaceholder: "For example: Perfect Jobs LLC",
+  licenceFileAria: "Certificate file",
+  passportPhotos: "PASSPORT PHOTOS *",
+  selfieFileAria: "Selfie file",
+  agreeToTermsAria: "I agree to the terms of use",
   docExtraFileAria: "Additional document",
   docTitle: "Upload Documents",
   docSubtitle: "Confirm your identity and qualifications",
