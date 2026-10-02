@@ -26,7 +26,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
             </div>
             <div>
               <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">{a.phoneNumber}</span>
-              <div className="text-[13px] font-black text-slate-900">{user.phone || '+998 90 123 45 67'}</div>
+              <div className="text-[13px] font-black text-slate-900">{user.phone || a.noPhone}</div>
             </div>
           </div>
           
@@ -36,7 +36,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
             </div>
             <div>
               <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">{a.emailAddress}</span>
-              <div className="text-[13px] font-bold text-slate-900">{user.email || 'Kiritilmagan'}</div>
+              <div className="text-[13px] font-bold text-slate-900">{user.email || a.notEntered}</div>
             </div>
           </div>
           
@@ -46,7 +46,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
             </div>
             <div>
               <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">{a.regionLabel}</span>
-              <div className="text-[13px] font-bold text-slate-900">{user.region || 'Kiritilmagan'}</div>
+              <div className="text-[13px] font-bold text-slate-900">{user.region || a.notEntered}</div>
             </div>
           </div>
           
@@ -76,7 +76,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
             </div>
             <div>
               <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">Bank karta</span>
-              <div className="text-[13px] font-bold text-slate-900 font-mono">{user.bankCardMask || 'Kiritilmagan'}</div>
+              <div className="text-[13px] font-bold text-slate-900 font-mono">{user.bankCardMask || a.notEntered}</div>
             </div>
           </div>
         </div>
@@ -85,7 +85,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
         {user.role === 'employer' && (
           <div className="p-5 bg-white rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50">
             <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">{a.companyNameLabel}</span>
-            <strong className="text-[15px] font-black text-slate-900">{user.companyName || 'Kiritilmagan'}</strong>
+            <strong className="text-[15px] font-black text-slate-900">{user.companyName || a.notEntered}</strong>
           </div>
         )}
 
@@ -93,7 +93,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
           <div>
             <span className="text-slate-400 font-bold block text-[11px] uppercase tracking-wider mb-1">Pasport / ID karta seriyasi:</span>
             <strong className="text-[15px] font-black text-slate-900 font-mono tracking-widest">
-              {showPassport ? (user.passportSeries || 'Kiritilmagan') : (user.passportSeries ? user.passportSeries.substring(0,2) + ' ********' : 'Kiritilmagan')}
+              {showPassport ? (user.passportSeries || a.notEntered) : (user.passportSeries ? user.passportSeries.substring(0,2) + ' ********' : a.notEntered)}
             </strong>
           </div>
           <button

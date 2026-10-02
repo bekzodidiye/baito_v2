@@ -20,7 +20,7 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
   // Computed properties from transactions
   const withdrawals = transactions.filter(t => t.type === 'withdrawal').map(w => ({
     id: w.id,
-    workerName: w.workerName || w.employerName || 'Noma\'lum', // fallback for user name
+    workerName: w.workerName || w.employerName || a.unknown, // fallback for user name
     cardNumber: 'Tasdiqlangan karta', // we can add bankCardMask to transaction or fetch from user
     amount: w.amount,
     requestedAt: w.createdAt || '',

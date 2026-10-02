@@ -305,7 +305,7 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
         <div className="flex items-center gap-2 mb-2">
           <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md text-[11px] font-bold border border-emerald-100">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            {j.category || 'Ish turi'}
+            {j.category || adminText().jobTypeFallback}
           </span>
           <span className="text-slate-300">•</span>
           <span className="text-slate-400 font-semibold text-[11px] truncate flex items-center gap-1">

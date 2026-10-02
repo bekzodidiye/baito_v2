@@ -85,7 +85,7 @@ export const VerificationDetailModal: React.FC<VerificationDetailModalProps> = (
               </div>
               <div className="flex items-center gap-2">
                 <MapPin size={14} className="text-slate-400 shrink-0" />
-                <span>{a.regionAddressColon} <strong className="text-slate-900">{user.region || 'Toshkent v.'}</strong></span>
+                <span>{a.regionAddressColon} <strong className="text-slate-900">{user.region || a.notEntered}</strong></span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar size={14} className="text-slate-400 shrink-0" />

@@ -131,7 +131,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 {user.isVerified && <span className="bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full">{a.verifiedLabel}</span>}
                 {user.isBanned && <span className="bg-red-50 text-red-600 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Bloklangan</span>}
               </div>
-              <p className="text-slate-500 text-[12px] font-medium">{user.phone || '+998 90 123 45 67'} • <span className="font-bold text-slate-700">{user.role === 'worker' ? 'Ishchi' : 'Ish beruvchi'}</span></p>
+              <p className="text-slate-500 text-[12px] font-medium">{user.phone || a.noPhone} • <span className="font-bold text-slate-700">{user.role === 'worker' ? a.roleWorker : a.roleEmployer}</span></p>
             </div>
           </div>
         </div>

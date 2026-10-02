@@ -77,7 +77,7 @@ export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, o
                       <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-slate-100 text-slate-700">
                         {u.role === 'worker' ? 'Ishchi' : 'Ish beruvchi'}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-bold">• {u.region || 'Toshkent'}</span>
+                      <span className="text-[10px] text-slate-400 font-bold">• {u.region || a.notEntered}</span>
                     </div>
                   </div>
                 </div>

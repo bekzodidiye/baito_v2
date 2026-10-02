@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Shield, Eye, X, FileBadge } from 'lucide-react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { AdminUser } from './types';
 
 interface UserDocumentsSectionProps {
@@ -8,11 +10,13 @@ interface UserDocumentsSectionProps {
 
 export const UserDocumentsSection: React.FC<UserDocumentsSectionProps> = ({ user }) => {
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
 
   const docs = [
-    { title: 'Pasport Old tomoni', src: user.passportDocFront },
-    { title: 'Pasport Orqa tomoni', src: user.passportDocBack },
-    { title: 'Selfie + Pasport', src: user.selfieWithDoc },
+    { title: a.passportFront, src: user.passportDocFront },
+    { title: a.passportBack, src: user.passportDocBack },
+    { title: a.selfieWithPassport, src: user.selfieWithDoc },
   ];
 
   return (
@@ -22,10 +26,10 @@ export const UserDocumentsSection: React.FC<UserDocumentsSectionProps> = ({ user
           <div className="w-6 h-6 rounded-md bg-blue-100 text-blue-600 flex items-center justify-center">
             <FileBadge size={14} />
           </div>
-          Pasport va ID Hujjatlar
+          {a.passportAndIdDocs}
         </span>
         <span className="text-[11px] font-bold text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200">
-          JSHSHIR: <strong className="text-slate-900 tracking-widest">{user.passportJshshir || 'Kiritilmagan'}</strong>
+          JSHSHIR: <strong className="text-slate-900 tracking-widest">{user.passportJshshir || a.notEntered}</strong>
         </span>
       </div>
 
@@ -41,7 +45,7 @@ export const UserDocumentsSection: React.FC<UserDocumentsSectionProps> = ({ user
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2">
                   <Shield size={24} className="opacity-20" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider">Yuklanmagan</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider">{a.notUploaded}</span>
                 </div>
               )}
               {doc.src && (

@@ -294,8 +294,8 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
               sessions.map((s, i) => (
                 <div key={i} className="flex items-center justify-between p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors">
                   <div>
-                    <div className="text-[13px] font-bold text-slate-900 mb-0.5">{s.ip || 'Noma\'lum IP'}</div>
-                    <div className="text-[11px] font-semibold text-slate-500">{s.location || 'Noma\'lum'}, {s.device || 'Noma\'lum'}</div>
+                    <div className="text-[13px] font-bold text-slate-900 mb-0.5">{s.ip || a.unknownIp}</div>
+                    <div className="text-[11px] font-semibold text-slate-500">{s.location || a.unknown}, {s.device || a.unknown}</div>
                   </div>
                   <span className="text-[12px] font-bold text-slate-400">{s.date ? formatDate(s.date) : ''}</span>
                 </div>

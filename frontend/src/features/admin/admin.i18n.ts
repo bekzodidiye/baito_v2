@@ -234,7 +234,23 @@ export const ADMIN_TEXTS = {
     financialTransactionsDone: 'Bajarilgan moliyaviy tranzaksiyalar',
     autoDeleteBannerDesc: "Eskirgan yoki rad etilgan e'lonlar belgilangan muddatdan so'ng avtomatik tozalanadi",
     activeBadge: 'FAOL',
-    runCleanup: 'Tozalashni ishga tushirish'
+    runCleanup: 'Tozalashni ishga tushirish',
+
+    // Stand-ins for a value the record does not carry. They must not invent
+    // one: a made-up phone number reads as a real one, and a region nobody
+    // entered is not Toshkent.
+    notEntered: "Kiritilmagan",
+    notUploaded: "Yuklanmagan",
+    unknown: "Noma'lum",
+    unknownIp: "Noma'lum IP",
+    noPhone: "Ko'rsatilmagan",
+    jobTypeFallback: "Ish turi",
+
+    // Documents
+    passportAndIdDocs: "Pasport va ID Hujjatlar",
+    passportFront: "Pasport Old tomoni",
+    passportBack: "Pasport Orqa tomoni",
+    selfieWithPassport: "Selfie + Pasport"
   },
   ru: {
     escrowHeld: 'Средства, удерживаемые на время работы',
@@ -437,7 +453,19 @@ export const ADMIN_TEXTS = {
     financialTransactionsDone: 'Выполненные финансовые транзакции',
     autoDeleteBannerDesc: 'Устаревшие или отклонённые объявления удаляются автоматически по истечении срока',
     activeBadge: 'ВКЛ',
-    runCleanup: 'Запустить очистку'
+    runCleanup: 'Запустить очистку',
+
+    notEntered: 'Не указано',
+    notUploaded: 'Не загружено',
+    unknown: 'Неизвестно',
+    unknownIp: 'Неизвестный IP',
+    noPhone: 'Не указан',
+    jobTypeFallback: 'Тип работы',
+
+    passportAndIdDocs: 'Паспорт и ID документы',
+    passportFront: 'Паспорт, лицевая сторона',
+    passportBack: 'Паспорт, обратная сторона',
+    selfieWithPassport: 'Селфи с паспортом'
   },
   en: {
     escrowHeld: 'Funds held while the work is under way',
@@ -640,6 +668,18 @@ export const ADMIN_TEXTS = {
     financialTransactionsDone: 'Financial transactions completed',
     autoDeleteBannerDesc: 'Stale or rejected postings are cleared automatically once their time is up',
     activeBadge: 'ON',
-    runCleanup: 'Run the cleanup'
+    runCleanup: 'Run the cleanup',
+
+    notEntered: 'Not entered',
+    notUploaded: 'Not uploaded',
+    unknown: 'Unknown',
+    unknownIp: 'Unknown IP',
+    noPhone: 'Not provided',
+    jobTypeFallback: 'Job type',
+
+    passportAndIdDocs: 'Passport and ID documents',
+    passportFront: 'Passport, front',
+    passportBack: 'Passport, back',
+    selfieWithPassport: 'Selfie with passport'
   },
 } as const;
