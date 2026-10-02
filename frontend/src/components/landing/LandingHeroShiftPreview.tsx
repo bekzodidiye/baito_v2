@@ -131,13 +131,6 @@ export const LandingHeroShiftPreview: React.FC<LandingHeroShiftPreviewProps> = (
                   </div>
 
                   <div className="pt-2 border-t border-slate-200/60 space-y-1.5">
-                    <div className="flex flex-wrap gap-1.5 pt-0.5">
-                      {(currentShift.perksUz || []).map((perk: string, i: number) => (
-                        <span key={i} className="text-[10px] font-bold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-md shadow-2xs">
-                          {perk}
-                        </span>
-                      ))}
-                    </div>
                   </div>
                 </div>
 

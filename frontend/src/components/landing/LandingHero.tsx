@@ -6,7 +6,6 @@ import { Briefcase, Building2, Search, ArrowRight, Wallet, CheckCircle2, BadgeCh
 import { LandingHeroBackground } from './LandingHeroBackground';
 import { LandingHeroShiftPreview } from './LandingHeroShiftPreview';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
-import { perksForJob } from '../../constants/perks';
 import { useAuthStore } from "../../store/useAuthStore";
 
 interface LandingHeroProps {
@@ -33,8 +32,6 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
     urgent: j.urgent || false,
     descriptionUz: j.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
     descriptionRu: j.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
-    // The employer's own tags, not the same three strings on every card.
-    perksUz: perksForJob(j.tags, language)
   })), [jobs, language]);
 
   const displayShifts = useMemo(() => {

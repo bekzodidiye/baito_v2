@@ -5,7 +5,6 @@ import { Job } from '../../types';
 import { getJobDetails } from '../../utils/jobDetailHelpers';
 import { getJobBannerImage } from './EmployerJobCard';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
-import { perksForJob } from '../../constants/perks';
 
 interface EmployerJobDetailModalProps {
   job: Job | null;
@@ -113,11 +112,6 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                 <div className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg text-[13px] font-bold flex items-center gap-1.5 border border-indigo-100/50">
                   <Users size={16} strokeWidth={2.5} /> {language === 'uz' ? 'Ishchilar:' : language === 'ru' ? 'Работники:' : 'Workers:'} {hired}/{vac}
                 </div>
-                {perksForJob(job.tags, language).map((perk) => (
-                  <div key={perk} className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-[13px] font-bold">
-                    {perk}
-                  </div>
-                ))}
               </div>
 
               {/* Location */}

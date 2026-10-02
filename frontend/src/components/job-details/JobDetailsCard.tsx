@@ -69,11 +69,6 @@ export const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ selectedJob }) =
         <span className="bg-blue-50 text-brand-primary border border-blue-100/80 px-2.5 py-0.5 rounded-lg text-xs font-extrabold flex items-center gap-1">
           <Users size={13} className="text-brand-primary" /> {language === 'uz' ? "Ishchilar:" : language === 'ru' ? "Рабочие:" : "Workers:"} {selectedJob.hiredCount || 0}/{selectedJob.vacancies || (selectedJob.neededWorkers ? parseInt(selectedJob.neededWorkers) : 1)}
         </span>
-        {selectedJob.tags && selectedJob.tags.slice(0, 2).map((tag, idx) => (
-          <span key={idx} className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-lg text-xs font-semibold">
-            {tag}
-          </span>
-        ))}
       </div>
 
       {/* 2x2 Bento Grid */}

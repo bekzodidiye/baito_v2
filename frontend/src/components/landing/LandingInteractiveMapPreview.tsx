@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { perksForJob } from '../../constants/perks';
 import { useJobsData } from "../../context/useJobsData";
 import { LANDING_TEXTS } from './LandingData';
 import { Compass, MapPin, Building2, Clock, ArrowRight, Info, CheckCircle2 } from 'lucide-react';
@@ -40,7 +39,6 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
           lat: 0, lng: 0, urgent: foundJob.urgent || false,
           descriptionUz: foundJob.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
           descriptionRu: foundJob.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
-          perksUz: perksForJob(foundJob.tags, language)
         };
       }
 
@@ -63,7 +61,6 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
         lat: 0, lng: 0, urgent: j.urgent || false,
         descriptionUz: j.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
         descriptionRu: j.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
-        perksUz: perksForJob(j.tags, language)
       }));
       const allShifts = realShifts.slice(0, 6);
       if (allShifts.length > 0) {
@@ -206,14 +203,6 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
                   </div>
                 </div>
 
-                <div className="pt-1.5 border-t border-slate-200/60 space-y-1">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">{t.mapPerksTitle}</span>
-                  <div className="flex flex-wrap gap-1">
-                    {((activeShift as any).perksUz || []).map((perk: string, i: number) => (
-                      <span key={i} className="text-[10px] font-bold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-md shadow-2xs">{perk}</span>
-                    ))}
-                  </div>
-                </div>
 
                 <div className="pt-1.5 text-[10px] sm:text-[11px] text-slate-600 font-medium bg-blue-50/90 p-2 rounded-xl border border-blue-100 flex items-center gap-1.5">
                   <CheckCircle2 size={13} className="text-brand-primary shrink-0" />

@@ -106,14 +106,6 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
             <span className="px-2 py-0.5 bg-blue-50/80 text-brand-primary text-[10px] font-extrabold rounded flex items-center gap-1">
               <Users size={10} className="text-brand-primary" /> {(job.hiredCount || 0)}/{(job.vacancies || (job.neededWorkers ? parseInt(job.neededWorkers) : 1))}
             </span>
-            {(job.tags || []).slice(0, 2).map((tag, tIdx) => (
-              <span
-                key={tIdx}
-                className="px-2 py-0.5 bg-slate-100/70 text-slate-500 text-[10px] font-semibold rounded"
-              >
-                {tag}
-              </span>
-            ))}
             {userLocation && (
               <span className="px-2 py-0.5 bg-indigo-50/70 text-brand-primary text-[10px] font-semibold rounded flex items-center gap-1">
                 <Navigation size={8} className="rotate-45 fill-brand-primary/20" />

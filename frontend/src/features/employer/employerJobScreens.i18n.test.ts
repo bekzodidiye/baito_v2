@@ -8,9 +8,9 @@ const read = (f: string) => fs.readFileSync(path.resolve(__dirname, f), 'utf8');
 describe('EmployerJobDetailModal', () => {
   const src = read('EmployerJobDetailModal.tsx');
 
-  it('does not hard-code a posting’s badges', () => {
+  it('shows no tags at all', () => {
     expect(src).not.toMatch(/#Tezkor|#KunlikTo/);
-    expect(src).toContain('perksForJob(job.tags, language)');
+    expect(src).not.toMatch(/job\.tags|perksForJob/);
   });
 
   it('does not promise a deadline the posting never states', () => {
@@ -29,8 +29,8 @@ describe('EmployerJobDetailModal', () => {
 });
 
 describe('EmployerJobCard', () => {
-  it('renders labels rather than the raw tags', () => {
+  it('shows no tags at all', () => {
     const src = read('EmployerJobCard.tsx');
-    expect(src).toContain('perksForJob(job.tags, language)');
+    expect(src).not.toMatch(/job\.tags|perksForJob/);
   });
 });

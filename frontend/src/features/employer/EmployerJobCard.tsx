@@ -3,7 +3,6 @@ import { motion } from 'motion/react';
 import { MapPin, CheckCircle2, Trash2, Users, Calendar, Wallet, Hourglass } from 'lucide-react';
 import { Job } from '../../types';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
-import { perksForJob } from '../../constants/perks';
 
 interface EmployerJobCardProps {
   job: Job;
@@ -104,20 +103,6 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Tags */}
-      {(job.tags || []).length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4 pl-24">
-          {perksForJob(job.tags, language).map((perk) => (
-            <span
-              key={perk}
-              className="px-2 py-0.5 bg-slate-50 text-slate-600 text-[10px] font-bold rounded-md uppercase tracking-wide"
-            >
-              {perk}
-            </span>
-          ))}
-        </div>
-      )}
 
       {/* Footer Actions */}
       <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-50">

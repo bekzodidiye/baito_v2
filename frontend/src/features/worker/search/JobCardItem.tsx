@@ -129,17 +129,6 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-1.5 items-center">
-        {(job.tags || []).slice(0, 3).map((tag, tIdx) => (
-          <span
-            key={tIdx}
-            className={`px-2.5 py-0.5 text-[10px] font-bold rounded-lg border transition-colors ${getTagStyles(tag)}`}
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
-
       <div className="h-[1px] bg-slate-100/80 w-full" />
 
       <div className="flex justify-between items-center">
