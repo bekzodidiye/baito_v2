@@ -79,6 +79,22 @@ def _status(job_id):
 
 # --- completing ---------------------------------------------------------------
 
+def _strip_day_rows(job_id):
+    """Leave the holds, take the day rows away — the shape `ish` (ccf3d143) has.
+
+    The hold is detached from its day first. That is not a convenience for the
+    delete: the stranded record's hold carries no jobDayId either, because it
+    was frozen before days existed. Deleting the rows underneath a hold that
+    still pointed at them would also violate transactions_jobDayId_fkey, which
+    Postgres enforces and the SQLite used for local runs does not.
+    """
+    with SessionLocal() as db:
+        (db.query(Transaction)
+           .filter(Transaction.jobId == job_id)
+           .update({Transaction.jobDayId: None}, synchronize_session=False))
+        db.query(JobDay).filter(JobDay.jobId == job_id).delete(synchronize_session=False)
+        db.commit()
+
 def test_a_posting_with_unfinished_days_cannot_be_called_finished(client):
     _employer, _worker, job = _hired_three_day_job(client)
     admin = make_user(role="admin", phone=_phone())
@@ -196,10 +212,7 @@ def test_money_frozen_against_a_posting_with_no_day_rows_still_refuses(client):
     """
     employer, _worker, job = _hired_three_day_job(client)
 
-    # Strip the day rows, leaving the holds — the shape the old record has.
-    with SessionLocal() as db:
-        db.query(JobDay).filter(JobDay.jobId == job.id).delete()
-        db.commit()
+    _strip_day_rows(job.id)
     assert _days(job.id) == []
     assert _held(job.id) > 0
 
@@ -215,9 +228,7 @@ def test_money_frozen_against_a_posting_with_no_day_rows_still_refuses(client):
 
 def test_that_refusal_does_not_mention_days_it_cannot_count(client):
     _employer, _worker, job = _hired_three_day_job(client)
-    with SessionLocal() as db:
-        db.query(JobDay).filter(JobDay.jobId == job.id).delete()
-        db.commit()
+    _strip_day_rows(job.id)
 
     admin = make_user(role="admin", phone=_phone())
     login(client, admin)
