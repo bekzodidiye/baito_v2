@@ -78,20 +78,20 @@ const getIcon = (type: NotificationItemData['type']) => {
 const getTypeBadge = (type: NotificationItemData['type'], t: any) => {
   switch (type) {
     case 'job':
-      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600">{t.badgeJob || 'Ish'}</span>;
+      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600">{t.badgeJob}</span>;
     case 'apply':
-      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">{t.badgeApply || 'Ariza'}</span>;
+      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">{t.badgeApply}</span>;
     case 'message':
-      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-600">{t.badgeMessage || 'Xabar'}</span>;
+      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-600">{t.badgeMessage}</span>;
     case 'profile':
-      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-600">{t.badgeProfile || 'Profil'}</span>;
+      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-600">{t.badgeProfile}</span>;
     case 'payment':
-      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">{t.badgePayment || "To'lov"}</span>;
+      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">{t.badgePayment}</span>;
     case 'support':
-      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-violet-50 text-violet-600">{t.badgeSupport || 'Yordam'}</span>;
+      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-violet-50 text-violet-600">{t.badgeSupport}</span>;
     case 'system':
     default:
-      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-500">{t.badgeSystem || 'Tizim'}</span>;
+      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-500">{t.badgeSystem}</span>;
   }
 };
 

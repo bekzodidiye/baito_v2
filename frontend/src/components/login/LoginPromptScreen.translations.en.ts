@@ -90,5 +90,7 @@ export const en = {
   loginBtn: "Log In",
   errorRequired: "Please fill in all required fields",
   phonePlaceholder: "+998 (90) 123-45-67",
-  passwordPlaceholder: "Enter your password"
+  passwordPlaceholder: "Enter your password",
+  sendCode: "Get the code",
+  verifyCode: "Verification code"
 };

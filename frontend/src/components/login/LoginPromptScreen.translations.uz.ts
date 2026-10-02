@@ -90,5 +90,7 @@ export const uz = {
   loginBtn: "Kirish",
   errorRequired: "Iltimos, barcha majburiy maydonlarni to'ldiring",
   phonePlaceholder: "+998 (90) 123-45-67",
-  passwordPlaceholder: "Parolingizni kiriting"
+  passwordPlaceholder: "Parolingizni kiriting",
+  sendCode: "Kodni olish",
+  verifyCode: "Tasdiqlash kodi"
 };

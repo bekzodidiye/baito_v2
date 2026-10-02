@@ -292,5 +292,25 @@ export const uz = {
   paymentSuccessBody: "Hisobingiz muvaffaqiyatli to'ldirildi.",
   paymentErrorTitle: "To'lovda xatolik",
   paymentErrorBody: "To'lov amalga oshmadi. Iltimos, qaytadan urinib ko'ring.",
-  paymentResultBack: "Orqaga qaytish"
+  paymentResultBack: "Orqaga qaytish",
+
+  // Notification badges. These were read off keys that did not exist, so all
+  // seven fell through to an Uzbek literal whatever the reader's language.
+  badgeJob: "Ish",
+  badgeApply: "Ariza",
+  badgeMessage: "Xabar",
+  badgeProfile: "Profil",
+  badgePayment: "To'lov",
+  badgeSupport: "Yordam",
+  badgeSystem: "Tizim",
+
+  // Stand-ins for a value the record does not carry. They must not invent one:
+  // a made-up phone number reads as a real one.
+  roleWorker: "Ishchi",
+  roleEmployer: "Ish beruvchi",
+  verifiedUser: "Baito tasdiqlangan foydalanuvchisi",
+  noPhoneOnFile: "Telefon raqami ko'rsatilmagan",
+  unknownDevice: "Noma'lum qurilma",
+  unknownIp: "Noma'lum IP",
+  activeNow: "Hozir faol"
 };

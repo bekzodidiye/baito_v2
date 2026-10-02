@@ -52,7 +52,7 @@ export const RoleSelectionView: React.FC<RoleSelectionViewProps> = ({
             <Briefcase size={20} className="stroke-[2.2]" />
           </div>
           <div className="flex-1 pr-6">
-            <h3 className="text-sm font-bold text-slate-755 mb-0.5">{t.ishchi || 'Ishchi'}</h3>
+            <h3 className="text-sm font-bold text-slate-755 mb-0.5">{t.roleWorker}</h3>
             <p className="text-xs text-slate-500 font-medium leading-relaxed">
               {t.ishchiDesc || "Ish qidirish, rezyume yaratish va bo'sh ish o'rinlariga ariza topshirish uchun."}
             </p>
@@ -82,7 +82,7 @@ export const RoleSelectionView: React.FC<RoleSelectionViewProps> = ({
             <Building2 size={20} className="stroke-[2.2]" />
           </div>
           <div className="flex-1 pr-6">
-            <h3 className="text-sm font-bold text-slate-755 mb-0.5">{t.ishBeruvchi || 'Ish beruvchi'}</h3>
+            <h3 className="text-sm font-bold text-slate-755 mb-0.5">{t.roleEmployer}</h3>
             <p className="text-xs text-slate-500 font-medium leading-relaxed">
               {t.ishBeruvchiDesc || "E'lonlar joylashtirish, munosib xodimlarni topish va ish jarayonini boshqarish uchun."}
             </p>

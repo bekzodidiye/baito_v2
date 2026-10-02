@@ -90,5 +90,7 @@ export const ru = {
   loginBtn: "Войти",
   errorRequired: "Пожалуйста, заполните все обязательные поля",
   phonePlaceholder: "+998 (90) 123-45-67",
-  passwordPlaceholder: "Введите пароль"
+  passwordPlaceholder: "Введите пароль",
+  sendCode: "Получить код",
+  verifyCode: "Код подтверждения"
 };

@@ -291,5 +291,21 @@ export const ru = {
   paymentSuccessBody: "Ваш счет успешно пополнен.",
   paymentErrorTitle: "Ошибка при оплате",
   paymentErrorBody: "Оплата не удалась. Пожалуйста, попробуйте еще раз.",
-  paymentResultBack: "Вернуться назад"
+  paymentResultBack: "Вернуться назад",
+
+  badgeJob: "Работа",
+  badgeApply: "Заявка",
+  badgeMessage: "Сообщение",
+  badgeProfile: "Профиль",
+  badgePayment: "Оплата",
+  badgeSupport: "Поддержка",
+  badgeSystem: "Система",
+
+  roleWorker: "Работник",
+  roleEmployer: "Работодатель",
+  verifiedUser: "Подтверждённый пользователь Baito",
+  noPhoneOnFile: "Номер телефона не указан",
+  unknownDevice: "Неизвестное устройство",
+  unknownIp: "Неизвестный IP",
+  activeNow: "Активно сейчас"
 };

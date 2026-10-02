@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { translations } from '../../translations';
 import { ArrowLeft, ChevronRight, Shield, Lock, ShieldCheck, Fingerprint, Smartphone, Monitor, Tablet, ShieldAlert, Loader2 } from 'lucide-react';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { ConfirmModal } from '../common/ConfirmModal';
@@ -11,6 +12,7 @@ export const SecurityScreen: React.FC = () => {
   const userProfile = useAuthStore(s => s.userProfile);
     const setUserProfile = useAuthStore(s => s.setUserProfile);
     const language = useAuthStore(s => s.language);
+    const t = translations[language];
 
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -174,11 +176,11 @@ export const SecurityScreen: React.FC = () => {
                           </div>
                           <div>
                             <p className="text-[15px] font-semibold text-brand-text flex items-center gap-2">
-                              {session.device_name || 'Noma\'lum qurilma'}
+                              {session.device_name || t.unknownDevice}
                               {isCurrent && <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>}
                             </p>
                             <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium flex items-center gap-1.5">
-                              {isCurrent ? 'Hozir faol' : formattedTime} • {session.ip_address || 'Noma\'lum IP'}
+                              {isCurrent ? t.activeNow : formattedTime} • {session.ip_address || t.unknownIp}
                             </p>
                           </div>
                         </div>
