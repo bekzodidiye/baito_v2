@@ -29,6 +29,9 @@ from .audit import record_admin_action
 
 router = APIRouter()
 
+# The states a worker reaches by being hired. Same list as jobs.HIRED_STATUSES.
+HIRED_STATUSES = ["hired", "confirmed", "completed", "in_progress", "start_requested"]
+
 
 class WithdrawalDecision(BaseModel):
     action: str = Field(pattern="^(approve|reject)$")
@@ -244,12 +247,20 @@ def decide_escrow(
         # whatever id it is given. A typo, a stale id copied from another tab,
         # or a compromised admin session could move real money to an unrelated
         # account, and the API would report success either way.
+        # Every other place that asks "is this worker engaged on this job"
+        # counts the states a hired worker moves through — jobs.py calls the
+        # list HIRED_STATUSES, job_actions.py calls it COMMITTED_APP_STATUSES.
+        # This asked for the literal "hired" and nothing else, so a worker who
+        # had already raised their hand to start could not be paid at all:
+        # `ish` (ccf3d143) sits at start_requested with 200 000 UZS held
+        # against it, and the release refused with "this worker was not hired
+        # for this job".
         was_hired = (
             db.query(models.Application)
             .filter(
                 models.Application.jobId == job.id,
                 models.Application.workerId == payload.workerId,
-                models.Application.status == "hired",
+                models.Application.status.in_(HIRED_STATUSES),
             )
             .first()
         )

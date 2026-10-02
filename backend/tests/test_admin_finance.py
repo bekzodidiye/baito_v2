@@ -8,6 +8,13 @@ from app.services.escrow_service import EscrowService
 
 from .conftest import login, make_job, make_user
 
+import uuid
+
+
+def _unique_phone():
+    """The fixed numbers above collide once a test is parametrised."""
+    return f"+9989{uuid.uuid4().int % 10**8:08d}"
+
 
 # ── Withdrawal workflow ────────────────────────────────────────────────────
 
@@ -656,3 +663,58 @@ def test_auto_release_actually_releases_a_completed_job(client):
         assert tx.status == "released"
         paid = db.query(User).filter(User.id == worker.id).first()
         assert (paid.balance or 0) > 0, "the worker was not paid"
+
+
+@pytest.mark.parametrize("status", ["hired", "confirmed", "start_requested",
+                                    "in_progress", "completed"])
+def test_release_reaches_a_worker_at_any_stage_of_the_job(client, status):
+    """Being hired is not a moment the worker stays in.
+
+    They are hired, then they raise a hand to start, then they are working,
+    then they are done — and the application status moves with them. The guard
+    asked for the literal "hired" and nothing else, so a worker past that first
+    step could not be paid at all. `ish` (ccf3d143) is stuck exactly there: at
+    start_requested, with 200 000 UZS frozen and the release refusing it.
+    """
+    employer = make_user(role="employer", phone=_unique_phone(), balance=1_000_000)
+    worker = make_user(phone=_unique_phone(), balance=0)
+    job = make_job(employer.id, salary="250000")
+    app_id = _hire_with_escrow(client, employer, worker, job)
+
+    with SessionLocal() as db:
+        db.query(Application).filter(Application.id == app_id).first().status = status
+        db.commit()
+
+    admin = make_user(role="admin", phone=_unique_phone())
+    login(client, admin)
+    resp = client.post(f"/api/v1/admin/jobs/{job.id}/escrow",
+                       json={"action": "release", "reason": "stranded hold",
+                             "workerId": worker.id})
+
+    assert resp.status_code == 200, resp.text
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == worker.id).first().balance == 250_000
+
+
+@pytest.mark.parametrize("status", ["applied", "rejected"])
+def test_release_still_refuses_a_worker_who_was_never_hired(client, status):
+    """Widening the guard must not open it to anyone who merely applied."""
+    employer = make_user(role="employer", phone=_unique_phone(), balance=1_000_000)
+    hired = make_user(phone=_unique_phone(), balance=0)
+    other = make_user(phone=_unique_phone(), balance=0)
+    job = make_job(employer.id, salary="250000")
+    _hire_with_escrow(client, employer, hired, job)
+
+    with SessionLocal() as db:
+        db.add(Application(jobId=job.id, workerId=other.id, status=status))
+        db.commit()
+
+    admin = make_user(role="admin", phone=_unique_phone())
+    login(client, admin)
+    resp = client.post(f"/api/v1/admin/jobs/{job.id}/escrow",
+                       json={"action": "release", "reason": "should refuse",
+                             "workerId": other.id})
+
+    assert resp.status_code == 400
+    with SessionLocal() as db:
+        assert db.query(User).filter(User.id == other.id).first().balance == 0
