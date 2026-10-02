@@ -5,6 +5,7 @@ import { Job } from '../../types';
 import { getJobDetails } from '../../utils/jobDetailHelpers';
 import { getJobBannerImage } from './EmployerJobCard';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
+import { perksForJob } from '../../constants/perks';
 
 interface EmployerJobDetailModalProps {
   job: Job | null;
@@ -109,18 +110,14 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
 
               {/* Tags Row */}
               <div className="flex flex-wrap gap-2 mb-6">
-                <div className="bg-[#E5F9ED] text-[#00B85E] px-3 py-1.5 rounded-lg text-[13px] font-bold">
-                  12 soat muddatgacha
-                </div>
                 <div className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg text-[13px] font-bold flex items-center gap-1.5 border border-indigo-100/50">
-                  <Users size={16} strokeWidth={2.5} /> {language === 'uz' ? 'Ishchilar:' : language === 'ru' ? 'Workers:' : 'Workers:'} {hired}/{vac}
+                  <Users size={16} strokeWidth={2.5} /> {language === 'uz' ? 'Ishchilar:' : language === 'ru' ? 'Работники:' : 'Workers:'} {hired}/{vac}
                 </div>
-                <div className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-[13px] font-bold">
-                  #Tezkor
-                </div>
-                <div className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-[13px] font-bold">
-                  #KunlikTo'lov
-                </div>
+                {perksForJob(job.tags, language).map((perk) => (
+                  <div key={perk} className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-[13px] font-bold">
+                    {perk}
+                  </div>
+                ))}
               </div>
 
               {/* Location */}
