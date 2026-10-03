@@ -285,9 +285,6 @@ def hire_applicant(
     # exists to prevent.
     day_count = max(1, len(days))
     fee_per_day = fee_for(wage, job_fee_percent(db, job))
-    day_count = max(1, len(days))
-    fee_per_day = fee_for(wage, job_fee_percent(db, job))
-
 
     escrow_held = False
     if wage > 0:
