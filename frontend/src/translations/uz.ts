@@ -224,6 +224,7 @@ export const uz = {
   cancel: "Bekor qilish",
   // Scattered controls and upload buttons
   reload: "Qayta yuklash",
+  photoSaved: "Rasm muvaffaqiyatli saqlandi!",
   somethingWentWrong: "Nimadir xato ketdi",
   chatLoadFailed: "Suhbat yuklanishida kutilmagan xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
   workTime24: "Ish vaqti (24-soat)",

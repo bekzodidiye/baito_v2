@@ -224,6 +224,7 @@ export const en = {
   cancel: "Cancel",
   // Scattered controls and upload buttons
   reload: "Reload",
+  photoSaved: "Photo saved!",
   somethingWentWrong: "Something went wrong",
   chatLoadFailed: "The chat failed to load. Please try again.",
   workTime24: "Working hours (24h)",

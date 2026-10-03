@@ -224,6 +224,7 @@ export const ru = {
   cancel: "Отмена",
   // Scattered controls and upload buttons
   reload: "Перезагрузить",
+  photoSaved: "Фото сохранено!",
   somethingWentWrong: "Что-то пошло не так",
   chatLoadFailed: "При загрузке чата произошла непредвиденная ошибка. Пожалуйста, попробуйте ещё раз.",
   workTime24: "Время работы (24 ч)",

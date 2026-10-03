@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { useJobsData } from "../context/useJobsData";
 import { getProfileTranslations } from '../features/worker/profile/ProfileScreen.utils';
 import { showToast } from '../utils/toast';
+import { translations } from '../translations';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 import { requestWithdrawalApi, uploadFileApi } from '../api/queries';
 import { apiClient } from '../api/client';
@@ -131,6 +132,18 @@ export const useProfileScreen = () => {
 
   const t = getProfileTranslations(language);
 
+  /** What actually went wrong, when the server bothered to say.
+   *
+   *  `apiClient` puts the server's own `detail` on the error it throws. Both
+   *  handlers below threw it away and showed "Error occurred" instead — so
+   *  saving a profile with an email another account already uses failed with
+   *  nothing to act on, when the server had said exactly that. The generic
+   *  string was also Uzbek or English and never Russian. */
+  const reasonFor = (err: unknown): string => {
+    const detail = err instanceof Error ? err.message.trim() : '';
+    return detail || translations[language].somethingWentWrong;
+  };
+
   // Dynamic values
   const appliedJobsCount = jobs.filter(j => j.applied || j.status === 'applied').length;
   const showVerified = !!userProfile?.docFileName1;
@@ -168,10 +181,10 @@ export const useProfileScreen = () => {
           body: JSON.stringify({ avatarUrl: uploadedUrl })
         });
         setUserProfile({ ...userProfile, profileImage: uploadedUrl });
-        showToast(language === 'uz' ? "Rasm muvaffaqiyatli saqlandi!" : "Photo saved successfully!");
+        showToast(translations[language].photoSaved);
       } catch (err) {
         console.error('Avatar upload failed:', err);
-        showToast(language === 'uz' ? "Rasm yuklashda xatolik yuz berdi" : "Failed to upload photo");
+        showToast(reasonFor(err), 'error');
       }
     }
   };
@@ -254,7 +267,7 @@ export const useProfileScreen = () => {
       showToast(t.savedSuccess);
     } catch (err) {
       console.error(err);
-      showToast(language === 'uz' ? "Xatolik yuz berdi" : "Error occurred");
+      showToast(reasonFor(err), 'error');
     } finally {
       setIsEditing(false);
     }
@@ -298,7 +311,7 @@ export const useProfileScreen = () => {
       }, 2500);
     } catch (err) {
       console.error(err);
-      showToast(language === 'uz' ? "Xatolik yuz berdi" : "Error occurred");
+      showToast(reasonFor(err), 'error');
     }
   };
 
