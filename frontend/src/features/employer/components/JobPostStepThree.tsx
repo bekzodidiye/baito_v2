@@ -19,6 +19,13 @@ interface JobPostStepThreeProps {
 export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
   language, city, setCity, addressLine, setAddressLine, setCoordinateX, setCoordinateY
 }) => {
+  // One string for the visible label and the field's accessible name, so a
+  // screen reader announces the field rather than an example of what to type.
+  const addressFieldLabel =
+    language === 'uz' ? "Aniq manzil (Ko'cha nomi va bino/uy №) *"
+    : language === 'ru' ? 'Точный адрес (Название улицы и № здания/дома) *'
+    : 'Exact Address & Building # *';
+
   const [currentCoords, setCurrentCoords] = useState(CITY_COORDINATES[city] || CITY_COORDINATES['Toshkent']);
   const [isLocating, setIsLocating] = useState(false);
   const [gpsSuccess, setGpsSuccess] = useState(false);
@@ -114,11 +121,11 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
       <div className="flex flex-col gap-2 relative">
         <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
           <MapPin size={14} className="text-brand-primary" />
-          {language === 'uz' ? `Aniq manzil (Ko'cha nomi va bino/uy №) *` : language === 'ru' ? 'Точный адрес (Название улицы и № здания/дома) *' : "Exact Address & Building # *"}
+          {addressFieldLabel}
         </label>
         <div className="relative">
           <input
-              aria-label={language === 'uz' ? "Masalan: Ibn Sino ko'chasi, 17A" : language === 'ru' ? "e.g. Ibn Sino street, 17A" : "e.g. Ibn Sino street, 17A"}
+              aria-label={addressFieldLabel}
             type="text"
             placeholder={language === 'ru' ? "Например: улица Ибн Сино, 17А" : language === 'en' ? "For example: Ibn Sino street, 17A" : "Masalan: Ibn Sino ko'chasi, 17A"}
             className="w-full bg-slate-50 border rounded-xl px-4 py-3 pl-10 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"

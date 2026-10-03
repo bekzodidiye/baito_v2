@@ -112,7 +112,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
             a select is for — and the city field further down the same form
             already uses one. */}
         <select
-          aria-label={language === 'uz' ? 'Kategoriya' : language === 'ru' ? 'Category' : 'Category'}
+          aria-label={language === 'uz' ? 'Kategoriya' : language === 'ru' ? 'Категория' : 'Category'}
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-extrabold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"
