@@ -19,7 +19,7 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
   const lastMsg = messages[messages.length - 1];
   const companyInitial = (chat.companyName || 'C').charAt(0);
   const isUserLastMsg = lastMsg?.sender === 'user';
-  const fallbackText = (t && t.noConversation) || 'Suhbat mavjud emas';
+  const fallbackText = t?.noConversations ?? '';
 
   return (
     <div

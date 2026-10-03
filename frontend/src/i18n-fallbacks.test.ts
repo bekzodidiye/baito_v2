@@ -41,7 +41,13 @@ const definedKeys = (): Set<string> => {
   return keys;
 };
 
-const FALLBACK = /\bt\.([a-zA-Z0-9_]+)\s*\|\|\s*(['"])(.*?)\2/g;
+/** `t.key || 'literal'`, and the guarded forms around it:
+ *  `(t && t.key) || '…'`, `t?.key || '…'`, `(t?.key) || '…'`.
+ *  The first pass only matched the bare form, and `ChatListItem` wrote
+ *  `(t && t.noConversation) || 'Suhbat mavjud emas'` — the key is
+ *  `noConversations`, plural, so that Uzbek showed to every reader and this
+ *  scan walked straight past it. */
+const FALLBACK = /(?:\(\s*)?(?:\bt\s*&&\s*)?\bt\??\.([a-zA-Z0-9_]+)\s*\)?\s*\|\|\s*(['"])(.*?)\2/g;
 
 describe('translation fallbacks', () => {
   it('scans a realistic number of files and keys', () => {
