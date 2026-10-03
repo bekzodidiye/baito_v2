@@ -145,8 +145,8 @@ export const ApplicationsScreen: React.FC = () => {
             </h3>
             <p className="text-slate-500 font-medium text-center text-[13px] max-w-[250px] leading-relaxed">
               {activeTab === 'all' 
-                ? (language === 'uz' ? "Siz hali hech qanday ishga ariza topshirmagansiz." : "Вы еще не подали ни одной заявки.") 
-                : (language === 'uz' ? "Bu bo'limda mos arizalar topilmadi." : "Подходящие заявки не найдены.")}
+                ? (language === 'uz' ? "Siz hali hech qanday ishga ariza topshirmagansiz." : language === 'ru' ? "Вы еще не подали ни одной заявки." : 'You have not applied to any job yet.') 
+                : (language === 'uz' ? "Bu bo'limda mos arizalar topilmadi." : language === 'ru' ? "Подходящие заявки не найдены." : 'No matching applications in this tab.')}
             </p>
             {activeTab === 'all' && (
               <button 

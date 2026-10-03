@@ -133,7 +133,7 @@ export const PaymentsScreen: React.FC = () => {
         <div className="flex items-center gap-4">
           <button 
             onClick={handleBack}
-            aria-label={language === 'uz' ? 'Orqaga' : 'Назад'}
+            aria-label={language === 'uz' ? 'Orqaga' : language === 'ru' ? 'Назад' : 'Back'}
             className="active:scale-95 duration-200 p-2 hover:bg-slate-200 transition-colors rounded-full cursor-pointer"
           >
             <ArrowLeft className="text-brand-primary w-6 h-6" />
@@ -237,7 +237,7 @@ export const PaymentsScreen: React.FC = () => {
             <p className="text-slate-500 text-xs font-medium">
               {language === 'uz' ? 'Aktiv kartalar' : language === 'ru' ? 'Активные карты' : 'Active Cards'}
             </p>
-            <p className="text-blue-600 font-bold text-lg">{savedCards.length} {language === 'uz' ? 'ta' : 'шт'}</p>
+            <p className="text-blue-600 font-bold text-lg">{savedCards.length} {language === 'uz' ? 'ta' : language === 'ru' ? 'шт' : 'pcs'}</p>
           </div>
           
           <div className="min-w-[160px] bg-white p-4 rounded-xl shadow-[0px_4px_12px_rgba(26,35,126,0.04)] border border-slate-200">
@@ -373,11 +373,11 @@ export const PaymentsScreen: React.FC = () => {
                       </p>
                       {tx.status === 'pending' ? (
                         <span className="inline-block px-2.5 py-0.5 rounded-full bg-amber-100 text-[10px] font-bold text-amber-700 mt-1">
-                          {language === 'uz' ? 'Kutilmoqda' : 'В ожидании'}
+                          {language === 'uz' ? 'Kutilmoqda' : language === 'ru' ? 'В ожидании' : 'Pending'}
                         </span>
                       ) : (
                         <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700 mt-1">
-                          {language === 'uz' ? 'Bajarildi' : 'Успешно'}
+                          {language === 'uz' ? 'Bajarildi' : language === 'ru' ? 'Успешно' : 'Done'}
                         </span>
                       )}
                     </div>

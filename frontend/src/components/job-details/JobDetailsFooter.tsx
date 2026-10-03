@@ -62,7 +62,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
       queryClient?.invalidateQueries({ queryKey: ['workerApplications'] });
       if (onApplied) (onApplied as any)(newStatus);
     } catch (e: any) {
-      showToast(e?.message || (language === 'uz' ? "Ishni yakunlab bo'lmadi" : "Failed to complete job"), 'error');
+      showToast(e?.message || (language === 'uz' ? "Ishni yakunlab bo'lmadi" : language === 'ru' ? 'Не удалось завершить работу' : "Failed to complete job"), 'error');
     } finally {
       setIsSubmitting(false);
       setConfirmingFinish(false);

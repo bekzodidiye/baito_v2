@@ -59,12 +59,45 @@ const scan = (): Finding[] => {
   return found;
 };
 
+/** `language === 'uz' ? A : B` — B is shown to a Russian reader and to an
+ *  English one, so one of them is reading the other's language. The payments
+ *  screen told an English reader "В ожидании"; the register flow told a
+ *  Russian one nothing it could read either way.
+ *
+ *  The tail of a correct three-way chain looks identical in isolation —
+ *  `… : language === 'ru' ? X : Y` — so a test that is itself the else of
+ *  another language test is skipped. */
+const TWO_WAY = /language\s*===\s*'(uz|ru|en)'\s*\?\s*(['"])(.*?)\2\s*:\s*(['"])(.*?)\4/gs;
+
+const twoWayLeaks = (): string[] => {
+  const leaks: string[] = [];
+  for (const file of FILES) {
+    const src = fs.readFileSync(file, 'utf8');
+    for (const m of src.matchAll(TWO_WAY)) {
+      const [a, b] = [m[3], m[5]];
+      if (a.includes('language ===') || b.includes('language ===')) continue;
+      if (!HAS_LETTERS.test(a) || !HAS_LETTERS.test(b)) continue;
+      if (CLASS_SOUP.test(a) || CLASS_SOUP.test(b)) continue;
+      if (src.slice(0, m.index).trimEnd().endsWith(':')) continue;
+      const line = src.slice(0, m.index).split('\n').length;
+      leaks.push(`${path.relative(SRC, file)}:${line}  ${m[1]} -> ${JSON.stringify(a)}` +
+                 `, everyone else -> ${JSON.stringify(b)}`);
+    }
+  }
+  return leaks;
+};
+
 describe('language ternaries', () => {
   it('scans a realistic number of files and branches', () => {
     expect(FILES.length).toBeGreaterThan(100);
     let branches = 0;
     for (const f of FILES) branches += [...fs.readFileSync(f, 'utf8').matchAll(BRANCH)].length;
     expect(branches).toBeGreaterThan(100);
+  });
+
+  it('write a string for every language, not two out of three', () => {
+    const leaks = twoWayLeaks();
+    expect(leaks, `\n  ${leaks.join('\n  ')}\n`).toEqual([]);
   });
 
   it('answer in the language they test for', () => {

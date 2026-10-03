@@ -296,7 +296,7 @@ export const useProfileScreen = () => {
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!withdrawAmount || isNaN(Number(withdrawAmount)) || Number(withdrawAmount) <= 0) {
-      showToast(language === 'uz' ? "To'g'ri miqdor kiriting!" : "Enter a valid amount!");
+      showToast(language === 'uz' ? "To'g'ri miqdor kiriting!" : language === 'ru' ? 'Введите корректную сумму!' : "Enter a valid amount!");
       return;
     }
     
