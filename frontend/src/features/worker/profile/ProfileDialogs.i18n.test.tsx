@@ -12,7 +12,7 @@ afterEach(cleanup);
 const EMPTY_FORM = {
   firstName: '', lastName: '', phone: '', email: '',
   birthDay: '', birthMonth: '', birthYear: '', gender: '',
-  region: '', profession: '', aboutMe: '', skills: '',
+  region: '', profession: '', bankCard: '', aboutMe: '', skills: '',
   passportSeries: '', passportNumber: '', pinfl: '',
   docFileName1: '', docFileName2: '', profileImage: null,
 };
@@ -80,5 +80,75 @@ describe('ProfileDialogs — the form is in the same language as its buttons', (
   it('translates the skills hint rather than showing an Uzbek example', () => {
     openIn('ru');
     expect(screen.getByPlaceholderText('Например: Быстрый, Ответственный')).toBeTruthy();
+  });
+});
+
+/** Where the worker is paid.
+ *
+ *  `bankCardMask` was read in three admin places — the user detail, the payouts
+ *  table, the finance list — and written by none, because no screen ever asked
+ *  for it. Every worker showed "Kiritilmagan" and every payout row "—", so an
+ *  administrator making the transfer by hand had nowhere to read the number.
+ */
+describe('the payout card field', () => {
+  const withCard = (bankCard: string, language: 'uz' | 'ru' | 'en' = 'ru') => {
+    const setEditForm = vi.fn();
+    render(
+      <ProfileDialogs
+        activeDialog="edit"
+        setActiveDialog={vi.fn()}
+        t={getProfileTranslations(language)}
+        language={language}
+        withdrawAmount=""
+        setWithdrawAmount={vi.fn()}
+        withdrawSuccess={false}
+        handleWithdrawSubmit={vi.fn()}
+        editForm={{ ...EMPTY_FORM, bankCard }}
+        setEditForm={setEditForm}
+        handleSaveProfileSubmit={vi.fn()}
+        isEditing={false}
+      />,
+    );
+    return { setEditForm, input: document.getElementById('input-bank-card') as HTMLInputElement };
+  };
+
+  it('is on the form at all', () => {
+    const { input } = withCard('');
+    expect(input).not.toBeNull();
+  });
+
+  it('reads back in groups of four', () => {
+    const { input } = withCard('8600123456789012');
+    expect(input.value).toBe('8600 1234 5678 9012');
+  });
+
+  it('names the scheme once it can tell', () => {
+    cleanup();
+    withCard('9860123456789012');
+    expect(document.body.textContent).toContain('Humo');
+    cleanup();
+    withCard('8600123456789012');
+    expect(document.body.textContent).toContain('UzCard');
+  });
+
+  it('says what is wrong, and marks the field invalid', () => {
+    const { input } = withCard('4276123456789012');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(document.body.textContent).toMatch(/UzCard.*Humo|Humo.*UzCard/);
+  });
+
+  it('treats an empty field as fine, not as an error', () => {
+    // A worker who has not been paid yet has no reason to fill it in.
+    const { input } = withCard('');
+    expect(input.getAttribute('aria-invalid')).toBe('false');
+  });
+
+  it('labels itself in the reader’s language', () => {
+    for (const [lang, said] of [['ru', 'Банковская карта'], ['en', 'Bank card'],
+                                ['uz', 'Bank kartasi']] as const) {
+      cleanup();
+      withCard('', lang);
+      expect(document.body.textContent, lang).toContain(said);
+    }
   });
 });

@@ -1,3 +1,4 @@
+import { cardDigits, formatCard, schemeName, cardProblem } from '../../../utils/bankCard';
 import React from 'react';
 import { X, Camera, Check, Loader2, Plus, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -30,6 +31,7 @@ interface ProfileDialogsProps {
     gender: string;
     region: string;
     profession: string;
+    bankCard: string;
     aboutMe: string;
     skills: string;
     passportSeries: string;
@@ -58,6 +60,7 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
   handleSaveProfileSubmit,
   isEditing,
 }) => {
+  const lang = (language as 'uz' | 'ru' | 'en');
   return (
     <AnimatePresence>
       {activeDialog !== 'none' && (
@@ -259,6 +262,43 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                         className="w-full bg-white border border-slate-200/80 focus:border-brand-primary rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 text-slate-800"
                       />
                     </div>
+
+                  {/* Where the worker is paid. The admin payouts screen has
+                      always had a column for this and always shown "—", because
+                      no screen ever asked for it. Optional: a worker who has not
+                      been paid yet has no reason to fill it in. */}
+                  <div className="space-y-1.5 col-span-2">
+                    <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider flex items-center gap-2">
+                      <span>{t.fieldBankCard}</span>
+                      {schemeName(editForm.bankCard) && (
+                        <span className="text-[9px] font-black text-brand-primary bg-brand-primary/10 px-1.5 py-0.5 rounded">
+                          {schemeName(editForm.bankCard)}
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      id="input-bank-card"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      placeholder={t.bankCardPlaceholder}
+                      value={formatCard(editForm.bankCard)}
+                      onChange={(e) => setEditForm({ ...editForm, bankCard: cardDigits(e.target.value) })}
+                      disabled={isEditing}
+                      aria-invalid={!!cardProblem(editForm.bankCard, lang)}
+                      aria-describedby="bank-card-note"
+                      className={`w-full bg-white border rounded-xl py-2.5 px-3.5 text-xs font-semibold tracking-wider font-mono focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 text-slate-800 ${
+                        cardProblem(editForm.bankCard, lang)
+                          ? 'border-rose-300 focus:border-rose-400'
+                          : 'border-slate-200/80 focus:border-brand-primary'
+                      }`}
+                    />
+                    <p id="bank-card-note" className={`text-[10px] font-semibold px-1 ${
+                      cardProblem(editForm.bankCard, lang) ? 'text-rose-600' : 'text-slate-400'
+                    }`}>
+                      {cardProblem(editForm.bankCard, lang) ?? t.bankCardHint}
+                    </p>
+                  </div>
                   </div>
 
                   <div className="space-y-1.5">

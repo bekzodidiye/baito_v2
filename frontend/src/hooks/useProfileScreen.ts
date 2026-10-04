@@ -4,6 +4,7 @@ import { useJobsData } from "../context/useJobsData";
 import { getProfileTranslations } from '../features/worker/profile/ProfileScreen.utils';
 import { showToast } from '../utils/toast';
 import { translations } from '../translations';
+import { cardDigits } from '../utils/bankCard';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 import { requestWithdrawalApi, uploadFileApi } from '../api/queries';
 import { apiClient } from '../api/client';
@@ -85,6 +86,7 @@ export const useProfileScreen = () => {
     gender: userProfile?.gender || 'male',
     region: userProfile?.region || '',
     profession: userProfile?.profession || '',
+    bankCard: (userProfile as any)?.bankCardMask || '',
     aboutMe: userProfile?.aboutMe || '',
     skills: userProfile?.skills?.join(', ') || '',
     passportSeries: userProfile?.passportSeries?.replace(/[^A-Za-z]/g, '') || '',
@@ -110,6 +112,7 @@ export const useProfileScreen = () => {
         gender: userProfile.gender || 'male',
         region: userProfile.region || '',
         profession: userProfile.profession || '',
+        bankCard: (userProfile as any).bankCardMask || '',
         aboutMe: userProfile.aboutMe || '',
         skills: userProfile.skills?.join(', ') || '',
         passportSeries: userProfile.passportSeries?.replace(/[^A-Za-z]/g, '') || '',
@@ -228,6 +231,8 @@ export const useProfileScreen = () => {
         birthDate: updated.birthDate || undefined,
         region: editForm.region || undefined,
         category: editForm.profession || undefined,
+        // Digits only: the admin who makes the transfer reads this field.
+        bankCardMask: cardDigits(editForm.bankCard) || undefined,
         bio: editForm.aboutMe || undefined,
         skills: updated.skills.length > 0 ? updated.skills : undefined,
         passportSeries: updated.passportSeries || undefined,

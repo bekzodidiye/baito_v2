@@ -57,6 +57,9 @@ export const getProfileTranslations = (language: string) => {
       fieldAboutMe: "O'zim haqimda *",
       fieldSkills: "Ko'nikmalar (vergul bilan) *",
       skillsPlaceholder: "Masalan: Tezkor, Mas'uliyatli",
+      fieldBankCard: "Bank kartasi",
+      bankCardPlaceholder: '8600 1234 5678 9012',
+      bankCardHint: "Ish haqi shu kartaga o'tkaziladi. Majburiy emas.",
       cancel: 'Bekor qilish'
     },
     ru: {
@@ -116,6 +119,9 @@ export const getProfileTranslations = (language: string) => {
       fieldAboutMe: 'О себе *',
       fieldSkills: 'Навыки (через запятую) *',
       skillsPlaceholder: 'Например: Быстрый, Ответственный',
+      fieldBankCard: "Банковская карта",
+      bankCardPlaceholder: '8600 1234 5678 9012',
+      bankCardHint: "Зарплата придёт на эту карту. Не обязательно.",
       cancel: 'Отмена'
     },
     en: {
@@ -175,6 +181,9 @@ export const getProfileTranslations = (language: string) => {
       fieldAboutMe: 'About me *',
       fieldSkills: 'Skills (comma separated) *',
       skillsPlaceholder: 'For example: Fast, Reliable',
+      fieldBankCard: "Bank card",
+      bankCardPlaceholder: '8600 1234 5678 9012',
+      bankCardHint: "Your pay is sent to this card. Optional.",
       cancel: 'Cancel'
     }
   };
