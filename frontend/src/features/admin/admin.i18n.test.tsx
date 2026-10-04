@@ -20,7 +20,7 @@ const body = () => document.body.textContent ?? '';
 
 const stats = {
   totalUsers: 12, totalJobs: 5, totalApplications: 8,
-  completedJobs: 3, escrowHeld: 1_000_000, revenue: 100_000,
+  completedJobs: 3, totalOwedToWorkers: 1_000_000, revenue: 100_000,
 } as never;
 
 /** The sidebar and header already picked by language; the screens behind them
@@ -36,7 +36,7 @@ describe('Admin panel — the screens follow the sidebar’s language', () => {
   it('still reads in Uzbek when Uzbek is chosen', () => {
     language.current = 'uz';
     render(<AdminOverview stats={stats} loading={false} />);
-    expect(body()).toContain("Ish vaqtida xavfsiz saqlanayotgan mablag'");
+    expect(body()).toContain("Ishchilarga hisoblangan, hali qo'lda to'lanmagan");
   });
 });
 
@@ -106,7 +106,7 @@ describe('Status labels and overview tiles follow the language too', () => {
   });
 
   it('translates the overview tile captions', () => {
-    for (const key of ['commissionRevenue', 'escrowFrozen'] as const) {
+    for (const key of ['commissionRevenue', 'owedToWorkers'] as const) {
       expect(ADMIN_TEXTS.ru[key]).not.toBe(ADMIN_TEXTS.uz[key]);
     }
   });

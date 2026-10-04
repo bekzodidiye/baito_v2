@@ -51,7 +51,7 @@ export const PaymentsScreen: React.FC = () => {
 
   // Whether a row is money arriving or money leaving depends on which side of
   // it you are. The sign used to be `tx.type === 'deposit' ? '+' : '-'`, so a
-  // worker's own wage — an escrow_hold released to them — was labelled "Kirim"
+  // worker's own wage — a credit to them — was labelled "Kirim"
   // and printed as "-275 000" in the same row.
   const myId = me?.id ?? user?.id;
   const isIncoming = (tx: any) => {

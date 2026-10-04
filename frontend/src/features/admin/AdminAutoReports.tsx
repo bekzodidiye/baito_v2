@@ -52,7 +52,7 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
     newUsers: stats?.totalUsers ?? 0,
     activeJobs: stats?.activeJobsCount ?? 0,
     completedJobs: stats?.completedJobsCount ?? 0,
-    escrowHeld: money(stats?.totalEscrowHeld),
+    owedToWorkers: money(stats?.totalOwedToWorkers),
   };
 
   const handleSendTelegramDigest = async () => {
@@ -77,7 +77,7 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
       ['Foydalanuvchilar', String(reportData.newUsers)],
       ['Aktiv ishlar', String(reportData.activeJobs)],
       ['Yakunlangan ishlar', String(reportData.completedJobs)],
-      ['Eskrouda muzlatilgan', reportData.escrowHeld],
+      ['Eskrouda muzlatilgan', reportData.owedToWorkers],
     ];
     const csv = rows.map((r) => r.join(',')).join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -176,7 +176,7 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
             <div className="text-slate-300">
               ─────────────────────────────<br />
               💰 <b>{a.dailyNetRevenue}</b> {reportData.totalRevenue}<br />
-              🔒 <b>Escrow Muzlatilgan Balans:</b> {reportData.escrowHeld}<br />
+              💰 <b>Ishchilarga qarz:</b> {reportData.owedToWorkers}<br />
               👥 <b>{a.newSignups}</b> +{reportData.newUsers} ta<br />
               🛠️ <b>{a.activeJobs}</b> {reportData.activeJobs} ta<br />
               ✅ <b>{a.finishedJobs}</b> {reportData.completedJobs} ta<br />

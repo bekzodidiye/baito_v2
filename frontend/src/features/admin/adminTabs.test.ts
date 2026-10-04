@@ -9,8 +9,8 @@ const ALL_TABS = Object.keys(TAB_SLUGS) as AdminTab[];
  *  the panel instead of going back a section. Every section is an address now,
  *  and this table is the only place the two spellings meet. */
 describe('Every admin section has an address', () => {
-  it('covers all 22 sections', () => {
-    expect(ALL_TABS).toHaveLength(22);
+  it('covers all 21 sections', () => {
+    expect(ALL_TABS).toHaveLength(21);
   });
 
   it('gives each one a distinct slug', () => {
@@ -21,7 +21,7 @@ describe('Every admin section has an address', () => {
   it('builds the path the user asked for', () => {
     expect(adminPath('jobs')).toBe('/admin/jobs');
     expect(adminPath('daily_jobs')).toBe('/admin/daily-jobs');
-    expect(adminPath('auto_escrow_docs')).toBe('/admin/auto-escrow-docs');
+    expect(adminPath('audit_logs')).toBe('/admin/audit-logs');
   });
 
   it('round-trips every section through its URL', () => {

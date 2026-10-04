@@ -153,6 +153,7 @@ const EXACT: Record<string, { ru: string; en: string }> = {
 /** The details the server builds with a value in them. The `{}` stands where
  *  the backend interpolates — a count, a status, a list. */
 const TEMPLATED: { re: RegExp; ru: string; en: string }[] = [
+  { re: /^Bu\ ishning\ (.+?)\ kuni\ hali\ yakunlanmagan\.\ Holatni\ shu\ yerdan\ o'zgartirish\ ishchiga\ hech\ narsa\ hisoblamaydi\.\ Ishni\ kunlar\ bo'yicha\ yakunlang\ yoki\ bekor\ qiling\.$/, ru: 'У этой работы ещё не завершено дней: $1. Смена статуса отсюда ничего работнику не начислит. Завершите работу по дням или отмените её.', en: '$1 day(s) of this job are not finished. Changing the status here credits the worker nothing. Finish it day by day, or cancel it.' },
   { re: /^(.+?)\ hali\ kelmadi\ —\ o'sha\ kuni\ yakunlang$/, ru: '$1 ещё не наступил — завершите его в тот день', en: '$1 has not arrived yet — close it on the day' },
   { re: /^Bu\ ish\ bo'yicha\ barcha\ (.+?)\ ta\ o'rin\ to'lgan$/, ru: 'По этой работе заняты все $1 мест', en: 'All $1 places on this job are taken' },
   { re: /^Bu\ so'rov\ allaqachon\ ko'rib\ chiqilgan\ \(holat:\ (.+?)\)$/, ru: 'Этот запрос уже рассмотрен (статус: $1)', en: 'This request has already been handled (status: $1)' },

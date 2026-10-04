@@ -43,16 +43,16 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
           </p>
         </div>
 
-        {/* Total Escrow Held */}
+        {/* What the platform owes workers */}
         <div className="p-5 rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-900/10 border border-slate-800">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{a.escrowFrozen}</span>
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{a.owedToWorkers}</span>
             <div className="p-2 rounded-xl bg-slate-800 text-emerald-400">
               <ShieldCheck size={18} />
             </div>
           </div>
-          <div className="text-2xl font-black text-emerald-400">{formatSum(stats?.totalEscrowHeld)}</div>
-          <p className="text-[11px] text-slate-400 mt-2 font-medium">{a.escrowHeld}</p>
+          <div className="text-2xl font-black text-emerald-400">{formatSum(stats?.totalOwedToWorkers)}</div>
+          <p className="text-[11px] text-slate-400 mt-2 font-medium">{a.owedToWorkersNote}</p>
         </div>
 
         {/* Users Metric */}

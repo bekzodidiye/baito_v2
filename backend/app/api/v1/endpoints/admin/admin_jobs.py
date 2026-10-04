@@ -11,7 +11,6 @@ from app.models.job import JobStatus
 from app.models.job_day import JobDayStatus
 from app.models.job_payout import JobPayout
 from app.services import job_days
-from app.services.escrow_service import EscrowService
 
 from .admin_users import get_admin_user
 from .audit import record_admin_action
@@ -310,14 +309,12 @@ def get_admin_job_detail(
             "date": job.createdAt.isoformat(), "icon": "plus",
         })
 
-    # Hiring is what puts the wage into escrow, so that transaction carries the
-    # moment it happened. The application row does not: it only knows when the
-    # worker applied, which is what this used to report as the hiring date.
-    hire_date = next(
-        (t["createdAt"] for t in sorted(txn_data, key=lambda x: x["createdAt"] or "")
-         if t["type"] == "escrow_hold"),
-        None,
-    )
+    # Nothing records when a worker was hired. This used to borrow the escrow
+    # hold's timestamp, which was the moment of hiring because hiring is what
+    # froze the money; with nothing frozen there is no such row. The posting's
+    # start is the closest thing that is actually written down, and the
+    # application date is the fallback — the same one this had before.
+    hire_date = job.startedAt.isoformat() if job.startedAt else None
 
     for app_d in sorted(apps_data, key=lambda x: x["appliedDate"] or ""):
         if app_d["appliedDate"]:
@@ -336,14 +333,14 @@ def get_admin_job_detail(
             })
 
     for tx in sorted(txn_data, key=lambda x: x["createdAt"] or ""):
-        if tx["type"] in ("deposit", "escrow_hold") and tx["status"] in ("paid", "pending", "held"):
+        if tx["type"] == "deposit" and tx["status"] in ("paid", "pending"):
             timeline.append({
                 "event": "deposit",
                 "label": f"Depozit: {tx['amount'] // 100} so'm",
                 "date": tx["createdAt"],
                 "icon": "dollar",
             })
-        if tx["type"] in ("payment", "escrow_hold") and tx["status"] in ("paid", "released"):
+        if tx["type"] in ("payment", "worker_earning", "completion_bonus") and tx["status"] in ("paid", "credited"):
             timeline.append({
                 "event": "payment",
                 "label": f"To'lov: {tx['amount'] // 100} so'm",
@@ -426,44 +423,23 @@ def change_job_status(
         )
 
     # Marking a posting finished from this dropdown used to set the column and
-    # nothing else: the day rows stayed pending, the escrow stayed frozen and
-    # the worker was never paid. The posting read as done while the money sat
-    # still — production has one in exactly that state.
+    # nothing else: the day rows stayed pending and the worker was credited for
+    # none of them. The posting read as done while nobody was owed anything —
+    # production has one in exactly that state.
     #
-    # Rather than pay somebody from a status dropdown, this refuses and points
-    # at the flow that settles the money properly. Completing a day is what
-    # releases that day's wage, and only the employer finishing the work can
-    # say it happened.
+    # Rather than credit somebody from a status dropdown, this refuses and
+    # points at the flow that settles the work properly. Completing a day is
+    # what credits that day's wage, and only the employer finishing the work
+    # can say it happened.
     if payload.status == JobStatus.COMPLETED and job.status != JobStatus.COMPLETED:
         payable = job_days.payable_days(db, job.id)
-        held = (
-            db.query(models.Transaction)
-            .filter(
-                models.Transaction.jobId == job.id,
-                models.Transaction.type == "escrow_hold",
-                models.Transaction.status == "held",
-            )
-            .count()
-        )
-        # Frozen money is the whole reason to refuse, so it alone decides. This
-        # asked for unfinished days as well, and a posting old enough to have no
-        # day rows at all went straight through: `ish` (ccf3d143) is marked
-        # completed in production with 200 000 UZS still held against it, paid
-        # to nobody and returned to nobody. The day count only shapes the
-        # sentence the administrator reads.
-        if held:
-            days_note = (
-                f"Bu ishning {len(payable)} kuni hali yakunlanmagan va puli "
-                if payable
-                else "Bu ishning puli "
-            )
+        if payable:
             raise HTTPException(
                 status_code=400,
                 detail=(
-                    days_note
-                    + "escrow'da muzlatilgan. Holatni shu yerdan o'zgartirish pulni "
-                    "muzlatilgan holda qoldiradi. Ishni kunlar bo'yicha yakunlang "
-                    "yoki bekor qiling."
+                    f"Bu ishning {len(payable)} kuni hali yakunlanmagan. Holatni "
+                    "shu yerdan o'zgartirish ishchiga hech narsa hisoblamaydi. "
+                    "Ishni kunlar bo'yicha yakunlang yoki bekor qiling."
                 ),
             )
 
@@ -502,16 +478,8 @@ def change_job_status(
         for app in active_apps:
             app.status = "cancelled"
 
-        # Cancelling left the money frozen too. The employer's own cancel
-        # refunds it and closes the days; doing it from here has to mean the
-        # same thing, or an admin cancelling a posting strands the employer's
-        # money instead of the worker's.
-        try:
-            EscrowService.refund_funds(db, job_id=job.id)
-        except HTTPException:
-            # Nothing was ever frozen: an unfilled posting, or one from before
-            # escrow existed. Cancelling is still legitimate.
-            pass
+        # The employer's own cancel closes the days; doing it from here has
+        # to mean the same thing, or a cancelled posting keeps offering work.
 
         for day in job_days.days_of(db, job.id):
             if day.status == JobDayStatus.PENDING:
@@ -592,54 +560,22 @@ def change_job_worker(
         if job.status == JobStatus.OPEN:
             job.status = JobStatus.CONFIRMED
 
-        # Assigning a worker marked them hired and moved the posting to
-        # CONFIRMED without freezing a som. They would then work the shift
-        # against nothing, and at completion release_funds would find no hold,
-        # log "escrow release skipped" and report them unpaid.
-        #
-        # Hiring through /applications/{id}/hire has always frozen the wage per
-        # day. Assigning from here is the same act and now means the same
-        # thing. Days already held are skipped, so re-assigning the same worker
-        # does not charge the employer twice.
+        # The wage each day is worth, pinned now rather than read from the
+        # posting later: editing the salary afterwards must not restate a day
+        # already agreed. Nothing is taken from the employer — the worker is
+        # credited as each day is worked, and the company invoiced after.
         wage = salary_to_uzs(job.salary)
         if wage > 0:
-            days = job_days.sync_days(db, job)
-            held_day_ids = {
-                tx.jobDayId
-                for tx in db.query(models.Transaction).filter(
-                    models.Transaction.jobId == job.id,
-                    models.Transaction.type == "escrow_hold",
-                    models.Transaction.status == "held",
-                ).all()
-            }
-            if days:
-                for day in days:
-                    if day.id in held_day_ids:
-                        continue
-                    EscrowService.hold_funds(
-                        db, employer_id=job.employerId, job_id=job.id,
-                        amount_uzs=wage, job_day_id=day.id,
-                    )
-                    # The wage as it stood when the day was agreed: editing the
-                    # posting afterwards must not change what is owed for it.
+            for day in job_days.sync_days(db, job):
+                if not day.amount:
                     day.amount = wage
                     db.add(day)
-            elif not held_day_ids:
-                EscrowService.hold_funds(
-                    db, employer_id=job.employerId, job_id=job.id, amount_uzs=wage
-                )
+
     else:
         job.hiredWorkerId = None
         if job.status != JobStatus.CANCELLED:
             job.status = JobStatus.OPEN
 
-        # Taking the worker off gives the employer their money back, the same
-        # way cancelling does. Leaving it frozen against a posting with nobody
-        # on it is how money goes missing.
-        try:
-            EscrowService.refund_funds(db, job_id=job.id)
-        except HTTPException:
-            pass
 
     record_admin_action(
         db, admin, "job.worker", target_type="job", target_id=job.id,

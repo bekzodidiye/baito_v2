@@ -155,9 +155,9 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                     </button>
                     <button
                       onClick={() => {
-                        const isEscrowActive = j.status === 'in_progress';
-                        const confirmMsg = isEscrowActive
-                          ? `⚠️ DIQQAT! Bu e'lon jarayonda! Escrow muzlatilgan pul bor.\n\n"${j.title}" e'lonini baribir tizimdan o'chirasizmi?`
+                        const isRunning = j.status === 'in_progress';
+                        const confirmMsg = isRunning
+                          ? `⚠️ DIQQAT! Bu e'lon jarayonda — ishchi ishlayapti.\n\n"${j.title}" e'lonini baribir tizimdan o'chirasizmi?`
                           : `"${j.title}" e'lonini tizimdan to'liq o'chirib tashlaysizmi?`;
                         if (confirm(confirmMsg)) {
                           onDeleteJob(j.id);

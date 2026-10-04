@@ -3,7 +3,7 @@
 Found in production. ``PATCH /admin/jobs/{id}/status`` set ``job.status`` and
 did nothing else, so:
 
-* marking a posting **completed** left its day rows pending, its escrow frozen
+* marking a posting **completed** left its day rows pending
   and the worker unpaid — the posting read as finished while the money sat
   still. One posting is in exactly that state: status ``completed``, all four
   days ``pending``, ``completedAt`` null.
@@ -35,7 +35,7 @@ def _phone():
 
 
 def _hired_three_day_job(client):
-    """A three-day posting with a worker hired and three days of escrow held."""
+    """A three-day posting with a worker hired and no day worked yet."""
     employer = make_user(role="employer", phone=_phone(), balance=5_000_000)
     worker = make_user(phone=_phone())
     job = make_job(employer.id, salary=str(WAGE), workDate=THREE_DAYS)
@@ -56,12 +56,12 @@ def _days(job_id):
                 .order_by(JobDay.workDate.asc()).all()]
 
 
-def _held(job_id):
+def _credited(job_id):
+    """Days this posting has been credited for."""
     with SessionLocal() as db:
         return (
             db.query(Transaction)
             .filter(Transaction.jobId == job_id,
-                    Transaction.type == "escrow_hold",
                     Transaction.status == "held")
             .count()
         )
@@ -104,7 +104,7 @@ def test_a_posting_with_unfinished_days_cannot_be_called_finished(client):
                         json={"status": JobStatus.COMPLETED})
 
     assert resp.status_code == 400
-    assert "escrow" in resp.json()["detail"].lower()
+    assert "yakunlanmagan" in resp.json()["detail"].lower()
 
 
 def test_the_refusal_leaves_everything_exactly_as_it_was(client):
@@ -117,7 +117,7 @@ def test_the_refusal_leaves_everything_exactly_as_it_was(client):
                  json={"status": JobStatus.COMPLETED})
 
     assert _status(job.id) != JobStatus.COMPLETED
-    assert _held(job.id) == 3
+    assert _credited(job.id) == 0
     assert [s for _, s in _days(job.id)] == [JobDayStatus.PENDING] * 3
 
 
@@ -163,21 +163,6 @@ def test_a_posting_already_finished_is_not_refused_again(client):
 
 # --- cancelling ---------------------------------------------------------------
 
-def test_cancelling_gives_the_employer_their_money_back(client):
-    employer, _worker, job = _hired_three_day_job(client)
-    after_hire = _balance(employer.id)
-    admin = make_user(role="admin", phone=_phone())
-    login(client, admin)
-
-    resp = client.patch(f"/api/v1/admin/jobs/{job.id}/status",
-                        json={"status": JobStatus.CANCELLED})
-
-    assert resp.status_code == 200
-    # Three days of wage and commission, all of it back.
-    assert _balance(employer.id) > after_hire
-    assert _held(job.id) == 0
-
-
 def test_cancelling_closes_the_days_so_nobody_is_offered_the_work(client):
     _employer, _worker, job = _hired_three_day_job(client)
     admin = make_user(role="admin", phone=_phone())
@@ -189,7 +174,7 @@ def test_cancelling_closes_the_days_so_nobody_is_offered_the_work(client):
     assert [s for _, s in _days(job.id)] == [JobDayStatus.CANCELLED] * 3
 
 
-def test_cancelling_a_posting_that_never_held_money_still_works(client):
+def test_cancelling_a_posting_nobody_worked_still_works(client):
     employer = make_user(role="employer", phone=_phone(), balance=1_000_000)
     job = make_job(employer.id, salary=str(WAGE), workDate=THREE_DAYS)
     admin = make_user(role="admin", phone=_phone())
@@ -202,39 +187,3 @@ def test_cancelling_a_posting_that_never_held_money_still_works(client):
     assert _status(job.id) == JobStatus.CANCELLED
 
 
-def test_money_frozen_against_a_posting_with_no_day_rows_still_refuses(client):
-    """The case that stranded 200 000 UZS in production.
-
-    ``ish`` (ccf3d143) predates JobDay and has no day rows at all. The guard
-    asked for unfinished days *and* frozen money, so a posting like it went
-    straight through: marked completed, the hold never released, the worker
-    never paid and the employer never refunded.
-    """
-    employer, _worker, job = _hired_three_day_job(client)
-
-    _strip_day_rows(job.id)
-    assert _days(job.id) == []
-    assert _held(job.id) > 0
-
-    admin = make_user(role="admin", phone=_phone())
-    login(client, admin)
-    resp = client.patch(f"/api/v1/admin/jobs/{job.id}/status",
-                        json={"status": JobStatus.COMPLETED})
-
-    assert resp.status_code == 400
-    assert _status(job.id) != JobStatus.COMPLETED
-    assert _held(job.id) > 0
-
-
-def test_that_refusal_does_not_mention_days_it_cannot_count(client):
-    _employer, _worker, job = _hired_three_day_job(client)
-    _strip_day_rows(job.id)
-
-    admin = make_user(role="admin", phone=_phone())
-    login(client, admin)
-    detail = client.patch(f"/api/v1/admin/jobs/{job.id}/status",
-                          json={"status": JobStatus.COMPLETED}).json()["detail"]
-
-    assert "0 kuni" not in detail
-    assert "muzlatilgan" in detail
-    assert "bekor qiling" in detail

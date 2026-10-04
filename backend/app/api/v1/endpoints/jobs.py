@@ -12,7 +12,6 @@ from app.models.job import JobStatus
 from app.redis_client import redis_client
 from app.services.ai_matcher import AIMatchmaker
 from app.services.geo_service import GeoSpatialService
-from app.services.escrow_service import EscrowService
 from app.services import job_days
 from app.models.job_day import JobDayStatus
 from app.services.spam_detector import SpamFraudDetector, keywords_from_settings
@@ -425,7 +424,7 @@ def create_job(
     db: Session = Depends(deps.get_db),
     job_in: schemas.JobCreate,
     # Posting is what puts a stranger's address in front of workers and what
-    # draws on an escrow balance, so the account behind it has to have been
+    # draws on a balance, so the account behind it has to have been
     # checked first.
     current_user: models.User = Depends(deps.get_current_employer),
 ) -> Any:
@@ -462,7 +461,7 @@ def create_job(
     # A five-day shift was briefly created as five separate Job rows, one per
     # day, each labelled "1 kunlik". That put five identical cards in front of
     # every worker searching, asked them to apply five times for one piece of
-    # work, and made five escrow holds against five postings that were really
+    # work, and made five postings that were really
     # one — none of which the splitting was needed for. The day rows below
     # already carry a day's status and a day's wage, which is what lets a
     # worker finish Monday without finishing Tuesday.
@@ -649,21 +648,6 @@ def delete_job(
     job.status = JobStatus.CANCELLED
     db.add(job)
 
-    # A posting can hold money several times over: once per vacancy filled,
-    # and once per day of a multi-day shift. refund_funds settles all of them
-    # in one pass, so this is a single call rather than a counted loop.
-    try:
-        # Wage and commission both: the employer was charged for both when the
-        # day was frozen, and refund_funds puts both back.
-        refunded = sum(
-            (tx.amount + (tx.platformFee or 0)) // 100
-            for tx in EscrowService.refund_funds(db, job_id=job.id)
-        )
-    except HTTPException:
-        # Nothing was ever frozen — an unfilled posting, or one from before
-        # escrow. Cancelling is still legitimate.
-        refunded = 0
-
     # The days go with it, so a cancelled posting stops offering work.
     for day in job_days.days_of(db, job.id):
         if day.status == JobDayStatus.PENDING:
@@ -675,5 +659,4 @@ def delete_job(
         "success": True,
         "status": JobStatus.CANCELLED,
         "notified": len(affected),
-        "refunded": refunded,
     }

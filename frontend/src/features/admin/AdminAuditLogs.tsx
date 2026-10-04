@@ -20,8 +20,10 @@ const ACTION_LABELS: Record<string, string> = {
   'broadcast': 'Ommaviy xabar yuborildi',
   'withdrawal.approve': "Yechish tasdiqlandi",
   'withdrawal.reject': 'Yechish rad etildi',
-  'escrow.release': "Escrow to'lovi chiqarildi",
-  'escrow.refund': 'Escrow qaytarildi',
+  // Kept for rows written before escrow was removed: the log is history and
+  // still holds them.
+  'escrow.release': "To'lov chiqarildi",
+  'escrow.refund': 'Mablag\' qaytarildi',
 };
 
 interface AuditRow {

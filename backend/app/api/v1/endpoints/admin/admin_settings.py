@@ -25,8 +25,6 @@ SETTING_FIELDS = (
     "spamKeywords",
     "spamAutoFineAmount",
     "spamAutoBanHours",
-    "escrowAutoReleaseEnabled",
-    "escrowAutoReleaseHours",
     "telegramDigestEnabled",
     "telegramDigestChannel",
     "matchMinScore",
@@ -58,8 +56,6 @@ class SettingsPayload(BaseModel):
     spamKeywords: Optional[str] = Field(default=None, max_length=8000)
     spamAutoFineAmount: Optional[int] = Field(default=None, ge=0, le=100_000_000)
     spamAutoBanHours: Optional[int] = Field(default=None, ge=0, le=8760)
-    escrowAutoReleaseEnabled: Optional[bool] = None
-    escrowAutoReleaseHours: Optional[int] = Field(default=None, ge=1, le=720)
     telegramDigestEnabled: Optional[bool] = None
     telegramDigestChannel: Optional[str] = Field(default=None, max_length=200)
     matchMinScore: Optional[int] = Field(default=None, ge=0, le=100)

@@ -104,8 +104,9 @@ export interface Application {
   candidatePhone: string;
   candidateAvatar?: string;
   candidateExperience: string;
-  /** What hiring this candidate freezes in escrow, in UZS. 0 when the listing
-   *  names no figure ("kelishilgan holda"), which hires without escrow. */
+  /** What this candidate's work will cost, in UZS — the figure the invoice
+   *  asks for once it is done. 0 when the listing names no figure
+   *  ("kelishilgan holda"). */
   wageAmount?: number;
   status: 'applied' | 'approved' | 'rejected' | 'hired' | 'completed' | 'start_requested';
   appliedDate: string;

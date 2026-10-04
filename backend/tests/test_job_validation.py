@@ -120,53 +120,6 @@ def test_hiring_refuses_a_salary_that_would_escrow_nothing(client):
     assert "chegara" in resp.json()["detail"].lower()
 
 
-def test_cancelling_a_job_returns_the_escrow_to_the_employer(client):
-    """Cancelling released the workers and left the wage frozen: the employer
-    never got it back and the worker was never paid it."""
-    employer = make_user(role="employer", phone="+998911112215", balance=1_000_000)
-    job = make_job(employer.id, salary="200000")
-
-    worker = make_user(role="worker", phone="+998911112216")
-    login(client, worker)
-    client.post(f"/api/v1/jobs/{job.id}/apply", json={})
-
-    login(client, employer)
-    apps = client.get("/api/v1/applications/employer").json()
-    app_id = next(a["id"] for a in apps if a.get("jobId") == job.id)
-    assert client.post(f"/api/v1/applications/{app_id}/hire", json={}).status_code == 200
-    # 200 000 wage plus the 10% commission the employer pays on top.
-    assert client.get("/api/v1/users/me").json()["balance"] == 780_000
-
-    resp = client.delete(f"/api/v1/jobs/{job.id}")
-    assert resp.status_code == 200
-    # Both halves come back: the employer was charged for both.
-    assert resp.json()["refunded"] == 220_000
-    assert client.get("/api/v1/users/me").json()["balance"] == 1_000_000
-
-
-def test_cancelling_returns_every_hold_not_just_the_first(client):
-    """Hiring freezes the wage once per worker, so a job with several vacancies
-    has several holds to return."""
-    employer = make_user(role="employer", phone="+998911112217", balance=1_000_000)
-    job = make_job(employer.id, salary="100000", neededWorkers="3")
-
-    for phone in ("+998911112218", "+998911112219"):
-        login(client, make_user(role="worker", phone=phone))
-        client.post(f"/api/v1/jobs/{job.id}/apply", json={})
-
-    login(client, employer)
-    apps = [a for a in client.get("/api/v1/applications/employer").json()
-            if a.get("jobId") == job.id]
-    for a in apps:
-        assert client.post(f"/api/v1/applications/{a['id']}/hire", json={}).status_code == 200
-    # Each hire freezes the wage and the commission charged on top of it.
-    assert client.get("/api/v1/users/me").json()["balance"] == 1_000_000 - 110_000 * len(apps)
-
-    resp = client.delete(f"/api/v1/jobs/{job.id}")
-    assert resp.json()["refunded"] == 110_000 * len(apps)
-    assert client.get("/api/v1/users/me").json()["balance"] == 1_000_000
-
-
 def test_a_nul_byte_is_refused_with_a_reason_not_a_crash(client):
     """A NUL byte reached PostgreSQL, which refused it in the driver — past every
     check the schema made. The writer saw "server error"; the log saw an

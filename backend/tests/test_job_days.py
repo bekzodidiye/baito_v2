@@ -1,9 +1,9 @@
 """A multi-day shift, as days that are worked and paid one at a time.
 
 The defect these cover: ``Job.workDate`` said a shift ran for three days, but
-one Job row carried one status and one escrow hold. Finishing the first day
-finished all three and released a single payment for the lot — so an employer
-who marked one day done had, without meaning to, closed and paid the whole run.
+one Job row carried one status. Finishing the first day finished all three and
+credited a single payment for the lot — so an employer who marked one day done
+had, without meaning to, closed and paid the whole run.
 """
 
 import uuid
@@ -19,10 +19,9 @@ from .conftest import login, make_job, make_user
 
 THREE_DAYS = "2026-09-02, 2026-09-03, 2026-09-04"
 WAGE = 250_000
-# The commission is charged to the employer on top of the wage, so a day costs
-# the employer WAGE + FEE and pays the worker WAGE.
+# The commission is billed to the company on top of the wage; the worker is
+# credited WAGE for a day worked.
 FEE = 25_000            # 10%, the default rate
-DAY_COST = WAGE + FEE
 
 
 def _phone():
@@ -129,53 +128,6 @@ def test_editing_the_dates_moves_the_days(client):
 
 # --- the money -------------------------------------------------------------
 
-def test_hiring_freezes_the_wage_for_every_day(client):
-    """The posted wage is what one day is worth, so three days costs three
-    times it. Hiring used to freeze one day's wage for the whole run."""
-    employer, worker, job, app_id = _posting(balance=1_000_000)
-    login(client, employer)
-
-    resp = client.post(f"/api/v1/applications/{app_id}/hire")
-    assert resp.status_code == 200
-
-    with SessionLocal() as db:
-        assert db.query(User).filter(User.id == employer.id).first().balance == \
-            1_000_000 - DAY_COST * 3
-
-        holds = db.query(Transaction).filter(
-            Transaction.jobId == job.id, Transaction.type == "escrow_hold").all()
-        # One per day, each nameable on its own — which is what lets a single
-        # day be released without touching the other two.
-        assert len(holds) == 3
-        assert all(h.jobDayId for h in holds)
-        assert {h.amount for h in holds} == {WAGE * 100}
-
-    # And the day rows carry the wage as it stood at hire.
-    assert {d[3] for d in _days(job.id)} == {WAGE}
-
-
-def skip_test_hiring_says_what_the_whole_run_costs_when_the_balance_is_short(client):
-    """One day's wage is affordable, three is not. The employer is told the
-    real figure before anything is frozen, not after day one succeeds."""
-    employer, worker, job, app_id = _posting(balance=DAY_COST + 1000)
-    login(client, employer)
-
-    resp = client.post(f"/api/v1/applications/{app_id}/hire")
-    assert resp.status_code == 400
-    detail = resp.json()["detail"]
-    assert "3 kunlik" in detail
-    # The wage and the commission the employer pays on top of it, for all three
-    # days — the figure they actually have to cover.
-    assert "825 000" in detail
-
-    with SessionLocal() as db:
-        # Nothing frozen, nothing hired — the employer can top up and retry.
-        assert db.query(User).filter(User.id == employer.id).first().balance == DAY_COST + 1000
-        assert db.query(Transaction).filter(Transaction.jobId == job.id).count() == 0
-
-
-# --- finishing one day at a time -------------------------------------------
-
 def _hired_and_started(client):
     employer, worker, job, app_id = _posting()
     login(client, employer)
@@ -207,10 +159,10 @@ def test_finishing_one_day_pays_one_day_and_leaves_the_rest(client):
         # One day's wage, less the platform's 10%.
         assert db.query(User).filter(User.id == worker.id).first().balance == \
             WAGE
-        held = db.query(Transaction).filter(
-            Transaction.jobId == job.id, Transaction.type == "escrow_hold",
-            Transaction.status == "held").count()
-        assert held == 2
+        credited = db.query(Transaction).filter(
+            Transaction.jobId == job.id,
+            Transaction.type == "worker_earning").count()
+        assert credited == 1
 
 
 def test_the_posting_closes_only_when_its_last_day_does(client):
@@ -303,44 +255,14 @@ def test_finishing_the_rest_after_one_day_pays_only_what_is_left(client):
 
 # --- calling it off --------------------------------------------------------
 
-def test_cancelling_refunds_every_day_that_was_frozen(client):
-    """Hiring freezes three days. Cancelling used to return one of them and
-    leave the other two frozen against a posting that no longer existed —
-    refund_funds settled the first hold it found and stopped."""
-    employer, worker, job, app_id = _posting(balance=1_000_000)
-    login(client, employer)
-    assert client.post(f"/api/v1/applications/{app_id}/hire").status_code == 200
-
-    with SessionLocal() as db:
-        assert db.query(User).filter(User.id == employer.id).first().balance == \
-            1_000_000 - DAY_COST * 3
-
-    # A started job cannot be called off — that guard is deliberate — so this
-    # is the state a posting is actually cancelled from.
-    resp = client.delete(f"/api/v1/jobs/{job.id}")
-    assert resp.status_code == 200
-    assert resp.json()["refunded"] == DAY_COST * 3
-
-    assert {d[2] for d in _days(job.id)} == {JobDayStatus.CANCELLED}
-
-    with SessionLocal() as db:
-        # Every so'm back, and nothing left frozen.
-        assert db.query(User).filter(User.id == employer.id).first().balance == 1_000_000
-        assert db.query(Transaction).filter(
-            Transaction.jobId == job.id, Transaction.type == "escrow_hold",
-            Transaction.status == "held").count() == 0
-
-
-# --- postings made before any of this existed ------------------------------
-
 def test_a_single_day_posting_still_behaves_exactly_as_before(client):
     employer, worker, job, app_id = _posting(balance=1_000_000, work_date="2026-09-02")
     login(client, employer)
     assert client.post(f"/api/v1/applications/{app_id}/hire").status_code == 200
 
     with SessionLocal() as db:
-        assert db.query(User).filter(User.id == employer.id).first().balance == \
-            1_000_000 - DAY_COST
+        # Hiring takes nothing: the company is invoiced after the work.
+        assert db.query(User).filter(User.id == employer.id).first().balance == 1_000_000
         j = db.query(Job).filter(Job.id == job.id).first()
         j.status = JobStatus.IN_PROGRESS
         db.add(j)

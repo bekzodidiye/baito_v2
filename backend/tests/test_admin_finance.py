@@ -3,8 +3,8 @@
 import pytest
 
 from app.db.session import SessionLocal
+from app.services.earnings_service import WorkerEarnings
 from app.models import Application, Job, Transaction, User
-from app.services.escrow_service import EscrowService
 
 from .conftest import login, make_job, make_user
 
@@ -104,9 +104,7 @@ def test_withdrawal_decision_requires_admin(client):
                         json={"action": "approve", "reason": "o'zimga"}).status_code == 403
 
 
-# ── Escrow controls ────────────────────────────────────────────────────────
-
-def _hire_with_escrow(client, employer, worker, job):
+def _hire(client, employer, worker, job):
     with SessionLocal() as db:
         app = Application(jobId=job.id, workerId=worker.id, status="applied")
         db.add(app)
@@ -117,101 +115,19 @@ def _hire_with_escrow(client, employer, worker, job):
     return app_id
 
 
-def test_admin_can_refund_a_frozen_wage(client):
-    """Disputes could change a job's status but never move the money."""
-    employer = make_user(role="employer", phone="+998921111110", balance=1_000_000)
-    worker = make_user(phone="+998921111111")
-    job = make_job(employer.id, salary="250000")
-    _hire_with_escrow(client, employer, worker, job)
-
-    # 250 000 wage and the 10% commission the employer pays on top of it.
-    with SessionLocal() as db:
-        assert db.query(User).filter(User.id == employer.id).first().balance == 725_000
-
-    admin = make_user(role="admin", phone="+998921111112")
-    login(client, admin)
-    resp = client.post(f"/api/v1/admin/jobs/{job.id}/escrow",
-                       json={"action": "refund", "reason": "Nizo ish beruvchi foydasiga"})
-    assert resp.status_code == 200
-    # Both halves come back — the employer paid both.
-    assert resp.json()["amountUzs"] == 275_000
-
-    with SessionLocal() as db:
-        assert db.query(User).filter(User.id == employer.id).first().balance == 1_000_000
-
-
-def test_admin_can_release_a_frozen_wage_to_the_worker(client):
-    employer = make_user(role="employer", phone="+998921111113", balance=1_000_000)
-    worker = make_user(phone="+998921111114", balance=0)
-    job = make_job(employer.id, salary="250000")
-    _hire_with_escrow(client, employer, worker, job)
-
-    admin = make_user(role="admin", phone="+998921111115")
-    login(client, admin)
-    resp = client.post(f"/api/v1/admin/jobs/{job.id}/escrow",
-                       json={"action": "release", "reason": "Nizo ishchi foydasiga",
-                             "workerId": worker.id})
-    assert resp.status_code == 200
-
-    with SessionLocal() as db:
-        # 250 000 minus the 10% platform fee.
-        assert db.query(User).filter(User.id == worker.id).first().balance == 250_000
-
-
-def test_release_refuses_a_worker_who_was_never_hired_for_this_job(client):
-    """The admin free-types a worker id into a prompt with no picker. A typo,
-    a stale id from another tab, or a compromised admin session must not be
-    able to move real money to whoever that id happens to belong to."""
-    employer = make_user(role="employer", phone="+998921111130", balance=1_000_000)
-    hired_worker = make_user(phone="+998921111131", balance=0)
-    bystander = make_user(phone="+998921111132", balance=0)
-    job = make_job(employer.id, salary="250000")
-    _hire_with_escrow(client, employer, hired_worker, job)
-
-    admin = make_user(role="admin", phone="+998921111133")
-    login(client, admin)
-    resp = client.post(f"/api/v1/admin/jobs/{job.id}/escrow",
-                       json={"action": "release", "reason": "wrong id, by mistake",
-                             "workerId": bystander.id})
-    assert resp.status_code == 400
-
-    with SessionLocal() as db:
-        assert db.query(User).filter(User.id == bystander.id).first().balance == 0
-        assert db.query(User).filter(User.id == hired_worker.id).first().balance == 0
-
-    # The hold is still there, waiting for the right id.
-    resp = client.post(f"/api/v1/admin/jobs/{job.id}/escrow",
-                       json={"action": "release", "reason": "correct id this time",
-                             "workerId": hired_worker.id})
-    assert resp.status_code == 200
-    with SessionLocal() as db:
-        assert db.query(User).filter(User.id == hired_worker.id).first().balance == 250_000
-
-
-def test_escrow_holds_are_listed_for_admin(client):
-    employer = make_user(role="employer", phone="+998921111116", balance=1_000_000)
-    worker = make_user(phone="+998921111117")
-    job = make_job(employer.id, salary="250000")
-    _hire_with_escrow(client, employer, worker, job)
-
-    admin = make_user(role="admin", phone="+998921111118")
-    login(client, admin)
-    body = client.get("/api/v1/admin/escrow").json()
-    assert body["total"] == 1
-    assert body["items"][0]["jobId"] == job.id
-    assert body["items"][0]["amountUzs"] == 250_000
-
-
 def test_admin_transactions_list_reports_uzs_not_tiyin(client):
     """Transaction.amount/platformFee are stored in tiyin (UZS * 100), same as
-    every other money column in this table. /admin/escrow already converted
-    back to UZS for display; this list endpoint returned the raw tiyin value
-    instead, so the admin transactions screen showed every amount and every
-    commission figure 100x too large."""
+    every other money column in this table. This list endpoint returned the
+    raw tiyin value, so the admin transactions screen showed every amount and
+    every commission figure 100x too large."""
     employer = make_user(role="employer", phone="+998921111120", balance=1_000_000)
     worker = make_user(phone="+998921111121")
     job = make_job(employer.id, salary="250000")
-    _hire_with_escrow(client, employer, worker, job)
+    _hire(client, employer, worker, job)
+    # The row appears when the work is done, not when the worker is hired.
+    client.post(f"/api/v1/jobs/{job.id}/start")
+    client.post(f"/api/v1/jobs/{job.id}/complete",
+                json={"rating": 5, "review": "yaxshi", "bonus": 0})
 
     admin = make_user(role="admin", phone="+998921111122")
     login(client, admin)
@@ -221,7 +137,7 @@ def test_admin_transactions_list_reports_uzs_not_tiyin(client):
 
     # The payments screen both sides use reads a different endpoint that had
     # the same defect: it returned the ORM rows straight through, so a 250,000
-    # so'm hold was rendered as "25 000 000".
+    # so'm credit was rendered as "25 000 000".
     login(client, employer)
     rows = client.get("/api/v1/payments/transactions").json()
     assert len(rows) == 1
@@ -234,23 +150,25 @@ def test_admin_transactions_list_reports_uzs_not_tiyin(client):
 
 # ── Transaction atomicity (TX-01) ──────────────────────────────────────────
 
-def test_escrow_service_does_not_commit_on_its_own(client):
+def test_crediting_a_worker_does_not_commit_on_its_own(client):
     """The service used to commit internally while callers committed again.
 
-    A failure between the two left the employer's money frozen against a job
-    nobody was hired for. Rolling back must now undo the hold completely.
+    A failure between the two left a worker credited for a job whose
+    completion then rolled back. Abandoning the session must leave no trace.
     """
     employer = make_user(role="employer", phone="+998921111119", balance=1_000_000)
+    worker = make_user(phone="+998921111121", balance=0)
     job = make_job(employer.id, salary="250000")
 
     with SessionLocal() as db:
-        EscrowService.hold_funds(db, employer_id=employer.id, job_id=job.id, amount_uzs=250_000)
-        # Nothing has been committed yet, so abandoning the session must leave
-        # no trace of the hold.
+        job_row = db.query(Job).filter(Job.id == job.id).first()
+        WorkerEarnings.credit_worker(
+            db, job=job_row, worker_id=worker.id, amount_uzs=250_000,
+        )
         db.rollback()
 
     with SessionLocal() as db:
-        assert db.query(User).filter(User.id == employer.id).first().balance == 1_000_000
+        assert db.query(User).filter(User.id == worker.id).first().balance == 0
         assert db.query(Transaction).filter(Transaction.jobId == job.id).count() == 0
 
 
@@ -555,8 +473,6 @@ def test_settings_survive_a_reload(client):
     admin = make_user(role="admin", phone="+998944444003")
     _set_settings(
         client, admin,
-        escrowAutoReleaseEnabled=True,
-        escrowAutoReleaseHours=48,
         telegramDigestEnabled=True,
         telegramDigestChannel="@baito_stats",
         matchMinScore=65,
@@ -565,8 +481,6 @@ def test_settings_survive_a_reload(client):
     )
 
     body = client.get("/api/v1/admin/settings").json()
-    assert body["escrowAutoReleaseEnabled"] is True
-    assert body["escrowAutoReleaseHours"] == 48
     assert body["telegramDigestEnabled"] is True
     assert body["telegramDigestChannel"] == "@baito_stats"
     assert body["matchMinScore"] == 65
@@ -574,19 +488,11 @@ def test_settings_survive_a_reload(client):
     assert body["spamAutoBanHours"] == 24
 
 
-def test_auto_release_does_nothing_while_it_is_switched_off(client):
-    from app.tasks import auto_release_escrow
-
-    admin = make_user(role="admin", phone="+998944444004")
-    _set_settings(client, admin, escrowAutoReleaseEnabled=False)
-    assert auto_release_escrow() == 0
-
-
 def test_settings_are_validated(client):
     admin = make_user(role="admin", phone="+998944444005")
     login(client, admin)
     assert client.put("/api/v1/admin/settings", json={"matchMinScore": 500}).status_code == 422
-    assert client.put("/api/v1/admin/settings", json={"escrowAutoReleaseHours": 0}).status_code == 422
+    assert client.put("/api/v1/admin/settings", json={"spamAutoBanHours": -1}).status_code == 422
 
 
 def test_the_verification_message_uses_the_admin_s_wording(client):
@@ -618,103 +524,3 @@ def test_the_default_wording_is_used_when_no_template_is_set(client):
     login(client, worker)
     messages = [n["message"] for n in client.get("/api/v1/notifications").json()]
     assert any("rad etildi" in m for m in messages)
-
-
-def test_auto_release_actually_releases_a_completed_job(client):
-    """BUG-001. The only test this task had asserted it returns 0 — which it did,
-    for the wrong reason: it reads jobs.hiredWorkerId, and the hire flow never
-    wrote that column, so every run fell through 'nobody to pay' and the safety
-    net that exists to stop a finished worker's wage sitting frozen did nothing.
-    """
-    from datetime import datetime, timedelta, timezone
-
-    from app.models.job import JobStatus
-    from app.tasks import auto_release_escrow
-
-    employer = make_user(role="employer", phone="+998944444010", balance=1_000_000)
-    worker = make_user(role="worker", phone="+998944444011")
-    job = make_job(employer.id, salary="200000")
-
-    login(client, worker)
-    client.post(f"/api/v1/jobs/{job.id}/apply", json={})
-
-    login(client, employer)
-    app_id = next(a["id"] for a in client.get("/api/v1/applications/employer").json()
-                  if a.get("jobId") == job.id)
-    assert client.post(f"/api/v1/applications/{app_id}/hire", json={}).status_code == 200
-
-    admin = make_user(role="admin", phone="+998944444012")
-    _set_settings(client, admin, escrowAutoReleaseEnabled=True, escrowAutoReleaseHours=24)
-
-    # The state the task exists for: finished, undisputed, past the window, and
-    # the wage still held.
-    with SessionLocal() as db:
-        row = db.query(Job).filter(Job.id == job.id).first()
-        row.status = JobStatus.COMPLETED
-        row.completedAt = datetime.now(timezone.utc) - timedelta(hours=48)
-        db.commit()
-
-    assert auto_release_escrow() == 1, "a completed, undisputed job was not released"
-
-    with SessionLocal() as db:
-        tx = (db.query(Transaction)
-              .filter(Transaction.jobId == job.id, Transaction.type == "escrow_hold")
-              .first())
-        assert tx.status == "released"
-        paid = db.query(User).filter(User.id == worker.id).first()
-        assert (paid.balance or 0) > 0, "the worker was not paid"
-
-
-@pytest.mark.parametrize("status", ["hired", "confirmed", "start_requested",
-                                    "in_progress", "completed"])
-def test_release_reaches_a_worker_at_any_stage_of_the_job(client, status):
-    """Being hired is not a moment the worker stays in.
-
-    They are hired, then they raise a hand to start, then they are working,
-    then they are done — and the application status moves with them. The guard
-    asked for the literal "hired" and nothing else, so a worker past that first
-    step could not be paid at all. `ish` (ccf3d143) is stuck exactly there: at
-    start_requested, with 200 000 UZS frozen and the release refusing it.
-    """
-    employer = make_user(role="employer", phone=_unique_phone(), balance=1_000_000)
-    worker = make_user(phone=_unique_phone(), balance=0)
-    job = make_job(employer.id, salary="250000")
-    app_id = _hire_with_escrow(client, employer, worker, job)
-
-    with SessionLocal() as db:
-        db.query(Application).filter(Application.id == app_id).first().status = status
-        db.commit()
-
-    admin = make_user(role="admin", phone=_unique_phone())
-    login(client, admin)
-    resp = client.post(f"/api/v1/admin/jobs/{job.id}/escrow",
-                       json={"action": "release", "reason": "stranded hold",
-                             "workerId": worker.id})
-
-    assert resp.status_code == 200, resp.text
-    with SessionLocal() as db:
-        assert db.query(User).filter(User.id == worker.id).first().balance == 250_000
-
-
-@pytest.mark.parametrize("status", ["applied", "rejected"])
-def test_release_still_refuses_a_worker_who_was_never_hired(client, status):
-    """Widening the guard must not open it to anyone who merely applied."""
-    employer = make_user(role="employer", phone=_unique_phone(), balance=1_000_000)
-    hired = make_user(phone=_unique_phone(), balance=0)
-    other = make_user(phone=_unique_phone(), balance=0)
-    job = make_job(employer.id, salary="250000")
-    _hire_with_escrow(client, employer, hired, job)
-
-    with SessionLocal() as db:
-        db.add(Application(jobId=job.id, workerId=other.id, status=status))
-        db.commit()
-
-    admin = make_user(role="admin", phone=_unique_phone())
-    login(client, admin)
-    resp = client.post(f"/api/v1/admin/jobs/{job.id}/escrow",
-                       json={"action": "release", "reason": "should refuse",
-                             "workerId": other.id})
-
-    assert resp.status_code == 400
-    with SessionLocal() as db:
-        assert db.query(User).filter(User.id == other.id).first().balance == 0

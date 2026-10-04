@@ -29,7 +29,7 @@ class PaymentOrder(Base):
     userId = Column(String, ForeignKey("users.id"), nullable=False, index=True)
 
     # 'deposit' — top up the employer's balance.
-    # 'job'     — top up in order to fund a particular posting; the escrow
+    # 'job'     — top up in order to fund a particular posting; the
     #             itself is still taken at hire time, from the balance.
     purpose = Column(String, nullable=False, default="deposit")
     jobId = Column(String, ForeignKey("jobs.id"), nullable=True, index=True)

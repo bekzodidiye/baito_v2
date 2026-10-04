@@ -28,8 +28,8 @@ export const AdminDisputes: React.FC = () => {
       refresh();
       (
         winner === 'worker'
-          ? "Nizo hal qilindi: Escrow mablag'i Ishchiga o'tkazildi"
-          : "Nizo hal qilindi: Escrow mablag'i Ish beruvchiga qaytarildi"
+          ? "Nizo hal qilindi: ishchi foydasiga"
+          : "Nizo hal qilindi: ish beruvchi foydasiga"
       );
     } catch(e) {
       console.error(e);
@@ -45,7 +45,7 @@ export const AdminDisputes: React.FC = () => {
           <span>{a.disputesTitle}</span>
         </h2>
         <p className="text-xs text-slate-500 mt-1 font-medium">
-          Ish beruvchi va ishchi o'rtasidagi kelishmovchiliklar boyicha Escrow mablag'ini taqsimlash
+          Ish beruvchi va ishchi o'rtasidagi kelishmovchiliklarni hal qilish
         </p>
       </div>
 

@@ -26,7 +26,6 @@ import { AdminNotificationRules } from './AdminNotificationRules';
 import { AdminAutoModeration } from './AdminAutoModeration';
 import { AdminAutoMatching } from './AdminAutoMatching';
 import { AdminAutoReports } from './AdminAutoReports';
-import { AdminAutoEscrowDocs } from './AdminAutoEscrowDocs';
 
 export const AdminPanel: React.FC = () => {
   // The URL is the tab. Every section is its own address, so it can be linked
@@ -197,9 +196,6 @@ export const AdminPanel: React.FC = () => {
             <AdminAutoReports stats={stats} settings={settings} onUpdateSettings={updateSettings} />
           )}
 
-          {activeTab === 'auto_escrow_docs' && (
-            <AdminAutoEscrowDocs settings={settings} onUpdateSettings={updateSettings} />
-          )}
 
           {activeTab === 'settings' && (
             <AdminSettings settings={settings} onUpdateSettings={updateSettings} />

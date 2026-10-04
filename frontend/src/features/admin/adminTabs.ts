@@ -33,7 +33,6 @@ export const TAB_SLUGS: Record<AdminTab, string> = {
   auto_moderation: 'auto-moderation',
   auto_matching: 'auto-matching',
   auto_reports: 'auto-reports',
-  auto_escrow_docs: 'auto-escrow-docs',
 };
 
 export const DEFAULT_ADMIN_TAB: AdminTab = 'overview';

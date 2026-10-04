@@ -63,10 +63,11 @@ def test_the_bonus_reaches_the_worker_in_full(finished_job):
     # taken from the bonus - only from the wage.
     assert _balance(ctx["worker"].id) == NET_WAGE + 25_000
     # The employer funds it, on top of the wage they escrowed at hire.
-    assert _balance(ctx["employer"].id) == employer_before - 25_000
+    # The employer is not debited: the bonus goes on the invoice with the wage.
+    assert _balance(ctx["employer"].id) == employer_before
 
 
-def test_both_sides_are_recorded_in_the_ledger(finished_job):
+def test_the_credit_is_recorded_in_the_ledger(finished_job):
     ctx = finished_job
     ctx["client"].post(
         f"/api/v1/jobs/{ctx['job'].id}/complete",
@@ -78,8 +79,8 @@ def test_both_sides_are_recorded_in_the_ledger(finished_job):
             .filter(models.AuditLedger.entryType == "completion_bonus")
             .all()
         )
-        deltas = sorted(e.amountDelta for e in entries)
-        assert deltas == [-25_000, 25_000]
+        # One entry, the worker's. The employer's balance is not touched.
+        assert sorted(e.amountDelta for e in entries) == [25_000]
 
 
 def test_completion_without_a_bonus_pays_the_wage_only(finished_job):
@@ -124,8 +125,9 @@ def test_a_bonus_bigger_than_the_balance_still_reaches_the_worker(finished_job):
     assert res.status_code == 200, res.text
     assert res.json()["bonus_paid_workers"] == 1
     assert _balance(ctx["worker"].id) == NET_WAGE + 500_000
-    # What the employer owes, which the invoice collects.
-    assert _balance(ctx["employer"].id) == 10_000 - 500_000
+    # An employer with almost nothing on their balance can still award a
+    # bonus: nothing is taken from them, the invoice collects it afterwards.
+    assert _balance(ctx["employer"].id) == 10_000
 
 
 def test_the_employer_is_not_told_a_bonus_was_paid_that_was_not(finished_job):

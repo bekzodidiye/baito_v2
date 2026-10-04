@@ -11,7 +11,7 @@ state it left behind, never because it happens to carry a date.
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from app.models.application import Application
 from app.models.job import JobStatus
@@ -180,33 +180,3 @@ def test_a_cancelled_job_does_not_claim_to_be_waiting_for_anything(client):
     assert steps[-1]["key"] == "cancelled"
 
 
-def test_hiring_is_dated_from_the_escrow_hold_not_the_application(client):
-    """The application row only knows when the worker applied.
-
-    That date used to be reported as the hiring date too, which put the two
-    events at the same moment on a job where hiring happened days later.
-    """
-    _admin(client)
-    employer = make_user(role="employer", phone=_phone(), balance=1_000_000)
-    worker = make_user(phone=_phone())
-    job = make_job(employer.id, status=JobStatus.CONFIRMED, hiredWorkerId=worker.id)
-
-    from app.services.escrow_service import EscrowService
-    # Applied two days before being hired. Without the gap both rows land in
-    # the same second here and the bug this covers would pass unnoticed.
-    with SessionLocal() as db:
-        db.add(Application(
-            jobId=job.id, workerId=worker.id, status="hired",
-            appliedDate=datetime.now(timezone.utc) - timedelta(days=2),
-        ))
-        db.commit()
-        EscrowService.hold_funds(db, employer.id, job.id, 250_000)
-        db.commit()
-
-    detail = client.get(f"/api/v1/admin/jobs/{job.id}/detail").json()
-    hired_event = next(e for e in detail["timeline"] if e["event"] == "hired")
-    applied_event = next(e for e in detail["timeline"] if e["event"] == "applied")
-    hold = next(t for t in detail["transactions"] if t["type"] == "escrow_hold")
-
-    assert hired_event["date"] == hold["createdAt"]
-    assert hired_event["date"] != applied_event["date"]

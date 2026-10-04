@@ -8,7 +8,7 @@
 export const ADMIN_TEXTS = {
   uz: {
     // Overview
-    escrowHeld: "Ish vaqtida xavfsiz saqlanayotgan mablag'",
+    owedToWorkersNote: "Ishchilarga hisoblangan, hali qo'lda to'lanmagan",
     usersLabel: 'Foydalanuvchilar',
     totalPostings: "Jami E'lonlar",
     completedAndPaid: "Muvaffaqiyatli yakunlangan va to'langan",
@@ -154,12 +154,8 @@ export const ADMIN_TEXTS = {
     timeAndIp: 'Vaqt & IP',
     targetLabel: 'Nishon (Target)',
 
-    // Escrow documents
-    escrowDocsTitle: 'Avto-Escrow Garantiya va Daloatnoma Generator',
     autoTransferMode: "Avtomatik pul o'tkazish rejimi",
     fiscalReceiptPrep: 'Kassa va fiskal cheklarga tayyorlash',
-    escrowFrozenNote: "Mablag' Baito trast hamyonida muzlatiladi. Usta ishni yakunlamaguncha berilmaydi.",
-    escrowReleaseNote: 'Ish topshirilishi tasdiqlangach, pul ustaga o\'tadi va QR daloatnoma beriladi.',
     acceptanceActTitle: 'Bajarilgan Ishlar va Qabul Qilish Daloatnomasi',
     orderAndJobName: 'BUYURTMA VA ISH NOMI:',
     customerEmployer: 'BUYURTMACHI (ISH BERUVCHI):',
@@ -223,7 +219,7 @@ export const ADMIN_TEXTS = {
     // it was hardcoded here as "10% platforma komissiyasi", which stopped
     // being true when the rates became per-category.
     platformCommissionNote: 'Platforma komissiyasi',
-    escrowFrozen: 'Muzlatilgan escrow',
+    owedToWorkers: 'Ishchilarga qarz',
     workersShort: ['ishchi'],
     employersShort: ['ish beruvchi'],
     openShort: 'Ochiq',
@@ -253,7 +249,7 @@ export const ADMIN_TEXTS = {
     selfieWithPassport: "Selfie + Pasport"
   },
   ru: {
-    escrowHeld: 'Средства, удерживаемые на время работы',
+    owedToWorkersNote: 'Начислено работникам, ещё не выплачено вручную',
     usersLabel: 'Пользователи',
     totalPostings: 'Всего объявлений',
     completedAndPaid: 'Успешно завершено и оплачено',
@@ -382,11 +378,8 @@ export const ADMIN_TEXTS = {
     timeAndIp: 'Время и IP',
     targetLabel: 'Объект (Target)',
 
-    escrowDocsTitle: 'Авто-эскроу: гарантии и генератор актов',
     autoTransferMode: 'Режим автоматического перевода средств',
     fiscalReceiptPrep: 'Подготовка к кассовым и фискальным чекам',
-    escrowFrozenNote: 'Средства замораживаются в трастовом кошельке Baito. Они не выдаются, пока исполнитель не завершит работу.',
-    escrowReleaseNote: 'После подтверждения сдачи работы деньги переходят исполнителю и выдаётся акт с QR-кодом.',
     acceptanceActTitle: 'Акт выполненных работ и приёмки',
     orderAndJobName: 'ЗАКАЗ И НАЗВАНИЕ РАБОТЫ:',
     customerEmployer: 'ЗАКАЗЧИК (РАБОТОДАТЕЛЬ):',
@@ -442,7 +435,7 @@ export const ADMIN_TEXTS = {
     timeColumn: 'Время',
     commissionRevenue: 'Доход от комиссии',
     platformCommissionNote: 'Комиссия платформы',
-    escrowFrozen: 'Замороженный эскроу',
+    owedToWorkers: 'Долг работникам',
     workersShort: ['работник', 'работника', 'работников'],
     employersShort: ['работодатель', 'работодателя', 'работодателей'],
     openShort: 'Открыто',
@@ -468,7 +461,7 @@ export const ADMIN_TEXTS = {
     selfieWithPassport: 'Селфи с паспортом'
   },
   en: {
-    escrowHeld: 'Funds held while the work is under way',
+    owedToWorkersNote: 'Credited to workers, not yet paid out by hand',
     usersLabel: 'Users',
     totalPostings: 'Postings in total',
     completedAndPaid: 'Completed and paid',
@@ -597,11 +590,8 @@ export const ADMIN_TEXTS = {
     timeAndIp: 'Time and IP',
     targetLabel: 'Target',
 
-    escrowDocsTitle: 'Auto-escrow guarantees and acceptance-act generator',
     autoTransferMode: 'Automatic transfer mode',
     fiscalReceiptPrep: 'Prepare for till and fiscal receipts',
-    escrowFrozenNote: 'The funds are frozen in Baito’s trust wallet. They are not released until the worker finishes the job.',
-    escrowReleaseNote: 'Once the handover is confirmed, the money goes to the worker and a QR acceptance act is issued.',
     acceptanceActTitle: 'Act of completed work and acceptance',
     orderAndJobName: 'ORDER AND JOB TITLE:',
     customerEmployer: 'CUSTOMER (EMPLOYER):',
@@ -657,7 +647,7 @@ export const ADMIN_TEXTS = {
     timeColumn: 'Time',
     commissionRevenue: 'Commission revenue',
     platformCommissionNote: 'Platform commission',
-    escrowFrozen: 'Held in escrow',
+    owedToWorkers: 'Owed to workers',
     workersShort: ['worker', 'workers'],
     employersShort: ['employer', 'employers'],
     openShort: 'open',

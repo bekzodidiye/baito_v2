@@ -95,7 +95,7 @@ export const useEmployer = () => {
   // A blank field is sent blank. This used to substitute a wage of
   // "200000 UZS", a location of Toshkent, today's date and a 09:00-18:00
   // shift for anything the employer left empty - figures nobody chose, on a
-  // posting that then went live carrying them, and the wage is what escrow
+  // posting that then went live carrying them, and the wage is what the
   // freezes and what the worker is paid. JobPostForm is the only caller
   // (`postNewJob` is this hook's sole export of the mutation) and it refuses
   // to advance past step 2 without a date, a time, a worker count and a
@@ -150,7 +150,7 @@ export const useEmployer = () => {
       queryClient.invalidateQueries({ queryKey: ['employer-jobs'] });
       queryClient.invalidateQueries({ queryKey: ['employer-applications'] });
       if (variables.status === 'hired') {
-        handleSuccess("Ishchi yollandi! Summa ushlab qolindi.", "Работник нанят! Сумма удержана.", "Worker hired! Amount held in escrow.");
+        handleSuccess("Ishchi yollandi!", "Работник нанят!", "Worker hired!");
       } else {
         handleSuccess("Ariza rad etildi.", "Заявка отклонена.", "Application rejected.");
       }

@@ -26,6 +26,8 @@ class SystemSetting(Base):
 
     # Escrow released without anyone pressing a button, once the work has been
     # marked complete and nobody has objected.
+    # Unread since escrow was removed: nothing is frozen, so nothing is
+    # auto-released. The columns stay until a migration drops them.
     escrowAutoReleaseEnabled = Column(Boolean, default=False)
     escrowAutoReleaseHours = Column(Integer, default=24)
 

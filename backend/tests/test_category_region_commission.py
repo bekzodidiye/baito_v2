@@ -12,12 +12,12 @@ advertised; every rate below only ever moves what the employer pays.
 import uuid
 
 from app.models.category import Category
-from app.models.job import JobStatus
+from app.models.job import Job, JobStatus
 from app.models.region import Region
 from app.models.system_setting import SystemSetting
 from app.models.transaction import Transaction
 from app.models.user import User
-from app.services.escrow_service import EscrowService, job_fee_percent
+from app.services.earnings_service import WorkerEarnings, job_fee_percent
 from app.db.session import SessionLocal
 
 from .conftest import make_job, make_user
@@ -133,7 +133,7 @@ def test_a_zero_rate_on_both_halves_is_a_rate_not_a_missing_value(client):
 
 # --- what it does to money ---------------------------------------------------
 
-def test_hiring_freezes_the_wage_plus_the_summed_rate(client):
+def test_a_day_worked_bills_the_wage_plus_the_summed_rate(client):
     _clean()
     _category("logistics", 1)
     _region("Toshkent", 3)
@@ -144,22 +144,22 @@ def test_hiring_freezes_the_wage_plus_the_summed_rate(client):
                    status=JobStatus.CONFIRMED, hiredWorkerId=worker.id, salary=str(WAGE))
 
     with SessionLocal() as db:
-        EscrowService.hold_funds(db, employer.id, job.id, WAGE)
+        job_row = db.query(Job).filter(Job.id == job.id).first()
+        tx = WorkerEarnings.credit_worker(
+            db, job=job_row, worker_id=worker.id, amount_uzs=WAGE,
+        )
+        # 4% of 200 000, recorded beside the wage for the invoice to collect.
+        assert tx.platformFee == 8_000 * 100
         db.commit()
 
-    # 4% of 200 000 on top of the wage.
-    assert _balance(employer.id) == 1_000_000 - (WAGE + 8_000)
-
-    with SessionLocal() as db:
-        EscrowService.release_funds(db, job_id=job.id, worker_id=worker.id)
-        db.commit()
-
-    # The worker is paid the posting's figure whatever the two rates were.
+    # Nothing leaves the employer; the worker is credited the posting's figure
+    # whatever the two rates were.
+    assert _balance(employer.id) == 1_000_000
     assert _balance(worker.id) == WAGE
 
 
-def test_the_summed_rate_is_pinned_when_the_money_is_frozen(client):
-    """Editing either half afterwards must not reach into a live hold."""
+def test_the_summed_rate_is_pinned_when_the_day_is_credited(client):
+    """Editing either half afterwards must not restate work already done."""
     _clean()
     _category("logistics", 1)
     _region("Toshkent", 3)
@@ -170,23 +170,24 @@ def test_the_summed_rate_is_pinned_when_the_money_is_frozen(client):
                    status=JobStatus.CONFIRMED, hiredWorkerId=worker.id, salary=str(WAGE))
 
     with SessionLocal() as db:
-        EscrowService.hold_funds(db, employer.id, job.id, WAGE)
+        job_row = db.query(Job).filter(Job.id == job.id).first()
+        WorkerEarnings.credit_worker(
+            db, job=job_row, worker_id=worker.id, amount_uzs=WAGE,
+        )
         db.commit()
-    charged = 1_000_000 - _balance(employer.id)
 
-    # An administrator raises both halves after the hire.
+    # An administrator raises both halves after the work was done.
     with SessionLocal() as db:
         db.query(Category).filter(Category.slug == "logistics").first().commissionPercent = 20
         db.query(Region).filter(Region.name == "Toshkent").first().commissionPercent = 20
         db.commit()
 
     with SessionLocal() as db:
-        hold = db.query(Transaction).filter(Transaction.jobId == job.id).first()
-        assert hold.feePercent == 4
-        EscrowService.release_funds(db, job_id=job.id, worker_id=worker.id)
-        db.commit()
+        row = db.query(Transaction).filter(Transaction.jobId == job.id).first()
+        # Still the rate the day was worked under, not the new one.
+        assert row.feePercent == 4
+        assert row.platformFee == 8_000 * 100
 
-    assert 1_000_000 - _balance(employer.id) == charged
     assert _balance(worker.id) == WAGE
 
 
@@ -206,13 +207,15 @@ def test_fractional_halves_survive_being_recorded(client):
                    status=JobStatus.CONFIRMED, hiredWorkerId=worker.id, salary=str(WAGE))
 
     with SessionLocal() as db:
-        EscrowService.hold_funds(db, employer.id, job.id, WAGE)
+        job_row = db.query(Job).filter(Job.id == job.id).first()
+        WorkerEarnings.credit_worker(
+            db, job=job_row, worker_id=worker.id, amount_uzs=WAGE,
+        )
         db.commit()
-        hold = db.query(Transaction).filter(Transaction.jobId == job.id).first()
-        assert hold.feePercent == 2.7
-
-    # 2.7% of 200 000 = 5 400.
-    assert _balance(employer.id) == 1_000_000 - (WAGE + 5_400)
+        row = db.query(Transaction).filter(Transaction.jobId == job.id).first()
+        assert row.feePercent == 2.7
+        # 2.7% of 200 000 = 5 400.
+        assert row.platformFee == 5_400 * 100
 
 
 # --- the lists the posting form reads ----------------------------------------

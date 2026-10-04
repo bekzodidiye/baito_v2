@@ -127,7 +127,7 @@ def get_current_employer(
 # What "verified" means here is that an administrator has looked at the
 # documents the account uploaded and marked it so. It is not a formality: a
 # worker turns up at a stranger's address, and an employer's posting moves
-# money out of an escrow balance. Editing a document field clears the flag
+# money out of a balance. Editing a document field clears the flag
 # again (see users.py), so this cannot be passed once and then changed.
 #
 # Administrators are exempt. They are created by scripts/create_accounts.py,

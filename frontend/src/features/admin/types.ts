@@ -9,7 +9,7 @@ export interface AdminStats {
   totalApplications: number;
   totalTransactions: number;
   totalRevenue: number;
-  totalEscrowHeld: number;
+  totalOwedToWorkers: number;
 }
 
 export interface AdminUser {
@@ -199,8 +199,6 @@ export interface SystemSettings {
   spamKeywords?: string | null;
   spamAutoFineAmount?: number;
   spamAutoBanHours?: number;
-  escrowAutoReleaseEnabled?: boolean;
-  escrowAutoReleaseHours?: number;
   telegramDigestEnabled?: boolean;
   telegramDigestChannel?: string | null;
   matchMinScore?: number;
@@ -348,6 +346,5 @@ export type AdminTab =
   | 'notification_rules'
   | 'auto_moderation'
   | 'auto_matching'
-  | 'auto_reports'
-  | 'auto_escrow_docs';
+  | 'auto_reports';
 

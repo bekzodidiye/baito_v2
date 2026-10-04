@@ -20,12 +20,12 @@ def _phone():
     return f"+9989{uuid.uuid4().int % 10**8:08d}"
 def _day(offset: int) -> str:
     return (datetime.now(TASHKENT) + timedelta(days=offset)).strftime("%Y-%m-%d")
-def _held(job_id):
+def _credited(job_id):
+    """Days this posting has been credited for."""
     with SessionLocal() as db:
         return (db.query(Transaction)
                 .filter(Transaction.jobId == job_id,
-                        Transaction.type == "escrow_hold",
-                        Transaction.status == "held").count())
+                        Transaction.type == "worker_earning").count())
 def _days(job_id):
     with SessionLocal() as db:
         return {str(d.workDate): d.status for d in
@@ -50,12 +50,12 @@ def _day_id(job_id, date):
             JobDay.jobId == job_id, JobDay.workDate == date).first().id
 def test_tomorrow_cannot_be_closed_today(client):
     _employer, _worker, job = _running_three_day_job(client)
-    before = _held(job.id)
+    before = _credited(job.id)
     resp = client.post(
         f"/api/v1/jobs/{job.id}/days/{_day_id(job.id, _day(1))}/complete")
     assert resp.status_code == 400
     assert _day(1) in resp.json()["detail"]
-    assert _held(job.id) == before
+    assert _credited(job.id) == before
     assert _days(job.id)[_day(1)] == JobDayStatus.PENDING
 def test_the_worker_is_not_paid_for_a_day_they_have_not_worked(client):
     _employer, worker, job = _running_three_day_job(client)
@@ -85,7 +85,8 @@ def test_closing_today_leaves_tomorrow_alone(client):
     assert days[_day(0)] == JobDayStatus.COMPLETED
     assert days[_day(1)] == JobDayStatus.PENDING
     assert days[_day(-1)] == JobDayStatus.PENDING
-    assert _held(job.id) == 2
+    # One day worked, one credit. The other two are still owed nothing.
+    assert _credited(job.id) == 1
 def test_an_administrator_can_still_close_a_day_early(client):
     """The override exists for support cases; the refusal is not a lock."""
     _employer, _worker, job = _running_three_day_job(client)

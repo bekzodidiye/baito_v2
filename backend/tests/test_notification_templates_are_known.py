@@ -29,6 +29,9 @@ TRANSLATOR = (
     / "frontend" / "src" / "utils" / "notificationTranslator.ts"
 )
 
+# "Mablag' qaytarildi" and "To'lov chiqarildi" are not here: they went with
+# escrow. Their rows are still in the database and still on screen, so the
+# client keeps translating them — that list is its own.
 KNOWN_TITLES = {
     "Ariza rad etildi",
     "Hisob-faktura to'landi deb belgilandi",
@@ -39,27 +42,25 @@ KNOWN_TITLES = {
     "Ish kuni yakunlandi",
     "Ish tayinlanishi o'zgardi",
     "Ish yakunlandi",
-    "Mablag' qaytarildi",
     "Mablag' yechildi",
     "Murojaatingizga javob",
     "Sizni ishga qabul qilishdi!",
     "Sizni ishga tayinlashdi",
-    "To'lov chiqarildi",
     "To'lov tasdiqlandi",
     "Verifikatsiya holati",
     "Yangi ariza keldi",
     "Yechish so'rovi rad etildi",
 }
 
+# The refund and admin-payout messages are not here either: they went with
+# escrow, and their rows live on in the database for the client to translate.
 KNOWN_MESSAGES = {
     "'{}' bo'yicha qo'llab-quvvatlash javob berdi.",
     "'{}' e'loni administrator tomonidan bekor qilindi.",
     "'{}' e'loni ish beruvchi tomonidan bekor qilindi.",
     "'{}' ishi bo'yicha arizangiz rad etildi.",
     "'{}' ishi bo'yicha ishchi ishni boshladi.",
-    "'{}' ishi bo'yicha muzlatilgan mablag' hisobingizga qaytarildi.",
     "'{}' ishi bo'yicha tayinlov administrator tomonidan o'zgartirildi.",
-    "'{}' ishi bo'yicha to'lov administrator tomonidan chiqarildi.",
     "'{}' ishi bo'yicha to'lov hisobingizga o'tkazildi.",
     "'{}' ishi bo'yicha to'lov hisobingizga o'tkazildi. Ish beruvchi qo'shimcha {} so'm bonus qo'shdi.",
     "'{}' ishi ishchi tomonidan yakunlandi. Iltimos, ishchiga baho va sharh qoldiring.",

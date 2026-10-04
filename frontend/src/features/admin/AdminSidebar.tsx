@@ -53,7 +53,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
         { id: 'auto_moderation' as AdminTab, labelUz: 'Avto-Shtraf & Spam Bot', labelRu: 'Авто-Штраф & Спам Бот', labelEn: 'Auto-Penalty & Spam Bot', icon: Bot },
         { id: 'auto_matching' as AdminTab, labelUz: 'AI Avto-Matching', labelRu: 'AI Авто-Подбор', labelEn: 'AI Auto-Matching', icon: Zap },
         { id: 'auto_reports' as AdminTab, labelUz: 'Avto-Hisobot & Telegram', labelRu: 'Авто-Отчеты & Telegram', labelEn: 'Auto-Reports & Telegram', icon: FileText },
-        { id: 'auto_escrow_docs' as AdminTab, labelUz: 'Avto-Escrow Daloatnoma', labelRu: 'Авто-Escrow Акты', labelEn: 'Auto-Escrow Acts', icon: ShieldCheck },
         { id: 'notification_rules' as AdminTab, labelUz: 'Auto-Xabarnoma Qoidalari', labelRu: 'Правила уведомлений', labelEn: 'Notification Rules', icon: BellRing },
       ],
     },
@@ -62,8 +61,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
       titleRu: 'Финансы и Безопасность',
       titleEn: 'Finance & Security',
       items: [
-        { id: 'transactions' as AdminTab, labelUz: 'Escrow va Tranzaksiyalar', labelRu: 'Escrow и транзакции', labelEn: 'Escrow & Transactions', icon: DollarSign },
-        { id: 'payouts' as AdminTab, labelUz: "To'lovlar va Escrow", labelRu: 'Выплаты и эскроу', labelEn: 'Payouts & Escrow', icon: Wallet },
+        { id: 'transactions' as AdminTab, labelUz: 'Tranzaksiyalar', labelRu: 'Транзакции', labelEn: 'Transactions', icon: DollarSign },
+        { id: 'payouts' as AdminTab, labelUz: "To'lovlar", labelRu: 'Выплаты', labelEn: 'Payouts', icon: Wallet },
         { id: 'disputes' as AdminTab, labelUz: 'Nizolar va Shikoyatlar', labelRu: 'Споры и жалобы', labelEn: 'Disputes & Claims', icon: AlertTriangle, badge: badge(disputes.length) },
         { id: 'verifications' as AdminTab, labelUz: 'Hujjatlarni Tasdiqlash', labelRu: 'Проверка документов', labelEn: 'Verifications', icon: FileCheck },
         { id: 'audit_logs' as AdminTab, labelUz: 'Audit Loglar Stream', labelRu: 'Логи аудита', labelEn: 'Audit Logs Stream', icon: ShieldAlert },
