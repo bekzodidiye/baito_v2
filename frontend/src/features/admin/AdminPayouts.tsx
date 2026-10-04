@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { money as sum } from '../../utils/money';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
@@ -75,7 +76,7 @@ interface EscrowHold {
   createdAt: string | null;
 }
 
-const money = (n: number) => new Intl.NumberFormat('uz-UZ').format(n) + " so'm";
+const money = (n: number) => sum(n, useAuthStore.getState().language);
 const when = (s: string | null) => (s ? new Date(s).toLocaleString('uz-UZ') : '—');
 
 export const AdminPayouts: React.FC = () => {

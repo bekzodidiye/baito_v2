@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useAuthStore } from '../../store/useAuthStore';
+import { money } from '../../utils/money';
 import { PromoCode } from './types';
 import { useAdminData } from './useAdminData';
 import { apiClient } from '../../api/client';
@@ -79,7 +81,7 @@ export const AdminPromotions: React.FC = () => {
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-500">Chegirma qiymati:</span>
                 <span className="font-extrabold text-emerald-600">
-                  {p.discountType === 'percentage' ? `${p.amount}%` : `${p.amount.toLocaleString()} so'm`}
+                  {p.discountType === 'percentage' ? `${p.amount}%` : money(p.amount, useAuthStore.getState().language)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">

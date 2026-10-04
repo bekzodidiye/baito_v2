@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { money } from '../../utils/money';
 import { X, Check, Loader2, Upload, FileText, Wallet } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { showToast } from '../../utils/toast';
@@ -101,7 +102,7 @@ export const EmployerPayInvoiceModal: React.FC<EmployerPayInvoiceModalProps> = (
   };
 
   const amount = job?.invoiceAmount != null
-    ? `${Number(job.invoiceAmount).toLocaleString()} so'm`
+    ? money(job.invoiceAmount, language)
     : '—';
 
   return (

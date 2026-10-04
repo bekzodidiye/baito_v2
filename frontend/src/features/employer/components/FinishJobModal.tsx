@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { money } from '../../../utils/money';
 import { X, Star, MessageSquare, PlusCircle, CalendarCheck, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -65,7 +66,6 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
   // One day is just a job; the choice only means something when there is more
   // than one day to choose between.
   const showDays = days.length > 1;
-  const money = (n: number) => n.toLocaleString('ru-RU').replace(/ /g, ' ');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,7 +146,7 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-slate-800 tabular-nums">{day.workDate}</p>
                           {day.amount != null && (
-                            <p className="text-xs text-slate-500 tabular-nums">{money(day.amount)} so'm</p>
+                            <p className="text-xs text-slate-500 tabular-nums">{money(day.amount, language)}</p>
                           )}
                         </div>
                         {done ? (

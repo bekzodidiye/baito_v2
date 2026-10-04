@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { negotiablePay } from './useLandingCategories';
 import { useJobsData } from "../../context/useJobsData";
 import { LANDING_TEXTS } from './LandingData';
 import { Compass, MapPin, Building2, Clock, ArrowRight, Info, CheckCircle2 } from 'lucide-react';
@@ -35,7 +36,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
       if (foundJob) {
         targetShift = {
           id: foundJob.id, titleUz: foundJob.title, titleRu: foundJob.title, company: foundJob.company, district: foundJob.location,
-          pay: foundJob.salary || "280,000 so'm/smena", payNum: 280000, time: foundJob.time || `09:00 - 18:00 (8 ${t.hoursSuffix})`, category: 'general',
+          pay: foundJob.salary || negotiablePay(language), payNum: 280000, time: foundJob.time || `09:00 - 18:00 (8 ${t.hoursSuffix})`, category: 'general',
           lat: 0, lng: 0, urgent: foundJob.urgent || false,
           descriptionUz: foundJob.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
           descriptionRu: foundJob.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
@@ -57,7 +58,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
     const updateActiveShift = () => {
       const realShifts = jobs.map(j => ({
         id: j.id, titleUz: j.title, titleRu: j.title, company: j.company, district: j.location,
-        pay: j.salary || "280,000 so'm/smena", payNum: 280000, time: j.time || `09:00 - 18:00 (8 ${t.hoursSuffix})`, category: 'general',
+        pay: j.salary || negotiablePay(language), payNum: 280000, time: j.time || `09:00 - 18:00 (8 ${t.hoursSuffix})`, category: 'general',
         lat: 0, lng: 0, urgent: j.urgent || false,
         descriptionUz: j.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
         descriptionRu: j.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",

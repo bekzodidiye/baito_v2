@@ -1,4 +1,5 @@
 import React from 'react';
+import { money } from '../../../utils/money';
 import type { ScreenType } from '../../../context/types';
 import { Wallet, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { showToast } from '../../../utils/toast';
@@ -40,7 +41,7 @@ export const ProfileWidgets: React.FC<ProfileWidgetsProps> = ({
             <Wallet size={12} />
             <span>{t.walletTitle}</span>
           </p>
-          <h3 className="text-3xl font-black text-white my-2.5 tracking-tight">{Number(balance).toLocaleString()} so'm</h3>
+          <h3 className="text-3xl font-black text-white my-2.5 tracking-tight">{money(balance, language)}</h3>
           <button 
             onClick={() => setCurrentScreen('payments')}
             className="w-full min-h-[44px] py-2.5 bg-white text-brand-primary font-display font-black text-[11px] rounded-xl hover:bg-slate-50 transition-all cursor-pointer shadow-[0_4px_12px_rgba(255,255,255,0.15)] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-[0.99]"

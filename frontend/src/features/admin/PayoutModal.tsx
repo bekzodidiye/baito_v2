@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { money as sum } from '../../utils/money';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import {
@@ -44,7 +45,7 @@ interface Props {
   onDone?: () => void;
 }
 
-const som = (n: number) => `${n.toLocaleString('ru-RU').replace(/,/g, ' ')} so'm`;
+const som = (n: number) => sum(n, useAuthStore.getState().language);
 
 export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
   const language = useAuthStore(st => st.language);

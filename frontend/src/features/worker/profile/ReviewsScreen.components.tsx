@@ -1,4 +1,6 @@
 import React from 'react';
+import { useAuthStore } from '../../../store/useAuthStore';
+import { money } from '../../../utils/money';
 import { Star, MessageSquare, TrendingUp, Award, Gift } from 'lucide-react';
 import { Application } from '../../../types';
 import { motion } from 'motion/react';
@@ -86,7 +88,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase">{t.totalEarned}</p>
             <p className="font-display font-black text-sm text-emerald-600">
-              {totalEarned.toLocaleString()} so'm
+              {money(totalEarned, useAuthStore.getState().language)}
             </p>
           </div>
         </div>
@@ -129,7 +131,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, index }) => (
     <div className="flex items-center gap-3 mt-3">
       {review.bonus ? (
         <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-          + {review.bonus.toLocaleString()} so'm bonus
+          + {money(review.bonus, useAuthStore.getState().language)} bonus
         </span>
       ) : null}
       <span className="text-[10px] font-medium text-slate-300 ml-auto">

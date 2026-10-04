@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { money } from '../../utils/money';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { RegionConfig } from './types';
@@ -134,7 +135,7 @@ export const AdminRegions: React.FC = () => {
               <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                 <span className="text-[10px] text-slate-400 block font-medium">{a.minWageShort}</span>
                 <span className="text-xs font-bold text-slate-800 flex items-center gap-1 mt-0.5">
-                  {(region.minSalary || 0).toLocaleString()} so'm
+                  {money(region.minSalary || 0, language)}
                 </span>
               </div>
               <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">

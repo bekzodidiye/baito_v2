@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { money } from '../../utils/money';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { motion, AnimatePresence } from 'motion/react';
@@ -93,6 +94,8 @@ const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
  *  the language, so they re-render when it changes. This spares threading the
  *  table through four of them as a prop. */
 const adminText = () => ADMIN_TEXTS[useAuthStore.getState().language] || ADMIN_TEXTS.uz;
+/** Same store read, for the sums shown in the sub-components below. */
+const adminLang = () => useAuthStore.getState().language;
 
 export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) => {
   const language = useAuthStore(st => st.language);
@@ -577,11 +580,11 @@ const PaymentsTab: React.FC<{ transactions: AdminJobTransaction[] }> = ({ transa
               <div className="bg-slate-50 rounded-lg p-2.5 grid grid-cols-2 gap-2 text-[11px]">
                 <div>
                   <span className="text-slate-400 font-medium block">Summa</span>
-                  <span className="text-slate-800 font-bold">{Number(tx.amount).toLocaleString()} so'm</span>
+                  <span className="text-slate-800 font-bold">{money(tx.amount, adminLang())}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 font-medium block">Platforma haqqi</span>
-                  <span className="text-slate-800 font-bold">{Number(tx.platformFee).toLocaleString()} so'm</span>
+                  <span className="text-slate-800 font-bold">{money(tx.platformFee, adminLang())}</span>
                 </div>
                 {tx.employerName && (
                   <div>

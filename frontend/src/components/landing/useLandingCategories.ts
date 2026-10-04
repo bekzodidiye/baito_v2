@@ -132,3 +132,11 @@ export const useLandingCategories = (language: string) => {
     isFallback: categories === null,
   };
 };
+
+/** A posting that names no figure. Inventing one — the cards used to read
+ *  "280,000 so'm/smena" whatever the posting said — puts a wage in an
+ *  employer's mouth, and in Uzbek to every reader. */
+export const negotiablePay = (language: string): string =>
+  language === 'ru' ? 'По договорённости'
+  : language === 'en' ? 'Negotiable'
+  : 'Kelishilgan holda';
