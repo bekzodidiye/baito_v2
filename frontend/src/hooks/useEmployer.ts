@@ -91,20 +91,34 @@ export const useEmployer = () => {
   };
 
   // Mutations
+  //
+  // A blank field is sent blank. This used to substitute a wage of
+  // "200000 UZS", a location of Toshkent, today's date and a 09:00-18:00
+  // shift for anything the employer left empty - figures nobody chose, on a
+  // posting that then went live carrying them, and the wage is what escrow
+  // freezes and what the worker is paid. JobPostForm is the only caller
+  // (`postNewJob` is this hook's sole export of the mutation) and it refuses
+  // to advance past step 2 without a date, a time, a worker count and a
+  // positive wage, so none of those substitutions was ever reachable. What
+  // reaches the API now is what was typed; a blank title, wage, location or
+  // description comes back as a 422 the employer can read, instead of being
+  // quietly filled in.
   const postNewJobMutation = useMutation({
     mutationFn: async (newJobData: Partial<Job>) => {
       return apiClient('/jobs', {
         method: 'POST',
         body: JSON.stringify({
           title: (newJobData.title || '').trim(),
+          // Not an invented figure: the server reads this as "no company
+          // given" and fills in the account's own name.
           company: (newJobData.company || companyName || t.roleEmployer).trim(),
-          salary: newJobData.salary || "200000 UZS",
-          location: newJobData.location || 'Toshkent',
-          rawLocation: newJobData.rawLocation || newJobData.location || 'Toshkent',
-          durationLabel: newJobData.durationLabel || "1 kunlik",
-          description: (newJobData.description || newJobData.responsibilities || 'Batafsil ma\'lumot olish uchun bog\'laning.').trim(),
-          workDate: newJobData.workDate || new Date().toISOString().split('T')[0],
-          workTime: newJobData.workTime || '09:00 - 18:00',
+          salary: newJobData.salary,
+          location: newJobData.location,
+          rawLocation: newJobData.rawLocation || newJobData.location,
+          durationLabel: newJobData.durationLabel,
+          description: (newJobData.description || newJobData.responsibilities || '').trim(),
+          workDate: newJobData.workDate,
+          workTime: newJobData.workTime,
           neededWorkers: newJobData.neededWorkers || '1',
           hourlyRate: newJobData.hourlyRate || '',
           transportRate: newJobData.transportRate || '',
