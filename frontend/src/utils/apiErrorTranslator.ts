@@ -153,6 +153,7 @@ const EXACT: Record<string, { ru: string; en: string }> = {
 /** The details the server builds with a value in them. The `{}` stands where
  *  the backend interpolates — a count, a status, a list. */
 const TEMPLATED: { re: RegExp; ru: string; en: string }[] = [
+  { re: /^(.+?)\ hali\ kelmadi\ —\ o'sha\ kuni\ yakunlang$/, ru: '$1 ещё не наступил — завершите его в тот день', en: '$1 has not arrived yet — close it on the day' },
   { re: /^Bu\ ish\ bo'yicha\ barcha\ (.+?)\ ta\ o'rin\ to'lgan$/, ru: 'По этой работе заняты все $1 мест', en: 'All $1 places on this job are taken' },
   { re: /^Bu\ so'rov\ allaqachon\ ko'rib\ chiqilgan\ \(holat:\ (.+?)\)$/, ru: 'Этот запрос уже рассмотрен (статус: $1)', en: 'This request has already been handled (status: $1)' },
   { re: /^Ko'pi\ bilan\ (.+?)\ ta\ karta\ qo'shish\ mumkin$/, ru: 'Можно добавить не более $1 карт', en: 'At most $1 cards can be added' },

@@ -1,6 +1,6 @@
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -17,6 +17,16 @@ from app.models.job_day import JobDay, JobDayStatus
 from app.services.work_dates import get_job_dates_set  # noqa: F401  (re-exported)
 ACTIVE_APP_STATUSES = ['applied', 'hired', 'confirmed', 'in_progress', 'start_requested']
 COMMITTED_APP_STATUSES = ['hired', 'confirmed', 'in_progress', 'start_requested']
+
+# Uzbekistan is UTC+5 and keeps no daylight saving, so a fixed offset is the
+# whole of it. Asking UTC what day it is would call the first five hours of
+# every Tashkent morning "yesterday", and a shift starting at 06:00 could not
+# be closed until 05:00 UTC.
+TASHKENT = timezone(timedelta(hours=5))
+
+
+def _today_in_tashkent() -> str:
+    return datetime.now(TASHKENT).strftime("%Y-%m-%d")
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -422,6 +432,17 @@ def complete_job_day(
     if day.status == JobDayStatus.CANCELLED:
         raise HTTPException(status_code=400, detail="Bu kun bekor qilingan")
 
+    # A day closes once it has arrived, not before. Nothing stopped an employer
+    # closing every day of a five-day posting on the first morning, paying the
+    # worker in full for four shifts nobody had worked yet — and a paid day
+    # cannot be reopened. An administrator can still close one early, which is
+    # the point of the override above.
+    if current_user.role != 'admin' and str(day.workDate) > _today_in_tashkent():
+        raise HTTPException(
+            status_code=400,
+            detail=f"{day.workDate} hali kelmadi — o'sha kuni yakunlang",
+        )
+
     apps = (
         db.query(models.Application)
         .filter(
@@ -576,10 +597,23 @@ def complete_job(
     
     if remaining:
         original_remaining_count = len(remaining)
-        today_str = now.strftime("%Y-%m-%d")
-        
-        # Complete the day corresponding to today, or fallback to the first uncompleted day
-        first_day = next((d for d in remaining if d.workDate == today_str), remaining[0])
+        today_str = _today_in_tashkent()
+
+        # Today's day, or the oldest one still owed. The fallback used to be
+        # `remaining[0]` whatever its date, so pressing "finish" on a posting
+        # whose only open day is still ahead closed and paid that day — the
+        # same thing the per-day endpoint refuses, reached by the other button.
+        arrived = [d for d in remaining if str(d.workDate) <= today_str]
+        if not arrived and current_user.role != 'admin':
+            soonest = min(str(d.workDate) for d in remaining)
+            raise HTTPException(
+                status_code=400,
+                detail=f"{soonest} hali kelmadi — o'sha kuni yakunlang",
+            )
+        first_day = next(
+            (d for d in remaining if str(d.workDate) == today_str),
+            (arrived or remaining)[0],
+        )
         
         first_day.status = JobDayStatus.COMPLETED
         first_day.completedAt = now

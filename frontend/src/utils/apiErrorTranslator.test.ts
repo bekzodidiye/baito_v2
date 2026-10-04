@@ -70,6 +70,17 @@ describe('translateApiError', () => {
     expect(status).toContain('rad etilgan');
   });
 
+  it('carries the date a refusal was built around', () => {
+    const ru = translateApiError("2026-09-21 hali kelmadi — o'sha kuni yakunlang", 'ru');
+    expect(ru).toContain('2026-09-21');
+    expect(ru).toMatch(/[а-яА-Я]/);
+    expect(ru).not.toMatch(/kelmadi|yakunlang/);
+
+    const en = translateApiError("2026-09-21 hali kelmadi — o'sha kuni yakunlang", 'en');
+    expect(en).toContain('2026-09-21');
+    expect(en).not.toMatch(/kelmadi/);
+  });
+
   it('hands back a provider string untouched', () => {
     // "Card not found" from the payment gateway is the same word a support
     // conversation will use; translating it would only make that harder.
