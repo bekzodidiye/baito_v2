@@ -1,3 +1,28 @@
+import { translateApiError } from '../utils/apiErrorTranslator';
+
+type Lang = 'uz' | 'ru' | 'en';
+const LANGS: readonly Lang[] = ['uz', 'ru', 'en'];
+
+/** The reader's language, read the way the store reads it.
+ *
+ *  Taken from storage rather than the store so this module stays free of it:
+ *  the store is what screens subscribe to, and the client is below them. */
+const readLanguage = (): Lang => {
+  try {
+    const stored = localStorage.getItem('baito_language');
+    return LANGS.includes(stored as Lang) ? (stored as Lang) : 'uz';
+  } catch {
+    return 'uz';
+  }
+};
+
+/** The last resort, when the server failed without saying anything at all. */
+const REQUEST_FAILED: Record<Lang, string> = {
+  uz: "So'rov bajarilmadi ({})",
+  ru: 'Запрос не выполнен ({})',
+  en: 'The request failed ({})',
+};
+
 const API_BASE_URL = '/api/v1';
 
 // The session lives in httpOnly cookies the browser attaches automatically —
@@ -69,7 +94,14 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}, isR
       }
     }
 
-    throw new Error(errorDetail || `So'rov bajarilmadi (${response.status})`);
+    // Translated here rather than at each screen: every caller shows this
+    // message, and the server writes it in Uzbek whatever the reader chose.
+    const lang = readLanguage();
+    throw new Error(
+      errorDetail
+        ? translateApiError(errorDetail, lang)
+        : REQUEST_FAILED[lang].replace('{}', String(response.status)),
+    );
   }
 
   if (response.status === 204) return null;
