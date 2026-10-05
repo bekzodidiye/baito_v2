@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import L from 'leaflet';
+import { HOVERED, RESTING, outlineFor } from './regionOutlineStyle';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
 import { mapFeatureToRegionId } from './mapUtils';
 
@@ -41,13 +42,7 @@ export const useRegionPolygonInitialization = ({
           const regionId = mapFeatureToRegionId(feature?.properties?.ADM1_EN || "");
           const region = UZBEKISTAN_REGIONS.find(r => r.id === regionId);
           return {
-            color: region ? region.color : "#94a3b8",
-            weight: 1.5,
-            opacity: 0.7,
-            fillColor: region ? region.color : "#94a3b8",
-            fillOpacity: 0.25,
-            fillRule: 'nonzero',
-            fill: true,
+            ...RESTING,
             className: region ? `region-polygon-${region.id}` : ''
           };
         },
@@ -85,11 +80,7 @@ export const useRegionPolygonInitialization = ({
                }
             }
 
-            (layer as L.Path).setStyle({
-              fillOpacity: isRegionActive ? 0.40 : 0.35,
-              weight: isRegionActive ? 2.4 : 2.0,
-              opacity: 0.85
-            });
+            (layer as L.Path).setStyle(HOVERED);
           });
           
           layer.on('mouseout', () => {
@@ -105,28 +96,10 @@ export const useRegionPolygonInitialization = ({
                }
             }
 
-            let fillOpacity = 0.25;
-            let weight = 1.5;
-            let opacity = 0.7;
-            
-            if (isActiveFilter) {
-              if (isRegionActive) {
-                fillOpacity = 0.35;
-                weight = 2.2;
-                opacity = 0.85;
-              } else {
-                fillOpacity = 0.12;
-                weight = 1.0;
-                opacity = 0.4;
-              }
-            }
-            
-            (layer as L.Path).setStyle({
-              fillColor: region.color,
-              fillOpacity: fillOpacity,
-              weight: weight,
-              opacity: opacity
-            });
+            (layer as L.Path).setStyle(outlineFor({
+              isFiltering: isActiveFilter,
+              isActive: isRegionActive,
+            }));
           });
         }
       });

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import L from 'leaflet';
+import { outlineFor } from './regionOutlineStyle';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
 import { mapFeatureToRegionId } from './mapUtils';
 
@@ -39,31 +40,10 @@ export const useRegionPolygonStyleUpdate = ({
         const isDistrictOfThisRegion = activeRegionIdForDistrict === regionId;
         const isRegionActive = isSelected || isDistrictOfThisRegion;
         
-        let fillOpacity = 0.25;
-        let weight = 1.5;
-        let opacity = 0.7;
-        
-        if (isActiveFilter) {
-          if (isRegionActive) {
-            fillOpacity = 0.35;
-            weight = 2.2;
-            opacity = 0.85;
-          } else {
-            fillOpacity = 0.12;
-            weight = 1.0;
-            opacity = 0.4;
-          }
-        }
-        
-        layer.setStyle({
-          color: region.color,
-          weight: weight,
-          opacity: opacity,
-          fillColor: region.color,
-          fillOpacity: fillOpacity,
-          fillRule: 'nonzero',
-          fill: true,
-        });
+        layer.setStyle(outlineFor({
+          isFiltering: isActiveFilter,
+          isActive: isRegionActive,
+        }));
      });
      
   }, [isMapReady, filterLocation, districtsGeoJsonData]);

@@ -1,6 +1,7 @@
 import L from 'leaflet';
-import { areDistrictNamesEqual, getDistrictColor } from './mapUtils';
+import { areDistrictNamesEqual } from './mapUtils';
 import { translateRegion, Language } from '../../translations';
+import { BOUNDARY_COLOUR, HOVERED, outlineFor } from './regionOutlineStyle';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
 import React from 'react';
 
@@ -14,7 +15,6 @@ export const createDistrictOnEachFeature = (
   filterLocRef: React.MutableRefObject<string>
 ) => (feature: any, layer: L.Layer) => {
   const tumanName = feature.properties.shapeName || "Tuman";
-  const districtColor = getDistrictColor(tumanName);
   const count = districtJobsCount.get(tumanName) || 0;
   const translatedTumanName = translateRegion(tumanName, language);
   const tumanLabelText = translatedTumanName
@@ -26,7 +26,7 @@ export const createDistrictOnEachFeature = (
   
   const tooltipContent = `
     <div class="flex flex-col items-center">
-      <span class="font-bold text-xs" style="color: ${districtColor}">${tumanLabelText}</span>
+      <span class="font-bold text-xs" style="color: ${BOUNDARY_COLOUR}">${tumanLabelText}</span>
       <span class="text-[10px] font-medium text-slate-500">${count} ${language === 'ru' ? 'вакансий' : language === 'en' ? 'jobs' : 'ta ish'}</span>
     </div>
   `;
@@ -63,10 +63,7 @@ export const createDistrictOnEachFeature = (
     const isSelected = !isRegionFilt && areDistrictNamesEqual(currentFilter, tumanName);
     
     if (!isSelected) {
-      this.setStyle({
-        fillOpacity: 0.32,
-        weight: 2.0
-      });
+      this.setStyle({ ...HOVERED, weight: HOVERED.weight * 0.8 });
     }
   });
   
@@ -79,26 +76,7 @@ export const createDistrictOnEachFeature = (
     const isAnyDistFilt = !isRegionFilt && currentFilter !== 'Barchasi';
     const isSelected = !isRegionFilt && areDistrictNamesEqual(currentFilter, tumanName);
     
-    let weight = 1.2;
-    let opacity = 0.6;
-    let fillOpacity = 0.18;
-    
-    if (isAnyDistFilt) {
-      if (isSelected) {
-        weight = 2.4;
-        opacity = 0.85;
-        fillOpacity = 0.32;
-      } else {
-        weight = 1.0;
-        opacity = 0.4;
-        fillOpacity = 0.12;
-      }
-    }
-    
-    this.setStyle({
-      fillOpacity: fillOpacity,
-      weight: weight,
-      opacity: opacity
-    });
+    const base = outlineFor({ isFiltering: isAnyDistFilt, isActive: isSelected });
+    this.setStyle({ ...base, weight: base.weight * 0.8 });
   });
 };
