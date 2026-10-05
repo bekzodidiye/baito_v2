@@ -44,6 +44,11 @@ export const DrawerMenuItem: React.FC<DrawerMenuItemProps> = ({ item, index }) =
           <Icon size={16} className="stroke-[2.2]" />
         </span>
         <span>{item.label}</span>
+        {item.badge ? (
+          <span className="ml-1 min-w-[18px] h-[18px] px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center">
+            {item.badge > 99 ? '99+' : item.badge}
+          </span>
+        ) : null}
       </div>
       <ChevronRight 
         size={14} 

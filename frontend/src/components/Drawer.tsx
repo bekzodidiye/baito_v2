@@ -4,6 +4,7 @@ import { X, User, ClipboardList, Settings, HelpCircle, ChevronRight, LogOut, Lay
 import { Logo } from './Logo';
 import { motion, AnimatePresence } from 'motion/react';
 import { translations } from '../translations';
+import { useSidebarBadges } from '../hooks/useSidebarBadges';
 import { LanguageSelector } from './LanguageSelector';
 import { DrawerMenuItem } from './DrawerMenuItem';
 import { showToast } from '../utils/toast';
@@ -25,6 +26,7 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
     const logout = useApp().logout;
     const userProfile = useAuthStore(s => s.userProfile);
   const t = translations[language];
+  const { pendingApplications, unreadMessages } = useSidebarBadges();
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
   const isAdmin = isLoggedIn && userProfile?.selectedRole === 'admin';
 
@@ -101,6 +103,7 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
           id: 'applicants',
           label: language === 'uz' ? 'Arizalar' : language === 'ru' ? 'Заявки' : 'Applicants',
           icon: Users,
+          badge: pendingApplications,
           action: () => { setDrawerOpen(false); setCurrentScreen('employer-applicants'); },
           active: currentScreen === 'employer-applicants',
         },
@@ -108,6 +111,7 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
           id: 'chats',
           label: language === 'uz' ? 'Suhbatlar' : language === 'ru' ? 'Чаты' : 'Chats',
           icon: MessageSquare,
+          badge: unreadMessages,
           action: () => { setDrawerOpen(false); setCurrentScreen('employer-chats'); },
           active: currentScreen === 'employer-chats',
         }
