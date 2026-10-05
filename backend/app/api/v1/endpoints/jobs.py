@@ -625,6 +625,15 @@ def delete_job(
             status_code=400,
             detail="Boshlangan ishni bekor qilib bo'lmaydi, avval uni yakunlang",
         )
+    # Work that is finished cannot be un-finished. Only the started case was
+    # refused, so a completed posting could be flipped to cancelled while its
+    # days stayed completed and the worker kept the money credited for them —
+    # a record that contradicts itself and says the work never happened.
+    if job.status == JobStatus.COMPLETED:
+        raise HTTPException(
+            status_code=400,
+            detail="Yakunlangan ishni bekor qilib bo'lmaydi",
+        )
 
     affected = (
         db.query(models.Application)

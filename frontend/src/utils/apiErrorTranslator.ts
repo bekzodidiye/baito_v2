@@ -143,6 +143,7 @@ const EXACT: Record<string, { ru: string; en: string }> = {
   'To\'lovni faqat yakunlangan ish uchun tasdiqlash mumkin': { ru: 'Подтвердить оплату можно только за завершённую работу', en: 'Payment can only be confirmed for a completed job' },
   'Tranzaksiyani amalga oshirishda xatolik': { ru: 'Ошибка при проведении транзакции', en: 'The transaction could not be carried out' },
   'Ushbu ish uchun muzlatilgan mablag\' topilmadi': { ru: 'Замороженные средства по этой работе не найдены', en: 'No held funds were found for this job' },
+  'Yakunlangan ishni bekor qilib bo\'lmaydi': { ru: 'Завершённую работу нельзя отменить', en: 'Finished work cannot be cancelled' },
   'Yakunlangan e\'lonni tahrirlab bo\'lmaydi': { ru: 'Завершённое объявление нельзя редактировать', en: 'A completed posting cannot be edited' },
   'Yakunlash uchun yollangan ishchi yo\'q': { ru: 'Нет нанятого работника, чтобы завершить', en: 'There is no hired worker to complete' },
   'Yangi parol eskisidan farq qilishi kerak': { ru: 'Новый пароль должен отличаться от старого', en: 'The new password must differ from the old one' },

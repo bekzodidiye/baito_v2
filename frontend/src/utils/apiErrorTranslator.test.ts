@@ -35,6 +35,7 @@ const SAMPLES = [
   "Yollangan ishchini rad etib bo'lmaydi, avval ishni bekor qiling",
   'Fayl hajmi 15 MB dan oshmasligi kerak',
   "To'lov tizimi hozircha ulanmagan. Iltimos, keyinroq urinib ko'ring.",
+  "Yakunlangan ishni bekor qilib bo'lmaydi",
 ];
 
 describe('translateApiError', () => {
