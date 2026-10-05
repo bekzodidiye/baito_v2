@@ -11,6 +11,7 @@ from app.core.limiter import limiter
 from app.core.phone import consume_verification_grant, is_valid_uz_phone, normalize_phone
 from app.core.security import get_password_hash
 from app.models.session import ActiveSession
+from app.services.session_window import is_live
 
 router = APIRouter()
 
@@ -178,8 +179,13 @@ def read_active_sessions(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    """Get current user's active sessions."""
-    return (
+    """The devices that can still get into this account.
+
+    A row left `is_active` but unused past the refresh window cannot sign back
+    in, so listing it answers "who else is in my account?" wrongly. It is left
+    out here and closed the next time this user signs in.
+    """
+    rows = (
         db.query(ActiveSession)
         .filter(
             ActiveSession.user_uid == str(current_user.uid or current_user.id),
@@ -188,6 +194,7 @@ def read_active_sessions(
         .order_by(ActiveSession.last_active_at.desc())
         .all()
     )
+    return [row for row in rows if is_live(row)]
 
 
 @router.delete("/me/sessions/{session_id}")

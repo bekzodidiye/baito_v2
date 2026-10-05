@@ -21,6 +21,7 @@ from app.core.phone import (
     normalize_phone,
 )
 from app.models.session import ActiveSession
+from app.services.session_window import expire_idle, is_live
 from app.redis_client import redis_client
 from app.tasks import send_sms_task
 
@@ -204,6 +205,10 @@ def login(
             status_code=status.HTTP_403_FORBIDDEN, detail="Hisobingiz bloklangan"
         )
 
+    # Signing in is a write on this user's rows already: the sessions they have
+    # let go idle are closed here rather than left reading "active" forever.
+    expire_idle(db, str(user.uid or user.id))
+
     session_record = ActiveSession(
         user_uid=str(user.uid or user.id),
         device_name=_device_name(request.headers.get("user-agent", "")),
@@ -262,7 +267,12 @@ def refresh(
     session_record = (
         db.query(ActiveSession).filter(ActiveSession.id == token_data.sid).first()
     )
-    if not session_record or not session_record.is_active:
+    if not is_live(session_record):
+        # An idle session is closed on the way out, so the row stops claiming
+        # to be active the moment we have established that it is not.
+        if session_record and session_record.is_active:
+            session_record.is_active = False
+            db.commit()
         _clear_auth_cookies(response)
         raise HTTPException(status_code=401, detail="Sessiya yaroqsiz")
 
