@@ -66,3 +66,32 @@ export const parseWorkDates = (workDate?: string | null): string[] => {
   const single = parseOne(raw);
   return single ? [toIsoDate(single)] : [];
 };
+
+/** What a card shows for a shift, which may run over several days.
+ *
+ *  A posting's `workDate` holds every day it is worked, comma-separated. Put
+ *  straight on a card it wrapped onto three and four lines, pushing the icon
+ *  beside it into the middle of the block and leaving cards of wildly different
+ *  heights in the same row.
+ *
+ *  The days are not always contiguous — "14, 15, 17, 18" skips a day — so this
+ *  gives the first day and a count rather than a range, which would claim a day
+ *  nobody is working. The whole list goes in `full`, for the tooltip.
+ */
+export const workDateSummary = (
+  workDate: string | null | undefined,
+  language: 'uz' | 'ru' | 'en',
+): { label: string; full: string } | null => {
+  const days = parseWorkDates(workDate);
+  if (days.length === 0) return null;
+
+  const full = days.join(', ');
+  if (days.length === 1) return { label: days[0], full };
+
+  const count =
+    language === 'uz' ? `${days.length} kun`
+    : language === 'ru' ? `${days.length} дн.`
+    : `${days.length} days`;
+
+  return { label: `${days[0]} · ${count}`, full };
+};

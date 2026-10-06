@@ -185,7 +185,13 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
           </div>
         ) : (
           <div className="flex flex-col gap-4 mt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {/* The number of columns follows the width of a card, not the width of
+                the window. Breakpoints gave four columns from 1280px, which on a
+                1663px screen — the sidebar takes 256px of it — left every card at
+                330px, where the title, the address and the status label all had
+                to be cut. A card is never narrower than 340px now, and the
+                browser fits as many as that allows. */}
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(min(340px,100%),1fr))] gap-5 items-stretch">
               {displayJobs.slice(0, visibleCount).map(job => (
                 <EmployerJobCard
                   key={job.id}
