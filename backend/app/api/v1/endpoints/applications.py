@@ -156,7 +156,7 @@ def get_employer_applications(
 
     # Each job carries its own rate — its category's plus its region's.
     # We batch query categories and regions to avoid N+1 queries.
-    from app.services.escrow_service import platform_fee_percent, _region_of
+    from app.services.earnings_service import platform_fee_percent, _region_of
     
     cat_slugs = {j.category for j in employer_jobs if j.category}
     region_names = {_region_of(j.location) for j in employer_jobs if _region_of(j.location)}
