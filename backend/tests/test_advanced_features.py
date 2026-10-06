@@ -11,7 +11,7 @@ import pytest
 from app import models
 from app.db.session import SessionLocal
 from app.services.ai_matcher import AIMatchmaker
-from app.services.escrow_service import EscrowService
+from app.services.earnings_service import WorkerEarnings
 from app.services.geo_service import GeoSpatialService
 from app.services.growth_engine import GrowthEngine
 from app.services.soliq_service import SoliqFiscalService
@@ -92,23 +92,23 @@ def escrow_pair():
         yield db, employer, worker, job
 
 
-def test_escrow_holds_the_wage_plus_the_employers_commission(escrow_pair):
-    """The worker is paid the posted wage; the platform's cut is the employer's.
+def test_a_day_worked_credits_the_wage_and_records_the_commission(escrow_pair):
+    """The worker is credited the posted wage; the platform's cut is the
+    company's, recorded beside it for the invoice to collect.
 
-    Both halves are frozen together, so the employer cannot be billed the
-    commission later for a shift whose money has already gone.
+    Nothing leaves the employer's balance: they are billed once, afterwards.
     """
     db, employer, worker, job = escrow_pair
 
-    held = EscrowService.hold_funds(db, employer.id, job.id, 200000)
-    assert held.status == "held"
-    db.refresh(employer)
-    assert employer.balance == 280000  # 500,000 less 200,000 wage and 20,000 fee
-
-    released = EscrowService.release_funds(db, job.id, worker.id)
-    assert released.status == "released"
+    tx = WorkerEarnings.credit_worker(
+        db, job=job, worker_id=worker.id, amount_uzs=200000,
+    )
+    assert tx.status == "credited"
     db.refresh(worker)
-    assert worker.balance == 200000  # the posted wage, whole
+    assert worker.balance == 200000          # the posted wage, whole
+    assert tx.platformFee == 20000 * 100     # 10%, the company's to pay
+    db.refresh(employer)
+    assert employer.balance == 500000        # untouched
 
 
 def test_fiscal_receipt_is_confirmed_and_points_at_soliq():
@@ -124,11 +124,12 @@ def test_fiscal_receipt_is_confirmed_and_points_at_soliq():
 
 def test_referral_bonus_credits_both_sides(escrow_pair):
     db, employer, worker, job = escrow_pair
-    EscrowService.hold_funds(db, employer.id, job.id, 200000)
-    EscrowService.release_funds(db, job.id, worker.id)
+    WorkerEarnings.credit_worker(
+        db, job=job, worker_id=worker.id, amount_uzs=200000,
+    )
 
     GrowthEngine.apply_referral_bonus_on_first_job(db, worker, employer.id)
     db.refresh(employer)
     db.refresh(worker)
-    assert employer.balance == 300000  # 280,000 + 20,000
-    assert worker.balance == 220000    # 200,000 + 20,000
+    assert employer.balance == 520000  # 500,000 + the 20,000 referral bonus
+    assert worker.balance == 220000    # 200,000 wage + 20,000 bonus

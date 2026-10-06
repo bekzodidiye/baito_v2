@@ -40,9 +40,50 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
           gradient: 'from-rose-400 to-red-500',
           icon: <XCircle size={12} className="mr-1" />
         };
-      default:
+      // Being hired is not where a worker stops. They confirm, they ask to
+      // start, they work, they finish — and only the first three of those had
+      // a label here. The rest fell to the default below, which printed the
+      // database's own word: a worker waiting to start read START_REQUESTED.
+      case 'confirmed':
         return {
-          text: status,
+          text: lang === 'uz' ? 'Tasdiqlandi' : lang === 'ru' ? 'Подтверждено' : 'Confirmed',
+          bg: 'bg-emerald-50',
+          textCol: 'text-emerald-600',
+          borderCol: 'border-emerald-200',
+          gradient: 'from-emerald-400 to-teal-500',
+          icon: <CheckCircle2 size={12} className="mr-1" />
+        };
+      case 'start_requested':
+        return {
+          text: lang === 'uz' ? 'Boshlash so\'raldi' : lang === 'ru' ? 'Запрошено начало' : 'Start requested',
+          bg: 'bg-sky-50',
+          textCol: 'text-sky-600',
+          borderCol: 'border-sky-200',
+          gradient: 'from-sky-400 to-blue-500',
+          icon: <Clock3 size={12} className="mr-1" />
+        };
+      case 'in_progress':
+        return {
+          text: lang === 'uz' ? 'Ish davom etmoqda' : lang === 'ru' ? 'В работе' : 'In progress',
+          bg: 'bg-indigo-50',
+          textCol: 'text-indigo-600',
+          borderCol: 'border-indigo-200',
+          gradient: 'from-indigo-400 to-violet-500',
+          icon: <Clock3 size={12} className="mr-1" />
+        };
+      case 'completed':
+        return {
+          text: lang === 'uz' ? 'Yakunlandi' : lang === 'ru' ? 'Завершено' : 'Completed',
+          bg: 'bg-slate-50',
+          textCol: 'text-slate-600',
+          borderCol: 'border-slate-200',
+          gradient: 'from-slate-400 to-slate-500',
+          icon: <CheckCircle2 size={12} className="mr-1" />
+        };
+      default:
+        // A status we do not know is not something to spell out at the reader.
+        return {
+          text: lang === 'uz' ? 'Holat' : lang === 'ru' ? 'Статус' : 'Status',
           bg: 'bg-slate-50',
           textCol: 'text-slate-600',
           borderCol: 'border-slate-200',

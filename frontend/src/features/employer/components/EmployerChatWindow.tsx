@@ -31,6 +31,7 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
   }, [activeSession.messages, isTyping]);
 
   const t = {
+    previewLabel: language === 'uz' ? "Ko'rib chiqish" : language === 'ru' ? 'Предпросмотр' : 'Preview',
     back: language === 'uz' ? 'Orqaga' : language === 'ru' ? 'Назад' : "Back",
     online: language === 'uz' ? 'Onlayn' : language === 'ru' ? 'Онлайн' : "Online",
     today: language === 'uz' ? 'Bugun' : language === 'ru' ? 'Сегодня' : "Today",
@@ -174,7 +175,7 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
               <div className="w-14 h-14 rounded-lg overflow-hidden shadow-sm bg-slate-50 border border-slate-200">
                 <img 
                   src={attachedFile.previewUrl} 
-                  alt="Preview" 
+                  alt={t.previewLabel} 
                   className="w-full h-full object-cover"
                 />
               </div>

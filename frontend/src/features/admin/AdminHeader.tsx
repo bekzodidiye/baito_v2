@@ -27,7 +27,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         case 'jobs': return 'Объявления и модерация';
         case 'verifications': return 'Верификация и документы';
         case 'disputes': return 'Споры и претензии';
-        case 'transactions': return 'Escrow и транзакции';
+        case 'transactions': return 'Транзакции';
         case 'support': return 'Служба поддержки';
         case 'broadcast': return 'Массовые рассылки';
         case 'analytics': return 'Аналитика и отчеты';
@@ -41,7 +41,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         case 'jobs': return 'Listings & Moderation';
         case 'verifications': return 'Verifications & Documents';
         case 'disputes': return 'Disputes & Claims';
-        case 'transactions': return 'Escrow & Transactions';
+        case 'transactions': return 'Transactions';
         case 'support': return 'Support Tickets';
         case 'broadcast': return 'Broadcast Notifications';
         case 'analytics': return 'Deep Analytics';
@@ -55,7 +55,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         case 'jobs': return 'E\'lonlar va Moderatsiya';
         case 'verifications': return 'Verifikatsiya va Hujjatlar';
         case 'disputes': return 'Nizolar va E\'tirozlar';
-        case 'transactions': return 'Escrow va Tranzaksiyalar';
+        case 'transactions': return 'Tranzaksiyalar';
         case 'support': return 'Support Ticketlar va Yordam';
         case 'broadcast': return 'Ommaviy Xabarnomalar';
         case 'analytics': return 'Chuqur Analitika va Hisobotlar';

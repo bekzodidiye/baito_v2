@@ -1,6 +1,6 @@
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,12 +11,35 @@ from app import crud, models
 from app.api import deps
 from app.models.job import JobStatus
 from app.models.job_payout import JobPayout, PayoutStatus
-from app.services.escrow_service import EscrowService
+from app.core.money import salary_to_uzs
+from app.services.earnings_service import WorkerEarnings
 from app.services import job_days as job_days_service
 from app.models.job_day import JobDay, JobDayStatus
 from app.services.work_dates import get_job_dates_set  # noqa: F401  (re-exported)
 ACTIVE_APP_STATUSES = ['applied', 'hired', 'confirmed', 'in_progress', 'start_requested']
 COMMITTED_APP_STATUSES = ['hired', 'confirmed', 'in_progress', 'start_requested']
+
+# Uzbekistan is UTC+5 and keeps no daylight saving, so a fixed offset is the
+# whole of it. Asking UTC what day it is would call the first five hours of
+# every Tashkent morning "yesterday", and a shift starting at 06:00 could not
+# be closed until 05:00 UTC.
+TASHKENT = timezone(timedelta(hours=5))
+
+
+def _wage_for_day(job, day) -> int:
+    """What a day of this posting is worth.
+
+    The day's own figure when it has one — pinned at hire, so editing the
+    salary afterwards does not restate a day already agreed — and the
+    posting's salary otherwise.
+    """
+    if day is not None and getattr(day, "amount", None):
+        return int(day.amount)
+    return salary_to_uzs(job.salary)
+
+
+def _today_in_tashkent() -> str:
+    return datetime.now(TASHKENT).strftime("%Y-%m-%d")
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -419,6 +442,17 @@ def complete_job_day(
     if day.status == JobDayStatus.CANCELLED:
         raise HTTPException(status_code=400, detail="Bu kun bekor qilingan")
 
+    # A day closes once it has arrived, not before. Nothing stopped an employer
+    # closing every day of a five-day posting on the first morning, paying the
+    # worker in full for four shifts nobody had worked yet — and a paid day
+    # cannot be reopened. An administrator can still close one early, which is
+    # the point of the override above.
+    if current_user.role != 'admin' and str(day.workDate) > _today_in_tashkent():
+        raise HTTPException(
+            status_code=400,
+            detail=f"{day.workDate} hali kelmadi — o'sha kuni yakunlang",
+        )
+
     apps = (
         db.query(models.Application)
         .filter(
@@ -442,15 +476,17 @@ def complete_job_day(
     paid, unpaid = [], []
     for app in apps:
         try:
-            EscrowService.release_funds(
-                db, job_id=job.id, worker_id=app.workerId, job_day_id=day.id,
+            WorkerEarnings.credit_worker(
+                db, job=job, worker_id=app.workerId,
+                amount_uzs=_wage_for_day(job, day),
+                job_day_id=day.id,
                 # One posting is one completed job on a worker's profile,
                 # however many days it ran for. Counted when the last day lands.
                 count_completed_job=is_last_day,
             )
             paid.append(app.workerId)
         except HTTPException as e:
-            logger.warning("Escrow release skipped for job %s day %s / worker %s: %s",
+            logger.warning("Crediting skipped for job %s day %s / worker %s: %s",
                            job.id, day.workDate, app.workerId, e.detail)
             unpaid.append(app.workerId)
 
@@ -507,7 +543,7 @@ def complete_job(
     req: JobCompleteRequest,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    """Finish a job: release escrow, pay the workers, record the review.
+    """Finish a job: credit the workers, record the review.
 
     The old version only flipped statuses and then told the worker "to'lov
     amalga oshirildi" — no money ever moved. It also accepted repeat calls,
@@ -573,16 +609,29 @@ def complete_job(
     
     if remaining:
         original_remaining_count = len(remaining)
-        today_str = now.strftime("%Y-%m-%d")
-        
-        # Complete the day corresponding to today, or fallback to the first uncompleted day
-        first_day = next((d for d in remaining if d.workDate == today_str), remaining[0])
+        today_str = _today_in_tashkent()
+
+        # Today's day, or the oldest one still owed. The fallback used to be
+        # `remaining[0]` whatever its date, so pressing "finish" on a posting
+        # whose only open day is still ahead closed and paid that day — the
+        # same thing the per-day endpoint refuses, reached by the other button.
+        arrived = [d for d in remaining if str(d.workDate) <= today_str]
+        if not arrived and current_user.role != 'admin':
+            soonest = min(str(d.workDate) for d in remaining)
+            raise HTTPException(
+                status_code=400,
+                detail=f"{soonest} hali kelmadi — o'sha kuni yakunlang",
+            )
+        first_day = next(
+            (d for d in remaining if str(d.workDate) == today_str),
+            (arrived or remaining)[0],
+        )
         
         first_day.status = JobDayStatus.COMPLETED
         first_day.completedAt = now
         db.add(first_day)
         
-        remaining = [first_day] # Process only this day for escrow
+        remaining = [first_day]  # Credit this day only
         
         if original_remaining_count > 1: # There are still more days after this one
             is_single_day_completion = True
@@ -614,7 +663,7 @@ def complete_job(
 
         worker = db.query(models.User).filter(models.User.id == app.workerId).first()
         if worker:
-            # completedJobsCount is incremented by EscrowService.release_funds
+            # completedJobsCount is incremented by WorkerEarnings.credit_worker
             # below; doing it here as well double-counted every finished job.
             if req.rating:
                 rated = (
@@ -633,32 +682,48 @@ def complete_job(
         try:
             if remaining:
                 for index, day in enumerate(remaining):
-                    EscrowService.release_funds(
-                        db, job_id=job.id, worker_id=app.workerId, job_day_id=day.id,
-                        # One posting, one completed job on the profile.
-                        count_completed_job=(index == 0),
+                    WorkerEarnings.credit_worker(
+                        db, job=job, worker_id=app.workerId,
+                        amount_uzs=_wage_for_day(job, day), job_day_id=day.id,
+                        # One posting is one completed job on a worker's
+                        # profile, however many days it ran for — counted when
+                        # the last day lands, the same rule /days/{id}/complete
+                        # follows. `index == 0` was enough while this endpoint
+                        # settled every remaining day in one go; it now settles
+                        # one day per call, so on a five-day run that counted
+                        # five completed jobs for one shift.
+                        count_completed_job=(index == 0 and not is_single_day_completion),
                     )
             else:
-                # Either every day was already ticked off, or the posting
-                # predates day records and still holds one lump for the lot.
-                EscrowService.release_funds(db, job_id=job.id, worker_id=app.workerId)
-            paid.append(app.workerId)
-            # The wage is released first: it is owed for work already done and
-            # must not be held up by an optional tip. The balance check above
-            # means this cannot fail for want of funds.
-            if bonus_each > 0:
-                EscrowService.pay_completion_bonus(
-                    db, job_id=job.id, employer_id=job.employerId,
-                    worker_id=app.workerId, amount_uzs=bonus_each,
+                # Every day was already ticked off, or the posting predates day
+                # records and is settled as one.
+                WorkerEarnings.credit_worker(
+                    db, job=job, worker_id=app.workerId,
+                    amount_uzs=_wage_for_day(job, None),
                 )
-                bonus_paid.append(app.workerId)
+            paid.append(app.workerId)
         except HTTPException as e:
-            # No escrow was held for this job (it predates escrow, or the
-            # employer never funded it). Complete the job anyway, but say so
-            # instead of claiming a payment happened.
-            logger.warning("Escrow release skipped for job %s / worker %s: %s",
+            # Finish the job anyway, but say so instead of claiming the worker
+            # was credited when they were not.
+            logger.warning("Crediting skipped for job %s / worker %s: %s",
                            job.id, app.workerId, e.detail)
             unpaid.append(app.workerId)
+
+        # The wage is released first: it is owed for work already done and must
+        # not be held up by an optional tip. The tip is settled in its own try
+        # for the same reason in reverse - it shares nothing with the wage, and
+        # while it sat inside the block above a failing bonus put the worker
+        # into `unpaid` as well as `paid`, reporting the wage as unpaid when it
+        # had already gone out.
+        if bonus_each > 0:
+            try:
+                WorkerEarnings.pay_completion_bonus(
+                    db, job=job, worker_id=app.workerId, amount_uzs=bonus_each,
+                )
+                bonus_paid.append(app.workerId)
+            except HTTPException as e:
+                logger.warning("Completion bonus skipped for job %s / worker %s: %s",
+                               job.id, app.workerId, e.detail)
 
         if app.workerId in paid:
             message = f"'{job.title}' ishi bo'yicha to'lov hisobingizga o'tkazildi."

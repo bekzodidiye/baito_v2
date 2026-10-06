@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { negotiablePay } from './useLandingCategories';
 import { useApp } from '../../context/AppContext';
 import { useJobsData } from "../../context/useJobsData";
 import { LANDING_TEXTS } from './LandingData';
@@ -6,7 +7,6 @@ import { Briefcase, Building2, Search, ArrowRight, Wallet, CheckCircle2, BadgeCh
 import { LandingHeroBackground } from './LandingHeroBackground';
 import { LandingHeroShiftPreview } from './LandingHeroShiftPreview';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
-import { perksForJob } from '../../constants/perks';
 import { useAuthStore } from "../../store/useAuthStore";
 
 interface LandingHeroProps {
@@ -26,13 +26,13 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
 
   const realShifts = useMemo(() => (jobs || []).map(j => ({
     id: j.id, titleUz: j.title, titleRu: j.title, company: j.company,
-    district: j.location, pay: j.salary || "280,000 so'm/smena",
-    time: j.time || "09:00 - 18:00 (8 soat)", badge: j.urgent ? 'Aktiv' : 'Aktiv',
+    district: j.location, pay: j.salary || negotiablePay(language),
+    // The hour count reads in the visitor's language; the badge comes from the
+    // table now, so "Aktiv" is not hardcoded twice over for both branches.
+    time: j.time || `09:00 - 18:00 (8 ${t.hoursSuffix})`, badge: t.statusActive,
     urgent: j.urgent || false,
     descriptionUz: j.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
     descriptionRu: j.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
-    // The employer's own tags, not the same three strings on every card.
-    perksUz: perksForJob(j.tags, language)
   })), [jobs, language]);
 
   const displayShifts = useMemo(() => {
@@ -84,31 +84,31 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
                 data-allow-guest="true"
                 className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${activeTab === 'worker' ? 'bg-brand-primary text-white shadow-md shadow-blue-600/25' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
               >
-                <Briefcase size={15} /><span>Ish izlovchi</span>
+                <Briefcase size={15} /><span>{t.heroTabWorker}</span>
               </button>
               <button
                 onClick={() => setActiveTab('employer')}
                 data-allow-guest="true"
                 className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${activeTab === 'employer' ? 'bg-brand-primary text-white shadow-md shadow-blue-600/25' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
               >
-                <Building2 size={15} /><span>Ish beruvchi</span>
+                <Building2 size={15} /><span>{t.heroTabEmployer}</span>
               </button>
             </div>
 
             {/* Main Title */}
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.12] text-slate-900">
               {activeTab === 'worker' ? (
-                <>Bugun ishlang, <br className="hidden sm:inline" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-blue-600 to-sky-600">bugunoq maosh oling!</span></>
+                <>{t.heroTitleWorkerA} <br className="hidden sm:inline" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-blue-600 to-sky-600">{t.heroTitleWorkerB}</span></>
               ) : (
-                <>15 daqiqada ishonchli <br className="hidden sm:inline" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-blue-600 to-sky-600">xodimlarni yollang!</span></>
+                <>{t.heroTitleEmployerA} <br className="hidden sm:inline" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-blue-600 to-sky-600">{t.heroTitleEmployerB}</span></>
               )}
             </h1>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0">
               {activeTab === 'worker'
-                ? "Baito — uyingizga yaqin smenalarni topish, soatbay ishlash va smena oxirida kafolatlangan kunlik maosh olish xizmati."
-                : "Aktiv e'lon bering, nomzodlar bilan chat orqali muloqot qiling va tekshirilgan ID profilli xodimlarni zudlik bilan tanlang."}
+                ? t.heroSubWorker
+                : t.heroSubEmployer}
             </p>
 
             {/* Search and Action Bar */}
@@ -117,11 +117,11 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
                 <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl flex-1 border border-slate-200/80 text-slate-900 focus-within:border-brand-primary/60 transition-colors">
                   <Search size={19} className="text-brand-primary shrink-0" />
                   <input
-              aria-label="Ish qidirish"
+              aria-label={t.heroSearchLabel}
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={activeTab === 'worker' ? "Kuryer, kassir, ofitsiant..." : "Aktiv lavozim qidirish..."}
+                    placeholder={activeTab === 'worker' ? t.heroSearchPlaceholderWorker : t.heroSearchPlaceholderEmployer}
                     className="w-full text-xs sm:text-sm font-bold bg-transparent text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 placeholder:text-slate-400"
                   />
                 </div>
@@ -143,7 +143,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
                   }}
                   className="px-6 py-3.5 rounded-xl font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0 bg-brand-primary hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30 active:scale-[0.98]"
                 >
-                  <span>{activeTab === 'worker' ? "Ishlarni ko'rish" : "E'lon berish"}</span><ArrowRight size={16} />
+                  <span>{activeTab === 'worker' ? t.heroSubmitWorker : t.heroSubmitEmployer}</span><ArrowRight size={16} />
                 </button>
               </form>
 
@@ -162,7 +162,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
                   className="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 hover:text-brand-primary font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
                 >
                   <MapPin size={16} className="text-brand-primary" />
-                  <span>Xaritadan izlash</span>
+                  <span>{t.heroMapBtn}</span>
                 </button>
               ) : (
                 <button
@@ -171,15 +171,15 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
                   className="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 hover:text-brand-primary font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
                 >
                   <Building2 size={16} className="text-brand-primary" />
-                  <span>Smena e'lon qilish (Yangi xodim yollash)</span>
+                  <span>{t.heroPostShiftBtn}</span>
                 </button>
               )}
             </div>
 
             {/* Badges */}
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-5 text-xs font-extrabold text-slate-700 pt-1">
-              <span className="flex items-center gap-1.5"><BadgeCheck size={17} className="text-blue-600 shrink-0" /> Tasdiqlangan ID</span>
-              <span className="flex items-center gap-1.5"><Wallet size={17} className="text-blue-600 shrink-0" /> Bir zumda to'lov</span>
+              <span className="flex items-center gap-1.5"><BadgeCheck size={17} className="text-blue-600 shrink-0" /> {t.heroBadgeId}</span>
+              <span className="flex items-center gap-1.5"><Wallet size={17} className="text-blue-600 shrink-0" /> {t.heroBadgeInstantPay}</span>
               {/* Sat outside the activeTab switch, so an employer was told they
                   pay no commission — true of a worker, who receives the posted
                   wage in full, and not of an employer, who pays the category's

@@ -77,29 +77,6 @@ def test_hiring_respects_the_vacancy_count(client):
     assert "to'lgan" in second.json()["detail"]
 
 
-def test_hiring_holds_the_wage_in_escrow(client):
-    employer = make_user(role="employer", phone="+998911111120", balance=1_000_000)
-    job = make_job(employer.id, salary="250 000 so'm / kun")
-    worker = make_user(role="worker", phone="+998911111121")
-    with SessionLocal() as db:
-        app = Application(jobId=job.id, workerId=worker.id, status="applied")
-        db.add(app)
-        db.commit()
-        app_id = app.id
-
-    login(client, employer)
-    resp = client.post(f"/api/v1/applications/{app_id}/hire")
-    assert resp.status_code == 200
-    assert resp.json()["escrow_held"] is True
-    # The wage the worker will be paid, and the commission the employer pays on
-    # top of it, are frozen together.
-    assert resp.json()["escrow_wage"] == 250_000
-    assert resp.json()["escrow_fee"] == 25_000
-
-    with SessionLocal() as db:
-        assert db.query(User).filter(User.id == employer.id).first().balance == 725_000
-
-
 def test_rejected_applicant_is_notified(client):
     from app.models import Notification
 

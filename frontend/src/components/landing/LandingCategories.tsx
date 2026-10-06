@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { LANDING_TEXTS } from './LandingData';
-import { useLandingCategories, rateText, countText } from './useLandingCategories';
+import { useLandingCategories, rateText, countText, categoryName } from './useLandingCategories';
 import { Truck, Utensils, Package, HardHat, ShoppingBag, Briefcase, ArrowRight, Layers } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useUIStore } from "../../store/useUIStore";
@@ -47,7 +47,7 @@ export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRo
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-black">
               <Layers size={14} />
-              <span>Sohalar bo'yicha</span>
+              <span>{t.catBadge}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-black text-slate-900">{t.catTitle}</h2>
             <p className="text-xs sm:text-sm text-slate-600 font-medium">{t.catSubtitle}</p>
@@ -57,7 +57,7 @@ export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRo
             onClick={() => setCurrentScreen('login')}
             className="self-start md:self-auto px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-brand-primary font-black text-xs hover:bg-slate-100 transition-all cursor-pointer flex items-center gap-2 shadow-2xs"
           >
-            <span>Barcha smenalarni ko'rish</span>
+            <span>{t.catViewAll}</span>
             <ArrowRight size={14} />
           </button>
         </div>
@@ -65,7 +65,7 @@ export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRo
         {/* Categories Matrix Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
           {categories.map((cat) => {
-            const name = cat.name;
+            const name = categoryName(cat, language as 'uz' | 'ru' | 'en');
             return (
               <div
                 key={cat.slug}
@@ -83,7 +83,7 @@ export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRo
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
                       : 'bg-slate-50 text-slate-400 border-slate-200'
                   }`}>
-                    {countText(cat)}
+                    {countText(cat, language as 'uz' | 'ru' | 'en')}
                   </span>
                 </div>
 
@@ -92,12 +92,12 @@ export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRo
                     {name}
                   </h3>
                   <p className="text-sm sm:text-xs font-bold text-slate-500 mt-1">
-                    {rateText(cat)}
+                    {rateText(cat, language as 'uz' | 'ru' | 'en')}
                   </p>
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-sm sm:text-xs font-black text-brand-primary">
-                  <span>Smenalarni tanlash</span>
+                  <span>{t.catPickShifts}</span>
                   <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>

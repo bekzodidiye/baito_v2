@@ -13,18 +13,43 @@ export type YandexMaps = any;
 
 let pending: Promise<YandexMaps> | null = null;
 
-export function loadYandexMaps(): Promise<YandexMaps> {
+/** Yandex's own locale codes, from ours. */
+const YANDEX_LOCALES: Record<string, string> = {
+  uz: 'uz_UZ', ru: 'ru_RU', en: 'en_US',
+};
+
+/** The map draws its own controls — the route button, the terms link — and it
+ *  labels them from the `lang` on the script URL. That was pinned to `uz_UZ`
+ *  in index.html, so a Russian employer placing a pin read "Borish usuli" and
+ *  "Foydalanish shartlari" on an otherwise Russian form.
+ *
+ *  The API loads once per page and cannot be re-localised afterwards, so a
+ *  language changed while a map is already on screen takes effect on the next
+ *  load. Every entry point to a map is a fresh navigation, so in practice the
+ *  first map a visitor opens is already in their language.
+ */
+export function loadYandexMaps(language: string = 'uz'): Promise<YandexMaps> {
   if (window.ymaps) return Promise.resolve(window.ymaps);
   if (pending) return pending;
 
   pending = new Promise<YandexMaps>((resolve, reject) => {
-    const src = document
+    const configured = document
       .querySelector<HTMLMetaElement>('meta[name="yandex-maps-src"]')
       ?.content;
 
-    if (!src) {
+    if (!configured) {
       reject(new Error('Yandex Maps manzili topilmadi'));
       return;
+    }
+
+    let src = configured;
+    try {
+      const url = new URL(configured);
+      url.searchParams.set('lang', YANDEX_LOCALES[language] ?? YANDEX_LOCALES.uz);
+      src = url.toString();
+    } catch {
+      // A malformed meta tag is not worth failing the map over: fall back to
+      // the URL exactly as configured.
     }
 
     const tag = document.createElement('script');

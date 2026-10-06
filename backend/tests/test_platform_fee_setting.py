@@ -16,13 +16,12 @@ rate is pinned onto the escrow hold rather than read again at payout.
 """
 
 import uuid
-import pytest
 
 from app.models.application import Application
-from app.models.job import JobStatus
+from app.models.job import Job, JobStatus
 from app.models.system_setting import SystemSetting
 from app.models.transaction import Transaction
-from app.services.escrow_service import EscrowService, platform_fee_percent
+from app.services.earnings_service import WorkerEarnings, platform_fee_percent
 from app.db.session import SessionLocal
 
 from .conftest import login, make_job, make_user
@@ -45,7 +44,7 @@ def _set_rate(percent: int) -> None:
 
 
 def _hire(wage: int = WAGE):
-    """An employer with a worker hired and wage + commission frozen in escrow."""
+    """An employer with a worker hired. Nothing leaves the employer."""
     employer = make_user(role="employer", phone=_phone(), balance=5_000_000)
     worker = make_user(phone=_phone(), balance=0)
     job = make_job(employer.id, status=JobStatus.CONFIRMED,
@@ -53,15 +52,24 @@ def _hire(wage: int = WAGE):
     with SessionLocal() as db:
         db.add(Application(jobId=job.id, workerId=worker.id, status="hired"))
         db.commit()
-        EscrowService.hold_funds(db, employer.id, job.id, wage)
-        db.commit()
     return employer, worker, job
 
 
-def _release(job_id: str, worker_id: str) -> None:
+def _credit(job_id: str, worker_id: str, wage: int = WAGE) -> None:
+    """A day worked: the worker is credited, the commission recorded beside it."""
     with SessionLocal() as db:
-        EscrowService.release_funds(db, job_id=job_id, worker_id=worker_id)
+        job = db.query(Job).filter(Job.id == job_id).first()
+        WorkerEarnings.credit_worker(db, job=job, worker_id=worker_id, amount_uzs=wage)
         db.commit()
+
+
+def _billed(job_id: str) -> int:
+    """Wage plus commission — what the invoice will ask the company for."""
+    with SessionLocal() as db:
+        rows = (db.query(Transaction)
+                .filter(Transaction.jobId == job_id,
+                        Transaction.type == "worker_earning").all())
+        return sum((r.amount + (r.platformFee or 0)) // 100 for r in rows)
 
 
 def _balance(user_id: str) -> int:
@@ -72,15 +80,16 @@ def _balance(user_id: str) -> int:
 
 # --- the rate an administrator sets is the rate that is taken ---------------
 
-def test_the_configured_rate_is_what_the_employer_is_charged():
+def test_the_configured_rate_is_what_the_company_is_billed():
     _set_rate(20)
     employer, worker, job = _hire()
 
-    # 20% of 300 000 on top of the wage, not the 10% that used to be compiled in.
-    assert _balance(employer.id) == 5_000_000 - 360_000
+    _credit(job.id, worker.id)
 
-    _release(job.id, worker.id)
-
+    # 20% of 300 000 on top of the wage, not the 10% that used to be compiled
+    # in. Nothing leaves the employer's balance — this is the invoice figure.
+    assert _balance(employer.id) == 5_000_000
+    assert _billed(job.id) == 360_000
     # And none of it comes out of the worker.
     assert _balance(worker.id) == WAGE
 
@@ -94,10 +103,9 @@ def test_a_zero_rate_costs_the_employer_nothing_extra():
     _set_rate(0)
     employer, worker, job = _hire()
 
-    assert _balance(employer.id) == 5_000_000 - WAGE
+    _credit(job.id, worker.id)
 
-    _release(job.id, worker.id)
-
+    assert _billed(job.id) == WAGE
     assert _balance(worker.id) == WAGE
 
 
@@ -109,65 +117,46 @@ def test_with_no_settings_row_at_all_the_default_still_applies():
         assert platform_fee_percent(db) == 10
 
     employer, worker, job = _hire()
+    _credit(job.id, worker.id)
 
-    assert _balance(employer.id) == 5_000_000 - 330_000  # 300 000 + 10%
+    assert _billed(job.id) == 330_000  # 300 000 + 10%
 
 
-# --- and it holds to the rate the hire was made under -----------------------
+# --- and it holds to the rate the work was done under -----------------------
 
-def test_raising_the_rate_does_not_reach_back_into_frozen_money():
-    """The employer was charged at hiring; a later rate has nothing to bill."""
+def test_raising_the_rate_does_not_reach_back_into_work_already_done():
+    """The rate is pinned when a day is credited, not read again at invoice time.
+
+    Under escrow it was pinned when the money was frozen, which was hiring.
+    Nothing is frozen now, so the moment that matters is the work being done —
+    and a rate raised afterwards must not restate it.
+    """
     _set_rate(10)
     employer, worker, job = _hire()
-    charged = 5_000_000 - _balance(employer.id)
-    assert charged == 330_000  # 300 000 + 10%
+    _credit(job.id, worker.id)
+    assert _billed(job.id) == 330_000  # 300 000 + 10%
 
     _set_rate(45)
-    _release(job.id, worker.id)
 
-    # Releasing the hold does not go back for the difference.
-    assert 5_000_000 - _balance(employer.id) == charged
+    assert _billed(job.id) == 330_000
     assert _balance(worker.id) == WAGE
 
 
-def test_the_new_rate_applies_to_the_next_hire():
+def test_the_new_rate_applies_to_the_next_day_worked():
     _set_rate(10)
     employer_a, worker_a, job_a = _hire()
+    _credit(job_a.id, worker_a.id)
 
     _set_rate(30)
     employer_b, worker_b, job_b = _hire()
+    _credit(job_b.id, worker_b.id)
 
-    assert 5_000_000 - _balance(employer_a.id) == 330_000  # 300 000 + 10%
-    assert 5_000_000 - _balance(employer_b.id) == 390_000  # 300 000 + 30%
-
-    _release(job_a.id, worker_a.id)
-    _release(job_b.id, worker_b.id)
+    assert _billed(job_a.id) == 330_000  # 300 000 + 10%
+    assert _billed(job_b.id) == 390_000  # 300 000 + 30%
 
     # Both workers are paid the posted wage whatever their employer was charged.
     assert _balance(worker_a.id) == WAGE
     assert _balance(worker_b.id) == WAGE
-
-
-def test_a_hold_from_before_the_change_is_settled_on_its_old_terms():
-    """Money frozen under the old arrangement funded the wage alone.
-
-    Those holds took the fee out of the worker's pay, and the employer never
-    deposited anything extra. Paying the wage whole out of one would hand over
-    money nobody put in, so they are honoured as they were made.
-    """
-    _set_rate(10)
-    _employer, worker, job = _hire()
-    with SessionLocal() as db:
-        hold = db.query(Transaction).filter(Transaction.jobId == job.id).first()
-        hold.feePercent = None
-        hold.platformFee = 0
-        hold.amount = WAGE * 100
-        db.commit()
-
-    _set_rate(25)
-    _release(job.id, worker.id)
-
-    assert _balance(worker.id) == 225_000
 
 
 # --- what the worker is told matches what they are paid ---------------------
@@ -187,7 +176,7 @@ def test_the_worker_is_quoted_the_whole_wage(client):
 def test_a_finished_job_reports_what_reached_the_balance(client):
     _set_rate(15)
     _employer, worker, job = _hire()
-    _release(job.id, worker.id)
+    _credit(job.id, worker.id)
     with SessionLocal() as db:
         row = db.query(Application).filter(Application.jobId == job.id).first()
         row.status = "completed"
@@ -228,31 +217,3 @@ def test_saving_zero_percent_through_the_api_sticks(client):
         assert platform_fee_percent(db) == 0
 
 
-@pytest.mark.skip(reason="Balance checks removed from hiring logic")
-def test_hiring_is_refused_when_the_balance_covers_the_wage_but_not_the_fee(client):
-    """The check before the first hold has to include the commission.
-
-    Leaving it out let hiring pass this gate and then fail inside hold_funds on
-    the employer's balance — which on a multi-day posting is the "day one
-    froze, day two failed" split the pre-flight check exists to prevent.
-    """
-    _set_rate(10)
-    employer = make_user(role="employer", phone=_phone(), balance=WAGE)
-    worker = make_user(phone=_phone())
-    job = make_job(employer.id, salary=str(WAGE))
-
-    login(client, worker)
-    applied = client.post(f"/api/v1/jobs/{job.id}/apply")
-    assert applied.status_code == 200, applied.text
-
-    login(client, employer)
-    resp = client.post(f"/api/v1/applications/{applied.json()['id']}/hire")
-
-    assert resp.status_code == 400
-    detail = resp.json()["detail"]
-    assert "330 000" in detail          # 300 000 wage + 30 000 commission
-    assert "xizmat haqi" in detail
-    # Nothing was frozen and nobody was hired.
-    assert _balance(employer.id) == WAGE
-    with SessionLocal() as db:
-        assert db.query(Transaction).filter(Transaction.jobId == job.id).count() == 0

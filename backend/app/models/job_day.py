@@ -23,12 +23,12 @@ class JobDay(Base):
 
     ``Job.workDate`` is free text — "2026-09-02, 2026-09-03, 2026-09-04" — and
     for a long time that was the only record of a multi-day shift. One Job row
-    carried one status and one escrow hold, so finishing the first day
+    carried one status, so finishing the first day
     finished all three and paid once for all three. The days had no separate
     existence to complete or to pay.
 
     They do now. The posting still hires one worker for the whole run; what is
-    split is the work and the money. Each row here owns its own escrow hold
+    split is the work and the money. Each row here owns its own wage
     (``Transaction.jobDayId``), so a day is paid when that day is done and
     refunded when it is not worked.
     """

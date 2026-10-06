@@ -47,7 +47,7 @@ export const NotificationsScreen: React.FC = () => {
           <button
             onClick={() => setCurrentScreen('calendar')}
             className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-600 transition-colors active:scale-95 cursor-pointer border-0 bg-slate-50"
-            title="Orqaga"
+            title={language === 'ru' ? 'Назад' : language === 'en' ? 'Back' : 'Orqaga'}
           >
             <ArrowLeft size={18} className="stroke-[2.2]" />
           </button>

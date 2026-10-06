@@ -198,78 +198,6 @@ def purge_expired_idempotency_keys() -> int:
         return deleted or 0
 
 
-@celery_app.task(name="app.tasks.auto_release_escrow")
-def auto_release_escrow() -> int:
-    """Pay out work that was finished and never disputed.
-
-    The admin panel offered an "auto-release after N hours" control with
-    nothing behind it — the number lived in React state. Money stayed frozen
-    until somebody released it by hand, which for a completed job nobody had
-    objected to is just a delay to the worker.
-    """
-    from app.db.session import SessionLocal
-    from app.models import Job, SystemSetting, Transaction
-    from app.models.job import JobStatus
-    from app.services.escrow_service import EscrowService
-
-    released = 0
-    with SessionLocal() as db:
-        row = db.query(SystemSetting).filter(SystemSetting.id == "singleton").first()
-        if not row or not row.escrowAutoReleaseEnabled:
-            return 0
-        hours = row.escrowAutoReleaseHours or 24
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
-
-        held = (
-            db.query(Transaction)
-            .join(Job, Job.id == Transaction.jobId)
-            .filter(
-                Transaction.type == "escrow_hold",
-                Transaction.status == "held",
-                Job.status == JobStatus.COMPLETED,
-                Job.completedAt.isnot(None),
-                Job.completedAt < cutoff,
-            )
-            .all()
-        )
-
-        counted_jobs: set[str] = set()
-        
-        if held:
-            job_ids = {tx.jobId for tx in held}
-            jobs = db.query(Job).filter(Job.id.in_(job_ids)).all()
-            job_map = {j.id: j for j in jobs}
-            
-            try:
-                for tx in held:
-                    job = job_map.get(tx.jobId)
-                    worker_id = job.hiredWorkerId if job else None
-                    if not worker_id:
-                        # Nobody to pay; leave it for a human rather than guessing.
-                        continue
-                    
-                    EscrowService.release_funds(
-                        db, job_id=tx.jobId, worker_id=worker_id,
-                        # A multi-day posting has one hold per day. Naming the day
-                        # keeps each iteration on its own hold instead of releasing
-                        # whichever the query happened to return first.
-                        job_day_id=tx.jobDayId,
-                        # However many days it ran for, it is one job on the
-                        # worker's profile.
-                        count_completed_job=tx.jobId not in counted_jobs,
-                    )
-                    counted_jobs.add(tx.jobId)
-                    released += 1
-                db.commit()
-            except Exception as e:
-                db.rollback()
-                logger.error("Auto-release failed during batch processing: %s", e)
-
-    if released:
-        logger.info("Auto-released escrow for %d completed job(s)", released)
-    return released
-
-
 @celery_app.task(name="app.tasks.send_telegram_digest")
 def send_telegram_digest() -> bool:
     """A daily summary to the channel named in the admin panel.
@@ -279,7 +207,7 @@ def send_telegram_digest() -> bool:
     from sqlalchemy import func as sa_func
 
     from app.db.session import SessionLocal
-    from app.models import Job, SystemSetting, Transaction, User
+    from app.models import Job, SystemSetting, User
     from app.models.job import JobStatus
 
     with SessionLocal() as db:
@@ -299,9 +227,9 @@ def send_telegram_digest() -> bool:
             .scalar()
             or 0
         )
-        held = (
-            db.query(sa_func.coalesce(sa_func.sum(Transaction.amount), 0))
-            .filter(Transaction.type == "escrow_hold", Transaction.status == "held")
+        owed = (
+            db.query(sa_func.coalesce(sa_func.sum(User.balance), 0))
+            .filter(User.role == "worker")
             .scalar()
             or 0
         )
@@ -311,7 +239,7 @@ def send_telegram_digest() -> bool:
         f"👤 Yangi foydalanuvchilar: {new_users}\n"
         f"📋 Yangi e'lonlar: {new_jobs}\n"
         f"✅ Yakunlangan ishlar: {completed}\n"
-        f"🔒 Eskrouda muzlatilgan: {held // 100:,} so'm"
+        f"💰 Ishchilarga qarz: {owed:,} so'm"
     )
 
     try:
@@ -355,26 +283,24 @@ def expire_uzum_transactions() -> int:
         (datetime.now(timezone.utc) - timedelta(minutes=30)).timestamp() * 1000
     )
 
-    with SessionLocal() as db:
-        try:
-            stale = (
-                db.query(models.UzumTransaction)
-                .filter(
-                    models.UzumTransaction.status == "CREATED",
-                    models.UzumTransaction.transTime < cutoff_ms,
-                )
-                .all()
+    db = SessionLocal()
+    try:
+        stale = (
+            db.query(models.UzumTransaction)
+            .filter(
+                models.UzumTransaction.status == "CREATED",
+                models.UzumTransaction.transTime < cutoff_ms,
             )
-            # Only the transaction changes. An order is not taken out of use while
-            # a payment is in flight — /check refuses on "paid" and "cancelled" and
-            # nothing else — so there is no order state to restore here.
-            for trans in stale:
-                trans.status = "FAILED"
-            if stale:
-                db.commit()
-                logger.info("Expired %s unconfirmed Uzum transactions", len(stale))
-            return len(stale)
-        except Exception as e:
-            db.rollback()
-            logger.error("Error expiring uzum transactions: %s", e)
-            return 0
+            .all()
+        )
+        # Only the transaction changes. An order is not taken out of use while
+        # a payment is in flight — /check refuses on "paid" and "cancelled" and
+        # nothing else — so there is no order state to restore here.
+        for trans in stale:
+            trans.status = "FAILED"
+        if stale:
+            db.commit()
+            logger.info("Expired %s unconfirmed Uzum transactions", len(stale))
+        return len(stale)
+    finally:
+        db.close()

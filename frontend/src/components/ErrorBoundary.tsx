@@ -1,5 +1,7 @@
 import React, { ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { translations } from '../translations';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface Props {
   children: ReactNode;
@@ -37,6 +39,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
   };
 
   public render() {
+    // A class component, so no hook: the store is read directly. This renders
+    // after something has already thrown, and the language is the last thing
+    // the user chose, so a snapshot at render time is exactly right.
+    const t = translations[useAuthStore.getState().language];
+
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback;
@@ -48,17 +55,17 @@ export class ErrorBoundary extends React.Component<Props, State> {
             <AlertTriangle size={32} />
           </div>
           <h2 className="font-display font-bold text-base text-brand-primary mb-2">
-            Nimadir xato ketdi
+            {t.somethingWentWrong}
           </h2>
           <p className="text-xs text-brand-text-variant max-w-xs mb-6 leading-relaxed">
-            Suhbat yuklanishida kutilmagan xatolik yuz berdi. Iltimos, qayta urinib ko'ring.
+            {t.chatLoadFailed}
           </p>
           <button
             onClick={this.handleReset}
             className="flex items-center gap-2 bg-brand-primary text-white font-bold text-xs py-2.5 px-6 rounded-full cursor-pointer shadow-md hover:shadow-lg hover:opacity-95 transition-all"
           >
             <RotateCcw size={14} />
-            <span>Qayta yuklash</span>
+            <span>{t.reload}</span>
           </button>
         </div>
       );

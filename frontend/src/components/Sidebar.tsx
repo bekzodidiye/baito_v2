@@ -11,6 +11,7 @@ import { translations } from '../translations';
 import { LanguageSelector } from './LanguageSelector';
 import { showToast } from '../utils/toast';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
+import { useSidebarBadges } from '../hooks/useSidebarBadges';
 import { useUIStore } from "../store/useUIStore";
 import { useAuthStore } from "../store/useAuthStore";
 
@@ -34,6 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
     const logout = useApp().logout;
     const userProfile = useAuthStore(s => s.userProfile);
     const unreadNotificationsCount = useUIStore(s => s.unreadNotificationsCount);
+    const { pendingApplications, unreadMessages } = useSidebarBadges();
     const requireAuth = useApp().requireAuth;
 
   const t = translations[language];
@@ -48,7 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   const workerNav: NavItem[] = [
     { id: 'jobs', label: t.jobSearch, icon: Map, screen: 'jobs' as ScreenType, active: currentScreen === 'jobs' },
     { id: 'calendar', label: t.calendar, icon: Calendar, screen: 'calendar' as ScreenType, active: currentScreen === 'calendar' },
-    { id: 'messages', label: t.messages, icon: Mail, screen: 'messages' as ScreenType, active: currentScreen === 'messages' || currentScreen === 'chat' },
+    { id: 'messages', label: t.messages, icon: Mail, screen: 'messages' as ScreenType, active: currentScreen === 'messages' || currentScreen === 'chat', badge: unreadMessages },
     { id: 'notifications', label: language === 'uz' ? "Bildirishnomalar" : language === 'ru' ? "Уведомления" : "Notifications", icon: Bell, screen: 'notifications' as ScreenType, active: currentScreen === 'notifications', badge: unreadNotificationsCount },
   ];
 
@@ -56,8 +58,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
     { id: 'employer-dashboard', label: language === 'uz' ? "Boshqaruv paneli" : language === 'ru' ? "Панель управления" : "Dashboard", icon: LayoutDashboard, screen: 'employer-dashboard' as ScreenType, active: currentScreen === 'employer-dashboard' },
     { id: 'employer-jobs', label: language === 'uz' ? "E'lonlarim" : language === 'ru' ? "Мои объявления" : "My Jobs", icon: Briefcase, screen: 'employer-jobs' as ScreenType, active: currentScreen === 'employer-jobs' },
     { id: 'employer-post', label: language === 'uz' ? "E'lon joylash" : language === 'ru' ? "Новое объявление" : "Post Job", icon: PlusCircle, screen: 'employer-post' as ScreenType, active: currentScreen === 'employer-post' },
-    { id: 'employer-applicants', label: language === 'uz' ? "Arizalar" : language === 'ru' ? "Заявки" : "Applicants", icon: FileText, screen: 'employer-applicants' as ScreenType, active: currentScreen === 'employer-applicants' },
-    { id: 'employer-chats', label: language === 'uz' ? "Suhbatlar" : language === 'ru' ? "Чаты" : "Chats", icon: MessageSquare, screen: 'employer-chats' as ScreenType, active: currentScreen === 'employer-chats' },
+    { id: 'employer-applicants', label: language === 'uz' ? "Arizalar" : language === 'ru' ? "Заявки" : "Applicants", icon: FileText, screen: 'employer-applicants' as ScreenType, active: currentScreen === 'employer-applicants', badge: pendingApplications },
+    { id: 'employer-chats', label: language === 'uz' ? "Suhbatlar" : language === 'ru' ? "Чаты" : "Chats", icon: MessageSquare, screen: 'employer-chats' as ScreenType, active: currentScreen === 'employer-chats', badge: unreadMessages },
     // An employer gets notified about the same things a worker does - someone
     // applied, a shift was confirmed, an invoice was issued - and the screen
     // and its unread count were already built and already reachable at
@@ -158,7 +160,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
               >
                 <div className="flex items-center gap-3">
                   <ShieldCheck size={18} className="stroke-[2.2]" />
-                  <span>Admin Panel</span>
+                  <span>{t.adminPanel}</span>
                 </div>
               </button>}
 
@@ -189,7 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
           )}
 
           <div className="text-center pt-1">
-            <p className="text-[10px] font-bold text-brand-primary">Baito Uzbekistan</p>
+            <p className="text-[10px] font-bold text-brand-primary">{t.brandCountry}</p>
           </div>
         </div>
       </div>

@@ -33,7 +33,7 @@ from app.models.job import JobStatus
 from app.models.job_payout import JobPayout, PayoutStatus
 from app.models.user import User
 from app.services import email_service
-from app.services.escrow_service import fee_for, job_fee_percent
+from app.services.earnings_service import fee_for, job_fee_percent
 
 from .admin_users import get_admin_user
 from .audit import record_admin_action

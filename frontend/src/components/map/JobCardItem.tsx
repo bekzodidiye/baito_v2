@@ -36,7 +36,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
   const t = translations[language];
   const jobLatLng = getLatLng(job);
   const displayTime = getJobShiftTime(job);
-  const displayDuration = getJobDuration(job);
+  const displayDuration = getJobDuration(job, language as 'uz' | 'ru' | 'en');
 
   const shiftWhen = [(job as any).workDate, (job as any).workTime].filter(Boolean).join(', ');
   const applyQuestion = {
@@ -67,7 +67,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
               void shareJob(job, language);
             }}
             className="absolute top-3 right-3 w-11 h-11 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-brand-primary transition-all duration-200 cursor-pointer z-10"
-            title="Share"
+            title={t.share}
           >
             <Share2 size={13} />
           </button>
@@ -106,14 +106,6 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
             <span className="px-2 py-0.5 bg-blue-50/80 text-brand-primary text-[10px] font-extrabold rounded flex items-center gap-1">
               <Users size={10} className="text-brand-primary" /> {(job.hiredCount || 0)}/{(job.vacancies || (job.neededWorkers ? parseInt(job.neededWorkers) : 1))}
             </span>
-            {(job.tags || []).slice(0, 2).map((tag, tIdx) => (
-              <span
-                key={tIdx}
-                className="px-2 py-0.5 bg-slate-100/70 text-slate-500 text-[10px] font-semibold rounded"
-              >
-                {tag}
-              </span>
-            ))}
             {userLocation && (
               <span className="px-2 py-0.5 bg-indigo-50/70 text-brand-primary text-[10px] font-semibold rounded flex items-center gap-1">
                 <Navigation size={8} className="rotate-45 fill-brand-primary/20" />

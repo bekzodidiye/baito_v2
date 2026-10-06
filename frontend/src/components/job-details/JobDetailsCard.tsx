@@ -16,21 +16,35 @@ export const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ selectedJob }) =
   const category = getJobCategory(selectedJob);
   const categoryName = language === 'ru' ? category.nameRu : language === 'en' ? category.nameEn : category.nameUz;
 
-  const getDisplayHourly = () => {
-    if (selectedJob.hourlyRate && selectedJob.hourlyRate !== "Yo'q" && selectedJob.hourlyRate !== "Нет" && selectedJob.hourlyRate !== "No") {
-      return selectedJob.hourlyRate;
-    }
-    return language === 'uz' ? "50 000 so'm" : language === 'ru' ? "50 000 сум" : "50,000 UZS";
-  };
+  // A rate is stored with whatever currency word was on it when the posting
+  // went up — "15000 UZS" from the employer form, "15 000 so'm" from older
+  // ones. The old code appended "so'm" whenever it could not see one, which
+  // produced "15000 UZS so'm", and appended the Uzbek word whoever was
+  // reading. Take the currency off, keep the figure, and let the locale say it.
+  const withCurrency = (raw: string, pattern: string) =>
+    pattern.replace('{rate}', raw.replace(/\s*(so['\u2019]m|сум|UZS)\s*$/i, '').trim());
+
+  // "Yo'q" / "Нет" / "No" are how the three locales spell an unset rate.
+  const rateOrNull = (v?: string) =>
+    !v || v === "Yo'q" || v === "Нет" || v === "No" ? null : v;
+
+  const getDisplayHourly = () =>
+    withCurrency(rateOrNull(selectedJob.hourlyRate) ?? '50 000', t.hourlyVal);
 
   const getDisplayTransport = () => {
-    if (selectedJob.transportRate && selectedJob.transportRate !== "Yo'q" && selectedJob.transportRate !== "Нет" && selectedJob.transportRate !== "No" && !selectedJob.transportRate.includes('xarajat')) {
-      return selectedJob.transportRate.includes("so'm") || selectedJob.transportRate.includes("сум") ? selectedJob.transportRate : `${selectedJob.transportRate} so'm`;
-    }
-    return selectedJob.transportRate || (language === 'uz' ? "15 000 so'm" : language === 'ru' ? "15 000 сум" : "15,000 UZS");
+    const rate = rateOrNull(selectedJob.transportRate);
+    return withCurrency(
+      rate && !rate.includes('xarajat') ? rate : '15 000',
+      t.transportRateVal,
+    );
   };
 
-  const durationBadge = selectedJob.durationLabel ? `${selectedJob.durationLabel} muddatgacha` : "12 soat muddatgacha";
+  // t.deadlineText has been sitting in all three locale files unused; the badge
+  // said "muddatgacha" to Russian and English readers alike.
+  const durationBadge = t.deadlineText.replace(
+    '{duration}',
+    selectedJob.durationLabel || (language === 'uz' ? '12 soat' : language === 'ru' ? '12 часов' : '12 hours'),
+  );
 
   return (
     <div className="bg-white rounded-xl p-3.5 sm:p-4 shadow-sm border border-slate-200">
@@ -55,11 +69,6 @@ export const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ selectedJob }) =
         <span className="bg-blue-50 text-brand-primary border border-blue-100/80 px-2.5 py-0.5 rounded-lg text-xs font-extrabold flex items-center gap-1">
           <Users size={13} className="text-brand-primary" /> {language === 'uz' ? "Ishchilar:" : language === 'ru' ? "Рабочие:" : "Workers:"} {selectedJob.hiredCount || 0}/{selectedJob.vacancies || (selectedJob.neededWorkers ? parseInt(selectedJob.neededWorkers) : 1)}
         </span>
-        {selectedJob.tags && selectedJob.tags.slice(0, 2).map((tag, idx) => (
-          <span key={idx} className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-lg text-xs font-semibold">
-            {tag}
-          </span>
-        ))}
       </div>
 
       {/* 2x2 Bento Grid */}

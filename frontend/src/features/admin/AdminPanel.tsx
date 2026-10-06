@@ -1,6 +1,8 @@
 import { NotificationsScreen } from '../../components/notifications/NotificationsScreen';
 import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AdminTab } from './types';
+import { adminPath, tabFromSlug, DEFAULT_ADMIN_TAB } from './adminTabs';
 import { useAdminData } from './useAdminData';
 import { AdminHeader } from './AdminHeader';
 import { AdminSidebar } from './AdminSidebar';
@@ -24,10 +26,26 @@ import { AdminNotificationRules } from './AdminNotificationRules';
 import { AdminAutoModeration } from './AdminAutoModeration';
 import { AdminAutoMatching } from './AdminAutoMatching';
 import { AdminAutoReports } from './AdminAutoReports';
-import { AdminAutoEscrowDocs } from './AdminAutoEscrowDocs';
 
 export const AdminPanel: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  // The URL is the tab. Every section is its own address, so it can be linked
+  // to, bookmarked and survive a reload; `back` moves between sections rather
+  // than leaving the panel.
+  const { tab: tabSlug } = useParams<{ tab?: string }>();
+  const navigate = useNavigate();
+  const activeTab = tabFromSlug(tabSlug) ?? DEFAULT_ADMIN_TAB;
+  const setActiveTab = React.useCallback(
+    (tab: AdminTab) => navigate(adminPath(tab)),
+    [navigate],
+  );
+
+  // A slug nobody recognises is a typo or a stale link, not a blank panel.
+  React.useEffect(() => {
+    if (tabSlug && !tabFromSlug(tabSlug)) {
+      navigate(adminPath(DEFAULT_ADMIN_TAB), { replace: true });
+    }
+  }, [tabSlug, navigate]);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const mainRef = React.useRef<HTMLElement>(null);
 
@@ -178,9 +196,6 @@ export const AdminPanel: React.FC = () => {
             <AdminAutoReports stats={stats} settings={settings} onUpdateSettings={updateSettings} />
           )}
 
-          {activeTab === 'auto_escrow_docs' && (
-            <AdminAutoEscrowDocs settings={settings} onUpdateSettings={updateSettings} />
-          )}
 
           {activeTab === 'settings' && (
             <AdminSettings settings={settings} onUpdateSettings={updateSettings} />

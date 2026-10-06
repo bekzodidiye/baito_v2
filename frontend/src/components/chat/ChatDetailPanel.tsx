@@ -112,7 +112,7 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
                           <div className="rounded-xl overflow-hidden shadow-sm border border-black/5 bg-slate-100 max-w-[240px]">
                             <img 
                               src={imgMatch[1]} 
-                              alt="Rasm" 
+                              alt={t.imageLabel} 
                               className="w-full h-auto object-cover rounded-xl"
                               style={{ maxHeight: '280px' }}
                             />
@@ -130,7 +130,7 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
                         <div className="flex flex-col gap-1.5">
                           <div className="rounded-xl overflow-hidden shadow-sm border border-black/5 bg-slate-100 max-w-[240px] p-6 flex flex-col items-center justify-center gap-2">
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                            <span className="text-[10px] font-semibold opacity-70">Fayl</span>
+                            <span className="text-[10px] font-semibold opacity-70">{t.fileLabel}</span>
                           </div>
                           {faylMatch[2] && (
                             <p className="whitespace-pre-wrap leading-relaxed">{faylMatch[2]}</p>
@@ -179,7 +179,7 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
               <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.4s]" />
               <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.6s]" />
             </div>
-            <span className="text-[10px] text-slate-400 font-medium">yozmoqda...</span>
+            <span className="text-[10px] text-slate-400 font-medium">{t.typingIndicator}</span>
           </div>
         )}
 

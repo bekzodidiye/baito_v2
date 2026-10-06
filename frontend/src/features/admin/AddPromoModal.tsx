@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { PromoCode } from './types';
 
 interface AddPromoModalProps {
@@ -8,6 +10,8 @@ interface AddPromoModalProps {
 }
 
 export const AddPromoModal: React.FC<AddPromoModalProps> = ({ isOpen, onClose, onAdd }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [code, setCode] = useState('');
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [amount, setAmount] = useState(10);
@@ -39,7 +43,7 @@ export const AddPromoModal: React.FC<AddPromoModalProps> = ({ isOpen, onClose, o
   return (
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
-        <h3 className="font-bold text-slate-800 text-base">Yangi Promokod</h3>
+        <h3 className="font-bold text-slate-800 text-base">{a.newPromoTitle}</h3>
         <div>
           <label className="text-xs font-semibold text-slate-700 block mb-1">Promokod kodi</label>
           <input

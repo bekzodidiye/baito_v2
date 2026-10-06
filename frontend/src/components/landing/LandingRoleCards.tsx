@@ -14,21 +14,10 @@ export const LandingRoleCards: React.FC<LandingRoleCardsProps> = ({ onSelectRole
   const [activeRole, setActiveRole] = useState<'worker' | 'employer'>('worker');
   const t = LANDING_TEXTS[language as keyof typeof LANDING_TEXTS] || LANDING_TEXTS.uz;
 
-  const workerSteps = [
-    { title: "Profil va ID Verification", desc: "Pasport yoki ID ma'lumotlar bilan 2 daqiqada tasdiqlash" },
-    { title: "Smena va Xarita", desc: "Yaqin masofadagi mos smenani tanlash va bir bosing bilan ariza" },
-    { title: "Smenani Bajarish", desc: "Belgilangan manzilga borib vaqtida ishni muvaffaqiyatli topshirish" },
-    { title: "Darhol Pul Olish", desc: "Ish beruvchi tasdiqlashi bilan maosh to'g'ridan-to'g'ri kartaga" },
-  ];
-
-  const employerSteps = [
-    { title: "E'lon va Smena Joylash", desc: "Vaqt, joylashuv, talablar va smena maoshini kiritish" },
-    { title: "Top-Nomzodlar Ro'yxati", desc: "Reytingi baland, tasdiqlangan ID ga ega nomzodlar bilan chat" },
-    { title: "Smenaga Qabul Qilish", desc: "Nomzodni tanlash va avtomatik bildirishnoma yuborish" },
-    { title: "Smena Yakuni va Baholash", desc: "Ishni qabul qilib, bir bosing bilan maosh o'tkazish" },
-  ];
-
-  const steps = activeRole === 'worker' ? workerSteps : employerSteps;
+  // The eight cards were written into this file in Uzbek, so a Russian reader
+  // got a Russian heading over an Uzbek walkthrough. They live in LandingData
+  // beside the rest of the page's copy now.
+  const steps = activeRole === 'worker' ? t.stepsWorker : t.stepsEmployer;
 
   return (
     <section id="roles" className="py-12 lg:py-16 bg-white font-sans border-b border-slate-200 min-h-[calc(100vh-4.5rem)] sm:min-h-[calc(100vh-5rem)] flex flex-col justify-center">
@@ -37,7 +26,7 @@ export const LandingRoleCards: React.FC<LandingRoleCardsProps> = ({ onSelectRole
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-black">
             <Users size={14} />
-            <span>Dual Platforma</span>
+            <span>{t.dualPlatformBadge}</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-black text-slate-900">{t.rolesTitle}</h2>
           <p className="text-xs sm:text-sm text-slate-600 font-medium">{t.rolesSubtitle}</p>
@@ -53,7 +42,7 @@ export const LandingRoleCards: React.FC<LandingRoleCardsProps> = ({ onSelectRole
               }`}
             >
               <UserCheck size={16} />
-              <span>Ishchilar uchun 👷‍♂️</span>
+              <span>{t.rolesWorkerTab} 👷‍♂️</span>
             </button>
             <button
               onClick={() => setActiveRole('employer')}
@@ -64,7 +53,7 @@ export const LandingRoleCards: React.FC<LandingRoleCardsProps> = ({ onSelectRole
               }`}
             >
               <Building2 size={16} />
-              <span>Ish beruvchilar uchun 🏢</span>
+              <span>{t.rolesEmployerTab} 🏢</span>
             </button>
           </div>
         </div>
@@ -86,7 +75,7 @@ export const LandingRoleCards: React.FC<LandingRoleCardsProps> = ({ onSelectRole
           <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-xs font-extrabold text-slate-700">
               <ShieldCheck size={18} className="text-emerald-500 shrink-0" />
-              <span>Barcha xizmatlar xavfsiz va shaffof shartnoma asosida ishlaydi</span>
+              <span>{t.rolesContractNote}</span>
             </div>
 
             <button

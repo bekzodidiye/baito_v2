@@ -33,6 +33,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = () => {
     login: isUz ? "Kirish" : isRu ? "Войти" : "Log in",
     registerWorker: isUz ? "Ishchi bo'lish" : isRu ? "Стать рабочим" : "Join as Worker",
     exploreJobs: isUz ? "E'lonlar" : isRu ? "Вакансии" : "Jobs",
+    toggleMenu: isUz ? "Menyuni ochish/yopish" : isRu ? "Открыть/закрыть меню" : "Toggle the menu",
   };
 
   const scrollToSection = (id: string) => {
@@ -106,7 +107,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = () => {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-            aria-label="Toggle Menu"
+            aria-label={navs.toggleMenu}
             data-allow-guest="true"
           >
             {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}

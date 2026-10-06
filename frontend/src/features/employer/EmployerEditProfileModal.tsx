@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { translations, type Language } from '../../translations';
 import { X, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { showToast } from '../../utils/toast';
@@ -67,7 +68,11 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
       showToast(language === 'uz' ? "Profil yangilandi!" : language === 'ru' ? "Профиль обновлен!" : "Profile updated!");
       onClose();
     } catch (err) {
-      showToast(language === 'uz' ? "Xatolik yuz berdi" : language === 'ru' ? "Произошла ошибка" : "An error occurred");
+      // The server says why — an email another account already uses, a phone
+      // that is not a valid number. Showing "an error occurred" instead left
+      // nothing to act on.
+      const detail = err instanceof Error ? err.message.trim() : '';
+      showToast(detail || translations[language as Language].somethingWentWrong, 'error');
     } finally {
       setIsSubmitting(false);
     }

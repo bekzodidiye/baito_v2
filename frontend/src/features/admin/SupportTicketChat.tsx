@@ -1,4 +1,6 @@
 import React from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { SupportTicketDetail } from './types';
 import { CheckCircle, Send, X, MessageSquare } from 'lucide-react';
 
@@ -23,6 +25,8 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
   setReplyText,
   quickReplies,
 }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   if (loading) {
     return (
       <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center text-slate-400 flex flex-col items-center justify-center h-[520px]">
@@ -36,7 +40,7 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
       <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center text-slate-400 flex flex-col items-center justify-center h-[520px]">
         <MessageSquare size={40} className="text-slate-300 mb-2" />
         <p className="font-extrabold text-slate-700 text-sm">Ticket tanlanmadi</p>
-        <p className="text-xs text-slate-400 max-w-xs mt-1">Chap tomondagi ro'yxatdan biror ticketni tanlang va muloqotni boshlang.</p>
+        <p className="text-xs text-slate-400 max-w-xs mt-1">{a.pickATicket}</p>
       </div>
     );
   }
@@ -72,7 +76,7 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
 
       <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/30 text-xs">
         {(ticket.messages ?? []).length === 0 && (
-          <p className="text-center text-slate-400 py-6">Hali xabar yo'q</p>
+          <p className="text-center text-slate-400 py-6">{a.noMessagesYet}</p>
         )}
         {(ticket.messages ?? []).map((m) => (
           <div key={m.id} className={`flex ${m.isAdmin ? 'justify-end' : 'justify-start'}`}>

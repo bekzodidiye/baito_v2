@@ -15,20 +15,16 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
   const [hoursPerDay, setHoursPerDay] = useState<number>(8);
   const [daysPerWeek, setDaysPerWeek] = useState<number>(5);
 
-  const categories = [
-    { name: 'Kuryerlik', rate: 35000 },
-    { name: 'Restoran / Kafe', rate: 30000 },
-    { name: 'Omborxona', rate: 38000 },
-    { name: 'Qurilish', rate: 45000 },
-    { name: 'Savdo', rate: 28000 },
-  ];
+  // The rates are the same whoever is reading; only the names translate.
+  const RATES = [35000, 30000, 38000, 45000, 28000];
+  const categories = t.calcCategories.map((name, i) => ({ name, rate: RATES[i] }));
 
   const dailyIncome = hourlyRate * hoursPerDay;
   const weeklyIncome = dailyIncome * daysPerWeek;
   const monthlyIncome = weeklyIncome * 4;
 
   const formatSum = (val: number) => {
-    return val.toLocaleString('uz-UZ') + " so'm";
+    return `${val.toLocaleString('uz-UZ')} ${t.currencySuffix}`;
   };
 
   return (
@@ -44,7 +40,7 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-12">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-brand-primary text-xs font-black shadow-2xs">
             <Calculator size={14} className="text-brand-primary" />
-            <span>Interactive Kalkulyator</span>
+            <span>{t.calcBadge}</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">{t.calcTitle}</h2>
           <p className="text-sm sm:text-base font-semibold text-slate-600">{t.calcSubtitle}</p>
@@ -56,7 +52,7 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
           <div className="md:col-span-7 space-y-6">
             {/* Category Select */}
             <div className="space-y-2.5">
-              <label className="text-xs font-black text-slate-700 uppercase tracking-wider block">Soha toifasini tanlang:</label>
+              <label className="text-xs font-black text-slate-700 uppercase tracking-wider block">{t.calcCategoryLabel}</label>
               <div className="flex flex-wrap gap-2">
                 {categories.map((cat) => (
                   <button
@@ -77,11 +73,11 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
             {/* Hours Slider */}
             <div className="space-y-2.5">
               <div className="flex justify-between items-center text-xs font-extrabold">
-                <span className="text-slate-700 flex items-center gap-1.5"><Clock size={15} className="text-brand-primary" /> Kunlik ish vaqti:</span>
-                <span className="text-brand-primary font-black text-sm">{hoursPerDay} soat / kun</span>
+                <span className="text-slate-700 flex items-center gap-1.5"><Clock size={15} className="text-brand-primary" /> {t.calcHoursLabel}</span>
+                <span className="text-brand-primary font-black text-sm">{t.calcHoursUnit.replace('{n}', String(hoursPerDay))}</span>
               </div>
               <input
-              aria-label="Kunlik ish vaqti (soat)"
+              aria-label={t.calcHoursAria}
                 type="range"
                 min="4"
                 max="12"
@@ -95,11 +91,11 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
             {/* Days Slider */}
             <div className="space-y-2.5">
               <div className="flex justify-between items-center text-xs font-extrabold">
-                <span className="text-slate-700 flex items-center gap-1.5"><Calendar size={15} className="text-sky-600" /> Haftalik ish kunlari:</span>
-                <span className="text-sky-600 font-black text-sm">{daysPerWeek} kun / hafta</span>
+                <span className="text-slate-700 flex items-center gap-1.5"><Calendar size={15} className="text-sky-600" /> {t.calcDaysLabel}</span>
+                <span className="text-sky-600 font-black text-sm">{t.calcDaysUnit.replace('{n}', String(daysPerWeek))}</span>
               </div>
               <input
-              aria-label="Haftalik ish kunlari"
+              aria-label={t.calcDaysAria}
                 type="range"
                 min="1"
                 max="7"
@@ -114,7 +110,7 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
           {/* Results Display */}
           <div className="md:col-span-5 bg-gradient-to-br from-blue-900 via-[#0D1B54] to-[#060D2E] border border-blue-900/60 rounded-2xl p-6 text-center space-y-4 shadow-xl text-white">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-sky-200/90">Taxminiy Oylik Daromad</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-sky-200/90">{t.calcMonthlyLabel}</span>
               <div className="text-2xl sm:text-3xl font-black text-amber-300 mt-1 drop-shadow-sm">
                 {formatSum(monthlyIncome)}
               </div>
@@ -122,11 +118,11 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
 
             <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-blue-500/30 text-left">
               <div className="p-2.5 rounded-xl bg-[#040A26] border border-blue-500/25">
-                <span className="text-[10px] font-bold text-slate-300 block">Kunlik maosh</span>
+                <span className="text-[10px] font-bold text-slate-300 block">{t.calcDailyLabel}</span>
                 <span className="text-xs font-black text-emerald-400">{formatSum(dailyIncome)}</span>
               </div>
               <div className="p-2.5 rounded-xl bg-[#040A26] border border-blue-500/25">
-                <span className="text-[10px] font-bold text-slate-300 block">Haftalik maosh</span>
+                <span className="text-[10px] font-bold text-slate-300 block">{t.calcWeeklyLabel}</span>
                 <span className="text-xs font-black text-sky-300">{formatSum(weeklyIncome)}</span>
               </div>
             </div>
@@ -135,7 +131,7 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
               onClick={() => onSelectRole('worker')}
               className="w-full py-3.5 rounded-xl bg-brand-primary hover:bg-blue-600 text-white font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 active:scale-[0.98]"
             >
-              <span>Ushbu daromadni topishni boshlash</span>
+              <span>{t.calcCta}</span>
               <ArrowRight size={15} />
             </button>
           </div>

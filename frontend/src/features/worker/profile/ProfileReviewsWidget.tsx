@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { money } from '../../../utils/money';
 import { Star, MessageSquare } from 'lucide-react';
 import { apiClient } from '../../../api/client';
 import { Application } from '../../../types';
@@ -105,7 +106,7 @@ export const ProfileReviewsWidget: React.FC<ProfileReviewsWidgetProps> = ({ lang
             
             {review.bonus ? (
               <div className="mt-2 text-[10px] font-bold text-emerald-600 bg-emerald-50 inline-block px-2 py-0.5 rounded-full border border-emerald-100">
-                + {review.bonus.toLocaleString()} so'm bonus
+                + {money(review.bonus, language)} bonus
               </div>
             ) : null}
           </motion.div>

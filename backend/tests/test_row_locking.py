@@ -66,15 +66,15 @@ def test_every_row_lock_refreshes_the_object():
 
 
 def test_the_balance_paths_are_actually_locked():
-    """The specific queries the withdrawal and escrow races went through."""
+    """The specific queries the withdrawal and crediting races went through."""
     joined = "\n".join(
         io.open(p, encoding="utf-8").read()
         for p in (
             APP / "api" / "v1" / "endpoints" / "payments.py",
-            APP / "services" / "escrow_service.py",
+            APP / "services" / "earnings_service.py",
         )
     )
     assert "populate_existing" in joined, (
-        "Neither the payout endpoint nor the escrow service refreshes under its "
-        "lock; concurrent requests will read a stale balance."
+        "Neither the payout endpoint nor the earnings service refreshes under "
+        "its lock; concurrent requests will read a stale balance."
     )

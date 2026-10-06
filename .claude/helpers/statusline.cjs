@@ -46,7 +46,7 @@ const CWD = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 // Replaced by statusline-generator with the package root of the CLI that
 // installed this helper. This survives custom npm prefixes and bundled Node
 // runtimes whose process.execPath belongs to a different tree (#2811).
-const BAKED_INSTALL_ROOT = "/home/Bekzod/.npm/_npx/2ed56890c96f58f7/node_modules/@claude-flow/cli";
+const BAKED_INSTALL_ROOT = "";
 
 // ─── Delegation cache ───────────────────────────────────────────
 // Cache the CLI JSON result so rapid prompt re-renders (Claude Code
@@ -899,7 +899,7 @@ function getPkgVersion() {
   // version (see generateStatuslineScript()'s doc comment) — correct even
   // when this renders via a pure npx invocation with no local install for
   // the candidate scan below to find.
-  let ver = "3.38.21";
+  let ver = "3.32.8";
   try {
     const home = os.homedir();
     const pkgPaths = [

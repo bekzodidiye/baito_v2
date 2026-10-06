@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { AdminDispute, AdminJob } from './types';
 import { AlertTriangle, ShieldCheck, ArrowRightLeft, DollarSign, CheckCircle2 } from 'lucide-react';
 import { useAdminData } from './useAdminData';
 import { apiClient } from '../../api/client';
 
 export const AdminDisputes: React.FC = () => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const { disputes, jobs, refresh } = useAdminData();
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
@@ -24,8 +28,8 @@ export const AdminDisputes: React.FC = () => {
       refresh();
       (
         winner === 'worker'
-          ? "Nizo hal qilindi: Escrow mablag'i Ishchiga o'tkazildi"
-          : "Nizo hal qilindi: Escrow mablag'i Ish beruvchiga qaytarildi"
+          ? "Nizo hal qilindi: ishchi foydasiga"
+          : "Nizo hal qilindi: ish beruvchi foydasiga"
       );
     } catch(e) {
       console.error(e);
@@ -38,10 +42,10 @@ export const AdminDisputes: React.FC = () => {
       <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
         <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
           <AlertTriangle size={20} className="text-amber-500" />
-          <span>Nizolar va E'tirozlarni Hal Qilish (Disputes)</span>
+          <span>{a.disputesTitle}</span>
         </h2>
         <p className="text-xs text-slate-500 mt-1 font-medium">
-          Ish beruvchi va ishchi o'rtasidagi kelishmovchiliklar boyicha Escrow mablag'ini taqsimlash
+          Ish beruvchi va ishchi o'rtasidagi kelishmovchiliklarni hal qilish
         </p>
       </div>
 

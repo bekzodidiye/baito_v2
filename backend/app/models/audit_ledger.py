@@ -14,7 +14,7 @@ class AuditLedger(Base):
     userId = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     amountDelta = Column(Integer, nullable=False) # positive for credit, negative for debit (in UZS)
     balanceAfter = Column(Integer, nullable=False)
-    entryType = Column(String, nullable=False) # 'deposit', 'payout', 'fee', 'escrow_hold', 'escrow_release', 'refund'
+    entryType = Column(String, nullable=False) # 'deposit', 'payout', 'fee', 'worker_earning', 'completion_bonus', 'refund'
     referenceType = Column(String, nullable=True) # 'transaction', 'job', 'application'
     referenceId = Column(String, nullable=True, index=True)
     description = Column(Text, nullable=True)

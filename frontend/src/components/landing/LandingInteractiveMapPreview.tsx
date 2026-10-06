@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { perksForJob } from '../../constants/perks';
+import { negotiablePay } from './useLandingCategories';
 import { useJobsData } from "../../context/useJobsData";
 import { LANDING_TEXTS } from './LandingData';
 import { Compass, MapPin, Building2, Clock, ArrowRight, Info, CheckCircle2 } from 'lucide-react';
@@ -36,11 +36,10 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
       if (foundJob) {
         targetShift = {
           id: foundJob.id, titleUz: foundJob.title, titleRu: foundJob.title, company: foundJob.company, district: foundJob.location,
-          pay: foundJob.salary || "280,000 so'm/smena", payNum: 280000, time: foundJob.time || "09:00 - 18:00 (8 soat)", category: 'general',
-          lat: 0, lng: 0, badge: foundJob.urgent ? 'Tezkor' : 'Aktiv', urgent: foundJob.urgent || false,
+          pay: foundJob.salary || negotiablePay(language), payNum: 280000, time: foundJob.time || `09:00 - 18:00 (8 ${t.hoursSuffix})`, category: 'general',
+          lat: 0, lng: 0, urgent: foundJob.urgent || false,
           descriptionUz: foundJob.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
           descriptionRu: foundJob.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
-          perksUz: perksForJob(foundJob.tags, language)
         };
       }
 
@@ -59,11 +58,10 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
     const updateActiveShift = () => {
       const realShifts = jobs.map(j => ({
         id: j.id, titleUz: j.title, titleRu: j.title, company: j.company, district: j.location,
-        pay: j.salary || "280,000 so'm/smena", payNum: 280000, time: j.time || "09:00 - 18:00 (8 soat)", category: 'general',
-        lat: 0, lng: 0, badge: j.urgent ? 'Tezkor' : 'Aktiv', urgent: j.urgent || false,
+        pay: j.salary || negotiablePay(language), payNum: 280000, time: j.time || `09:00 - 18:00 (8 ${t.hoursSuffix})`, category: 'general',
+        lat: 0, lng: 0, urgent: j.urgent || false,
         descriptionUz: j.description || "Ushbu smenada berilgan vazifalarni belgilangan vaqt va tartibga ko'ra mas'uliyat bilan bajarish talab etiladi.",
         descriptionRu: j.description || "Требуется ответственное выполнение поставленных задач в соответствии с регламентом и графиком смены.",
-        perksUz: perksForJob(j.tags, language)
       }));
       const allShifts = realShifts.slice(0, 6);
       if (allShifts.length > 0) {
@@ -94,7 +92,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-8 sm:mb-10 px-2">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-brand-primary text-xs font-black shadow-2xs">
             <Compass size={14} className="text-brand-primary" />
-            <span>Xaritalar va Masofa</span>
+            <span>{t.mapBadge}</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">{t.mapTitle}</h2>
           <p className="text-sm sm:text-base font-semibold text-slate-600">{t.mapSubtitle}</p>
@@ -158,10 +156,10 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
               <div className="flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-1.5 text-brand-primary text-xs font-black">
                   <Info size={15} />
-                  <span>Tanlangan Smena Tafsiloti</span>
+                  <span>{t.mapSelectedShift}</span>
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-wider text-brand-primary bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
-                  {activeShift.badge || 'BUGUN'}
+                  {activeShift.urgent ? t.statusUrgent : t.statusActive}
                 </span>
               </div>
 
@@ -177,7 +175,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
                 <div>
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-[10px] font-extrabold text-brand-primary bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
-                      {activeShift.urgent ? 'BUGUN • AKTIV SMENA' : 'REJALASHTIRILGAN'}
+                      {activeShift.urgent ? t.heroShiftBadge : t.mapPlanned}
                     </span>
                     <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1 bg-white px-2 py-0.5 rounded-full border border-slate-200">
                       ⭐ 4.9 <span className="text-slate-400 font-normal">(120+)</span>
@@ -192,7 +190,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
 
                 <div className="text-base sm:text-lg font-black text-blue-700 pt-2 border-t border-slate-200/60 flex items-center justify-between">
                   <span>{activeShift.pay}</span>
-                  <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">Kunlik to'lov</span>
+                  <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">{t.shiftDailyPay}</span>
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-600 font-semibold pt-2 border-t border-slate-200/60">
@@ -206,18 +204,10 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
                   </div>
                 </div>
 
-                <div className="pt-1.5 border-t border-slate-200/60 space-y-1">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">Qulayliklar va imtiyozlar</span>
-                  <div className="flex flex-wrap gap-1">
-                    {((activeShift as any).perksUz || []).map((perk: string, i: number) => (
-                      <span key={i} className="text-[10px] font-bold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-md shadow-2xs">{perk}</span>
-                    ))}
-                  </div>
-                </div>
 
                 <div className="pt-1.5 text-[10px] sm:text-[11px] text-slate-600 font-medium bg-blue-50/90 p-2 rounded-xl border border-blue-100 flex items-center gap-1.5">
                   <CheckCircle2 size={13} className="text-brand-primary shrink-0" />
-                  <span>Smena tugashi bilan maosh kartaga o'tkaziladi</span>
+                  <span>{t.mapPayNote}</span>
                 </div>
               </motion.div>
             </div>
@@ -232,7 +222,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
                 }}
                 className="w-full py-3 rounded-xl bg-brand-primary hover:bg-blue-700 text-white text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 active:scale-[0.98]"
               >
-                <span>Ushbu smenaga ariza topshirish</span>
+                <span>{t.shiftApplyCta}</span>
                 <ArrowRight size={15} />
               </button>
             </div>

@@ -6,8 +6,11 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.api import deps
+from app.core.money import salary_to_uzs
 from app.models.job import JobStatus
+from app.models.job_day import JobDayStatus
 from app.models.job_payout import JobPayout
+from app.services import job_days
 
 from .admin_users import get_admin_user
 from .audit import record_admin_action
@@ -306,14 +309,12 @@ def get_admin_job_detail(
             "date": job.createdAt.isoformat(), "icon": "plus",
         })
 
-    # Hiring is what puts the wage into escrow, so that transaction carries the
-    # moment it happened. The application row does not: it only knows when the
-    # worker applied, which is what this used to report as the hiring date.
-    hire_date = next(
-        (t["createdAt"] for t in sorted(txn_data, key=lambda x: x["createdAt"] or "")
-         if t["type"] == "escrow_hold"),
-        None,
-    )
+    # Nothing records when a worker was hired. This used to borrow the escrow
+    # hold's timestamp, which was the moment of hiring because hiring is what
+    # froze the money; with nothing frozen there is no such row. The posting's
+    # start is the closest thing that is actually written down, and the
+    # application date is the fallback — the same one this had before.
+    hire_date = job.startedAt.isoformat() if job.startedAt else None
 
     for app_d in sorted(apps_data, key=lambda x: x["appliedDate"] or ""):
         if app_d["appliedDate"]:
@@ -332,14 +333,14 @@ def get_admin_job_detail(
             })
 
     for tx in sorted(txn_data, key=lambda x: x["createdAt"] or ""):
-        if tx["type"] in ("deposit", "escrow_hold") and tx["status"] in ("paid", "pending", "held"):
+        if tx["type"] == "deposit" and tx["status"] in ("paid", "pending"):
             timeline.append({
                 "event": "deposit",
                 "label": f"Depozit: {tx['amount'] // 100} so'm",
                 "date": tx["createdAt"],
                 "icon": "dollar",
             })
-        if tx["type"] in ("payment", "escrow_hold") and tx["status"] in ("paid", "released"):
+        if tx["type"] in ("payment", "worker_earning", "completion_bonus") and tx["status"] in ("paid", "credited"):
             timeline.append({
                 "event": "payment",
                 "label": f"To'lov: {tx['amount'] // 100} so'm",
@@ -421,6 +422,27 @@ def change_job_status(
             detail=f"Noma'lum holat. Ruxsat etilgan: {', '.join(sorted(VALID_STATUSES))}",
         )
 
+    # Marking a posting finished from this dropdown used to set the column and
+    # nothing else: the day rows stayed pending and the worker was credited for
+    # none of them. The posting read as done while nobody was owed anything —
+    # production has one in exactly that state.
+    #
+    # Rather than credit somebody from a status dropdown, this refuses and
+    # points at the flow that settles the work properly. Completing a day is
+    # what credits that day's wage, and only the employer finishing the work
+    # can say it happened.
+    if payload.status == JobStatus.COMPLETED and job.status != JobStatus.COMPLETED:
+        payable = job_days.payable_days(db, job.id)
+        if payable:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Bu ishning {len(payable)} kuni hali yakunlanmagan. Holatni "
+                    "shu yerdan o'zgartirish ishchiga hech narsa hisoblamaydi. "
+                    "Ishni kunlar bo'yicha yakunlang yoki bekor qiling."
+                ),
+            )
+
     previous = job.status
     job.status = payload.status
 
@@ -455,6 +477,14 @@ def change_job_status(
         )
         for app in active_apps:
             app.status = "cancelled"
+
+        # The employer's own cancel closes the days; doing it from here has
+        # to mean the same thing, or a cancelled posting keeps offering work.
+
+        for day in job_days.days_of(db, job.id):
+            if day.status == JobDayStatus.PENDING:
+                day.status = JobDayStatus.CANCELLED
+                db.add(day)
 
     record_admin_action(
         db, admin, "job.status", target_type="job", target_id=job.id,
@@ -529,10 +559,23 @@ def change_job_worker(
         job.hiredWorkerId = new_worker_id
         if job.status == JobStatus.OPEN:
             job.status = JobStatus.CONFIRMED
+
+        # The wage each day is worth, pinned now rather than read from the
+        # posting later: editing the salary afterwards must not restate a day
+        # already agreed. Nothing is taken from the employer — the worker is
+        # credited as each day is worked, and the company invoiced after.
+        wage = salary_to_uzs(job.salary)
+        if wage > 0:
+            for day in job_days.sync_days(db, job):
+                if not day.amount:
+                    day.amount = wage
+                    db.add(day)
+
     else:
         job.hiredWorkerId = None
         if job.status != JobStatus.CANCELLED:
             job.status = JobStatus.OPEN
+
 
     record_admin_action(
         db, admin, "job.worker", target_type="job", target_id=job.id,

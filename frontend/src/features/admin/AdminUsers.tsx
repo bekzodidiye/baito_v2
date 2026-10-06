@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { clickable } from '../../utils/clickable';
 import { AdminUser } from './types';
 import { Search, UserCheck, PlusCircle, Phone, Ban, CheckCircle, Eye } from 'lucide-react';
@@ -14,6 +16,8 @@ interface AdminUsersProps {
 }
 
 export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onChangeRole, onToggleBan }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'worker' | 'employer'>('all');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
@@ -44,9 +48,9 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
         <div className="relative w-full sm:w-80">
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
-              aria-label="Ism, telefon yoki kompaniya..."
+              aria-label={a.searchUsersPlaceholder}
             type="text"
-            placeholder="Ism, telefon yoki kompaniya..."
+            placeholder={a.searchUsersPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
@@ -75,7 +79,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
               <tr className="bg-slate-50 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                 <th className="p-4">Foydalanuvchi</th>
                 <th className="p-4">Rol</th>
-                <th className="p-4">Telefon</th>
+                <th className="p-4">{a.phone}</th>
                 <th className="p-4">Balans</th>
                 <th className="p-4 text-right">Amallar</th>
               </tr>
@@ -83,7 +87,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
             <tbody className="divide-y divide-slate-100 text-xs font-medium">
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-400 font-semibold">Foydalanuvchilar topilmadi</td>
+                  <td colSpan={5} className="p-8 text-center text-slate-400 font-semibold">{a.noUsersFound}</td>
                 </tr>
               ) : (
                 filteredUsers.map((u) => (
@@ -109,8 +113,8 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
                         onChange={(e) => setRoleChange({ user: u, role: e.target.value })}
                         className="bg-slate-100 font-bold text-slate-700 px-2.5 py-1 rounded-lg text-xs border border-slate-200/60 cursor-pointer"
                       >
-                        <option value="worker">Ishchi</option>
-                        <option value="employer">Ish beruvchi</option>
+                        <option value="worker">{a.roleWorker}</option>
+                        <option value="employer">{a.roleEmployer}</option>
                         <option value="admin">Admin</option>
                       </select>
                     </td>
@@ -162,7 +166,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
 
       <ConfirmModal
         isOpen={!!roleChange}
-        title="Rolni o'zgartirishni tasdiqlang"
+        title="{a.confirmRoleChange}"
         message={
           roleChange
             ? `${roleChange.user.name}: ${roleLabel(roleChange.user.role)} -> ${roleLabel(roleChange.role)}. `

@@ -66,8 +66,6 @@ export function useAdminData() {
     spamKeywords: null,
     spamAutoFineAmount: 0,
     spamAutoBanHours: 0,
-    escrowAutoReleaseEnabled: false,
-    escrowAutoReleaseHours: 24,
     telegramDigestEnabled: false,
     telegramDigestChannel: null,
     matchMinScore: 80,

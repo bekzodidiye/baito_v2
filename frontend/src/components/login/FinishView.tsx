@@ -1,4 +1,6 @@
 import React from 'react';
+import { translations } from '../../translations';
+import { useAuthStore } from '../../store/useAuthStore';
 import { Smartphone, Lock, Eye, EyeOff, Check, ArrowRight, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
@@ -51,6 +53,8 @@ export const FinishView: React.FC<FinishViewProps> = ({
   isModal,
   onOpenPrivacy,
 }) => {
+  const language = useAuthStore(st => st.language);
+  const tr = translations[language];
   return (
     <motion.div
       key="finish"
@@ -218,7 +222,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
         {/* Terms and conditions checkbox */}
         <div className="flex items-start gap-3 pt-2 group">
           <input
-              aria-label="Foydalanish shartlariga roziman"
+              aria-label={tr.agreeToTerms}
             type="checkbox"
             checked={agreeTerms}
             readOnly
@@ -242,7 +246,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
               (Maxfiylik Siyosati)
             </button>
             {!agreeTerms && (
-               <div className="text-red-500 text-[10px] mt-1 font-medium">Royxatdan o'tish uchun maxfiylik siyosati bilan tanishib, tasdiqlang.</div>
+               <div className="text-red-500 text-[10px] mt-1 font-medium">{tr.privacyConsent}</div>
             )}
           </div>
         </div>

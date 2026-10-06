@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.core.config import settings
+from app.services.session_window import is_live
 from app.db.session import SessionLocal
 
 def get_db() -> Generator:
@@ -69,7 +70,7 @@ def get_current_user(
         )
     if token_data.sid:
         session_record = db.query(models.ActiveSession).filter(models.ActiveSession.id == token_data.sid).first()
-        if not session_record or not session_record.is_active:
+        if not is_live(session_record):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Sessiya bekor qilingan",
@@ -104,7 +105,7 @@ def get_current_user_optional(
         
     if token_data.sid:
         session_record = db.query(models.ActiveSession).filter(models.ActiveSession.id == token_data.sid).first()
-        if not session_record or not session_record.is_active:
+        if not is_live(session_record):
             return None
             
     user = crud.user.get_by_uid(db, uid=token_data.sub)
@@ -127,7 +128,7 @@ def get_current_employer(
 # What "verified" means here is that an administrator has looked at the
 # documents the account uploaded and marked it so. It is not a formality: a
 # worker turns up at a stranger's address, and an employer's posting moves
-# money out of an escrow balance. Editing a document field clears the flag
+# money out of a balance. Editing a document field clears the flag
 # again (see users.py), so this cannot be passed once and then changed.
 #
 # Administrators are exempt. They are created by scripts/create_accounts.py,

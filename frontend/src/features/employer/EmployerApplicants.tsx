@@ -32,9 +32,9 @@ export const EmployerApplicants: React.FC<EmployerApplicantsProps> = ({ onChatCl
     const total = pendingApps.reduce((sum, app) => sum + Number(app.wageAmount ?? 0), 0);
     const count = pendingApps.length;
     const cost = total > 0
-      ? { uz: ` Jami ${total.toLocaleString('uz-UZ')} so'm escrow'ga muzlatiladi.`,
-          ru: ` Всего ${total.toLocaleString('ru-RU')} сум будет заморожено.`,
-          en: ` ${total.toLocaleString('en-US')} UZS will be frozen in escrow.` }[language] ?? ''
+      ? { uz: ` Jami ${total.toLocaleString('uz-UZ')} so'm hisob-fakturada keladi.`,
+          ru: ` Всего ${total.toLocaleString('ru-RU')} сум придёт в счёте.`,
+          en: ` ${total.toLocaleString('en-US')} UZS will be invoiced.` }[language] ?? ''
       : '';
     const question = {
       uz: `${count} ta nomzodni yollaysizmi?${cost}`,

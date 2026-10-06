@@ -63,7 +63,7 @@ export const WorkerDocsSection: React.FC<WorkerDocsSectionProps> = (props) => {
       </div>
 
       <div className="space-y-2 pt-1">
-        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-wider block px-1">PASSPORT RASMLARI *</h3>
+        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-wider block px-1">{t.passportPhotos || 'PASSPORT RASMLARI *'}</h3>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-400 block px-1">{t.passportFront}</label>
@@ -109,7 +109,7 @@ export const WorkerDocsSection: React.FC<WorkerDocsSectionProps> = (props) => {
           className={`border border-dashed rounded-xl p-4 text-center cursor-pointer ${docFileName3 ? 'border-brand-primary bg-brand-primary/10' : 'border-slate-200/80 bg-white'}`}
         >
           <input
-              aria-label="Selfi fayli" type="file" ref={doc3InputRef} onChange={handleDoc3Upload} accept="image/*" className="hidden" />
+              aria-label={t.selfieFileAria || 'Selfi fayli'} type="file" ref={doc3InputRef} onChange={handleDoc3Upload} accept="image/*" className="hidden" />
           <Camera size={20} className="text-slate-400 mx-auto mb-1" />
           <p className="text-xs font-bold text-slate-700">{docFileName3 || t.selfie}</p>
         </div>

@@ -42,7 +42,7 @@ export const JobDetailsHeader: React.FC<JobDetailsHeaderProps> = ({
       <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={onClose}
-          aria-label="Orqaga"
+          aria-label={t.goBack}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-brand-primary transition-colors cursor-pointer active:scale-95 shrink-0"
         >
           <ArrowLeft size={20} className="stroke-[2.5]" />
@@ -55,14 +55,14 @@ export const JobDetailsHeader: React.FC<JobDetailsHeaderProps> = ({
         <button 
           onClick={handleShare}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
-          title="Ulashish"
+          title={t.share}
         >
           <Share2 size={18} />
         </button>
         <button 
           onClick={handleCopyLink} 
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
-          title="Nusxa olish"
+          title={t.copyLabel}
         >
           <MoreVertical size={18} />
         </button>

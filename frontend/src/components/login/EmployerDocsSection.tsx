@@ -57,7 +57,7 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           required
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
-          placeholder="Perfect Jobs MCHJ"
+          placeholder={t.orgNamePlaceholder || 'Perfect Jobs MCHJ'}
           className="w-full bg-white border border-slate-200 hover:border-slate-300 rounded-xl py-3 px-4 text-xs font-bold focus:border-brand-primary/40 focus:ring-2 focus:ring-brand-primary/20 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
         />
       </div>
@@ -103,7 +103,7 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           }`}
         >
           <input
-              aria-label="Guvohnoma fayli"
+              aria-label={t.licenceFileAria || 'Guvohnoma fayli'}
             type="file"
             ref={doc1InputRef}
             onChange={handleDoc1Upload}
@@ -158,7 +158,7 @@ export const EmployerDocsSection: React.FC<EmployerDocsSectionProps> = ({
           }`}
         >
           <input
-              aria-label="Qo'shimcha hujjat fayli"
+              aria-label={t.docExtraFileAria}
             type="file"
             ref={doc2InputRef}
             onChange={handleDoc2Upload}

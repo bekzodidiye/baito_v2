@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { Send, Bell, Users, CheckCircle2 } from 'lucide-react';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 
@@ -7,6 +9,8 @@ interface AdminBroadcastProps {
 }
 
 export const AdminBroadcast: React.FC<AdminBroadcastProps> = ({ onSendBroadcast }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [targetRole, setTargetRole] = useState('all');
@@ -42,7 +46,7 @@ export const AdminBroadcast: React.FC<AdminBroadcastProps> = ({ onSendBroadcast 
       <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
         <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
           <Send size={20} className="text-blue-600" />
-          <span>Ommaviy Xabarnoma Yuborish (System Broadcast)</span>
+          <span>{a.broadcastTitle}</span>
         </h2>
         <p className="text-xs text-slate-500 mt-1 font-medium">
           Platformadagi foydalanuvchilar ekraniga bildirishnoma yoki muhim xabar yuborish
@@ -80,7 +84,7 @@ export const AdminBroadcast: React.FC<AdminBroadcastProps> = ({ onSendBroadcast 
             <input
               aria-label="Sarlavha (Title)"
               type="text"
-              placeholder="Masalan: Tizimda yangilanishlar e'lon qilindi!"
+              placeholder={a.broadcastTitleExample}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-xs text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"
@@ -89,10 +93,10 @@ export const AdminBroadcast: React.FC<AdminBroadcastProps> = ({ onSendBroadcast 
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1">Xabar matni</label>
+            <label className="text-xs font-bold text-slate-700 block mb-1">{a.broadcastBodyLabel}</label>
             <textarea
               rows={4}
-              placeholder="Foydalanuvchilarga ko'rinadigan to'liq bildirishnoma matnini yozing..."
+              placeholder={a.broadcastBodyPlaceholder}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-xs text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"
@@ -108,12 +112,12 @@ export const AdminBroadcast: React.FC<AdminBroadcastProps> = ({ onSendBroadcast 
             {sent ? (
               <>
                 <CheckCircle2 size={16} />
-                <span>Yuborildi!</span>
+                <span>{a.sentExclaim}</span>
               </>
             ) : (
               <>
                 <Send size={16} />
-                <span>Xabarnomani Yuborish</span>
+                <span>{a.sendBroadcast}</span>
               </>
             )}
           </button>

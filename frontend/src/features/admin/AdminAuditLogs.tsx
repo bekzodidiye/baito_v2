@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient, unwrapList } from '../../api/client';
 import { AdminLog } from './types';
@@ -18,8 +20,10 @@ const ACTION_LABELS: Record<string, string> = {
   'broadcast': 'Ommaviy xabar yuborildi',
   'withdrawal.approve': "Yechish tasdiqlandi",
   'withdrawal.reject': 'Yechish rad etildi',
-  'escrow.release': "Escrow to'lovi chiqarildi",
-  'escrow.refund': 'Escrow qaytarildi',
+  // Kept for rows written before escrow was removed: the log is history and
+  // still holds them.
+  'escrow.release': "To'lov chiqarildi",
+  'escrow.refund': 'Mablag\' qaytarildi',
 };
 
 interface AuditRow {
@@ -46,6 +50,8 @@ const toAdminLog = (r: AuditRow): AdminLog => ({
 });
 
 export const AdminAuditLogs: React.FC = () => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState<string>('all');
 
@@ -114,11 +120,11 @@ export const AdminAuditLogs: React.FC = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
-              aria-label="Audit loglarni qidirish"
+              aria-label={a.searchAuditLogs}
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Admin nomi, amal yoki nishon bo'yicha qidiruv..."
+            placeholder={a.searchAuditLogsPlaceholder}
             className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-indigo-500 transition"
           />
         </div>
@@ -129,7 +135,7 @@ export const AdminAuditLogs: React.FC = () => {
             onChange={(e) => setActionFilter(e.target.value)}
             className="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           >
-            <option value="all">Barcha amallar</option>
+            <option value="all">{a.allActions}</option>
             <option value="Super Admin">Super Admin</option>
             <option value="Moderator">Moderator</option>
           </select>
@@ -142,10 +148,10 @@ export const AdminAuditLogs: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="p-4">Vaqt & IP</th>
+                <th className="p-4">{a.timeAndIp}</th>
                 <th className="p-4">Admin / Moderator</th>
                 <th className="p-4">Amal (Action)</th>
-                <th className="p-4">Nishon (Target)</th>
+                <th className="p-4">{a.targetLabel}</th>
                 <th className="p-4">Batafsil Tafsilot</th>
               </tr>
             </thead>

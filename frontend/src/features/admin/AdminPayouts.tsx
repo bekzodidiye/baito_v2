@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { money as sum } from '../../utils/money';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Wallet, Lock, Check, X, Loader2, RefreshCw, Receipt, Landmark, Save } from 'lucide-react';
 import { apiClient, unwrapList } from '../../api/client';
@@ -9,7 +12,6 @@ import { showToast } from '../../utils/toast';
  *
  * Both existed only in the database before: a withdrawal debited the worker's
  * balance and then sat as `pending` forever because nothing could act on it,
- * and a disputed job's escrow could not be released or returned at all.
  */
 
 interface Withdrawal {
@@ -62,23 +64,14 @@ interface BankDetails {
   payoutCompanyAddress: string | null;
 }
 
-interface EscrowHold {
-  id: string;
-  jobId: string;
-  jobTitle: string;
-  jobStatus: string;
-  employerId: string;
-  employerName: string;
-  amountUzs: number;
-  createdAt: string | null;
-}
-
-const money = (n: number) => new Intl.NumberFormat('uz-UZ').format(n) + " so'm";
+const money = (n: number) => sum(n, useAuthStore.getState().language);
 const when = (s: string | null) => (s ? new Date(s).toLocaleString('uz-UZ') : '—');
 
 export const AdminPayouts: React.FC = () => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<'withdrawals' | 'escrow' | 'payouts' | 'bank'>('withdrawals');
+  const [tab, setTab] = useState<'withdrawals' | 'payouts' | 'bank'>('withdrawals');
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const withdrawals = useQuery({
@@ -87,10 +80,6 @@ export const AdminPayouts: React.FC = () => {
       unwrapList(await apiClient('/admin/withdrawals?status=pending')) as Withdrawal[],
   });
 
-  const escrow = useQuery({
-    queryKey: ['adminEscrow'],
-    queryFn: async () => unwrapList(await apiClient('/admin/escrow')) as EscrowHold[],
-  });
 
   // Saying the money arrived. Deliberately a separate action from everything
   // else on this screen: the rest of it records what we did, and this records
@@ -117,7 +106,6 @@ export const AdminPayouts: React.FC = () => {
 
   const refreshAll = () => {
     queryClient.invalidateQueries({ queryKey: ['adminWithdrawals'] });
-    queryClient.invalidateQueries({ queryKey: ['adminEscrow'] });
     queryClient.invalidateQueries({ queryKey: ['adminJobPayouts'] });
     queryClient.invalidateQueries({ queryKey: ['adminSettings'] });
   };
@@ -155,34 +143,8 @@ export const AdminPayouts: React.FC = () => {
     }
   };
 
-  const decideEscrow = async (h: EscrowHold, action: 'release' | 'refund') => {
-    let workerId: string | null = null;
-    if (action === 'release') {
-      workerId = window.prompt("To'lov chiqariladigan ishchining ID raqami:");
-      if (!workerId) return;
-    }
-    const reason = window.prompt(
-      `${money(h.amountUzs)} — "${h.jobTitle}"\n\nQaror sababi (audit jurnaliga yoziladi):`,
-    );
-    if (!reason || reason.trim().length < 3) return;
-
-    setBusyId(h.id);
-    try {
-      await apiClient(`/admin/jobs/${h.jobId}/escrow`, {
-        method: 'POST',
-        body: JSON.stringify({ action, reason: reason.trim(), workerId }),
-      });
-      showToast(action === 'release' ? "To'lov chiqarildi" : 'Mablag\' qaytarildi');
-      refreshAll();
-    } catch (e: any) {
-      showToast(e?.message || 'Amal bajarilmadi');
-    } finally {
-      setBusyId(null);
-    }
-  };
 
   const pendingTotal = (withdrawals.data ?? []).reduce((s, w) => s + w.amountUzs, 0);
-  const heldTotal = (escrow.data ?? []).reduce((s, h) => s + h.amountUzs, 0);
 
   const Tab = ({ id, label, count }: { id: typeof tab; label: string; count?: number }) => (
     <button
@@ -206,20 +168,11 @@ export const AdminPayouts: React.FC = () => {
             {money(pendingTotal)}
           </div>
         </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80">
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold">
-            <Lock size={15} /> Muzlatilgan mablag'
-          </div>
-          <div className="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">
-            {money(heldTotal)}
-          </div>
-        </div>
       </div>
 
       <div className="flex items-center gap-2 bg-white p-3 rounded-2xl border border-slate-200/80">
-        <Tab id="withdrawals" label="Yechish so'rovlari" count={withdrawals.data?.length ?? 0} />
-        <Tab id="escrow" label="Escrow" count={escrow.data?.length ?? 0} />
-        <Tab id="payouts" label="Qo'lda to'lovlar" count={payouts.data?.length ?? 0} />
+        <Tab id="withdrawals" label={a.withdrawalRequests} count={withdrawals.data?.length ?? 0} />
+        <Tab id="payouts" label={a.manualPayouts} count={payouts.data?.length ?? 0} />
         <Tab id="bank" label="Bank rekvizitlari" />
         <button
           onClick={refreshAll}
@@ -238,12 +191,12 @@ export const AdminPayouts: React.FC = () => {
             <table className="w-full text-xs">
               <thead className="bg-slate-50 text-slate-500">
                 <tr>
-                  <th className="text-left font-semibold px-4 py-3">Ish</th>
-                  <th className="text-left font-semibold px-4 py-3">Ishchi</th>
-                  <th className="text-left font-semibold px-4 py-3">To'langan</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.jobLabel}</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.roleWorker}</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.paidLabel}</th>
                   <th className="text-left font-semibold px-4 py-3">Chek</th>
                   <th className="text-left font-semibold px-4 py-3">Hisob-faktura</th>
-                  <th className="text-left font-semibold px-4 py-3">Sana</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.dateLabel}</th>
                 </tr>
               </thead>
               <tbody>
@@ -327,10 +280,10 @@ export const AdminPayouts: React.FC = () => {
             <table className="w-full text-xs">
               <thead className="bg-slate-50 text-slate-500">
                 <tr>
-                  <th className="text-left font-semibold px-4 py-3">Ishchi</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.roleWorker}</th>
                   <th className="text-left font-semibold px-4 py-3">Summa</th>
                   <th className="text-left font-semibold px-4 py-3">Karta</th>
-                  <th className="text-left font-semibold px-4 py-3">Sana</th>
+                  <th className="text-left font-semibold px-4 py-3">{a.dateLabel}</th>
                   <th className="text-right font-semibold px-4 py-3">Qaror</th>
                 </tr>
               </thead>
@@ -377,60 +330,7 @@ export const AdminPayouts: React.FC = () => {
                 )}
               </tbody>
             </table>
-          ) : (
-            <table className="w-full text-xs">
-              <thead className="bg-slate-50 text-slate-500">
-                <tr>
-                  <th className="text-left font-semibold px-4 py-3">Ish e'loni</th>
-                  <th className="text-left font-semibold px-4 py-3">Ish beruvchi</th>
-                  <th className="text-left font-semibold px-4 py-3">Summa</th>
-                  <th className="text-left font-semibold px-4 py-3">Sana</th>
-                  <th className="text-right font-semibold px-4 py-3">Qaror</th>
-                </tr>
-              </thead>
-              <tbody>
-                {escrow.isLoading ? (
-                  <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Yuklanmoqda…</td></tr>
-                ) : (escrow.data ?? []).length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">
-                    Muzlatilgan mablag' yo'q
-                  </td></tr>
-                ) : (
-                  (escrow.data ?? []).map((h) => (
-                    <tr key={h.id} className="border-t border-slate-100 hover:bg-slate-50/80">
-                      <td className="px-4 py-3">
-                        <span className="font-semibold text-slate-800 block">{h.jobTitle}</span>
-                        <span className="text-slate-400 font-mono">{h.jobStatus}</span>
-                      </td>
-                      <td className="px-4 py-3 text-slate-600">{h.employerName}</td>
-                      <td className="px-4 py-3 font-bold text-slate-900 tabular-nums">
-                        {money(h.amountUzs)}
-                      </td>
-                      <td className="px-4 py-3 text-slate-500">{when(h.createdAt)}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            disabled={busyId === h.id}
-                            onClick={() => decideEscrow(h, 'release')}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold cursor-pointer hover:bg-emerald-700 disabled:opacity-50"
-                          >
-                            Ishchiga chiqarish
-                          </button>
-                          <button
-                            disabled={busyId === h.id}
-                            onClick={() => decideEscrow(h, 'refund')}
-                            className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 font-bold cursor-pointer hover:bg-slate-200 disabled:opacity-50"
-                          >
-                            Qaytarish
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
@@ -445,6 +345,8 @@ export const AdminPayouts: React.FC = () => {
  *  wrong for months because nothing ever reads it back.
  */
 const BankDetailsForm: React.FC<{ data?: BankDetails; onSaved: () => void }> = ({ data, onSaved }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [form, setForm] = useState<BankDetails>({
     payoutCompanyName: '', payoutBankName: '', payoutBankAccount: '',
     payoutBankMfo: '', payoutCompanyInn: '', payoutCompanyAddress: '',
@@ -496,7 +398,7 @@ const BankDetailsForm: React.FC<{ data?: BankDetails; onSaved: () => void }> = (
     <div className="p-5">
       <div className="flex items-center gap-2 mb-1">
         <Landmark size={16} className="text-slate-500" />
-        <h3 className="font-bold text-slate-900 text-sm">To'lov rekvizitlarimiz</h3>
+        <h3 className="font-bold text-slate-900 text-sm">{a.ourPaymentDetails}</h3>
       </div>
       <p className="text-xs text-slate-500 mb-4">
         Korxonaga yuboriladigan hisob-fakturada shu ma'lumotlar chiqadi.

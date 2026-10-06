@@ -23,8 +23,8 @@ export const MapBreadcrumbs: React.FC<MapBreadcrumbsProps> = ({
       <button 
         onClick={handleBreadcrumbBack}
         className="flex items-center justify-center p-1 text-brand-primary hover:bg-slate-100 rounded-lg transition-colors cursor-pointer shrink-0"
-        title="Orqaga"
-       aria-label="Orqaga">
+        title={language === 'ru' ? 'Назад' : language === 'en' ? 'Back' : 'Orqaga'}
+       aria-label={language === 'ru' ? 'Назад' : language === 'en' ? 'Back' : 'Orqaga'}>
 <ArrowLeft size={16} className="stroke-[2.5px]" />
       </button>
       {breadcrumbItems.map((item, index) => {

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { XCircle, X } from 'lucide-react';
 
 interface RejectJobModalProps {
@@ -12,6 +14,8 @@ export const RejectJobModal: React.FC<RejectJobModalProps> = ({
   onClose,
   onConfirmReject,
 }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [reason, setReason] = useState('Noto\'g\'ri kategoriya');
   const [comment, setComment] = useState('');
 
@@ -45,21 +49,21 @@ export const RejectJobModal: React.FC<RejectJobModalProps> = ({
               onChange={(e) => setReason(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             >
-              <option value="Noto'g'ri kategoriya">Noto'g'ri kategoriya tanlangan</option>
-              <option value="Narx ko'rsatilmagan">Narx noto'g'ri yoki ko'rsatilmagan</option>
-              <option value="Joylashuv noto'g'ri">Joylashuv / manzil xato</option>
-              <option value="Spam / Tahlil yetarsiz">Spam yoki noaniq tavsif</option>
+              <option value="Noto'g'ri kategoriya">{a.rejectWrongCategory}</option>
+              <option value="Narx ko'rsatilmagan">{a.rejectWrongPrice}</option>
+              <option value="Joylashuv noto'g'ri">{a.rejectWrongLocation}</option>
+              <option value="Spam / Tahlil yetarsiz">{a.rejectSpam}</option>
               <option value="Boshqa">Boshqa sabab</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-slate-700 font-bold mb-1">Ish beruvchiga izoh (Tushuntirish):</label>
+            <label className="block text-slate-700 font-bold mb-1">{a.rejectNoteToEmployer}</label>
             <textarea
               rows={3}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Iltimos, e'lonni qayta tahrirlashingiz uchun sababni yozing..."
+              placeholder={a.rejectNotePlaceholder}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-medium text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none"
               required
             />

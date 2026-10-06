@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useAuthStore } from '../../../store/useAuthStore';
 import { loadYandexMaps, YandexMaps } from '../../../utils/loadYandexMaps';
 
 interface JobLocationYandexMapProps {
@@ -11,6 +12,7 @@ interface JobLocationYandexMapProps {
 export const JobLocationYandexMap: React.FC<JobLocationYandexMapProps> = ({
   lat, lon, onLocationSelect
 }) => {
+  const language = useAuthStore(st => st.language);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const placemarkRef = useRef<any>(null);
@@ -66,7 +68,7 @@ export const JobLocationYandexMap: React.FC<JobLocationYandexMapProps> = ({
     // This used to poll for window.ymaps every 300ms with no end and no error
     // state, so a script that never arrived left an employer staring at an
     // empty grey box for as long as they cared to wait.
-    loadYandexMaps()
+    loadYandexMaps(language)
       .then(initMap)
       .catch(() => { if (!cancelled) setFailed(true); });
 
@@ -90,7 +92,7 @@ export const JobLocationYandexMap: React.FC<JobLocationYandexMapProps> = ({
           role="alert"
           className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-6 text-center bg-slate-100"
         >
-          <p className="font-semibold text-sm text-slate-700">Xarita yuklanmadi</p>
+          <p className="font-semibold text-sm text-slate-700">{language === 'ru' ? "Карта не загрузилась" : language === 'en' ? "The map did not load" : "Xarita yuklanmadi"}</p>
           <p className="text-xs text-slate-500 max-w-xs">
             Internet aloqasini tekshirib, sahifani yangilang. Joylashuvni
             qo&apos;lda ham kiritishingiz mumkin.

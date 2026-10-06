@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import L from 'leaflet';
 import { Job } from '../../types';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
-import { mapFeatureToRegionId, areDistrictNamesEqual, getDistrictColor } from './mapUtils';
+import { mapFeatureToRegionId, areDistrictNamesEqual } from './mapUtils';
+import { BOUNDARY_COLOUR } from './regionOutlineStyle';
 import { translateRegion, Language } from '../../translations';
 
 interface UseMapLabelsProps {
@@ -146,7 +147,9 @@ export const useMapLabels = ({
           );
           
           const isSelected = !isRegionFilterSelected && areDistrictNamesEqual(filterLocation, tumanName);
-          const districtColor = getDistrictColor(tumanName);
+          // One colour, not one per district. The twelve-colour scheme went
+          // with the polygon fills; a label is for reading, and the count
+          // badge is the one thing worth picking out.
           
           const translatedTumanName = translateRegion(tumanName, language);
           const tumanLabelText = translatedTumanName
@@ -160,7 +163,7 @@ export const useMapLabels = ({
 
           let badgeHtml = '';
           if (tumanJobsCount > 0) {
-            badgeHtml = `<div class="flex items-center justify-center rounded-full text-white font-bold text-[7px] h-3.5 min-w-[14px] px-1 shadow-sm mt-0.5" style="background-color: ${districtColor}; border: 1px solid white;">${tumanJobsCount}</div>`;
+            badgeHtml = `<div class="flex items-center justify-center rounded-full text-white font-bold text-[7px] h-3.5 min-w-[14px] px-1 shadow-sm mt-0.5" style="background-color: var(--color-brand-primary); border: 1px solid white;">${tumanJobsCount}</div>`;
           }
 
           const fontSizeClass = zoomLevel < 8.5 ? 'text-[6.5px]' : 'text-[7.5px] md:text-[8.5px]';
@@ -168,7 +171,7 @@ export const useMapLabels = ({
           const icon = L.divIcon({
             className: 'district-center-label-container',
             html: `<div class="flex flex-col items-center -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-              <span class="font-bold ${fontSizeClass} whitespace-nowrap" style="color: ${districtColor}; text-shadow: 1px 1px 0px white, -1px -1px 0px white, 1px -1px 0px white, -1px 1px 0px white;">${tumanLabelText}</span>
+              <span class="font-bold ${fontSizeClass} whitespace-nowrap" style="color: ${BOUNDARY_COLOUR}; text-shadow: 1px 1px 0px white, -1px -1px 0px white, 1px -1px 0px white, -1px 1px 0px white;">${tumanLabelText}</span>
               ${badgeHtml}
             </div>`,
             iconSize: null as any,

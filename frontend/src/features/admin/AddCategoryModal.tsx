@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { CategoryItem } from './types';
 
 interface AddCategoryModalProps {
@@ -8,6 +10,8 @@ interface AddCategoryModalProps {
 }
 
 export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onClose, onAdd }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [newCatName, setNewCatName] = useState('');
   const [newCatIcon, setNewCatIcon] = useState('🛠️');
   const [newCatCommission, setNewCatCommission] = useState(5);
@@ -39,7 +43,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
   return (
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
-        <h3 className="font-bold text-slate-800 text-base">Yangi Kategoriya Yaratish</h3>
+        <h3 className="font-bold text-slate-800 text-base">{a.newCategoryTitle}</h3>
         <div>
           <label className="text-xs font-semibold text-slate-700 block mb-1">Nomi</label>
           <input
@@ -48,7 +52,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
             required
             value={newCatName}
             onChange={(e) => setNewCatName(e.target.value)}
-            placeholder="Masalan: Mebel Yig'ish"
+            placeholder={a.categoryNameExample}
             className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-blue-500"
           />
         </div>
@@ -87,9 +91,9 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-slate-700 block mb-1">Ko'nikmalar (vergul bilan ajrating)</label>
+          <label className="text-xs font-semibold text-slate-700 block mb-1">{a.skillsCommaSeparated}</label>
           <input
-              aria-label="Ko'nikmalar (vergul bilan ajrating)"
+              aria-label={a.skillsCommaSeparated}
             type="text"
             value={newCatSkills}
             onChange={(e) => setNewCatSkills(e.target.value)}

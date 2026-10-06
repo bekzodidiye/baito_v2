@@ -39,7 +39,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
     setDurationLabel(durLabel);
   };
 
-  const formattedDateText = formatDateDisplay(workDate);
+  const formattedDateText = formatDateDisplay(workDate, language as 'uz' | 'ru' | 'en');
   const dayCount = parseWorkDates(workDate).length;
 
   return (
@@ -75,7 +75,9 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
             onClick={() => setIsPickerOpen(true)}
             className="w-full bg-slate-50 border border-slate-200 hover:border-brand-primary/60 rounded-xl px-3.5 py-3 text-sm font-extrabold text-slate-800 cursor-pointer flex items-center justify-between transition-colors"
           >
-            <span>{durationLabel || '1 kunlik'}</span>
+            <span>{dayCount > 0
+              ? (language === 'ru' ? `${dayCount} дн.` : language === 'en' ? (dayCount === 1 ? '1 day' : `${dayCount} days`) : `${dayCount} kunlik`)
+              : (language === 'ru' ? '1 дн.' : language === 'en' ? '1 day' : '1 kunlik')}</span>
             <Clock size={16} className="text-slate-400 shrink-0" />
           </div>
         </div>
@@ -130,8 +132,8 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
             <DollarSign size={14} className="stroke-[2.5] text-brand-primary" />
             {/* Not "umumiy": a three-day shift takes this figure three
-                times over, once per day, and the employer's balance has to
-                cover all of it at the moment they hire. */}
+                times over, once per day, and all three are charged to the
+                employer. Nothing has to be in an in-app balance first. */}
             {language === 'uz' ? "Bir kunlik to'lov (so'm) *" : language === 'ru' ? "Ежедневная оплата (UZS) *" : "Daily Pay (UZS) *"}
           </label>
           <input
@@ -144,7 +146,8 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
               {dayCount} {language === 'uz' ? 'kun' : language === 'ru' ? 'дн.' : 'days'} &times;{' '}
               {Number(hourlyRate).toLocaleString('ru-RU').replace(/\u00a0/g, ' ')} ={' '}
               <span className="font-bold text-slate-700 tabular-nums">
-                {(Number(hourlyRate) * dayCount).toLocaleString('ru-RU').replace(/\u00a0/g, ' ')} so&apos;m
+                {(Number(hourlyRate) * dayCount).toLocaleString('ru-RU').replace(/\u00a0/g, ' ')}{' '}
+                {language === 'ru' ? 'сум' : language === 'en' ? 'UZS' : "so'm"}
               </span>{' '}
               {language === 'uz' ? 'jami' : language === 'ru' ? 'всего' : 'total'}
             </p>
@@ -168,7 +171,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
           <CheckCircle size={14} className="stroke-[2.5] text-emerald-600" />
           {language === 'uz' ? "Talablar va shartlar" : language === 'ru' ? "Требования" : "Requirements"}
         </label>
-        <textarea rows={2} placeholder={language === 'uz' ? "1. Yosh 18-35\n2. Intizomli bo'lish" : language === 'ru' ? "1. Age 18-35" : "1. Age 18-35"} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={requirements} onChange={(e) => setRequirements(e.target.value)} />
+        <textarea rows={2} placeholder={language === 'ru' ? "1. Возраст 18–35\n2. Дисциплинированность" : language === 'en' ? "1. Aged 18-35\n2. Reliable" : "1. Yosh 18-35\n2. Intizomli bo'lish"} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={requirements} onChange={(e) => setRequirements(e.target.value)} />
       </div>
 
       {/* Muhim eslatma */}
@@ -177,7 +180,7 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
           <AlertTriangle size={14} className="stroke-[2.5] text-amber-600" />
           {language === 'uz' ? "Muhim eslatma (ishchilar uchun)" : language === 'ru' ? "Важное примечание" : "Important Note"}
         </label>
-        <textarea rows={2} placeholder={language === 'uz' ? "Pasport asli nusxasi bilan kelish shart." : language === 'ru' ? "Passport required." : "Passport required."} className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-amber-950 focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={importantNote} onChange={(e) => setImportantNote(e.target.value)} />
+        <textarea rows={2} placeholder={language === 'ru' ? "Обязательно иметь при себе оригинал паспорта." : language === 'en' ? "You must bring your original passport." : "Pasport asli nusxasi bilan kelish shart."} className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-amber-950 focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={importantNote} onChange={(e) => setImportantNote(e.target.value)} />
       </div>
 
       {/* Premium Modal */}

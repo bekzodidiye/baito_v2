@@ -43,7 +43,7 @@ export const BottomNav: React.FC = () => {
 
   return (
     <nav 
-      aria-label="Asosiy navigatsiya"
+      aria-label={t.mainNavigation}
       className={`fixed bottom-0 left-0 w-full z-50 flex justify-around items-center bg-white/95 backdrop-blur-md pb-[env(safe-area-inset-bottom,0px)] h-16 md:hidden border-t border-slate-100/80 ${
       isMapScreen ? 'shadow-[0_-2px_10px_rgba(0,0,0,0.02)]' : 'shadow-[0_-4px_24px_rgba(0,0,0,0.04)]'
     }`}>

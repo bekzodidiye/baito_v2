@@ -1,4 +1,6 @@
 import React from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { ShieldAlert, ToggleLeft, ToggleRight, RefreshCw } from 'lucide-react';
 
 interface AdminJobsAutoDeleteBannerProps {
@@ -12,6 +14,8 @@ export const AdminJobsAutoDeleteBanner: React.FC<AdminJobsAutoDeleteBannerProps>
   onToggleAutoDelete,
   onRunCleanup,
 }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   return (
     <div className="bg-slate-900 text-white p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
       <div className="flex items-center gap-3">
@@ -20,7 +24,7 @@ export const AdminJobsAutoDeleteBanner: React.FC<AdminJobsAutoDeleteBannerProps>
         </div>
         <div>
           <div className="text-xs font-bold flex items-center gap-2">
-            <span>E'lonlarni Avto-O'chirish va Moderatsiya Rejimi</span>
+            <span>{a.autoDeleteBannerTitle}</span>
             <span
               className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
                 autoDeleteEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
@@ -30,7 +34,7 @@ export const AdminJobsAutoDeleteBanner: React.FC<AdminJobsAutoDeleteBannerProps>
             </span>
           </div>
           <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-            Eskirgan yoki rad etilgan e'lonlar belgilangan muddatdan so'ng avtomatik tozalanadi
+            {a.autoDeleteBannerDesc}
           </p>
         </div>
       </div>
@@ -45,7 +49,7 @@ export const AdminJobsAutoDeleteBanner: React.FC<AdminJobsAutoDeleteBannerProps>
           ) : (
             <ToggleLeft size={20} className="text-slate-400" />
           )}
-          <span>Avto-O'chirish Tugmasi</span>
+          <span>{a.autoDeleteButton}</span>
         </button>
         <button
           onClick={onRunCleanup}

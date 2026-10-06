@@ -14,6 +14,7 @@ interface ChatInputBarProps {
     typeMessage: string;
     emoji: string;
     send: string;
+    previewLabel: string;
   };
 }
 
@@ -68,7 +69,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             <div className="w-14 h-14 rounded-lg overflow-hidden shadow-sm bg-slate-50 border border-slate-200">
               <img 
                 src={attachedFile.previewUrl} 
-                alt="Preview" 
+                alt={t.previewLabel} 
                 className="w-full h-full object-cover"
               />
             </div>
@@ -88,7 +89,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
 
       <div className="w-full max-w-5xl mx-auto flex items-end gap-2 px-4 pb-3 pt-2 relative bg-white">
         <input
-              aria-label="Fayl biriktirish" type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+              aria-label={t.attachFile} type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
         <button 
           onClick={() => fileInputRef.current?.click()} 
           type="button"

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { CategoryItem } from './types';
 import { useAdminData } from './useAdminData';
 import { apiClient } from '../../api/client';
@@ -8,6 +10,8 @@ import { AddCategoryModal } from './AddCategoryModal';
 
 
 export const AdminCategories: React.FC = () => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const { categories, refresh, loading } = useAdminData();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -68,11 +72,11 @@ export const AdminCategories: React.FC = () => {
       <div className="relative max-w-md">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
         <input
-              aria-label="Kategoriyalarni qidirish"
+              aria-label={a.searchCategories}
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Kategoriya yoki ko'nikmalarni qidirish..."
+          placeholder={a.searchCategoriesPlaceholder}
           className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-blue-500 transition"
         />
       </div>
@@ -132,7 +136,7 @@ export const AdminCategories: React.FC = () => {
                 whole admin panel down through the error boundary. */}
             {(cat.skills || []).length > 0 && (
               <div className="space-y-1.5">
-                <span className="text-[11px] font-semibold text-slate-600 block">Biriktirilgan Ko'nikmalar:</span>
+                <span className="text-[11px] font-semibold text-slate-600 block">{a.attachedSkills}</span>
                 <div className="flex flex-wrap gap-1.5">
                   {(cat.skills || []).map((skill: string, idx: number) => (
                     <span key={idx} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-medium rounded-md border border-blue-100">

@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { Zap, Send, CheckCircle2, UserCheck, Star, Sparkles, SlidersHorizontal } from 'lucide-react';
 
 import { SystemSettings } from './types';
@@ -9,6 +11,8 @@ interface AdminAutoMatchingProps {
 }
 
 export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, onUpdateSettings }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   // The match threshold now filters what /jobs/recommended returns.
   const [minMatchScore, setMinMatchScore] = useState(settings.matchMinScore ?? 80);
   const [maxDistanceKm, setMaxDistanceKm] = useState(settings.matchMaxDistanceKm ?? 15);
@@ -60,7 +64,7 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
         <div>
           <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
             <Zap size={22} className="text-amber-500" />
-            <span>AI Avto-Matching va Smart Dispetcher</span>
+            <span>{a.autoMatchingTitle}</span>
           </h2>
           <p className="text-xs text-slate-500 font-medium mt-1">
             Yangi e'lonlar joylanganda reytingi, ko'nikmasi va joylashuviga ko'ra eng mos ustalarga avtomatik push / Telegram xabar yuborish

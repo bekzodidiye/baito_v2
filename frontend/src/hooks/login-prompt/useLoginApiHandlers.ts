@@ -30,7 +30,7 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
     }
     // Code validation
     if (!state.regCode || state.regCode.length < 4) {
-      showToast(language === 'uz' ? "Tasdiqlash kodini kiriting!" : "Введите код подтверждения!");
+      showToast(language === 'uz' ? "Tasdiqlash kodini kiriting!" : language === 'ru' ? "Введите код подтверждения!" : 'Enter the verification code!');
       return;
     }
 
@@ -226,13 +226,13 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
         }
       }
     } catch (err) {
-      showToast(language === 'uz' ? "Telefon raqam yoki parol xato" : "Неверный телефон или пароль");
+      showToast(language === 'uz' ? "Telefon raqam yoki parol xato" : language === 'ru' ? "Неверный телефон или пароль" : 'Wrong phone number or password');
     }
   };
 
   const handleSendVerificationCode = async () => {
     if (!state.regPhone || state.regPhone.length < 9) {
-      showToast(language === 'uz' ? "Telefon raqamni to'g'ri kiriting!" : "Введите правильный номер телефона!");
+      showToast(language === 'uz' ? "Telefon raqamni to'g'ri kiriting!" : language === 'ru' ? "Введите правильный номер телефона!" : 'Enter a valid phone number!');
       return;
     }
     state.setIsSendingCode(true);
@@ -242,9 +242,9 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
         body: JSON.stringify({ phone: state.regPhone })
       });
       state.setIsCodeSent(true);
-      showToast(language === 'uz' ? "Tasdiqlash kodi telefoningizga yuborildi!" : "Код подтверждения отправлен на ваш телефон!");
+      showToast(language === 'uz' ? "Tasdiqlash kodi telefoningizga yuborildi!" : language === 'ru' ? "Код подтверждения отправлен на ваш телефон!" : 'The verification code was sent to your phone!');
     } catch (err) {
-      showToast(language === 'uz' ? "Kodni yuborishda xatolik yuz berdi" : "Ошибка при отправке кода");
+      showToast(language === 'uz' ? "Kodni yuborishda xatolik yuz berdi" : language === 'ru' ? "Ошибка при отправке кода" : 'The code could not be sent');
     } finally {
       state.setIsSendingCode(false);
     }

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { translations } from '../../translations';
+import { useAuthStore } from '../../store/useAuthStore';
 import { ArrowLeft, HelpCircle, PlusCircle, Lock, Wifi } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -6,6 +8,8 @@ import { addPaymentCardApi } from '../../api/queries';
 import { getBankName, getBankColors } from '../../utils/cardUtils';
 
 export const AddCardScreen: React.FC = () => {
+  const language = useAuthStore(st => st.language);
+  const t = translations[language];
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
@@ -162,7 +166,7 @@ export const AddCardScreen: React.FC = () => {
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="font-bold text-xl text-slate-900">Yangi karta qo'shish</h1>
+        <h1 className="font-bold text-xl text-slate-900">{t.addNewCard}</h1>
         <div className="w-10"></div> {/* Spacer for centering */}
       </header>
 
@@ -212,11 +216,11 @@ export const AddCardScreen: React.FC = () => {
           {/* Bottom Row */}
           <div className="flex justify-between items-end z-10 mt-auto">
             <div>
-              <div className={`text-[9px] font-semibold mb-[2px] uppercase tracking-widest ${cardStyle.textMuted}`}>Karta egasi</div>
+              <div className={`text-[9px] font-semibold mb-[2px] uppercase tracking-widest ${cardStyle.textMuted}`}>{t.cardHolder}</div>
               <div className={`font-bold text-sm uppercase tracking-widest truncate max-w-[150px] drop-shadow-sm ${cardStyle.text}`}>{cardholderName || 'ISM SHARIF'}</div>
             </div>
             <div className="text-right">
-              <div className={`text-[9px] font-semibold mb-[2px] uppercase tracking-widest ${cardStyle.textMuted}`}>Muddati</div>
+              <div className={`text-[9px] font-semibold mb-[2px] uppercase tracking-widest ${cardStyle.textMuted}`}>{t.cardExpiry}</div>
               <div className={`font-bold text-sm tracking-widest drop-shadow-sm ${cardStyle.text}`}>{expiryDate || 'MM/YY'}</div>
             </div>
           </div>
@@ -227,7 +231,7 @@ export const AddCardScreen: React.FC = () => {
           <form id="add-card-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
             {/* Card Number */}
             <div className="flex flex-col gap-2">
-              <label className="font-semibold text-sm text-slate-600" htmlFor="cardNumber">Karta raqami</label>
+              <label className="font-semibold text-sm text-slate-600" htmlFor="cardNumber">{t.cardNumber}</label>
               <div className="relative flex items-center">
                 <div className="absolute left-4 z-10 flex items-center justify-center w-6 h-6 bg-slate-200 rounded border border-slate-300">
                   <span className="w-4 h-1 bg-slate-400 rounded-full" />
@@ -248,7 +252,7 @@ export const AddCardScreen: React.FC = () => {
             {/* Expiry & CVV */}
             <div className="flex gap-4">
               <div className="flex flex-col gap-2 flex-1">
-                <label className="font-semibold text-sm text-slate-600" htmlFor="expiryDate">Muddati</label>
+                <label className="font-semibold text-sm text-slate-600" htmlFor="expiryDate">{t.cardExpiry}</label>
                 <input 
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg py-3 px-4 font-mono text-lg text-slate-800 placeholder:text-slate-400 focus:outline-none transition-all duration-200 input-glow text-center" 
                   id="expiryDate" 
@@ -285,7 +289,7 @@ export const AddCardScreen: React.FC = () => {
 
             {/* Cardholder Name */}
             <div className="flex flex-col gap-2">
-              <label className="font-semibold text-sm text-slate-600" htmlFor="cardholderName">Karta egasi (Ism sharif)</label>
+              <label className="font-semibold text-sm text-slate-600" htmlFor="cardholderName">{t.cardHolderFull}</label>
               <input
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg py-3 px-4 text-slate-800 placeholder:text-slate-400 focus:outline-none transition-all duration-200 input-glow uppercase"
                 id="cardholderName"
@@ -299,8 +303,8 @@ export const AddCardScreen: React.FC = () => {
             {/* Save Card Toggle */}
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
-                <span className="font-semibold text-slate-800">Kartani saqlash</span>
-                <span className="text-xs text-slate-500">Kelgusi to'lovlar uchun qulay</span>
+                <span className="font-semibold text-slate-800">{t.saveCard}</span>
+                <span className="text-xs text-slate-500">{t.saveCardHint}</span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer mr-2">
                 <input 

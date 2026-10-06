@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { money } from '../../utils/money';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { motion, AnimatePresence } from 'motion/react';
 import { apiClient } from '../../api/client';
 import { 
@@ -86,7 +89,17 @@ const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'payments', label: "To'lovlar", icon: <CreditCard size={16} /> },
 ];
 
+
+/** The sub-components below are rendered by JobDetailModal, which subscribes to
+ *  the language, so they re-render when it changes. This spares threading the
+ *  table through four of them as a prop. */
+const adminText = () => ADMIN_TEXTS[useAuthStore.getState().language] || ADMIN_TEXTS.uz;
+/** Same store read, for the sums shown in the sub-components below. */
+const adminLang = () => useAuthStore.getState().language;
+
 export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [activeTab, setActiveTab] = useState<TabKey>('info');
   const [detail, setDetail] = useState<AdminJobDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -295,7 +308,7 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
         <div className="flex items-center gap-2 mb-2">
           <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md text-[11px] font-bold border border-emerald-100">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            {j.category || 'Ish turi'}
+            {j.category || adminText().jobTypeFallback}
           </span>
           <span className="text-slate-300">•</span>
           <span className="text-slate-400 font-semibold text-[11px] truncate flex items-center gap-1">
@@ -322,7 +335,7 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
             <Building2 size={16} className="text-blue-500" />
           </div>
           <div className="min-w-0 flex-1">
-            <span className="text-[10px] font-medium text-slate-400 block">Ish beruvchi</span>
+            <span className="text-[10px] font-medium text-slate-400 block">{adminText().roleEmployer}</span>
             <span className="text-[13px] font-bold text-slate-800 block truncate">{j.employerName || '—'}</span>
           </div>
           {(j as any).employerPhone && (
@@ -337,7 +350,7 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
               <UserCheck size={16} className="text-emerald-500" />
             </div>
             <div className="min-w-0 flex-1">
-              <span className="text-[10px] font-medium text-slate-400 block">Biriktirilgan ishchi</span>
+              <span className="text-[10px] font-medium text-slate-400 block">{adminText().assignedWorker}</span>
               <span className="text-[13px] font-bold text-slate-800 block truncate">{detail.hiredWorker.workerName}</span>
             </div>
             {detail.hiredWorker.workerPhone && (
@@ -360,16 +373,16 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
 
       {/* 2x2 Grid */}
       <div className="grid grid-cols-2 gap-2 mb-3">
-        <StatCard icon={<DollarSign size={14} />} label="Maosh" value={j.salary || '—'} />
+        <StatCard icon={<DollarSign size={14} />} label={adminText().salaryLabel} value={j.salary || '—'} />
         <StatCard icon={<Zap size={14} />} label="Soatlik" value={j.hourlyRate || "Yo'q"} />
-        <StatCard icon={<Calendar size={14} />} label="Sana" value={j.workDate || '—'} />
-        <StatCard icon={<Timer size={14} />} label="Vaqt" value={j.workTime || '—'} />
+        <StatCard icon={<Calendar size={14} />} label={adminText().dateLabel} value={j.workDate || '—'} />
+        <StatCard icon={<Timer size={14} />} label={adminText().timeLabel} value={j.workTime || '—'} />
       </div>
 
       {/* Description */}
       {j.description && (
         <div className="bg-white rounded-xl p-3.5 border border-slate-200/60 mb-4">
-          <h3 className="text-[13px] font-bold text-slate-800 mb-1.5">Qo'shimcha ma'lumot</h3>
+          <h3 className="text-[13px] font-bold text-slate-800 mb-1.5">{adminText().extraInfo}</h3>
           <p className="text-[12px] text-slate-600 font-medium leading-relaxed">{j.description}</p>
         </div>
       )}
@@ -444,7 +457,7 @@ const TimelineTab: React.FC<{ timeline: AdminTimelineEvent[] }> = ({ timeline })
     {timeline.length === 0 ? (
       <div className="text-center py-12 text-slate-400">
         <History size={32} className="mx-auto mb-2 opacity-40" />
-        <p className="text-[13px] font-medium">Hozircha voqealar yo'q</p>
+        <p className="text-[13px] font-medium">{adminText().noEventsYet}</p>
       </div>
     ) : (
       <div className="relative">
@@ -482,7 +495,7 @@ const ApplicationsTab: React.FC<{ applications: AdminJobApplication[] }> = ({ ap
     {applications.length === 0 ? (
       <div className="text-center py-12 text-slate-400">
         <Users size={32} className="mx-auto mb-2 opacity-40" />
-        <p className="text-[13px] font-medium">Hozircha arizalar yo'q</p>
+        <p className="text-[13px] font-medium">{adminText().noApplicationsYet}</p>
       </div>
     ) : (
       <div className="space-y-2.5">
@@ -543,7 +556,7 @@ const PaymentsTab: React.FC<{ transactions: AdminJobTransaction[] }> = ({ transa
     {transactions.length === 0 ? (
       <div className="text-center py-12 text-slate-400">
         <CreditCard size={32} className="mx-auto mb-2 opacity-40" />
-        <p className="text-[13px] font-medium">To'lovlar topilmadi</p>
+        <p className="text-[13px] font-medium">{adminText().noPaymentsFound}</p>
       </div>
     ) : (
       <div className="space-y-2.5">
@@ -567,21 +580,21 @@ const PaymentsTab: React.FC<{ transactions: AdminJobTransaction[] }> = ({ transa
               <div className="bg-slate-50 rounded-lg p-2.5 grid grid-cols-2 gap-2 text-[11px]">
                 <div>
                   <span className="text-slate-400 font-medium block">Summa</span>
-                  <span className="text-slate-800 font-bold">{Number(tx.amount).toLocaleString()} so'm</span>
+                  <span className="text-slate-800 font-bold">{money(tx.amount, adminLang())}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 font-medium block">Platforma haqqi</span>
-                  <span className="text-slate-800 font-bold">{Number(tx.platformFee).toLocaleString()} so'm</span>
+                  <span className="text-slate-800 font-bold">{money(tx.platformFee, adminLang())}</span>
                 </div>
                 {tx.employerName && (
                   <div>
-                    <span className="text-slate-400 font-medium block">Ish beruvchi</span>
+                    <span className="text-slate-400 font-medium block">{adminText().roleEmployer}</span>
                     <span className="text-slate-800 font-bold">{tx.employerName}</span>
                   </div>
                 )}
                 {tx.workerName && (
                   <div>
-                    <span className="text-slate-400 font-medium block">Ishchi</span>
+                    <span className="text-slate-400 font-medium block">{adminText().roleWorker}</span>
                     <span className="text-slate-800 font-bold">{tx.workerName}</span>
                   </div>
                 )}

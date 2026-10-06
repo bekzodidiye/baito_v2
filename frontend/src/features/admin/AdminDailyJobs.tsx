@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { parseWorkDates, toIsoDate } from '../../utils/workDates';
 import { AdminJob, AdminUser } from './types';
 import { Search, Trash2, MapPin, Building2, Briefcase, XCircle, Eye, Wallet } from 'lucide-react';
@@ -30,6 +32,8 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
   onChangeRole,
   onToggleBan
 }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [rejectingJob, setRejectingJob] = useState<AdminJob | null>(null);
@@ -188,9 +192,9 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
           <div className="relative w-full sm:w-64">
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
-              aria-label="Qidiruv..."
+              aria-label={a.searchShort}
               type="text"
-              placeholder="Qidiruv..."
+              placeholder={a.searchShort}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
@@ -200,12 +204,12 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
 
         <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto no-scrollbar">
           {[
-            { id: 'all', label: 'Barchasi' },
-            { id: 'open', label: 'Ariza ochiq' },
-            { id: 'confirmed', label: 'Ishchi olindi' },
-            { id: 'in_progress', label: 'Ish boshlandi' },
-            { id: 'completed', label: 'Ish tugatildi' },
-            { id: 'cancelled', label: 'Bekor qilingan' }
+            { id: 'all', label: a.statusAll },
+            { id: 'open', label: a.statusOpen },
+            { id: 'confirmed', label: a.statusHired },
+            { id: 'in_progress', label: a.statusStarted },
+            { id: 'completed', label: a.statusFinished },
+            { id: 'cancelled', label: a.statusCancelledShort }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -225,7 +229,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
       <div className="grid grid-cols-1 gap-4">
         {filteredJobs.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-200/80 p-8 text-center shadow-sm">
-            <p className="text-slate-400 font-semibold">Bu sana uchun ishlar topilmadi</p>
+            <p className="text-slate-400 font-semibold">{a.noJobsForThisDate}</p>
           </div>
         ) : (
           filteredJobs.map((j) => (
@@ -233,7 +237,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
               
               {/* Job Info */}
               <div className="flex-1 min-w-0 w-40 shrink">
-                <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">Ish nomi</div>
+                <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">{a.jobNameLabel}</div>
                 <div 
                   onClick={() => setSelectedJobDetails(j)}
                   className="font-bold text-slate-800 flex items-center gap-2 cursor-pointer hover:text-indigo-600 transition-colors"
@@ -247,7 +251,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
 
               {/* Employer Info */}
               <div className="flex-1 min-w-0 w-40 shrink">
-                <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">Korxona</div>
+                <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">{a.companyColumn}</div>
                 <div 
                   onClick={() => handleUserClick(j.employerId)} 
                   className="font-bold text-slate-800 cursor-pointer hover:text-blue-600 transition-colors flex items-center gap-2"
@@ -261,7 +265,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
 
               {/* Worker Assignment */}
               <div className="flex-1 min-w-0 shrink">
-                <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">Ishchi</div>
+                <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">{a.roleWorker}</div>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 min-w-0">
                     <CustomSelect
@@ -278,13 +282,13 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                         }
                       }}
                       options={[
-                        { value: '', label: 'Tayinlanmagan' },
+                        { value: '', label: a.unassigned },
                         ...users.filter(u => u.role === 'worker').map(w => ({
                           value: w.id,
                           label: w.name || 'Ismsiz ishchi'
                         }))
                       ]}
-                      placeholder="Ishchi tanlash..."
+                      placeholder={a.pickAWorker}
                       className="bg-slate-50 hover:bg-slate-100"
                     />
                   </div>
@@ -292,7 +296,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                     <button
                       onClick={() => handleUserClick(j.workerId)}
                       className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors shrink-0"
-                      title="Ishchi ma'lumotlarini ko'rish"
+                      title={a.viewWorkerDetails}
                     >
                       <Eye size={18} />
                     </button>
@@ -302,7 +306,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
 
               {/* Date & Time */}
               <div className="flex-1 min-w-0 shrink">
-                <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">Vaqti</div>
+                <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">{a.timeColumn}</div>
                 <div className="flex flex-col">
                   <span className="font-bold text-slate-800">{j.workTime || '09:00 - 18:00'}</span>
                   <ActualTiming job={j} />
@@ -326,12 +330,12 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                   <button
                     onClick={() => setPayoutJobId(j.id)}
                     disabled={j.status !== 'completed'}
-                    aria-label="To'lovni tasdiqlash"
+                    aria-label={a.confirmPayment}
                     className="p-2 rounded-xl transition-colors flex items-center justify-center text-emerald-600 hover:bg-emerald-50 cursor-pointer disabled:text-slate-300 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                     title={
                       j.status === 'completed'
-                        ? "To'lovni tasdiqlash"
-                        : "Faqat yakunlangan ishlar uchun"
+                        ? a.confirmPayment
+                        : a.onlyCompletedJobs
                     }
                   >
                     <Wallet size={18} />
@@ -339,7 +343,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                   <button
                     onClick={() => setRejectingJob(j)}
                     className="p-2 text-amber-600 hover:bg-amber-50 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
-                    title="Rad etish (Sabab bilan)"
+                    title={a.rejectWithReason}
                   >
                     <XCircle size={18} />
                   </button>
@@ -350,7 +354,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                       }
                     }}
                     className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
-                    title="O'chirish"
+                    title={a.deleteLabel}
                   >
                     <Trash2 size={18} />
                   </button>

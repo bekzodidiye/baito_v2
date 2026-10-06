@@ -2,6 +2,7 @@ import React from 'react';
 import { Target, AlertCircle, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { UserProfile } from '../../context/types';
+import { OPTIONAL_FIELDS, REQUIRED_FIELDS, missingFrom } from './employerProfileFields';
 
 interface EmployerProfileCompletionProps {
   userProfile: UserProfile | null;
@@ -11,8 +12,12 @@ interface EmployerProfileCompletionProps {
 
 /* The worker profile has a completion widget; the employer side had nothing
    telling anyone their company page was half empty. Same idea, company fields.
-   The list is only what an employer can actually fill from the edit form plus
-   the logo, so every missing item here has somewhere to go. */
+
+   The list is `REQUIRED_FIELDS`, which is what the server asks for when a
+   posting is created — this used to keep its own list, which left out the
+   email address, so an employer without one read 100% here and was refused
+   at the posting form. The logo is shown separately: nothing refuses a
+   posting over it, so it does not decide whether the profile is complete. */
 export const EmployerProfileCompletion: React.FC<EmployerProfileCompletionProps> = ({
   userProfile,
   language,
@@ -21,21 +26,11 @@ export const EmployerProfileCompletion: React.FC<EmployerProfileCompletionProps>
   const t = (uz: string, ru: string, en: string) =>
     language === 'uz' ? uz : language === 'ru' ? ru : en;
 
-  const fields = [
-    { key: 'firstName', name: t('Kompaniya nomi', 'Название компании', 'Company name') },
-    { key: 'phone', name: t('Telefon', 'Телефон', 'Phone') },
-    { key: 'region', name: t('Manzil', 'Адрес', 'Address') },
-    { key: 'aboutMe', name: t('Kompaniya haqida', 'О компании', 'About') },
-    { key: 'profileImage', name: t('Logotip', 'Логотип', 'Logo') },
-  ] as const;
+  const missing = missingFrom(userProfile);
+  const missingOptional = missingFrom(userProfile, OPTIONAL_FIELDS);
 
-  const missing = fields.filter((f) => {
-    const val = userProfile ? userProfile[f.key as keyof UserProfile] : undefined;
-    return val === undefined || val === null || String(val).trim() === '';
-  });
-
-  const done = fields.length - missing.length;
-  const percent = Math.round((done / fields.length) * 100);
+  const done = REQUIRED_FIELDS.length - missing.length;
+  const percent = Math.round((done / REQUIRED_FIELDS.length) * 100);
   const complete = missing.length === 0;
 
   return (
@@ -57,7 +52,7 @@ export const EmployerProfileCompletion: React.FC<EmployerProfileCompletionProps>
               {t('Profil toʻldirilgani', 'Заполненность профиля', 'Profile completion')}
             </p>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1.5">
-              {done}/{fields.length}
+              {done}/{REQUIRED_FIELDS.length}
             </p>
           </div>
         </div>
@@ -78,9 +73,17 @@ export const EmployerProfileCompletion: React.FC<EmployerProfileCompletionProps>
       </div>
 
       {complete ? (
-        <p className="text-[11px] font-bold text-emerald-600">
-          {t('Hammasi toʻldirilgan.', 'Всё заполнено.', 'Everything is filled in.')}
-        </p>
+        <div className="flex flex-col gap-1.5">
+          <p className="text-[11px] font-bold text-emerald-600">
+            {t('Hammasi toʻldirilgan.', 'Всё заполнено.', 'Everything is filled in.')}
+          </p>
+          {missingOptional.length > 0 && (
+            <p className="text-[10px] font-semibold text-slate-400">
+              {t('Ixtiyoriy:', 'Необязательно:', 'Optional:')}{' '}
+              {missingOptional.map(f => f.label[language]).join(', ')}
+            </p>
+          )}
+        </div>
       ) : (
         <>
           <div className="flex flex-wrap gap-1.5">
@@ -90,7 +93,7 @@ export const EmployerProfileCompletion: React.FC<EmployerProfileCompletionProps>
                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-bold text-slate-500"
               >
                 <AlertCircle size={11} className="text-amber-500 shrink-0" />
-                {f.name}
+                {f.label[language]}
               </span>
             ))}
           </div>

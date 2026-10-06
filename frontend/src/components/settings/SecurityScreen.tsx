@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { translations } from '../../translations';
 import { ArrowLeft, ChevronRight, Shield, Lock, ShieldCheck, Fingerprint, Smartphone, Monitor, Tablet, ShieldAlert, Loader2 } from 'lucide-react';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { ConfirmModal } from '../common/ConfirmModal';
@@ -11,6 +12,7 @@ export const SecurityScreen: React.FC = () => {
   const userProfile = useAuthStore(s => s.userProfile);
     const setUserProfile = useAuthStore(s => s.setUserProfile);
     const language = useAuthStore(s => s.language);
+    const t = translations[language];
 
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -102,7 +104,7 @@ export const SecurityScreen: React.FC = () => {
         >
           <ArrowLeft className="text-brand-primary" />
         </button>
-        <h1 className="text-[20px] font-semibold text-brand-primary">Xavfsizlik</h1>
+        <h1 className="text-[20px] font-semibold text-brand-primary">{language === 'ru' ? 'Безопасность' : language === 'en' ? 'Security' : 'Xavfsizlik'}</h1>
         <span className="w-10" aria-hidden="true" />
       </header>
 
@@ -120,7 +122,7 @@ export const SecurityScreen: React.FC = () => {
 
         {/* Security Main Settings */}
         <div className="mb-6">
-          <h2 className="text-[12px] uppercase tracking-wider text-brand-text-variant mb-3 px-2 font-bold">Asosiy himoya</h2>
+          <h2 className="text-[12px] uppercase tracking-wider text-brand-text-variant mb-3 px-2 font-bold">{language === 'ru' ? 'Базовая защита' : language === 'en' ? 'Basic protection' : 'Asosiy himoya'}</h2>
           <div className="bg-brand-surface-lowest rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
             
             <button onClick={() => setShowPasswordModal(true)} className="w-full flex items-center p-4 hover:bg-brand-surface-low transition-colors active:scale-95 cursor-pointer">
@@ -128,8 +130,8 @@ export const SecurityScreen: React.FC = () => {
                 <Lock className="text-brand-primary" size={20} />
               </div>
               <div className="flex-1 text-left">
-                <h3 className="text-[15px] font-semibold text-brand-text">Parolni o'zgartirish</h3>
-                <p className="text-[13px] text-brand-text-variant">Xavfsizlikni oshirish uchun yangilang</p>
+                <h3 className="text-[15px] font-semibold text-brand-text">{language === 'ru' ? 'Смена пароля' : language === 'en' ? 'Change password' : "Parolni o'zgartirish"}</h3>
+                <p className="text-[13px] text-brand-text-variant">{language === 'ru' ? 'Обновите его, чтобы повысить безопасность' : language === 'en' ? 'Update it to keep your account secure' : 'Xavfsizlikni oshirish uchun yangilang'}</p>
               </div>
               <ChevronRight className="text-brand-outline-variant" size={20} />
             </button>
@@ -140,7 +142,7 @@ export const SecurityScreen: React.FC = () => {
         {/* Active Sessions */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3 px-2">
-            <h2 className="text-[12px] uppercase tracking-wider text-brand-text-variant font-bold">Faol seanslar</h2>
+            <h2 className="text-[12px] uppercase tracking-wider text-brand-text-variant font-bold">{language === 'ru' ? 'Активные сессии' : language === 'en' ? 'Active sessions' : 'Faol seanslar'}</h2>
             <span className="bg-brand-primary-container text-white text-[10px] px-2 py-0.5 rounded-full font-bold">{activeSessions.length} TA QURILMA</span>
           </div>
           <div className="bg-brand-surface-lowest rounded-2xl border border-slate-100 shadow-xs overflow-hidden">
@@ -174,11 +176,11 @@ export const SecurityScreen: React.FC = () => {
                           </div>
                           <div>
                             <p className="text-[15px] font-semibold text-brand-text flex items-center gap-2">
-                              {session.device_name || 'Noma\'lum qurilma'}
+                              {session.device_name || t.unknownDevice}
                               {isCurrent && <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>}
                             </p>
                             <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium flex items-center gap-1.5">
-                              {isCurrent ? 'Hozir faol' : formattedTime} • {session.ip_address || 'Noma\'lum IP'}
+                              {isCurrent ? t.activeNow : formattedTime} • {session.ip_address || t.unknownIp}
                             </p>
                           </div>
                         </div>
@@ -203,10 +205,10 @@ export const SecurityScreen: React.FC = () => {
         <div className="mb-10">
           <div className="bg-brand-primary-container text-white p-5 rounded-2xl relative overflow-hidden">
             <div className="relative z-10">
-              <h3 className="text-[16px] font-bold mb-1">Shubhali faollikni ko'rdingizmi?</h3>
-              <p className="text-white/90 text-[12px] mb-3">Barcha boshqa qurilmalardan bitta tugma bilan chiqing.</p>
+              <h3 className="text-[16px] font-bold mb-1">{language === 'ru' ? 'Заметили подозрительную активность?' : language === 'en' ? 'Noticed anything suspicious?' : "Shubhali faollikni ko'rdingizmi?"}</h3>
+              <p className="text-white/90 text-[12px] mb-3">{language === 'ru' ? 'Выйдите со всех остальных устройств одной кнопкой.' : language === 'en' ? 'Sign out of every other device with one button.' : 'Barcha boshqa qurilmalardan bitta tugma bilan chiqing.'}</p>
               <button onClick={() => setConfirmLogoutAll(true)} className="bg-white text-brand-primary px-4 py-2 rounded-xl font-bold text-xs active:scale-95 transition-transform cursor-pointer">
-                Barcha qurilmalardan chiqish
+                {language === 'ru' ? 'Выйти со всех устройств' : language === 'en' ? 'Sign out everywhere' : 'Barcha qurilmalardan chiqish'}
               </button>
             </div>
             <ShieldAlert className="absolute -bottom-6 -right-6 w-28 h-28 text-white/10 pointer-events-none" />

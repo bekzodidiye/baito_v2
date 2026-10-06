@@ -1,4 +1,6 @@
 import React from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, Award, PieChart, AlertTriangle } from 'lucide-react';
 
 /** Every figure on this screen is placeholder markup — there is no query behind
@@ -12,6 +14,8 @@ import { BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, Award, PieChart
  *  never happened — and had they worked, they would only have written these
  *  invented figures into a file that outlives the screen's own caveat. */
 export const AdminAnalytics: React.FC = () => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -19,7 +23,7 @@ export const AdminAnalytics: React.FC = () => {
         <div>
           <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
             <BarChart3 size={20} className="text-indigo-600" />
-            <span>Chuqur Analitika va Platforma Hisobotlari</span>
+            <span>{a.analyticsTitle}</span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">
             Foydalanuvchilar faolligi, mehnat bozori ko'rsatkichlari va moliya dinamikasi
@@ -88,7 +92,7 @@ export const AdminAnalytics: React.FC = () => {
               <Award size={16} className="text-amber-500" />
               <span>Eng Talab Yuqori Kasblar (TOP 5)</span>
             </h3>
-            <span className="text-[11px] font-bold text-slate-400">So'nggi 30 kun</span>
+            <span className="text-[11px] font-bold text-slate-400">{a.last30Days}</span>
           </div>
 
           <div className="space-y-3 text-xs">
@@ -117,9 +121,9 @@ export const AdminAnalytics: React.FC = () => {
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
               <PieChart size={16} className="text-blue-600" />
-              <span>Hududlar Bo'yicha Faollik (Viloyatlar)</span>
+              <span>{a.activityByRegion}</span>
             </h3>
-            <span className="text-[11px] font-bold text-slate-400">O'zbekiston</span>
+            <span className="text-[11px] font-bold text-slate-400">{a.uzbekistan}</span>
           </div>
 
           <div className="space-y-3 text-xs">

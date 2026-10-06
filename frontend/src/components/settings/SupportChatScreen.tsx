@@ -114,8 +114,8 @@ export const SupportChatScreen: React.FC = () => {
           <ArrowLeft size={24} className="text-brand-text-variant" />
         </button>
         <div className="flex flex-col items-center">
-          <h1 className="text-[16px] font-bold text-brand-primary">Jonli chat</h1>
-          <span className="text-[11px] text-green-600 font-medium">Tarmoqda</span>
+          <h1 className="text-[16px] font-bold text-brand-primary">{t.liveChatTitle}</h1>
+          <span className="text-[11px] text-green-600 font-medium">{t.onlineStatus}</span>
         </div>
         <div className="w-10 h-10 flex items-center justify-center bg-brand-primary-container/10 rounded-full text-brand-primary">
           <Logo sizeClassName="text-[14px]" />
@@ -149,11 +149,11 @@ export const SupportChatScreen: React.FC = () => {
         <form onSubmit={handleSendMessage} className="flex items-center gap-2">
           <div className="flex-1 bg-brand-surface-low rounded-full px-4 py-2 flex items-center">
             <input
-              aria-label="Xabar matni" 
+              aria-label={t.messageText} 
               type="text" 
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Xabar yozing..." 
+              placeholder={t.typeMessage} 
               className="bg-transparent border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 w-full text-[14px] text-brand-text placeholder:text-brand-text-variant"
             />
           </div>

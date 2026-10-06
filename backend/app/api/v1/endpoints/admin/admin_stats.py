@@ -51,12 +51,13 @@ def get_stats(
         .filter(models.Transaction.status.in_(["paid", "released"]))
         .scalar() or 0
     )
-    escrow_held = (
-        db.query(func.coalesce(func.sum(models.Transaction.amount), 0))
-        .filter(
-            models.Transaction.type == "escrow_hold",
-            models.Transaction.status == "held",
-        )
+    # What the platform owes workers and has not yet handed over. A completed
+    # day credits the worker's balance; an administrator pays it out by bank
+    # transfer and the balance comes down. The figure here used to be the money
+    # frozen against employers, which no longer leaves them at all.
+    owed_to_workers = (
+        db.query(func.coalesce(func.sum(models.User.balance), 0))
+        .filter(models.User.role == "worker")
         .scalar() or 0
     )
 
@@ -71,7 +72,7 @@ def get_stats(
         "totalApplications": total_apps,
         "totalTransactions": total_tx,
         "totalRevenue": total_revenue // 100,   # tiyin -> UZS
-        "totalEscrowHeld": escrow_held // 100,
+        "totalOwedToWorkers": owed_to_workers,
     }
 
 

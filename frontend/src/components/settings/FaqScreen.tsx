@@ -3,6 +3,7 @@ import { translations } from '../../translations';
 import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useAuthStore } from "../../store/useAuthStore";
+import { FAQ_CONTENT } from './FaqScreen.content';
 
 export const FaqScreen: React.FC = () => {
   const language = useAuthStore(s => s.language);
@@ -11,28 +12,7 @@ export const FaqScreen: React.FC = () => {
   
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  const faqs = [
-    {
-      q: "Baito nima?",
-      a: "Baito - talabalar uchun ish topish, karyera qurish va tajriba orttirish imkoniyatini taqdim etuvchi maxsus platformadir."
-    },
-    {
-      q: "Qanday qilib ishga topshirsam bo'ladi?",
-      a: "Asosiy ekrandagi ishlar ro'yxatidan o'zingizga yoqqan ishni tanlab, 'Ariza topshirish' tugmasini bosishingiz kifoya."
-    },
-    {
-      q: "Xizmat butunlay bepulmi?",
-      a: "Ha, Baito platformasidan foydalanish va ish qidirish talabalar uchun butunlay bepul."
-    },
-    {
-      q: "Profilimni qanday yangilayman?",
-      a: "Profil bo'limiga o'tib, 'Tahrirlash' tugmasini bosish orqali barcha shaxsiy ma'lumotlaringizni yangilashingiz mumkin."
-    },
-    {
-      q: "Bildirishnomalarni o'chira olamanmi?",
-      a: "Ha, Sozlamalar > Afzalliklar bo'limiga kirib, bildirishnomalarni o'chirib qo'yishingiz mumkin."
-    }
-  ];
+  const { title, entries: faqs } = FAQ_CONTENT[language] ?? FAQ_CONTENT.uz;
 
   return (
     <div className="flex-1 flex flex-col h-full w-full bg-brand-surface">
@@ -46,7 +26,7 @@ export const FaqScreen: React.FC = () => {
           <ArrowLeft size={24} className="text-brand-text-variant" />
         </button>
         <h1 className="text-[18px] font-semibold text-brand-primary absolute left-1/2 transform -translate-x-1/2">
-          Ko'p so'raladigan savollar
+          {title}
         </h1>
         <div className="w-10 h-10"></div>
       </header>

@@ -32,6 +32,12 @@ export const ru = {
   email: "EMAIL (НЕОБЯЗАТЕЛЬНО)",
 
   // Step 2 Documents
+  orgNamePlaceholder: "Например: Perfect Jobs MCHJ",
+  licenceFileAria: "Файл свидетельства",
+  passportPhotos: "ФОТО ПАСПОРТА *",
+  selfieFileAria: "Файл селфи",
+  agreeToTermsAria: "Я согласен с условиями использования",
+  docExtraFileAria: "Дополнительный документ",
   docTitle: "Загрузка документов",
   docSubtitle: "Подтвердите вашу личность и квалификацию",
   docWorkerPassport: "Копия паспорта или ID-карты *",
@@ -84,5 +90,7 @@ export const ru = {
   loginBtn: "Войти",
   errorRequired: "Пожалуйста, заполните все обязательные поля",
   phonePlaceholder: "+998 (90) 123-45-67",
-  passwordPlaceholder: "Введите пароль"
+  passwordPlaceholder: "Введите пароль",
+  sendCode: "Получить код",
+  verifyCode: "Код подтверждения"
 };

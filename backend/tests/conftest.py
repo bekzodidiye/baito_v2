@@ -24,9 +24,22 @@ from app.core.limiter import limiter  # noqa: E402
 from app.core.security import get_password_hash  # noqa: E402
 from app.db.base import Base  # noqa: E402
 from app.db.session import SessionLocal, engine  # noqa: E402
+from sqlalchemy import event  # noqa: E402
 from app.main import app  # noqa: E402
 from app.models import Job, User  # noqa: E402
 from app.models.job import JobStatus  # noqa: E402
+
+# SQLite ignores foreign keys unless asked, so a delete that Postgres refuses
+# passed locally and failed on CI: two tests took a job's day rows out from
+# under a hold that still pointed at them, went green here and red there. CI
+# runs Postgres, which enforces them; this makes the local run agree.
+if engine.url.get_backend_name() == "sqlite":
+    @event.listens_for(engine, "connect")
+    def _enforce_foreign_keys(dbapi_connection, _record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
 
 TEST_PASSWORD = "Str0ngPassw0rd"
 

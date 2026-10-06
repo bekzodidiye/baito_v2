@@ -12,7 +12,6 @@ from app.models.job import JobStatus
 from app.redis_client import redis_client
 from app.services.ai_matcher import AIMatchmaker
 from app.services.geo_service import GeoSpatialService
-from app.services.escrow_service import EscrowService
 from app.services import job_days
 from app.models.job_day import JobDayStatus
 from app.services.spam_detector import SpamFraudDetector, keywords_from_settings
@@ -420,19 +419,6 @@ def read_jobs(
     return result
 
 
-def parse_work_dates(work_date_str: str) -> List[str]:
-    """Parse a workDate string into individual dates using the global parser."""
-    if not work_date_str:
-        return [work_date_str]
-    
-    from app.services.work_dates import get_job_dates_set
-    
-    dates = get_job_dates_set(work_date_str)
-    
-    if dates:
-        return sorted(list(dates))
-    return [work_date_str]
-
 
 @router.post("", response_model=schemas.Job)
 @limiter.limit("20/hour")
@@ -442,7 +428,7 @@ def create_job(
     db: Session = Depends(deps.get_db),
     job_in: schemas.JobCreate,
     # Posting is what puts a stranger's address in front of workers and what
-    # draws on an escrow balance, so the account behind it has to have been
+    # draws on a balance, so the account behind it has to have been
     # checked first.
     current_user: models.User = Depends(deps.get_current_employer),
 ) -> Any:
@@ -474,32 +460,29 @@ def create_job(
     if not job_in_dict.get("company") or job_in_dict["company"] == "Ish beruvchi":
         job_in_dict["company"] = current_user.companyName or current_user.name or "Ish beruvchi"
 
-    work_dates = parse_work_dates(job_in_dict.get("workDate", ""))
-    
-    first_job = None
-    for w_date in work_dates:
-        single_job_dict = job_in_dict.copy()
-        single_job_dict["workDate"] = w_date
-        # Multi-day jobs are now split into separate single-day jobs
-        single_job_dict["durationLabel"] = "1 kunlik"
-        single_job_dict["salaryInt"] = salary_to_uzs(single_job_dict.get("salary"))
-        single_job_dict["hourlyRateInt"] = salary_to_uzs(single_job_dict.get("hourlyRate"))
-        single_job_dict["transportRateInt"] = salary_to_uzs(single_job_dict.get("transportRate"))
-        
-        db_job = models.Job(**single_job_dict)
-        db.add(db_job)
-        db.flush()
-        
-        # We still sync days to create the single JobDay record for EscrowService.
-        job_days.sync_days(db, db_job)
-        
-        if not first_job:
-            first_job = db_job
+    job_in_dict["salaryInt"] = salary_to_uzs(job_in_dict.get("salary"))
+    job_in_dict["hourlyRateInt"] = salary_to_uzs(job_in_dict.get("hourlyRate"))
+    job_in_dict["transportRateInt"] = salary_to_uzs(job_in_dict.get("transportRate"))
 
+    # One posting, however many days it runs for.
+    #
+    # A five-day shift was briefly created as five separate Job rows, one per
+    # day, each labelled "1 kunlik". That put five identical cards in front of
+    # every worker searching, asked them to apply five times for one piece of
+    # work, and made five postings that were really
+    # one — none of which the splitting was needed for. The day rows below
+    # already carry a day's status and a day's wage, which is what lets a
+    # worker finish Monday without finishing Tuesday.
+    db_job = models.Job(**job_in_dict)
+    db.add(db_job)
+    db.flush()
+    # A five-day posting becomes five day rows here, not at hire: the calendar,
+    # the admin's day-by-day view and the employer's own list all need the days
+    # before anybody has been taken on.
+    job_days.sync_days(db, db_job)
     db.commit()
-    if first_job:
-        db.refresh(first_job)
-    return first_job
+    db.refresh(db_job)
+    return db_job
 
 
 @router.get("/{job_id}", response_model=schemas.Job)
@@ -654,6 +637,15 @@ def delete_job(
             status_code=400,
             detail="Boshlangan ishni bekor qilib bo'lmaydi, avval uni yakunlang",
         )
+    # Work that is finished cannot be un-finished. Only the started case was
+    # refused, so a completed posting could be flipped to cancelled while its
+    # days stayed completed and the worker kept the money credited for them —
+    # a record that contradicts itself and says the work never happened.
+    if job.status == JobStatus.COMPLETED:
+        raise HTTPException(
+            status_code=400,
+            detail="Yakunlangan ishni bekor qilib bo'lmaydi",
+        )
 
     affected = (
         db.query(models.Application)
@@ -677,21 +669,6 @@ def delete_job(
     job.status = JobStatus.CANCELLED
     db.add(job)
 
-    # A posting can hold money several times over: once per vacancy filled,
-    # and once per day of a multi-day shift. refund_funds settles all of them
-    # in one pass, so this is a single call rather than a counted loop.
-    try:
-        # Wage and commission both: the employer was charged for both when the
-        # day was frozen, and refund_funds puts both back.
-        refunded = sum(
-            (tx.amount + (tx.platformFee or 0)) // 100
-            for tx in EscrowService.refund_funds(db, job_id=job.id)
-        )
-    except HTTPException:
-        # Nothing was ever frozen — an unfilled posting, or one from before
-        # escrow. Cancelling is still legitimate.
-        refunded = 0
-
     # The days go with it, so a cancelled posting stops offering work.
     for day in job_days.days_of(db, job.id):
         if day.status == JobDayStatus.PENDING:
@@ -703,5 +680,4 @@ def delete_job(
         "success": True,
         "status": JobStatus.CANCELLED,
         "notified": len(affected),
-        "refunded": refunded,
     }

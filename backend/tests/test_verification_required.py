@@ -11,7 +11,6 @@ workers and drawing on an escrow balance.
 
 import uuid
 
-from app.models.job import JobStatus
 from app.db.session import SessionLocal
 from app.models.user import User
 

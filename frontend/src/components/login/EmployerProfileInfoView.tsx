@@ -73,7 +73,7 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
           className="w-[88px] h-[88px] rounded-full border border-dashed border-slate-300 hover:border-brand-primary/40 flex items-center justify-center relative bg-white cursor-pointer transition-all active:scale-95 group shadow-3xs"
         >
           {profileImage ? (
-            <img src={profileImage} alt="Avatar Preview" className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
+            <img src={profileImage} alt={language === 'ru' ? "Предпросмотр фото профиля" : language === 'en' ? "Profile photo preview" : "Profil rasmi ko'rinishi"} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
           ) : (
             <Camera size={30} className="text-slate-400 group-hover:text-brand-primary transition-colors stroke-[2.2]" />
           )}
@@ -82,7 +82,7 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
           </div>
         </div>
         <input
-              aria-label="Kompaniya logotipini yuklash" type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
+              aria-label={language === 'ru' ? "Загрузить логотип компании" : language === 'en' ? "Upload a company logo" : "Kompaniya logotipini yuklash"} type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
         <p className="mt-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
           {language === 'uz' ? "Profil rasmi (ixtiyoriy)" : language === 'ru' ? "Фото профиля (необязательно)" : "Profile photo (optional)"}
         </p>
@@ -102,7 +102,7 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
           <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">
             {language === 'uz' ? "Sohasi *" : language === 'ru' ? "Отрасль *" : "Industry *"}
           </label>
-          <CustomSelect value={industry} onChange={setIndustry} placeholder={language === 'uz' ? "Tanlang" : "Select"} options={industries} />
+          <CustomSelect value={industry} onChange={setIndustry} placeholder={language === 'uz' ? "Tanlang" : language === 'ru' ? 'Выберите' : "Select"} options={industries} />
         </div>
 
         <div className="space-y-1">
@@ -111,39 +111,39 @@ export const EmployerProfileInfoView: React.FC<EmployerProfileInfoViewProps> = (
           </label>
           <input
               aria-label={language === 'uz' ? "Manzil *" : language === 'ru' ? "Адрес *" : "Location *"}
-              type="text" required value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Toshkent, Chilonzor" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+              type="text" required value={location} onChange={(e) => setLocation(e.target.value)} placeholder={language === 'ru' ? "Например: Ташкент, Чиланзар" : language === 'en' ? "For example: Tashkent, Chilonzor" : "Masalan: Toshkent, Chilonzor"} className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">
-              {language === 'uz' ? "Xodimlar soni" : "Employees"}
+              {language === 'uz' ? "Xodimlar soni" : language === 'ru' ? 'Количество сотрудников' : "Employees"}
             </label>
             <input
-              aria-label={language === 'uz' ? "Xodimlar soni" : "Employees"} type="text" value={employeesCount} onChange={(e) => setEmployeesCount(e.target.value)} placeholder="100-500" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+              aria-label={language === 'uz' ? "Xodimlar soni" : language === 'ru' ? 'Количество сотрудников' : "Employees"} type="text" value={employeesCount} onChange={(e) => setEmployeesCount(e.target.value)} placeholder="100-500" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">
-              {language === 'uz' ? "Tashkil topgan yil" : "Founded Year"}
+              {language === 'uz' ? "Tashkil topgan yil" : language === 'ru' ? 'Год основания' : "Founded Year"}
             </label>
             <input
-              aria-label={language === 'uz' ? "Tashkil topgan yil" : "Founded Year"} type="number" value={foundedYear} onChange={(e) => setFoundedYear(e.target.value)} placeholder="2006" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+              aria-label={language === 'uz' ? "Tashkil topgan yil" : language === 'ru' ? 'Год основания' : "Founded Year"} type="number" value={foundedYear} onChange={(e) => setFoundedYear(e.target.value)} placeholder="2006" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
           </div>
         </div>
 
         <div className="space-y-1">
           <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">
-            {language === 'uz' ? "Vebsayt" : "Website"}
+            {language === 'uz' ? "Vebsayt" : language === 'ru' ? 'Веб-сайт' : "Website"}
           </label>
           <input
-              aria-label={language === 'uz' ? "Vebsayt" : "Website"} type="url" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="company.uz" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+              aria-label={language === 'uz' ? "Vebsayt" : language === 'ru' ? 'Веб-сайт' : "Website"} type="url" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="company.uz" className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
         </div>
 
         <div className="space-y-1">
           <label className="text-[10px] font-extrabold text-slate-400 px-1 uppercase tracking-wider">
-            {language === 'uz' ? "Kompaniya haqida" : "Company Bio"}
+            {language === 'uz' ? "Kompaniya haqida" : language === 'ru' ? 'О компании' : "Company Bio"}
           </label>
-          <textarea value={companyBio} onChange={(e) => setCompanyBio(e.target.value)} placeholder="Kompaniyangiz haqida ma'lumot..." rows={3} className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 resize-none" />
+          <textarea value={companyBio} onChange={(e) => setCompanyBio(e.target.value)} placeholder={language === 'ru' ? "Информация о вашей компании..." : language === 'en' ? "About your company..." : "Kompaniyangiz haqida ma'lumot..."} rows={3} className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-3.5 text-xs font-semibold focus:border-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 resize-none" />
         </div>
       </form>
     </motion.div>

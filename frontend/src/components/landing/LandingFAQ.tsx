@@ -19,16 +19,18 @@ export const LandingFAQ: React.FC = () => {
         <div className="text-center space-y-3 mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-black">
             <HelpCircle size={14} />
-            <span>Savollar va Javoblar</span>
+            <span>{t.faqBadge}</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-black text-slate-900">{t.faqTitle}</h2>
-          <p className="text-xs sm:text-sm text-slate-600 font-medium">Baito platformasi bo'yicha eng muhim savollarga ochiq javoblar</p>
+          <p className="text-xs sm:text-sm text-slate-600 font-medium">{t.faqSubtitle}</p>
         </div>
 
         <div className="space-y-3">
           {FAQ_ITEMS.map((item, idx) => {
-            const q = language === 'ru' ? item.qRu : item.qUz;
-            const a = language === 'ru' ? item.aRu : item.aUz;
+            // English was missing from FAQ_ITEMS, so `language === 'ru' ? ru : uz`
+            // handed an English reader the Uzbek question and the Uzbek answer.
+            const q = language === 'ru' ? item.qRu : language === 'en' ? item.qEn : item.qUz;
+            const a = language === 'ru' ? item.aRu : language === 'en' ? item.aEn : item.aUz;
             const isOpen = openIndex === idx;
 
             return (

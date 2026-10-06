@@ -32,6 +32,12 @@ export const uz = {
   email: "EMAIL (IXTIYORIY)",
 
   // Step 2 Documents
+  orgNamePlaceholder: "Masalan: Perfect Jobs MCHJ",
+  licenceFileAria: "Guvohnoma fayli",
+  passportPhotos: "PASSPORT RASMLARI *",
+  selfieFileAria: "Selfi fayli",
+  agreeToTermsAria: "Foydalanish shartlariga roziman",
+  docExtraFileAria: "Qo'shimcha hujjat fayli",
   docTitle: "Hujjatlarni yuklash",
   docSubtitle: "Shaxsingiz va kasbiy ma'lumotingizni tasdiqlang",
   docWorkerPassport: "Pasport yoki ID-karta nusxasi *",
@@ -84,5 +90,7 @@ export const uz = {
   loginBtn: "Kirish",
   errorRequired: "Iltimos, barcha majburiy maydonlarni to'ldiring",
   phonePlaceholder: "+998 (90) 123-45-67",
-  passwordPlaceholder: "Parolingizni kiriting"
+  passwordPlaceholder: "Parolingizni kiriting",
+  sendCode: "Kodni olish",
+  verifyCode: "Tasdiqlash kodi"
 };

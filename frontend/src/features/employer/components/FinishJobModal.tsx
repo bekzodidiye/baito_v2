@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { money } from '../../../utils/money';
 import { X, Star, MessageSquare, PlusCircle, CalendarCheck, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -52,10 +53,19 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
   if (!isOpen) return null;
 
   const pending = days.filter(d => d.status === 'pending');
+
+  /** Today in Tashkent, the way the server reckons it.
+   *
+   *  Uzbekistan is UTC+5 and keeps no daylight saving. Taking the browser's
+   *  own date instead would disagree with the server for any employer whose
+   *  machine is set to another zone, and the button would be offered for a
+   *  day the server then refuses. */
+  const todayInTashkent = new Date(Date.now() + 5 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
   // One day is just a job; the choice only means something when there is more
   // than one day to choose between.
   const showDays = days.length > 1;
-  const money = (n: number) => n.toLocaleString('ru-RU').replace(/ /g, ' ');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,19 +130,23 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
                   {days.map(day => {
                     const done = day.status === 'completed';
                     const off = day.status === 'cancelled';
+                    // A day closes once it has arrived. Offering the button
+                    // earlier only earns a refusal from the server.
+                    const notYet = !done && !off && day.workDate > todayInTashkent;
                     return (
                       <div
                         key={day.id}
                         className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl border ${
                           done ? 'border-emerald-200 bg-emerald-50/60'
                                : off ? 'border-slate-200 bg-slate-50 opacity-60'
-                                     : 'border-slate-200 bg-white'
+                                     : notYet ? 'border-slate-200 bg-slate-50/60'
+                                              : 'border-slate-200 bg-white'
                         }`}
                       >
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-slate-800 tabular-nums">{day.workDate}</p>
                           {day.amount != null && (
-                            <p className="text-xs text-slate-500 tabular-nums">{money(day.amount)} so'm</p>
+                            <p className="text-xs text-slate-500 tabular-nums">{money(day.amount, language)}</p>
                           )}
                         </div>
                         {done ? (
@@ -143,6 +157,12 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
                         ) : off ? (
                           <span className="text-xs font-bold text-slate-400">
                             {language === 'uz' ? 'Bekor' : language === 'ru' ? 'Отменён' : 'Cancelled'}
+                          </span>
+                        ) : notYet ? (
+                          <span className="text-xs font-bold text-slate-400">
+                            {language === 'uz' ? 'Hali kelmadi'
+                              : language === 'ru' ? 'Ещё не наступил'
+                              : 'Not yet'}
                           </span>
                         ) : (
                           <button
@@ -229,7 +249,7 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
                 </label>
                 <div className="relative">
                   <input
-              aria-label="Qo'shimcha bonus summasi"
+              aria-label={language === 'ru' ? "Сумма дополнительного бонуса" : language === 'en' ? "Bonus amount" : "Qo'shimcha bonus summasi"}
                     type="text"
                     value={bonus}
                     onChange={(e) => {

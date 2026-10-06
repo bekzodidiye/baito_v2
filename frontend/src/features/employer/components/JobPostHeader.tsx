@@ -21,7 +21,7 @@ export const JobPostHeader: React.FC<JobPostHeaderProps> = ({ step, language, on
         <button
           onClick={onBack}
           className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-700 cursor-pointer border-none bg-transparent"
-         aria-label="Orqaga">
+         aria-label={language === 'ru' ? 'Назад' : language === 'en' ? 'Back' : 'Orqaga'}>
 <ArrowLeft size={20} />
         </button>
         <h1 className="font-display font-black text-slate-900 text-lg">

@@ -3,6 +3,8 @@ import { useApp } from '../context/AppContext';
 import { useJobsData } from "../context/useJobsData";
 import { getProfileTranslations } from '../features/worker/profile/ProfileScreen.utils';
 import { showToast } from '../utils/toast';
+import { translations } from '../translations';
+import { cardDigits } from '../utils/bankCard';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 import { requestWithdrawalApi, uploadFileApi } from '../api/queries';
 import { apiClient } from '../api/client';
@@ -84,6 +86,7 @@ export const useProfileScreen = () => {
     gender: userProfile?.gender || 'male',
     region: userProfile?.region || '',
     profession: userProfile?.profession || '',
+    bankCard: (userProfile as any)?.bankCardMask || '',
     aboutMe: userProfile?.aboutMe || '',
     skills: userProfile?.skills?.join(', ') || '',
     passportSeries: userProfile?.passportSeries?.replace(/[^A-Za-z]/g, '') || '',
@@ -109,6 +112,7 @@ export const useProfileScreen = () => {
         gender: userProfile.gender || 'male',
         region: userProfile.region || '',
         profession: userProfile.profession || '',
+        bankCard: (userProfile as any).bankCardMask || '',
         aboutMe: userProfile.aboutMe || '',
         skills: userProfile.skills?.join(', ') || '',
         passportSeries: userProfile.passportSeries?.replace(/[^A-Za-z]/g, '') || '',
@@ -130,6 +134,18 @@ export const useProfileScreen = () => {
   const [withdrawSuccess, setWithdrawSuccess] = useState(false);
 
   const t = getProfileTranslations(language);
+
+  /** What actually went wrong, when the server bothered to say.
+   *
+   *  `apiClient` puts the server's own `detail` on the error it throws. Both
+   *  handlers below threw it away and showed "Error occurred" instead — so
+   *  saving a profile with an email another account already uses failed with
+   *  nothing to act on, when the server had said exactly that. The generic
+   *  string was also Uzbek or English and never Russian. */
+  const reasonFor = (err: unknown): string => {
+    const detail = err instanceof Error ? err.message.trim() : '';
+    return detail || translations[language].somethingWentWrong;
+  };
 
   // Dynamic values
   const appliedJobsCount = jobs.filter(j => j.applied || j.status === 'applied').length;
@@ -168,10 +184,10 @@ export const useProfileScreen = () => {
           body: JSON.stringify({ avatarUrl: uploadedUrl })
         });
         setUserProfile({ ...userProfile, profileImage: uploadedUrl });
-        showToast(language === 'uz' ? "Rasm muvaffaqiyatli saqlandi!" : "Photo saved successfully!");
+        showToast(translations[language].photoSaved);
       } catch (err) {
         console.error('Avatar upload failed:', err);
-        showToast(language === 'uz' ? "Rasm yuklashda xatolik yuz berdi" : "Failed to upload photo");
+        showToast(reasonFor(err), 'error');
       }
     }
   };
@@ -215,6 +231,8 @@ export const useProfileScreen = () => {
         birthDate: updated.birthDate || undefined,
         region: editForm.region || undefined,
         category: editForm.profession || undefined,
+        // Digits only: the admin who makes the transfer reads this field.
+        bankCardMask: cardDigits(editForm.bankCard) || undefined,
         bio: editForm.aboutMe || undefined,
         skills: updated.skills.length > 0 ? updated.skills : undefined,
         passportSeries: updated.passportSeries || undefined,
@@ -254,7 +272,7 @@ export const useProfileScreen = () => {
       showToast(t.savedSuccess);
     } catch (err) {
       console.error(err);
-      showToast(language === 'uz' ? "Xatolik yuz berdi" : "Error occurred");
+      showToast(reasonFor(err), 'error');
     } finally {
       setIsEditing(false);
     }
@@ -283,7 +301,7 @@ export const useProfileScreen = () => {
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!withdrawAmount || isNaN(Number(withdrawAmount)) || Number(withdrawAmount) <= 0) {
-      showToast(language === 'uz' ? "To'g'ri miqdor kiriting!" : "Enter a valid amount!");
+      showToast(language === 'uz' ? "To'g'ri miqdor kiriting!" : language === 'ru' ? 'Введите корректную сумму!' : "Enter a valid amount!");
       return;
     }
     
@@ -298,7 +316,7 @@ export const useProfileScreen = () => {
       }, 2500);
     } catch (err) {
       console.error(err);
-      showToast(language === 'uz' ? "Xatolik yuz berdi" : "Error occurred");
+      showToast(reasonFor(err), 'error');
     }
   };
 

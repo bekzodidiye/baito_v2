@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import L from 'leaflet';
 import { Job } from '../../types';
+import { outlineFor } from './regionOutlineStyle';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
-import { areDistrictNamesEqual, getDistrictColor } from './mapUtils';
+import { areDistrictNamesEqual } from './mapUtils';
 import { translateRegion, Language } from '../../translations';
 import { createDistrictOnEachFeature } from './districtFeatureUtils';
 
@@ -78,33 +79,14 @@ export const useDistrictPolygons = ({
     const getDistrictStyle = (feature: any) => {
       const tumanName = feature?.properties?.shapeName || "";
       const isSelected = !isRegionFilterSelected && areDistrictNamesEqual(filterLocation, tumanName);
-      const districtColor = getDistrictColor(tumanName);
-      
-      let weight = 1.2;
-      let opacity = 0.6;
-      let fillOpacity = 0.18;
-      
-      if (isAnyDistrictOfThisRegionSelected) {
-        if (isSelected) {
-          weight = 2.4;
-          opacity = 0.85;
-          fillOpacity = 0.32;
-        } else {
-          weight = 1.0;
-          opacity = 0.4;
-          fillOpacity = 0.12;
-        }
-      }
-      
-      return {
-        color: districtColor,
-        weight: weight,
-        opacity: opacity,
-        fillColor: districtColor,
-        fillOpacity: fillOpacity,
-        fillRule: 'nonzero' as L.FillRule,
-        fill: true
-      };
+      // Districts are drawn a shade lighter than the region boundaries they
+      // sit inside, so the two read as an outline and its subdivisions rather
+      // than as one mesh.
+      const base = outlineFor({
+        isFiltering: isAnyDistrictOfThisRegionSelected,
+        isActive: isSelected,
+      });
+      return { ...base, weight: base.weight * 0.8 };
     };
 
     if (districtsGeoJsonLayerRef.current && currentDistrictsRegionIdRef.current === selectedRegion.id) {

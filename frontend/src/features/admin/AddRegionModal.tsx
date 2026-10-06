@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { RegionConfig } from './types';
 
 interface AddRegionModalProps {
@@ -8,6 +10,8 @@ interface AddRegionModalProps {
 }
 
 export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose, onAdd }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [name, setName] = useState('');
   const [districtsCount, setDistrictsCount] = useState(10);
   const [minSalary, setMinSalary] = useState(100000);
@@ -39,12 +43,12 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
   return (
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
-        <h3 className="font-bold text-slate-800 text-base">Yangi Hudud / Viloyat Qo'shish</h3>
+        <h3 className="font-bold text-slate-800 text-base">{a.newRegionTitle}</h3>
         
         <div>
-          <label className="text-xs font-semibold text-slate-700 block mb-1">Hudud / Viloyat Nomi</label>
+          <label className="text-xs font-semibold text-slate-700 block mb-1">{a.regionNameLabel}</label>
           <input
-              aria-label="Hudud / Viloyat Nomi"
+              aria-label={a.regionNameLabel}
             type="text"
             required
             value={name}
@@ -82,9 +86,9 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
         </div>
 
         <div>
-          <label className="text-xs font-semibold text-slate-700 block mb-1">Minimal Kunlik Ish Haq (so'm)</label>
+          <label className="text-xs font-semibold text-slate-700 block mb-1">{a.minDailyWage}</label>
           <input
-              aria-label="Minimal Kunlik Ish Haq (so'm)"
+              aria-label={a.minDailyWage}
             type="number"
             step="10000"
             min="50000"

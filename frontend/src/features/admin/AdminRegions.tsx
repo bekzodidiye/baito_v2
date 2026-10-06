@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { money } from '../../utils/money';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { RegionConfig } from './types';
 import { useAdminData } from './useAdminData';
 import { apiClient } from '../../api/client';
@@ -8,6 +11,8 @@ import { AddRegionModal } from './AddRegionModal';
 
 
 export const AdminRegions: React.FC = () => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const { regions, refresh } = useAdminData();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,11 +82,11 @@ export const AdminRegions: React.FC = () => {
       <div className="relative max-w-md">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
         <input
-              aria-label="Hududlarni qidirish"
+              aria-label={a.searchRegions}
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Hudud nomini qidirish..."
+          placeholder={a.searchRegionsPlaceholder}
           className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-red-500"
         />
       </div>
@@ -128,9 +133,9 @@ export const AdminRegions: React.FC = () => {
                 </span>
               </div>
               <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                <span className="text-[10px] text-slate-400 block font-medium">Min Ish Xaqi</span>
+                <span className="text-[10px] text-slate-400 block font-medium">{a.minWageShort}</span>
                 <span className="text-xs font-bold text-slate-800 flex items-center gap-1 mt-0.5">
-                  {(region.minSalary || 0).toLocaleString()} so'm
+                  {money(region.minSalary || 0, language)}
                 </span>
               </div>
               <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">

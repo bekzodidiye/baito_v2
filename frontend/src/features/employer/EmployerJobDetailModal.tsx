@@ -81,12 +81,12 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
               {job.status === 'in_progress' ? (
                 <div className="absolute top-4 left-4 bg-emerald-600 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold text-[13px] shadow-sm">
                   <Clock size={16} strokeWidth={2.5} />
-                  <span>Jarayonda</span>
+                  <span>{language === 'ru' ? "В работе" : language === 'en' ? "In progress" : "Jarayonda"}</span>
                 </div>
               ) : (
                 <div className="absolute top-4 left-4 bg-[#FF004D] text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold text-[13px] shadow-sm">
                   <Clock size={16} strokeWidth={2.5} />
-                  <span>12 soat qoldi</span>
+                  <span>{language === 'ru' ? '12 часов осталось' : language === 'en' ? '12 hours left' : '12 soat qoldi'}</span>
                 </div>
               )}
             </div>
@@ -109,17 +109,8 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
 
               {/* Tags Row */}
               <div className="flex flex-wrap gap-2 mb-6">
-                <div className="bg-[#E5F9ED] text-[#00B85E] px-3 py-1.5 rounded-lg text-[13px] font-bold">
-                  12 soat muddatgacha
-                </div>
                 <div className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg text-[13px] font-bold flex items-center gap-1.5 border border-indigo-100/50">
-                  <Users size={16} strokeWidth={2.5} /> {language === 'uz' ? 'Ishchilar:' : language === 'ru' ? 'Workers:' : 'Workers:'} {hired}/{vac}
-                </div>
-                <div className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-[13px] font-bold">
-                  #Tezkor
-                </div>
-                <div className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-[13px] font-bold">
-                  #KunlikTo'lov
+                  <Users size={16} strokeWidth={2.5} /> {language === 'uz' ? 'Ishchilar:' : language === 'ru' ? 'Работники:' : 'Workers:'} {hired}/{vac}
                 </div>
               </div>
 

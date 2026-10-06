@@ -76,7 +76,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           {language === 'uz' ? "Ish / Vazifa nomi *" : language === 'ru' ? "Название вакансии *" : "Job Title *"}
         </label>
         <input
-              aria-label={language === 'uz' ? "Masalan: Omborda yuk tashuvchi / Kassir" : language === 'ru' ? "e.g. Warehouse Loader" : "e.g. Warehouse Loader"} type="text" placeholder={language === 'uz' ? "Masalan: Omborda yuk tashuvchi / Kassir" : language === 'ru' ? "e.g. Warehouse Loader" : "e.g. Warehouse Loader"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20" value={title} onChange={(e) => setTitle(e.target.value)} />
+              aria-label={language === 'ru' ? "Например: грузчик на склад / кассир" : language === 'en' ? "For example: Warehouse loader / Cashier" : "Masalan: Omborda yuk tashuvchi / Kassir"} type="text" placeholder={language === 'ru' ? "Например: грузчик на склад / кассир" : language === 'en' ? "For example: Warehouse loader / Cashier" : "Masalan: Omborda yuk tashuvchi / Kassir"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20" value={title} onChange={(e) => setTitle(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -86,9 +86,9 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
         </label>
         {imageUrl ? (
           <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-slate-200 group">
-            <img src={imageUrl} alt="Job Banner" className="w-full h-full object-cover" />
+            <img src={imageUrl} alt={language === 'ru' ? "Изображение объявления" : language === 'en' ? "Posting image" : "E'lon rasmi"} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 bg-white text-slate-800 text-xs font-bold rounded-lg cursor-pointer">O'zgartirish</button>
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 bg-white text-slate-800 text-xs font-bold rounded-lg cursor-pointer">{language === 'ru' ? 'Изменить' : language === 'en' ? 'Change' : "O'zgartirish"}</button>
               <button type="button" onClick={() => setImageUrl && setImageUrl('')} className="p-1.5 bg-rose-600 text-white rounded-lg cursor-pointer"><X size={16} /></button>
             </div>
           </div>
@@ -99,7 +99,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           </div>
         )}
         <input
-              aria-label="E'lon rasmini yuklash" ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+              aria-label={language === 'ru' ? "Загрузить изображение объявления" : language === 'en' ? "Upload a photo for the posting" : "E'lon rasmini yuklash"} ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -112,7 +112,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
             a select is for — and the city field further down the same form
             already uses one. */}
         <select
-          aria-label={language === 'uz' ? 'Kategoriya' : language === 'ru' ? 'Category' : 'Category'}
+          aria-label={language === 'uz' ? 'Kategoriya' : language === 'ru' ? 'Категория' : 'Category'}
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-extrabold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:ring-2 focus:ring-brand-primary/20"
@@ -158,7 +158,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           {language === 'uz' ? "Tashkilot nomi (ixtiyoriy)" : language === 'ru' ? "Название компании (необязательно)" : "Company Name (Optional)"}
         </label>
         <input
-              aria-label="Tashkilot nomi" type="text" placeholder={language === 'uz' ? "Tashkilot nomi (bo'sh qolsa ismingiz ko'rsatiladi)" : language === 'ru' ? "Company name (optional)" : "Company name (optional)"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={company} onChange={(e) => setCompany(e.target.value)} />
+              aria-label={language === 'ru' ? 'Название компании' : language === 'en' ? 'Company name' : 'Tashkilot nomi'} type="text" placeholder={language === 'ru' ? "Название компании (если пусто — покажем ваше имя)" : language === 'en' ? "Company name (your own name is used if left empty)" : "Tashkilot nomi (bo'sh qolsa ismingiz ko'rsatiladi)"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={company} onChange={(e) => setCompany(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -166,7 +166,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           <ClipboardList size={14} className="text-brand-primary" />
           {language === 'uz' ? "Ish vazifalari *" : language === 'ru' ? "Обязанности *" : "Job Responsibilities *"}
         </label>
-        <textarea rows={3} placeholder={language === 'uz' ? "1. Yuklarni tushirish va joylash..." : language === 'ru' ? "1. Unloading goods" : "1. Unloading goods"} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={responsibilities} onChange={(e) => setResponsibilities(e.target.value)} />
+        <textarea rows={3} placeholder={language === 'ru' ? "1. Разгрузка и размещение товара..." : language === 'en' ? "1. Unloading and stacking goods..." : "1. Yuklarni tushirish va joylash..."} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={responsibilities} onChange={(e) => setResponsibilities(e.target.value)} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -174,7 +174,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           <FileText size={14} className="text-brand-primary" />
           {language === 'uz' ? "Qo'shimcha ma'lumot" : language === 'ru' ? "Дополнительная информация" : "Additional Description"}
         </label>
-        <textarea rows={2} placeholder={language === 'uz' ? "Ish sharoitlari haqida..." : language === 'ru' ? "General info..." : "General info..."} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={description} onChange={(e) => setDescription(e.target.value)} />
+        <textarea rows={2} placeholder={language === 'ru' ? "Об условиях работы..." : language === 'en' ? "About the working conditions..." : "Ish sharoitlari haqida..."} className="w-full bg-slate-50 border rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 resize-none" value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
     </motion.div>
   );

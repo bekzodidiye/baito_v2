@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { MapPin, CheckCircle2, Trash2, Users, Calendar, Wallet, Hourglass } from 'lucide-react';
+import { MapPin, CheckCircle2, Trash2, Users, Calendar, Wallet, Hourglass, XCircle } from 'lucide-react';
 import { Job } from '../../types';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
+import { workDateSummary } from '../../utils/workDates';
 
 interface EmployerJobCardProps {
   job: Job;
@@ -45,6 +46,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
   const hired = Number(job.hiredCount ?? 0);
   const vac = Number(job.vacancies ?? (job.neededWorkers ? parseInt(job.neededWorkers) : 1));
   const bannerUrl = getJobBannerImage(job);
+  const dates = workDateSummary(job.workDate, language);
 
   return (
     <motion.div
@@ -52,12 +54,12 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={() => onSelect(job)}
-      className="bg-white rounded-2xl p-4 flex flex-col shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 group cursor-pointer relative"
+      className="bg-white rounded-2xl p-5 flex flex-col h-full shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-300 group cursor-pointer relative"
     >
       {/* Top Section: Image & Basic Info */}
       <div className="flex items-start gap-4 mb-4">
         {/* Thumbnail Image */}
-        <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-slate-100 shrink-0">
+        <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-slate-100 shrink-0">
           <img
             src={bannerUrl}
             alt={job.title}
@@ -68,7 +70,10 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
         {/* Details */}
         <div className="flex-1 min-w-0 pt-0.5">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h3 className="font-black text-[15px] text-slate-800 line-clamp-2 leading-tight">
+            <h3
+              title={job.title}
+              className="font-black text-base text-slate-800 line-clamp-2 leading-snug break-words min-w-0"
+            >
               {job.title}
             </h3>
             {/* Delete Button */}
@@ -85,43 +90,42 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
             )}
           </div>
           
-          <div className="text-[17px] font-black text-brand-primary mb-2 leading-none">
+          <div className="text-[19px] font-black text-brand-primary mb-2.5 leading-none truncate">
             {job.salary}
           </div>
           
           <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-1.5 text-slate-500">
-              <MapPin size={14} className="shrink-0" strokeWidth={2.5} />
-              <span className="text-[12px] font-semibold truncate">{job.rawLocation || job.location}</span>
+            <div className="flex items-center gap-1.5 text-slate-500 min-w-0">
+              <MapPin size={15} className="shrink-0" strokeWidth={2.5} />
+              <span
+                title={job.rawLocation || job.location}
+                className="text-[13px] font-semibold truncate"
+              >
+                {job.rawLocation || job.location}
+              </span>
             </div>
-            {job.workDate && (
-              <div className="flex items-center gap-1.5 text-slate-500">
-                <Calendar size={14} className="shrink-0" strokeWidth={2.5} />
-                <span className="text-[12px] font-semibold">{job.workDate}</span>
+            {dates && (
+              <div className="flex items-center gap-1.5 text-slate-500 min-w-0">
+                <Calendar size={15} className="shrink-0" strokeWidth={2.5} />
+                {/* One line, always. The whole list used to sit here and wrap
+                    onto three, which is what left the icon stranded in the
+                    middle of the block and the cards uneven. */}
+                <span title={dates.full} className="text-[13px] font-semibold truncate">
+                  {dates.label}
+                </span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Tags */}
-      {(job.tags || []).length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4 pl-24">
-          {(job.tags || []).slice(0, 3).map((tag, idx) => (
-            <span
-              key={idx}
-              className="px-2 py-0.5 bg-slate-50 text-slate-600 text-[10px] font-bold rounded-md uppercase tracking-wide"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-
       {/* Footer Actions */}
-      <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-50">
+      {/* `mt-auto` keeps this on the floor of the card. The cards in a row are
+          the same height, so on a posting with less to say the action row used
+          to stop halfway up and leave a hole beneath it. */}
+      <div className="flex items-center justify-between gap-3 pt-3.5 mt-auto border-t border-slate-100">
         {/* Status Button / Pill */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {/* Settlement is checked before job.status, because a job can be
               finished and still owe money - "Yopildi" over an unpaid invoice
               would be the wrong thing to say. */}
@@ -132,25 +136,43 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
                 onPayInvoice?.(job);
               }}
               disabled={!onPayInvoice}
-              className="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white text-[12px] font-black transition-all cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+              className="w-full min-w-0 h-11 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white text-[12px] font-black transition-all cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
             >
               <Wallet size={14} className="stroke-[2.5]" />
-              {language === 'uz' ? "To'lov qilish" : language === 'ru' ? "Оплатить" : "Pay invoice"}
+              <span className="truncate">
+                {language === 'uz' ? "To'lov qilish" : language === 'ru' ? "Оплатить" : "Pay invoice"}
+              </span>
             </button>
           ) : job.payoutStatus === 'payment_declared' ? (
-            <span className="w-full py-2 rounded-lg bg-sky-50 text-sky-700 border border-sky-100 text-[12px] font-bold flex items-center justify-center gap-1.5">
+            <span className="w-full min-w-0 h-11 rounded-lg bg-sky-50 text-sky-700 border border-sky-100 text-[12px] font-bold flex items-center justify-center gap-1.5">
               <Hourglass size={14} />
-              {language === 'uz' ? "Tasdiqlanishi kutilmoqda" : language === 'ru' ? "Ожидает подтверждения" : "Awaiting confirmation"}
+              <span className="truncate">
+                {language === 'uz' ? "Tasdiqlanishi kutilmoqda" : language === 'ru' ? "Ожидает подтверждения" : "Awaiting confirmation"}
+              </span>
             </span>
           ) : job.payoutStatus === 'payment_confirmed' ? (
-            <span className="w-full py-2 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-[12px] font-bold flex items-center justify-center gap-1.5">
+            <span className="w-full min-w-0 h-11 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-[12px] font-bold flex items-center justify-center gap-1.5">
               <CheckCircle2 size={14} />
-              {language === 'uz' ? "To'lov tasdiqlandi" : language === 'ru' ? "Оплата подтверждена" : "Payment confirmed"}
+              <span className="truncate">
+                {language === 'uz' ? "To'lov tasdiqlandi" : language === 'ru' ? "Оплата подтверждена" : "Payment confirmed"}
+              </span>
+            </span>
+          ) : job.status === 'cancelled' ? (
+            /* There was no branch for this, so a cancelled posting fell through
+               to "Kutilyapti" and claimed on the dashboard to be waiting for a
+               worker while the jobs screen counted it, correctly, as history. */
+            <span className="w-full min-w-0 h-11 rounded-lg bg-rose-50 text-rose-600 border border-rose-100 text-[12px] font-bold flex items-center justify-center gap-1.5">
+              <XCircle size={14} />
+              <span className="truncate">
+                {language === 'uz' ? "Bekor qilindi" : language === 'ru' ? "Отменено" : "Cancelled"}
+              </span>
             </span>
           ) : job.status === 'completed' ? (
-            <span className="w-full py-2 rounded-lg bg-slate-100 text-slate-600 text-[12px] font-bold flex items-center justify-center gap-1.5">
+            <span className="w-full min-w-0 h-11 rounded-lg bg-slate-100 text-slate-600 text-[12px] font-bold flex items-center justify-center gap-1.5">
               <CheckCircle2 size={14} />
-              {language === 'uz' ? "Yopildi" : language === 'ru' ? "Завершено" : "Closed"}
+              <span className="truncate">
+                {language === 'uz' ? "Yopildi" : language === 'ru' ? "Завершено" : "Closed"}
+              </span>
             </span>
           ) : job.status === 'in_progress' ? (
             <button
@@ -158,10 +180,12 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
                 e.stopPropagation();
                 onComplete(job.id);
               }}
-              className="w-full py-2 rounded-lg bg-brand-primary hover:bg-brand-primary/90 text-white text-[12px] font-black transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full min-w-0 h-11 rounded-lg bg-brand-primary hover:bg-brand-primary/90 text-white text-[12px] font-black transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
               <CheckCircle2 size={14} />
-              {language === 'uz' ? "Yakunlash" : language === 'ru' ? "Завершить" : "Complete"}
+              <span className="truncate">
+                {language === 'uz' ? "Yakunlash" : language === 'ru' ? "Завершить" : "Complete"}
+              </span>
             </button>
           ) : job.status === 'start_requested' ? (
             <button
@@ -169,28 +193,34 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
                 e.stopPropagation();
                 if (onConfirmStart) onConfirmStart(job.id);
               }}
-              className="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[12px] font-black transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full min-w-0 h-11 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[12px] font-black transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
               <CheckCircle2 size={14} />
-              {language === 'uz' ? "Tasdiqlash" : language === 'ru' ? "Подтвердить" : "Confirm"}
+              <span className="truncate">
+                {language === 'uz' ? "Tasdiqlash" : language === 'ru' ? "Подтвердить" : "Confirm"}
+              </span>
             </button>
           ) : job.status === 'confirmed' ? (
-            <span className="w-full py-2 rounded-lg bg-brand-primary/10 text-brand-primary text-[12px] font-black flex items-center justify-center gap-1.5">
+            <span className="w-full min-w-0 h-11 rounded-lg bg-brand-primary/10 text-brand-primary text-[12px] font-black flex items-center justify-center gap-1.5">
               <CheckCircle2 size={14} />
-              {language === 'uz' ? "Ishchi olindi" : language === 'ru' ? "Работник нанят" : "Worker Hired"}
+              <span className="truncate">
+                {language === 'uz' ? "Ishchi olindi" : language === 'ru' ? "Работник нанят" : "Worker Hired"}
+              </span>
             </span>
           ) : (
-            <span className="w-full py-2 rounded-lg bg-blue-50 text-blue-600 text-[12px] font-bold flex items-center justify-center gap-1.5">
+            <span className="w-full min-w-0 h-11 rounded-lg bg-blue-50 text-blue-600 text-[12px] font-bold flex items-center justify-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-              {language === 'uz' ? "Kutilyapti" : language === 'ru' ? "Ожидание" : "Waiting"}
+              <span className="truncate">
+                {language === 'uz' ? "Kutilyapti" : language === 'ru' ? "Ожидание" : "Waiting"}
+              </span>
             </span>
           )}
         </div>
 
         {/* Workers Counter */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-lg">
-          <Users size={14} className="text-slate-400" />
-          <span className="text-[12px] font-black text-slate-700">{hired}/{vac}</span>
+        <div className="flex items-center gap-1.5 h-11 px-3.5 shrink-0 bg-slate-50 rounded-lg">
+          <Users size={15} className="text-slate-400" />
+          <span className="text-[13px] font-black text-slate-700 tabular-nums">{hired}/{vac}</span>
         </div>
       </div>
       

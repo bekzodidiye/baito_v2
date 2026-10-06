@@ -67,7 +67,7 @@ export const ProfileInfoView: React.FC<ProfileInfoViewProps> = (props) => {
           className="w-[88px] h-[88px] rounded-full border border-dashed border-slate-300 hover:border-brand-primary/40 flex items-center justify-center relative bg-white cursor-pointer transition-all active:scale-95 group shadow-3xs"
         >
           {profileImage ? (
-            <img src={profileImage} alt="Avatar Preview" className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
+            <img src={profileImage} alt={language === 'ru' ? "Предпросмотр фото профиля" : language === 'en' ? "Profile photo preview" : "Profil rasmi ko'rinishi"} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
           ) : (
             <Camera size={30} className="text-slate-400 group-hover:text-brand-primary transition-colors stroke-[2.2]" />
           )}
@@ -76,7 +76,7 @@ export const ProfileInfoView: React.FC<ProfileInfoViewProps> = (props) => {
           </div>
         </div>
         <input
-              aria-label="Profil rasmini yuklash" type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
+              aria-label={language === 'ru' ? "Загрузить фото профиля" : language === 'en' ? "Upload a profile photo" : "Profil rasmini yuklash"} type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
         <p className="mt-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{t.uploadPhoto}</p>
       </div>
 

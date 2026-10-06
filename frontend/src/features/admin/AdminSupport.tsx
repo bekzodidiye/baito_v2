@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { SupportTicket, SupportTicketDetail } from './types';
 import { Headphones, User } from 'lucide-react';
 import { SupportTicketChat } from './SupportTicketChat';
@@ -18,6 +20,8 @@ const formatTicketTime = (raw?: string): string => {
 };
 
 export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'new' | 'open' | 'resolved'>('all');
   // The list carries no messages, so selecting a ticket has to fetch it.
@@ -86,7 +90,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
         <div>
           <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
             <Headphones size={20} className="text-blue-600" />
-            <span>Support Ticketlar va Yordam Chat</span>
+            <span>{a.supportTitle}</span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">
             Foydalanuvchilardan kelgan murojaatlar va nizoli holatlarga tezkor javob bering
@@ -101,7 +105,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
                 activeTab === tab ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              {tab === 'all' ? 'Barchasi' : tab === 'new' ? 'Yangi' : tab === 'open' ? 'Jarayonda' : 'Hal etildi'}
+              {tab === 'all' ? a.statusAll : tab === 'new' ? a.ticketNew : tab === 'open' ? a.chipInProgress : a.ticketResolved}
             </button>
           ))}
         </div>

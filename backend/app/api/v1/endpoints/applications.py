@@ -8,9 +8,8 @@ from sqlalchemy.orm import Session
 from app import crud, models
 from app.api import deps
 from app.core.money import parse_salary_amounts, salary_to_uzs
-from app.services.escrow_service import fee_for, job_fee_percent, worker_share
+from app.services.earnings_service import fee_for, job_fee_percent
 from app.models.job import JobStatus
-from app.services.escrow_service import EscrowService
 from app.services import job_days
 from app.services.work_dates import get_job_dates_set
 
@@ -63,22 +62,24 @@ def get_worker_applications(
     jobs = db.query(models.Job).filter(models.Job.id.in_(job_ids)).all()
     job_map = {j.id: j for j in jobs}
 
-    # The commission is the employer's: a worker is paid the wage the posting
-    # advertised, in full. What is read back here is the escrow hold, which
-    # knows exactly what it owes — including for the jobs hired before the fee
-    # moved off the worker's side, which are still settled on their old terms.
+    # The commission is the company's: a worker is paid the wage the posting
+    # advertised, in full. Days already worked have a row saying exactly what
+    # was credited, which is what to quote — a posting edited since would
+    # otherwise restate work already done at the new figure.
     # One query for the lot rather than one per application.
-    holds = (
+    earnings = (
         db.query(models.Transaction)
         .filter(
             models.Transaction.jobId.in_(job_ids),
-            models.Transaction.type == "escrow_hold",
+            # The wage only. A bonus is carried on the application row and
+            # added below, so counting it here too would double it.
+            models.Transaction.type == "worker_earning",
         )
         .all()
     ) if job_ids else []
-    owed_by_hold: dict[str, int] = {}
-    for h in holds:
-        owed_by_hold[h.jobId] = owed_by_hold.get(h.jobId, 0) + worker_share(h, db)
+    credited: dict[str, int] = {}
+    for e in earnings:
+        credited[e.jobId] = credited.get(e.jobId, 0) + (e.amount or 0) // 100
 
     result = []
     for app in apps:
@@ -92,10 +93,10 @@ def get_worker_applications(
         # What the worker is told they earned has to be what reached their
         # balance. The commission is charged to the employer on top of the wage,
         # so for anyone hired since that changed the two are simply the posted
-        # salary. The escrow hold is still the source: a job hired under the old
-        # arrangement pays what it promised then, and quoting the posting's
-        # figure for it would overstate what actually arrived.
-        net_wage = owed_by_hold.get(job.id, base_salary)
+        # salary. A day already worked has its own row saying what was
+        # credited, and quoting the posting's figure instead would restate it
+        # at whatever the salary says today.
+        net_wage = credited.get(job.id, base_salary)
 
         result.append({
             "id": app.id,
@@ -238,7 +239,11 @@ def hire_applicant(
     id: str,
     current_user: models.User = Depends(deps.get_current_employer),
 ) -> Any:
-    """Hire an applicant and put the wage into escrow."""
+    """Hire an applicant.
+
+    Takes nothing from the employer. The wage is credited to the worker as
+    each day is worked, and the company is invoiced for it afterwards.
+    """
     app, job = _load_owned_application(db, id, current_user)
     db.refresh(app)
 
@@ -285,10 +290,10 @@ def hire_applicant(
     wage = salary_to_uzs(job.salary)
     if wage <= 0 and parse_salary_amounts(job.salary, bounded=False):
         # A figure was written but the parser cannot represent it, so the wage
-        # collapses to zero. Hiring then took nothing into escrow while the
+        # collapses to zero. The worker would then be credited nothing while the
         # listing still advertised the full amount, and the worker was owed
         # nothing for the work. A salary with no figure at all ("kelishilgan
-        # holda") is a different case and still hires without escrow.
+        # holda") is a different case and still hires, owing nothing fixed.
         raise HTTPException(
             status_code=400,
             detail="E'londagi maosh tizim qabul qila oladigan chegaradan tashqarida, "
@@ -301,48 +306,25 @@ def hire_applicant(
     # day's wage for the whole run and the worker was paid once for all of it.
     days = job_days.sync_days(db, job)
 
-    # Checked before a single hold is taken, so the employer is told the real
-    # figure once instead of watching day one freeze and day two fail. A
-    # three-day shift costs three times the posted wage, and that is not
-    # obvious from a form that asks for one number.
-    # The wage is the worker's in full; the platform's commission is charged to
-    # the employer on top of it. Leaving the fee out of this check would let
-    # hiring pass here and then fail inside hold_funds on the employer's
-    # balance — the exact "day one froze, day two failed" split this check
-    # exists to prevent.
+    # What the posting will cost the company, day by day. Nothing is taken
+    # now: the wage is credited to the worker as each day is worked, and the
+    # company is invoiced for it afterwards. Money used to leave the employer's
+    # balance here as well, and the invoice raised later billed the same shift
+    # again with nothing ever giving the first back.
     day_count = max(1, len(days))
     fee_per_day = fee_for(wage, job_fee_percent(db, job))
-    day_count = max(1, len(days))
-    fee_per_day = fee_for(wage, job_fee_percent(db, job))
-
-
-    escrow_held = False
-    if wage > 0:
-        # Freeze the wage now so the worker is not left chasing an employer
-        # who has since spent the money.
-        if days:
-            for day in days:
-                EscrowService.hold_funds(
-                    db, employer_id=job.employerId, job_id=job.id,
-                    amount_uzs=wage, job_day_id=day.id,
-                )
-                # Frozen here rather than read from the posting later: an
-                # employer editing the salary afterwards must not change what
-                # is owed for a day already agreed.
-                day.amount = wage
-                db.add(day)
-        else:
-            # No parseable date at all. Still one day of somebody's work.
-            EscrowService.hold_funds(
-                db, employer_id=job.employerId, job_id=job.id, amount_uzs=wage
-            )
-        escrow_held = True
+    if wage > 0 and days:
+        for day in days:
+            # Pinned here rather than read from the posting later: an employer
+            # editing the salary afterwards must not change what is owed for a
+            # day already agreed.
+            day.amount = wage
+            db.add(day)
 
     app.status = "hired"
     job.status = JobStatus.CONFIRMED
-    # auto_release_escrow reads this to decide who to pay. Nothing wrote it, so
-    # that task fell through "nobody to pay" on every run and the wage of a
-    # finished, undisputed job stayed frozen until a human released it.
+    # The settlement task reads this to decide who to pay. Nothing wrote it,
+    # so that task fell through "nobody to pay" on every run.
     if job.hiredWorkerId is None:
         job.hiredWorkerId = app.workerId
     db.add(job)
@@ -387,12 +369,11 @@ def hire_applicant(
     return {
         "success": True,
         "application_status": "hired",
-        "escrow_held": escrow_held,
         # What actually left the employer's balance: the wage plus the
         # commission charged on top of it, for every day of the posting.
-        "escrow_amount": (wage + fee_per_day) * day_count if escrow_held else 0,
-        "escrow_wage": wage * day_count if escrow_held else 0,
-        "escrow_fee": fee_per_day * day_count if escrow_held else 0,
+        "expected_invoice": (wage + fee_per_day) * day_count if wage > 0 else 0,
+        "expected_wage": wage * day_count if wage > 0 else 0,
+        "expected_fee": fee_per_day * day_count if wage > 0 else 0,
     }
 
 

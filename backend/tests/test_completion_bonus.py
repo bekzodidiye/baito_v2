@@ -63,10 +63,11 @@ def test_the_bonus_reaches_the_worker_in_full(finished_job):
     # taken from the bonus - only from the wage.
     assert _balance(ctx["worker"].id) == NET_WAGE + 25_000
     # The employer funds it, on top of the wage they escrowed at hire.
-    assert _balance(ctx["employer"].id) == employer_before - 25_000
+    # The employer is not debited: the bonus goes on the invoice with the wage.
+    assert _balance(ctx["employer"].id) == employer_before
 
 
-def test_both_sides_are_recorded_in_the_ledger(finished_job):
+def test_the_credit_is_recorded_in_the_ledger(finished_job):
     ctx = finished_job
     ctx["client"].post(
         f"/api/v1/jobs/{ctx['job'].id}/complete",
@@ -78,8 +79,8 @@ def test_both_sides_are_recorded_in_the_ledger(finished_job):
             .filter(models.AuditLedger.entryType == "completion_bonus")
             .all()
         )
-        deltas = sorted(e.amountDelta for e in entries)
-        assert deltas == [-25_000, 25_000]
+        # One entry, the worker's. The employer's balance is not touched.
+        assert sorted(e.amountDelta for e in entries) == [25_000]
 
 
 def test_completion_without_a_bonus_pays_the_wage_only(finished_job):
@@ -95,38 +96,76 @@ def test_completion_without_a_bonus_pays_the_wage_only(finished_job):
     assert _balance(ctx["employer"].id) == employer_before
 
 
-@pytest.mark.skip(reason="Balance checks removed from hiring logic")
-def test_a_bonus_the_employer_cannot_cover_changes_nothing(finished_job):
-    """The check runs before any row changes, so a refusal is a clean no-op:
-    the job is still completable, and nobody has been paid."""
-    ctx = finished_job
+# --- a bonus bigger than the balance ----------------------------------------
+#
+# Hiring stopped requiring a funded balance (#153), so an employer is normally
+# already in debt for the wage by the time they reach completion. The check
+# left behind in pay_completion_bonus could therefore only ever refuse — and it
+# refused into a `except HTTPException` that logged and moved on, so the
+# employer entered a bonus, was told the completion succeeded, and the worker
+# received nothing. These three pin the behaviour it was replaced with.
+
+def _skint(ctx, balance=10_000):
     with SessionLocal() as db:
-        employer = db.query(models.User).filter(
+        db.query(models.User).filter(
             models.User.id == ctx["employer"].id
-        ).first()
-        employer.balance = 10_000
+        ).first().balance = balance
         db.commit()
+
+
+def test_a_bonus_bigger_than_the_balance_still_reaches_the_worker(finished_job):
+    ctx = finished_job
+    _skint(ctx)
 
     res = ctx["client"].post(
         f"/api/v1/jobs/{ctx['job'].id}/complete",
         json={"rating": 5, "bonus": 500_000},
     )
-    assert res.status_code == 400
-    assert "bonus" in res.json()["detail"].lower()
 
+    assert res.status_code == 200, res.text
+    assert res.json()["bonus_paid_workers"] == 1
+    assert _balance(ctx["worker"].id) == NET_WAGE + 500_000
+    # An employer with almost nothing on their balance can still award a
+    # bonus: nothing is taken from them, the invoice collects it afterwards.
     assert _balance(ctx["employer"].id) == 10_000
-    assert _balance(ctx["worker"].id) == 0
+
+
+def test_the_employer_is_not_told_a_bonus_was_paid_that_was_not(finished_job):
+    """The reported defect: 200, bonus_paid_workers 0, and no word of it.
+
+    The same worker came back in both paid_workers and unpaid_workers, because
+    the bonus raised out of the block that had just recorded the wage as paid.
+    """
+    ctx = finished_job
+    _skint(ctx)
+
+    body = ctx["client"].post(
+        f"/api/v1/jobs/{ctx['job'].id}/complete",
+        json={"rating": 5, "bonus": 500_000},
+    ).json()
+
+    assert body["paid_workers"] == 1
+    assert body["unpaid_workers"] == 0
+
+
+def test_the_worker_is_told_about_the_bonus_too(finished_job):
+    ctx = finished_job
+    _skint(ctx)
+
+    ctx["client"].post(
+        f"/api/v1/jobs/{ctx['job'].id}/complete",
+        json={"rating": 5, "bonus": 500_000},
+    )
 
     with SessionLocal() as db:
-        job = db.query(models.Job).filter(models.Job.id == ctx["job"].id).first()
-        assert job.status != "completed"
-
-    # And the same job still completes once the bonus is affordable.
-    retry = ctx["client"].post(
-        f"/api/v1/jobs/{ctx['job'].id}/complete", json={"rating": 5, "bonus": 0}
-    )
-    assert retry.status_code == 200, retry.text
-    assert _balance(ctx["worker"].id) == NET_WAGE
+        note = (
+            db.query(models.Notification)
+            .filter(models.Notification.userId == ctx["worker"].id,
+                    models.Notification.type == "completed")
+            .first()
+        )
+        assert note is not None
+        assert "bonus" in note.message
 
 
 def test_earned_amount_equals_what_the_worker_was_paid(finished_job):

@@ -7,7 +7,7 @@ class Transaction(Base):
     id = Column(String, primary_key=True, default=generate_uuid, index=True)
     jobId = Column(String, ForeignKey("jobs.id"), index=True)
     # Which day of the posting this holds money for. A multi-day shift
-    # takes one escrow hold per day, so a day can be released when it is
+    # credits the worker once per day, so a day that was worked can be
     # worked and refunded when it is not. Null on everything else — top-ups,
     # payouts, and the single-day holds made before this existed.
     jobDayId = Column(String, ForeignKey("job_days.id"), nullable=True, index=True)
@@ -19,7 +19,7 @@ class Transaction(Base):
     # the rate, and the worker is quoted their net wage when they apply — so the
     # rate has to be the one in force when the money was frozen, not whatever it
     # happens to be on payout day. Null on holds made before this existed, and
-    # on everything that is not an escrow hold.
+    # on everything that is not a worker credit.
     feePercent = Column(Float, nullable=True)
     type = Column(String, nullable=False, index=True) # 'deposit' | 'withdraw' | 'payment'
     status = Column(String, nullable=False, default='pending', index=True) # 'pending' | 'paid' | 'canceled'

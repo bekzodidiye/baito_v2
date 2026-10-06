@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ADMIN_TEXTS } from './admin.i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 import { apiClient } from '../../api/client';
 import { AdminUserDetailResponse } from './types';
 import { PlusCircle, Wallet, History, AlertCircle, FileText, Send, CheckCircle, Clock, XCircle, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
@@ -11,6 +13,8 @@ interface UserTabsExtraProps {
 }
 
 export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab, onAddBalance }) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const user = detail?.user || { id: '', name: 'Foydalanuvchi', role: 'worker', balance: 0, adminNotes: [] };
   const sessions = detail?.sessions || [];
   const transactions = detail?.transactions || [];
@@ -71,7 +75,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
     switch (status) {
       case 'completed': return <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded flex items-center gap-1"><CheckCircle size={10} /> Yakunlangan</span>;
       case 'active': return <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded flex items-center gap-1"><Clock size={10} /> Faol</span>;
-      case 'cancelled': return <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded flex items-center gap-1"><XCircle size={10} /> Bekor qilingan</span>;
+      case 'cancelled': return <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded flex items-center gap-1"><XCircle size={10} /> {a.cancelledLabel}</span>;
       default: return <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-bold rounded flex items-center gap-1"><Clock size={10} /> Kutilmoqda</span>;
     }
   };
@@ -100,7 +104,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
           
           <div className="p-2">
             {transactions.length === 0 ? (
-              <div className="text-center text-slate-500 py-6 text-sm">Tranzaksiyalar mavjud emas</div>
+              <div className="text-center text-slate-500 py-6 text-sm">{a.noTransactions}</div>
             ) : (
               transactions.map(t => (
                 <div key={t.id} className="flex items-center justify-between p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors">
@@ -141,8 +145,8 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
             <table className="w-full text-left border-collapse">
               <thead className="bg-white text-slate-400 font-bold text-[11px] uppercase tracking-wider border-b border-slate-100">
                 <tr>
-                  <th className="p-4 font-bold">Sana</th>
-                  <th className="p-4 font-bold">Mijoz / Ishchi</th>
+                  <th className="p-4 font-bold">{a.dateLabel}</th>
+                  <th className="p-4 font-bold">{a.clientOrWorker}</th>
                   <th className="p-4 font-bold">Summa</th>
                   <th className="p-4 font-bold">Holat</th>
                 </tr>
@@ -150,7 +154,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
               <tbody className="divide-y divide-slate-100">
                 {orders.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="p-4 text-center text-[13px] text-slate-500 font-medium">Buyurtmalar yo'q</td>
+                    <td colSpan={4} className="p-4 text-center text-[13px] text-slate-500 font-medium">{a.noOrders}</td>
                   </tr>
                 ) : (
                   orders.map(o => (
@@ -208,7 +212,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
             <div className="p-5">
               <form onSubmit={handleTopUpSubmit} className="flex flex-col gap-3 max-w-sm">
                 <input
-              aria-label="To'ldirish summasi" 
+              aria-label={a.topUpAmount} 
                   type="number" 
                   value={topUpAmount} 
                   onChange={(e) => setTopUpAmount(e.target.value)} 
@@ -217,12 +221,12 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
                   required 
                 />
                 <input
-                  aria-label="To'ldirish sababi"
+                  aria-label={a.topUpReason}
                   type="text"
                   value={topUpReason}
                   onChange={(e) => setTopUpReason(e.target.value)}
                   className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-sm text-slate-900 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all"
-                  placeholder="Sabab (audit uchun)"
+                  placeholder={a.reasonForAudit}
                   minLength={3}
                   required
                 />
@@ -242,12 +246,12 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
       <div className="space-y-4">
         <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50 overflow-hidden">
           <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-            <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Foydalanuvchiga berilgan sharhlar</span>
+            <span className="text-xs font-black text-slate-800 uppercase tracking-wider">{a.reviewsAboutUser}</span>
           </div>
           
           <div className="p-5 space-y-4">
             {reviews.length === 0 ? (
-              <div className="text-center text-slate-500 py-6 text-sm">Sharhlar mavjud emas</div>
+              <div className="text-center text-slate-500 py-6 text-sm">{a.noReviews}</div>
             ) : (
               reviews.map((r, i) => (
                 <div key={i} className="p-4 bg-slate-50 rounded-[12px] border border-slate-100">
@@ -285,13 +289,13 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
           
           <div className="p-2">
             {sessions.length === 0 ? (
-              <div className="text-center text-slate-500 py-6 text-sm">Sessiyalar mavjud emas</div>
+              <div className="text-center text-slate-500 py-6 text-sm">{a.noSessions}</div>
             ) : (
               sessions.map((s, i) => (
                 <div key={i} className="flex items-center justify-between p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors">
                   <div>
-                    <div className="text-[13px] font-bold text-slate-900 mb-0.5">{s.ip || 'Noma\'lum IP'}</div>
-                    <div className="text-[11px] font-semibold text-slate-500">{s.location || 'Noma\'lum'}, {s.device || 'Noma\'lum'}</div>
+                    <div className="text-[13px] font-bold text-slate-900 mb-0.5">{s.ip || a.unknownIp}</div>
+                    <div className="text-[11px] font-semibold text-slate-500">{s.location || a.unknown}, {s.device || a.unknown}</div>
                   </div>
                   <span className="text-[12px] font-bold text-slate-400">{s.date ? formatDate(s.date) : ''}</span>
                 </div>
@@ -336,7 +340,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
                 type="text" 
                 value={newNote} 
                 onChange={(e) => setNewNote(e.target.value)} 
-                placeholder="Yangi izoh yozing..." 
+                placeholder={a.writeNewNote} 
                 className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-[13px] text-slate-900 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all" 
                 required 
                 disabled={isSubmitting}

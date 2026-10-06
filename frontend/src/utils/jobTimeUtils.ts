@@ -1,3 +1,4 @@
+import { parseWorkDates } from './workDates';
 import { Job } from '../types';
 
 /**
@@ -39,9 +40,16 @@ export const getJobDateDisplay = (job: Job): string => {
 };
 
 /**
- * Extract duration label (e.g. "1 kunlik")
+ * How long a posting runs for, as it appears on its card.
+ *
+ * This used to fall through to a flat "1 kunlik" whenever `durationLabel` was
+ * missing, which is always: the field is on the Job row but not on JobCreate,
+ * so nothing a client sends ever reaches it. That was survivable while a
+ * five-day shift was five separate one-day postings. It is one posting again,
+ * so a card that says "1 kunlik" for a five-day run is now simply wrong —
+ * count the days instead.
  */
-export const getJobDuration = (job: Job): string => {
+export const getJobDuration = (job: Job, language: 'uz' | 'ru' | 'en' = 'uz'): string => {
   if (job.durationLabel && !/\d{4}-\d{2}-\d{2}/.test(job.durationLabel)) {
     return job.durationLabel;
   }
@@ -49,5 +57,8 @@ export const getJobDuration = (job: Job): string => {
     const match = job.periodText.match(/\((\d+\s*soat[^)]*)\)/);
     if (match) return match[1];
   }
-  return '1 kunlik';
+  const days = Math.max(1, parseWorkDates(job.workDate).length);
+  if (language === 'ru') return `${days} дн.`;
+  if (language === 'en') return days === 1 ? '1 day' : `${days} days`;
+  return `${days} kunlik`;
 };
