@@ -105,9 +105,15 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
 
       {/* Tabs. Five of them now, so they come from a list rather than five
           near-identical blocks - the pair in the middle is settlement, which
-          runs on after the work is finished. Scrolls sideways below sm; five
-          fixed columns would be unreadable on a phone. */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex gap-1 p-1.5 bg-slate-100/80 rounded-2xl w-full max-w-3xl mx-auto mt-2 mb-2 relative z-10 overflow-x-auto">
+          runs on after the work is finished.
+
+          No width cap of its own. It was `max-w-3xl` — 768px — while the five
+          Uzbek labels need 875px, so "Tarix" sat 107px off the right edge on
+          every screen, behind a sideways scroll with nothing to say it was
+          there. The page it sits on is already `max-w-6xl`; inside that the
+          strip has 1104px and all five fit with room to spare. `overflow-x-auto`
+          stays for the phones, where five columns genuinely will not fit. */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex gap-1 p-1.5 bg-slate-100/80 rounded-2xl w-full mt-2 mb-2 relative z-10 overflow-x-auto">
         {([
           { id: 'open' as const, icon: Clock, count: openJobs.length, tone: 'text-brand-primary', badge: 'bg-brand-primary/10 text-brand-primary',
             label: language === 'uz' ? "Ochiq" : language === 'ru' ? "Открытые" : "Open" },
