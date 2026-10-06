@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { EmployerStatsBanner } from './EmployerStatsBanner';
 import { EmployerJobsList } from './EmployerJobsList';
+import { parseWorkDates } from '../../utils/workDates';
 
 interface EmployerDashboardProps {
   onPostJobClick: () => void;
@@ -67,9 +68,22 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
     }
   }, []); // Run once on mount
 
-  // Filter jobs by selected date
+  // The postings worked on the chosen day.
+  //
+  // This compared `job.workDate === selectedFullDateStr`. A posting's workDate
+  // holds every day it is worked — "2026-09-20, 2026-09-21, 2026-09-22" — and
+  // that string equals no single day, so a shift running over more than one day
+  // appeared under none of them. `parseWorkDates` is what the rest of the app
+  // reads the field with.
+  //
+  // Cancelled postings are left out. The day strip answers "what is happening
+  // on this day", and they are not: two cancelled test postings showed under
+  // today while the jobs screen counted, correctly, none open.
   const selectedFullDateStr = dates[selectedDate].fullDateStr;
-  const filteredJobs = postedJobs.filter(job => job.workDate === selectedFullDateStr);
+  const filteredJobs = postedJobs.filter(job =>
+    job.status !== 'cancelled'
+    && parseWorkDates(job.workDate).includes(selectedFullDateStr),
+  );
 
   return (
     <div className="w-full max-w-6xl mx-auto flex flex-col gap-6 pb-6">

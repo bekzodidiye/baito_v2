@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { MapPin, CheckCircle2, Trash2, Users, Calendar, Wallet, Hourglass } from 'lucide-react';
+import { MapPin, CheckCircle2, Trash2, Users, Calendar, Wallet, Hourglass, XCircle } from 'lucide-react';
 import { Job } from '../../types';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { workDateSummary } from '../../utils/workDates';
@@ -155,6 +155,16 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
               <CheckCircle2 size={14} />
               <span className="truncate">
                 {language === 'uz' ? "To'lov tasdiqlandi" : language === 'ru' ? "Оплата подтверждена" : "Payment confirmed"}
+              </span>
+            </span>
+          ) : job.status === 'cancelled' ? (
+            /* There was no branch for this, so a cancelled posting fell through
+               to "Kutilyapti" and claimed on the dashboard to be waiting for a
+               worker while the jobs screen counted it, correctly, as history. */
+            <span className="w-full min-w-0 h-11 rounded-lg bg-rose-50 text-rose-600 border border-rose-100 text-[12px] font-bold flex items-center justify-center gap-1.5">
+              <XCircle size={14} />
+              <span className="truncate">
+                {language === 'uz' ? "Bekor qilindi" : language === 'ru' ? "Отменено" : "Cancelled"}
               </span>
             </span>
           ) : job.status === 'completed' ? (

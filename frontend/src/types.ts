@@ -13,7 +13,11 @@ export interface Job {
   urgent: boolean;
   applied: boolean;
   bookmarked: boolean;
-  status: 'applied' | 'confirmed' | 'todo' | 'completed' | 'none' | 'open' | 'in_progress' | 'start_requested' | 'hired';
+  // `cancelled` is what `DELETE /jobs/{id}` writes, and it was missing here.
+  // So TypeScript could not warn that the employer card had no branch for
+  // it, and a cancelled posting fell through to the "waiting for a worker"
+  // pill. `jobStatusUnion.test.ts` reads the backend's own list now.
+  status: 'applied' | 'confirmed' | 'todo' | 'completed' | 'cancelled' | 'none' | 'open' | 'in_progress' | 'start_requested' | 'hired';
   description: string;
   hourlyRate?: string;
   transportRate?: string;
