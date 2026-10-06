@@ -54,6 +54,35 @@ export const createCachedTileLayer = (urlTemplate: string, options: L.TileLayerO
   return new CachedTileLayer(urlTemplate, options);
 };
 
+/** OpenStreetMap's highest zoom. Past it there is no tile to fall back to. */
+const OSM_MAX_ZOOM = 19;
+
+/** The same square from OpenStreetMap, for a tile the base layer could not load.
+ *
+ *  This used to be one fixed URL — `.../1/0/0.png`, the whole world at zoom 1 —
+ *  handed to every tile that failed. The map does not come from OpenStreetMap;
+ *  it comes from an undocumented Google endpoint that can stop answering at any
+ *  time, and on the day it does this was the fallback: a grid of identical
+ *  stretched world maps where the map used to be.
+ */
+export const osmFallbackUrl = (coords?: L.Coords | null): string | null => {
+  if (!coords || coords.z > OSM_MAX_ZOOM) return null;
+  const { x, y, z } = coords;
+  if ([x, y, z].some(n => typeof n !== 'number' || !Number.isFinite(n))) return null;
+  return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+};
+
+/** Put that square in place of the tile that failed, once. */
+export const tileErrorFallback = (e: L.TileErrorEvent): void => {
+  const target = e.tile as HTMLImageElement | undefined;
+  // Retrying a tile that already fell back would loop if the fallback fails too.
+  if (!target || target.dataset.fallbackTried) return;
+  const url = osmFallbackUrl(e.coords);
+  if (!url) return;
+  target.dataset.fallbackTried = 'true';
+  target.src = url;
+};
+
 // TileLayer instances are cached per map, never globally: a Leaflet layer can
 // only belong to one map at a time. Handing the same instance to a second map
 // silently unregisters it from the first, which then reports getMaxZoom() as
@@ -81,14 +110,6 @@ export const createTileLayers = (mapType: MapType, map: L.Map) => {
     maxNativeZoom: 19,
     maxZoom: 20,
     crossOrigin: 'anonymous',
-  };
-
-  const tileErrorFallback = (e: L.TileErrorEvent) => {
-    const target = e.tile as HTMLImageElement;
-    if (target && !target.dataset.fallbackTried) {
-      target.dataset.fallbackTried = 'true';
-      target.src = 'https://a.tile.openstreetmap.org/1/0/0.png';
-    }
   };
 
   if (mapType === 'sputnik') {
