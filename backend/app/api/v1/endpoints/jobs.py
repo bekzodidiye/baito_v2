@@ -143,7 +143,7 @@ def get_my_jobs(
     """Retrieve all jobs posted by the currently authenticated employer only."""
     employer_ids = [current_user.id]
     if getattr(current_user, 'uid', None):
-        employer_ids.append(current_user.uid)
+        employer_ids.append(current_user.id)
 
     jobs = (
         db.query(models.Job)
@@ -248,7 +248,7 @@ def read_jobs(
     if employer_id:
         # Browsing another employer's full posting history — including their
         # closed and cancelled jobs — is not public information.
-        if not (is_admin or (current_user and employer_id in (current_user.id, current_user.uid))):
+        if not (is_admin or (current_user and employer_id == current_user.id)):
             raise HTTPException(status_code=403, detail="Bu ma'lumotni ko'rish huquqingiz yo'q")
         query = query.filter(models.Job.employerId == employer_id)
     elif is_employer:
@@ -270,7 +270,7 @@ def read_jobs(
             own = (
                 db.query(models.Application.jobId)
                 .filter(models.Application.workerId.in_(
-                    [current_user.id, current_user.uid]
+                    [current_user.id]
                 ))
                 .subquery()
             )
@@ -340,7 +340,7 @@ def read_jobs(
         from app.schemas.job import HiredWorkerInfo
 
         employer_job_ids = {j.id for j in jobs if j.employerId in
-                            ((current_user.id, current_user.uid) if current_user else ())}
+                            ((current_user.id,) if current_user else ())}
 
         for app in hired_apps:
             user = user_map.get(app.workerId)
@@ -381,7 +381,7 @@ def read_jobs(
                 job_status = 'hired'
             elif app_item.status == 'applied':
                 job_status = 'applied'
-        elif current_user and job.employerId in (current_user.id, current_user.uid):
+        elif current_user and job.employerId == current_user.id:
             job_apps = job_hired_apps_map.get(job.id, [])
             if job.status not in (JobStatus.IN_PROGRESS, JobStatus.COMPLETED, JobStatus.CANCELLED):
                 if any(a.status == 'in_progress' for a in job_apps):
@@ -496,7 +496,7 @@ def read_job(
     if not job:
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
 
-    is_owner = bool(current_user and job.employerId in (current_user.id, current_user.uid))
+    is_owner = bool(current_user and job.employerId == current_user.id)
     is_admin = bool(current_user and current_user.role == 'admin')
     if job.status in JobStatus.CLOSED_STATUSES and not (is_owner or is_admin):
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
@@ -521,7 +521,7 @@ def update_job(
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
 
     is_admin = current_user.role == 'admin'
-    if not is_admin and job.employerId not in (current_user.id, current_user.uid):
+    if not is_admin and job.employerId != current_user.id:
         raise HTTPException(status_code=403, detail="Bu e'lonni tahrirlash huquqingiz yo'q")
 
     if job.status in JobStatus.CLOSED_STATUSES and not is_admin:
@@ -629,7 +629,7 @@ def delete_job(
     job = crud.job.get(db=db, id=id)
     if not job:
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
-    if job.employerId not in (current_user.id, current_user.uid) and current_user.role != 'admin':
+    if job.employerId != current_user.id and current_user.role != 'admin':
         raise HTTPException(status_code=403, detail="Bu e'lonni o'chirish huquqingiz yo'q")
 
     if job.status == JobStatus.IN_PROGRESS:

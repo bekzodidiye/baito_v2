@@ -207,10 +207,10 @@ def login(
 
     # Signing in is a write on this user's rows already: the sessions they have
     # let go idle are closed here rather than left reading "active" forever.
-    expire_idle(db, str(user.uid or user.id))
+    expire_idle(db, user.uid)
 
     session_record = ActiveSession(
-        user_uid=str(user.uid or user.id),
+        user_uid=user.uid,
         device_name=_device_name(request.headers.get("user-agent", "")),
         ip_address=request.client.host if request.client else None,
         location="Unknown Location",
@@ -220,7 +220,7 @@ def login(
     db.refresh(session_record)
 
     access_token, refresh_token = _set_auth_cookies(
-        response, str(user.uid or user.id), sid=session_record.id
+        response, user.uid, sid=session_record.id
     )
     return {
         "success": True,
@@ -280,7 +280,7 @@ def refresh(
     db.commit()
 
     access_token, refresh_token = _set_auth_cookies(
-        response, str(user.uid or user.id), sid=token_data.sid
+        response, user.uid, sid=token_data.sid
     )
     return {
         "success": True,

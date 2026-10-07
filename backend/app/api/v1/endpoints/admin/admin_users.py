@@ -126,7 +126,7 @@ def ban_user(
         sessions = (
             db.query(models.ActiveSession)
             .filter(
-                models.ActiveSession.user_uid == str(user.uid or user.id),
+                models.ActiveSession.user_uid == user.uid,
                 models.ActiveSession.is_active == True,  # noqa: E712
             )
             .all()
@@ -288,7 +288,7 @@ def get_user_detail(
 
     sessions = (
         db.query(models.ActiveSession)
-        .filter(models.ActiveSession.user_uid == (user.uid or user.id))
+        .filter(models.ActiveSession.user_uid == user.uid)
         .all()
     )
     sessions_list = [
