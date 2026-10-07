@@ -29,7 +29,7 @@ def _load_owned_application(db: Session, app_id: str, current_user: models.User)
     if not job:
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
 
-    if current_user.role != "admin" and job.employerId not in (current_user.id, current_user.uid):
+    if current_user.role != "admin" and job.employerId != current_user.id:
         raise HTTPException(status_code=403, detail="Bu arizani boshqarish huquqingiz yo'q")
 
     return app, job
@@ -52,7 +52,7 @@ def get_worker_applications(
     """All applications for the current worker, enriched with job details."""
     apps = (
         db.query(models.Application)
-        .filter(models.Application.workerId.in_([current_user.id, current_user.uid]))
+        .filter(models.Application.workerId == current_user.id)
         .all()
     )
     if not apps:
@@ -126,7 +126,7 @@ def get_employer_applications(
     """Applications for jobs posted by the current employer only."""
     employer_jobs = (
         db.query(models.Job)
-        .filter(models.Job.employerId.in_([current_user.id, current_user.uid]))
+        .filter(models.Job.employerId == current_user.id)
         .all()
     )
     if not employer_jobs:
@@ -145,14 +145,10 @@ def get_employer_applications(
     worker_ids = {a.workerId for a in apps}
     workers = (
         db.query(models.User)
-        .filter((models.User.id.in_(worker_ids)) | (models.User.uid.in_(worker_ids)))
+        .filter(models.User.id.in_(worker_ids))
         .all()
     )
-    worker_map = {}
-    for w in workers:
-        worker_map[w.id] = w
-        if w.uid:
-            worker_map[w.uid] = w
+    worker_map = {w.id: w for w in workers}
 
     # Each job carries its own rate — its category's plus its region's.
     # We batch query categories and regions to avoid N+1 queries.

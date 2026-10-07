@@ -19,7 +19,7 @@ router = APIRouter()
 def _deactivate_other_sessions(db: Session, user: models.User, keep_session_id: str | None) -> int:
     """Revoke every session except the caller's own."""
     query = db.query(ActiveSession).filter(
-        ActiveSession.user_uid == str(user.uid or user.id),
+        ActiveSession.user_uid == user.uid,
         ActiveSession.is_active == True,  # noqa: E712 — SQL boolean, not Python
     )
     if keep_session_id:
@@ -188,7 +188,7 @@ def read_active_sessions(
     rows = (
         db.query(ActiveSession)
         .filter(
-            ActiveSession.user_uid == str(current_user.uid or current_user.id),
+            ActiveSession.user_uid == current_user.uid,
             ActiveSession.is_active == True,  # noqa: E712
         )
         .order_by(ActiveSession.last_active_at.desc())
@@ -208,7 +208,7 @@ def deactivate_session(
         db.query(ActiveSession)
         .filter(
             ActiveSession.id == session_id,
-            ActiveSession.user_uid == str(current_user.uid or current_user.id),
+            ActiveSession.user_uid == current_user.uid,
         )
         .first()
     )

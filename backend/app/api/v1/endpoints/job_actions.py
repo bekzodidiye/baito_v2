@@ -298,7 +298,7 @@ def confirm_start_job(
     """
     job = _get_job_or_404(db, id)
 
-    is_employer = job.employerId in (current_user.id, current_user.uid)
+    is_employer = job.employerId == current_user.id
     if not (is_employer or current_user.role == 'admin'):
         raise HTTPException(status_code=403, detail="Faqat ish beruvchi ishni tasdiqlay oladi")
 
@@ -419,7 +419,7 @@ def complete_job_day(
     """
     job = _get_job_or_404(db, id)
 
-    if job.employerId not in (current_user.id, current_user.uid) and current_user.role != 'admin':
+    if job.employerId != current_user.id and current_user.role != 'admin':
         raise HTTPException(status_code=403, detail="Faqat ish beruvchi ishni yakunlay oladi")
 
     if job.status == JobStatus.CANCELLED:
