@@ -41,11 +41,21 @@ def _parse_to_int(salary: str | None) -> int:
     return min(amounts)
 
 def upgrade() -> None:
-    # Add columns
-    op.add_column('jobs', sa.Column('salaryInt', sa.Integer(), nullable=True))
-    op.add_column('jobs', sa.Column('hourlyRateInt', sa.Integer(), nullable=True))
-    op.add_column('jobs', sa.Column('transportRateInt', sa.Integer(), nullable=True))
-    op.create_index(op.f('ix_jobs_salaryInt'), 'jobs', ['salaryInt'], unique=False)
+    bind = op.get_bind()
+    from sqlalchemy import inspect
+    inspector = inspect(bind)
+    columns = [c["name"] for c in inspector.get_columns("jobs")]
+
+    if 'salaryInt' not in columns:
+        op.add_column('jobs', sa.Column('salaryInt', sa.Integer(), nullable=True))
+    if 'hourlyRateInt' not in columns:
+        op.add_column('jobs', sa.Column('hourlyRateInt', sa.Integer(), nullable=True))
+    if 'transportRateInt' not in columns:
+        op.add_column('jobs', sa.Column('transportRateInt', sa.Integer(), nullable=True))
+
+    indexes = [ix["name"] for ix in inspector.get_indexes("jobs")]
+    if 'ix_jobs_salaryInt' not in indexes:
+        op.create_index(op.f('ix_jobs_salaryInt'), 'jobs', ['salaryInt'], unique=False)
 
     # Data migration
     conn = op.get_bind()
@@ -63,7 +73,18 @@ def upgrade() -> None:
         )
 
 def downgrade() -> None:
-    op.drop_index(op.f('ix_jobs_salaryInt'), table_name='jobs')
-    op.drop_column('jobs', 'transportRateInt')
-    op.drop_column('jobs', 'hourlyRateInt')
-    op.drop_column('jobs', 'salaryInt')
+    bind = op.get_bind()
+    from sqlalchemy import inspect
+    inspector = inspect(bind)
+    
+    indexes = [ix["name"] for ix in inspector.get_indexes("jobs")]
+    if 'ix_jobs_salaryInt' in indexes:
+        op.drop_index(op.f('ix_jobs_salaryInt'), table_name='jobs')
+        
+    columns = [c["name"] for c in inspector.get_columns("jobs")]
+    if 'transportRateInt' in columns:
+        op.drop_column('jobs', 'transportRateInt')
+    if 'hourlyRateInt' in columns:
+        op.drop_column('jobs', 'hourlyRateInt')
+    if 'salaryInt' in columns:
+        op.drop_column('jobs', 'salaryInt')
