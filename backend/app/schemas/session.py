@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 class ActiveSessionBase(BaseModel):
@@ -21,8 +21,7 @@ class ActiveSessionInDBBase(ActiveSessionBase):
     created_at: datetime
     last_active_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ActiveSession(ActiveSessionInDBBase):
     pass

@@ -1,6 +1,6 @@
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class TransactionBase(BaseModel):
     jobId: Optional[str] = None
@@ -19,5 +19,4 @@ class TransactionOut(TransactionBase):
     cancelTime: Optional[int] = None
     cancelReason: Optional[int] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

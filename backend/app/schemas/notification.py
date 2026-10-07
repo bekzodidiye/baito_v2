@@ -1,6 +1,6 @@
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class NotificationBase(BaseModel):
     title: str
@@ -20,8 +20,7 @@ class NotificationInDBBase(NotificationBase):
     isRead: bool
     createdAt: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class Notification(NotificationInDBBase):
     pass

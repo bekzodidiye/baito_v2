@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 ALLOWED_CARD_TYPES = {"uzcard", "humo", "visa", "mastercard"}
 
@@ -50,8 +50,7 @@ class PaymentCardOut(PaymentCardBase):
     id: str
     userId: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Backwards-compatible alias for existing imports.

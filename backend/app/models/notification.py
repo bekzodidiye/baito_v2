@@ -1,3 +1,4 @@
+from datetime import timezone
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, Boolean, DateTime
@@ -13,4 +14,4 @@ class Notification(Base):
     type = Column(String, default="system") # apply, hire, start_request, start_confirmed, completed, system
     relatedJobId = Column(String, nullable=True)
     isRead = Column(Boolean, default=False)
-    createdAt = Column(DateTime, default=datetime.utcnow)
+    createdAt = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

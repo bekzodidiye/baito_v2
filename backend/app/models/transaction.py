@@ -5,14 +5,14 @@ from .user import generate_uuid
 
 class Transaction(Base):
     id = Column(String, primary_key=True, default=generate_uuid, index=True)
-    jobId = Column(String, ForeignKey("jobs.id"))
+    jobId = Column(String, ForeignKey("jobs.id"), index=True)
     # Which day of the posting this holds money for. A multi-day shift
     # credits the worker once per day, so a day that was worked can be
     # worked and refunded when it is not. Null on everything else — top-ups,
     # payouts, and the single-day holds made before this existed.
     jobDayId = Column(String, ForeignKey("job_days.id"), nullable=True, index=True)
-    employerId = Column(String, ForeignKey("users.id"), nullable=False)
-    workerId = Column(String, ForeignKey("users.id"))
+    employerId = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    workerId = Column(String, ForeignKey("users.id"), index=True)
     amount = Column(Integer, nullable=False)
     platformFee = Column(Integer, nullable=False, default=0)
     # The commission rate this hold was taken under. An administrator can change
@@ -21,8 +21,8 @@ class Transaction(Base):
     # happens to be on payout day. Null on holds made before this existed, and
     # on everything that is not a worker credit.
     feePercent = Column(Float, nullable=True)
-    type = Column(String, nullable=False) # 'deposit' | 'withdraw' | 'payment'
-    status = Column(String, nullable=False, default='pending') # 'pending' | 'paid' | 'canceled'
+    type = Column(String, nullable=False, index=True) # 'deposit' | 'withdraw' | 'payment'
+    status = Column(String, nullable=False, default='pending', index=True) # 'pending' | 'paid' | 'canceled'
     createdAt = Column(DateTime(timezone=True), server_default=func.now())
 
     # Provider specific fields (Payme/Click)

@@ -2,7 +2,7 @@ import os
 import secrets
 from typing import List
 from pydantic import field_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Baito API"
@@ -93,10 +93,11 @@ class Settings(BaseSettings):
     # in its response so the signup flow stays testable without a real gateway.
     SMS_DEV_ECHO_CODE: bool = os.getenv("SMS_DEV_ECHO_CODE", "true").lower() in ("1", "true", "yes")
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = "ignore"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore"
+    )
 
     @property
     def is_production(self) -> bool:

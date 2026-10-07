@@ -65,6 +65,15 @@ class Job(Base):
     responsibilities = Column(String)
     requirements = Column(String)
     importantNote = Column(String)
+    
+    salaryInt = Column(Integer, index=True)
+    hourlyRateInt = Column(Integer)
+    transportRateInt = Column(Integer)
 
     employer = relationship("User", foreign_keys=[employerId])
     hiredWorker = relationship("User", foreign_keys=[hiredWorkerId])
+
+    @property
+    def vacancies(self) -> int:
+        raw = (self.neededWorkers or "1").strip()
+        return int(raw) if raw.isdigit() and int(raw) > 0 else 1

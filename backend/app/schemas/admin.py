@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 
@@ -18,8 +18,7 @@ class TransactionInDBBase(TransactionBase):
     id: str
     createdAt: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class Transaction(TransactionInDBBase):
     pass
@@ -37,8 +36,7 @@ class TicketMessageInDBBase(TicketMessageBase):
     ticketId: str
     timestamp: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TicketMessage(TicketMessageInDBBase):
     pass
@@ -59,8 +57,7 @@ class SupportTicketInDBBase(SupportTicketBase):
     createdAt: datetime
     messages: List[TicketMessage] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SupportTicket(SupportTicketInDBBase):
     pass

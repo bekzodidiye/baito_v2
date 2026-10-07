@@ -35,9 +35,6 @@ def _load_owned_application(db: Session, app_id: str, current_user: models.User)
     return app, job
 
 
-def _vacancies(job: models.Job) -> int:
-    raw = (job.neededWorkers or "1").strip()
-    return int(raw) if raw.isdigit() and int(raw) > 0 else 1
 
 
 def _mask_phone(phone: str | None) -> str:
@@ -157,9 +154,39 @@ def get_employer_applications(
         if w.uid:
             worker_map[w.uid] = w
 
-    # Each job carries its own rate — its category's plus its region's — so
-    # this is per job rather than one figure for the list.
-    rate_by_job = {j.id: job_fee_percent(db, j) for j in employer_jobs}
+    # Each job carries its own rate — its category's plus its region's.
+    # We batch query categories and regions to avoid N+1 queries.
+    from app.services.earnings_service import platform_fee_percent, _region_of
+    
+    cat_slugs = {j.category for j in employer_jobs if j.category}
+    region_names = {_region_of(j.location) for j in employer_jobs if _region_of(j.location)}
+    
+    cat_map = {}
+    if cat_slugs:
+        categories = db.query(models.Category).filter(models.Category.slug.in_(cat_slugs)).all()
+        cat_map = {c.slug: c for c in categories}
+        
+    region_map = {}
+    if region_names:
+        regions = db.query(models.Region).filter(models.Region.name.in_(region_names)).all()
+        region_map = {r.name: r for r in regions}
+        
+    default_fee = platform_fee_percent(db)
+    rate_by_job = {}
+    
+    for j in employer_jobs:
+        if not j.category and not _region_of(j.location):
+            rate_by_job[j.id] = default_fee
+            continue
+            
+        c = cat_map.get(j.category)
+        r = region_map.get(_region_of(j.location))
+        
+        if c is None and r is None:
+            rate_by_job[j.id] = default_fee
+        else:
+            total = (getattr(c, "commissionPercent", 0) or 0) + (getattr(r, "commissionPercent", 0) or 0)
+            rate_by_job[j.id] = max(0.0, min(100.0, float(total)))
 
     result = []
     for app in apps:
@@ -235,7 +262,7 @@ def hire_applicant(
         )
         .count()
     )
-    vacancies = _vacancies(job)
+    vacancies = job.vacancies
     if already_hired >= vacancies:
         raise HTTPException(
             status_code=400,

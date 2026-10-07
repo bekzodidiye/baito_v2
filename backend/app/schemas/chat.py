@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 MAX_MESSAGE_LENGTH = 4000
 
@@ -18,8 +18,7 @@ class Message(MessageBase):
     id: str
     createdAt: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ChatBase(BaseModel):
@@ -51,8 +50,7 @@ class ChatInDBBase(ChatBase):
     isContactRevealed: bool = False
     createdAt: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Chat(ChatInDBBase):
