@@ -22,7 +22,6 @@ from sqlalchemy.orm import Session
 from app import models
 from app.api import deps
 from app.core import invoice_link
-from app.core.config import settings
 from app.core.limiter import limiter
 from app.models.job_payout import JobPayout, PayoutStatus
 from app.models.user import User
