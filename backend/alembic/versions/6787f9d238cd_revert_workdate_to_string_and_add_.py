@@ -15,12 +15,17 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    jobs_cols = [c['name'] for c in inspector.get_columns('jobs')]
+
     with op.batch_alter_table('jobs', schema=None) as batch_op:
         batch_op.alter_column('workDate',
                existing_type=sa.DATETIME(),
                type_=sa.String(),
                existing_nullable=True)
-        batch_op.add_column(sa.Column('isNegotiable', sa.Boolean(), nullable=True, server_default='0'))
+        if 'isNegotiable' not in jobs_cols:
+            batch_op.add_column(sa.Column('isNegotiable', sa.Boolean(), nullable=True, server_default='0'))
 
 def downgrade() -> None:
     with op.batch_alter_table('jobs', schema=None) as batch_op:
