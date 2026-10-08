@@ -27,25 +27,7 @@ def test_upload_requires_authentication(client):
     assert res.status_code == 401
 
 
-def test_webhook_rejects_a_forged_signature(client, monkeypatch):
-    """Without UZUM_SECRET_KEY the endpoint refuses everything with 503 and
-    the signature is never evaluated — so the original 403/404 expectation
-    could not be reached, and the forgery was never actually tested. Set a
-    key so the HMAC comparison is the thing under test."""
-    from app.core.config import settings
-    monkeypatch.setattr(settings, "UZUM_SECRET_KEY", "test_uzum_secret", raising=False)
 
-    res = client.post(
-        "/api/v1/payments/webhook/uzum",
-        json={
-            "order_id": "test_order_123",
-            "uzum_transaction_id": "fake_tx_999",
-            "amount": 1000000,
-            "status": "SUCCESS",
-            "sign": "forged_invalid_md5_or_sha_signature",
-        },
-    )
-    assert res.status_code == 403, res.text
 
 
 def test_withdrawal_refuses_negative_and_excessive_amounts(client):

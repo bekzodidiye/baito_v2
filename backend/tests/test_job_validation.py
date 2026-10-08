@@ -36,9 +36,9 @@ def test_non_positive_salary_is_rejected(client):
 
 
 def test_negotiable_salary_is_still_allowed(client):
-    """Text with no figure parses to zero and must not be caught by the above."""
+    """A zero salary is allowed if isNegotiable is true."""
     login(client, make_user(role="employer", phone="+998911112204"))
-    assert _post(client, salary="Kelishilgan holda").status_code == 200
+    assert _post(client, salary=0, isNegotiable=True).status_code == 200
 
 
 def test_blank_and_oversized_fields_are_rejected(client):

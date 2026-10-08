@@ -109,6 +109,14 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"detail": jsonable_encoder(exc.errors())},
     )
 
+from app.core.exceptions import DomainException
+@app.exception_handler(DomainException)
+async def domain_exception_handler(request: Request, exc: DomainException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message},
+    )
+
 app.add_exception_handler(SQLAlchemyError, sqlalchemy_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 

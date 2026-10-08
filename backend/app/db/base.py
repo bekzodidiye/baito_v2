@@ -24,4 +24,3 @@ from app.models.job_payout import JobPayout
 from app.models.idempotency import IdempotencyKey
 from app.models.media_file import MediaFile
 from app.models.admin_audit_log import AdminAuditLog
-from app.models.uzum_payment import PaymentOrder, UzumTransaction  # noqa

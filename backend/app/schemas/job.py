@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from typing import Optional, List
 from datetime import datetime
 
@@ -79,7 +79,8 @@ class JobBase(BaseModel):
 
     title: str
     company: str
-    salary: str
+    salary: int
+    isNegotiable: Optional[bool] = False
     location: str
     description: str
     logoUrl: Optional[str] = None
@@ -90,8 +91,8 @@ class JobBase(BaseModel):
     workDate: Optional[str] = None
     workTime: Optional[str] = None
     neededWorkers: Optional[str] = '1'
-    hourlyRate: Optional[str] = None
-    transportRate: Optional[str] = None
+    hourlyRate: Optional[int] = None
+    transportRate: Optional[int] = None
     category: Optional[str] = None
     responsibilities: Optional[str] = None
     requirements: Optional[str] = None
@@ -112,7 +113,8 @@ class JobCreate(JobBase):
 
     title: str = Field(min_length=3, max_length=200)
     company: str = Field(default="Ish beruvchi", min_length=1, max_length=200)
-    salary: str = Field(min_length=1, max_length=100)
+    salary: int = Field(ge=0)
+    isNegotiable: Optional[bool] = False
     location: str = Field(min_length=1, max_length=200)
     description: str = Field(min_length=10, max_length=5000)
 
@@ -121,11 +123,6 @@ class JobCreate(JobBase):
     def check_control_chars(cls, v):
         return _reject_control_chars(v)
 
-    @field_validator("salary")
-    @classmethod
-    def check_salary(cls, v: str) -> str:
-        return _validate_salary(v)
-
     @field_validator("neededWorkers")
     @classmethod
     def check_needed_workers(cls, v):
@@ -133,11 +130,18 @@ class JobCreate(JobBase):
             return v
         return _validate_needed_workers(v)
 
+    @model_validator(mode='after')
+    def check_salary_and_negotiable(self) -> 'JobCreate':
+        if not self.isNegotiable and self.salary <= 0:
+            raise ValueError("Maosh musbat bo'lishi kerak")
+        return self
+
 
 class JobUpdate(JobBase):
     title: Optional[str] = None
     company: Optional[str] = None
-    salary: Optional[str] = None
+    salary: Optional[int] = Field(default=None, ge=0)
+    isNegotiable: Optional[bool] = None
     location: Optional[str] = None
     description: Optional[str] = Field(default=None, min_length=10, max_length=5000)
     status: Optional[str] = None
@@ -160,11 +164,6 @@ class JobUpdate(JobBase):
         if v is not None and not (1 <= len(v) <= 200):
             raise ValueError("Bo'sh bo'lishi mumkin emas")
         return v
-
-    @field_validator("salary")
-    @classmethod
-    def check_salary(cls, v):
-        return v if v is None else _validate_salary(v)
 
     @field_validator("neededWorkers")
     @classmethod

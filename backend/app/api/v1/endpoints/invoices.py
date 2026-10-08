@@ -66,14 +66,6 @@ def _methods() -> list[dict]:
             "hint": "Rekvizitlar tayyor — bank ilovangizga nusxalang",
         }
     ]
-    if settings.uzum_configured:
-        methods.append(
-            {
-                "id": "card",
-                "label": "Karta orqali",
-                "hint": "To'lov tizimi orqali onlayn to'lash",
-            }
-        )
     return methods
 
 

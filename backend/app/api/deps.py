@@ -161,3 +161,38 @@ def get_current_admin(
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin huquqi talab etiladi")
     return current_user
+
+def get_tx_db() -> Generator:
+    """A transactional database session that automatically commits on success."""
+    db = SessionLocal()
+    try:
+        yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+def get_idempotent_response(db: Session, key: Optional[str], user_id: str) -> Optional[dict]:
+    if not key:
+        return None
+    import json
+    prior = db.query(models.IdempotencyKey).filter(models.IdempotencyKey.id == key).first()
+    if prior:
+        if prior.userId != user_id:
+            raise HTTPException(status_code=409, detail="Idempotency key already used")
+        return json.loads(prior.responseBody)
+    return None
+
+def save_idempotent_response(db: Session, key: Optional[str], user_id: str, path: str, result: dict):
+    if not key:
+        return
+    import json
+    db.add(models.IdempotencyKey(
+        id=key,
+        userId=user_id,
+        requestPath=path,
+        responseCode=200,
+        responseBody=json.dumps(result),
+    ))

@@ -40,13 +40,7 @@ try:
             "task": "app.tasks.purge_expired_idempotency_keys",
             "schedule": crontab(hour=4, minute=0),
         },
-        # Uzum's window is 30 minutes, so a daily sweep would leave an order
-        # unusable for most of a day. Every ten minutes is close enough to the
-        # deadline to matter and cheap enough to ignore.
-        "expire-uzum-transactions": {
-            "task": "app.tasks.expire_uzum_transactions",
-            "schedule": crontab(minute="*/10"),
-        },
+
         # Both of these back a control in the admin panel and do nothing
         # unless it is switched on there.
         "telegram-digest": {

@@ -1,7 +1,4 @@
-// IMPORTANT: This file monkey-patches native Error and Event listeners 
-// to suppress benign third-party wallet/extension errors in dev mode.
-// It is an antipattern and can hide real errors. Consider removing it for production.
-import './lib/silenceExtensionErrors';
+
 import { installStaleChunkRecovery } from './lib/recoverFromStaleChunks';
 
 import { StrictMode } from 'react';

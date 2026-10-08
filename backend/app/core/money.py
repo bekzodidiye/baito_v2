@@ -17,7 +17,7 @@ _SEPARATORS = str.maketrans({" ": "", " ": "", "'": "", "’": "", ",": "", "."
 MAX_REASONABLE_SALARY_UZS = 500_000_000
 
 
-def parse_salary_amounts(salary: str | None, bounded: bool = True) -> list[int]:
+def parse_salary_amounts(salary: str | int | None, bounded: bool = True) -> list[int]:
     """Extract every distinct amount mentioned in a salary string.
 
     ``bounded`` drops implausible figures, which is what callers computing a
@@ -27,8 +27,11 @@ def parse_salary_amounts(salary: str | None, bounded: bool = True) -> list[int]:
     """
     if not salary:
         return []
+    if isinstance(salary, int):
+        return [salary] if (not bounded or 0 < salary <= MAX_REASONABLE_SALARY_UZS) else []
+    
     amounts = []
-    for match in _NUMBER_RE.finditer(salary):
+    for match in _NUMBER_RE.finditer(str(salary)):
         digits = match.group(0).translate(_SEPARATORS)
         if not digits.isdigit():
             continue
@@ -38,7 +41,7 @@ def parse_salary_amounts(salary: str | None, bounded: bool = True) -> list[int]:
     return amounts
 
 
-def salary_to_uzs(salary: str | None, default: int = 0) -> int:
+def salary_to_uzs(salary: str | int | None, default: int = 0) -> int:
     """Best single figure for a salary string.
 
     For a range the lower bound is used — it is what a worker is guaranteed,
@@ -48,3 +51,15 @@ def salary_to_uzs(salary: str | None, default: int = 0) -> int:
     if not amounts:
         return default
     return min(amounts)
+
+
+class Money:
+    """Utility class to safely convert between UZS (so'm) and Tiyin."""
+    
+    @staticmethod
+    def to_tiyin(uzs_amount: int) -> int:
+        return uzs_amount * 100
+        
+    @staticmethod
+    def to_uzs(tiyin_amount: int) -> int:
+        return tiyin_amount // 100

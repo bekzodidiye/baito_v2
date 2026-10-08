@@ -460,10 +460,6 @@ def create_job(
     if not job_in_dict.get("company") or job_in_dict["company"] == "Ish beruvchi":
         job_in_dict["company"] = current_user.companyName or current_user.name or "Ish beruvchi"
 
-    job_in_dict["salaryInt"] = salary_to_uzs(job_in_dict.get("salary"))
-    job_in_dict["hourlyRateInt"] = salary_to_uzs(job_in_dict.get("hourlyRate"))
-    job_in_dict["transportRateInt"] = salary_to_uzs(job_in_dict.get("transportRate"))
-
     # One posting, however many days it runs for.
     #
     # A five-day shift was briefly created as five separate Job rows, one per
@@ -557,10 +553,6 @@ def update_job(
 
     for field, value in update_data.items():
         setattr(job, field, value)
-
-    job.salaryInt = salary_to_uzs(job.salary)
-    job.hourlyRateInt = salary_to_uzs(job.hourlyRate)
-    job.transportRateInt = salary_to_uzs(job.transportRate)
 
     db.add(job)
     if "workDate" in update_data:

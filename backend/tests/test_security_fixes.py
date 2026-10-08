@@ -134,58 +134,7 @@ def test_password_change_revokes_other_sessions(client):
         assert other.post("/api/v1/auth/refresh").status_code == 401
 
 
-# ── Payments ───────────────────────────────────────────────────────────────
 
-def test_uzum_webhook_rejects_a_forged_signature(client):
-    employer = make_user(role="employer", phone="+998901234522", balance=0)
-    with SessionLocal() as db:
-        tx = Transaction(employerId=employer.id, amount=100000, type="deposit", status="pending")
-        db.add(tx)
-        db.commit()
-        tx_id = tx.id
-
-    resp = client.post("/api/v1/payments/webhook/uzum", json={
-        "order_id": tx_id, "uzum_transaction_id": "x", "amount": 100000,
-        "status": "SUCCESS", "sign": "deadbeef",
-    })
-    assert resp.status_code in (403, 503)
-
-    with SessionLocal() as db:
-        assert db.query(User).filter(User.id == employer.id).first().balance == 0
-
-
-def test_uzum_webhook_rejects_an_amount_mismatch(client, monkeypatch):
-    monkeypatch.setattr(settings, "UZUM_SECRET_KEY", "unit-test-secret")
-    employer = make_user(role="employer", phone="+998901234511", balance=0)
-    with SessionLocal() as db:
-        tx = Transaction(employerId=employer.id, amount=100000, type="deposit", status="pending")
-        db.add(tx)
-        db.commit()
-        tx_id = tx.id
-
-    claimed = 99_999_999
-    sign = hmac.new(
-        b"unit-test-secret", f"{tx_id}{claimed}SUCCESS".encode(), hashlib.sha256
-    ).hexdigest()
-
-    resp = client.post("/api/v1/payments/webhook/uzum", json={
-        "order_id": tx_id, "uzum_transaction_id": "x", "amount": claimed,
-        "status": "SUCCESS", "sign": sign,
-    })
-    assert resp.status_code == 400
-
-    with SessionLocal() as db:
-        assert db.query(User).filter(User.id == employer.id).first().balance == 0
-
-
-def test_top_up_fails_loudly_when_provider_is_not_configured(client, monkeypatch):
-    monkeypatch.setattr(settings, "UZUM_TERMINAL_ID", "")
-    monkeypatch.setattr(settings, "UZUM_SECRET_KEY", "")
-    user = make_user(role="employer", phone="+998901234500")
-    login(client, user)
-
-    resp = client.post("/api/v1/payments/generate-link", json={"amount": 50000})
-    assert resp.status_code == 503
 
 
 def test_card_token_is_not_returned_to_the_client(client):
@@ -302,37 +251,4 @@ def test_employer_job_history_is_not_publicly_enumerable(client):
     assert client.get(f"/api/v1/jobs?employer_id={employer.id}").status_code == 403
 
 
-def test_uzum_webhook_actually_credits_a_balance(client, monkeypatch):
-    """The success path, which had no test — and could not have passed.
 
-    Every other test on this endpoint asserts a refusal: bad signature, wrong
-    amount, provider not configured. None of them reach the line that writes
-    performTime, and that line stored milliseconds into a 32-bit column. On
-    PostgreSQL it raised NumericValueOutOfRange and rolled back the credit, so
-    the bank took the money and nothing was recorded. Widening the column is
-    only half the fix; this is the other half.
-    """
-    monkeypatch.setattr(settings, "UZUM_SECRET_KEY", "unit-test-secret")
-    employer = make_user(role="employer", phone="+998901234599", balance=0)
-    with SessionLocal() as db:
-        tx = Transaction(employerId=employer.id, amount=250_000, type="deposit", status="pending")
-        db.add(tx)
-        db.commit()
-        tx_id = tx.id
-
-    sign = hmac.new(
-        b"unit-test-secret", f"{tx_id}{250000}SUCCESS".encode(), hashlib.sha256
-    ).hexdigest()
-
-    resp = client.post("/api/v1/payments/webhook/uzum", json={
-        "order_id": tx_id, "uzum_transaction_id": "uzum-1", "amount": 250_000,
-        "status": "SUCCESS", "sign": sign,
-    })
-    assert resp.status_code == 200, resp.text
-
-    with SessionLocal() as db:
-        # 250 000 tiyin is 2 500 so'm.
-        assert db.query(User).filter(User.id == employer.id).first().balance == 2_500
-        stored = db.query(Transaction).filter(Transaction.id == tx_id).first()
-        assert stored.status == "paid"
-        assert stored.performTime > 1_000_000_000_000  # milliseconds, not seconds

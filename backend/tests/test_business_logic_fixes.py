@@ -321,7 +321,7 @@ def test_salary_ranges_no_longer_concatenate_every_digit():
 # ── Date parsing ───────────────────────────────────────────────────────────
 
 def test_bare_day_number_rolls_into_next_month_when_already_past():
-    from app.api.v1.endpoints.job_actions import get_job_dates_set
+    from app.services.work_dates import get_job_dates_set
 
     class FakeJob:
         workDate = "1"
@@ -336,7 +336,7 @@ def test_bare_day_number_rolls_into_next_month_when_already_past():
 
 
 def test_iso_date_is_not_mistaken_for_a_range():
-    from app.api.v1.endpoints.job_actions import get_job_dates_set
+    from app.services.work_dates import get_job_dates_set
 
     class FakeJob:
         workDate = "2026-09-15"

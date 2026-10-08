@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core.config import settings
 from app.core.limiter import limiter
+from app.core.money import Money
 from app.models.audit_ledger import AuditLedger
 from app.models.payment_card import PaymentCard
 from app.models.transaction import Transaction
@@ -26,159 +27,6 @@ MIN_WITHDRAWAL_UZS = 5_000
 MAX_WITHDRAWAL_UZS = 50_000_000
 
 
-class GeneratePaymentLinkRequest(BaseModel):
-    amount: int = Field(ge=1000, le=100_000_000)
-
-
-class GeneratePaymentLinkResponse(BaseModel):
-    url: str
-    transaction_id: str
-
-
-@router.post("/generate-link", response_model=GeneratePaymentLinkResponse)
-@limiter.limit("10/minute")
-def generate_payment_link(
-    request: Request,
-    req: GeneratePaymentLinkRequest,
-    db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
-):
-    """Start a top-up with the payment provider.
-
-    This used to fabricate a ``pay.uzum.uz`` URL from a random UUID and return
-    it as if a payment had been initiated — the checkout page never existed, so
-    every top-up silently went nowhere. With no provider credentials configured
-    the endpoint now fails loudly instead.
-    """
-    if not settings.uzum_configured:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="To'lov tizimi hozircha ulanmagan. Iltimos, keyinroq urinib ko'ring.",
-        )
-
-    tx = Transaction(
-        employerId=current_user.id,
-        amount=req.amount * 100,  # store in tiyin
-        type="deposit",
-        status="pending",
-    )
-    db.add(tx)
-    db.commit()
-    db.refresh(tx)
-
-    try:
-        import httpx
-
-        with httpx.Client(timeout=15.0) as client:
-            provider_response = client.post(
-                f"{settings.UZUM_API_URL.rstrip('/')}/create-payment",
-                json={
-                    "terminal_id": settings.UZUM_TERMINAL_ID,
-                    "amount": tx.amount,
-                    "order_id": tx.id,
-                },
-                headers={"Authorization": f"Bearer {settings.UZUM_SECRET_KEY}"},
-            )
-            provider_response.raise_for_status()
-            payment_url = provider_response.json().get("payment_url")
-    except Exception as e:
-        logger.error("Uzum create-payment failed for tx %s: %s", tx.id, e)
-        tx.status = "canceled"
-        db.commit()
-        raise HTTPException(status_code=502, detail="To'lov tizimiga ulanib bo'lmadi")
-
-    if not payment_url:
-        tx.status = "canceled"
-        db.commit()
-        raise HTTPException(status_code=502, detail="To'lov tizimi havola qaytarmadi")
-
-    return GeneratePaymentLinkResponse(url=payment_url, transaction_id=tx.id)
-
-
-class UzumWebhookPayload(BaseModel):
-    order_id: str
-    uzum_transaction_id: str
-    amount: int
-    status: str  # 'SUCCESS' | 'FAILED'
-    sign: str
-
-
-@router.post("/webhook/uzum")
-def uzum_webhook(payload: UzumWebhookPayload, db: Session = Depends(deps.get_db)):
-    """Uzum payment callback.
-
-    Three things were wrong here: the signature check was skipped entirely when
-    ``UZUM_SECRET_KEY`` was unset (and its default lived in the repo), an MD5
-    "legacy" signature was accepted alongside the HMAC, and the reported amount
-    was never compared against the order. All three let a caller credit any
-    balance at will.
-    """
-    if not settings.UZUM_SECRET_KEY:
-        logger.error("Uzum webhook received but UZUM_SECRET_KEY is not configured; rejecting.")
-        raise HTTPException(status_code=503, detail="Payment provider not configured")
-
-    data_string = f"{payload.order_id}{payload.amount}{payload.status}"
-    expected_sign = hmac.new(
-        settings.UZUM_SECRET_KEY.encode("utf-8"),
-        data_string.encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
-
-    if not hmac.compare_digest(payload.sign or "", expected_sign):
-        logger.warning("Uzum webhook signature mismatch for order %s", payload.order_id)
-        raise HTTPException(status_code=403, detail="Invalid signature")
-
-    tx = (
-        db.query(Transaction)
-        .filter(Transaction.id == payload.order_id)
-        .populate_existing()
-        .with_for_update()
-        .first()
-    )
-    if not tx:
-        raise HTTPException(status_code=404, detail="Order not found")
-
-    if tx.status == "paid":
-        return {"status": "ok", "message": "Already paid"}
-
-    # The provider must be talking about the amount we actually recorded.
-    if payload.amount != tx.amount:
-        logger.error(
-            "Uzum webhook amount mismatch for %s: reported %s, expected %s",
-            tx.id, payload.amount, tx.amount,
-        )
-        raise HTTPException(status_code=400, detail="Amount mismatch")
-
-    if payload.status == "SUCCESS":
-        tx.status = "paid"
-        tx.providerTransactionId = payload.uzum_transaction_id
-        tx.performTime = int(time.time() * 1000)
-
-        user = db.query(User).filter(User.id == tx.employerId).populate_existing().with_for_update().first()
-        if user:
-            amount_uzs = tx.amount // 100
-            user.balance = (user.balance or 0) + amount_uzs
-            db.add(user)
-            db.add(AuditLedger(
-                userId=user.id,
-                amountDelta=amount_uzs,
-                balanceAfter=user.balance,
-                entryType="deposit",
-                referenceType="transaction",
-                referenceId=tx.id,
-                description=f"Uzum orqali hisob to'ldirildi ({amount_uzs} so'm)",
-            ))
-
-        db.commit()
-        return {"status": "ok", "message": "Payment processed successfully"}
-
-    if payload.status == "FAILED":
-        tx.status = "canceled"
-        tx.cancelTime = int(time.time() * 1000)
-        db.commit()
-        return {"status": "ok", "message": "Payment canceled"}
-
-    raise HTTPException(status_code=400, detail="Unknown status")
 
 
 @router.get("/cards", response_model=List[PaymentCardOut])
@@ -283,7 +131,7 @@ def get_transactions(
     # showed a 275,000 so'm payout as "27 500 000".
     return [
         TransactionOut.model_validate(r).model_copy(
-            update={"amount": r.amount // 100, "platformFee": (r.platformFee or 0) // 100}
+            update={"amount": Money.to_uzs(r.amount), "platformFee": Money.to_uzs(r.platformFee or 0)}
         )
         for r in rows
     ]
@@ -298,7 +146,7 @@ class WithdrawRequest(BaseModel):
 def request_withdrawal(
     request: Request,
     req: WithdrawRequest,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(deps.get_tx_db),
     current_user: User = Depends(deps.get_current_user),
     idempotency_key: Optional[str] = Header(default=None, alias="Idempotency-Key"),
 ):
@@ -307,19 +155,9 @@ def request_withdrawal(
     A retried request (flaky network, double tap) used to deduct the balance
     twice; ``Idempotency-Key`` now makes the operation replay-safe.
     """
-    from app.models.idempotency import IdempotencyKey
-
-    if idempotency_key:
-        prior = (
-            db.query(IdempotencyKey)
-            .filter(IdempotencyKey.id == idempotency_key)
-            .first()
-        )
-        if prior:
-            if prior.userId != current_user.id:
-                raise HTTPException(status_code=409, detail="Idempotency key already used")
-            import json
-            return json.loads(prior.responseBody)
+    cached_response = deps.get_idempotent_response(db, idempotency_key, current_user.id)
+    if cached_response:
+        return cached_response
 
     if current_user.isBanned:
         raise HTTPException(
@@ -332,51 +170,34 @@ def request_withdrawal(
     if not user or (user.balance or 0) < req.amount:
         raise HTTPException(status_code=400, detail="Balansda yetarli mablag' mavjud emas")
 
-    try:
-        tx = Transaction(
-            employerId=user.id,
-            amount=req.amount * 100,  # UZS -> tiyin
-            type="withdraw",
-            status="pending",
-        )
-        db.add(tx)
-        db.flush()
+    tx = Transaction(
+        employerId=user.id,
+        amount=Money.to_tiyin(req.amount),
+        type="withdraw",
+        status="pending",
+    )
+    db.add(tx)
+    db.flush()
 
-        user.balance = (user.balance or 0) - req.amount
-        db.add(user)
+    user.balance = (user.balance or 0) - req.amount
+    db.add(user)
 
-        db.add(AuditLedger(
-            userId=user.id,
-            amountDelta=-req.amount,
-            balanceAfter=user.balance,
-            entryType="payout",
-            referenceType="transaction",
-            referenceId=tx.id,
-            description=f"Kartaga mablag' yechish so'rovi ({req.amount} so'm)",
-        ))
+    db.add(AuditLedger(
+        userId=user.id,
+        amountDelta=-req.amount,
+        balanceAfter=user.balance,
+        entryType="payout",
+        referenceType="transaction",
+        referenceId=tx.id,
+        description=f"Kartaga mablag' yechish so'rovi ({req.amount} so'm)",
+    ))
 
-        result = {
-            "status": "ok",
-            "message": "Mablag' yechish so'rovi yuborildi",
-            "transaction_id": tx.id,
-        }
+    result = {
+        "status": "ok",
+        "message": "Mablag' yechish so'rovi yuborildi",
+        "transaction_id": tx.id,
+    }
 
-        if idempotency_key:
-            import json
-            db.add(IdempotencyKey(
-                id=idempotency_key,
-                userId=user.id,
-                requestPath="/payments/withdraw",
-                responseCode=200,
-                responseBody=json.dumps(result),
-            ))
+    deps.save_idempotent_response(db, idempotency_key, user.id, "/payments/withdraw", result)
 
-        db.commit()
-        return result
-    except HTTPException:
-        db.rollback()
-        raise
-    except Exception as e:
-        db.rollback()
-        logger.error("Withdrawal failed for user %s: %s", current_user.id, e)
-        raise HTTPException(status_code=500, detail="Tranzaksiyani amalga oshirishda xatolik")
+    return result

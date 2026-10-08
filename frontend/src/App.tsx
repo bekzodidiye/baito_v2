@@ -9,6 +9,7 @@ import { Drawer } from './components/Drawer';
 import { Sidebar } from './components/Sidebar';
 import { ErrorBoundary } from './components/ErrorBoundary';
 const MapViewScreen = React.lazy(() => import('./components/map/MapViewScreen').then(m => ({ default: m.MapViewScreen })));
+import { MapLoadingSkeleton } from './components/map/MapLoadingSkeleton';
 import { RegionSelector } from './components/RegionSelector';
 import { MenuModals } from './components/MenuModals';
 import { OnboardingTour } from './components/OnboardingTour';
@@ -87,8 +88,8 @@ function AppContent() {
   // Screens nobody may reach while logged out; they bounce back to the landing.
   const isAuthGatedScreen = !isLoggedIn && !['landing', 'login', 'register', 'faq', 'terms', 'help', 'guide'].includes(currentScreen);
 
-  // The map is only reachable while logged in and only mounted once user switches to map view
-  const shouldMountMap = isLoggedIn && !isEmployer && (hasOpenedMap || (currentScreen === 'jobs' && jobsView === 'map'));
+  // The map is only reachable while logged in, and unmounts on other screens to save memory on low-end devices.
+  const shouldMountMap = isLoggedIn && !isEmployer && currentScreen === 'jobs' && (hasOpenedMap || jobsView === 'map');
 
   return (
     <div className={`flex flex-col md:flex-row bg-brand-background text-brand-text antialiased font-sans selection:bg-brand-primary-container selection:text-white ${
@@ -138,11 +139,12 @@ function AppContent() {
           {/* Persistently mounted map to avoid Leaflet re-initialization overhead.
               It sits outside the keyed boundary on purpose: a key that changes on
               every navigation would destroy and rebuild the Leaflet instance each
-              time, which is exactly what mounting it here is meant to avoid. */}
+              time, which is exactly what mounting it here is meant to avoid.
+              However, it unmounts when leaving the jobs screen to prevent memory leaks. */}
           {shouldMountMap && (
             <ErrorBoundary>
               <div className={currentScreen === 'jobs' && jobsView === 'map' ? 'block' : 'hidden'}>
-                <Suspense fallback={null}>
+                <Suspense fallback={<MapLoadingSkeleton />}>
                   <MapViewScreen />
                 </Suspense>
               </div>

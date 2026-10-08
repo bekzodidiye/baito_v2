@@ -13,11 +13,19 @@ def get_disputes(
     _: models.User = Depends(get_admin_user),
 ) -> Any:
     disputes = db.query(models.Dispute).all()
+    
+    job_ids = {d.jobId for d in disputes if d.jobId}
+    employer_ids = {d.employerId for d in disputes if d.employerId}
+    worker_ids = {d.workerId for d in disputes if d.workerId}
+    
+    jobs = {j.id: j for j in db.query(models.Job).filter(models.Job.id.in_(job_ids)).all()} if job_ids else {}
+    users = {u.id: u for u in db.query(models.User).filter(models.User.id.in_(employer_ids | worker_ids)).all()} if employer_ids or worker_ids else {}
+    
     result = []
     for d in disputes:
-        job = db.query(models.Job).filter(models.Job.id == d.jobId).first()
-        employer = db.query(models.User).filter(models.User.id == d.employerId).first()
-        worker = db.query(models.User).filter(models.User.id == d.workerId).first()
+        job = jobs.get(d.jobId)
+        employer = users.get(d.employerId)
+        worker = users.get(d.workerId)
         result.append({
             "id": d.id,
             "jobId": d.jobId,

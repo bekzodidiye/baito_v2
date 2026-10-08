@@ -52,21 +52,6 @@ class Settings(BaseSettings):
     # the public actually reaches us on.
     PUBLIC_APP_URL: str = os.getenv("PUBLIC_APP_URL", "")
 
-    # Uzum E-Commerce Integration. Empty means "not configured" — the payment
-    # endpoints fail closed rather than pretending to work.
-    UZUM_TERMINAL_ID: str = os.getenv("UZUM_TERMINAL_ID", "")
-    UZUM_SECRET_KEY: str = os.getenv("UZUM_SECRET_KEY", "")
-    UZUM_API_URL: str = os.getenv("UZUM_API_URL", "https://api.uzum.uz/epos/v1")
-
-    # Uzum Bank Merchant API — a different product from the e-commerce one
-    # above. There, we send the customer to Uzum's checkout. Here, Uzum calls
-    # us: the customer types an order number into the Uzum app and the bank
-    # drives /check, /create, /confirm, /reverse and /status against this
-    # service. Empty means not configured, and every webhook answers 10001.
-    UZUM_MERCHANT_SERVICE_ID: int = 0
-    UZUM_MERCHANT_USERNAME: str = os.getenv("UZUM_MERCHANT_USERNAME", "")
-    UZUM_MERCHANT_PASSWORD: str = os.getenv("UZUM_MERCHANT_PASSWORD", "")
-
     # Telegram — reused by the error reporter. The backup bot already owns a
     # channel; pointing exceptions at it costs no extra infrastructure.
     TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -112,35 +97,6 @@ class Settings(BaseSettings):
         failing.
         """
         return bool(self.TELEGRAM_BOT_TOKEN and self.TELEGRAM_CHAT_ID)
-
-    @field_validator("UZUM_MERCHANT_SERVICE_ID", mode="before")
-    @classmethod
-    def _empty_means_unset(cls, v):
-        """An empty environment variable must not take the application down.
-
-        BaseSettings reads the variable itself, so a default computed in the
-        field declaration never applies once the name exists in the
-        environment. docker-compose lists it as `${VAR:-}`, which sets it to the
-        empty string — and Pydantic cannot parse that as an int, so importing
-        settings raised ValidationError, the container failed its health check,
-        and the site returned 502. "Not configured" has to read as 0, not as a
-        crash.
-        """
-        if v is None or (isinstance(v, str) and not v.strip()):
-            return 0
-        return v
-
-    @property
-    def uzum_configured(self) -> bool:
-        return bool(self.UZUM_TERMINAL_ID and self.UZUM_SECRET_KEY)
-
-    @property
-    def uzum_merchant_configured(self) -> bool:
-        return bool(
-            self.UZUM_MERCHANT_SERVICE_ID
-            and self.UZUM_MERCHANT_USERNAME
-            and self.UZUM_MERCHANT_PASSWORD
-        )
 
     @property
     def cors_origins(self) -> List[str]:
