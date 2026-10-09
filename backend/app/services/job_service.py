@@ -1,7 +1,7 @@
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Optional, List, Tuple
+from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -17,7 +17,6 @@ from app.core.exceptions import (
     ActionForbiddenError,
     InvalidJobStateError,
     ApplicationError,
-    ValidationDomainError,
 )
 
 logger = logging.getLogger(__name__)

@@ -15,7 +15,6 @@ from app.services.geo_service import GeoSpatialService
 from app.services import job_days
 from app.models.job_day import JobDayStatus
 from app.services.spam_detector import SpamFraudDetector, keywords_from_settings
-from app.core.money import salary_to_uzs
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

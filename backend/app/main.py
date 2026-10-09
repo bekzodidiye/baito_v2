@@ -15,7 +15,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.v1.api import api_router
 from app.core.config import settings
-from app.core.exceptions import sqlalchemy_exception_handler, generic_exception_handler
+from app.core.exceptions import DomainException, sqlalchemy_exception_handler, generic_exception_handler
 from app.core.limiter import limiter
 from app.db.base import Base
 from app.db.session import engine, SessionLocal
@@ -109,7 +109,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"detail": jsonable_encoder(exc.errors())},
     )
 
-from app.core.exceptions import DomainException
+
 @app.exception_handler(DomainException)
 async def domain_exception_handler(request: Request, exc: DomainException):
     return JSONResponse(
