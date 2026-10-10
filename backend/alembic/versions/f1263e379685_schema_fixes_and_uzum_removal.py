@@ -43,22 +43,22 @@ def upgrade() -> None:
                    existing_type=sa.VARCHAR(),
                    type_=sa.Integer(),
                    existing_nullable=False,
-                   postgresql_using="COALESCE(NULLIF(regexp_replace(salary, '\\D', '', 'g'), ''), '0')::integer")
+                   postgresql_using="COALESCE(NULLIF(regexp_replace(salary::text, '\\D', '', 'g'), ''), '0')::integer")
             batch_op.alter_column('workDate',
                    existing_type=sa.VARCHAR(),
                    type_=sa.DateTime(timezone=True),
                    existing_nullable=True,
-                   postgresql_using='NULLIF("workDate", \'\')::timestamp with time zone')
+                   postgresql_using='NULLIF("workDate"::text, \'\')::timestamp with time zone')
             batch_op.alter_column('hourlyRate',
                    existing_type=sa.VARCHAR(),
                    type_=sa.Integer(),
                    existing_nullable=True,
-                   postgresql_using="NULLIF(regexp_replace(\"hourlyRate\", '\\D', '', 'g'), '')::integer")
+                   postgresql_using="NULLIF(regexp_replace(\"hourlyRate\"::text, '\\D', '', 'g'), '')::integer")
             batch_op.alter_column('transportRate',
                    existing_type=sa.VARCHAR(),
                    type_=sa.Integer(),
                    existing_nullable=True,
-                   postgresql_using="NULLIF(regexp_replace(\"transportRate\", '\\D', '', 'g'), '')::integer")
+                   postgresql_using="NULLIF(regexp_replace(\"transportRate\"::text, '\\D', '', 'g'), '')::integer")
             batch_op.drop_column('salaryInt')
             batch_op.drop_column('transportRateInt')
             batch_op.drop_column('hourlyRateInt')
