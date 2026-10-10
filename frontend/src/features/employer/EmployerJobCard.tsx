@@ -64,7 +64,13 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
             src={bannerUrl}
             alt={job.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
+           onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
         </div>
 
         {/* Details */}

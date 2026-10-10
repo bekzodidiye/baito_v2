@@ -47,7 +47,13 @@ export const VerificationDetailModal: React.FC<VerificationDetailModalProps> = (
           <div className="flex items-center gap-3.5">
             <div className="w-14 h-14 rounded-2xl bg-white/10 text-white font-black text-xl flex items-center justify-center border border-white/20 overflow-hidden shrink-0">
               {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                <img src={user.avatarUrl} alt="" className="w-full h-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
               ) : (
                 <User size={24} />
               )}

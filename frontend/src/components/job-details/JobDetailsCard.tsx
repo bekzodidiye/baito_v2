@@ -21,12 +21,12 @@ export const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ selectedJob }) =
   // ones. The old code appended "so'm" whenever it could not see one, which
   // produced "15000 UZS so'm", and appended the Uzbek word whoever was
   // reading. Take the currency off, keep the figure, and let the locale say it.
-  const withCurrency = (raw: string, pattern: string) =>
-    pattern.replace('{rate}', raw.replace(/\s*(so['\u2019]m|сум|UZS)\s*$/i, '').trim());
+  const withCurrency = (raw: string | number, pattern: string) =>
+    pattern.replace('{rate}', String(raw).replace(/\s*(so['\u2019]m|сум|UZS)\s*$/i, '').trim());
 
   // "Yo'q" / "Нет" / "No" are how the three locales spell an unset rate.
-  const rateOrNull = (v?: string) =>
-    !v || v === "Yo'q" || v === "Нет" || v === "No" ? null : v;
+  const rateOrNull = (v?: string | number) =>
+    !v || String(v) === "Yo'q" || String(v) === "Нет" || String(v) === "No" ? null : v;
 
   const getDisplayHourly = () =>
     withCurrency(rateOrNull(selectedJob.hourlyRate) ?? '50 000', t.hourlyVal);
@@ -34,7 +34,7 @@ export const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ selectedJob }) =
   const getDisplayTransport = () => {
     const rate = rateOrNull(selectedJob.transportRate);
     return withCurrency(
-      rate && !rate.includes('xarajat') ? rate : '15 000',
+      rate && !String(rate).includes('xarajat') ? rate : '15 000',
       t.transportRateVal,
     );
   };

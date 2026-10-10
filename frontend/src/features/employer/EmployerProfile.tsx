@@ -109,7 +109,13 @@ export const EmployerProfile: React.FC = () => {
                     src={userProfile.profileImage}
                     alt={companyName}
                     className="w-full h-full object-cover"
-                  />
+                   onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
                 ) : (
                   companyName.charAt(0)
                 )}

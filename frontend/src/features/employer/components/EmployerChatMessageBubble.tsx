@@ -24,7 +24,13 @@ export const EmployerChatMessageBubble: React.FC<EmployerChatMessageBubbleProps>
       {!isRecruiter && (
         <div className="w-8 h-8 rounded-full bg-brand-surface-low flex-shrink-0 flex items-center justify-center overflow-hidden border border-brand-outline-variant shadow-xs">
           {activeSession.candidateAvatar ? (
-            <img src={activeSession.candidateAvatar} alt={activeSession.candidateName} className="w-full h-full object-cover" />
+            <img src={activeSession.candidateAvatar} alt={activeSession.candidateName} className="w-full h-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
           ) : (
             <span className="font-bold text-xs text-brand-primary">{(activeSession.candidateName || 'C').charAt(0)}</span>
           )}
@@ -44,7 +50,13 @@ export const EmployerChatMessageBubble: React.FC<EmployerChatMessageBubbleProps>
                       alt={t.imageLabel} 
                       className="w-full h-auto object-cover rounded-xl"
                       style={{ maxHeight: '280px' }}
-                    />
+                     onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
                   </div>
                   {imgMatch[2] && (
                     <p className="whitespace-pre-wrap leading-relaxed">{imgMatch[2]}</p>

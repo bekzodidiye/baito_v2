@@ -128,7 +128,13 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
                         disabled={isEditing}
                       />
                       {editForm.profileImage ? (
-                        <img src={editForm.profileImage} alt={t.fieldPhoto} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
+                        <img src={editForm.profileImage} alt={t.fieldPhoto} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
                       ) : (
                         <Camera size={30} className="text-slate-400 group-hover:text-brand-primary transition-colors stroke-[2.2]" />
                       )}

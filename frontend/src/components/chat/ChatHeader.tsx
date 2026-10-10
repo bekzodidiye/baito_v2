@@ -33,7 +33,13 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ activeChat, t, setCurren
             <div className="relative">
               <div className="w-10 h-10 rounded-full bg-brand-surface-low flex items-center justify-center overflow-hidden border border-brand-outline-variant">
                 {activeChat.recruiterAvatar ? (
-                  <img src={activeChat.recruiterAvatar} alt={activeChat.recruiterName || activeChat.companyName} className="w-full h-full object-cover" />
+                  <img src={activeChat.recruiterAvatar} alt={activeChat.recruiterName || activeChat.companyName} className="w-full h-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-brand-primary text-white font-bold text-xs">
                     {(activeChat.companyName || 'C').charAt(0)}

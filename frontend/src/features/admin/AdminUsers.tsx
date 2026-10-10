@@ -95,7 +95,13 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
                     <td className="p-4">
                       <div className="flex items-center gap-3 cursor-pointer" {...clickable(() => setSelectedUser(u))}>
                         <div className="w-9 h-9 rounded-full bg-slate-100 font-bold flex items-center justify-center shrink-0 border border-slate-200">
-                          {u.avatarUrl ? <img src={u.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" /> : u.name.charAt(0).toUpperCase()}
+                          {u.avatarUrl ? <img src={u.avatarUrl} alt="" className="w-full h-full rounded-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} /> : u.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <div className="font-bold text-slate-900 flex items-center gap-1.5">

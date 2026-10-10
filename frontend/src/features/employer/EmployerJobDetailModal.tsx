@@ -75,7 +75,13 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                 alt={job.title}
                 className="w-full h-full object-cover opacity-95"
                 loading="lazy"
-              />
+               onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
               
               {/* Top-left Badge (like "12 soat qoldi") */}
               {job.status === 'in_progress' ? (
@@ -187,7 +193,13 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-400 text-lg shrink-0 overflow-hidden">
                             {worker.avatarUrl ? (
-                              <img src={worker.avatarUrl} alt={worker.name} className="w-full h-full object-cover" />
+                              <img src={worker.avatarUrl} alt={worker.name} className="w-full h-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
                             ) : (
                               worker.name.charAt(0).toUpperCase()
                             )}

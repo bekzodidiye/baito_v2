@@ -112,7 +112,13 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
               alt={app.workerName || app.candidateName}
               className="w-full h-full rounded-full object-cover border-2 border-white bg-white"
               referrerPolicy="no-referrer"
-            />
+             onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
           </div>
           <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-0.5 border-2 border-white shadow-sm">
             <Star size={10} className="fill-white" />

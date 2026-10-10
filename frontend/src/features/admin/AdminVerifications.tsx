@@ -65,7 +65,13 @@ export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, o
                 >
                   <div className="w-11 h-11 rounded-2xl bg-slate-100 text-brand-primary font-bold flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden group-hover:border-blue-500 transition-colors">
                     {u.avatarUrl ? (
-                      <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      <img src={u.avatarUrl} alt="" className="w-full h-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
                     ) : (
                       <User size={20} />
                     )}

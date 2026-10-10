@@ -92,7 +92,13 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
               <div className="relative">
                 <div className="w-10 h-10 rounded-full bg-brand-surface-low flex items-center justify-center overflow-hidden border border-brand-outline-variant">
                   {activeSession.candidateAvatar ? (
-                    <img src={activeSession.candidateAvatar} alt={activeSession.candidateName} className="w-full h-full object-cover" />
+                    <img src={activeSession.candidateAvatar} alt={activeSession.candidateName} className="w-full h-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-brand-primary text-white font-bold text-xs">
                       {(activeSession.candidateName || 'C').charAt(0)}
@@ -142,7 +148,13 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
           <div className="flex items-center gap-2" id="typing-indicator">
             <div className="w-8 h-8 rounded-full bg-brand-surface-low overflow-hidden border border-brand-outline-variant flex-shrink-0 flex items-center justify-center">
               {activeSession.candidateAvatar ? (
-                <img src={activeSession.candidateAvatar} alt={activeSession.candidateName} className="w-full h-full object-cover animate-pulse" />
+                <img src={activeSession.candidateAvatar} alt={activeSession.candidateName} className="w-full h-full object-cover animate-pulse"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
               ) : (
                 <span className="font-bold text-xs text-brand-primary">{(activeSession.candidateName || 'C').charAt(0)}</span>
               )}
@@ -177,7 +189,13 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
                   src={attachedFile.previewUrl} 
                   alt={t.previewLabel} 
                   className="w-full h-full object-cover"
-                />
+                 onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
               </div>
               <button 
                 type="button" 

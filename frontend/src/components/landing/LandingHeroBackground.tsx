@@ -9,7 +9,13 @@ export const LandingHeroBackground: React.FC = () => {
         alt=""
         referrerPolicy="no-referrer"
         className="w-full h-full object-cover opacity-10 filter brightness-105 contrast-105 object-center mix-blend-multiply transition-all duration-500"
-      />
+       onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
       {/* Soft brand gradient overlays for seamless light theme blending */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-50/90 via-white/80 to-sky-50/90" />
       <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-transparent to-slate-50/90" />
