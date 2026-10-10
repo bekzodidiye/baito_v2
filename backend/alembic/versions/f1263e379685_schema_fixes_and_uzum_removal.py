@@ -44,11 +44,7 @@ def upgrade() -> None:
                    type_=sa.Integer(),
                    existing_nullable=False,
                    postgresql_using="COALESCE(NULLIF(regexp_replace(salary::text, '\\D', '', 'g'), ''), '0')::integer")
-            batch_op.alter_column('workDate',
-                   existing_type=sa.VARCHAR(),
-                   type_=sa.DateTime(timezone=True),
-                   existing_nullable=True,
-                   postgresql_using='NULLIF("workDate"::text, \'\')::timestamp with time zone')
+
             batch_op.alter_column('hourlyRate',
                    existing_type=sa.VARCHAR(),
                    type_=sa.Integer(),
@@ -133,10 +129,7 @@ def downgrade() -> None:
                existing_type=sa.Integer(),
                type_=sa.VARCHAR(),
                existing_nullable=True)
-        batch_op.alter_column('workDate',
-               existing_type=sa.DateTime(timezone=True),
-               type_=sa.VARCHAR(),
-               existing_nullable=True)
+
         batch_op.alter_column('salary',
                existing_type=sa.Integer(),
                type_=sa.VARCHAR(),
