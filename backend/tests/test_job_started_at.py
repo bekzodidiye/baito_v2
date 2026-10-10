@@ -79,7 +79,7 @@ def test_a_job_nobody_started_has_no_start_time(client):
 
 def test_the_day_being_worked_is_stamped_too(client):
     """On a multi-day posting the job-level stamp only describes the first day."""
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(timezone(timedelta(hours=5))).strftime("%Y-%m-%d")
     employer, worker, job = _hired_job(client, workDate=today)
     with SessionLocal() as db:
         db.add(JobDay(jobId=job.id, workDate=today, status=JobDayStatus.PENDING,
@@ -96,7 +96,7 @@ def test_the_day_being_worked_is_stamped_too(client):
 
 def test_a_future_day_is_not_stamped_as_started(client):
     """Confirming the start of a run does not mean tomorrow has begun."""
-    tomorrow = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d")
+    tomorrow = (datetime.now(timezone(timedelta(hours=5))) + timedelta(days=1)).strftime("%Y-%m-%d")
     employer, worker, job = _hired_job(client, workDate=tomorrow)
     with SessionLocal() as db:
         db.add(JobDay(jobId=job.id, workDate=tomorrow, status=JobDayStatus.PENDING,
