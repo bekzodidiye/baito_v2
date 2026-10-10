@@ -91,7 +91,7 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
         requirements, importantNote, tags, coordinates: { x: coordinateX, y: coordinateY }
       });
       onSubmitSuccess();
-    } catch (err) {
+    } catch {
       showToast(language === 'uz' ? "Serverda xatolik yuz berdi. Qaytadan urinib ko'ring." : "An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);

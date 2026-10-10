@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
-import { AdminDispute, AdminJob } from './types';
-import { AlertTriangle, ShieldCheck, ArrowRightLeft, DollarSign, CheckCircle2 } from 'lucide-react';
+
+import { AlertTriangle, ArrowRightLeft, DollarSign, CheckCircle2 } from 'lucide-react';
 import { useAdminData } from './useAdminData';
 import { apiClient } from '../../api/client';
 

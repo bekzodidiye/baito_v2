@@ -2,7 +2,7 @@ import React from 'react';
 import { AdminTab } from './types';
 import {
   Wallet, LayoutDashboard, Users, Briefcase, FileCheck, DollarSign, AlertTriangle, Send, Sliders, X, User,
-  Building2, Headphones, BarChart3, FolderTree, ShieldAlert, Ticket, MapPin, Bell, BellRing, Bot, Zap, FileText, ShieldCheck,
+  Building2, Headphones, BarChart3, FolderTree, ShieldAlert, Ticket, MapPin, Bell, BellRing, Bot, Zap, FileText,
 } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useAdminData } from './useAdminData';

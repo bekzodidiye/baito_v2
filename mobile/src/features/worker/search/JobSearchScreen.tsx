@@ -1,5 +1,5 @@
 import React from 'react';
-import { Briefcase, Loader2 } from 'lucide-react';
+import { Briefcase } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 
 import { SearchFilterSection } from './SearchFilterSection';
@@ -12,7 +12,6 @@ import { useJobSearchScreen } from '../../../hooks/useJobSearchScreen';
 import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll';
 import { SearchSidebar } from './SearchSidebar';
 import { JobSortHeader } from './JobSortHeader';
-import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 export const JobSearchScreen: React.FC = () => {
   const {

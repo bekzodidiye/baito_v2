@@ -5,7 +5,6 @@ import { getTranslatedJob } from '../jobTranslations';
 import { 
   isJobOnDay, 
   getJobTimeRelation, 
-  isOverlappingWithActiveJob, 
   getDayStatusForList
 } from '../features/worker/calendar/CalendarScreen.utils';
 import { useUIStore } from "../store/useUIStore";

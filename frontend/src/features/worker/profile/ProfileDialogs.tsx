@@ -1,6 +1,6 @@
 import { cardDigits, formatCard, schemeName, cardProblem } from '../../../utils/bankCard';
 import React from 'react';
-import { X, Camera, Check, Loader2, Plus, User } from 'lucide-react';
+import { X, Camera, Check, Loader2, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CustomSelect } from '../../../components/login/CustomSelect';
 import { uploadFileApi } from '../../../api/queries';

@@ -89,7 +89,7 @@ export const getJobDates = (job: Job): Date[] => {
       
       if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
         const dates = [];
-        let cur = new Date(startDate);
+        const cur = new Date(startDate);
         while (cur <= endDate) {
           dates.push(new Date(cur));
           cur.setDate(cur.getDate() + 1);
@@ -107,24 +107,6 @@ export const getJobDates = (job: Job): Date[] => {
   return [new Date()];
 };
 
-export const isJobInMonth = (job: Job, year: number, month: number): boolean => {
-  const dates = getJobDates(job);
-  return dates.some(d => d.getFullYear() === year && d.getMonth() === month);
-};
-
-export const isJobFutureDay = (job: Job, yearFromContext: number, monthFromContext: number, dayFromContext: number): boolean => {
-  const dates = getJobDates(job);
-  if (dates.length === 0) return false;
-  
-  dates.sort((a,b) => a.getTime() - b.getTime());
-  const firstDay = dates[0];
-  const today = new Date(yearFromContext, monthFromContext - 1, dayFromContext);
-  
-  firstDay.setHours(0,0,0,0);
-  today.setHours(0,0,0,0);
-  
-  return firstDay > today;
-};
 
 export const isJobOnDay = (job: Job, day: number, year: number, month: number): boolean => {
   const dates = getJobDates(job);

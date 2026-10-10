@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AdminTransaction } from './types';
-import { DollarSign, ArrowUpRight, ArrowDownLeft, ShieldCheck, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { DollarSign, ArrowUpRight, ArrowDownLeft, AlertCircle } from 'lucide-react';
 
 interface AdminTransactionsProps {
   transactions: AdminTransaction[];

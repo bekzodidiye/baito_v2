@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchPaymentCardsApi, addPaymentCardApi, fetchTransactionsApi, requestWithdrawalApi } from '../../api/queries';
+import { useQuery } from '@tanstack/react-query';
+import { fetchPaymentCardsApi, fetchTransactionsApi } from '../../api/queries';
 import { useAuthStore } from '../../store/useAuthStore';
 import { 
   ArrowLeft, Search, Wallet, TrendingUp, CreditCard, 
@@ -17,7 +17,6 @@ export const PaymentsScreen: React.FC = () => {
   const navigate = useNavigate();
   const { language } = useApp();
   const user = useAuthStore(state => state.userProfile);
-  const queryClient = useQueryClient();
 
   const [txFilter, setTxFilter] = useState<'all' | 'in' | 'out'>('all');
   const [modalType, setModalType] = useState<PaymentModalType>(null);

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { useEmployer } from '../../hooks/useEmployer';
 import { EmployerDashboard } from './EmployerDashboard';
 import { EmployerJobs } from './EmployerJobs';
 import { EmployerApplicants } from './EmployerApplicants';
@@ -8,7 +7,7 @@ import { EmployerChats } from './EmployerChats';
 import { EmployerProfile } from './EmployerProfile';
 import { JobPostForm } from './JobPostForm';
 import { EmployerAnalytics } from './EmployerAnalytics';
-import { Briefcase, FileText, MessageSquare, PlusCircle, LayoutDashboard, User, BarChart2, LogOut } from 'lucide-react';
+import { Briefcase, FileText, MessageSquare, LayoutDashboard, User, LogOut } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 

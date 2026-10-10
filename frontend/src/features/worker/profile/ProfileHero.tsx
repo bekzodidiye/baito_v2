@@ -1,6 +1,6 @@
 import { translations } from '../../../translations';
 import React from 'react';
-import { Camera, MapPin, Briefcase, Star, Award, Edit2 } from 'lucide-react';
+import { Camera, MapPin, Briefcase, Star, Edit2 } from 'lucide-react';
 import { useAuthStore } from "../../../store/useAuthStore";
 
 interface ProfileHeroProps {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
-import { Send, Bell, Users, CheckCircle2 } from 'lucide-react';
+import { Send, CheckCircle2 } from 'lucide-react';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 
 interface AdminBroadcastProps {

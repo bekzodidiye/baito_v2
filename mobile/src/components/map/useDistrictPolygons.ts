@@ -3,7 +3,7 @@ import L from 'leaflet';
 import { Job } from '../../types';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
 import { areDistrictNamesEqual, getDistrictColor } from './mapUtils';
-import { translateRegion, Language } from '../../translations';
+import { Language } from '../../translations';
 import { createDistrictOnEachFeature } from './districtFeatureUtils';
 
 interface UseDistrictPolygonsProps {

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useJobsData } from "../../context/useJobsData";
 import { LANDING_TEXTS } from './LandingData';
-import { Briefcase, Building2, Search, ArrowRight, Wallet, CheckCircle2, BadgeCheck, MapPin, Clock, Percent } from 'lucide-react';
+import { Briefcase, Building2, Search, ArrowRight, Wallet, BadgeCheck, MapPin, Percent } from 'lucide-react';
 import { LandingHeroBackground } from './LandingHeroBackground';
 import { LandingHeroShiftPreview } from './LandingHeroShiftPreview';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
@@ -12,8 +12,8 @@ interface LandingHeroProps {
 }
 
 export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, isLoggedIn, requireAuth } = useApp();
+  const { setCurrentScreen } = useCurrentScreen();
+  const { language } = useApp();
   const { jobs, isLoading } = useJobsData();
   const [activeTab, setActiveTab] = useState<'worker' | 'employer'>('worker');
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,9 +43,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (activeTab === 'employer') {
-      try { localStorage.setItem('baito_preselected_role', 'employer'); } catch (e) { }
+      try { localStorage.setItem('baito_preselected_role', 'employer'); } catch { /* ignore */ }
     } else {
-      try { localStorage.setItem('baito_preselected_role', 'worker'); } catch (e) { }
+      try { localStorage.setItem('baito_preselected_role', 'worker'); } catch { /* ignore */ }
     }
     setCurrentScreen('login');
   };
@@ -146,7 +146,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
               ) : (
                 <button
                   type="button"
-                  onClick={() => { try { localStorage.setItem('baito_preselected_role', 'employer'); } catch (e) { } setCurrentScreen('register'); }}
+                  onClick={() => { try { localStorage.setItem('baito_preselected_role', 'employer'); } catch { /* ignore */ } setCurrentScreen('register'); }}
                   className="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 hover:text-brand-primary font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
                 >
                   <Building2 size={16} className="text-brand-primary" />

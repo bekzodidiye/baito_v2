@@ -4,7 +4,7 @@ import { showToast } from '../utils/toast';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 
 export const useVerificationPending = () => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const { language, userProfile } = useApp();
   const { t, stepT } = getTranslations(language);
 

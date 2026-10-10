@@ -53,6 +53,33 @@ def _hired_count(db: Session, job_id: str) -> int:
 class JobService:
 
     @staticmethod
+    def _get_dates_for_job(db: Session, job: models.Job) -> set:
+        from app.models.job_day import JobDay
+        
+        days = db.query(JobDay).filter(JobDay.jobId == job.id).all()
+        if days:
+            return {str(d.workDate) for d in days if d.workDate}
+        return get_job_dates_set(job)
+
+    @staticmethod
+    def _get_dates_for_jobs_bulk(db: Session, jobs: list[models.Job]) -> dict:
+        from app.models.job_day import JobDay
+        
+        job_ids = [j.id for j in jobs]
+        job_days = db.query(JobDay).filter(JobDay.jobId.in_(job_ids)).all()
+        
+        result = {}
+        for d in job_days:
+            if d.workDate:
+                result.setdefault(d.jobId, set()).add(str(d.workDate))
+                
+        for job in jobs:
+            if job.id not in result:
+                result[job.id] = get_job_dates_set(job)
+                
+        return result
+
+    @staticmethod
     def get_job_or_fail(db: Session, job_id: str) -> models.Job:
         job = crud.job.get(db=db, id=job_id)
         if not job:
@@ -92,7 +119,7 @@ class JobService:
                 "status": existing_app.status,
             }
 
-        target_dates = get_job_dates_set(job)
+        target_dates = JobService._get_dates_for_job(db, job)
         worker_apps = (
             db.query(models.Application)
             .filter(
@@ -105,13 +132,13 @@ class JobService:
         if target_dates and worker_apps:
             app_job_ids = {a.jobId for a in worker_apps}
             app_jobs = db.query(models.Job).filter(models.Job.id.in_(app_job_ids)).all()
-            app_job_map = {j.id: j for j in app_jobs}
+            app_job_dates = JobService._get_dates_for_jobs_bulk(db, app_jobs)
 
             for t_date in target_dates:
                 same_day_count = 0
                 has_confirmed_job = False
                 for app in worker_apps:
-                    app_dates = get_job_dates_set(app_job_map.get(app.jobId))
+                    app_dates = app_job_dates.get(app.jobId, set())
                     if t_date in app_dates:
                         same_day_count += 1
                         if app.status in COMMITTED_APP_STATUSES:
@@ -179,7 +206,7 @@ class JobService:
                 day.startedAt = datetime.now(timezone.utc)
                 db.add(day)
 
-            job_dates = get_job_dates_set(job)
+            job_dates = JobService._get_dates_for_job(db, job)
             if job_dates:
                 others = (
                     db.query(models.Application)
@@ -190,16 +217,13 @@ class JobService:
                     )
                     .all()
                 )
-                other_jobs = {
-                    j.id: j
-                    for j in db.query(models.Job)
-                    .filter(models.Job.id.in_({a.jobId for a in others}))
-                    .all()
-                } if others else {}
-                for other in others:
-                    if job_dates & get_job_dates_set(other_jobs.get(other.jobId)):
-                        other.status = "withdrawn"
-                        db.add(other)
+                if others:
+                    other_jobs = db.query(models.Job).filter(models.Job.id.in_({a.jobId for a in others})).all()
+                    other_job_dates = JobService._get_dates_for_jobs_bulk(db, other_jobs)
+                    for other in others:
+                        if job_dates & other_job_dates.get(other.jobId, set()):
+                            other.status = "withdrawn"
+                            db.add(other)
 
             db.add(models.Notification(
                 id=str(uuid.uuid4()), userId=job.employerId,
@@ -250,7 +274,7 @@ class JobService:
                 day.startedAt = datetime.now(timezone.utc)
                 db.add(day)
 
-            job_dates = get_job_dates_set(job)
+            job_dates = JobService._get_dates_for_job(db, job)
 
             if job_dates:
                 worker_ids = [app.workerId for app in apps]
@@ -265,11 +289,10 @@ class JobService:
                 )
                 if all_other_apps:
                     other_job_ids = {a.jobId for a in all_other_apps}
-                    other_job_map = {
-                        j.id: j for j in db.query(models.Job).filter(models.Job.id.in_(other_job_ids)).all()
-                    }
+                    other_jobs = db.query(models.Job).filter(models.Job.id.in_(other_job_ids)).all()
+                    other_job_dates = JobService._get_dates_for_jobs_bulk(db, other_jobs)
                     for other_app in all_other_apps:
-                        if job_dates & get_job_dates_set(other_job_map.get(other_app.jobId)):
+                        if job_dates & other_job_dates.get(other_app.jobId, set()):
                             other_app.status = "withdrawn"
                             db.add(other_app)
 

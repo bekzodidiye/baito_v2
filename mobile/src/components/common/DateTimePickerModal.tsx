@@ -16,12 +16,12 @@ interface DateTimePickerModalProps {
 export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
   isOpen, onClose, workDateValue, startTimeValue, endTimeValue, onSave
 }) => {
-  if (!isOpen) return null;
+
 
   const initialDates = workDateValue ? workDateValue.split(', ').filter(Boolean) : [new Date().toISOString().split('T')[0]];
   const [selectedDates, setSelectedDates] = useState<string[]>(initialDates);
   const initialDateObj = selectedDates[0] ? new Date(selectedDates[0]) : new Date();
-  const [currYear, setCurrYear] = useState(initialDateObj.getFullYear() || 2026);
+  const [currYear] = useState(initialDateObj.getFullYear() || 2026);
   const [currMonth, setCurrMonth] = useState(initialDateObj.getMonth() ?? 7);
 
   const [timeTab, setTimeTab] = useState<'start' | 'end'>('start');
@@ -60,6 +60,8 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
     onSave(datesStr, sStr, eStr, `${selectedDates.length} kunlik`);
     onClose();
   };
+
+  if (!isOpen) return null;
 
   return (
     <AnimatePresence>

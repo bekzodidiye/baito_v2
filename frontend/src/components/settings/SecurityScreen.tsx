@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { translations } from '../../translations';
-import { ArrowLeft, ChevronRight, Shield, Lock, ShieldCheck, Fingerprint, Smartphone, Monitor, Tablet, ShieldAlert, Loader2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Lock, ShieldCheck, Smartphone, Monitor, Tablet, ShieldAlert, Loader2 } from 'lucide-react';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
-import { fetchActiveSessionsApi, logoutSessionApi, logoutAllOtherSessionsApi, changePasswordApi, updateUserProfileApi } from '../../api/queries';
+import { fetchActiveSessionsApi, logoutSessionApi, logoutAllOtherSessionsApi, changePasswordApi } from '../../api/queries';
 import { useAuthStore } from '../../store/useAuthStore';
 import { formatShortDate } from '../../utils/dateFormat';
 export const SecurityScreen: React.FC = () => {

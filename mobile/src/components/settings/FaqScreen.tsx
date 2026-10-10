@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
 import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const FaqScreen: React.FC = () => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 

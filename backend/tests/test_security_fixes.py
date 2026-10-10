@@ -4,12 +4,10 @@ Each test names the behaviour that used to be wrong, so a future refactor that
 reintroduces it fails here rather than in production.
 """
 
-import hashlib
-import hmac
 
 from app.core.config import settings
 from app.db.session import SessionLocal
-from app.models import Transaction, User
+from app.models import User
 
 from .conftest import TEST_PASSWORD, login, make_job, make_user
 

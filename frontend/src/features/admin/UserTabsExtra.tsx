@@ -4,7 +4,6 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { apiClient } from '../../api/client';
 import { AdminUserDetailResponse } from './types';
 import { PlusCircle, Wallet, History, AlertCircle, FileText, Send, CheckCircle, Clock, XCircle, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
 
 interface UserTabsExtraProps {
   detail: AdminUserDetailResponse;

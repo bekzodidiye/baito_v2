@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, TrendingUp, Users, DollarSign, Download, ArrowUpRight, Award, PieChart } from 'lucide-react';
+import { BarChart3, Download, ArrowUpRight, Award, PieChart } from 'lucide-react';
 
 export const AdminAnalytics: React.FC = () => {
   const handleExport = (type: string) => {

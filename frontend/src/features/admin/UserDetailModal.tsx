@@ -16,7 +16,6 @@ import {
   Loader2,
 } from 'lucide-react';
 import { apiClient } from '../../api/client';
-import { useApp } from '../../context/AppContext';
 import { BanUserModal } from './BanUserModal';
 import { UserTabsMain } from './UserTabsMain';
 import { UserTabsExtra } from './UserTabsExtra';

@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { Logo } from '../Logo';
 import { LANDING_TEXTS } from './LandingData';
-import { ShieldCheck, Heart, Send, Phone, Mail, MapPin } from 'lucide-react';
+import { ShieldCheck, Heart, Phone, Mail, MapPin } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useAuthStore } from "../../store/useAuthStore";
 

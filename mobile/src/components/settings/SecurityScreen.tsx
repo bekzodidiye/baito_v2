@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { ArrowLeft, ChevronRight, Search, Shield, Lock, ShieldCheck, Fingerprint, Smartphone, Monitor, Tablet, ShieldAlert, Loader2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Search, Lock, ShieldCheck, Fingerprint, Smartphone, Monitor, Tablet, ShieldAlert, Loader2 } from 'lucide-react';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { fetchActiveSessionsApi, logoutSessionApi, logoutAllOtherSessionsApi, changePasswordApi, updateUserProfileApi } from '../../api/queries';
-import { useAuthStore } from '../../store/useAuthStore';
 export const SecurityScreen: React.FC = () => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const { userProfile, setUserProfile } = useApp();
   
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(userProfile?.two_factor_enabled ?? false);

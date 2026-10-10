@@ -21,7 +21,7 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
   handleCalculateDistance,
   isLocating,
 }) => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const { language, setMapFocusedJobId } = useApp();
   const t = translations[language];
 

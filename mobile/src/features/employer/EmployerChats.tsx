@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useEmployerChat } from '../../hooks/useEmployerChat';
 import { EmployerChatList } from './components/EmployerChatList';
@@ -23,7 +23,6 @@ export const EmployerChats: React.FC<EmployerChatsProps> = ({
     activeSession,
     isTyping,
     sendMessage,
-    createSession,
     language
   } = useEmployerChat(initialTargetCandidate, onClearTargetCandidate);
 

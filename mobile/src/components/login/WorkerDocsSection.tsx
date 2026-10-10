@@ -36,8 +36,8 @@ export const WorkerDocsSection: React.FC<WorkerDocsSectionProps> = (props) => {
   const {
     passportSeries, setPassportSeries, passportNumber, setPassportNumber,
     jshshir, setJshshir, docFileName1, setDocFileName1, docFileName2, setDocFileName2,
-    docFileName3, setDocFileName3, isDragging1, setIsDragging1, isDragging2, setIsDragging2,
-    isDragging3, setIsDragging3, triggerDoc1Select, triggerDoc2Select, triggerDoc3Select,
+    docFileName3, setDocFileName3, setIsDragging1, setIsDragging2,
+    setIsDragging3, triggerDoc1Select, triggerDoc2Select, triggerDoc3Select,
     doc1InputRef, doc2InputRef, doc3InputRef, handleDoc1Upload, handleDoc2Upload, handleDoc3Upload, t
   } = props;
 

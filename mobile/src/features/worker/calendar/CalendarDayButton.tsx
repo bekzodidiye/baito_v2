@@ -107,9 +107,9 @@ export const CalendarDayButton: React.FC<CalendarDayButtonProps> = ({
     oneJob = filteredJobs[0];
   }
   
-  let tooltipJobs: Job[] = oneJob ? [oneJob] : [];
+  const tooltipJobs: Job[] = oneJob ? [oneJob] : [];
   const monthName = MONTHS_TRANSLATIONS[language][currentMonth];
-  let tooltipTitle = language === 'ru' 
+  const tooltipTitle = language === 'ru' 
     ? `Задачи на ${day} ${monthName}` 
     : language === 'en' 
       ? `Tasks for ${monthName} ${day}` 

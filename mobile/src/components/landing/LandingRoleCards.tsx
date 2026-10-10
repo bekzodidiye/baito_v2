@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { LANDING_TEXTS } from './LandingData';
-import { UserCheck, Building2, CheckCircle2, ArrowRight, ShieldCheck, Users, Clock, CreditCard } from 'lucide-react';
+import { UserCheck, Building2, ArrowRight, ShieldCheck, Users } from 'lucide-react';
 
 interface LandingRoleCardsProps {
   onSelectRole: (role: 'worker' | 'employer') => void;
 }
 
 export const LandingRoleCards: React.FC<LandingRoleCardsProps> = ({ onSelectRole }) => {
-  const { language, requireAuth } = useApp();
+  const { language } = useApp();
   const [activeRole, setActiveRole] = useState<'worker' | 'employer'>('worker');
   const t = LANDING_TEXTS[language as keyof typeof LANDING_TEXTS] || LANDING_TEXTS.uz;
 

@@ -1,7 +1,6 @@
 import React from 'react';
-import { Smartphone, Lock, Eye, EyeOff, Check, ArrowRight, Edit2 } from 'lucide-react';
+import { Smartphone, Lock, Eye, EyeOff, Check, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Link } from 'react-router-dom';
 
 interface FinishViewProps {
   selectedRole?: 'worker' | 'employer' | null;
@@ -169,6 +168,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
             <input
               type={regShowPassword ? 'text' : 'password'}
               required
+              autoComplete="new-password"
               value={regPassword}
               onChange={(e) => setRegPassword(e.target.value)}
               placeholder="••••••••"
@@ -196,6 +196,7 @@ export const FinishView: React.FC<FinishViewProps> = ({
             <input
               type={regShowPassword ? 'text' : 'password'}
               required
+              autoComplete="new-password"
               value={regConfirmPassword}
               onChange={(e) => setRegConfirmPassword(e.target.value)}
               placeholder="••••••••"

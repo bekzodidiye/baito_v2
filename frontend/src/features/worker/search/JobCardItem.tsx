@@ -16,22 +16,7 @@ interface JobCardItemProps {
   isActive?: boolean;
 }
 
-const getTagStyles = (tag: string) => {
-  const t = tag.toLowerCase();
-  if (t.includes('kunlik') || t.includes('smena') || t.includes('day')) {
-    return 'bg-blue-50/70 text-blue-600 border-blue-100/60';
-  }
-  if (t.includes('tushlik') || t.includes('yotoq') || t.includes('ovqat') || t.includes('lunch') || t.includes('food') || t.includes('bepul')) {
-    return 'bg-emerald-50/70 text-emerald-600 border-emerald-100/60';
-  }
-  if (t.includes('shoshilinch') || t.includes('og\'ir') || t.includes('tezkor') || t.includes('urgent') || t.includes('heavy')) {
-    return 'bg-rose-50/70 text-rose-600 border-rose-100/60';
-  }
-  if (t.includes('oson') || t.includes('yengil') || t.includes('easy') || t.includes('erkin')) {
-    return 'bg-amber-50/70 text-amber-600 border-amber-100/60';
-  }
-  return 'bg-slate-50/80 text-slate-500 border-slate-100';
-};
+
 
 const JobCardItemComponent: React.FC<JobCardItemProps> = ({
   job,

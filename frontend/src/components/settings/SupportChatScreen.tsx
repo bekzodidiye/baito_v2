@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { translations } from '../../translations';
-import { ArrowLeft, Send, User } from 'lucide-react';
+import { ArrowLeft, Send } from 'lucide-react';
 import { Logo } from '../Logo';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { fetchSupportConversationApi, sendSupportMessageApi } from '../../api/queries';

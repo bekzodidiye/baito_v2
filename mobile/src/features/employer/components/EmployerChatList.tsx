@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Inbox, SquarePen, Search, X } from 'lucide-react';
+import { Inbox, Search, X } from 'lucide-react';
 import { EmployerPageHeader } from '../EmployerPageHeader';
 import { ChatSession } from '../../../hooks/useEmployerChat';
 

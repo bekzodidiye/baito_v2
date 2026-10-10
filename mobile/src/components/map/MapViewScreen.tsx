@@ -13,7 +13,6 @@ import { JobDetailModal } from './JobDetailModal';
 import { RegionSelector } from '../RegionSelector';
 import { MapLoadingSkeleton } from './MapLoadingSkeleton';
 
-import { useApp } from '../../context/AppContext';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface MapViewScreenProps {
@@ -23,11 +22,9 @@ interface MapViewScreenProps {
 export const MapViewScreen: React.FC<MapViewScreenProps> = ({ 
   className = "h-[calc(100vh-56px-64px)] md:h-[calc(100vh-64px)] mt-14 md:mt-0" 
 }) => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { currentScreen } = useCurrentScreen();
   
   const {
-    language,
-    t,
     toggleBookmark,
     applyToJob,
     filterLocation,
@@ -38,7 +35,6 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
     setSelectedJob,
     activeCluster,
     isRefreshing,
-    isMapLoading,
     isPanelExpanded,
     setIsPanelExpanded,
     mapType,

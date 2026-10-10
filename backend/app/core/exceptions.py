@@ -72,6 +72,3 @@ class ApplicationError(DomainException):
         super().__init__(message, status_code=400)
 
 
-class ValidationDomainError(DomainException):
-    def __init__(self, message: str):
-        super().__init__(message, status_code=400)

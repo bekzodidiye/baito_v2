@@ -5,7 +5,6 @@
  *  full for shifts nobody had worked — and once the server started refusing
  *  that, the button was simply a way to earn an error.
  */
-import React from 'react';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

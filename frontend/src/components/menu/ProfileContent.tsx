@@ -2,7 +2,6 @@ import React from 'react';
 import { Mail, Phone, MapPin, Briefcase, LogOut } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { MODAL_TRANSLATIONS } from './MenuTranslations';
-import { showToast } from '../../utils/toast';
 import { useAuthStore } from "../../store/useAuthStore";
 
 interface ProfileContentProps {

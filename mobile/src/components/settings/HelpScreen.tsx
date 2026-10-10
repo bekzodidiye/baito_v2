@@ -1,10 +1,9 @@
 import React from 'react';
-import { useApp } from '../../context/AppContext';
 import { ArrowLeft, HelpCircle, FileText, MessageCircle, Phone, ChevronRight, Mail } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const HelpScreen: React.FC = () => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   
 
   return (

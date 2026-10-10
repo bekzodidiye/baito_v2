@@ -36,7 +36,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
       await onSave(name.trim(), phone.trim());
       showToast(language === 'uz' ? "Profil yangilandi!" : "Профиль обновлен!");
       onClose();
-    } catch (err) {
+    } catch {
       showToast(language === 'uz' ? "Xatolik yuz berdi" : "Произошла ошибка");
     } finally {
       setIsSubmitting(false);

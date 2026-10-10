@@ -1,8 +1,6 @@
 import React from 'react';
-import { Briefcase, ChevronRight, History, MessageSquare, Award, Coins, FileText, ClipboardList } from 'lucide-react';
+import { Briefcase, ChevronRight, History, MessageSquare, Coins, FileText, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { showToast } from '../../../utils/toast';
-import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 interface ProfileAccordionProps {
   expandedSection: 'activity' | 'settings' | 'help' | null;
@@ -49,7 +47,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
             >
               <div className="divide-y divide-slate-100">
                 <div 
-                  onClick={() => { setCurrentScreen('calendar'); (null); }}
+                  onClick={() => { setCurrentScreen('calendar'); }}
                   className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
@@ -60,7 +58,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
                 </div>
 
                 <div 
-                  onClick={() => { setCurrentScreen('applications'); (null); }}
+                  onClick={() => { setCurrentScreen('applications'); }}
                   className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
@@ -117,7 +115,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
       {/* 2. Sozlamalar Accordion (Direct Link) */}
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
         <button 
-          onClick={() => { setCurrentScreen('settings'); (null); }}
+          onClick={() => { setCurrentScreen('settings'); }}
           className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           <div className="flex items-center gap-2">
@@ -131,7 +129,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
       {/* 3. Yordam Accordion (Direct Link) */}
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
         <button 
-          onClick={() => { setCurrentScreen('help'); (null); }}
+          onClick={() => { setCurrentScreen('help'); }}
           className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           <div className="flex items-center gap-2">
@@ -144,7 +142,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
       {/* 4. Maxfiylik siyosati (Direct Link) */}
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs mt-3">
         <button 
-          onClick={() => { setCurrentScreen('privacy'); (null); }}
+          onClick={() => { setCurrentScreen('privacy'); }}
           className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           <div className="flex items-center gap-2">

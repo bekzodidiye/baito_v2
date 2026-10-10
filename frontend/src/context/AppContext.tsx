@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react';
-import { AppContextType, UserProfile, ScreenType } from './types';
+import { AppContextType, ScreenType } from './types';
 import { useAuthStore } from '../store/useAuthStore';
 import { useUIStore } from '../store/useUIStore';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { safeGetItem } from './utils';
 import { fetchUserProfileApi, logoutApi } from '../api/queries';
 
 export * from './types';

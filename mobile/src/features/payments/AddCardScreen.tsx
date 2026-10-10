@@ -118,7 +118,7 @@ export const AddCardScreen: React.FC = () => {
   };
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, '');
+    const value = e.target.value.replace(/\D/g, '');
     let formattedValue = '';
     for (let i = 0; i < value.length; i++) {
       if (i > 0 && i % 4 === 0) formattedValue += ' ';

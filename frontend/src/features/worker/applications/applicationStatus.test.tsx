@@ -7,7 +7,6 @@
  *  Being hired is not where a worker stops: they confirm, they ask to start,
  *  they work, they finish, and the application status moves with them.
  */
-import React from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
 import { ApplicationCard } from './ApplicationCard';

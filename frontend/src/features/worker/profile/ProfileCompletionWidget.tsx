@@ -1,5 +1,5 @@
 import React from 'react';
-import { Target, ChevronRight, AlertCircle, Edit2 } from 'lucide-react';
+import { Target, AlertCircle, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 import { useAuthStore } from "../../../store/useAuthStore";

@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useChatsData } from "../context/useChatsData";
 import { translations } from '../translations';
 import { getTranslatedChat } from '../chatTranslations';
-import { Chat } from '../types';
 import { useUIStore } from "../store/useUIStore";
 import { useAuthStore } from "../store/useAuthStore";
 

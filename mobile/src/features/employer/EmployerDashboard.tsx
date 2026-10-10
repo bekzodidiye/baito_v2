@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
-import { Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { EmployerStatsBanner } from './EmployerStatsBanner';
 import { EmployerJobsList } from './EmployerJobsList';

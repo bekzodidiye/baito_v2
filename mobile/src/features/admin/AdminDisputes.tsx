@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { AdminDispute, AdminJob } from './types';
-import { AlertTriangle, ShieldCheck, ArrowRightLeft, DollarSign, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, ArrowRightLeft, DollarSign, CheckCircle2 } from 'lucide-react';
 import { useAdminData } from './useAdminData';
 import { apiClient } from '../../api/client';
 
@@ -22,7 +21,7 @@ export const AdminDisputes: React.FC = () => {
         body: JSON.stringify({ status: 'resolved', adminNotes: `Resolved in favor of ${winner}` })
       });
       refresh();
-      (
+      console.log(
         winner === 'worker'
           ? "Nizo hal qilindi: Escrow mablag'i Ishchiga o'tkazildi"
           : "Nizo hal qilindi: Escrow mablag'i Ish beruvchiga qaytarildi"

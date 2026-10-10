@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AdminLog } from './types';
-import { ShieldAlert, Search, Filter, Download, UserCheck, Ban, Trash2, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, Search, Filter, Download, UserCheck, Ban, CheckCircle2 } from 'lucide-react';
 
 const INITIAL_LOGS: AdminLog[] = [
   {

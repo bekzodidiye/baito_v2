@@ -6,37 +6,15 @@ export const fetchJobs = async (): Promise<Job[]> => {
   return await apiClient('/jobs');
 };
 
-export const fetchRecommendedJobs = async (limit = 20): Promise<Job[]> => {
-  return await apiClient(`/jobs/recommended?limit=${limit}`);
-};
 
-export const fetchNearbyJobs = async (lat: number, lng: number, radiusKm = 10): Promise<Job[]> => {
-  return await apiClient(`/jobs/nearby?lat=${lat}&lng=${lng}&radius_km=${radiusKm}`);
-};
 
-export const postJobApi = async (jobData: Partial<Job>): Promise<Job> => {
-  return await apiClient('/jobs', {
-    method: 'POST',
-    body: JSON.stringify(jobData)
-  });
-};
 
-export const deleteJobApi = async (jobId: string) => {
-  return await apiClient(`/jobs/${jobId}`, {
-    method: 'DELETE'
-  });
-};
 
-export const completeJobApi = async (jobId: string, data?: { rating?: number; review?: string; bonus?: number }) => {
-  return await apiClient(`/jobs/${jobId}/complete`, {
-    method: 'POST',
-    body: JSON.stringify(data || {})
-  });
-};
 
-export const incrementJobViewApi = async (jobId: string) => {
-  return await apiClient(`/jobs/${jobId}/view`, { method: 'POST' });
-};
+
+
+
+
 
 // Job Action API
 export const bookmarkJobApi = async (jobId: string) => {
@@ -60,39 +38,11 @@ export const fetchWorkerApplicationsApi = async () => {
   return await apiClient('/applications/worker');
 };
 
-export const fetchEmployerApplicationsApi = async () => {
-  return await apiClient('/applications/employer');
-};
 
-export const updateApplicationStatusApi = async (appId: string, status: string) => {
-  return await apiClient(`/applications/${appId}/status`, {
-    method: 'PUT',
-    body: JSON.stringify({ status })
-  });
-};
 
-// Chats API
-export const fetchChats = async (): Promise<Chat[]> => {
-  return await apiClient('/chats');
-};
 
-export const fetchChatMessages = async (chatId: string) => {
-  return await apiClient(`/chats/${chatId}/messages`);
-};
 
-export const createChatApi = async (employerId: string, jobId?: string) => {
-  return await apiClient('/chats', {
-    method: 'POST',
-    body: JSON.stringify({ employerId, jobId })
-  });
-};
 
-export const sendMessageApi = async (chatId: string, text: string) => {
-  return await apiClient(`/chats/${chatId}/messages`, {
-    method: 'POST',
-    body: JSON.stringify({ text })
-  });
-};
 
 // Notifications API
 export const fetchNotificationsApi = async () => {
@@ -103,25 +53,7 @@ export const markAllNotificationsReadApi = async () => {
   return await apiClient('/notifications/read-all', { method: 'POST' });
 };
 
-export const uploadFileApi = async (file: File): Promise<string> => {
-  const formData = new FormData();
-  formData.append('file', file);
-  const token = (typeof localStorage !== 'undefined' ? localStorage.getItem('baito_access_token') : '') || '';
-  const baseUrl = getApiBaseUrl();
-  const response = await fetch(`${baseUrl}/upload/`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: formData,
-  });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || 'Fayl yuklashda xatolik yuz berdi');
-  }
-
-  const data = await response.json();
-  return data.url;
-};
 
 // User & Profile API
 export const fetchUserProfileApi = async () => {
@@ -198,19 +130,7 @@ export const registerApi = async (data: any) => {
   });
 };
 
-export const sendSmsApi = async (phone: string) => {
-  return await apiClient('/auth/send-sms', {
-    method: 'POST',
-    body: JSON.stringify({ phone })
-  });
-};
 
-export const verifySmsApi = async (phone: string, code: string) => {
-  return await apiClient('/auth/verify-sms', {
-    method: 'POST',
-    body: JSON.stringify({ phone, code })
-  });
-};
 
 // Payments API
 export const requestWithdrawalApi = async (amount: number) => {
@@ -245,5 +165,4 @@ export const fetchTransactionsApi = async () => {
   return await apiClient('/payments/transactions');
 };
 
-export const updateJobsStorage = (_jobs?: any[]) => {};
-export const updateChatsStorage = (_chats?: any[]) => {};
+

@@ -9,6 +9,8 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+import re
+from sqlalchemy import text
 
 
 # revision identifiers, used by Alembic.
@@ -16,9 +18,6 @@ revision: str = 'f19942162cbf'
 down_revision: Union[str, None] = '0017_privacy_consent'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
-import re
-from sqlalchemy import text
 
 # Regex from app.core.money
 _NUMBER_RE = re.compile(r"\d[\d\s '’,.]*\d|\d")

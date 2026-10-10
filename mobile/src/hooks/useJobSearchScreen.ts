@@ -13,7 +13,7 @@ export function useJobSearchScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { districtsGeoJsonData } = useUzbekistanGeoJson();
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const { filterLocation, setFilterLocation, setShowRegionSelector, language, activeCalendarDay } = useApp();
   const { jobs: rawJobs, toggleBookmark, applyToJob } = useJobsData();
 
@@ -100,12 +100,12 @@ export function useJobSearchScreen() {
   const getJobsCountSummary = () => {
     const count = filteredJobs.length;
     if (filterLocation === 'Barchasi') {
-      return count === 0 ? t.noJobsUzbekistan : t.jobsFoundUzbekistan.replace('{count}', count.toString());
+      return count === 0 ? (t.noJobsUzbekistan || '') : (t.jobsFoundUzbekistan || '{count}').replace('{count}', count.toString());
     } else {
       const locName = translateRegion(filterLocation, language);
       return count === 0 
-        ? t.noJobsInArea.replace('{location}', locName) 
-        : t.jobsFoundInArea.replace('{location}', locName).replace('{count}', count.toString());
+        ? (t.noJobsInArea || '').replace('{location}', locName) 
+        : (t.jobsFoundInArea || '{location}: {count}').replace('{location}', locName).replace('{count}', count.toString());
     }
   };
 

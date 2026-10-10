@@ -1128,10 +1128,10 @@
     "semantic_hash": ""
   },
   "backend/tests/test_job_started_at.py": {
-    "mtime": 1789545685.7667496,
-    "seen": 1789900503.01917,
-    "ast_hash": "0bd83740df552d4fa090dca8f389cc72",
-    "semantic_hash": "0bd83740df552d4fa090dca8f389cc72"
+    "mtime": 1790104834.046516,
+    "seen": 1790104852.3226664,
+    "ast_hash": "a72c4f6d869f623534eea6c35c62bd49",
+    "semantic_hash": ""
   },
   "backend/tests/test_job_validation.py": {
     "mtime": 1790092425.8412619,
@@ -5264,19 +5264,19 @@
   "frontend/data/source/uzbekistan_districts.json": {
     "mtime": 1788518942.5360365,
     "seen": 1790104152.4542527,
-    "ast_hash": "57353647ddbc24e518158fe2d7287d97",
+    "ast_hash": "",
     "semantic_hash": ""
   },
   "frontend/src/data/geo/uzbekistan_districts.json": {
     "mtime": 1788518943.2995298,
     "seen": 1790104152.454419,
-    "ast_hash": "006d1c7fc93046e4c6187fdbf278c807",
+    "ast_hash": "",
     "semantic_hash": ""
   },
   "mobile/public/uzbekistan_districts_original.json": {
     "mtime": 1787754888.3685987,
     "seen": 1790104152.4546678,
-    "ast_hash": "57353647ddbc24e518158fe2d7287d97",
+    "ast_hash": "",
     "semantic_hash": ""
   },
   "scratch/update_models.py": {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NotificationTemplate } from './types';
-import { BellRing, Plus, Edit2, CheckCircle, MessageSquare, Smartphone, Zap, ToggleLeft, ToggleRight } from 'lucide-react';
+import { BellRing, Zap, ToggleLeft, ToggleRight } from 'lucide-react';
 
 const INITIAL_RULES: NotificationTemplate[] = [
   {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Calendar, Timer, DollarSign, Zap, Truck, Users } from 'lucide-react';
 import { Job } from '../../types';
-import { getJobDateDisplay, getJobShiftTime, getJobDuration } from '../../utils/jobTimeUtils';
+import { getJobDateDisplay, getJobShiftTime } from '../../utils/jobTimeUtils';
 import { getJobCategory } from '../../utils/jobCategoryUtils';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
@@ -24,10 +24,11 @@ export const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ selectedJob }) =
   };
 
   const getDisplayTransport = () => {
-    if (selectedJob.transportRate && selectedJob.transportRate !== "Yo'q" && selectedJob.transportRate !== "Нет" && selectedJob.transportRate !== "No" && !selectedJob.transportRate.includes('xarajat')) {
-      return selectedJob.transportRate.includes("so'm") || selectedJob.transportRate.includes("сум") ? selectedJob.transportRate : `${selectedJob.transportRate} so'm`;
+    const tr = String(selectedJob.transportRate || '');
+    if (tr && tr !== "Yo'q" && tr !== "Нет" && tr !== "No" && !tr.includes('xarajat')) {
+      return tr.includes("so'm") || tr.includes("сум") ? tr : `${tr} so'm`;
     }
-    return selectedJob.transportRate || (language === 'uz' ? "15 000 so'm" : language === 'ru' ? "15 000 сум" : "15,000 UZS");
+    return tr || (language === 'uz' ? "15 000 so'm" : language === 'ru' ? "15 000 сум" : "15,000 UZS");
   };
 
   const durationBadge = selectedJob.durationLabel ? `${selectedJob.durationLabel} muddatgacha` : "12 soat muddatgacha";

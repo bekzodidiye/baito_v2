@@ -3,7 +3,7 @@ import { negotiablePay } from './useLandingCategories';
 import { useApp } from '../../context/AppContext';
 import { useJobsData } from "../../context/useJobsData";
 import { LANDING_TEXTS } from './LandingData';
-import { Briefcase, Building2, Search, ArrowRight, Wallet, CheckCircle2, BadgeCheck, MapPin, Clock, Percent } from 'lucide-react';
+import { Briefcase, Building2, Search, ArrowRight, Wallet, BadgeCheck, MapPin, Percent } from 'lucide-react';
 import { LandingHeroBackground } from './LandingHeroBackground';
 import { LandingHeroShiftPreview } from './LandingHeroShiftPreview';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';

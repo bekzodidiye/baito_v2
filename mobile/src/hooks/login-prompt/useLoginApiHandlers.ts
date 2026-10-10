@@ -6,7 +6,7 @@ import { showToast } from '../../utils/toast';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () => void) => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const { language, setIsLoggedIn, setUserProfile, executePendingRedirect } = useApp();
   const t = LOCAL_TEXTS[language as 'uz' | 'ru' | 'en'] || LOCAL_TEXTS.uz;
 
@@ -176,7 +176,7 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
           else setCurrentScreen('jobs');
         }
       }
-    } catch (err) {
+    } catch {
       showToast(language === 'uz' ? "Telefon raqam yoki parol xato" : "Неверный телефон или пароль");
     }
   };
@@ -194,7 +194,7 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
       });
       state.setIsCodeSent(true);
       showToast(language === 'uz' ? "Tasdiqlash kodi telefoningizga yuborildi!" : "Код подтверждения отправлен на ваш телефон!");
-    } catch (err) {
+    } catch {
       showToast(language === 'uz' ? "Kodni yuborishda xatolik yuz berdi" : "Ошибка при отправке кода");
     } finally {
       state.setIsSendingCode(false);

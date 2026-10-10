@@ -12,7 +12,6 @@
  *  And the dashboard's day strip matched `job.workDate === day`, on a field
  *  that holds every day a shift is worked, and filtered by no status at all.
  */
-import React from 'react';
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import fs from 'node:fs';

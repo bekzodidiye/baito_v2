@@ -5,7 +5,7 @@ import { MODAL_TRANSLATIONS } from './MenuTranslations';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const SettingsContent: React.FC = () => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const { language, setLanguage } = useApp();
   const t = MODAL_TRANSLATIONS[language];
 

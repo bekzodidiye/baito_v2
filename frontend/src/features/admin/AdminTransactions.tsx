@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { apiClient } from '../../api/client';
 import { showToast } from '../../utils/toast';
 import { AdminTransaction } from './types';
-import { DollarSign, ArrowUpRight, ArrowDownLeft, ShieldCheck, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { DollarSign, ArrowUpRight, ArrowDownLeft, AlertCircle } from 'lucide-react';
 
 interface AdminTransactionsProps {
   /** Lets the list refresh after a decision. */

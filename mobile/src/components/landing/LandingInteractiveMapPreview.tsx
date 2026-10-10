@@ -12,11 +12,10 @@ interface LandingInteractiveMapPreviewProps {
 }
 
 export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreviewProps> = ({ onSelectRole }) => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const { language } = useApp();
   const { jobs } = useJobsData();
   const [activeShift, setActiveShift] = useState<any>(null);
-  const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   const isFirstRender = useRef(true);
 
   useEffect(() => {
@@ -45,7 +44,6 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
 
       if (targetShift) {
         setActiveShift(targetShift);
-        setIsMobileModalOpen(true);
       }
     };
     window.addEventListener('open-job-detail', handleOpenJobDetail);
@@ -226,7 +224,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
             <div className="pt-3 border-t border-slate-200/80 bg-white shrink-0 mt-auto">
               <button
                 onClick={() => {
-                  try { localStorage.setItem('baito_preselected_role', 'worker'); } catch(e){}
+                  try { localStorage.setItem('baito_preselected_role', 'worker'); } catch (e) { console.error('Failed to set baito_preselected_role:', e); }
                   setCurrentScreen('login');
                 }}
                 className="w-full py-3 rounded-xl bg-brand-primary hover:bg-blue-700 text-white text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 active:scale-[0.98]"

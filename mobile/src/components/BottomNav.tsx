@@ -6,8 +6,8 @@ import { translations } from '../translations';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 
 export const BottomNav: React.FC = () => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, requireAuth, selectedChatId, employerSelectedChatId, unreadNotificationsCount } = useApp();
+  const { currentScreen } = useCurrentScreen();
+  const { language, requireAuth, selectedChatId, employerSelectedChatId } = useApp();
   const t = translations[language];
 
   if (
@@ -59,7 +59,7 @@ export const BottomNav: React.FC = () => {
     >
       <div className="flex justify-between items-center w-full max-w-md mx-auto px-2 h-full relative">
         {navItems.map((item) => {
-          const active = currentScreen === item.id || (item.id === 'messages' && currentScreen === 'chat');
+          const active = currentScreen === item.id;
           const Icon = item.icon;
 
           return (

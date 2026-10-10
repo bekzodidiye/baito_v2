@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
-import { Zap, Send, CheckCircle2, UserCheck, Star, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { Zap, CheckCircle2, UserCheck, Star, Sparkles, SlidersHorizontal } from 'lucide-react';
 
 import { SystemSettings } from './types';
 

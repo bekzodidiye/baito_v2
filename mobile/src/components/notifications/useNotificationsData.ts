@@ -8,13 +8,15 @@ export const useNotificationsData = (
   activeCategory: NotificationCategory,
   setUnreadNotificationsCount: (count: number) => void
 ) => {
-  const { data: apiNotifs = [], refetch } = useQuery({
+  const { data: apiNotifs = [] } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
       const res = await fetchNotificationsApi();
       return Array.isArray(res) ? res : [];
     },
     refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    retry: 2,
   });
 
   const notifications: NotificationItemData[] = useMemo(() => {
@@ -42,7 +44,9 @@ export const useNotificationsData = (
   const handleMarkAllRead = async () => {
     try {
       await markAllNotificationsReadApi();
-    } catch (e) {}
+    } catch {
+      // Ignore
+    }
     setUnreadNotificationsCount(0);
   };
 

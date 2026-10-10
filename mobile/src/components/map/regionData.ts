@@ -22,14 +22,4 @@ export const REGIONS_LIST: RegionListItem[] = [
   { id: "Qoraqalpog'iston", name: "Qoraqalpog'iston Respublikasi", count: "250+ bo'sh ish o'rni" }
 ];
 
-export const TASHKENT_CITY_DISTRICTS = [
-  "Yunusobod tumani", "Chilonzor tumani", "Bektemir tumani", "Mirzo Ulug'bek tumani", 
-  "Mirobod tumani", "Yashnobod tumani", "Shayxontohur tumani", "Uchtepa tumani", 
-  "Yakkasaroy tumani", "Olmazor tumani", "Sergeli tumani", "Yangihayot tumani"
-];
 
-export const TASHKENT_VILOYATI_DISTRICTS = [
-  "Chinoz tumani", "Quyi Chirchiq tumani", "Yangiyo'l tumani", "Oqqorg'on tumani", 
-  "Bo'ka tumani", "Piskent tumani", "O'rtachirchiq tumani", "Parkent tumani", 
-  "Bo'stonliq tumani", "Qibray tumani", "Ohangaron tumani", "Zangiota tumani"
-];

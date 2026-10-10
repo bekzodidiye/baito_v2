@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AdminUser } from './types';
-import { Search, UserCheck, PlusCircle, Phone, Ban, CheckCircle, Eye } from 'lucide-react';
+import { Search, UserCheck, Phone, Ban, CheckCircle, Eye } from 'lucide-react';
 import { UserDetailModal } from './UserDetailModal';
 
 interface AdminUsersProps {
@@ -103,7 +103,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
                       <span className="flex items-center gap-1"><Phone size={12} className="text-slate-400" />{u.phone || 'Biriktirilmagan'}</span>
                     </td>
                     <td className="p-4 font-bold text-emerald-600">
-                      {(parseFloat(u.balance || '0')).toLocaleString('uz-UZ')} UZS
+                      {(Number(u.balance || 0)).toLocaleString('uz-UZ')} UZS
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { LANDING_TEXTS } from './LandingData';
-import { UserCheck, Building2, CheckCircle2, ArrowRight, ShieldCheck, Users, Clock, CreditCard } from 'lucide-react';
+import { UserCheck, Building2, ArrowRight, ShieldCheck, Users } from 'lucide-react';
 import { useAuthStore } from "../../store/useAuthStore";
 
 interface LandingRoleCardsProps {

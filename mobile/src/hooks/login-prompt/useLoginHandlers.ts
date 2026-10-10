@@ -5,7 +5,7 @@ import { showToast } from '../../utils/toast';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => void) => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const { language } = useApp();
   const t = LOCAL_TEXTS[language as 'uz' | 'ru' | 'en'] || LOCAL_TEXTS.uz;
   
@@ -98,7 +98,7 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
       }
       if (state.jshshir.trim().length !== 14 || isNaN(Number(state.jshshir.trim()))) {
         const msg = language === 'uz' ? "JSHSHIR 14 ta raqamdan iborat bo'lishi kerak!" : language === 'ru' ? "ПИНФЛ должен состоять из 14 цифр!" : "JSHSHIR must be exactly 14 digits!";
-        (msg);
+        showToast(msg);
         return;
       }
     } else {
@@ -108,7 +108,7 @@ export const useLoginHandlers = (state: any, isModal: boolean, onClose?: () => v
       }
       if (state.stir.trim().length !== 9 || isNaN(Number(state.stir.trim()))) {
         const msg = language === 'uz' ? "STIR (INN) 9 ta raqamdan iborat bo'lishi kerak!" : language === 'ru' ? "ИНН должен состоять из 9 цифр!" : "STIR (INN) must be exactly 9 digits!";
-        (msg);
+        showToast(msg);
         return;
       }
     }

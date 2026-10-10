@@ -14,6 +14,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { getStoredToken } from '../../api/client';
 import { BanUserModal } from './BanUserModal';
 import { UserTabsMain } from './UserTabsMain';
 import { UserTabsExtra } from './UserTabsExtra';
@@ -40,7 +41,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   
   const [detail, setDetail] = useState<AdminUserDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const { token } = useApp();
+  const token = getStoredToken();
   
   const API = import.meta.env.VITE_API_URL || '';
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
 import { apiClient } from '../../api/client';
 import { useApp } from '../../context/AppContext';
-import { Settings, DollarSign, Building2, Phone, MapPin, Edit3, LogOut, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Settings, DollarSign, Edit3, LogOut, ShieldCheck, HelpCircle } from 'lucide-react';
 import { EmployerProfileInfo } from './EmployerProfileInfo';
 import { motion } from 'motion/react';
 import { EmployerPageHeader } from './EmployerPageHeader';
@@ -13,13 +13,13 @@ import { EmployerEditProfileModal } from './EmployerEditProfileModal';
 export const EmployerProfile: React.FC = () => {
   const { language, balance } = useEmployer();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const { userProfile, logout, setUserProfile } = useApp();
   
   const companyName = userProfile?.firstName || 'Korzinka.uz';
 
   React.useEffect(() => {
-    const handleScrollEvent = (e: Event) => {
+    const handleScrollEvent = (_e: Event) => {
       setIsEditModalOpen(true);
     };
     window.addEventListener('scroll-to-profile-section', handleScrollEvent);
@@ -98,7 +98,7 @@ export const EmployerProfile: React.FC = () => {
           onClick={() => {
             if (userProfile) {
               setUserProfile({ ...userProfile, selectedRole: 'worker' });
-              (
+              showToast(
                 language === 'uz' ? "Tizimga Xodim sifatida kirdingiz" : language === 'ru' ? "Вы вошли как Работник" : "You logged in as Worker"
               );
               setCurrentScreen('jobs');

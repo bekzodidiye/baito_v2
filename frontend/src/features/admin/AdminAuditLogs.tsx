@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient, unwrapList } from '../../api/client';
 import { AdminLog } from './types';
-import { ShieldAlert, Search, Filter, Download, UserCheck, Ban, Trash2, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, Search, Filter, Download, UserCheck, Ban, CheckCircle2 } from 'lucide-react';
 
 // Human labels for the action slugs the backend records.
 const ACTION_LABELS: Record<string, string> = {

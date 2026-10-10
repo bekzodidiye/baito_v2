@@ -2,7 +2,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from typing import Optional, List
 from datetime import datetime
 
-from app.core.money import parse_salary_amounts
 
 # A shift's crew, not a workforce. Past this it is a typo, not a vacancy count.
 MAX_WORKERS_PER_JOB = 100
@@ -32,22 +31,6 @@ def _reject_control_chars(v):
     elif isinstance(v, list):
         for item in v:
             _reject_control_chars(item)
-    return v
-
-
-def _validate_salary(v: str) -> str:
-    if "-" in v and not any(c.isdigit() for c in v.split("-")[0]):
-        # A leading minus: "-500000". The parser strips it and the employer
-        # is charged the absolute value.
-        raise ValueError("Maosh manfiy bo'lishi mumkin emas")
-    written = parse_salary_amounts(v, bounded=False)
-    if written and max(written) <= 0:
-        # "kelishilgan holda" carries no figure and stays allowed. Only a
-        # figure that is actually there and not positive is refused.
-        raise ValueError("Maosh musbat bo'lishi kerak")
-    # No ceiling here on purpose: the spam detector already screens an absurd
-    # figure and answers 400 with the reason. Repeating the rule here replaced
-    # that message with a bare 422.
     return v
 
 

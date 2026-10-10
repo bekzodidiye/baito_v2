@@ -117,10 +117,6 @@ class User(UserInDBBase):
     pass
 
 
-class UserInDB(UserInDBBase):
-    hashed_password: str
-
-
 class PasswordChange(BaseModel):
     current_password: str
     new_password: str

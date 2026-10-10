@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { X, User, ClipboardList, Settings, HelpCircle, ChevronRight, LogOut, LayoutDashboard, Briefcase, Users, MessageSquare, ShieldCheck } from 'lucide-react';
+import { X, User, ClipboardList, Settings, HelpCircle, LogOut, LayoutDashboard, Briefcase, Users, MessageSquare, ShieldCheck } from 'lucide-react';
 import { Logo } from './Logo';
 import { motion, AnimatePresence } from 'motion/react';
 import { translations } from '../translations';

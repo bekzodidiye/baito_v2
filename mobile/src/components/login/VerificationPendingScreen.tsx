@@ -1,10 +1,9 @@
 import React from 'react';
-import { ArrowLeft, ArrowRight, ShieldCheck, Mail, ScanEye, Headphones, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ShieldCheck, Mail, Headphones, Check } from 'lucide-react';
 import { useVerificationPending } from '../../hooks/useVerificationPending';
-import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const VerificationPendingScreen: React.FC = () => {
-  const { language, setCurrentScreen, handleDashboardClick, t, stepT, handleSupportClick } = useVerificationPending();
+  const { language, setCurrentScreen, handleDashboardClick, t, stepT } = useVerificationPending();
 
   return (
     <div className="fixed inset-0 z-50 bg-brand-background md:p-6 lg:p-8 flex items-center justify-center font-sans overflow-hidden">

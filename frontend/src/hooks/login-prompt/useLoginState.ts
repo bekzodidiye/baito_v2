@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { useApp } from '../../context/AppContext';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const useLoginState = (isModal: boolean, initialMode?: 'login' | 'register') => {

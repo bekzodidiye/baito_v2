@@ -1,7 +1,7 @@
 import React from 'react';
 import { Calendar, Timer, DollarSign, Zap, Truck, Users } from 'lucide-react';
 import { Job } from '../../types';
-import { getJobDateDisplay, getJobShiftTime, getJobDuration } from '../../utils/jobTimeUtils';
+import { getJobDateDisplay, getJobShiftTime } from '../../utils/jobTimeUtils';
 import { getJobCategory } from '../../utils/jobCategoryUtils';
 import { translations } from '../../translations';
 import { useAuthStore } from "../../store/useAuthStore";

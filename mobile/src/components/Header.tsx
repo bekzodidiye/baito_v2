@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Menu, Map, Bell, Search, LayoutList, ArrowLeftRight } from 'lucide-react';
+import { Menu, Bell, Search, ArrowLeftRight } from 'lucide-react';
 import { translations } from '../translations';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 

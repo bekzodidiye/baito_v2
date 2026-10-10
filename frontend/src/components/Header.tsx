@@ -1,7 +1,5 @@
 import React from 'react';
-import { Menu, Map, Bell, Search, LayoutList, ShieldCheck, User, Calendar, Mail, Briefcase, FileText, MessageSquare, LayoutDashboard } from 'lucide-react';
-import { Logo } from './Logo';
-import { LanguageSelector } from './LanguageSelector';
+import { Menu, Map, Bell, Search, LayoutList } from 'lucide-react';
 import { translations } from '../translations';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 import { useUIStore } from "../store/useUIStore";

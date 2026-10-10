@@ -164,10 +164,7 @@ export const useJobMarkers = ({
     });
 
     const handleMoveEnd = () => {
-      setTimeout(() => {
-        if (mapInstanceRef.current && filterLocation === 'Barchasi') {
-        }
-      }, 100);
+      // Empty block removed
     };
 
     map.on('moveend', handleMoveEnd);

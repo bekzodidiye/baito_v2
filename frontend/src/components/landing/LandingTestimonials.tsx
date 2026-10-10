@@ -1,7 +1,7 @@
 import React from 'react';
 import { LANDING_TEXTS } from './LandingData';
 import { TESTIMONIALS } from './LandingTestimonials.content';
-import { Star, Quote, CheckCircle2, User } from 'lucide-react';
+import { Star, Quote, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from "../../store/useAuthStore";
 
 export const LandingTestimonials: React.FC = () => {

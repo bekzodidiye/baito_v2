@@ -1,8 +1,7 @@
 import React from 'react';
-import { Target, ChevronRight, AlertCircle, Edit2 } from 'lucide-react';
+import { Target, AlertCircle, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useApp } from '../../../context/AppContext';
-import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 interface ProfileCompletionWidgetProps {
   language: 'uz' | 'ru' | 'en';
@@ -10,8 +9,6 @@ interface ProfileCompletionWidgetProps {
 }
 
 export const ProfileCompletionWidget: React.FC<ProfileCompletionWidgetProps> = ({ language, setActiveDialog }) => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  
   
   const { userProfile } = useApp();
   

@@ -8,8 +8,6 @@ import { ProfileWidgets } from './ProfileWidgets';
 import { ProfileAboutWidget } from './ProfileAboutWidget';
 import { ProfileCompletionWidget } from './ProfileCompletionWidget';
 import { ProfileReviewsWidget } from './ProfileReviewsWidget';
-import { showToast } from '../../../utils/toast';
-import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 export const ProfileScreen: React.FC = () => {
   const {
@@ -26,7 +24,6 @@ export const ProfileScreen: React.FC = () => {
     setWithdrawAmount,
     withdrawSuccess,
     t,
-    appliedJobsCount,
     showVerified,
     isVerifiedUser,
     profileName,

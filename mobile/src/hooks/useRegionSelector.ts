@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { useUzbekistanGeoJson, getDistrictMetaList } from '../components/map/useUzbekistanGeoJson';
-import { translateRegion, Language } from '../translations';
+import { Language } from '../translations';
 import { 
   REGIONS_LIST, 
   RegionListItem 

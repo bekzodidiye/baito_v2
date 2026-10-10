@@ -30,7 +30,7 @@ export const cyrillicToLatin = (str: string): string => {
 
 export const formatUzbekAddress = (address: string): string => {
   if (!address) return '';
-  let formatted = cyrillicToLatin(address);
+  const formatted = cyrillicToLatin(address);
   return formatted
     .replace(/(\d+)\s+School/gi, "$1-maktab").replace(/School/gi, "maktab")
     .replace(/(\d+)\s+Kindergarten/gi, "$1-bog'cha").replace(/Kindergarten/gi, "bog'cha")
@@ -117,11 +117,11 @@ export const searchAddressSuggestions = async (query: string, city: string): Pro
             const items = await window.ymaps.suggest(`${query}, ${city}`);
             if (!items || !items.length) return resolve(null);
             resolve(items.slice(0, 5).map((item: any) => ({ displayName: cyrillicToLatin(item.title || item.value || ''), lat: 0, lon: 0 })));
-          } catch (e) { resolve(null); }
+          } catch { resolve(null); }
         });
       });
       if (sugs && sugs.length) return sugs;
-    } catch (e) {}
+    } catch { /* ignore */ }
   }
   try {
     const cleanQ = query.replace(/,\s*\d+[a-zа-яA-ZА-Я]*$/gi, '').replace(/\s+\d+[a-zа-яA-ZА-Я]*$/gi, '').trim();
@@ -129,7 +129,7 @@ export const searchAddressSuggestions = async (query: string, city: string): Pro
     if (!res.ok) return [];
     const data = await res.json();
     return data.map((item: any) => ({ displayName: formatStructuredAddress(item), lat: parseFloat(item.lat), lon: parseFloat(item.lon) }));
-  } catch (err) { return []; }
+  } catch { return []; }
 };
 
 export const reverseGeocodeAddressFull = async (lat: number, lon: number): Promise<{ address: string; city?: string }> => {
@@ -171,7 +171,7 @@ export const reverseGeocodeAddressFull = async (lat: number, lon: number): Promi
               }
             }
 
-            let finalAddress = formatUzbekAddress(cyrillicToLatin(formattedAddr));
+            const finalAddress = formatUzbekAddress(cyrillicToLatin(formattedAddr));
             
             let finalCity: string | undefined;
             if (detectedCity) {
@@ -189,11 +189,11 @@ export const reverseGeocodeAddressFull = async (lat: number, lon: number): Promi
             }
 
             resolve({ address: finalAddress, city: finalCity });
-          } catch (e) { resolve(null); }
+          } catch { resolve(null); }
         });
       });
       if (res && res.address) return res;
-    } catch (e) {}
+    } catch { /* ignore */ }
   }
   
   // Nominatim Fallback
@@ -225,5 +225,5 @@ export const reverseGeocodeAddressFull = async (lat: number, lon: number): Promi
     const latinLoc = cyrillicToLatin(`${addrObj.city || ''} ${addrObj.town || ''} ${addrObj.state || ''} ${data.display_name || ''}`).toLowerCase();
     for (const c of Object.keys(CITY_COORDINATES)) { if (latinLoc.includes(c.toLowerCase())) { detectedCity = c; break; } }
     return { address: latinAddress, city: detectedCity };
-  } catch (err) { return { address: '' }; }
+  } catch { return { address: '' }; }
 };

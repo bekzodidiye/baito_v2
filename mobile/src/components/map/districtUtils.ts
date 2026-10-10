@@ -1,5 +1,4 @@
 import { DISTRICT_MAP } from '../../data/districtMap';
-import { REGION_INFOS } from '../../data/regionInfos';
 
 const districtMatchCache = new Map<string, boolean>();
 

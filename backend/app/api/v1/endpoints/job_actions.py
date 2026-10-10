@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from app import models, crud
 from app.api import deps
 from app.services.job_service import JobService
-from app.core.exceptions import DomainException
 
 from app.models.job_payout import PayoutStatus
 from datetime import datetime, timezone
@@ -33,16 +32,6 @@ class PayoutDeclarationRequest(BaseModel):
     method: str = Field(min_length=1, max_length=40)
     reference: Optional[str] = Field(default=None, max_length=120)
     receiptUrl: Optional[str] = Field(default=None, max_length=500)
-
-
-def _handle_domain_errors(func):
-    """Decorator to convert DomainException to HTTPException"""
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except DomainException as e:
-            raise HTTPException(status_code=e.status_code, detail=e.message)
-    return wrapper
 
 
 @router.post("/{id}/apply")

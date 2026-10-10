@@ -3,7 +3,7 @@ import { useEmployer } from '../../hooks/useEmployer';
 import { apiClient } from '../../api/client';
 import { uploadFileApi } from '../../api/queries';
 import { useApp } from '../../context/AppContext';
-import { Settings, DollarSign, Building2, Phone, MapPin, Edit3, LogOut, ShieldCheck, HelpCircle, Camera } from 'lucide-react';
+import { Settings, Edit3, LogOut, ShieldCheck, HelpCircle, Camera } from 'lucide-react';
 import { EmployerProfileInfo } from './EmployerProfileInfo';
 import { motion } from 'motion/react';
 import { EmployerPageHeader } from './EmployerPageHeader';

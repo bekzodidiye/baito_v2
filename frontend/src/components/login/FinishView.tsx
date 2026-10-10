@@ -1,9 +1,8 @@
 import React from 'react';
 import { translations } from '../../translations';
 import { useAuthStore } from '../../store/useAuthStore';
-import { Smartphone, Lock, Eye, EyeOff, Check, ArrowRight, Edit2 } from 'lucide-react';
+import { Smartphone, Lock, Eye, EyeOff, Check, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Link } from 'react-router-dom';
 
 interface FinishViewProps {
   selectedRole?: 'worker' | 'employer' | null;

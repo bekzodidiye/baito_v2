@@ -23,10 +23,4 @@ export const CATEGORIES_LIST: CategoryOption[] = [
   { id: 'agriculture', labelUz: 'Qishloq xo\'jaligi va Bog\'dorchilik', labelRu: 'Сельское хозяйство', labelEn: 'Agriculture & Gardening' },
 ];
 
-export const getCategoryLabel = (id: string, lang: 'uz' | 'ru' | 'en' = 'uz'): string => {
-  const cat = CATEGORIES_LIST.find(c => c.id === id);
-  if (!cat) return id;
-  if (lang === 'ru') return cat.labelRu;
-  if (lang === 'en') return cat.labelEn;
-  return cat.labelUz;
-};
+

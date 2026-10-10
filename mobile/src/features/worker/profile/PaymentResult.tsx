@@ -2,13 +2,10 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
 import { useApp } from '../../../context/AppContext';
-import { translations } from '../../../translations';
-
 export const PaymentResult: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { language } = useApp();
-  const t = translations[language];
   
   const isSuccess = location.pathname.includes('success');
 

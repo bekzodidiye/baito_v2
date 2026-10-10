@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LANDING_TEXTS } from './LandingData';
-import { Calculator, DollarSign, Calendar, Clock, ArrowRight, Zap, CheckCircle2 } from 'lucide-react';
+import { Calculator, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { useAuthStore } from "../../store/useAuthStore";
 
 interface LandingIncomeCalculatorProps {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Logo } from '../Logo';
 import { LanguageSelector } from '../LanguageSelector';
-import { ArrowRight, Menu, X, UserCheck, Building2, Sparkles } from 'lucide-react';
+import { ArrowRight, Menu, X, UserCheck, Building2 } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface LandingNavbarProps {
@@ -10,8 +10,8 @@ interface LandingNavbarProps {
 }
 
 export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onSelectRole }) => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, isLoggedIn, userProfile, requireAuth } = useApp();
+  const { setCurrentScreen } = useCurrentScreen();
+  const { language } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleExploreJobs = () => {
@@ -88,7 +88,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onSelectRole }) =>
 
           <button
             onClick={() => {
-              try { localStorage.setItem('baito_preselected_role', 'worker'); } catch(e){}
+              try { localStorage.setItem('baito_preselected_role', 'worker'); } catch (e) { console.error(e); }
               setCurrentScreen('register');
             }}
             className="px-4 py-2.5 rounded-xl bg-brand-primary text-white font-black text-xs hover:bg-brand-primary/95 shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center gap-1.5"

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowLeft, 
-  Clock, 
   Users, 
   Calendar, 
   MapPin, 
@@ -13,21 +12,19 @@ import {
   Timer,
   Building2,
   User,
-  Phone,
   FileText,
   CreditCard,
   History,
   Star,
-  AlertCircle,
   Eye,
   Loader2,
-  ChevronRight,
   Plus,
   UserCheck,
   Banknote,
 } from 'lucide-react';
 import { AdminJob, AdminJobDetailResponse, AdminJobApplication, AdminJobTransaction, AdminTimelineEvent } from './types';
 import { useApp } from '../../context/AppContext';
+import { getStoredToken } from '../../api/client';
 
 interface JobDetailModalProps {
   job: AdminJob | null;
@@ -83,7 +80,7 @@ const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
 ];
 
 export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) => {
-  const { token } = useApp();
+  const token = getStoredToken();
   const [activeTab, setActiveTab] = useState<TabKey>('info');
   const [detail, setDetail] = useState<AdminJobDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);

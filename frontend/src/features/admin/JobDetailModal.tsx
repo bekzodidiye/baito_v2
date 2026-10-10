@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { apiClient } from '../../api/client';
 import { 
   ArrowLeft, 
-  Clock, 
   Users, 
   Calendar, 
   MapPin, 
@@ -17,15 +16,12 @@ import {
   Timer,
   Building2,
   User,
-  Phone,
   FileText,
   CreditCard,
   History,
   Star,
-  AlertCircle,
   Eye,
   Loader2,
-  ChevronRight,
   Plus,
   UserCheck,
   Banknote,
@@ -34,7 +30,6 @@ import {
   ListChecks,
 } from 'lucide-react';
 import { AdminJob, AdminJobDetailResponse, AdminJobApplication, AdminJobTransaction, AdminTimelineEvent, AdminJobStep } from './types';
-import { useApp } from '../../context/AppContext';
 
 interface JobDetailModalProps {
   job: AdminJob | null;

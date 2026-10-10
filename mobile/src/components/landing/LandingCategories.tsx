@@ -9,8 +9,8 @@ interface LandingCategoriesProps {
 }
 
 export const LandingCategories: React.FC<LandingCategoriesProps> = ({ onSelectRole }) => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, isLoggedIn, requireAuth, setFilterType } = useApp();
+  const { setCurrentScreen } = useCurrentScreen();
+  const { language, setFilterType } = useApp();
   const t = LANDING_TEXTS[language as keyof typeof LANDING_TEXTS] || LANDING_TEXTS.uz;
 
   const getCategoryIcon = (iconName: string) => {

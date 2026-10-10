@@ -9,9 +9,6 @@ class GrowthEngine:
     Growth & Viral Referral Loop Engine.
     Handles referral rewards, re-engagement incentives, and user retention hooks.
     """
-    @staticmethod
-    def generate_referral_code(user_id: str) -> str:
-        return f"BAITO-{user_id[:6].upper()}"
 
     @staticmethod
     def apply_referral_bonus_on_first_job(db: Session, worker: models.User, referrer_id: str) -> bool:
@@ -29,7 +26,7 @@ class GrowthEngine:
         referrer.balance = (referrer.balance or 0) + REFERRAL_BONUS_AMOUNT
         db.add(referrer)
         
-        ledger_ref = AuditLedger(
+        ledger_ref = AuditLedger(  # type: ignore
             userId=referrer.id,
             amountDelta=REFERRAL_BONUS_AMOUNT,
             balanceAfter=referrer.balance,
@@ -44,7 +41,7 @@ class GrowthEngine:
         worker.balance = (worker.balance or 0) + REFERRAL_BONUS_AMOUNT
         db.add(worker)
 
-        ledger_wrk = AuditLedger(
+        ledger_wrk = AuditLedger(  # type: ignore
             userId=worker.id,
             amountDelta=REFERRAL_BONUS_AMOUNT,
             balanceAfter=worker.balance,

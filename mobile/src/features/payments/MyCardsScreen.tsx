@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Star, EyeOff, Snowflake, Trash2, CreditCard, X, AlertTriangle, Info, CheckCircle2, Edit2 } from 'lucide-react';
+import { ArrowLeft, Plus, Star, Snowflake, Trash2, CreditCard, X, Info, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '../../store/useAuthStore';
-import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPaymentCardsApi, deletePaymentCardApi, updatePaymentCardApi } from '../../api/queries';
 import { useApp } from '../../context/AppContext';
@@ -11,7 +10,6 @@ import { getBankName, getBankColors } from '../../utils/cardUtils';
 
 export const MyCardsScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { setCurrentScreen } = useCurrentScreen();
   const { language } = useApp();
   const user = useAuthStore(state => state.userProfile);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);

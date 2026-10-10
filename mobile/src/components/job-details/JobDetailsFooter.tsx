@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Send, CheckCircle2, Clock, PlayCircle } from 'lucide-react';
+import { Send, CheckCircle2, PlayCircle } from 'lucide-react';
 import { Job } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
-import { showToast } from '../../utils/toast';
 import { confirmStartJobApi } from '../../api/queries';
 
 interface JobDetailsFooterProps {
@@ -79,7 +78,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
                   selectedJob.status = 'in_progress';
                   const success = await confirmStartJobApi(selectedJob.id);
                   if (success && onApplied) (onApplied as any)('in_progress');
-                } catch (e) {
+                } catch {
                   setIsStartedLocal(false);
                   selectedJob.status = 'hired'; // Revert back
                 } finally {

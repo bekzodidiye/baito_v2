@@ -8,7 +8,7 @@ import { AddCategoryModal } from './AddCategoryModal';
 
 
 export const AdminCategories: React.FC = () => {
-  const { categories, refresh, loading } = useAdminData();
+  const { categories, refresh } = useAdminData();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
 

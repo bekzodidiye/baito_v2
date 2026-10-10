@@ -3,7 +3,6 @@ vi.mock('../../store/useAuthStore', () => ({
     sel({ language: 'uz', userProfile: { isVerified: true, firstName: 'Anvar' } })),
 }));
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 

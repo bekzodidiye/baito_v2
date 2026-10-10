@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface ChatHeaderProps {
   activeChat: {

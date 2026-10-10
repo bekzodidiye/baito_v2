@@ -1,7 +1,7 @@
 import React from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
-import { BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, Award, PieChart, AlertTriangle } from 'lucide-react';
+import { BarChart3, ArrowUpRight, Award, PieChart, AlertTriangle } from 'lucide-react';
 
 /** Every figure on this screen is placeholder markup — there is no query behind
  *  any of it. Until the aggregations exist (see qa/findings/BUG-015, which also

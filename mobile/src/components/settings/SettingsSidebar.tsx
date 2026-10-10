@@ -1,6 +1,5 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { translations } from '../../translations';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { 
   Settings,
@@ -17,7 +16,6 @@ import {
 export const SettingsSidebar: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const { language } = useApp();
-  const t = translations[language];
 
   const navItems = [
     {

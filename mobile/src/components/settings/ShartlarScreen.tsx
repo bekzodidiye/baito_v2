@@ -1,10 +1,9 @@
 import React from 'react';
-import { useApp } from '../../context/AppContext';
 import { ArrowLeft } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const ShartlarScreen: React.FC = () => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   
 
   return (

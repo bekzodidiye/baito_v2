@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useChatsData } from "../context/useChatsData";
 import { getTranslatedChat } from '../chatTranslations';
@@ -13,8 +13,7 @@ export interface AttachedFileData {
 
 export function useChatScreen() {
   const { id: selectedChatId } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const { language } = useApp();
   const { chats, sendMessage, setActiveChatId } = useChatsData(language);
   const [inputText, setInputText] = useState('');

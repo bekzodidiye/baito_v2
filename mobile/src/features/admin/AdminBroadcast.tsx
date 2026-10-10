@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, Bell, Users, CheckCircle2 } from 'lucide-react';
+import { Send, CheckCircle2 } from 'lucide-react';
 
 interface AdminBroadcastProps {
   onSendBroadcast: (title: string, message: string, targetRole: string) => void;

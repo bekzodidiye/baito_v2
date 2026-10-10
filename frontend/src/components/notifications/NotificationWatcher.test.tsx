@@ -2,7 +2,6 @@ vi.mock('../../store/useUIStore', () => ({ useUIStore: vi.fn() }));
 vi.mock('../../store/useAuthStore', () => ({ useAuthStore: vi.fn() }));
 import { useUIStore } from '../../store/useUIStore';
 import { useAuthStore } from '../../store/useAuthStore';
-import React from 'react';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

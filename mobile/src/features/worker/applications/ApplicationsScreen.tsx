@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Inbox, BriefcaseBusiness, CheckCircle2, XCircle, Clock3 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Inbox, BriefcaseBusiness, CheckCircle2, XCircle, Clock3 } from 'lucide-react';
 import { useApp } from '../../../context/AppContext';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
-import { translations } from '../../../translations';
 import { fetchWorkerApplicationsApi } from '../../../api/queries';
 import { ApplicationCard } from './ApplicationCard';
 
@@ -11,7 +10,6 @@ import { useQuery } from '@tanstack/react-query';
 export const ApplicationsScreen: React.FC = () => {
   const { setCurrentScreen } = useCurrentScreen();
   const { language } = useApp();
-  const t = translations[language];
   
   // Tab state
   const [activeTab, setActiveTab] = useState<'all' | 'applied' | 'hired' | 'rejected'>('all');

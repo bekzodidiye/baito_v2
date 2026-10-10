@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Building2, Lock, ArrowRight, Check } from 'lucide-react';
+import { User, Building2, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { WorkerDocsSection } from './WorkerDocsSection';
 import { EmployerDocsSection } from './EmployerDocsSection';

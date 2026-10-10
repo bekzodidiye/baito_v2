@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, {} from 'react';
 import { money } from '../../../utils/money';
 import { Star, MessageSquare } from 'lucide-react';
-import { apiClient } from '../../../api/client';
-import { Application } from '../../../types';
 import { Language } from '../../../translations';
 import { motion } from 'motion/react';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';

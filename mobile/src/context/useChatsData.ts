@@ -1,12 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
 import { Chat, Message } from '../types';
 import { useCallback, useState } from 'react';
 import { useApp } from './AppContext';
 
 export function useChatsData(language: 'uz' | 'ru' | 'en') {
-  const { userProfile, isLoggedIn } = useApp();
+  const { userProfile } = useApp();
 
-  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [, setActiveChatId] = useState<string | null>(null);
   
   const initialSupportMessage = language === 'uz' ? 'Assalomu alaykum! Baito yordam markaziga xush kelibsiz. Sizga qanday yordam bera olaman?' : language === 'ru' ? 'Здравствуйте! Добро пожаловать в центр поддержки Baito. Чем могу помочь?' : 'Hello! Welcome to Baito Support. How can I help you?';
   const supportName = language === 'uz' ? 'Yordam markazi' : language === 'ru' ? 'Служба поддержки' : 'Support Center';

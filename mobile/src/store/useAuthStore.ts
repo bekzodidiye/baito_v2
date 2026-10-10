@@ -31,7 +31,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   userProfile: (() => {
     const cached = safeGetItem('baito_user_profile');
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
+      try { return JSON.parse(cached); } catch { /* ignore */ }
     }
     return null;
   })(),
@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (profile) {
       safeSetItem('baito_user_profile', JSON.stringify(profile));
     } else {
-      try { localStorage.removeItem('baito_user_profile'); } catch (e) {}
+      try { localStorage.removeItem('baito_user_profile'); } catch { /* ignore */ }
     }
     set({ userProfile: profile });
   },
@@ -49,7 +49,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       localStorage.removeItem('baito_user_profile');
       localStorage.removeItem('baito_is_logged_in');
-    } catch (e) {}
+    } catch { /* ignore */ }
     set({ userProfile: null, isLoggedIn: false });
   }
 }));

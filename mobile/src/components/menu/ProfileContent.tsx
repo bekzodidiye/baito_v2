@@ -2,7 +2,6 @@ import React from 'react';
 import { Mail, Phone, MapPin, Briefcase, LogOut } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { MODAL_TRANSLATIONS } from './MenuTranslations';
-import { showToast } from '../../utils/toast';
 
 interface ProfileContentProps {
   onClose: () => void;
@@ -80,10 +79,6 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({ onClose }) => {
       <button
         onClick={() => {
           logout();
-          (t.logoutSuccess);
-          setTimeout(() => {
-            (null);
-          }, 3000);
           onClose();
         }}
         className="w-full mt-4 py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-2 border border-rose-100 cursor-pointer shadow-3xs"

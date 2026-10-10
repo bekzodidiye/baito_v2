@@ -3,7 +3,7 @@ import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { clickable } from '../../utils/clickable';
 import { AdminUser } from './types';
-import { Search, UserCheck, PlusCircle, Phone, Ban, CheckCircle, Eye } from 'lucide-react';
+import { Search, UserCheck, Phone, Ban, CheckCircle, Eye } from 'lucide-react';
 import { UserDetailModal } from './UserDetailModal';
 import { BanUserModal } from './BanUserModal';
 import { ConfirmModal } from '../../components/common/ConfirmModal';

@@ -1,7 +1,7 @@
 import React from 'react';
-import { useApp } from '../../context/AppContext';
+
 import { Logo } from '../Logo';
-import { ShieldCheck, Heart, Send, Phone, Mail, MapPin } from 'lucide-react';
+import { ShieldCheck, Heart, Phone, Mail, MapPin } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface LandingFooterProps {
@@ -9,8 +9,7 @@ interface LandingFooterProps {
 }
 
 export const LandingFooter: React.FC<LandingFooterProps> = ({ onSelectRole }) => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { language, requireAuth } = useApp();
+  const { setCurrentScreen } = useCurrentScreen();
 
   return (
     <footer className="bg-slate-900 text-slate-300 font-sans pt-16 pb-12 border-t border-slate-800">

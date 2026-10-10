@@ -13,7 +13,6 @@ import { JobDetailModal } from './JobDetailModal';
 import { RegionSelector } from '../RegionSelector';
 import { MapLoadingSkeleton } from './MapLoadingSkeleton';
 
-import { useApp } from '../../context/AppContext';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface MapViewScreenProps {

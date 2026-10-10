@@ -6,21 +6,21 @@
 - Unclassified: 45 file(s) not represented in the graph (top: (none) 16, .xml 10, .css 5)
 
 ## Summary
-- 11376 nodes · 20725 edges · 722 communities (624 shown, 98 thin omitted)
+- 11380 nodes · 20720 edges · 715 communities (615 shown, 100 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 440 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `07a4b319`
+- Built from commit: `a4821d08`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - make_user
 - ref_react
-- useCurrentScreen
+- frontend/src/App.tsx
 - useApp
-- money
+- frontend/src/features/admin/JobDetailModal.tsx
 - Application
 - frontend/src/features/worker/profile/ProfileDialogs.tsx
 - showToast
@@ -34,24 +34,24 @@
 - Pair Programming Examples
 - Swarm Issue - Issue-Based Swarm Coordination
 - alembic
-- tasks.py
+- schemas/chat.py
 - employerProfileFields.test.ts
 - applications.py
 - agent.md
-- ref_vitest
+- useCurrentScreen
 - JobDay
-- datetime
+- frontend/src/components/common/DateTimePickerModal.tsx
 - statusline.cjs
 - SPARC Methodology Orchestrator Agent
 - main.py
 - ref_react_router_dom
-- frontend/src/hooks/login-prompt/useLoginApiHandlers.ts
+- i18n-sweep.test.ts
 - Flow Nexus Neural Networks
 - frontend_src_features_worker_calendar_calendarscreen_utils_months_translations
 - mobile/src/features/worker/search/JobSearchScreen.tsx
 - request_withdrawal
 - Job
-- frontend/src/api/queries.ts
+- frontend/src/context/useChatsData.ts
 - Tasdiqlash cheklisti — pul va qaytarib bo'lmaydigan amallar
 - Job
 - github swarm
@@ -60,15 +60,15 @@
 - useAuthStore
 - auto-memory-hook.mjs
 - frontend/src/components/map/useUzbekistanGeoJson.ts
-- frontend/src/components/settings/PrivacyScreen.tsx
-- Learning Hooks Script
 - LearningService
+- Learning Hooks Script
+- learning-service.mjs
 - mobile/package.json
 - AgentDB Performance Optimization
 - test_category_region_commission.py
 - Flow Nexus Swarm & Workflow Orchestration
 - test_completion_bonus.py
-- send_payout_invoice
+- User
 - JobStatus
 - Daemon Manager Script
 - frontend/package.json
@@ -83,12 +83,12 @@
 - Email Service Config
 - Frontend TS Config
 - test_worker_starts_shift.py
-- Job
+- frontend/src/api/queries.ts
 - change_job_status
-- declare_payment
+- frontend/src/components/MenuModals.tsx
 - jobs.py
-- User
-- showToast
+- auth.py
+- apiClient
 - record_admin_action
 - Frontend Dev Dependencies
 - conftest.py
@@ -108,10 +108,10 @@
 - Frontend Test Dependencies
 - Mobile TS Config
 - ref_leaflet
-- schemas/job.py
+- schemas/__init__.py
 - Support Ticket Conversations
 - MockRedis
-- ref_path
+- ref_fs
 - Root Package Scripts
 - Multi-Repo Swarm - Cross-Repository Swarm Orchestration
 - mobile/src/components/login/LoginPromptScreen.tsx
@@ -126,7 +126,7 @@
 - Frontend Dependencies
 - mobile/src/components/common/DateTimePickerModal.tsx
 - Category Management API
-- get_stats
+- QA Report — Round 2 — Baito — 2026-09-03 — `91f9ad0e3f6e`
 - Hierarchical Swarm Coordinator
 - test_idle_sessions_are_over.py
 - AgentDB Advanced Features
@@ -146,7 +146,7 @@
 - ADR Compliance Check
 - Frontend PWA Manifest
 - Mobile PWA Manifest
-- frontend/src/hooks/useJobSearchScreen.ts
+- ref_vitest
 - Checkpoint Manager Script
 - frontend/src/components/map/districtUtils.ts
 - test_platform_fee_setting.py
@@ -157,7 +157,7 @@
 - get_disputes
 - performance-optimizer.md
 - Locust Load Testing
-- Ruflo Hook Script
+- /graphify
 - Security Scanner Script
 - Frontend NPM Scripts
 - Smart Agent Coordinator
@@ -200,7 +200,7 @@
 - MemoryStorage
 - GitHub Release Manager
 - trading-predictor.md
-- QA Report — Round 2 — Baito — 2026-09-03 — `91f9ad0e3f6e`
+- frontend/src/main.tsx
 - Adaptive Swarm Coordinator
 - SPARC Implementation Specialist Agent
 - Memory Coordination Specialist Agent
@@ -217,24 +217,24 @@
 - Pair Programming Session Management
 - ReasoningBank with AgentDB
 - V3 DDD Architecture
-- Session Control Commands
+- regionOutlineStyle.ts
 - GitHub PR Manager
 - swarm init
 - Security assessment — round 2 (deeper attacks)
 - Uzum Bank Merchant API
 - Review Commands
 - hive-mind/README.md
-- Supabase MCP
+- Development Branches
 - 🐝 Claude-Flow Swarm Coordination
 - V3 CLI Modernization
 - test_notification_templates_are_known.py
-- BUG-018 — "Jonli chat" answers the user itself; the message never leaves the browser
-- Switch Mode
+- 0016_fill_catalog_details.py
+- 2. Specialized Review Agents
 - V3 MCP Optimization
 - test_error_details_are_known.py
 - BUG-024 — actions that commit money or cut off a user go through on one press
-- frontend/src/components/map/mapUtils.ts
-- Development Branches
+- Release Agents
+- Quick Reference
 - Pull Request Manager Agent
 - test_celery_routing.py
 - Task Orchestrator Agent
@@ -245,7 +245,7 @@
 - pair --start
 - V3 Swarm Coordination
 - mobile/src/features/admin/AdminPanel.tsx
-- Release Agents
+- Mode Combinations
 - GitHub Repository Architect
 - matrix-optimizer.md
 - Core Capabilities
@@ -302,8 +302,8 @@
 - GitHub Project Management
 - 🎭 Har bir Mutaxassisning Batafsil Ko'rsatmalari
 - generate_geojson.cjs
-- schemas/__init__.py
-- hive-mind
+- CRUDBase
+- Session Metrics
 - AIDefence Guardian Agent
 - V3 Integration Architect Agent
 - 🧠 Claude-Flow Memory System
@@ -321,8 +321,8 @@
 - Consensus Security Manager
 - Machine Learning Model Developer v3.0.0-alpha.1
 - AGENTS.md — Senior QA Engineer Protocol for AI Systems
-- Advanced Commands
-- Learning Commands
+- Synchronization Patterns
+- Troubleshooting
 - V3 Security Architecture Agent (AIMDS Enhanced)
 - Agent Health Command
 - Agent Spawn Command
@@ -346,7 +346,7 @@
 - Automation Recommendations
 - V3 Security Overhaul
 - ai-agent.md
-- Metrics Commands
+- Best Practices
 - SoliqFiscalService
 - Technical Implementation
 - Technical Implementation
@@ -374,9 +374,9 @@
 - Part II — Senior practice
 - models/__init__.py
 - Per-control click sweep — every user-facing route — 2026-09-03
-- Mode Selection Guide
+- Troubleshooting
 - update_settings
-- Focus Areas
+- Best Practices
 - Agent Logs Command
 - Agent Metrics Command
 - Agent Stop Command
@@ -394,8 +394,8 @@
 - Most common use case (80% of users)
 - SPARC Methodology - Comprehensive Development Framework
 - Baito - O'zbekiston va Markaziy Osiyo Uchun Yagona Kunbay va Soatbay Ishlar Tizimi
-- Monitoring & Utilities
-- graphify reference: query, path, explain
+- Automation Features
+- Issue Swarm Commands
 - agents/README.md
 - Initialize Coordination Framework
 - Coordinate Task Execution
@@ -462,13 +462,13 @@
 - BUG-017 — "Yechib olish" on the Payments screen reports success without withdrawing anything
 - BUG-020 — the search button on the Payments screen has no handler
 - BUG-023 — keyboard focus is invisible on controls that carry their own shadow
-- Core Features
+- Advanced Features
 - BUG-025 — "Asosiy qilish" says the card was set as default and does nothing
 - SES-01 — Ugly realistic data
 - SES-02 — Permissions, ownership and interruption
 - Test plan — Baito QA pass
-- Workflow Integration
-- Automation Examples
+- Background Sessions
+- Session Sharing
 - Byzantine Consensus Coordinator
 - Gossip Protocol Coordinator
 - Implementation Approach
@@ -490,7 +490,7 @@
 - Navigation Commands
 - Utility Commands
 - Session Commands
-- Issue Types & Strategies
+- Session Persistence
 - Testing Commands
 - Navigator Mode
 - verify check
@@ -509,7 +509,7 @@
 - BUG-027 — the Security screen's search field filters nothing
 - Security assessment — round 3 (full attack surface)
 - UI inventory — Baito
-- chats.py
+- ConnectionManager
 - Code Quality Analyzer
 - Code Quality Analyzer
 - System Architecture Designer
@@ -555,14 +555,10 @@
 - i18n-fallbacks.test.ts
 - Agents Commands
 - _Bind
-- Advanced Synchronization
 - Collaboration Commands
 - Monitoring & Insights
-- 🔐 Supabase Admin
 - Advanced Workflows
 - Best Practices
-- Core Features
-- Synchronization Patterns
 - Advanced Synchronization
 - Troubleshooting
 - Best Practices
@@ -596,11 +592,6 @@
 - Risk register — Baito
 - Security assessment — charter
 - currencyWord.test.ts
-- Team Collaboration
-- Core Features
-- Automation Examples
-- Usage
-- stats
 - Integration Examples
 - Session Recovery
 - mapFillsTheScreen.test.ts
@@ -692,26 +683,26 @@
 5. `make_job()` - 103 edges
 6. `JobStatus` - 100 edges
 7. `useCurrentScreen()` - 95 edges
-8. `useCurrentScreen()` - 94 edges
-9. `apiClient()` - 94 edges
+8. `apiClient()` - 94 edges
+9. `useCurrentScreen()` - 94 edges
 10. `Job` - 83 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `2. Yolg'on muvaffaqiyat — TUZATILDI (2026-09-06)` --references--> `PaymentCard`  [INFERRED]
-  qa/CHECKLIST.md → backend/app/models/payment_card.py
-- `Correction to the original fix direction` --references--> `PaymentCard`  [INFERRED]
-  qa/findings/BUG-025-make-default-card-reports-success.md → backend/app/models/payment_card.py
+- `Fix direction` --references--> `success()`  [INFERRED]
+  qa/findings/BUG-017-withdraw-reports-success-without-withdrawing.md → .claude/helpers/auto-memory-hook.mjs
 - `Related Commands` --references--> `verify()`  [INFERRED]
   .claude/commands/truth/start.md → backend/app/core/invoice_link.py
 - `1. Tasdiq so'ramaydigan amallar — TUZATILDI (2026-09-06)` --references--> `salary_to_uzs()`  [INFERRED]
   qa/CHECKLIST.md → backend/app/core/money.py
 - `Fix (2026-09-06)` --references--> `salary_to_uzs()`  [INFERRED]
   qa/findings/BUG-024-committing-actions-do-not-ask.md → backend/app/core/money.py
+- `2. Yolg'on muvaffaqiyat — TUZATILDI (2026-09-06)` --references--> `PaymentCard`  [INFERRED]
+  qa/CHECKLIST.md → backend/app/models/payment_card.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (722 total, 98 thin omitted)
+## Communities (715 total, 100 thin omitted)
 
 ### Community 0 - "make_user"
 Cohesion: 0.04
@@ -721,17 +712,17 @@ Nodes (133): login(), make_job(), make_user(), Job, User, Authenticate the share
 Cohesion: 0.03
 Nodes (89): LoginPromptScreen, DrawerMenuItemProps, LandingHeroShiftPreviewProps, CustomSelect(), CustomSelectProps, DocumentsView(), DocumentsViewProps, EmployerDocsSection() (+81 more)
 
-### Community 2 - "useCurrentScreen"
+### Community 2 - "frontend/src/App.tsx"
 Cohesion: 0.04
-Nodes (88): fetchNotificationsApi(), fetchWorkerApplicationsApi(), logoutApi(), AppContent(), MapViewScreen, LandingScreen, VerificationPendingScreen, BottomNav() (+80 more)
+Nodes (55): fetchNotificationsApi(), logoutApi(), AppContent(), MapViewScreen, AppRoutes(), BottomNav(), ErrorBoundary, Props (+47 more)
 
 ### Community 3 - "useApp"
 Cohesion: 0.04
 Nodes (113): AppContent(), MapViewScreen, AdminPanel, ApplicationsScreen, AppRoutes(), CalendarScreen, EmployerPanel, FaqScreen (+105 more)
 
-### Community 4 - "money"
-Cohesion: 0.07
-Nodes (31): completeJobDayApi(), fetchJobDaysApi(), ReviewsScreen, FinishJobModal(), FinishJobModalProps, JobDay, days, TODAY (+23 more)
+### Community 4 - "frontend/src/features/admin/JobDetailModal.tsx"
+Cohesion: 0.05
+Nodes (51): completeJobDayApi(), fetchJobDaysApi(), ReviewsScreen, adminLang(), adminText(), ApplicationsTab(), appStatusLabels, formatDate() (+43 more)
 
 ### Community 5 - "Application"
 Cohesion: 0.13
@@ -746,16 +737,16 @@ Cohesion: 0.05
 Nodes (49): ProfileScreen, CATEGORIES_LIST, CategoryOption, EmployerChatList(), EmployerChatListProps, EmployerChatMessageBubble(), EmployerChatMessageBubbleProps, EmployerChatWindow() (+41 more)
 
 ### Community 8 - "typing"
-Cohesion: 0.07
-Nodes (57): app, app_api, app_api_v1_endpoints, app_core, app_core_limiter, app_core_money, app_models_audit_ledger, app_models_job (+49 more)
+Cohesion: 0.08
+Nodes (49): app, app_api, app_api_v1_endpoints, app_core, app_core_limiter, app_core_money, app_crud_base, app_models_audit_ledger (+41 more)
 
 ### Community 9 - "frontend/src/features/worker/search/JobSearchScreen.tsx"
-Cohesion: 0.05
-Nodes (38): JobSearchScreen, ErrorBoundary, Props, State, language, JobCardSkeleton(), JobCardSkeletonProps, MapBreadcrumbs() (+30 more)
+Cohesion: 0.11
+Nodes (20): JobSearchScreen, JobCardSkeleton(), JobCardSkeletonProps, DesktopJobDetailsPanel, JobCardItem, JobSearchScreen(), getRegionDisplayName(), REGIONS_LIST (+12 more)
 
 ### Community 10 - "frontend/src/components/AppRoutes.tsx"
-Cohesion: 0.04
-Nodes (46): chatDataTrans, getTranslatedChat(), AdminPanel, ApplicationsScreen, AppRoutes(), AuthGuestRoute(), ChatScreen, EmployerPanel (+38 more)
+Cohesion: 0.03
+Nodes (63): changePasswordApi(), fetchActiveSessionsApi(), logoutAllOtherSessionsApi(), logoutSessionApi(), updateUserProfileApi(), AddCardScreen, AdminPanel, ApplicationsScreen (+55 more)
 
 ### Community 11 - "mobile/src/components/notifications/NotificationsScreen.tsx"
 Cohesion: 0.17
@@ -770,8 +761,8 @@ Cohesion: 0.07
 Nodes (55): app_core_error_reporter, apply_to_job(), complete_job(), complete_job_day(), confirm_start_job(), declare_job_payout(), get_job_payout_for_employer(), _handle_domain_errors() (+47 more)
 
 ### Community 14 - "frontend/src/components/map/useRegionPolygons.ts"
-Cohesion: 0.20
-Nodes (22): createDistrictOnEachFeature(), areDistrictNamesEqual(), frontend_src_components_map_maputils_aredistrictnamesequal, frontend_src_components_map_maputils_mapfeaturetoregionid, BOUNDARY_COLOUR, HOVERED, MUTED, outlineFor() (+14 more)
+Cohesion: 0.17
+Nodes (24): createDistrictOnEachFeature(), areDistrictNamesEqual(), MapDistrict, MapRegion, UZBEKISTAN_REGIONS, frontend_src_components_map_maputils_aredistrictnamesequal, frontend_src_components_map_maputils_isregionname, frontend_src_components_map_maputils_mapfeaturetoregionid (+16 more)
 
 ### Community 15 - "Pair Programming Examples"
 Cohesion: 0.04
@@ -779,15 +770,15 @@ Nodes (49): Best Practices from Examples, Common Patterns, Example 10: Mobile Ap
 
 ### Community 16 - "Swarm Issue - Issue-Based Swarm Coordination"
 Cohesion: 0.05
-Nodes (39): 1. Issue Dependencies, 1. Issue-PR Linking, 1. Issue Templates, 1. Issue-to-Swarm Conversion, 2. Epic Management, 2. Issue Comment Commands, 2. Label Strategy, 2. Milestone Coordination (+31 more)
+Nodes (43): 1. Issue Dependencies, 1. Issue-PR Linking, 1. Issue-to-Swarm Conversion, 2. Epic Management, 2. Issue Comment Commands, 2. Milestone Coordination, 3. Cross-Repo Issues, 3. Issue Templates (+35 more)
 
 ### Community 17 - "alembic"
 Cohesion: 0.03
 Nodes (26): alembic, _create_admin_audit_logs(), _create_media_files(), upgrade(), Message read state, and indexes for the foreign keys that had none The unread…, _create_payment_orders(), _create_uzum_transactions(), upgrade() (+18 more)
 
-### Community 18 - "tasks.py"
-Cohesion: 0.07
-Nodes (35): asyncio, _post(), Report unhandled exceptions to Telegram. Production had no error reporting at…, Report something that is worth an alert but is not an exception. Used for…, One alert per distinct error per hour. Fails open if Redis is unavailable., report_message(), _should_send(), _b64() (+27 more)
+### Community 18 - "schemas/chat.py"
+Cohesion: 0.13
+Nodes (28): app_models_chat, app_schemas_chat, create_chat(), get_chat_messages(), get_chats(), _get_participant_chat(), mark_chat_read(), post_chat_message() (+20 more)
 
 ### Community 19 - "employerProfileFields.test.ts"
 Cohesion: 0.23
@@ -801,17 +792,17 @@ Nodes (56): 1. Bir kunda maksimal ariza soni, 2. Ariza tasdiqlanganda, 3. Tasdiq
 Cohesion: 0.04
 Nodes (45): 1. Hierarchical Goal Decomposition, 1. State Space Modeling, 2. Action Graph Construction, 2. Dynamic Replanning, 3. Goal Prioritization with PageRank, 3. Learning from Execution, 4. Temporal Advantage Planning, 5. A* Search with Sublinear Optimization (+37 more)
 
-### Community 22 - "ref_vitest"
+### Community 22 - "useCurrentScreen"
 Cohesion: 0.03
-Nodes (59): language, text(), language, LandingCategories(), LandingCategoriesProps, FAQ_ITEMS, JOB_CATEGORIES, LANDING_TEXTS (+51 more)
+Nodes (79): fetchWorkerApplicationsApi(), LandingScreen, ProfileScreen, VerificationPendingScreen, language, LandingCategories(), LandingCategoriesProps, FAQ_ITEMS (+71 more)
 
 ### Community 23 - "JobDay"
 Cohesion: 0.16
 Nodes (21): JobDay, One calendar day of a posting, with its own status and its own wage.…, Leave the holds, take the day rows away — the shape `ish` (ccf3d143) has. The…, _strip_day_rows(), _hired_job(), _job_row(), _phone(), When the work actually started. ``workTime`` is the shift a posting advertised… (+13 more)
 
-### Community 24 - "datetime"
-Cohesion: 0.07
-Nodes (51): app_models_session, _decode(), get_access_token(), get_current_user(), get_current_user_optional(), get_refresh_token(), Request, _clear_auth_cookies() (+43 more)
+### Community 24 - "frontend/src/components/common/DateTimePickerModal.tsx"
+Cohesion: 0.21
+Nodes (14): DateTimePickerModal(), DateTimePickerModalProps, getDaysInMonth(), getFirstDayOfWeek(), monthNames(), parseInitial24hTime(), weekdayNames(), WEEKDAYS_SUNDAY_FIRST (+6 more)
 
 ### Community 25 - "statusline.cjs"
 Cohesion: 0.06
@@ -822,16 +813,16 @@ Cohesion: 0.04
 Nodes (45): 1. Specification Phase, 2. Pseudocode Phase, 3. Architecture Phase, 4. Refinement Phase, 5. Completion Phase, After: Self-learning SPARC coordination (v3.0.0-alpha.1), After SPARC Cycle: Store Complete Methodology Learning, Agent Coordination (+37 more)
 
 ### Community 27 - "main.py"
-Cohesion: 0.03
-Nodes (73): app_api_v1_api, app_core_config, app_core_exceptions, app_db_base, app_db_init_db, app_models_media_file, Run migrations in 'offline' mode., Run migrations in 'online' mode. (+65 more)
+Cohesion: 0.02
+Nodes (95): app_api_v1_api, app_core_config, app_core_exceptions, app_db_base, app_db_init_db, app_models_media_file, asyncio, Run migrations in 'offline' mode. (+87 more)
 
 ### Community 28 - "ref_react_router_dom"
 Cohesion: 0.06
 Nodes (33): App(), chatDataTrans, getTranslatedChat(), ChatScreen, ChatDetailPanel(), ChatDetailPanelProps, ChatHeader(), ChatHeaderProps (+25 more)
 
-### Community 29 - "frontend/src/hooks/login-prompt/useLoginApiHandlers.ts"
-Cohesion: 0.12
-Nodes (18): loginApi(), registerApi(), verifySmsApi(), SWEPT, en, LOCAL_TEXTS, ru, uz (+10 more)
+### Community 29 - "i18n-sweep.test.ts"
+Cohesion: 0.38
+Nodes (5): SWEPT, en, ru, locales, uz
 
 ### Community 30 - "Flow Nexus Neural Networks"
 Cohesion: 0.04
@@ -849,9 +840,9 @@ Nodes (21): get_idempotent_response(), Session, save_idempotent_response(), add_
 Cohesion: 0.13
 Nodes (31): CRUDJob, Session, Job, _days(), _five_day_run(), _hired_and_started(), _phone(), _posting() (+23 more)
 
-### Community 35 - "frontend/src/api/queries.ts"
-Cohesion: 0.03
-Nodes (94): ChatSocket, openChatSocket(), SocketMessage, addPaymentCardApi(), changePasswordApi(), createChatApi(), declareInvoicePaymentApi(), deletePaymentCardApi() (+86 more)
+### Community 35 - "frontend/src/context/useChatsData.ts"
+Cohesion: 0.04
+Nodes (72): ChatSocket, openChatSocket(), SocketMessage, createChatApi(), fetchChatMessages(), fetchChats(), fetchSupportConversationApi(), markChatReadApi() (+64 more)
 
 ### Community 36 - "Tasdiqlash cheklisti — pul va qaytarib bo'lmaydigan amallar"
 Cohesion: 0.18
@@ -866,36 +857,36 @@ Cohesion: 0.05
 Nodes (38): code-review, Examples, Options, Usage, Agent Types, Basic GitHub swarm, Development swarm with PR automation, Documentation Agent (+30 more)
 
 ### Community 39 - "intelligence.cjs"
-Cohesion: 0.10
-Nodes (40): boostConfidence(), bootstrapFromMemoryFiles(), buildEdges(), ADR-0174, clip(), computePageRank(), consolidate(), DATA_DIR (+32 more)
+Cohesion: 0.09
+Nodes (42): boostConfidence(), bootstrapFromMemoryFiles(), buildEdges(), ADR-0174, clip(), computePageRank(), consolidate(), DATA_DIR (+34 more)
 
 ### Community 40 - "Code Review Swarm - Automated Code Review with AI Agents"
 Cohesion: 0.05
-Nodes (44): 1. AI Learning, 1. Context-Aware Reviews, 1. Multi-Agent Review System, 1. Review Configuration, 2. Comment Quality, 2. Custom Review Agents, 2. Learning from History, 2. Specialized Review Agents (+36 more)
+Nodes (37): 1. AI Learning, 1. Context-Aware Reviews, 1. Review Configuration, 2. Comment Quality, 2. Custom Review Agents, 2. Learning from History, 3. Cross-PR Analysis, 3. Performance (+29 more)
 
 ### Community 41 - "useAuthStore"
-Cohesion: 0.03
-Nodes (155): apiClient(), Lang, LANGS, readLanguage(), refreshSession(), REQUEST_FAILED, unwrapList(), fetchAdminTicketApi() (+147 more)
+Cohesion: 0.04
+Nodes (115): unwrapList(), fetchAdminTicketApi(), replyToTicketApi(), sendDigestNowApi(), updateTicketStatusApi(), AddCategoryModal(), AddCategoryModalProps, AddPromoModal() (+107 more)
 
 ### Community 42 - "auto-memory-hook.mjs"
-Cohesion: 0.11
-Nodes (19): DATA_DIR, dim(), __dirname, doImport(), doStatus(), doSync(), __filename, gracefulExit() (+11 more)
+Cohesion: 0.09
+Nodes (20): DATA_DIR, dim(), __dirname, doImport(), doStatus(), doSync(), __filename, gracefulExit() (+12 more)
 
 ### Community 43 - "frontend/src/components/map/useUzbekistanGeoJson.ts"
 Cohesion: 0.14
 Nodes (20): formatDistrictName(), LAT_OFFSET, LNG_OFFSET, shiftCoordinates(), shiftGeoJson(), shiftGeometry(), isPointInFeature(), isPointInPolygon() (+12 more)
 
-### Community 44 - "frontend/src/components/settings/PrivacyScreen.tsx"
-Cohesion: 0.11
-Nodes (18): PrivacyScreen, ShartlarScreen, PrivacyScreen, language, en, PRIVACY, PrivacyBlock, PrivacyContent (+10 more)
+### Community 44 - "LearningService"
+Cohesion: 0.22
+Nodes (3): LearningService, main(), Navigation
 
 ### Community 45 - "Learning Hooks Script"
 Cohesion: 0.15
 Nodes (35): error(), generate_session_id(), get_stats(), log(), record_usage(), run_benchmark(), search_patterns(), session_end() (+27 more)
 
-### Community 46 - "LearningService"
-Cohesion: 0.09
-Nodes (14): CONFIG, DATA_DIR, DB_PATH, __dirname, EmbeddingService, __filename, initializeDatabase(), LearningService (+6 more)
+### Community 46 - "learning-service.mjs"
+Cohesion: 0.13
+Nodes (11): CONFIG, DATA_DIR, DB_PATH, __dirname, EmbeddingService, __filename, initializeDatabase(), METRICS_PATH (+3 more)
 
 ### Community 47 - "mobile/package.json"
 Cohesion: 0.04
@@ -917,9 +908,9 @@ Nodes (43): 1. Choose the Right Topology, 1. Multi-Repo Development, 2. Optimize
 Cohesion: 0.18
 Nodes (14): _balance(), finished_job(), fixture, The completion bonus moves real money, so it gets its own tests. BUG-016: the…, The reported defect: 200, bonus_paid_workers 0, and no word of it. The same…, BUG-016's second half: earnedAmount added the gross wage to the bonus with no…, An employer and worker with the job walked up to the point of completion., _skint() (+6 more)
 
-### Community 52 - "send_payout_invoice"
-Cohesion: 0.17
-Nodes (20): confirm_invoice_payment(), confirm_payout(), get_job_payout(), InvoiceSend, list_payouts(), PayoutCreate, Any, BaseModel (+12 more)
+### Community 52 - "User"
+Cohesion: 0.04
+Nodes (86): confirm_invoice_payment(), confirm_payout(), get_job_payout(), InvoiceSend, list_payouts(), PayoutCreate, Any, BaseModel (+78 more)
 
 ### Community 53 - "JobStatus"
 Cohesion: 0.12
@@ -935,7 +926,7 @@ Nodes (30): autoprefixer, jsdom, leaflet, lucide-react, motion, react, react-dom
 
 ### Community 56 - "hook-handler.cjs"
 Cohesion: 0.10
-Nodes (27): args, GITHUB_SAFE_VERSION, ADR-0174, claimSideEffectEvent(), firstRunAutoEnableIfEligible(), fs, intelligence, main() (+19 more)
+Nodes (26): args, GITHUB_SAFE_VERSION, ADR-0174, claimSideEffectEvent(), firstRunAutoEnableIfEligible(), fs, intelligence, main() (+18 more)
 
 ### Community 57 - "workTiming.ts"
 Cohesion: 0.32
@@ -943,7 +934,7 @@ Nodes (9): ActualTiming(), clockOf(), humanMinutes(), LATE_THRESHOLD_MIN, minute
 
 ### Community 58 - "frontend/src/components/notifications/NotificationsScreen.tsx"
 Cohesion: 0.13
-Nodes (21): markAllNotificationsReadApi(), NotificationCategory, NotificationFilterPanel(), NotificationFilterPanelProps, getIcon(), getTypeBadge(), NotificationItem(), NotificationItemData (+13 more)
+Nodes (22): markAllNotificationsReadApi(), NotificationsScreen, NotificationCategory, NotificationFilterPanel(), NotificationFilterPanelProps, getIcon(), getTypeBadge(), NotificationItem() (+14 more)
 
 ### Community 59 - "Capacitor Dependencies"
 Cohesion: 0.07
@@ -958,8 +949,8 @@ Cohesion: 0.05
 Nodes (41): 1. PR Validation Swarm, 1. Self-Healing CI/CD, 1. Swarm-Powered Actions, 1. Workflow Organization, 2. Dynamic Workflow Generation, 2. Progressive Deployment, 2. Release Automation, 2. Security (+33 more)
 
 ### Community 62 - "frontend/src/components/map/mapTileLayers.ts"
-Cohesion: 0.18
-Nodes (12): createClusterIcon(), CachedTileLayer, createCachedTileLayer(), createTileLayers(), layerCacheByMap, MapType, osmFallbackUrl(), tileErrorFallback() (+4 more)
+Cohesion: 0.23
+Nodes (8): CachedTileLayer, createCachedTileLayer(), createTileLayers(), layerCacheByMap, osmFallbackUrl(), tileErrorFallback(), tileMemoryCache, coords()
 
 ### Community 63 - "mobile/src/hooks/useJobSearchScreen.ts"
 Cohesion: 0.07
@@ -977,29 +968,29 @@ Nodes (24): compilerOptions, allowImportingTsExtensions, allowJs, alwaysStrict, 
 Cohesion: 0.21
 Nodes (18): _app_status(), _hired(), _job(), _phone(), The worker starts their own shift; nobody confirms it afterwards. Pressing…, The refusal the console was full of, now reachable from this route too., A multi-vacancy shift. confirm-start advances everyone at once, which is right…, The employer is told, not asked. (+10 more)
 
-### Community 67 - "Job"
+### Community 67 - "frontend/src/api/queries.ts"
 Cohesion: 0.04
-Nodes (89): completeJobApi(), ConfirmModal(), ConfirmModalProps, JobDetailsCard(), JobDetailsCardProps, JobDetailsFooter(), JobDetailsFooterProps, completeJobMock (+81 more)
+Nodes (104): applyToJobApi(), bookmarkJobApi(), completeJobApi(), confirmStartJobApi(), fetchJobs(), JobQuery, requestStartJobApi(), UploadPurpose (+96 more)
 
 ### Community 68 - "change_job_status"
 Cohesion: 0.10
 Nodes (33): _build_steps(), change_job_status(), change_job_worker(), delete_job(), get_admin_job_detail(), get_admin_jobs(), _iso(), JobStatusPayload (+25 more)
 
-### Community 69 - "declare_payment"
-Cohesion: 0.17
-Nodes (17): declare_payment(), get_invoice(), _load(), _methods(), PaymentDeclaration, Any, BaseModel, get (+9 more)
+### Community 69 - "frontend/src/components/MenuModals.tsx"
+Cohesion: 0.28
+Nodes (8): HelpContent(), MODAL_TRANSLATIONS, ModalLanguage, ProfileContent(), ProfileContentProps, SettingsContent(), MenuModalProps, MenuModals()
 
 ### Community 70 - "jobs.py"
 Cohesion: 0.05
 Nodes (64): app_services_ai_matcher, app_services_geo_service, app_services_growth_engine, app_services_soliq_service, app_services_spam_detector, create_job(), delete_job(), get_bookmarked_jobs() (+56 more)
 
-### Community 71 - "User"
-Cohesion: 0.05
-Nodes (72): app_core_phone, app_core_security, app_schemas_user, _require_valid_phone(), change_password(), create_user(), deactivate_all_other_sessions(), _deactivate_other_sessions() (+64 more)
+### Community 71 - "auth.py"
+Cohesion: 0.03
+Nodes (109): app_core_phone, app_core_security, app_models_session, app_services_session_window, _decode(), get_access_token(), get_current_user(), get_current_user_optional() (+101 more)
 
-### Community 72 - "showToast"
-Cohesion: 0.05
-Nodes (56): confirmStartJobApi(), uploadFileApi(), ProfileScreen, ApplicantCard(), ApplicantCardProps, applicant, applicant(), confirmStartJobApi (+48 more)
+### Community 72 - "apiClient"
+Cohesion: 0.04
+Nodes (85): apiClient(), Lang, LANGS, readLanguage(), refreshSession(), REQUEST_FAILED, incrementJobViewApi(), loginApi() (+77 more)
 
 ### Community 73 - "record_admin_action"
 Cohesion: 0.08
@@ -1014,8 +1005,8 @@ Cohesion: 0.05
 Nodes (36): app_db_session, app_models, AsyncClient, _clean_redis(), _clean_tables(), client(), _enforce_foreign_keys(), _flush_redis() (+28 more)
 
 ### Community 76 - "Multi-Repo Swarm - Cross-Repository Swarm Orchestration"
-Cohesion: 0.05
-Nodes (40): 1. Distributed Task Queue, 1. Microservices Coordination, 1. Repository Organization, 1. Webhook-Based Coordination, 2. Communication, 2. Cross-Repo Testing, 2. GraphQL Federation, 2. Library Updates (+32 more)
+Cohesion: 0.04
+Nodes (48): 1. Cross-Repo Initialization, 1. Distributed Task Queue, 1. Eventually Consistent, 1. Microservices Coordination, 1. Repository Organization, 1. Webhook-Based Coordination, 2. Communication, 2. Cross-Repo Testing (+40 more)
 
 ### Community 77 - "backup_bot.py"
 Cohesion: 0.08
@@ -1023,7 +1014,7 @@ Nodes (51): cleanup_old_backups(), deliver_backup_file(), deny(), download_backu
 
 ### Community 78 - "Project Board Sync - GitHub Projects Integration"
 Cohesion: 0.05
-Nodes (40): 1. Auto-Assignment, 1. Board Initialization, 1. Board Organization, 2. Data Integrity, 2. Progress Tracking, 2. Task Synchronization, 3. Real-time Updates, 3. Smart Card Movement (+32 more)
+Nodes (40): 1. Board Initialization, 1. Board Organization, 2. Data Integrity, 2. Task Synchronization, 3. Real-time Updates, 3. Team Adoption, Agile Development Board, Best Practices (+32 more)
 
 ### Community 79 - "frontend/src/features/employer/components/JobPostStepThree.tsx"
 Cohesion: 0.17
@@ -1043,11 +1034,11 @@ Nodes (18): calculateModuleProgress(), checkSecurityFile(), countFilesAndLines()
 
 ### Community 83 - "Release Swarm - Intelligent Release Automation"
 Cohesion: 0.05
-Nodes (39): 1. Progressive Deployment, 1. Release Planning, 2. Automation, 2. Multi-Repo Releases, 3. Documentation, 3. Hotfix Automation, Advanced Features, Auto-Generated Docs (+31 more)
+Nodes (37): 1. Progressive Deployment, 1. Release Planning, 1. Release Planning, 2. Automated Versioning, 2. Automation, 2. Multi-Repo Releases, 3. Documentation, 3. Hotfix Automation (+29 more)
 
 ### Community 84 - "Release Swarm - Intelligent Release Automation"
 Cohesion: 0.05
-Nodes (37): 1. Progressive Deployment, 1. Release Planning, 1. Release Planning, 2. Automated Versioning, 2. Automation, 2. Multi-Repo Releases, 3. Documentation, 3. Hotfix Automation (+29 more)
+Nodes (43): 1. Progressive Deployment, 1. Release Planning, 1. Release Planning, 2. Automated Versioning, 2. Automation, 2. Multi-Repo Releases, 3. Documentation, 3. Hotfix Automation (+35 more)
 
 ### Community 85 - "test_admin_payouts.py"
 Cohesion: 0.11
@@ -1074,12 +1065,12 @@ Cohesion: 0.12
 Nodes (16): compilerOptions, allowJs, experimentalDecorators, isolatedModules, jsx, lib, module, moduleDetection (+8 more)
 
 ### Community 91 - "ref_leaflet"
-Cohesion: 0.14
-Nodes (17): App(), frontend_src_index, CHUNK_ERROR_PATTERNS, installStaleChunkRecovery(), looksLikeStaleChunk(), reloadOnce(), queryClient, createClusterIcon() (+9 more)
+Cohesion: 0.17
+Nodes (14): createClusterIcon(), MapType, UseMapSetupProps, createClusterIcon(), CachedTileLayer, createCachedTileLayer(), createTileLayers(), layerCacheByMap (+6 more)
 
-### Community 92 - "schemas/job.py"
-Cohesion: 0.13
-Nodes (16): HiredWorkerInfo, Job, JobBase, JobCreate, JobInDBBase, JobUpdate, JobWithApplicationStatus, BaseModel (+8 more)
+### Community 92 - "schemas/__init__.py"
+Cohesion: 0.05
+Nodes (51): Bookmark, BookmarkBase, BookmarkCreate, BaseModel, HiredWorkerInfo, Job, JobBase, JobCreate (+43 more)
 
 ### Community 93 - "Support Ticket Conversations"
 Cohesion: 0.19
@@ -1089,25 +1080,25 @@ Nodes (16): get_support_conversation(), _open_ticket(), Any, BaseModel, get, lim
 Cohesion: 0.16
 Nodes (3): _build_client(), MockRedis, Single-process, non-durable stand-in. Development only.
 
-### Community 95 - "ref_path"
-Cohesion: 0.09
-Nodes (16): commands, fs, MEMORY_DIR, MEMORY_FILE, path, value, commands, fs (+8 more)
+### Community 95 - "ref_fs"
+Cohesion: 0.08
+Nodes (23): commands, fs, MEMORY_DIR, MEMORY_FILE, path, value, commandExists(), done() (+15 more)
 
 ### Community 96 - "Root Package Scripts"
 Cohesion: 0.12
 Nodes (15): devDependencies, concurrently, name, private, scripts, build, build:frontend, dev (+7 more)
 
 ### Community 97 - "Multi-Repo Swarm - Cross-Repository Swarm Orchestration"
-Cohesion: 0.04
-Nodes (48): 1. Cross-Repo Initialization, 1. Distributed Task Queue, 1. Eventually Consistent, 1. Microservices Coordination, 1. Repository Organization, 1. Webhook-Based Coordination, 2. Communication, 2. Cross-Repo Testing (+40 more)
+Cohesion: 0.05
+Nodes (40): 1. Cross-Repo Initialization, 1. Distributed Task Queue, 1. Microservices Coordination, 1. Repository Organization, 1. Webhook-Based Coordination, 2. Communication, 2. Cross-Repo Testing, 2. GraphQL Federation (+32 more)
 
 ### Community 98 - "mobile/src/components/login/LoginPromptScreen.tsx"
 Cohesion: 0.10
 Nodes (19): LoginPromptScreen, PrivacyScreen, LoginPromptBody(), LoginPromptFooter(), LoginPromptFooterProps, LoginPromptHeader(), LoginPromptHeaderProps, LoginPromptScreen() (+11 more)
 
 ### Community 99 - "Project Board Sync - GitHub Projects Integration"
-Cohesion: 0.06
-Nodes (36): 1. Auto-Assignment, 1. Board Organization, 2. Data Integrity, 2. Progress Tracking, 3. Smart Card Movement, 3. Team Adoption, Agile Development Board, Automation Features (+28 more)
+Cohesion: 0.05
+Nodes (40): 1. Auto-Assignment, 1. Board Initialization, 1. Multi-Board Sync, 2. Cross-Organization Sync, 2. Progress Tracking, 2. Task Synchronization, 3. External Tool Integration, 3. Real-time Updates (+32 more)
 
 ### Community 100 - "Notifications API"
 Cohesion: 0.24
@@ -1145,9 +1136,9 @@ Nodes (10): DateTimePickerModal(), DateTimePickerModalProps, getDaysInMonth(), g
 Cohesion: 0.22
 Nodes (13): create_category(), delete_category(), get_categories(), Any, delete, get, post, Session (+5 more)
 
-### Community 110 - "get_stats"
-Cohesion: 0.15
-Nodes (18): BroadcastPayload, get_stats(), get_support_tickets(), get_transactions(), Any, BaseModel, get, post (+10 more)
+### Community 110 - "QA Report — Round 2 — Baito — 2026-09-03 — `91f9ad0e3f6e`"
+Cohesion: 0.09
+Nodes (28): BroadcastPayload, get_stats(), get_support_tickets(), get_transactions(), Any, BaseModel, get, post (+20 more)
 
 ### Community 111 - "Hierarchical Swarm Coordinator"
 Cohesion: 0.06
@@ -1221,17 +1212,17 @@ Nodes (9): background_color, description, display, icons, name, orientation, sho
 Cohesion: 0.20
 Nodes (9): background_color, description, display, icons, name, orientation, short_name, start_url (+1 more)
 
-### Community 130 - "frontend/src/hooks/useJobSearchScreen.ts"
-Cohesion: 0.11
-Nodes (21): applyToJobApi(), bookmarkJobApi(), fetchJobs(), JobQuery, requestStartJobApi(), CalendarScreen, useJobsData(), getJobDates() (+13 more)
+### Community 130 - "ref_vitest"
+Cohesion: 0.03
+Nodes (57): addPaymentCardApi(), declareInvoicePaymentApi(), deletePaymentCardApi(), fetchInvoiceApi(), fetchPaymentCardsApi(), fetchTransactionsApi(), fetchUserProfileApi(), updatePaymentCardApi() (+49 more)
 
 ### Community 131 - "Checkpoint Manager Script"
 Cohesion: 0.42
 Nodes (8): clean_checkpoints(), diff_checkpoint(), list_checkpoints(), rollback_checkpoint(), checkpoint-manager.sh script, show_checkpoint(), show_help(), show_summary()
 
 ### Community 132 - "frontend/src/components/map/districtUtils.ts"
-Cohesion: 0.31
-Nodes (5): calculateAreDistrictNamesEqual(), districtMatchCache, DISTRICT_MAP, REGION_INFOS, RegionInfo
+Cohesion: 0.21
+Nodes (8): calculateAreDistrictNamesEqual(), districtMatchCache, getFeatureBounds(), calculateLatLng(), latLngCache, DISTRICT_MAP, REGION_INFOS, RegionInfo
 
 ### Community 133 - "test_platform_fee_setting.py"
 Cohesion: 0.19
@@ -1265,9 +1256,9 @@ Nodes (34): 1. Resource Allocation Optimization, 2. Load Balancing Optimization,
 Cohesion: 0.33
 Nodes (4): BaitoPlatformUser, task, HttpUser, locust
 
-### Community 141 - "Ruflo Hook Script"
-Cohesion: 0.43
-Nodes (6): commandExists(), done(), fs, invokeHook(), main(), { spawnSync, execSync }
+### Community 141 - "/graphify"
+Cohesion: 0.22
+Nodes (8): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Usage, What graphify is for
 
 ### Community 142 - "Security Scanner Script"
 Cohesion: 0.52
@@ -1369,9 +1360,9 @@ Nodes (32): 1. **Comprehensive Testing**, 1. Coordinated Release Preparation, 1.
 Cohesion: 0.06
 Nodes (32): 1. High-Frequency Trading with Temporal Lead, 2. Cross-Market Arbitrage, 3. Real-Time Portfolio Optimization, Advanced Trading Strategies, Consensus-Based Trading Decisions, Core Capabilities, Crisis Management, Daily Trading Cycle (+24 more)
 
-### Community 198 - "QA Report — Round 2 — Baito — 2026-09-03 — `91f9ad0e3f6e`"
-Cohesion: 0.18
-Nodes (10): 10. Artefacts, 11. Reproduction appendix, 1. Verdict, 2. Scope, 4. Results by area, 5. AI quality scorecard, 6. Risk register — deltas from round 1, 7. Coverage & traceability (+2 more)
+### Community 198 - "frontend/src/main.tsx"
+Cohesion: 0.31
+Nodes (7): App(), frontend_src_index, CHUNK_ERROR_PATTERNS, installStaleChunkRecovery(), looksLikeStaleChunk(), reloadOnce(), queryClient
 
 ### Community 199 - "Adaptive Swarm Coordinator"
 Cohesion: 0.06
@@ -1415,7 +1406,7 @@ Nodes (31): Best Practices, Bug Fixing, Code Review, Code Review Session, Collab
 
 ### Community 209 - "AgentDB Memory Patterns"
 Cohesion: 0.06
-Nodes (30): 1. Session Memory, 2. Long-Term Memory, 3. Pattern Learning, Advanced Patterns, AgentDB Memory Patterns, Available Algorithms (9 Total), CLI Operations, Create Learning Plugin (+22 more)
+Nodes (31): 1. Session Memory, 2. Long-Term Memory, 3. Pattern Learning, Advanced Patterns, AgentDB Memory Patterns, Available Algorithms (9 Total), Best Practices, CLI Operations (+23 more)
 
 ### Community 210 - "GitHub Sync Coordinator"
 Cohesion: 0.07
@@ -1426,8 +1417,8 @@ Cohesion: 0.07
 Nodes (26): Agent Types Selected, Analysis only, auto agent, Balanced, Basic auto-spawning, Constrained spawning, Examples, How It Works (+18 more)
 
 ### Community 212 - "Pair Programming Session Management"
-Cohesion: 0.07
-Nodes (30): Advanced Features, Attach to Background Session, Background Sessions, Best Practices, Collaboration, Create Learning Material, Default Settings, Export for Review (+22 more)
+Cohesion: 0.22
+Nodes (9): Best Practices, Default Settings, Pair Programming Session Management, Per-Session Config, Related Commands, Session Configuration, Session History, Session Reports (+1 more)
 
 ### Community 213 - "ReasoningBank with AgentDB"
 Cohesion: 0.07
@@ -1437,9 +1428,9 @@ Nodes (29): 1. PatternMatcher, 1. Trajectory Tracking, 2. ContextSynthesizer, 2.
 Cohesion: 0.07
 Nodes (29): 1. Task Management Domain, 2. Session Management Domain, 3. Health Monitoring Domain, Application Layer (Use Cases), Bounded Context Modules, Clean Architecture Layers, Complete Domain Extraction, Core Kernel (+21 more)
 
-### Community 215 - "Session Control Commands"
-Cohesion: 0.29
-Nodes (7): /end, /pause, /resume, Session Control Commands, /start, /status, /switch
+### Community 215 - "regionOutlineStyle.ts"
+Cohesion: 0.36
+Nodes (7): BOUNDARY_COLOUR, HOVERED, MUTED, OutlineStyle, RESTING, SELECTED, ALL
 
 ### Community 216 - "GitHub PR Manager"
 Cohesion: 0.07
@@ -1462,12 +1453,12 @@ Cohesion: 0.29
 Nodes (7): /complexity, /lint, /perf, /quality, /review, Review Commands, /security
 
 ### Community 221 - "hive-mind/README.md"
-Cohesion: 0.07
-Nodes (18): hive-mind-consensus, Examples, hive-mind-init, Options, Usage, hive-mind-memory, hive-mind-metrics, hive-mind-resume (+10 more)
+Cohesion: 0.06
+Nodes (22): hive-mind-consensus, Examples, hive-mind, Examples, hive-mind-init, Options, Usage, hive-mind-memory (+14 more)
 
-### Community 222 - "Supabase MCP"
-Cohesion: 0.22
-Nodes (9): Available Commands, Available Tools, Current Project, Getting Started with Supabase MCP, How to Use MCP Services, Memory Integration, Supabase MCP, Using MCP Tools (Preferred) (+1 more)
+### Community 222 - "Development Branches"
+Cohesion: 0.07
+Nodes (28): Available Commands, Available Tools, `create_branch`, Current Project, Custom Instructions, `delete_branch`, Development Branches, `generate_typescript_types` (+20 more)
 
 ### Community 223 - "🐝 Claude-Flow Swarm Coordination"
 Cohesion: 0.07
@@ -1481,13 +1472,13 @@ Nodes (27): Advanced Prompt Service, CLI Architecture Modernization, CLI Perform
 Cohesion: 0.21
 Nodes (13): collect(), skipif, A new notification must not ship without its translation. Notification titles…, Strings each local name in `fn` can hold, including `x += "..."`. Statements…, A template removed from the backend should be removed from here too. Two…, The six that production leaked, named so a rename cannot silently drop them., Every string the expression can evaluate to, `{}` for each placeholder. Returns…, _scope_of() (+5 more)
 
-### Community 226 - "BUG-018 — "Jonli chat" answers the user itself; the message never leaves the browser"
-Cohesion: 0.33
-Nodes (5): BUG-018 — "Jonli chat" answers the user itself; the message never leaves the browser, Impact, Reproduction (live, on the disposable QA stack), Root cause, What happens
+### Community 226 - "0016_fill_catalog_details.py"
+Cohesion: 0.36
+Nodes (7): _columns(), downgrade(), _fill(), fill in the category and region details the admin screens read 0013 seeded the…, Write only into fields that are empty. An administrator who has renamed a…, upgrade(), json
 
-### Community 227 - "Switch Mode"
+### Community 227 - "2. Specialized Review Agents"
 Cohesion: 0.29
-Nodes (7): Best For, Configuration, Default Intervals, Example Session, Role Transitions, Switch Mode, Usage
+Nodes (7): 1. Multi-Agent Review System, 2. Specialized Review Agents, 3. Review Configuration, Architecture Agent, Core Features, Performance Agent, Security Agent
 
 ### Community 228 - "V3 MCP Optimization"
 Cohesion: 0.07
@@ -1501,13 +1492,13 @@ Nodes (11): ast, details(), _plain(), skipif, A new error message must not ship 
 Cohesion: 0.22
 Nodes (8): BUG-024 — actions that commit money or cut off a user go through on one press, Evidence, Fix (2026-09-06), Fix direction, Impact, What happens, What is *not* a defect — checked, and working, Why the ban case is the sharpest
 
-### Community 231 - "frontend/src/components/map/mapUtils.ts"
-Cohesion: 0.18
-Nodes (13): getFeatureBounds(), calculateLatLng(), getLatLng(), latLngCache, MapDistrict, MapRegion, UZBEKISTAN_REGIONS, frontend_src_components_map_maputils_isregionname (+5 more)
+### Community 231 - "Release Agents"
+Cohesion: 0.33
+Nodes (6): Build Agent, Changelog Agent, Deploy Agent, Release Agents, Test Agent, Version Agent
 
-### Community 232 - "Development Branches"
-Cohesion: 0.29
-Nodes (7): `create_branch`, `delete_branch`, Development Branches, `list_branches`, `merge_branch`, `rebase_branch`, `reset_branch`
+### Community 232 - "Quick Reference"
+Cohesion: 0.33
+Nodes (6): Get Info, Interaction, Quick Reference, Sessions, Snapshots (AI-Optimized), Wait
 
 ### Community 233 - "Pull Request Manager Agent"
 Cohesion: 0.07
@@ -1538,8 +1529,8 @@ Cohesion: 0.08
 Nodes (25): 1. **Atomic Synchronization**, 1. Synchronize Package Dependencies, 1. **Version Alignment Strategy**, 2. **Documentation Sync Pattern**, 2. Documentation Synchronization, 2. **Version Management**, 3. Cross-Package Feature Integration, 3. **Documentation Consistency** (+17 more)
 
 ### Community 240 - "pair --start"
-Cohesion: 0.08
-Nodes (25): Background Execution, Basic Start, Best Practices, Code Review, Debugging Session, Driver Mode, Examples, Expert Refactoring Session (+17 more)
+Cohesion: 0.06
+Nodes (30): Background Execution, Basic Start, Best Practices, Code Review, Debug, Debugging Session, Driver Mode, Examples (+22 more)
 
 ### Community 241 - "V3 Swarm Coordination"
 Cohesion: 0.08
@@ -1549,9 +1540,9 @@ Nodes (25): 15-Agent Swarm Architecture, Agent Roster, Communication Bus, Coordi
 Cohesion: 0.03
 Nodes (102): getStoredRefreshToken(), getStoredToken(), AddCategoryModal(), AddCategoryModalProps, AddPromoModal(), AddPromoModalProps, AddRegionModal(), AddRegionModalProps (+94 more)
 
-### Community 243 - "Release Agents"
-Cohesion: 0.33
-Nodes (6): Build Agent, Changelog Agent, Deploy Agent, Release Agents, Test Agent, Version Agent
+### Community 243 - "Mode Combinations"
+Cohesion: 0.40
+Nodes (5): Debug-Focused, Learning-Focused, Mode Combinations, Quality-Focused, Speed-Focused
 
 ### Community 244 - "GitHub Repository Architect"
 Cohesion: 0.08
@@ -1570,8 +1561,8 @@ Cohesion: 0.08
 Nodes (24): 1. **Comprehensive Testing**, 1. Coordinated Release Preparation, 1. **Semantic Versioning Strategy**, 2. **Documentation Management**, 2. Multi-Package Version Coordination, 2. **Multi-Stage Validation**, 3. Automated Release Validation, 3. **Deployment Coordination** (+16 more)
 
 ### Community 248 - "Pair Programming Modes"
-Cohesion: 0.08
-Nodes (25): Best For, Best Practices by Mode, Commands in Driver Mode, Debug-Focused, Debug Mode, Driver Mode, Driver Mode, Example Session (+17 more)
+Cohesion: 0.06
+Nodes (32): Best For, Best For, Best Practices by Mode, Choose Driver Mode When:, Choose Navigator Mode When:, Choose Specialized Modes When:, Choose Switch Mode When:, Commands in Driver Mode (+24 more)
 
 ### Community 249 - "AGENTS.md"
 Cohesion: 0.08
@@ -1598,12 +1589,12 @@ Cohesion: 0.08
 Nodes (23): 1. Create Coordinated Issue with Swarm Tracking, 1. **Swarm-Coordinated Issue Management**, 2. **Automated Progress Tracking**, 2. Automated Progress Updates, 3. Multi-Issue Project Coordination, 3. **Smart Labeling and Organization**, 4. **Batch Issue Operations**, Automatic tracking of: (+15 more)
 
 ### Community 256 - "Browser Automation Skill"
-Cohesion: 0.08
-Nodes (23): Browser Automation Skill, Core Workflow, CSS Selectors, Data Extraction, Element Refs (Recommended), Examples, Form Submission, Get Info (+15 more)
+Cohesion: 0.12
+Nodes (16): Browser Automation Skill, Core Workflow, CSS Selectors, Data Extraction, Element Refs (Recommended), Examples, Form Submission, Hooks (+8 more)
 
 ### Community 257 - "What You Must Do When Invoked"
-Cohesion: 0.08
-Nodes (23): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Part A - Structural extraction for code files, Part B - Semantic extraction (parallel subagents) (+15 more)
+Cohesion: 0.13
+Nodes (15): Part A - Structural extraction for code files, Part B - Semantic extraction (parallel subagents), Part C - Merge AST + semantic into final extraction, Step 0 - GitHub repos and multi-path merge (only if a URL or several paths), Step 1 - Ensure graphify is installed, Step 2.5 - Video and audio (only if video files detected), Step 2 - Detect files, Step 3 - Extract entities and relationships (+7 more)
 
 ### Community 258 - "Swarm Orchestration"
 Cohesion: 0.08
@@ -1702,8 +1693,8 @@ Cohesion: 0.11
 Nodes (18): Advanced Workflows, Basic Verification, Configuration, Examples, Integration, Metrics, Overview, Performance (+10 more)
 
 ### Community 283 - "frontend/src/features/worker/calendar/CalendarScreen.utils.ts"
-Cohesion: 0.09
-Nodes (35): DateTimePickerModal(), DateTimePickerModalProps, getDaysInMonth(), getFirstDayOfWeek(), monthNames(), parseInitial24hTime(), weekdayNames(), WEEKDAYS_SUNDAY_FIRST (+27 more)
+Cohesion: 0.13
+Nodes (26): CalendarAccordion(), CalendarAccordionProps, CalendarAccordionItem(), CalendarDayButton(), CalendarDayButtonProps, CalendarDayTooltip(), CalendarDayTooltipProps, CalendarGridCard() (+18 more)
 
 ### Community 284 - "Advanced Swarm Workflow Automation"
 Cohesion: 0.40
@@ -1767,15 +1758,15 @@ Nodes (16): 🏢 15x AI Engineering Squad — Master Orchestration Plan, 📌 1-
 
 ### Community 299 - "generate_geojson.cjs"
 Cohesion: 0.12
-Nodes (15): admin3, admin4, admin6, finalDistrictsCollection, finalRegionsCollection, fs, ignoreNames, peshku (+7 more)
+Nodes (14): admin3, admin4, admin6, finalDistrictsCollection, finalRegionsCollection, fs, ignoreNames, peshku (+6 more)
 
-### Community 300 - "schemas/__init__.py"
-Cohesion: 0.06
-Nodes (53): app_crud_base, app_models_chat, app_schemas_application, app_schemas_chat, app_schemas_notification, CRUDBase, Any, Session (+45 more)
+### Community 300 - "CRUDBase"
+Cohesion: 0.10
+Nodes (24): app_models_notification, app_schemas_application, app_schemas_notification, CRUDBase, Any, Session, CRUDApplication, CRUDNotification (+16 more)
 
-### Community 301 - "hive-mind"
+### Community 301 - "Session Metrics"
 Cohesion: 0.40
-Nodes (4): Examples, hive-mind, Subcommands, Usage
+Nodes (5): Collaboration, Productivity, Quality, Session Metrics, Truth Score
 
 ### Community 302 - "AIDefence Guardian Agent"
 Cohesion: 0.12
@@ -1845,13 +1836,13 @@ Nodes (14): After Training: Store Learning Patterns, Before Training: Learn from
 Cohesion: 0.13
 Nodes (15): 0. Project facts — FILL THIS IN, 10. Performance, reliability and cost, 11. CI gates, 12. Test data, 13. Bug report format — use exactly this, 15. Exit criteria — all must be true for a GO, 16. Anti-patterns — never do these, 17. Standards this protocol follows (+7 more)
 
-### Community 319 - "Advanced Commands"
-Cohesion: 0.40
-Nodes (5): Advanced Commands, /api, /exec, /macro, /plugin
+### Community 319 - "Synchronization Patterns"
+Cohesion: 0.50
+Nodes (4): 1. Eventually Consistent, 2. Strong Consistency, 3. Hybrid Approach, Synchronization Patterns
 
-### Community 320 - "Learning Commands"
-Cohesion: 0.40
-Nodes (5): /example, /learn, Learning Commands, /quiz, /tip
+### Community 320 - "Troubleshooting"
+Cohesion: 0.50
+Nodes (4): Connectivity Issues, Memory Synchronization, Performance Bottlenecks, Troubleshooting
 
 ### Community 321 - "V3 Security Architecture Agent (AIMDS Enhanced)"
 Cohesion: 0.14
@@ -1866,8 +1857,8 @@ Cohesion: 0.14
 Nodes (14): Agent Spawn Command, Agent Types (87 Available), Consensus Agents, Core Development, Examples, GitHub Integration, MCP Coordination (Optional), Options (+6 more)
 
 ### Community 324 - "Database Operations"
-Cohesion: 0.29
-Nodes (7): `apply_migration`, Database Operations, `execute_sql`, `list_extensions`, `list_migrations`, `list_tables`, Step 0 — Constrained query expansion (REQUIRED before traversal)
+Cohesion: 0.17
+Nodes (11): `apply_migration`, Database Operations, `execute_sql`, `list_extensions`, `list_migrations`, `list_tables`, For /graphify explain, For /graphify path (+3 more)
 
 ### Community 325 - "Neural Pattern Training"
 Cohesion: 0.14
@@ -1945,9 +1936,9 @@ Nodes (12): Critical Security Fixes, CVE-1: Vulnerable Dependencies, CVE-2: Weak
 Cohesion: 0.17
 Nodes (11): 1. Qisqa versiya (CV/resume uchun, 1-2 qator), 2. O'rta versiya (portfolio kartasi uchun, 3-5 gap), 3. To'liq versiya (case study, portfolio sahifasi uchun), CHIQISH FORMATI (uch xil variant so'rab olinadi), KIRISH MA'LUMOTLARI (foydalanuvchi bilan qanday ishlaysan), MISOL (sizning haqiqiy loyihangiz asosida), MUHIM ESLATMA, NIMA UCHUN BU MUHIM (+3 more)
 
-### Community 344 - "Metrics Commands"
-Cohesion: 0.40
-Nodes (5): /leaderboard, /metrics, Metrics Commands, /productivity, /score
+### Community 344 - "Best Practices"
+Cohesion: 0.50
+Nodes (4): 1. Board Organization, 2. Data Integrity, 3. Team Adoption, Best Practices
 
 ### Community 345 - "SoliqFiscalService"
 Cohesion: 0.22
@@ -2050,24 +2041,24 @@ Cohesion: 0.17
 Nodes (11): 20. Shift-left — test the requirements before the code exists, 21. Oracles and coverage heuristics, 22. Session-based exploratory testing (SBTM), 23. Root cause analysis and defect prevention, 24. Metrics and trends, 25. Shift-right — production is a test environment you do not control, 26. Red teaming as a programme (AI), 27. Test architecture you own (+3 more)
 
 ### Community 370 - "models/__init__.py"
-Cohesion: 0.07
-Nodes (57): app_db_base_class, app_models_admin_audit_log, app_models_bookmark, app_models_dispute, app_models_idempotency, app_models_notification, app_models_payment_card, app_models_promotion (+49 more)
+Cohesion: 0.13
+Nodes (31): app_db_base_class, app_models_admin_audit_log, app_models_bookmark, app_models_dispute, app_models_idempotency, app_models_payment_card, app_models_promotion, app_models_support_ticket (+23 more)
 
 ### Community 371 - "Per-control click sweep — every user-facing route — 2026-09-03"
 Cohesion: 0.17
 Nodes (11): Coverage, Coverage against the router, Keyboard pass, Method, Mobile pass — Pixel 7, real touch, Not covered by this sweep, Per-control click sweep — every user-facing route — 2026-09-03, The guest and deep-link routes found nothing new (+3 more)
 
-### Community 372 - "Mode Selection Guide"
-Cohesion: 0.40
-Nodes (5): Choose Driver Mode When:, Choose Navigator Mode When:, Choose Specialized Modes When:, Choose Switch Mode When:, Mode Selection Guide
+### Community 372 - "Troubleshooting"
+Cohesion: 0.50
+Nodes (4): Data Recovery, Performance, Sync Issues, Troubleshooting
 
 ### Community 373 - "update_settings"
 Cohesion: 0.22
 Nodes (15): _get_or_create(), get_settings(), Any, BaseModel, get, post, put, Request (+7 more)
 
-### Community 374 - "Focus Areas"
-Cohesion: 0.40
-Nodes (5): Debug, Focus Areas, Implement, Refactor, Test
+### Community 374 - "Best Practices"
+Cohesion: 0.50
+Nodes (4): 1. Issue Templates, 2. Label Strategy, 3. Comment Etiquette, Best Practices
 
 ### Community 375 - "Agent Logs Command"
 Cohesion: 0.18
@@ -2137,13 +2128,13 @@ Nodes (10): Complete TDD Workflow, Core Philosophy, Key Principles, Overview, Pe
 Cohesion: 0.18
 Nodes (10): 1. Qisqacha Xulosa (Executive Summary), 2. Muammo va Yechim (Problem & Solution), 3. Platforma Ekotizimi (Platform Ecosystem), 4. Biznes Model va Monetizatsiya (How It Makes Money), 5. Raqobatdosh Ustunliklar (Competitive Advantages), 6. Texnologik Stack (Tech Stack - For Tech Investors), 7. Kelajakdagi Rejalar (Roadmap - Next 12 Months), Baito - O'zbekiston va Markaziy Osiyo Uchun Yagona Kunbay va Soatbay Ishlar Tizimi (+2 more)
 
-### Community 392 - "Monitoring & Utilities"
-Cohesion: 0.40
-Nodes (5): `generate_typescript_types`, `get_anon_key`, `get_logs`, `get_project_url`, Monitoring & Utilities
+### Community 392 - "Automation Features"
+Cohesion: 0.50
+Nodes (4): 1. Auto-Assignment, 2. Progress Tracking, 3. Smart Card Movement, Automation Features
 
-### Community 393 - "graphify reference: query, path, explain"
-Cohesion: 0.40
-Nodes (4): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 1 — Traversal
+### Community 393 - "Issue Swarm Commands"
+Cohesion: 0.50
+Nodes (4): Initialize from Issue, Issue Swarm Commands, Progress Tracking, Task Decomposition
 
 ### Community 394 - "agents/README.md"
 Cohesion: 0.31
@@ -2330,8 +2321,8 @@ Cohesion: 0.22
 Nodes (8): 1. Automatic State Persistence, 2. Session Restoration, 3. Memory Types, 4. Privacy & Control, Benefits, Cross-Session Memory, Memory Features, Purpose
 
 ### Community 441 - "Pair Programming Commands Reference"
-Cohesion: 0.22
-Nodes (9): Best Practices, Chaining Commands, Command History, Command Modifiers, Custom Commands, Global Modifiers, Pair Programming Commands Reference, Quick Command Aliases (+1 more)
+Cohesion: 0.06
+Nodes (31): Advanced Commands, /api, Best Practices, Chaining Commands, Command History, Command Modifiers, Custom Commands, /end (+23 more)
 
 ### Community 442 - "Code Commands"
 Cohesion: 0.22
@@ -2405,9 +2396,9 @@ Nodes (8): BUG-020 — the search button on the Payments screen has no handler, 
 Cohesion: 0.22
 Nodes (8): BUG-023 — keyboard focus is invisible on controls that carry their own shadow, Fix direction, Measured, with real keyboard focus, Note on measurement, Root cause, What happens, What was done, Where it bites, and where it does not
 
-### Community 460 - "Core Features"
+### Community 460 - "Advanced Features"
 Cohesion: 0.50
-Nodes (4): 1. Board Initialization, 2. Task Synchronization, 3. Real-time Updates, Core Features
+Nodes (4): Advanced Features, Session Analytics, Session Recording, Session Replay
 
 ### Community 461 - "BUG-025 — "Asosiy qilish" says the card was set as default and does nothing"
 Cohesion: 0.22
@@ -2425,13 +2416,13 @@ Nodes (8): Bugs filed, Evidence, Notes, Observations (not defects), Open questio
 Cohesion: 0.22
 Nodes (8): Data strategy, Entry criteria, Environments, Exit criteria, Levels, Schedule, Scope, Test plan — Baito QA pass
 
-### Community 465 - "Workflow Integration"
+### Community 465 - "Background Sessions"
 Cohesion: 0.50
-Nodes (4): Milestone Tracking, Release Planning, Sprint Management, Workflow Integration
+Nodes (4): Attach to Background Session, Background Sessions, Monitor Background Session, Start Background Session
 
-### Community 466 - "Automation Examples"
+### Community 466 - "Session Sharing"
 Cohesion: 0.50
-Nodes (4): Auto-Close Stale Issues, Automation Examples, Duplicate Detection, Issue Triage
+Nodes (4): Create Learning Material, Export for Review, Session Sharing, Share with Team
 
 ### Community 467 - "Byzantine Consensus Coordinator"
 Cohesion: 0.25
@@ -2517,9 +2508,9 @@ Nodes (7): /clear, /export, /help, /import, /redo, /undo, Utility Commands
 Cohesion: 0.25
 Nodes (8): Basic Commands, Code Commands, Git Commands, Navigation Commands, Review Commands, Role Commands, Session Commands, Testing Commands
 
-### Community 490 - "Issue Types & Strategies"
+### Community 490 - "Session Persistence"
 Cohesion: 0.50
-Nodes (4): Bug Reports, Feature Requests, Issue Types & Strategies, Technical Debt
+Nodes (4): Export Session, Load Session, Save Session, Session Persistence
 
 ### Community 491 - "Testing Commands"
 Cohesion: 0.29
@@ -2593,9 +2584,9 @@ Nodes (6): Infrastructure exposure (production, non-destructive recon), Net acro
 Cohesion: 0.29
 Nodes (6): Admin sub-screens, Denominator, Element enumeration, Screens, State variants to reach per screen (§9.1.2), UI inventory — Baito
 
-### Community 509 - "chats.py"
-Cohesion: 0.06
-Nodes (40): _columns(), downgrade(), _fill(), fill in the category and region details the admin screens read 0013 seeded the…, Write only into fields that are empty. An administrator who has renamed a…, upgrade(), _authenticate_socket(), ConnectionManager (+32 more)
+### Community 509 - "ConnectionManager"
+Cohesion: 0.14
+Nodes (11): _authenticate_socket(), ConnectionManager, Resolve a socket's user id using a short-lived DB session. A request-scoped…, Fan-out for chat sockets. Messages are published to Redis so that sockets…, websocket_endpoint(), health_check(), get, Response (+3 more)
 
 ### Community 510 - "Code Quality Analyzer"
 Cohesion: 0.33
@@ -2769,10 +2760,6 @@ Nodes (3): FILES, SRC, walk()
 Cohesion: 0.40
 Nodes (5): Agents Commands, Available Commands, Quick Start, Reference, V3 Agent Categories
 
-### Community 556 - "Advanced Synchronization"
-Cohesion: 0.50
-Nodes (4): 1. Multi-Board Sync, 2. Cross-Organization Sync, 3. External Tool Integration, Advanced Synchronization
-
 ### Community 557 - "Collaboration Commands"
 Cohesion: 0.40
 Nodes (5): /chat, Collaboration Commands, /invite, /note, /share
@@ -2781,10 +2768,6 @@ Nodes (5): /chat, Collaboration Commands, /invite, /note, /share
 Cohesion: 0.50
 Nodes (4): Cost Optimization, Failure Patterns, Monitoring & Insights, Workflow Analytics
 
-### Community 559 - "🔐 Supabase Admin"
-Cohesion: 0.50
-Nodes (3): Custom Instructions, Role Definition, 🔐 Supabase Admin
-
 ### Community 560 - "Advanced Workflows"
 Cohesion: 0.50
 Nodes (4): 1. Self-Healing CI/CD, 2. Progressive Deployment, 3. Performance Regression Detection, Advanced Workflows
@@ -2792,14 +2775,6 @@ Nodes (4): 1. Self-Healing CI/CD, 2. Progressive Deployment, 3. Performance Regr
 ### Community 561 - "Best Practices"
 Cohesion: 0.50
 Nodes (4): 1. Workflow Organization, 2. Security, 3. Performance, Best Practices
-
-### Community 562 - "Core Features"
-Cohesion: 0.50
-Nodes (4): 1. Cross-Repo Initialization, 2. Repository Discovery, 3. Synchronized Operations, Core Features
-
-### Community 563 - "Synchronization Patterns"
-Cohesion: 0.50
-Nodes (4): 1. Eventually Consistent, 2. Strong Consistency, 3. Hybrid Approach, Synchronization Patterns
 
 ### Community 564 - "Advanced Synchronization"
 Cohesion: 0.50
@@ -2932,26 +2907,6 @@ Nodes (4): Method, Rules of engagement, Security assessment — charter, Surface
 ### Community 596 - "currencyWord.test.ts"
 Cohesion: 0.33
 Nodes (3): ALLOWED, SRC, walk()
-
-### Community 597 - "Team Collaboration"
-Cohesion: 0.50
-Nodes (4): Review Coordination, Standup Automation, Team Collaboration, Work Distribution
-
-### Community 598 - "Core Features"
-Cohesion: 0.50
-Nodes (4): 1. Release Planning, 2. Automated Versioning, 3. Release Orchestration, Core Features
-
-### Community 599 - "Automation Examples"
-Cohesion: 0.50
-Nodes (4): Auto-Close Stale Issues, Automation Examples, Duplicate Detection, Issue Triage
-
-### Community 600 - "Usage"
-Cohesion: 0.50
-Nodes (4): Option 1: Using MCP Tools (Preferred in Claude Code), Option 2: Using NPX CLI (Fallback when MCP not available), Option 3: Local Installation, Usage
-
-### Community 601 - "stats"
-Cohesion: 0.50
-Nodes (3): stats(), Best Practices, [BUG-013] "Komissiya Hisoboti" tab shows fixed numbers, not real commission data
 
 ### Community 602 - "Integration Examples"
 Cohesion: 0.50
@@ -3210,24 +3165,24 @@ Cohesion: 0.67
 Nodes (3): 8.1 OWASP LLM Top 10 (2026) — concrete tests, 8.2 Classic application security, 8. Security testing
 
 ## Knowledge Gaps
-- **5107 isolated node(s):** `DrawerMenuItemProps`, `LandingHeroShiftPreviewProps`, `CustomSelectProps`, `DocumentsViewProps`, `EmployerDocsSectionProps` (+5102 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 6209 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **98 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **5107 isolated node(s):** `ADRS`, `__filename`, `__dirname`, `PROJECT_ROOT`, `DATA_DIR` (+5102 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 6213 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **100 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `refresh()` connect `datetime` to `typing`?**
-  _High betweenness centrality (0.101) - this node is a cross-community bridge._
-- **Why does `[BUG-010] The admin header's "Yangilash" button does nothing on Payments & Escrow` connect `datetime` to `useAuthStore`?**
-  _High betweenness centrality (0.101) - this node is a cross-community bridge._
-- **Why does `AdminPayouts()` connect `useAuthStore` to `showToast`, `datetime`?**
-  _High betweenness centrality (0.101) - this node is a cross-community bridge._
-- **What connects `DrawerMenuItemProps`, `LandingHeroShiftPreviewProps`, `CustomSelectProps` to the rest of the system?**
+- **Why does `[BUG-010] The admin header's "Yangilash" button does nothing on Payments & Escrow` connect `auth.py` to `apiClient`?**
+  _High betweenness centrality (0.110) - this node is a cross-community bridge._
+- **Why does `AdminPayouts()` connect `apiClient` to `useAuthStore`, `auth.py`?**
+  _High betweenness centrality (0.110) - this node is a cross-community bridge._
+- **What connects `ADRS`, `__filename`, `__dirname` to the rest of the system?**
   _5107 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `make_user` be split into smaller, more focused modules?**
   _Cohesion score 0.036909602752580546 - nodes in this community are weakly interconnected._
 - **Should `ref_react` be split into smaller, more focused modules?**
   _Cohesion score 0.02923331494760066 - nodes in this community are weakly interconnected._
-- **Should `useCurrentScreen` be split into smaller, more focused modules?**
-  _Cohesion score 0.03875968992248062 - nodes in this community are weakly interconnected._
+- **Should `frontend/src/App.tsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.04350205198358413 - nodes in this community are weakly interconnected._
+- **Should `useApp` be split into smaller, more focused modules?**
+  _Cohesion score 0.035649350649350646 - nodes in this community are weakly interconnected._

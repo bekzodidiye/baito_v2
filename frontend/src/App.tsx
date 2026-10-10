@@ -1,7 +1,7 @@
 import { ToastContainer } from './components/ToastContainer';
 import { NotificationWatcher } from './components/notifications/NotificationWatcher';
 import React, { useState, useEffect, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import {   Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
@@ -13,10 +13,8 @@ import { MapLoadingSkeleton } from './components/map/MapLoadingSkeleton';
 import { RegionSelector } from './components/RegionSelector';
 import { MenuModals } from './components/MenuModals';
 import { OnboardingTour } from './components/OnboardingTour';
-import { GatedLockScreen } from './components/GatedLockScreen';
-import { SettingsLayout } from './components/settings/SettingsLayout';
 import { MotionConfig } from 'motion/react';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 import { AppRoutes } from './components/AppRoutes';
 import { useCurrentScreen } from './hooks/useCurrentScreen';

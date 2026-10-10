@@ -31,7 +31,7 @@ class CachedTileLayer extends L.TileLayer {
           if (firstKey) tileMemoryCache.delete(firstKey);
         }
         tileMemoryCache.set(url, tile.src);
-      } catch (e) {
+      } catch {
         // Fallback gracefully
       }
       done(undefined, tile);

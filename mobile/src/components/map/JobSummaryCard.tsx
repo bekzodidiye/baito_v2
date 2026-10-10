@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Briefcase } from 'lucide-react';
 import { Job } from '../../types';
 import { MapActionButtons } from './MapActionButtons';
@@ -46,17 +46,16 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
   const { language } = useApp();
   const { jobs, applyToJob } = useJobsData();
   const t = translations[language];
-  const [isAtBeginning, setIsAtBeginning] = useState(true);
 
   const getJobsSummaryText = () => {
     const count = displayedJobs.length;
     if (filterLocation === 'Barchasi') {
-      return count === 0 ? t.noJobsUzbekistan : t.jobsFoundUzbekistan.replace('{count}', count.toString());
+      return count === 0 ? (t.noJobsUzbekistan || '') : (t.jobsFoundUzbekistan || '{count}').replace('{count}', count.toString());
     } else {
       const locName = translateRegion(filterLocation, language);
       return count === 0 
-        ? t.noJobsInArea.replace('{location}', locName) 
-        : t.jobsFoundInArea.replace('{location}', locName).replace('{count}', count.toString());
+        ? (t.noJobsInArea || '').replace('{location}', locName) 
+        : (t.jobsFoundInArea || '{location}: {count}').replace('{location}', locName).replace('{count}', count.toString());
     }
   };
 
@@ -143,10 +142,6 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
               <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white via-white/75 to-transparent pointer-events-none z-10" />
 
               <div 
-                onScroll={(e) => {
-                  const target = e.currentTarget;
-                  setIsAtBeginning(target.scrollLeft < 10);
-                }}
                 className={`px-8 pt-1.5 pb-2 overflow-x-auto no-scrollbar flex gap-4 snap-x snap-mandatory scroll-smooth w-full ${
                   displayedJobs.length === 1 ? 'justify-center' : ''
                 }`}

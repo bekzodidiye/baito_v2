@@ -6,7 +6,7 @@ import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { updateUserProfileApi } from '../../api/queries';
 
 export const SettingsScreen: React.FC = () => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const { language, setLanguage, userProfile, setUserProfile } = useApp();
   const t = translations[language];
   const tMenu = (t as any).menu || {};

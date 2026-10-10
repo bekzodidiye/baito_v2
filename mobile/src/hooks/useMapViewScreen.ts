@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { useJobsData } from "../context/useJobsData";
 import { Job } from '../types';
@@ -17,7 +17,7 @@ import { useOpenJobDetail } from '../components/map/useOpenJobDetail';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 
 export function useMapViewScreen() {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { currentScreen } = useCurrentScreen();
   const { filterLocation, setFilterLocation, showRegionSelector, setShowRegionSelector, mapFocusedJobId, setMapFocusedJobId, language } = useApp();
   const { jobs: rawJobs, toggleBookmark, applyToJob } = useJobsData();
 

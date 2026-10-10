@@ -40,9 +40,7 @@ export const useMapLabels = ({
     const map = mapInstanceRef.current;
     if (!map || !labelsGroupRef.current) return;
     
-    let animationFrameId: number;
-
-    animationFrameId = requestAnimationFrame(() => {
+    const animationFrameId = requestAnimationFrame(() => {
       if (!labelsGroupRef.current) return;
       labelsGroupRef.current.clearLayers();
       

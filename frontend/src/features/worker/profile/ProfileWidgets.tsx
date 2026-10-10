@@ -1,9 +1,7 @@
 import React from 'react';
-import { money } from '../../../utils/money';
 import type { ScreenType } from '../../../context/types';
-import { Wallet, ShieldCheck, AlertTriangle } from 'lucide-react';
+import {  ShieldCheck, AlertTriangle } from 'lucide-react';
 import { showToast } from '../../../utils/toast';
-import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 interface ProfileWidgetsProps {
   t: any;

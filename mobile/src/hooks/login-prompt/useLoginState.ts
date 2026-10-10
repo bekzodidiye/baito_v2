@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { useApp } from '../../context/AppContext';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const useLoginState = (isModal: boolean, initialMode?: 'login' | 'register') => {
@@ -18,7 +17,7 @@ export const useLoginState = (isModal: boolean, initialMode?: 'login' | 'registe
       if (savedRole === 'worker' || savedRole === 'employer') {
         return 'role-selection';
       }
-    } catch (e) {}
+    } catch { /* ignore */ }
     return 'login';
   });
 
@@ -41,7 +40,7 @@ export const useLoginState = (isModal: boolean, initialMode?: 'login' | 'registe
     } else if (currentScreen === 'login' && mode !== 'login') {
       setModeState('login');
     }
-  }, [currentScreen]);
+  }, [currentScreen, mode]);
 
   // Registration states
   const [selectedRole, setSelectedRole] = useState<'worker' | 'employer' | null>(() => {
@@ -50,7 +49,7 @@ export const useLoginState = (isModal: boolean, initialMode?: 'login' | 'registe
       if (savedRole === 'worker' || savedRole === 'employer') {
         return savedRole as 'worker' | 'employer';
       }
-    } catch (e) {}
+    } catch { /* ignore */ }
     return null;
   });
   const [profileImage, setProfileImage] = useState<string | null>(null);

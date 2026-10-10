@@ -3,7 +3,7 @@ import { money as sum } from '../../utils/money';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Wallet, Lock, Check, X, Loader2, RefreshCw, Receipt, Landmark, Save } from 'lucide-react';
+import { Wallet, Check, X, Loader2, RefreshCw, Receipt, Landmark, Save } from 'lucide-react';
 import { apiClient, unwrapList } from '../../api/client';
 import { showToast } from '../../utils/toast';
 

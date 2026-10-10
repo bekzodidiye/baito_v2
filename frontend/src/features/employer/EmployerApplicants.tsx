@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
-import { ClipboardCheck, CheckCircle2, Search, Inbox, Briefcase, History } from 'lucide-react';
+import { ClipboardCheck, CheckCircle2, Inbox, Briefcase, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EmployerPageHeader } from './EmployerPageHeader';
 import { ApplicantCard } from './components/ApplicantCard';

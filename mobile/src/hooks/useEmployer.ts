@@ -45,6 +45,8 @@ export const useEmployer = () => {
       })) as Job[];
     },
     refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    retry: 2,
   });
 
   // 3. Fetch Applications
@@ -71,6 +73,8 @@ export const useEmployer = () => {
       })) as Application[];
     },
     refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    retry: 2,
   });
 
   const handleSuccess = (msgUz: string, msgRu: string, msgEn: string) => {

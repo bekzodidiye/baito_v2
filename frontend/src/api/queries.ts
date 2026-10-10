@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { Job, Chat } from '../types';
+import { Job } from '../types';
 
 export interface JobQuery {
   /** Free text. Matched server-side against title, company, description and
@@ -174,9 +174,6 @@ export const logoutAllOtherSessionsApi = async () => {
 };
 
 // Storage updates are deprecated since we use real backend
-export const updateJobsStorage = (_jobs?: any[]) => { };
-export const updateChatsStorage = (_chats?: any[]) => { };
-
 export const loginApi = async (phone: string, password: string) => {
   const formData = new URLSearchParams();
   formData.append('username', phone);
@@ -253,9 +250,6 @@ export const fetchTransactionsApi = async () => {
   return await apiClient('/payments/transactions');
 };
 
-export const incrementJobViewApi = async (jobId: string) => {
-  return await apiClient(`/jobs/${jobId}/view`, { method: 'POST' });
-};
 
 /** The invoice a company opens from the button in its billing email.
  *
@@ -301,13 +295,4 @@ export const completeJobApi = async (
   });
 };
 
-export const reviewJobApi = async (
-  jobId: string,
-  data: { rating: number; review: string; bonus?: number },
-) => {
-  return await apiClient(`/jobs/${jobId}/review`, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-};
 

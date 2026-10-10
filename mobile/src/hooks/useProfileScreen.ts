@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { useJobsData } from "../context/useJobsData";
 import { getProfileTranslations } from '../features/worker/profile/ProfileScreen.utils';
 import { showToast } from '../utils/toast';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
@@ -9,10 +8,9 @@ import { apiClient } from '../api/client';
 import { useQuery } from '@tanstack/react-query';
 
 export const useProfileScreen = () => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const { userProfile, setUserProfile, logout, language, setLanguage } = useApp();
-  const { jobs } = useJobsData();
-  const [balance, setBalance] = useState('0');
+  const [balance] = useState('0');
 
   useQuery({
     queryKey: ['userProfile'],
@@ -44,7 +42,7 @@ export const useProfileScreen = () => {
           pinfl: data.passportJshshir || userProfile.pinfl,
           docFileName1: data.passportDocFront || userProfile.docFileName1,
           docFileName2: data.passportDocBack || userProfile.docFileName2,
-          docFileName3: data.selfieWithDoc || (userProfile as any).docFileName3,
+          docFileName3: data.selfieWithDoc || (userProfile as { docFileName3?: string })?.docFileName3,
           isVerified: data.isVerified ?? userProfile.isVerified,
           rating: data.rating ?? userProfile.rating,
           completedJobsCount: data.completedJobsCount ?? userProfile.completedJobsCount,
@@ -109,7 +107,7 @@ export const useProfileScreen = () => {
         profileImage: userProfile.profileImage || null
       });
     }
-  }, [userProfile]);
+  }, [userProfile, isEditing]);
 
   // Accordion active sections
   const [expandedSection, setExpandedSection] = useState<'activity' | 'settings' | 'help' | null>('activity');
@@ -122,7 +120,6 @@ export const useProfileScreen = () => {
   const t = getProfileTranslations(language);
 
   // Dynamic values
-  const appliedJobsCount = jobs.filter(j => j.applied || j.status === 'applied').length;
   const showVerified = !!userProfile?.docFileName1;
   const isVerifiedUser = !!userProfile?.isVerified;
   
@@ -197,7 +194,7 @@ export const useProfileScreen = () => {
         passportJshshir: updated.pinfl || undefined,
         passportDocFront: editForm.docFileName1 || undefined,
         passportDocBack: editForm.docFileName2 || undefined,
-        selfieWithDoc: (userProfile as any)?.docFileName3 || undefined,
+        selfieWithDoc: (userProfile as { docFileName3?: string })?.docFileName3 || undefined,
         avatarUrl: editForm.profileImage || undefined,
       };
 
@@ -286,7 +283,7 @@ export const useProfileScreen = () => {
     isEditing, userProfile, setCurrentScreen, setIsEditing,
     editForm, setEditForm,
     fileInputRef, expandedSection, setExpandedSection, activeDialog, setActiveDialog,
-    withdrawAmount, setWithdrawAmount, withdrawSuccess, t, appliedJobsCount, showVerified, isVerifiedUser,
+    withdrawAmount, setWithdrawAmount, withdrawSuccess, t, showVerified, isVerifiedUser,
     profileName, profileRole, profileImage, balance, toggleLanguage, handlePhotoUpload,
     handleSaveProfileSubmit, handleShare, handleLogout, handleWithdrawSubmit, toggleRole
   };

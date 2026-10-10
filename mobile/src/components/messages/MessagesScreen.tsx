@@ -3,7 +3,6 @@ import { useMessagesScreen } from '../../hooks/useMessagesScreen';
 import { useChatScreen } from '../../hooks/useChatScreen';
 import { ChatListPanel } from '../chat/ChatListPanel';
 import { ChatDetailPanel } from '../chat/ChatDetailPanel';
-import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const MessagesScreen: React.FC = () => {
   const {
@@ -24,8 +23,7 @@ export const MessagesScreen: React.FC = () => {
     isTyping,
     messagesEndRef,
     handleSend,
-    setCurrentScreen,
-    sendMessage
+    setCurrentScreen
   } = useChatScreen();
 
   // If no chat selected yet on desktop, select the first one by default for continuous view

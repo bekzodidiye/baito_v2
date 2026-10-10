@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AdminJob, AdminUser } from './types';
-import { Search, Trash2, MapPin, Building2, Briefcase, XCircle, Eye } from 'lucide-react';
+import { Search, Trash2, Building2, Briefcase, XCircle, Eye } from 'lucide-react';
 import { RejectJobModal } from './RejectJobModal';
 import { UserDetailModal } from './UserDetailModal';
 import { JobDetailModal } from './JobDetailModal';
@@ -31,7 +31,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [rejectingJob, setRejectingJob] = useState<AdminJob | null>(null);
   const [selectedJobDetails, setSelectedJobDetails] = useState<AdminJob | null>(null);
-  const [autoDeleteEnabled, setAutoDeleteEnabled] = useState(true);
+
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [pendingWorkerJobId, setPendingWorkerJobId] = useState<string | null>(null);
 
@@ -60,7 +60,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
           const jd = String(d.getDate()).padStart(2, '0');
           jobDate = `${jy}-${jm}-${jd}`;
         }
-      } catch (e) {
+      } catch {
         // Fallback
       }
     }
@@ -70,18 +70,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
     return matchSearch && matchStatus && matchDate;
   });
 
-  const getMockTimeDetails = (job: AdminJob) => {
-    // Determine start/end times based on job creation hash so it stays somewhat consistent
-    const hash = job.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-    const startHour = 8 + (hash % 6); // between 08:00 and 13:00
-    const duration = 4 + (hash % 6); // between 4 and 9 hours
-    const endHour = startHour + duration;
-    
-    return {
-      startHour,
-      timeStr: `${startHour.toString().padStart(2, '0')}:00 - ${endHour.toString().padStart(2, '0')}:00`
-    };
-  };
+
 
   const renderTimeWarning = (job: AdminJob) => {
     if (!job.workerId) return null;
@@ -100,7 +89,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
     } else if (job.createdAt) {
       try {
         jobDate = job.createdAt.split('T')[0].split(' ')[0];
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
@@ -158,17 +147,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
     }
   };
 
-  const handleRunAutoCleanup = () => {
-    const cancelledJobs = jobs.filter((j) => j.status === 'cancelled');
-    if (cancelledJobs.length === 0) {
-      alert("Hozirda avto-o'chirish uchun mos (bekor qilingan/eskirgan) e'lonlar topilmadi.");
-      return;
-    }
-    if (confirm(`Barcha bekor qilingan (${cancelledJobs.length} ta) e'lonlarni tizimdan avtomatik o'chirib tashlaysizmi?`)) {
-      cancelledJobs.forEach((j) => onDeleteJob(j.id));
-      alert(`${cancelledJobs.length} ta e'lon avtomatik o'chirildi!`);
-    }
-  };
+
 
   return (
     <div className="space-y-4">

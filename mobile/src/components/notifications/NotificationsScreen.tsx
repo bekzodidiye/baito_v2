@@ -9,7 +9,7 @@ import { useNotificationsData } from './useNotificationsData';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 export const NotificationsScreen: React.FC = () => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const { language, setUnreadNotificationsCount } = useApp();
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>('all');
 

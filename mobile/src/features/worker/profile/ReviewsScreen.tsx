@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { apiClient } from '../../../api/client';
-import { Application } from '../../../types';
 import { useApp } from '../../../context/AppContext';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 import { SummaryCard, ReviewCard, EmptyReviews, ReviewsSkeleton } from './ReviewsScreen.components';

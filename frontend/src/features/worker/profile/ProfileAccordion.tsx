@@ -1,9 +1,7 @@
 import React from 'react';
 import type { ScreenType } from '../../../context/types';
-import { Briefcase, ChevronRight, History, MessageSquare, Award, Coins, FileText, ClipboardList } from 'lucide-react';
+import { Briefcase, ChevronRight, History, MessageSquare, FileText, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { showToast } from '../../../utils/toast';
-import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 
 interface ProfileAccordionProps {
   expandedSection: 'activity' | 'settings' | 'help' | null;

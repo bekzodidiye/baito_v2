@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { LANDING_TEXTS } from './LandingData';
-import { Star, Quote, CheckCircle2, User } from 'lucide-react';
+import { Star, Quote, CheckCircle2 } from 'lucide-react';
 
 export const LandingTestimonials: React.FC = () => {
   const { language } = useApp();

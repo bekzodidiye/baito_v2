@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useEmployer } from './useEmployer';
 
 export interface ChatMessage {
@@ -22,7 +22,7 @@ export interface ChatSession {
   messages: ChatMessage[];
 }
 
-export const useEmployerChat = (initialTargetCandidate?: string | null, onClearTargetCandidate?: () => void) => {
+export const useEmployerChat = (_initialTargetCandidate?: string | null, _onClearTargetCandidate?: () => void) => {
   const { language, employer } = useEmployer();
   
   const initialSupportMessage = language === 'uz' ? 'Assalomu alaykum! Baito yordam markaziga xush kelibsiz. Sizga qanday yordam bera olaman?' : language === 'ru' ? 'Здравствуйте! Добро пожаловать в центр поддержки Baito. Чем могу помочь?' : 'Hello! Welcome to Baito Support. How can I help you?';
@@ -108,7 +108,7 @@ export const useEmployerChat = (initialTargetCandidate?: string | null, onClearT
     }, 2000);
   };
 
-  const createSession = async (candidateName: string, initialMessage: string, targetUserId?: string, jobId?: string) => {
+  const createSession = async (_candidateName: string, _initialMessage: string, _targetUserId?: string, _jobId?: string) => {
     // Disabled functionality
     console.warn("createSession is disabled. Employer can only chat with Support.");
   };

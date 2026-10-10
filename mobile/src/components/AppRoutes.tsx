@@ -17,7 +17,7 @@ const AddCardScreen = React.lazy(() => import('../features/payments/AddCardScree
 const TopUpScreen = React.lazy(() => import('../features/payments/TopUpScreen').then(m => ({ default: m.TopUpScreen })));
 const PaymentResult = React.lazy(() => import('../features/worker/profile/PaymentResult').then(m => ({ default: m.PaymentResult })));
 const TaxesScreen = React.lazy(() => import('../features/worker/profile/TaxesScreen').then(m => ({ default: m.TaxesScreen })));
-const VerificationPendingScreen = React.lazy(() => import('./login/VerificationPendingScreen').then(m => ({ default: m.VerificationPendingScreen })));
+
 const SettingsScreen = React.lazy(() => import('./settings/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
 const SecurityScreen = React.lazy(() => import('./settings/SecurityScreen').then(m => ({ default: m.SecurityScreen })));
 const HelpScreen = React.lazy(() => import('./settings/HelpScreen').then(m => ({ default: m.HelpScreen })));

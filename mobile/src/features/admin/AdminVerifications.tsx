@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { AdminUser } from './types';
 import { ShieldCheck, FileText, CheckCircle2, XCircle, User, Eye } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
 import { VerificationDetailModal } from './VerificationDetailModal';
 import { showToast } from '../../utils/toast';
 import { apiClient } from '../../api/client';
@@ -12,7 +11,7 @@ interface AdminVerificationsProps {
 }
 
 export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, onRefresh }) => {
-  const { } = useApp();
+
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
   const handleVerify = async (userId: string, approve: boolean) => {

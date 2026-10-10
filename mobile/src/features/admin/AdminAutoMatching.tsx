@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Zap, Send, CheckCircle2, UserCheck, Star, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { Zap, CheckCircle2, UserCheck, Star, Sparkles, SlidersHorizontal } from 'lucide-react';
 
 export const AdminAutoMatching: React.FC = () => {
   const [minMatchScore, setMinMatchScore] = useState(80);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {  useEffect } from 'react';
 import { useEmployerChat } from '../../hooks/useEmployerChat';
 import { EmployerChatList } from './components/EmployerChatList';
 import { EmployerChatWindow } from './components/EmployerChatWindow';

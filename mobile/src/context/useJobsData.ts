@@ -14,6 +14,8 @@ export function useJobsData() {
       return Array.isArray(res) ? res : [];
     },
     refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    retry: 2,
     staleTime: 1000,
   });
 

@@ -67,6 +67,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <input
               type="tel"
               required
+              autoComplete="tel"
               value={loginPhone}
               onChange={(e) => setLoginPhone(e.target.value)}
               placeholder={t.phonePlaceholder || '+998 (90) 123-45-67'}
@@ -87,6 +88,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <input
               type={showPassword ? 'text' : 'password'}
               required
+              autoComplete="current-password"
               value={loginPassword}
               onChange={(e) => setLoginPassword(e.target.value)}
               placeholder={t.passwordPlaceholder || 'Parolingizni kiriting'}

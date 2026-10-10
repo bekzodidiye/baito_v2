@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Clock, Users, Calendar, MapPin, CheckCircle2, Trash2, PhoneCall, ChevronRight, Truck, Zap } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Calendar, MapPin, CheckCircle2, Trash2, ChevronRight, Zap } from 'lucide-react';
 import { Job } from '../../types';
 import { getJobDetails } from '../../utils/jobDetailHelpers';
 import { getJobBannerImage } from './EmployerJobCard';

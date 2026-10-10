@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { LANDING_TEXTS } from './LandingData';
-import { Calculator, DollarSign, Calendar, Clock, ArrowRight, Zap, CheckCircle2 } from 'lucide-react';
+import { Calculator, Calendar, Clock, ArrowRight } from 'lucide-react';
 
 interface LandingIncomeCalculatorProps {
   onSelectRole: (role: 'worker' | 'employer') => void;

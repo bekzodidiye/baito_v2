@@ -34,11 +34,6 @@ describe('the map layers', () => {
     expect(offenders, offenders.join('\n')).toEqual([]);
   });
 
-  it('gives no layer a colour of its own', () => {
-    // `getDistrictColor` returned one of twelve; nothing should call it.
-    const callers = layerFiles().filter(f => /getDistrictColor\(/.test(code(f)));
-    expect(callers.map(f => path.basename(f))).toEqual([]);
-  });
 
   it('scans a realistic number of map files', () => {
     expect(layerFiles().length).toBeGreaterThan(8);

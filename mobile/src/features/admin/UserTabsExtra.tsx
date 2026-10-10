@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AdminUserDetailResponse } from './types';
 import { PlusCircle, Wallet, History, AlertCircle, FileText, Send, CheckCircle, Clock, XCircle, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { getStoredToken } from '../../api/client';
 
 interface UserTabsExtraProps {
   detail: AdminUserDetailResponse;
@@ -11,7 +12,7 @@ interface UserTabsExtraProps {
 
 export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab, onAddBalance }) => {
   const { user, sessions, transactions, orders, reviews } = detail;
-  const { token } = useApp();
+  const token = getStoredToken();
   const API = import.meta.env.VITE_API_URL || '';
   
   const [showTopUp, setShowTopUp] = useState(false);
@@ -167,7 +168,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
           <div className="p-5 bg-white rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-4 -mt-4 opacity-50 pointer-events-none" />
             <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">Joriy Balans</span>
-            <div className="text-2xl font-black text-slate-900">{parseFloat(user.balance || '0').toLocaleString('uz-UZ')} <span className="text-sm font-bold text-slate-500">UZS</span></div>
+            <div className="text-2xl font-black text-slate-900">{Number(user.balance || 0).toLocaleString('uz-UZ')} <span className="text-sm font-bold text-slate-500">UZS</span></div>
           </div>
           <div className="p-5 bg-white rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 opacity-50 pointer-events-none" />

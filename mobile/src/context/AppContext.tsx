@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react';
-import { AppContextType, UserProfile, ScreenType } from './types';
+import { AppContextType, ScreenType } from './types';
 import { useAuthStore } from '../store/useAuthStore';
 import { useUIStore } from '../store/useUIStore';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { safeGetItem } from './utils';
 import { fetchUserProfileApi, logoutApi } from '../api/queries';
 
 export * from './types';
@@ -63,7 +62,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       fetchUserProfileApi()
         .then(data => {
             if (data) {
-              let currentRole = (data as any).role || 'worker';
+              const currentRole = (data as any).role || 'worker';
               
               let fName = '';
               let lName = '';

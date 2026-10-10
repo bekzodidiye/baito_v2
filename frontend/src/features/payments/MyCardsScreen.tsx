@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { clickable } from '../../utils/clickable';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, EyeOff, Snowflake, Trash2, CreditCard, X, AlertTriangle, Info, CheckCircle2, Edit2 } from 'lucide-react';
+import { ArrowLeft, Plus, Snowflake, Trash2, CreditCard, X, Info, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
