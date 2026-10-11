@@ -64,8 +64,7 @@ export const RegionPolygons: React.FC<RegionPolygonsProps> = ({
         strokeColor: '#3B82F6',
         strokeWeight: 2,
         strokeOpacity: 0.8,
-        fillColor: '#60A5FA',
-        fillOpacity: 0.1,
+        fillOpacity: 0,
       };
 
       if (!isDistrict) {
@@ -73,7 +72,6 @@ export const RegionPolygons: React.FC<RegionPolygonsProps> = ({
           style.visible = true;
         } else if (isSelectedRegion) {
           style.visible = true;
-          style.fillOpacity = 0;
           style.strokeWeight = 3;
         }
       } else {
@@ -86,8 +84,6 @@ export const RegionPolygons: React.FC<RegionPolygonsProps> = ({
           }
           if (isSelectedDistrict) {
             style.visible = true;
-            style.fillColor = '#3B82F6';
-            style.fillOpacity = 0.3;
             style.strokeWeight = 2;
           }
         }
