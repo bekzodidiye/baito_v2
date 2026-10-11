@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import 'leaflet/dist/leaflet.css';
+import { APIProvider, Map, useMap } from '@vis.gl/react-google-maps';
 
 import { getLatLng } from './mapUtils';
 import { useMapViewScreen } from '../../hooks/useMapViewScreen';
@@ -12,6 +12,9 @@ import { JobSummaryCard } from './JobSummaryCard';
 import { JobDetailModal } from './JobDetailModal';
 import { RegionSelector } from '../RegionSelector';
 import { MapLoadingSkeleton } from './MapLoadingSkeleton';
+import { JobMarkers } from './JobMarkers';
+import { RegionPolygons } from './RegionPolygons';
+import { UserLocationMarker } from './UserLocationMarker';
 
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
@@ -19,15 +22,10 @@ interface MapViewScreenProps {
   className?: string;
 }
 
-export const MapViewScreen: React.FC<MapViewScreenProps> = ({ 
-  // 56px of header and 64px of bottom navigation are taken off the phone's
-  // height because both are there. On a desktop neither is: the header is the
-  // sidebar and `BottomNav` is `md:hidden`, so subtracting the nav's 64px left
-  // a strip of empty white across the bottom of the screen and stopped the
-  // collapsed job sheet 64px short of the edge it is meant to sit on.
+const MapViewScreenInner: React.FC<MapViewScreenProps> = ({ 
   className = "h-[calc(100vh-56px-64px)] md:h-screen mt-14 md:mt-0" 
 }) => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { currentScreen } = useCurrentScreen();
   
   const {
     language,
@@ -48,8 +46,6 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
     mapType,
     setMapType,
     locationToast,
-    mapContainerRef,
-    mapInstanceRef,
     breadcrumbItems,
     handleBreadcrumbBack,
     userLocation,
@@ -60,18 +56,53 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
     handleRefresh,
     handleJobSelect,
     handleLocationAction,
-    panToCoords
+    panToCoords,
+    map,
+    jobs,
+    geoJsonData,
+    districtsGeoJsonData
   } = useMapViewScreen();
 
   return (
     <div className={`relative w-full overflow-hidden bg-slate-100 z-0 isolate ${className}`}>
       
       {/* Real Map Canvas Container */}
-      <div 
-        ref={mapContainerRef} 
-        className="absolute inset-0 w-full h-full z-0" 
-        style={{ background: 'var(--color-brand-surface-low)' }}
-      />
+      <div className="absolute inset-0 w-full h-full z-0">
+        <Map
+          defaultCenter={{ lat: 41.2, lng: 64.0 }}
+          defaultZoom={5.1}
+          minZoom={3}
+          maxZoom={20}
+          disableDefaultUI={true}
+          mapId="BAITO_MAP_ID"
+        >
+          <RegionPolygons 
+            filterLocation={filterLocation}
+            setFilterLocation={setFilterLocation}
+            setIsPanelExpanded={setIsPanelExpanded}
+            geoJsonData={geoJsonData}
+            districtsGeoJsonData={districtsGeoJsonData}
+            zoomLevel={map ? map.getZoom() || 5 : 5}
+            jobs={jobs}
+            language={language}
+          />
+          <JobMarkers 
+            jobs={jobs}
+            selectedJob={selectedJob}
+            setSelectedJob={setSelectedJob}
+            activeCluster={activeCluster}
+            filterLocation={filterLocation}
+            language={language}
+            districtsGeoJsonData={districtsGeoJsonData}
+            isVisible={currentScreen === 'jobs'}
+          />
+          <UserLocationMarker 
+            userLocation={userLocation}
+            selectedJob={selectedJob}
+            language={language}
+          />
+        </Map>
+      </div>
 
       {/* Map Refreshing / Loading Skeleton Overlay */}
       <AnimatePresence>
@@ -108,8 +139,8 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
           isRefreshing={isRefreshing}
           handleRefresh={handleRefresh}
           handleResetMap={handleLocationAction}
-          onZoomIn={() => mapInstanceRef.current?.zoomIn()}
-          onZoomOut={() => mapInstanceRef.current?.zoomOut()}
+          onZoomIn={() => map?.setZoom((map.getZoom() || 5) + 1)}
+          onZoomOut={() => map?.setZoom((map.getZoom() || 5) - 1)}
           mapType={mapType}
           setMapType={setMapType}
         />
@@ -161,5 +192,13 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
         )}
       </AnimatePresence>
     </div>
+  );
+};
+
+export const MapViewScreen: React.FC<MapViewScreenProps> = (props) => {
+  return (
+    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
+      <MapViewScreenInner {...props} />
+    </APIProvider>
   );
 };
