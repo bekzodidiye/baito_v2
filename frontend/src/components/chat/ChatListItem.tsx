@@ -34,7 +34,13 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
       <div className="relative flex-shrink-0">
         <div className="w-11 h-11 rounded-full overflow-hidden bg-slate-100 border border-slate-200/80 flex items-center justify-center">
           {chat.recruiterAvatar ? (
-            <img src={chat.recruiterAvatar} alt={chat.companyName} className="w-full h-full object-cover" />
+            <img src={chat.recruiterAvatar} alt={chat.companyName} className="w-full h-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-brand-primary text-white font-bold text-sm">
               {companyInitial}

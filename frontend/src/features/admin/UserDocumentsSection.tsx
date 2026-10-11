@@ -41,7 +41,13 @@ export const UserDocumentsSection: React.FC<UserDocumentsSectionProps> = ({ user
               className="group relative bg-slate-50 rounded-[12px] overflow-hidden aspect-[4/3] border border-slate-200 cursor-pointer"
             >
               {doc.src ? (
-                <img src={doc.src} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                <img src={doc.src} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2">
                   <Shield size={24} className="opacity-20" />
@@ -75,7 +81,13 @@ export const UserDocumentsSection: React.FC<UserDocumentsSectionProps> = ({ user
             >
               <X size={24} />
             </button>
-            <img src={activeImage} alt="" className="w-full h-auto max-h-[85vh] object-contain rounded-xl shadow-2xl" />
+            <img src={activeImage} alt="" className="w-full h-auto max-h-[85vh] object-contain rounded-xl shadow-2xl"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
           </div>
         </div>
       )}

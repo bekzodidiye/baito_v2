@@ -288,7 +288,13 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
   <div className="pb-6">
     {/* Banner */}
     <div className="w-full h-[160px] relative bg-slate-200">
-      <img src={bannerUrl} alt={j.title} className="w-full h-full object-cover" loading="lazy" />
+      <img src={bannerUrl} alt={j.title} className="w-full h-full object-cover" loading="lazy"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
       <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent" />
       {j.views !== undefined && (
         <div className="absolute top-3 right-3 bg-black/50 text-white px-2 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
@@ -502,7 +508,13 @@ const ApplicationsTab: React.FC<{ applications: AdminJobApplication[] }> = ({ ap
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0 overflow-hidden border border-slate-200">
                     {app.workerAvatar ? (
-                      <img src={app.workerAvatar} className="w-full h-full object-cover" />
+                      <img src={app.workerAvatar} className="w-full h-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
                     ) : (
                       <User size={16} className="text-slate-400" />
                     )}

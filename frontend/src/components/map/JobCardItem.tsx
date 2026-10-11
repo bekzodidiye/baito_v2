@@ -17,7 +17,7 @@ interface JobCardItemProps {
   applyToJob: (id: string) => void;
 }
 
-export const JobCardItem: React.FC<JobCardItemProps> = ({
+export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
   job,
   language,
   selectedJob,
@@ -75,7 +75,13 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
           <div className="flex gap-3">
             <div className="w-8 h-8 rounded-lg bg-slate-50 shadow-xs flex items-center justify-center overflow-hidden shrink-0 border border-slate-100/90">
               {job.imageUrl || job.logoUrl ? (
-                <img src={job.imageUrl || job.logoUrl} alt={job.company} className="w-full h-full object-cover" />
+                <img src={job.imageUrl || job.logoUrl} alt={job.company} className="w-full h-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
               ) : (
                 <Briefcase size={14} className="text-slate-400" />
               )}
@@ -201,4 +207,11 @@ export const JobCardItem: React.FC<JobCardItemProps> = ({
     />
     </>
   );
-};
+}, (prev, next) => {
+  return prev.job.id === next.job.id &&
+         prev.language === next.language &&
+         (prev.selectedJob?.id === prev.job.id) === (next.selectedJob?.id === next.job.id) &&
+         prev.applied === next.applied &&
+         prev.userLocation?.lat === next.userLocation?.lat &&
+         prev.userLocation?.lng === next.userLocation?.lng;
+});

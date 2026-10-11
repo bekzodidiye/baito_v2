@@ -102,7 +102,13 @@ export const EmployerChatList: React.FC<EmployerChatListProps> = ({
               <div className="relative flex-shrink-0">
                 <div className="w-12 h-12 rounded-full overflow-hidden bg-brand-surface-low border border-brand-outline-variant">
                   {chat.candidateAvatar ? (
-                    <img src={chat.candidateAvatar} alt={chat.candidateName || ''} className="w-full h-full object-cover" />
+                    <img src={chat.candidateAvatar} alt={chat.candidateName || ''} className="w-full h-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-brand-primary text-white font-bold text-sm">
                       {candidateInitial}

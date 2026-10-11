@@ -85,7 +85,13 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
               {!isUser && (
                 <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center overflow-hidden border border-slate-300 shadow-2xs mb-1">
                   {activeChat.recruiterAvatar ? (
-                    <img src={activeChat.recruiterAvatar} alt={activeChat.recruiterName} className="w-full h-full object-cover" />
+                    <img src={activeChat.recruiterAvatar} alt={activeChat.recruiterName} className="w-full h-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
                   ) : (
                     <span className="font-bold text-xs text-brand-primary">
                       {(activeChat.companyName || 'C').charAt(0)}
@@ -114,7 +120,13 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
                               alt={t.imageLabel} 
                               className="w-full h-auto object-cover rounded-xl"
                               style={{ maxHeight: '280px' }}
-                            />
+                             onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
                           </div>
                           {imgMatch[2] && (
                             <p className="whitespace-pre-wrap leading-relaxed">{imgMatch[2]}</p>

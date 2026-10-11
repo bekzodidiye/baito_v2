@@ -86,7 +86,13 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
         </label>
         {imageUrl ? (
           <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-slate-200 group">
-            <img src={imageUrl} alt={language === 'ru' ? "Изображение объявления" : language === 'en' ? "Posting image" : "E'lon rasmi"} className="w-full h-full object-cover" />
+            <img src={imageUrl} alt={language === 'ru' ? "Изображение объявления" : language === 'en' ? "Posting image" : "E'lon rasmi"} className="w-full h-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
             <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
               <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 bg-white text-slate-800 text-xs font-bold rounded-lg cursor-pointer">{language === 'ru' ? 'Изменить' : language === 'en' ? 'Change' : "O'zgartirish"}</button>
               <button type="button" onClick={() => setImageUrl && setImageUrl('')} className="p-1.5 bg-rose-600 text-white rounded-lg cursor-pointer"><X size={16} /></button>

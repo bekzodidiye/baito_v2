@@ -48,6 +48,14 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
   const t = translations[language];
   const [isAtBeginning, setIsAtBeginning] = useState(true);
 
+  const appliedJobIds = React.useMemo(() => {
+    const set = new Set<string>();
+    for (const j of jobs) {
+      if (j.applied) set.add(j.id);
+    }
+    return set;
+  }, [jobs]);
+
   const getJobsSummaryText = () => {
     const count = displayedJobs.length;
     if (filterLocation === 'Barchasi') {
@@ -159,7 +167,7 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                     selectedJob={selectedJob}
                     handleJobSelect={handleJobSelect}
                     userLocation={userLocation}
-                    applied={!!jobs.find(j => j.id === job.id)?.applied}
+                    applied={appliedJobIds.has(job.id)}
                     applyToJob={applyToJob}
                   />
                 ))}

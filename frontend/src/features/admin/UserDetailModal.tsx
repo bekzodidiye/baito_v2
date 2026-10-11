@@ -122,7 +122,13 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
           
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 font-black text-2xl flex items-center justify-center border border-slate-200 overflow-hidden shrink-0">
-              {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : (user.name || 'Foydalanuvchi').charAt(0).toUpperCase()}
+              {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} /> : (user.name || 'Foydalanuvchi').charAt(0).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap mb-1">

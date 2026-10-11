@@ -75,8 +75,8 @@ export function useAdminData() {
 
   // This was `(msg);` — the message was built and thrown away, so every
   // confirmation and every failure in the admin panel was silent.
-  const showToast = (msg: string) => {
-    globalToast(msg);
+  const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
+    globalToast(msg, type);
   };
 
   // The header's refresh button only ever refetched this hook's own
@@ -94,9 +94,9 @@ export function useAdminData() {
         body: JSON.stringify({ amount, reason }),
       });
       if (res !== undefined) { showToast(`Hisobga ${amount.toLocaleString()} UZS qo'shildi`); fetchAllData(); }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      showToast("Balansni o'zgartirib bo'lmadi");
+      showToast(e.message || "Balansni o'zgartirib bo'lmadi", 'error');
     }
   };
 
@@ -107,7 +107,10 @@ export function useAdminData() {
         body: JSON.stringify({ role }),
       });
       if (res !== undefined) { showToast("Foydalanuvchi roli yangilandi"); fetchAllData(); }
-    } catch (e) { console.error(e); }
+    } catch (e: any) {
+      console.error(e);
+      showToast(e.message, 'error');
+    }
   };
 
   const toggleBan = async (userId: string, currentBannedState?: boolean, reason?: string) => {
@@ -122,8 +125,9 @@ export function useAdminData() {
         showToast(!currentBannedState ? "Foydalanuvchi bloklandi" : "Foydalanuvchi blokdan chiqarildi");
         fetchAllData();
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      showToast(e.message, 'error');
     }
   };
 
@@ -136,10 +140,10 @@ export function useAdminData() {
       if (res !== undefined) {
         showToast("E'lon holati o'zgardi");
         fetchAllData();
-        queryClient.invalidateQueries({ queryKey: ['jobs'] });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      showToast(e.message, 'error');
     }
   };
 
@@ -151,10 +155,10 @@ export function useAdminData() {
       });
       if (res !== undefined) {
         fetchAllData();
-        queryClient.invalidateQueries({ queryKey: ['jobs'] });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      showToast(e.message, 'error');
     }
   };
 
@@ -168,8 +172,9 @@ export function useAdminData() {
         fetchAllData();
         queryClient.invalidateQueries({ queryKey: ['jobs'] });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      showToast(e.message, 'error');
     }
   };
 
@@ -183,8 +188,9 @@ export function useAdminData() {
         fetchAllData();
         showToast("Tizim sozlamalari saqlandi");
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      showToast(e.message, 'error');
     }
   };
 
@@ -197,8 +203,9 @@ export function useAdminData() {
       if (res !== undefined) {
         showToast("Ommaviy xabarnoma muvaffaqiyatli yuborildi");
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      showToast(e.message, 'error');
     }
   };
 

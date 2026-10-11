@@ -81,7 +81,13 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
       <div className="flex gap-3.5 items-start">
         <div className="w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 border border-slate-100 shadow-3xs transition-transform group-hover:scale-105 duration-200">
           {job.imageUrl || job.logoUrl ? (
-            <img src={job.imageUrl || job.logoUrl} alt={job.company} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            <img src={job.imageUrl || job.logoUrl} alt={job.company} className="w-full h-full object-cover" referrerPolicy="no-referrer"  onError={(e) => {
+        const target = e.currentTarget;
+        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+        if (target.src !== fallback) {
+          target.src = fallback;
+        }
+      }} />
           ) : (
             <Briefcase size={20} className="text-slate-400" />
           )}

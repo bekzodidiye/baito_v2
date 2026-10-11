@@ -88,6 +88,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <input
               aria-label={t.passwordLabel || 'PAROL *'}
               type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
               required
               value={loginPassword}
               onChange={(e) => setLoginPassword(e.target.value)}
