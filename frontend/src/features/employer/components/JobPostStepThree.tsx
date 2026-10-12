@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, Navigation, CheckCircle2, Crosshair, Search, Loader2, Compass, Sparkles, Info } from 'lucide-react';
 import { searchAddressSuggestions, reverseGeocodeAddressFull, CITY_COORDINATES, POPULAR_DISTRICTS, AddressSuggestion } from './JobPostStepThree.utils';
-import { JobLocationYandexMap } from './JobLocationYandexMap';
+import { JobLocationLeafletMap } from './JobLocationLeafletMap';
 
 interface JobPostStepThreeProps {
   language: string;
@@ -164,9 +164,9 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5">
             <Compass size={14} className="text-brand-primary" />
-            <span>{language === 'uz' ? "Yandex Xarita *" : language === 'ru' ? "Яндекс Карта *" : "Yandex Map *"}</span>
+            <span>{language === 'uz' ? "Xarita *" : language === 'ru' ? "Карта *" : "Map *"}</span>
           </label>
-          <span className="text-[10px] text-brand-primary font-extrabold px-2 py-0.5 bg-brand-primary/10 rounded-full">Yandex Maps Official</span>
+          <span className="text-[10px] text-brand-primary font-extrabold px-2 py-0.5 bg-brand-primary/10 rounded-full">OpenStreetMap</span>
         </div>
 
         <div className="flex items-center gap-1.5 p-2.5 bg-purple-50/70 border border-purple-100 rounded-xl text-purple-900 text-xs font-semibold">
@@ -174,7 +174,7 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
           <span>{language === 'ru' ? 'Подсказка: перетащите метку на карте, чтобы отметить вход' : language === 'en' ? 'Tip: drag the pin to mark the entrance' : "Maslahat: Xaritadagi pin'ni sudrab yoki bosib aniq bino va eshikni belgilang"}</span>
         </div>
 
-        <JobLocationYandexMap lat={currentCoords.lat} lon={currentCoords.lon} city={city} onLocationSelect={handleLocationSelectFromMap} />
+        <JobLocationLeafletMap lat={currentCoords.lat} lon={currentCoords.lon} city={city} onLocationSelect={handleLocationSelectFromMap} />
 
         {addressLine && (
           <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-center gap-2 text-emerald-900 text-xs font-bold">

@@ -1,9 +1,3 @@
-declare global {
-  interface Window {
-    ymaps?: any;
-  }
-}
-
 export interface AddressSuggestion {
   displayName: string;
   lat: number;
@@ -107,25 +101,14 @@ export const POPULAR_DISTRICTS: Record<string, { label: string; lat: number; lon
   ],
 };
 
+const NOMINATIM_EMAIL = 'bekzodidiye@gmail.com';
+
 export const searchAddressSuggestions = async (query: string, city: string): Promise<AddressSuggestion[]> => {
   if (!query || query.trim().length < 2) return [];
-  if (typeof window !== 'undefined' && window.ymaps) {
-    try {
-      const sugs = await new Promise<AddressSuggestion[] | null>((resolve) => {
-        window.ymaps.ready(async () => {
-          try {
-            const items = await window.ymaps.suggest(`${query}, ${city}`);
-            if (!items || !items.length) return resolve(null);
-            resolve(items.slice(0, 5).map((item: any) => ({ displayName: cyrillicToLatin(item.title || item.value || ''), lat: 0, lon: 0 })));
-          } catch (e) { resolve(null); }
-        });
-      });
-      if (sugs && sugs.length) return sugs;
-    } catch (e) {}
-  }
+  
   try {
     const cleanQ = query.replace(/,\s*\d+[a-zа-яA-ZА-Я]*$/gi, '').replace(/\s+\d+[a-zа-яA-ZА-Я]*$/gi, '').trim();
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(`${cleanQ || query}, ${city}, O'zbekiston`)}&limit=5&countrycodes=uz&addressdetails=1`, { headers: { 'Accept-Language': 'uz,en' } });
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(`${cleanQ || query}, ${city}, O'zbekiston`)}&limit=5&countrycodes=uz&addressdetails=1&email=${NOMINATIM_EMAIL}`, { headers: { 'Accept-Language': 'uz,en' } });
     if (!res.ok) return [];
     const data = await res.json();
     return data.map((item: any) => ({ displayName: formatStructuredAddress(item), lat: parseFloat(item.lat), lon: parseFloat(item.lon) }));
@@ -133,72 +116,8 @@ export const searchAddressSuggestions = async (query: string, city: string): Pro
 };
 
 export const reverseGeocodeAddressFull = async (lat: number, lon: number): Promise<{ address: string; city?: string }> => {
-  if (typeof window !== 'undefined' && window.ymaps) {
-    try {
-      const res = await new Promise<{ address: string; city?: string } | null>((resolve) => {
-        window.ymaps.ready(async () => {
-          try {
-            const r = await window.ymaps.geocode([lat, lon], { results: 5 });
-            
-            let bestStreet = '';
-            let bestHouse = '';
-            let detectedCity = '';
-            
-            for (let i = 0; i < r.geoObjects.getLength(); i++) {
-              const obj = r.geoObjects.get(i);
-              const address = obj.properties.get('metaDataProperty.GeocoderMetaData.Address');
-              if (address && address.Components) {
-                const streetComp = address.Components.find((c: any) => c.kind === 'street');
-                const houseComp = address.Components.find((c: any) => c.kind === 'house');
-                const cityComp = address.Components.find((c: any) => c.kind === 'locality');
-                
-                if (streetComp && !bestStreet) bestStreet = streetComp.name;
-                if (houseComp && !bestHouse) bestHouse = houseComp.name;
-                if (cityComp && !detectedCity) detectedCity = cityComp.name;
-              }
-              if (bestStreet && bestHouse) break;
-            }
-
-            let formattedAddr = '';
-            if (bestStreet && bestHouse) {
-              formattedAddr = `${bestStreet}, ${bestHouse}`;
-            } else if (bestStreet) {
-              formattedAddr = bestStreet;
-            } else {
-              const obj = r.geoObjects.get(0);
-              if (obj) {
-                formattedAddr = obj.properties.get('name') || obj.getAddressLine() || '';
-              }
-            }
-
-            let finalAddress = formatUzbekAddress(cyrillicToLatin(formattedAddr));
-            
-            let finalCity: string | undefined;
-            if (detectedCity) {
-              const latinLoc = cyrillicToLatin(detectedCity).toLowerCase();
-              for (const c of Object.keys(CITY_COORDINATES)) { 
-                if (latinLoc.includes(c.toLowerCase())) { finalCity = c; break; } 
-              }
-            }
-            if (!finalCity) {
-              const fullText = r.geoObjects.get(0)?.getAddressLine() || '';
-              const latinFull = cyrillicToLatin(fullText).toLowerCase();
-              for (const c of Object.keys(CITY_COORDINATES)) { 
-                if (latinFull.includes(c.toLowerCase())) { finalCity = c; break; } 
-              }
-            }
-
-            resolve({ address: finalAddress, city: finalCity });
-          } catch (e) { resolve(null); }
-        });
-      });
-      if (res && res.address) return res;
-    } catch (e) {}
-  }
-  
-  // Nominatim Fallback
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`, { headers: { 'Accept-Language': 'uz,en' } });
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&email=${NOMINATIM_EMAIL}`, { headers: { 'Accept-Language': 'uz,en' } });
     if (!res.ok) return { address: '' };
     const data = await res.json();
     if (!data) return { address: '' };
@@ -224,6 +143,7 @@ export const reverseGeocodeAddressFull = async (lat: number, lon: number): Promi
     let detectedCity: string | undefined;
     const latinLoc = cyrillicToLatin(`${addrObj.city || ''} ${addrObj.town || ''} ${addrObj.state || ''} ${data.display_name || ''}`).toLowerCase();
     for (const c of Object.keys(CITY_COORDINATES)) { if (latinLoc.includes(c.toLowerCase())) { detectedCity = c; break; } }
+    
     return { address: latinAddress, city: detectedCity };
   } catch (err) { return { address: '' }; }
 };
