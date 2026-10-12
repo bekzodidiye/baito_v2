@@ -741,7 +741,9 @@ jobs:
         working-directory: /home/scarygun/IntellexGroup/Baito
         env:
           IMAGE_TAG: ${{ github.sha }}
-        run: docker compose run --rm migrate
+        run: |
+          docker compose up -d db
+          docker compose run --rm migrate
 
       - name: 🚀 Swap Containers
         working-directory: /home/scarygun/IntellexGroup/Baito
