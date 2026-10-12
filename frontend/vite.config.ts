@@ -84,7 +84,7 @@ export default defineConfig(() => {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
             query: ['@tanstack/react-query'],
-            map: ['@vis.gl/react-google-maps'],
+            map: ['leaflet', 'react-leaflet', 'leaflet.markercluster'],
             motion: ['motion/react'],
             ui: ['lucide-react'],
             state: ['zustand']
