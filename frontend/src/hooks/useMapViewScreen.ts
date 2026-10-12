@@ -1,10 +1,13 @@
 import { useState, useRef, useMemo, useCallback } from 'react';
-import { useMap } from '@vis.gl/react-google-maps';
 import { useJobsData } from "../context/useJobsData";
 import { Job } from '../types';
 import { getTranslatedJob } from '../jobTranslations';
 import { translations } from '../translations';
+import { UZBEKISTAN_REGIONS } from '../components/map/mapConstants';
 import { useUzbekistanGeoJson } from '../components/map/useUzbekistanGeoJson';
+import { useMapSetup } from '../components/map/useMapSetup';
+import { useRegionPolygons } from '../components/map/useRegionPolygons';
+import { useJobMarkers } from '../components/map/useJobMarkers';
 import { useMapNavigation } from '../components/map/useMapNavigation';
 import { useUserGeolocation } from '../components/map/useUserGeolocation';
 import { useMapFilterJobs } from '../components/map/useMapFilterJobs';
@@ -17,12 +20,12 @@ import { useAuthStore } from "../store/useAuthStore";
 export function useMapViewScreen() {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const filterLocation = useUIStore(s => s.filterLocation);
-  const setFilterLocation = useUIStore(s => s.setFilterLocation);
-  const showRegionSelector = useUIStore(s => s.showRegionSelector);
-  const setShowRegionSelector = useUIStore(s => s.setShowRegionSelector);
-  const mapFocusedJobId = useUIStore(s => s.mapFocusedJobId);
-  const setMapFocusedJobId = useUIStore(s => s.setMapFocusedJobId);
-  const language = useAuthStore(s => s.language);
+    const setFilterLocation = useUIStore(s => s.setFilterLocation);
+    const showRegionSelector = useUIStore(s => s.showRegionSelector);
+    const setShowRegionSelector = useUIStore(s => s.setShowRegionSelector);
+    const mapFocusedJobId = useUIStore(s => s.mapFocusedJobId);
+    const setMapFocusedJobId = useUIStore(s => s.setMapFocusedJobId);
+    const language = useAuthStore(s => s.language);
   const { jobs: rawJobs, toggleBookmark, applyToJob } = useJobsData();
 
   const jobs = useMemo(() => {
@@ -36,16 +39,35 @@ export function useMapViewScreen() {
   const [isPanelExpanded, setIsPanelExpanded] = useState(false);
   const [mapType, setMapType] = useState<'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro'>('jobs');
   
-  const map = useMap(); // Get the Google Map instance
+  const lastFittedLocationRef = useRef<string>('Barchasi');
 
   const { geoJsonData, districtsGeoJsonData } = useUzbekistanGeoJson();
 
+  const {
+    mapContainerRef,
+    mapInstanceRef,
+    markerGroupRef,
+    regionsGroupRef,
+    userGroupRef,
+    labelsGroupRef,
+    zoomLevel,
+    isMapLoading,
+    isMapReady,
+  } = useMapSetup({
+    isPanelExpanded,
+    isViloyatDashboard: filterLocation !== 'Barchasi' && UZBEKISTAN_REGIONS.some(r => filterLocation.toLowerCase().includes(r.id.toLowerCase())),
+    onMapClick: () => {
+      setSelectedJob(null);
+      setIsPanelExpanded(false);
+    },
+    mapType
+  });
+
   const panToCoords = useCallback((lat: number, lng: number, zoom: number) => {
-    if (map) {
-      map.panTo({ lat, lng });
-      map.setZoom(zoom);
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView([lat, lng], zoom, { animate: true, duration: 0.8 });
     }
-  }, [map]);
+  }, [mapInstanceRef]);
 
   const { breadcrumbItems, handleBreadcrumbBack } = useMapNavigation({
     filterLocation,
@@ -61,7 +83,7 @@ export function useMapViewScreen() {
     handleCalculateDistance,
   } = useUserGeolocation({
     selectedJob,
-    map,
+    mapInstanceRef,
   });
 
   const { activeCluster, getDisplayedJobs, setActiveCluster } = useMapFilterJobs({
@@ -75,6 +97,39 @@ export function useMapViewScreen() {
     setMapFocusedJobId,
     setFilterLocation,
     setSelectedJob,
+  });
+
+  useRegionPolygons({
+    isMapReady,
+    mapInstanceRef,
+    regionsGroupRef,
+    labelsGroupRef,
+    filterLocation,
+    setFilterLocation,
+    setIsPanelExpanded,
+    geoJsonData,
+    districtsGeoJsonData,
+    zoomLevel,
+    jobs,
+    lastFittedLocationRef,
+    language,
+  });
+
+  useJobMarkers({
+    mapInstanceRef,
+    markerGroupRef,
+    userGroupRef,
+    activeCluster,
+    jobs,
+    selectedJob,
+    setSelectedJob,
+    userLocation,
+    filterLocation,
+    setIsPanelExpanded,
+    getDisplayedJobs,
+    language,
+    districtsGeoJsonData,
+    isVisible: currentScreen === 'jobs'
   });
 
   const handleRefresh = () => {
@@ -115,12 +170,14 @@ export function useMapViewScreen() {
     setSelectedJob,
     activeCluster,
     isRefreshing,
-    isMapLoading: !map,
+    isMapLoading,
     isPanelExpanded,
     setIsPanelExpanded,
     mapType,
     setMapType,
     locationToast,
+    mapContainerRef,
+    mapInstanceRef,
     breadcrumbItems,
     handleBreadcrumbBack,
     userLocation,
@@ -132,10 +189,6 @@ export function useMapViewScreen() {
     handleRefresh,
     handleJobSelect,
     handleLocationAction,
-    panToCoords,
-    map,
-    jobs,
-    geoJsonData,
-    districtsGeoJsonData,
+    panToCoords
   };
 }
