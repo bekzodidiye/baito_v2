@@ -67,6 +67,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <input
               aria-label={t.phoneLabel || 'TELEFON RAQAM *'}
               type="tel"
+              autoComplete="username"
               required
               value={loginPhone}
               onChange={(e) => setLoginPhone(e.target.value)}
