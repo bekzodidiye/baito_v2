@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import L from 'leaflet';
 import { Job } from '../../types';
 import { getLatLng, calculateDistance } from './mapUtils';
 
 interface UseUserGeolocationProps {
   selectedJob: Job | null;
-  map: google.maps.Map | null;
+  mapInstanceRef: React.MutableRefObject<L.Map | null>;
 }
 
 export const useUserGeolocation = ({
   selectedJob,
-  map,
+  mapInstanceRef,
 }: UseUserGeolocationProps) => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -38,11 +39,9 @@ export const useUserGeolocation = ({
       const dist = calculateDistance(lat, lng, jobCoords.lat, jobCoords.lng);
       setDistanceToSelectedJob(`${dist.toFixed(1)} km`);
 
-      if (map) {
-        const bounds = new google.maps.LatLngBounds();
-        bounds.extend(new google.maps.LatLng(lat, lng));
-        bounds.extend(new google.maps.LatLng(jobCoords.lat, jobCoords.lng));
-        map.fitBounds(bounds, { top: 50, bottom: 50, left: 50, right: 50 });
+      if (mapInstanceRef.current) {
+        const bounds = L.latLngBounds([[lat, lng], [jobCoords.lat, jobCoords.lng]]);
+        mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], animate: true, duration: 1.0 });
       }
     };
 
