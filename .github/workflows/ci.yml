@@ -654,20 +654,6 @@ jobs:
           (sudo systemctl status 'actions.runner.*'), then re-run this job."
           exit 1
 
-  debug:
-    name: 🐛 Debug Server
-    runs-on: [self-hosted, baito-server]
-    steps:
-      - name: Inspect Docker State
-        run: |
-          cd /home/scarygun/IntellexGroup/Baito
-          echo "=== PS ==="
-          docker compose ps
-          echo "=== DB INSPECT ==="
-          docker inspect $(docker compose ps -q db) || true
-          echo "=== ENV ==="
-          cat .env | sed 's/=.*/=***/'
-
   deploy:
     name: 🚀 4. Production Deploy
     needs: [test-backend, test-frontend, test-e2e, validate-docker, build-images]
@@ -755,7 +741,9 @@ jobs:
         working-directory: /home/scarygun/IntellexGroup/Baito
         env:
           IMAGE_TAG: ${{ github.sha }}
-        run: docker compose run --rm migrate
+        run: |
+          docker compose up -d db
+          docker compose run --rm migrate
 
       - name: 🚀 Swap Containers
         working-directory: /home/scarygun/IntellexGroup/Baito
