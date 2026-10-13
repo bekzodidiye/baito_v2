@@ -58,7 +58,7 @@ export const formatStructuredAddress = (data: any): string => {
   const poiName = data.name || addr.amenity || addr.shop || addr.office || addr.tourism || addr.historic;
   const road = addr.road || props.street || addr.pedestrian || addr.street;
   const houseNum = addr.house_number || props.housenumber || addr.building || addr.house;
-  const neighbourhood = addr.neighbourhood || addr.suburb || addr.quarter || addr.residential;
+  const neighbourhood = addr.neighbourhood || addr.suburb || addr.quarter || addr.residential || addr.village || addr.hamlet || addr.town || addr.city_district;
 
   const parts: string[] = [];
   if (poiName) {
@@ -74,12 +74,14 @@ export const formatStructuredAddress = (data: any): string => {
     const cleanN = formatUzbekAddress(neighbourhood);
     if (!NOISE.some(n => cleanN.toLowerCase().includes(n)) && !parts.some(p => p.toLowerCase().includes(cleanN.toLowerCase()))) parts.push(cleanN);
   }
+  
   if (parts.length === 0 && data.display_name) {
     const fallbackParts = data.display_name.split(',').map((s: string) => formatUzbekAddress(s.trim())).filter((s: string) => !NOISE.some(n => s.toLowerCase().includes(n)));
     if (fallbackParts.length > 0) {
       const isGeneric = fallbackParts[0].toLowerCase().includes('shahri') || fallbackParts[0].toLowerCase().includes('viloyati');
       if (isGeneric && data.lat && data.lon) {
-        return `Belgilangan nuqta (${parseFloat(data.lat).toFixed(4)}, ${parseFloat(data.lon).toFixed(4)})`;
+        // Only use 'Nomsiz hudud' if there really is no name at all
+        return `Nomsiz hudud (Yaqin manzil: ${fallbackParts.slice(0, 2).join(', ')})`;
       }
       return fallbackParts.slice(0, 2).join(', ');
     }
@@ -130,20 +132,9 @@ export const reverseGeocodeAddressFull = async (lat: number, lon: number): Promi
     if (!data) return { address: '' };
     
     const addrObj = data.address || {};
-    const road = addrObj.road || addrObj.pedestrian || addrObj.street || '';
-    const houseNum = addrObj.house_number || addrObj.building || addrObj.house || '';
-    const neighbourhood = addrObj.neighbourhood || addrObj.suburb || addrObj.residential || '';
     
-    let baseAddr = '';
-    if (road && houseNum) {
-      baseAddr = `${road}, ${houseNum}`;
-    } else if (road) {
-      baseAddr = road;
-    } else if (neighbourhood) {
-      baseAddr = neighbourhood;
-    } else {
-      baseAddr = formatStructuredAddress(data);
-    }
+    // Always use formatStructuredAddress to get the richest possible name (combining POI, road, neighbourhood)
+    const baseAddr = formatStructuredAddress(data);
     
     const latinAddress = formatUzbekAddress(cyrillicToLatin(baseAddr));
 
