@@ -75,7 +75,14 @@ export const formatStructuredAddress = (data: any): string => {
     if (!NOISE.some(n => cleanN.toLowerCase().includes(n)) && !parts.some(p => p.toLowerCase().includes(cleanN.toLowerCase()))) parts.push(cleanN);
   }
   if (parts.length === 0 && data.display_name) {
-    return data.display_name.split(',').map((s: string) => formatUzbekAddress(s.trim())).filter((s: string) => !NOISE.some(n => s.toLowerCase().includes(n))).slice(0, 2).join(', ');
+    const fallbackParts = data.display_name.split(',').map((s: string) => formatUzbekAddress(s.trim())).filter((s: string) => !NOISE.some(n => s.toLowerCase().includes(n)));
+    if (fallbackParts.length > 0) {
+      const isGeneric = fallbackParts[0].toLowerCase().includes('shahri') || fallbackParts[0].toLowerCase().includes('viloyati');
+      if (isGeneric && data.lat && data.lon) {
+        return `Belgilangan nuqta (${parseFloat(data.lat).toFixed(4)}, ${parseFloat(data.lon).toFixed(4)})`;
+      }
+      return fallbackParts.slice(0, 2).join(', ');
+    }
   }
   return parts.join(', ');
 };
