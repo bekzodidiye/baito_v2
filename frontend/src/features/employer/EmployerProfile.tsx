@@ -215,6 +215,7 @@ export const EmployerProfile: React.FC = () => {
             applicantsCount={applications.length}
             hiredCount={hiredCount}
             rating={userProfile?.rating}
+            balance={balance}
             language={language}
           />
 

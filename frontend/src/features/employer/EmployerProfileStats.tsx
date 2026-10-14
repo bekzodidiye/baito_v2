@@ -1,5 +1,5 @@
 import React from 'react';
-import { Briefcase, Users, UserCheck, Star } from 'lucide-react';
+import { Briefcase, Users, UserCheck, Star, DollarSign } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface EmployerProfileStatsProps {
@@ -8,6 +8,7 @@ interface EmployerProfileStatsProps {
   applicantsCount: number;
   hiredCount: number;
   rating?: number;
+  balance?: string | number;
   language: 'uz' | 'ru' | 'en';
 }
 
@@ -23,6 +24,7 @@ export const EmployerProfileStats: React.FC<EmployerProfileStatsProps> = ({
   applicantsCount,
   hiredCount,
   rating,
+  balance,
   language,
 }) => {
   const t = (uz: string, ru: string, en: string) =>
@@ -49,6 +51,16 @@ export const EmployerProfileStats: React.FC<EmployerProfileStatsProps> = ({
       tone: 'text-emerald-600 bg-emerald-50',
     },
   ];
+
+  
+  // We add Balance as the 4th tile to fill the empty space
+  tiles.push({
+    icon: DollarSign,
+    value: balance ? Number(balance).toLocaleString() : '0',
+    label: t('Hisobim', 'Мой счет', 'Balance'),
+    hint: 'UZS',
+    tone: 'text-purple-600 bg-purple-50',
+  });
 
   if (typeof rating === 'number' && rating > 0) {
     tiles.push({
