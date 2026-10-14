@@ -59,34 +59,39 @@ export const formatStructuredAddress = (data: any): string => {
   const road = addr.road || props.street || addr.pedestrian || addr.street;
   const houseNum = addr.house_number || props.housenumber || addr.building || addr.house;
   const neighbourhood = addr.neighbourhood || addr.suburb || addr.quarter || addr.residential || addr.village || addr.hamlet || addr.town || addr.city_district;
+  const cityOrDistrict = addr.city || addr.town || addr.county || addr.state;
 
   const parts: string[] = [];
-  if (poiName) {
-    const cleanPoi = formatUzbekAddress(poiName);
-    if (!NOISE.some(n => cleanPoi.toLowerCase().includes(n)) && !cleanPoi.match(/^(building|house|way|yes|no)$/i)) parts.push(cleanPoi);
+
+  if (cityOrDistrict) {
+    parts.push(formatUzbekAddress(cityOrDistrict));
   }
+
+  if (neighbourhood && neighbourhood !== cityOrDistrict) {
+    const cleanN = formatUzbekAddress(neighbourhood);
+    if (!NOISE.some(n => cleanN.toLowerCase().includes(n))) parts.push(cleanN);
+  }
+
   if (road) {
     let st = formatUzbekAddress(road);
     if (houseNum) st += `, ${houseNum}`;
-    if (!parts.some(p => p.toLowerCase().includes(st.toLowerCase()))) parts.push(st);
+    parts.push(st);
+  } else if (poiName) {
+    const cleanPoi = formatUzbekAddress(poiName);
+    if (!NOISE.some(n => cleanPoi.toLowerCase().includes(n)) && !cleanPoi.match(/^(building|house|way|yes|no)$/i)) {
+      parts.push(cleanPoi);
+    }
   }
-  if (neighbourhood && parts.length < 2) {
-    const cleanN = formatUzbekAddress(neighbourhood);
-    if (!NOISE.some(n => cleanN.toLowerCase().includes(n)) && !parts.some(p => p.toLowerCase().includes(cleanN.toLowerCase()))) parts.push(cleanN);
-  }
-  
+
   if (parts.length === 0 && data.display_name) {
     const fallbackParts = data.display_name.split(',').map((s: string) => formatUzbekAddress(s.trim())).filter((s: string) => !NOISE.some(n => s.toLowerCase().includes(n)));
     if (fallbackParts.length > 0) {
-      const isGeneric = fallbackParts[0].toLowerCase().includes('shahri') || fallbackParts[0].toLowerCase().includes('viloyati');
-      if (isGeneric && data.lat && data.lon) {
-        // Only use 'Nomsiz hudud' if there really is no name at all
-        return `Nomsiz hudud (Yaqin manzil: ${fallbackParts.slice(0, 2).join(', ')})`;
-      }
-      return fallbackParts.slice(0, 2).join(', ');
+      return fallbackParts.slice(0, 3).join(', ');
     }
   }
-  return parts.join(', ');
+
+  const uniqueParts = Array.from(new Set(parts));
+  return uniqueParts.join(', ');
 };
 
 export const CITY_COORDINATES: Record<string, { lat: number; lon: number }> = {
