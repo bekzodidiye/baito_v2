@@ -13,6 +13,7 @@ class TransactionBase(BaseModel):
 
 class TransactionOut(TransactionBase):
     id: str
+    jobTitle: Optional[str] = None
     createdAt: datetime
     providerTransactionId: Optional[str] = None
     performTime: Optional[int] = None

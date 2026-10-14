@@ -10,6 +10,8 @@ import {
   ChevronRight, Image as  Banknote 
 } from 'lucide-react';
 import { PaymentModals, PaymentModalType } from './PaymentModals';
+import { TxReceiptModal } from './TxReceiptModal';
+import { AnimatePresence } from 'motion/react';
 
 export const PaymentsScreen: React.FC = () => {
   const { setCurrentScreen } = useCurrentScreen();
@@ -24,6 +26,7 @@ export const PaymentsScreen: React.FC = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [modalType, setModalType] = useState<PaymentModalType>(null);
+  const [selectedTx, setSelectedTx] = useState<any>(null);
   
   const { data: savedCards = [] } = useQuery({
     queryKey: ['paymentCards'],
@@ -86,14 +89,20 @@ export const PaymentsScreen: React.FC = () => {
 
   // One derivation of a row's title, used by both the list and the search, so
   // what a user reads is exactly what they can search for.
-  const txLabel = (tx: any) =>
-    tx.type === 'payout'
+  const txLabel = (tx: any) => {
+    const typeName = tx.type === 'payout'
       ? (language === 'uz' ? "Bank orqali to'lov" : language === 'ru' ? "Выплата на счёт" : "Bank payout")
       : tx.type === 'withdraw'
       ? (language === 'uz' ? "Mablag' yechish" : language === 'ru' ? "Снятие средств" : "Withdrawal")
       : isIncoming(tx)
         ? (language === 'uz' ? "Kirim" : language === 'ru' ? "Поступление" : "Incoming")
         : (language === 'uz' ? "Ish uchun to'lov" : language === 'ru' ? "Оплата за работу" : "Payment for work");
+        
+    if (tx.jobTitle) {
+      return `${typeName}: ${tx.jobTitle}`;
+    }
+    return typeName;
+  };
 
   const query = searchQuery.trim().toLowerCase();
   const matchesQuery = (tx: any) => {
@@ -340,7 +349,7 @@ export const PaymentsScreen: React.FC = () => {
           <div className="bg-white rounded-xl shadow-[0px_4px_20px_rgba(26,35,126,0.04)] divide-y divide-slate-100 overflow-hidden border border-slate-100">
             {filteredTransactions.length > 0 ? (
               filteredTransactions.map((tx: any) => (
-                <div key={tx.id} className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer">
+                <div key={tx.id} onClick={() => setSelectedTx(tx)} className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer">
                   <div className="flex items-center gap-4">
                     {tx.type === 'withdraw' ? (
                        <div className="w-12 h-12 rounded-xl bg-brand-primary/5 flex items-center justify-center shadow-sm">

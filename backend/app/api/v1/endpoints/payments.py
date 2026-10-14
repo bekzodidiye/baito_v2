@@ -11,6 +11,7 @@ from app.core.money import Money
 from app.models.audit_ledger import AuditLedger
 from app.models.payment_card import PaymentCard
 from app.models.transaction import Transaction
+from app.models.job import Job
 from app.models.user import User
 from app.schemas.payment_card import PaymentCardCreate, PaymentCardOut, PaymentCardUpdate
 from app.schemas.transaction import TransactionOut
@@ -125,9 +126,16 @@ def get_transactions(
     # amount and platformFee are stored in tiyin (UZS * 100). Returning the ORM
     # rows straight through handed the raw tiyin to the payments screen, which
     # showed a 275,000 so'm payout as "27 500 000".
+    job_ids = list({r.jobId for r in rows if r.jobId})
+    jobs = {j.id: j.title for j in db.query(Job.id, Job.title).filter(Job.id.in_(job_ids)).all()} if job_ids else {}
+
     return [
         TransactionOut.model_validate(r).model_copy(
-            update={"amount": Money.to_uzs(r.amount), "platformFee": Money.to_uzs(r.platformFee or 0)}
+            update={
+                "amount": Money.to_uzs(r.amount), 
+                "platformFee": Money.to_uzs(r.platformFee or 0),
+                "jobTitle": jobs.get(r.jobId) if r.jobId else None
+            }
         )
         for r in rows
     ]
