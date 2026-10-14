@@ -48,14 +48,15 @@ export const formatUzbekAddress = (address: string): string => {
     .trim();
 };
 
-const NOISE = ['aksaray', 'oqsaroy', 'unnamed', 'unknown', 'undefined', 'null'];
+const NOISE = ['aksaray', 'oqsaroy', 'unnamed', 'unknown', 'undefined', 'null', 'viewpoint', 'ruins'];
 
 export const formatStructuredAddress = (data: any): string => {
   if (!data) return '';
   const addr = data.address || {};
   const props = data.properties || {};
 
-  const poiName = data.name || addr.amenity || addr.shop || addr.office || addr.tourism || addr.historic;
+  // ONLY use data.name. Other fields are raw OSM tags (like "hospital", "fast_food", "yes")
+  const poiName = data.name;
   const road = addr.road || props.street || addr.pedestrian || addr.street;
   const houseNum = addr.house_number || props.housenumber || addr.building || addr.house;
   const neighbourhood = addr.neighbourhood || addr.suburb || addr.quarter || addr.residential || addr.village || addr.hamlet || addr.town || addr.city_district;
@@ -76,10 +77,15 @@ export const formatStructuredAddress = (data: any): string => {
     let st = formatUzbekAddress(road);
     if (houseNum) st += `, ${houseNum}`;
     parts.push(st);
-  } else if (poiName) {
+  }
+
+  if (poiName) {
     const cleanPoi = formatUzbekAddress(poiName);
     if (!NOISE.some(n => cleanPoi.toLowerCase().includes(n)) && !cleanPoi.match(/^(building|house|way|yes|no)$/i)) {
-      parts.push(cleanPoi);
+      const isDuplicate = parts.some(p => p.toLowerCase() === cleanPoi.toLowerCase());
+      if (!isDuplicate) {
+        parts.push(cleanPoi);
+      }
     }
   }
 
@@ -93,6 +99,7 @@ export const formatStructuredAddress = (data: any): string => {
   const uniqueParts = Array.from(new Set(parts));
   return uniqueParts.join(', ');
 };
+
 
 export const CITY_COORDINATES: Record<string, { lat: number; lon: number }> = {
   Toshkent: { lat: 41.3111, lon: 69.2406 }, Samarqand: { lat: 39.6542, lon: 66.9597 },
