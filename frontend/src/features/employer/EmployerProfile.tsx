@@ -180,6 +180,14 @@ export const EmployerProfile: React.FC = () => {
 
           {/* Support and Logout */}
           <div className="flex flex-col gap-3 mt-2">
+          <motion.button onClick={() => setCurrentScreen("settings")}
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+            className="w-full bg-white p-4 rounded-2xl shadow-xs border border-slate-100 flex items-center justify-center gap-2 hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 font-bold text-xs"
+          >
+            <Settings size={16} className="stroke-[2.5] text-slate-500" />
+            <span>{language === 'uz' ? "Sozlamalar" : language === 'ru' ? "Настройки" : "Settings"}</span>
+          </motion.button>
+
             <motion.button onClick={() => setCurrentScreen("help")}
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
               className="w-full bg-white p-4 rounded-2xl shadow-xs border border-slate-100 flex items-center justify-center gap-2 hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 font-bold text-xs"
@@ -210,51 +218,7 @@ export const EmployerProfile: React.FC = () => {
             language={language}
           />
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Balance tile parked with the rest of the balance flow - see the
-                note beside the /payments routes in components/AppRoutes.tsx.
-                Payment for a finished job is moving to invoice-and-receipt, so
-                an in-app balance would be a second, competing answer to "how do
-                I pay". */}
-            {/*
-            <motion.button onClick={() => setCurrentScreen('payments')} 
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-              className="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col items-center sm:flex-row sm:justify-between gap-4 hover:shadow-md hover:border-brand-primary/20 transition-all cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <DollarSign size={24} className="stroke-[2.5]" />
-              </div>
-              <div className="text-center sm:text-right flex-1">
-                <h3 className="font-display font-black text-sm text-slate-800">
-                  {Number(balance).toLocaleString()} UZS
-                </h3>
-                <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
-                  {language === 'uz' ? "Hisobim" : language === 'ru' ? "Мой счет" : "My Account"}
-                </p>
-              </div>
-            </motion.button>
-            */}
-
-            <motion.button onClick={() => setCurrentScreen("settings")}
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-              className="bg-white p-5 rounded-2xl shadow-xs border border-slate-100 flex flex-col items-center sm:flex-row sm:justify-between gap-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <Settings size={24} className="stroke-[2.5]" />
-              </div>
-              <div className="text-center sm:text-right flex-1">
-                <h3 className="font-display font-black text-sm text-slate-800">
-                  {language === 'uz' ? "Sozlamalar" : language === 'ru' ? "Настройки" : "Settings"}
-                </h3>
-                <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
-                  {language === 'uz' ? "Tizim sozlamalari" : language === 'ru' ? "Настройки системы" : "System settings"}
-                </p>
-              </div>
-            </motion.button>
-          </div>
-
-          {/* Info List */}
+{/* Info List */}
           <EmployerProfileInfo
             companyName={companyName}
             phone={userProfile?.phone || '+998 ** *** ** **'}
