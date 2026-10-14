@@ -3,6 +3,7 @@ import { Briefcase, Users, UserCheck, Star, DollarSign } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface EmployerProfileStatsProps {
+  onPaymentsClick?: () => void;
   postedJobsCount: number;
   activeJobsCount: number;
   applicantsCount: number;
@@ -26,6 +27,7 @@ export const EmployerProfileStats: React.FC<EmployerProfileStatsProps> = ({
   rating,
   balance,
   language,
+  onPaymentsClick,
 }) => {
   const t = (uz: string, ru: string, en: string) =>
     language === 'uz' ? uz : language === 'ru' ? ru : en;
@@ -57,7 +59,7 @@ export const EmployerProfileStats: React.FC<EmployerProfileStatsProps> = ({
   tiles.push({
     icon: DollarSign,
     value: balance ? Number(balance).toLocaleString() : '0',
-    label: t('Hisobim', 'Мой счет', 'Balance'),
+    label: t('Jami xarajatlar', 'Общие расходы', 'Total expenses'),
     hint: 'UZS',
     tone: 'text-purple-600 bg-purple-50',
   });
@@ -80,10 +82,12 @@ export const EmployerProfileStats: React.FC<EmployerProfileStatsProps> = ({
     >
       {tiles.map((tile) => {
         const Icon = tile.icon;
+        const isBalance = tile.label === t('Jami xarajatlar', 'Общие расходы', 'Total expenses');
         return (
           <div
             key={tile.label}
-            className="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 flex flex-col gap-2"
+            onClick={isBalance ? onPaymentsClick : undefined}
+            className={`bg-white rounded-2xl border border-slate-100 shadow-xs p-4 flex flex-col gap-2 ${isBalance ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
           >
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${tile.tone}`}>
               <Icon size={17} className="stroke-[2.3]" />

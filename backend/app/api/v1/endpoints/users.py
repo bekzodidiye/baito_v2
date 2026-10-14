@@ -9,6 +9,8 @@ from app.api import deps
 from app.core import security
 from app.core.limiter import limiter
 from app.core.phone import consume_verification_grant, is_valid_uz_phone, normalize_phone
+from app.models.transaction import Transaction
+from sqlalchemy import func
 from app.core.security import get_password_hash
 from app.models.session import ActiveSession
 from app.services.session_window import is_live
@@ -32,9 +34,17 @@ def _deactivate_other_sessions(db: Session, user: models.User, keep_session_id: 
 
 @router.get("/me", response_model=schemas.User)
 def read_user_me(
+    db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """Get current user."""
+    if current_user.role == 'employer':
+        total_spent = db.query(func.sum(Transaction.amount)).filter(
+            Transaction.employerId == current_user.id,
+            Transaction.type == 'withdraw',
+            Transaction.status == 'paid'
+        ).scalar() or 0
+        setattr(current_user, 'totalSpent', total_spent)
     return current_user
 
 

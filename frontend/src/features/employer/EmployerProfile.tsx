@@ -216,6 +216,7 @@ export const EmployerProfile: React.FC = () => {
             hiredCount={hiredCount}
             rating={userProfile?.rating}
             balance={balance}
+            onPaymentsClick={() => setCurrentScreen('payments')}
             language={language}
           />
 

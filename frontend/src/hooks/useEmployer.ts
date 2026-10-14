@@ -19,7 +19,7 @@ export const useEmployer = () => {
   });
 
   const companyName = me?.companyName || me?.name || userProfile?.firstName || t.roleEmployer;
-  const balance = me?.balance || '0';
+  const balance = me?.totalSpent || me?.balance || '0';
 
   // 2. Fetch Jobs (Strictly authenticated employer's own jobs)
   const { data: postedJobs = [], isLoading: isLoadingJobs } = useQuery({

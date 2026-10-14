@@ -88,6 +88,7 @@ class UserInDBBase(UserBase):
     id: str
     uid: str
     balance: int
+    totalSpent: Optional[int] = 0
     isBanned: bool
     isVerified: bool
     createdAt: datetime
