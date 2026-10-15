@@ -391,8 +391,8 @@ export const PaymentsScreen: React.FC = () => {
                         <span>{new Date(tx.createdAt).toLocaleDateString()} • {new Date(tx.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                         <span className="w-1 h-1 rounded-full bg-slate-300"></span>
                         <span className="flex items-center gap-1">
-                          {tx.type === 'withdraw' ? <CreditCard size={12} /> : <Wallet size={12} />}
-                          {tx.type === 'withdraw' ? 'Uzcard/Humo' : 'Hamyon'}
+                          {isEmployer ? <CreditCard size={12} /> : (tx.type === 'withdraw' ? <CreditCard size={12} /> : <Wallet size={12} />)}
+                          {isEmployer ? 'Karta orqali' : (tx.type === 'withdraw' ? 'Uzcard/Humo' : 'Hamyon')}
                         </span>
                       </div>
                     </div>
