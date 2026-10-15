@@ -333,6 +333,7 @@ export const PaymentsScreen: React.FC = () => {
             </button>
           </div>
           
+          {!isEmployer && (
           <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
             <button 
               onClick={() => setTxFilter('all')}
@@ -365,6 +366,7 @@ export const PaymentsScreen: React.FC = () => {
               {language === 'uz' ? 'Chiqim' : language === 'ru' ? 'Расход' : 'Expense'}
             </button>
           </div>
+        )}
 
           <div className="bg-white rounded-xl shadow-[0px_4px_20px_rgba(26,35,126,0.04)] divide-y divide-slate-100 overflow-hidden border border-slate-100">
             {filteredTransactions.length > 0 ? (
