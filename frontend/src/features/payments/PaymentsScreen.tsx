@@ -47,6 +47,8 @@ export const PaymentsScreen: React.FC = () => {
   });
 
   const currentBalance = me?.balance ?? user?.balance ?? 0;
+  const isEmployer = user?.selectedRole === 'employer';
+  const totalSpent = me?.totalSpent ?? user?.totalSpent ?? 0;
 
   const formatMoney = (amount: number | string) => {
     return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -181,7 +183,10 @@ export const PaymentsScreen: React.FC = () => {
       )}
 
       <main className="pt-2 px-5 md:px-0 space-y-6">
-        {/* Main Balance Card */}
+        
+        {!isEmployer ? (
+          <>
+            {/* Main Balance Card */}
         <section className="relative overflow-hidden rounded-xl bg-gradient-to-br from-brand-primary-container to-brand-primary p-6 text-white shadow-xl">
           {/* Glassy background decorative element */}
           <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
@@ -299,6 +304,21 @@ export const PaymentsScreen: React.FC = () => {
           </button>
         </section>
 
+        
+          </>
+        ) : (
+          <section className="relative overflow-hidden rounded-xl bg-gradient-to-br from-brand-primary-container to-brand-primary p-6 text-white shadow-xl">
+            <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="relative z-10 flex flex-col items-center">
+              <p className="text-white/70 text-sm font-medium tracking-wider mb-2">
+                {language === 'uz' ? 'Jami xarajatlar' : language === 'ru' ? 'Общие расходы' : 'Total Expenses'}
+              </p>
+              <h2 className="text-[32px] font-bold leading-tight mb-2">
+                {formatMoney(totalSpent)} {language === 'uz' ? "so'm" : "UZS"}
+              </h2>
+            </div>
+          </section>
+        )}
         {/* Recent Transactions */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
