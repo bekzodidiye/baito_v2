@@ -111,12 +111,11 @@ export const AppRoutes = () => {
             /invoice/:token below is deliberately NOT parked - that is the
             billing-email link and belongs to the flow that is taking over.
             =================================================================== */}
-        {/*
         <Route path="/payments" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><PaymentsScreen /></ProtectedRoute>} />
         <Route path="/payments/my-cards" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><MyCardsScreen /></ProtectedRoute>} />
         <Route path="/payments/add-card" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><AddCardScreen /></ProtectedRoute>} />
         <Route path="/payments/top-up" element={<ProtectedRoute allowedRoles={['worker', 'employer']}><TopUpScreen /></ProtectedRoute>} />
-        */}
+        
         {/* Public, and it has to stay that way: this is opened from the
             button in a billing email by whoever pays that company's invoices,
             who usually has no account here. The signed token in the path is
