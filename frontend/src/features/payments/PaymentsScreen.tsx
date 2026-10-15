@@ -136,9 +136,9 @@ export const PaymentsScreen: React.FC = () => {
   };
 
   return (
-    <div className="bg-brand-background text-slate-900 min-h-screen pb-32 font-sans w-full max-w-4xl mx-auto">
+    <div className="bg-brand-background text-slate-900 min-h-screen pb-32 font-sans w-full max-w-6xl mx-auto md:px-6">
       {/* TopAppBar */}
-      <header className="fixed top-0 w-full max-w-4xl z-50 bg-brand-background flex items-center justify-between px-5 h-16 shadow-[0px_4px_20px_rgba(26,35,126,0.04)]">
+      <header className="sticky top-0 w-full z-50 bg-brand-background flex items-center justify-between px-5 md:px-0 py-2 h-16 mb-4">
         <div className="flex items-center gap-4">
           <button 
             onClick={handleBack}
@@ -167,7 +167,7 @@ export const PaymentsScreen: React.FC = () => {
       </header>
 
       {showSearch && (
-        <div className="fixed top-16 w-full max-w-4xl z-40 bg-brand-background px-5 pb-3">
+        <div className="sticky top-16 w-full z-40 bg-brand-background px-5 md:px-0 pb-3">
           <input
             autoFocus
             type="search"
@@ -180,7 +180,7 @@ export const PaymentsScreen: React.FC = () => {
         </div>
       )}
 
-      <main className="mt-20 px-5 space-y-6">
+      <main className="pt-2 px-5 md:px-0 space-y-6">
         {/* Main Balance Card */}
         <section className="relative overflow-hidden rounded-xl bg-gradient-to-br from-brand-primary-container to-brand-primary p-6 text-white shadow-xl">
           {/* Glassy background decorative element */}
@@ -261,7 +261,7 @@ export const PaymentsScreen: React.FC = () => {
         </section>
 
         {/* Quick Actions */}
-        <section className="grid grid-cols-2 gap-4">
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <button onClick={() => navigate('/payments/top-up')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
             <div className="p-2 bg-emerald-100 rounded-lg">
               <PlusCircle className="text-emerald-600 w-6 h-6" />
