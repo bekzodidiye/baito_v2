@@ -41,7 +41,7 @@ def read_user_me(
     if current_user.role == 'employer':
         total_spent = db.query(func.sum(Transaction.amount)).filter(
             Transaction.employerId == current_user.id,
-            Transaction.type == 'withdraw',
+            Transaction.type.in_(['withdraw', 'payment']),
             Transaction.status == 'paid'
         ).scalar() or 0
         setattr(current_user, 'totalSpent', total_spent)
