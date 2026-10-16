@@ -1,6 +1,6 @@
 import React from 'react';
 import { translations } from '../../translations';
-import { ArrowLeft, HelpCircle, FileText, MessageCircle, Phone, ChevronRight, Mail } from 'lucide-react';
+import { ArrowLeft, HelpCircle, FileText, MessageCircle, Phone, ChevronRight, Mail, ShieldCheck } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useAuthStore } from "../../store/useAuthStore";
 
