@@ -12,6 +12,7 @@ import {
 import { PaymentModals, PaymentModalType } from './PaymentModals';
 import { TxReceiptModal } from './TxReceiptModal';
 import { AnimatePresence } from 'motion/react';
+import { money } from '../../utils/money';
 
 export const PaymentsScreen: React.FC = () => {
   const { setCurrentScreen } = useCurrentScreen();
@@ -400,7 +401,7 @@ export const PaymentsScreen: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <div className="text-right">
                       <p className={`font-bold text-[16px] ${isIncoming(tx) ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {isIncoming(tx) ? '+' : '-'}{formatMoney(tx.amount)}
+                        {isIncoming(tx) ? '+' : '-'} {money(tx.amount, language)}
                       </p>
                       {tx.status === 'pending' ? (
                         <span className="inline-block px-2.5 py-0.5 rounded-full bg-amber-100 text-[10px] font-bold text-amber-700 mt-1">
