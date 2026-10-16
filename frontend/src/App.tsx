@@ -70,7 +70,7 @@ function AppContent() {
     else setActiveModal(type);
   };
 
-  const isSettingsOrHelp = ['settings', 'security', 'help', 'faq', 'guide', 'terms', 'support-chat'].includes(currentScreen);
+  const isSettingsOrHelp = ['settings', 'security', 'help', 'faq', 'guide', 'terms', 'privacy', 'support-chat'].includes(currentScreen);
   const showNavigation = currentScreen !== 'admin' && currentScreen !== 'verification' && currentScreen !== 'login' && currentScreen !== 'register' && currentScreen !== 'landing' && !currentScreen.startsWith('employer-') && !isSettingsOrHelp;
 
   // The settings screens kept the app's own rail hidden and offered a "back to
@@ -117,7 +117,7 @@ function AppContent() {
         {showNavigation && <Drawer onOpenModal={handleOpenModal} />}
 
         {/* Main Content Layout */}
-        <main id="main-content" tabIndex={-1} className={`flex-1 w-full min-w-0 ${['landing', 'admin', 'jobs', 'messages', 'chat', 'verification', 'login', 'settings', 'security', 'help', 'faq', 'guide', 'terms', 'support-chat', 'profile', 'reviews', 'applications', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'jobs'].includes(currentScreen) ? 'max-w-none px-0 md:px-0' : 'max-w-7xl mx-auto px-4 md:px-6'}`}>
+        <main id="main-content" tabIndex={-1} className={`flex-1 w-full min-w-0 ${['landing', 'admin', 'jobs', 'messages', 'chat', 'verification', 'login', 'settings', 'security', 'help', 'faq', 'guide', 'terms', 'privacy', 'support-chat', 'profile', 'reviews', 'applications', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'jobs'].includes(currentScreen) ? 'max-w-none px-0 md:px-0' : 'max-w-7xl mx-auto px-4 md:px-6'}`}>
           {/* Keyed on the screen so a crashed screen's fallback clears as soon as
               the user navigates away. Only route content belongs in here. */}
           <ErrorBoundary key={currentScreen}>

@@ -12,6 +12,7 @@ export const SettingsScreen: React.FC = () => {
     const userProfile = useAuthStore(s => s.userProfile);
     const setUserProfile = useAuthStore(s => s.setUserProfile);
   const t = translations[language];
+  const isEmployer = userProfile?.selectedRole === 'employer';
 
   const [newJobsNotifications, setNewJobsNotifications] = useState(userProfile?.notify_new_jobs ?? true);
   const [interviewNotifications, setInterviewNotifications] = useState(userProfile?.notify_interviews ?? true);
@@ -39,7 +40,7 @@ export const SettingsScreen: React.FC = () => {
       {/* TopAppBar */}
       <header className="md:hidden flex justify-between items-center px-4 h-16 w-full z-50 bg-brand-surface/90 backdrop-blur-md sticky top-0">
         <button 
-          onClick={() => setCurrentScreen('jobs')}
+          onClick={() => setCurrentScreen(isEmployer ? 'employer-dashboard' : 'jobs')}
           aria-label={t.goBack}
             className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-brand-surface-low transition-colors"
         >
@@ -126,8 +127,8 @@ export const SettingsScreen: React.FC = () => {
                   <Briefcase size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">{t.notifyNewJobs}</p>
-                  <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium">{t.notifyNewJobsDesc}</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{isEmployer ? (language === 'uz' ? 'Yangi arizalar' : language === 'ru' ? 'Новые отклики' : 'New applicants') : t.notifyNewJobs}</p>
+                  <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium">{isEmployer ? (language === 'uz' ? 'E\'loningizga tushgan arizalar haqida' : language === 'ru' ? 'О новых откликах на ваши вакансии' : 'About new applications for your jobs') : t.notifyNewJobsDesc}</p>
                 </div>
               </div>
               
@@ -146,8 +147,8 @@ export const SettingsScreen: React.FC = () => {
                   <MessageSquare size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
-                  <p className="text-[16px] font-semibold text-brand-text">{t.notifyChat}</p>
-                  <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium">{t.notifyOffers}</p>
+                  <p className="text-[16px] font-semibold text-brand-text">{isEmployer ? (language === 'uz' ? 'Yangi xabarlar' : language === 'ru' ? 'Новые сообщения' : 'New messages') : t.notifyChat}</p>
+                  <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium">{isEmployer ? (language === 'uz' ? 'Nomzodlardan kelgan xabarlar haqida' : language === 'ru' ? 'О сообщениях от кандидатов' : 'About messages from candidates') : t.notifyOffers}</p>
                 </div>
               </div>
               

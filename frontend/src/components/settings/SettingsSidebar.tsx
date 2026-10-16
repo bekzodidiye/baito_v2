@@ -1,7 +1,7 @@
 import React from 'react';
 import { translations } from '../../translations';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
-import { Settings, Lock, HelpCircle, HelpCircle as FaqIcon, BookOpen, FileText, Headphones, ChevronRight } from 'lucide-react';
+import { Settings, Lock, HelpCircle, HelpCircle as FaqIcon, BookOpen, FileText, Headphones, ChevronRight, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from "../../store/useAuthStore";
 
 export const SettingsSidebar: React.FC = () => {
@@ -42,6 +42,11 @@ export const SettingsSidebar: React.FC = () => {
           id: 'guide',
           label: language === 'uz' ? 'Foydalanish qo\'llanmasi' : language === 'ru' ? 'Руководство' : 'User Guide',
           icon: BookOpen,
+        },
+        {
+          id: 'privacy',
+          label: language === 'uz' ? 'Maxfiylik siyosati' : language === 'ru' ? 'Политика конфиденциальности' : 'Privacy Policy',
+          icon: ShieldCheck,
         },
         {
           id: 'terms',
