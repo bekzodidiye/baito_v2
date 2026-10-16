@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { X, FileText, CheckCircle2 } from 'lucide-react';
+import { money } from '../../utils/money';
 
 interface TxReceiptModalProps {
   tx: any;
@@ -37,7 +38,7 @@ export const TxReceiptModal: React.FC<TxReceiptModalProps> = ({ tx, onClose, lan
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <FileText className="w-5 h-5 text-brand-primary" />
-            {t('To\\'lov cheki', 'Чек об оплате', 'Payment receipt')}
+            {t("To'lov cheki", 'Чек об оплате', 'Payment receipt')}
           </h3>
           <button
             onClick={onClose}
@@ -51,7 +52,7 @@ export const TxReceiptModal: React.FC<TxReceiptModalProps> = ({ tx, onClose, lan
             <div className="text-center mb-2">
                 <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
                 <h4 className="font-bold text-2xl text-slate-800">
-                    {formatMoney(tx.amount)} {t("so'm", "сум", "UZS")}
+                    {money(tx.amount, language)}
                 </h4>
                 <p className="text-emerald-600 font-medium text-sm mt-1">
                     {tx.status === 'pending' ? t('Kutilmoqda', 'Ожидается', 'Pending') : t('Muvaffaqiyatli', 'Успешно', 'Successful')}
@@ -61,7 +62,7 @@ export const TxReceiptModal: React.FC<TxReceiptModalProps> = ({ tx, onClose, lan
             <div className="h-px bg-slate-200 w-full" />
             
             <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-500">{t('To\\'lov turi', 'Тип оплаты', 'Payment type')}</span>
+                <span className="text-slate-500">{t("To'lov turi", 'Тип оплаты', 'Payment type')}</span>
                 <span className="font-medium text-slate-800">{txLabel(tx)}</span>
             </div>
             
