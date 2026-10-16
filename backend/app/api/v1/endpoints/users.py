@@ -44,7 +44,7 @@ def read_user_me(
             Transaction.type.in_(['withdraw', 'payment']),
             Transaction.status == 'paid'
         ).scalar() or 0
-        setattr(current_user, 'totalSpent', total_spent)
+        setattr(current_user, 'totalSpent', total_spent // 100 if total_spent else 0)
     return current_user
 
 
