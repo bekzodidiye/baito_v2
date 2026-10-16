@@ -69,7 +69,30 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
       // employer must never be shown an empty category picker — that is a form
       // they cannot submit at all.
       .catch(() => {});
-    return () => { alive = false; };
+    if (!isVerified) {
+    return (
+      <div className="w-full min-h-screen bg-slate-50 flex flex-col">
+        <JobPostHeader step={1} language={language} onBack={onBack} />
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+          <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mb-4">
+             <span className="text-2xl">🛡️</span>
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">
+            {language === 'uz' ? "Tasdiqlanmagan" : language === 'ru' ? "Не проверено" : "Not verified"}
+          </h2>
+          <p className="text-slate-600 max-w-md">
+            {language === 'uz'
+              ? "Ish yaratish uchun kompaniyangiz ma'lumotlari admin tomonidan tasdiqlangan bo'lishi kerak."
+              : language === 'ru'
+              ? "Для создания вакансии профиль компании должен быть проверен администратором."
+              : "To create a job, your company profile must be verified by an administrator."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return () => { alive = false; };
   }, []);
 
   const translated = (slug: string, name: string) => {
@@ -168,6 +191,29 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
       setIsSubmitting(false);
     }
   };
+
+  if (!isVerified) {
+    return (
+      <div className="w-full min-h-screen bg-slate-50 flex flex-col">
+        <JobPostHeader step={1} language={language} onBack={onBack} />
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+          <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mb-4">
+             <span className="text-2xl">🛡️</span>
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">
+            {language === 'uz' ? "Tasdiqlanmagan" : language === 'ru' ? "Не проверено" : "Not verified"}
+          </h2>
+          <p className="text-slate-600 max-w-md">
+            {language === 'uz'
+              ? "Ish yaratish uchun kompaniyangiz ma'lumotlari admin tomonidan tasdiqlangan bo'lishi kerak."
+              : language === 'ru'
+              ? "Для создания вакансии профиль компании должен быть проверен администратором."
+              : "To create a job, your company profile must be verified by an administrator."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-slate-50 flex flex-col pb-32">
