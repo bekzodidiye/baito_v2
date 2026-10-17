@@ -25,6 +25,7 @@ export interface UserProfile {
   completedJobsCount?: number;
   balance?: number;
   totalSpent?: number;
+  totalEarned?: number;
   notify_new_jobs?: boolean;
   notify_interviews?: boolean;
   notify_general?: boolean;
