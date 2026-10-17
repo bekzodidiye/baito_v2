@@ -318,6 +318,8 @@ class JobService:
     @staticmethod
     def complete_job_day(db: Session, job_id: str, day_id: str, current_user: models.User) -> dict:
         job = JobService.get_job_or_fail(db, job_id)
+        # Lock the job row to serialize completions and safely evaluate is_last_day
+        job = db.query(models.Job).filter(models.Job.id == job.id).with_for_update().first()
 
         if job.employerId != current_user.id and current_user.role != 'admin':
             raise ActionForbiddenError("Faqat ish beruvchi ishni yakunlay oladi")
@@ -330,6 +332,7 @@ class JobService:
         day = (
             db.query(JobDay)
             .filter(JobDay.id == day_id, JobDay.jobId == job.id)
+            .with_for_update()
             .first()
         )
         if not day:
@@ -422,6 +425,8 @@ class JobService:
     @staticmethod
     def complete_job(db: Session, job_id: str, rating: Optional[int], review: Optional[str], bonus: Optional[int], current_user: models.User) -> dict:
         job = JobService.get_job_or_fail(db, job_id)
+        # Lock the job row to serialize completions
+        job = db.query(models.Job).filter(models.Job.id == job.id).with_for_update().first()
 
         is_employer = job.employerId in (current_user.id, getattr(current_user, 'uid', None)) or current_user.role == 'admin'
 

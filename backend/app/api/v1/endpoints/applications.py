@@ -240,8 +240,10 @@ def hire_applicant(
     Takes nothing from the employer. The wage is credited to the worker as
     each day is worked, and the company is invoiced for it afterwards.
     """
-    app, job = _load_owned_application(db, id, current_user)
+    app, _ = _load_owned_application(db, id, current_user)
     db.refresh(app)
+    # Lock the job row to serialize hiring and prevent exceeding vacancies
+    job = db.query(models.Job).filter(models.Job.id == app.jobId).with_for_update().first()
 
     if app.status in COMMITTED_APP_STATUSES:
         return {"success": True, "application_status": app.status}

@@ -196,7 +196,7 @@ def confirm_payout(
     is settled, so the number has to come down — otherwise the next payout run
     would show the same worker owed the same money again.
     """
-    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+    job = db.query(models.Job).filter(models.Job.id == job_id).with_for_update().first()
     if not job:
         raise HTTPException(status_code=404, detail="Ish topilmadi")
 
