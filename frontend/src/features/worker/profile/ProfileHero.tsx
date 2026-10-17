@@ -1,6 +1,6 @@
 import { translations } from '../../../translations';
 import React from 'react';
-import { Camera, MapPin, Briefcase, Star, Edit2 } from 'lucide-react';
+import { Camera, MapPin, Briefcase, Star, Edit2, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from "../../../store/useAuthStore";
 
 interface ProfileHeroProps {
@@ -14,6 +14,7 @@ interface ProfileHeroProps {
   t: any;
   onEditClick: () => void;
   region?: string;
+  isVerifiedUser: boolean;
 }
 
 export const ProfileHero: React.FC<ProfileHeroProps> = ({
@@ -26,7 +27,8 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
   completedJobsCount,
   t,
   onEditClick,
-  region
+  region,
+  isVerifiedUser
 }) => {
   const language = useAuthStore(s => s.language);
   const tGlobal = translations[language];
@@ -77,7 +79,28 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
         </div>
 
         <div className="text-center mt-4 z-10 w-full">
-          <h2 className="font-display text-lg font-black text-slate-800 tracking-tight">{profileName}</h2>
+          
+          <h2 className="font-display text-lg font-black text-slate-800 tracking-tight flex items-center justify-center gap-1.5">
+            {profileName}
+          </h2>
+          <div className="flex items-center justify-center gap-1 mt-1">
+            {isVerifiedUser ? (
+              <>
+                <ShieldCheck size={14} className="text-emerald-500" />
+                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
+                  {language === 'uz' ? 'Tasdiqlangan' : language === 'ru' ? 'Проверен' : "Verified"}
+                </span>
+              </>
+            ) : (
+              <>
+                <ShieldCheck size={14} className="text-slate-400" />
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  {language === 'uz' ? 'Tasdiqlanmagan' : language === 'ru' ? 'Не проверено' : 'Not verified'}
+                </span>
+              </>
+            )}
+          </div>
+
           <p className="text-xs text-brand-primary font-bold mt-1 uppercase tracking-wider">{profileRole}</p>
           
           {region && (

@@ -182,7 +182,20 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
         } else {
           return (
             <button
-              onClick={() => setConfirmingApply(true)}
+              onClick={() => {
+                if (!isVerified) {
+                  showToast(
+                    language === 'ru'
+                      ? 'Ваши документы ещё не подтверждены.'
+                      : language === 'en'
+                      ? 'Your documents have not been verified yet.'
+                      : "Hujjatlaringiz hali tasdiqlanmagan.",
+                    'error',
+                  );
+                  return;
+                }
+                setConfirmingApply(true);
+              }}
               disabled={isSubmitting}
               aria-label={t.applyToThisJob}
               className={`flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-black shadow-lg transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'bg-brand-primary/50 cursor-not-allowed' : 'bg-brand-primary hover:bg-brand-primary/90 shadow-brand-primary/20 active:scale-[0.98] cursor-pointer'}`}
