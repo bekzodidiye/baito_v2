@@ -90,6 +90,7 @@ export const ProfileScreen: React.FC = () => {
             completedJobsCount={userProfile?.completedJobsCount || 0}
             region={userProfile?.region}
             isVerifiedUser={isVerifiedUser}
+            totalEarned={userProfile?.totalEarned || 0}
             t={t}
             onEditClick={() => setActiveDialog('edit')}
           />
