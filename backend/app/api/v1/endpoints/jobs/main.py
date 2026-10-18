@@ -429,7 +429,7 @@ def create_job(
     # Posting is what puts a stranger's address in front of workers and what
     # draws on a balance, so the account behind it has to have been
     # checked first.
-    current_user: models.User = Depends(deps.get_current_employer),
+    current_user: models.User = Depends(deps.get_verified_employer),
 ) -> Any:
     """Create a new job posting, screening it for fraud first."""
     if not all([current_user.name, current_user.phone, current_user.region, current_user.email, current_user.bio]):
@@ -504,7 +504,7 @@ def update_job(
     job_id: str,
     job_in: schemas.JobUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_employer),
+    current_user: models.User = Depends(deps.get_verified_employer),
 ) -> Any:
     """Edit a posting.
 
