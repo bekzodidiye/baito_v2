@@ -27,24 +27,6 @@ VIEW_DEDUPE_TTL_SECONDS = 3600
 
 
 
-@router.get("/bookmarked", response_model=List[schemas.Job])
-def get_bookmarked_jobs(
-    db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
-) -> Any:
-    """The jobs this user has saved.
-
-    The toggle wrote to the bookmarks table from the start, but nothing ever
-    read it back, so there was no way to see what had been saved.
-    """
-    return (
-        db.query(models.Job)
-        .join(models.Bookmark, models.Bookmark.jobId == models.Job.id)
-        .filter(models.Bookmark.userId == current_user.id)
-        .order_by(models.Bookmark.createdAt.desc())
-        .all()
-    )
-
 
 @router.get("/recommended")
 def get_recommended_jobs(
