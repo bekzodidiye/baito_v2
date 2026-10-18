@@ -243,7 +243,7 @@ def hire_applicant(
     app, _ = _load_owned_application(db, id, current_user)
     db.refresh(app)
     # Lock the job row to serialize hiring and prevent exceeding vacancies
-    job = db.query(models.Job).filter(models.Job.id == app.jobId).with_for_update().first()
+    job = db.query(models.Job).filter(models.Job.id == app.jobId).populate_existing().with_for_update().first()
 
     if app.status in COMMITTED_APP_STATUSES:
         return {"success": True, "application_status": app.status}
