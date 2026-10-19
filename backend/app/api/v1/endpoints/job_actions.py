@@ -1,7 +1,8 @@
 import logging
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from app.core.limiter import limiter
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -34,9 +35,12 @@ class PayoutDeclarationRequest(BaseModel):
     receiptUrl: Optional[str] = Field(default=None, max_length=500)
 
 
+@limiter.limit('10/minute')
+@limiter.limit('5/minute')
 @router.post("/{id}/apply")
 def apply_to_job(
-    *,
+    *
+    request: Request,,
     db: Session = Depends(deps.get_db),
     id: str,
     current_user: models.User = Depends(deps.get_verified_worker),
@@ -256,7 +260,8 @@ def get_job_payout_for_employer(
 
 @router.post("/{id}/payout/declare")
 def declare_job_payout(
-    *,
+    *
+    request: Request,,
     db: Session = Depends(deps.get_db),
     id: str,
     req: PayoutDeclarationRequest,
