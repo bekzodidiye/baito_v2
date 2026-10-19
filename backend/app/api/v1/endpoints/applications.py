@@ -2,7 +2,8 @@ import logging
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from app.core.limiter import limiter
 from sqlalchemy.orm import Session
 
 from app import crud, models
@@ -44,6 +45,7 @@ def _mask_phone(phone: str | None) -> str:
     return f"{phone[:4]} ** *** ** {phone[-2:]}"
 
 
+@limiter.limit('5/minute')
 @router.get("/worker")
 def get_worker_applications(
     db: Session = Depends(deps.get_db),
@@ -230,7 +232,8 @@ def get_employer_applications(
 
 @router.post("/{id}/hire")
 def hire_applicant(
-    *,
+    *
+    request: Request,,
     db: Session = Depends(deps.get_db),
     id: str,
     current_user: models.User = Depends(deps.get_current_employer),
