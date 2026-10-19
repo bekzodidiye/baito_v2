@@ -10,7 +10,7 @@ from app.api import deps
 router = APIRouter()
 
 
-@router.get("", response_model=List[schemas.Notification])
+@router.get("/", response_model=List[schemas.Notification])
 def read_notifications(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -77,7 +77,7 @@ def mark_one_read(
     return {"success": True}
 
 
-@router.post("", response_model=schemas.Notification)
+@router.post("/", response_model=schemas.Notification)
 def create_notification(
     *,
     db: Session = Depends(deps.get_db),

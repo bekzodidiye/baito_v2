@@ -27,7 +27,7 @@ VIEW_DEDUPE_TTL_SECONDS = 3600
 
 
 
-@router.get("", response_model=List[schemas.JobWithApplicationStatus])
+@router.get("/", response_model=List[schemas.JobWithApplicationStatus])
 def read_jobs(
     db: Session = Depends(deps.get_db),
     current_user: Optional[models.User] = Depends(deps.get_current_user_optional),

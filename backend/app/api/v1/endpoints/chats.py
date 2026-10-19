@@ -117,7 +117,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-@router.get("", response_model=List[schemas.Chat])
+@router.get("/", response_model=List[schemas.Chat])
 def get_chats(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -202,7 +202,7 @@ def get_chats(
     return enriched
 
 
-@router.post("", response_model=schemas.Chat)
+@router.post("/", response_model=schemas.Chat)
 def create_chat(
     chat_in: schemas.ChatCreate,
     db: Session = Depends(deps.get_db),

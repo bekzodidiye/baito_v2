@@ -34,7 +34,7 @@ VIEW_DEDUPE_TTL_SECONDS = 3600
 
 
 
-@router.post("", response_model=schemas.Job)
+@router.post("/", response_model=schemas.Job)
 @limiter.limit("20/hour")
 def create_job(
     request: Request,

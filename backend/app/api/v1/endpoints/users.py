@@ -55,7 +55,7 @@ def read_user_me(
     return current_user
 
 
-@router.post("", response_model=schemas.User)
+@router.post("/", response_model=schemas.User)
 @limiter.limit("5/hour")
 @limiter.limit("3/minute")
 def create_user(
