@@ -41,7 +41,6 @@ def _mask_phone(phone: str | None) -> str:
     return f"{phone[:4]} ** *** ** {phone[-2:]}"
 
 
-@limiter.limit('5/minute')
 @router.get("/worker")
 def get_worker_applications(
     db: Session = Depends(deps.get_db),

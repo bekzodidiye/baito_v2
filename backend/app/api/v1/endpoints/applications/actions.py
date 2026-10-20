@@ -4,6 +4,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from app.core.limiter import limiter
 from sqlalchemy.orm import Session
 
 from app import models
@@ -30,6 +31,7 @@ router = APIRouter()
 
 
 
+@limiter.limit('5/minute')
 @router.post("/{id}/hire")
 def hire_applicant(
     *,
@@ -178,9 +180,11 @@ def hire_applicant(
     }
 
 
+@limiter.limit('10/minute')
 @router.post("/{id}/reject")
 def reject_applicant(
     *,
+    request: Request,
     db: Session = Depends(deps.get_db),
     id: str,
     current_user: models.User = Depends(deps.get_current_employer),
