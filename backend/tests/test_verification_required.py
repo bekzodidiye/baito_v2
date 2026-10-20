@@ -96,14 +96,14 @@ def test_losing_verification_takes_the_ability_with_it(client):
 
 # --- an employer posting -----------------------------------------------------
 
-def test_an_employer_can_post_regardless_of_verification(client):
+def test_an_employer_cannot_post_until_verified(client):
     employer = make_user(role="employer", phone=_phone())
     _set_verified(employer.id, False)
 
     login(client, employer)
     resp = client.post("/api/v1/jobs", json=JOB_BODY)
 
-    assert resp.status_code == 200, resp.text
+    assert resp.status_code == 403, resp.text
 
 
 # --- and the people doing the verifying ---------------------------------------
