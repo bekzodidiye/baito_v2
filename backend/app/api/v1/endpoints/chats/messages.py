@@ -200,5 +200,43 @@ def post_chat_message(
     return msg
 
 
+@router.delete("/{chat_id}/messages/{message_id}")
+def delete_chat_message(
+    chat_id: str,
+    message_id: str,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """Delete a chat message."""
+    from fastapi import HTTPException
 
+    _get_participant_chat(db, chat_id, current_user)
 
+    msg = (
+        db.query(models.Message)
+        .filter(models.Message.id == message_id, models.Message.chatId == chat_id)
+        .first()
+    )
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    if msg.senderId != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to delete this message")
+
+    db.delete(msg)
+    db.commit()
+
+    if not redis_is_mock():
+        try:
+            redis_client.publish(
+                f"chat:{chat_id}",
+                json.dumps({
+                    "type": "delete",
+                    "messageId": message_id,
+                    "chatId": chat_id,
+                }),
+            )
+        except Exception as e:
+            logger.debug("Chat delete publish failed: %s", e)
+
+    return {"success": True, "messageId": message_id}
