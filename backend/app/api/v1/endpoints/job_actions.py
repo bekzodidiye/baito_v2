@@ -39,8 +39,8 @@ class PayoutDeclarationRequest(BaseModel):
 @limiter.limit('5/minute')
 @router.post("/{id}/apply")
 def apply_to_job(
-    *
-    request: Request,,
+    *,
+    request: Request,
     db: Session = Depends(deps.get_db),
     id: str,
     current_user: models.User = Depends(deps.get_verified_worker),
@@ -260,8 +260,8 @@ def get_job_payout_for_employer(
 
 @router.post("/{id}/payout/declare")
 def declare_job_payout(
-    *
-    request: Request,,
+    *,
+    request: Request,
     db: Session = Depends(deps.get_db),
     id: str,
     req: PayoutDeclarationRequest,
