@@ -62,11 +62,12 @@ export const PaymentsScreen: React.FC = () => {
   const myId = me?.id ?? user?.id;
   const isIncoming = (tx: any) => {
     if (tx.type === 'withdraw') return false;
-    // A payout is the admin having sent the money to the worker's bank
-    // account; the in-app balance goes down to match. Without this line the
-    // fallback below reads workerId === me and calls it income, so the worker
-    // would be shown a credit at the moment they were debited.
-    if (tx.type === 'payout') return false;
+    // account. For the worker, this is real-world income, so it should be
+    // green (incoming). For the employer, this represents money paid out for
+    // work, so it is an expense.
+    if (tx.type === 'payout') {
+      return !isEmployer;
+    }
     if (tx.type === 'deposit') return true;
     return !!myId && tx.workerId === myId;
   };
