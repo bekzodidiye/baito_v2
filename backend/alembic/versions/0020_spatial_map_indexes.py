@@ -46,19 +46,23 @@ def upgrade() -> None:
         """
     )
 
-    # 4. GIN Trigram indexes for fast location and title substring searches
-    op.execute(
-        """
-        CREATE EXTENSION IF NOT EXISTS pg_trgm;
-        CREATE INDEX IF NOT EXISTS idx_jobs_location_trgm ON jobs USING gin (location gin_trgm_ops);
-        CREATE INDEX IF NOT EXISTS idx_jobs_title_trgm ON jobs USING gin (title gin_trgm_ops);
-        """
-    )
+    # 4. GIN Trigram indexes for fast location and title substring searches (PostgreSQL only)
+    bind = op.get_bind()
+    if bind and bind.dialect.name == "postgresql":
+        op.execute(
+            """
+            CREATE EXTENSION IF NOT EXISTS pg_trgm;
+            CREATE INDEX IF NOT EXISTS idx_jobs_location_trgm ON jobs USING gin (location gin_trgm_ops);
+            CREATE INDEX IF NOT EXISTS idx_jobs_title_trgm ON jobs USING gin (title gin_trgm_ops);
+            """
+        )
 
 
 def downgrade() -> None:
     op.execute("DROP INDEX IF EXISTS idx_jobs_spatial_open;")
     op.execute("DROP INDEX IF EXISTS idx_jobs_location_open;")
     op.execute("DROP INDEX IF EXISTS idx_jobs_category_spatial;")
-    op.execute("DROP INDEX IF EXISTS idx_jobs_location_trgm;")
-    op.execute("DROP INDEX IF EXISTS idx_jobs_title_trgm;")
+    bind = op.get_bind()
+    if bind and bind.dialect.name == "postgresql":
+        op.execute("DROP INDEX IF EXISTS idx_jobs_location_trgm;")
+        op.execute("DROP INDEX IF EXISTS idx_jobs_title_trgm;")

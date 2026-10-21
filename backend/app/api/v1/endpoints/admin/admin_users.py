@@ -44,8 +44,15 @@ class NotePayload(BaseModel):
     text: str = Field(min_length=1, max_length=2000)
 
 
-def _serialize_user(u: models.User) -> dict:
-    return {
+def _serialize_user(u: models.User, include_pii: bool = False) -> dict:
+    has_docs = bool(
+        u.passportDocFront
+        or u.passportDocBack
+        or u.selfieWithDoc
+        or u.passportSeries
+        or u.passportJshshir
+    )
+    data = {
         "id": u.id,
         "uid": u.uid,
         "name": u.name,
@@ -57,6 +64,7 @@ def _serialize_user(u: models.User) -> dict:
         "balance": u.balance,
         "isBanned": u.isBanned,
         "isVerified": u.isVerified,
+        "hasVerificationDocs": has_docs,
         "createdAt": str(u.createdAt) if u.createdAt else None,
         "region": u.region,
         "category": u.category,
@@ -64,14 +72,16 @@ def _serialize_user(u: models.User) -> dict:
         "skills": u.skills,
         "rating": u.rating,
         "completedJobsCount": u.completedJobsCount,
-        "passportSeries": u.passportSeries,
-        "passportJshshir": u.passportJshshir,
-        "passportDocFront": u.passportDocFront,
-        "passportDocBack": u.passportDocBack,
-        "selfieWithDoc": u.selfieWithDoc,
         "bankCardMask": u.bankCardMask,
         "sourceApp": u.sourceApp,
     }
+    if include_pii:
+        data["passportSeries"] = u.passportSeries
+        data["passportJshshir"] = u.passportJshshir
+        data["passportDocFront"] = u.passportDocFront
+        data["passportDocBack"] = u.passportDocBack
+        data["selfieWithDoc"] = u.selfieWithDoc
+    return data
 
 
 @router.get("/users")
@@ -102,7 +112,7 @@ def get_users(
     users = (
         query.order_by(models.User.createdAt.desc()).offset(skip).limit(limit).all()
     )
-    return {"total": total, "items": [_serialize_user(u) for u in users]}
+    return {"total": total, "items": [_serialize_user(u, include_pii=False) for u in users]}
 
 
 @router.patch("/users/{user_id}/ban")
@@ -413,7 +423,7 @@ def get_user_detail(
                 "employerName": "Siz (Ish beruvchi)",
             })
 
-    user_data = _serialize_user(user)
+    user_data = _serialize_user(user, include_pii=True)
     user_data["createdAt"] = user.createdAt.isoformat() if user.createdAt else None
     user_data["adminNotes"] = user.adminNotes or []
 
@@ -462,6 +472,37 @@ def get_user_detail(
         "orders": orders_list,
         "reviews": reviews_list,
         "invoices": invoices_list,
+    }
+
+
+@router.get("/users/{user_id}/verification")
+def get_user_verification(
+    user_id: str,
+    db: Session = Depends(deps.get_db),
+    admin: models.User = Depends(get_admin_user),
+) -> Any:
+    user = (
+        db.query(models.User)
+        .filter(or_(models.User.id == user_id, models.User.uid == user_id))
+        .first()
+    )
+    if not user:
+        raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+    return {
+        "userId": user.id,
+        "isVerified": user.isVerified,
+        "hasVerificationDocs": bool(
+            user.passportDocFront
+            or user.passportDocBack
+            or user.selfieWithDoc
+            or user.passportSeries
+            or user.passportJshshir
+        ),
+        "passportSeries": user.passportSeries,
+        "passportJshshir": user.passportJshshir,
+        "passportDocFront": user.passportDocFront,
+        "passportDocBack": user.passportDocBack,
+        "selfieWithDoc": user.selfieWithDoc,
     }
 
 
