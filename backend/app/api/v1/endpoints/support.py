@@ -129,3 +129,21 @@ def send_support_message(
     db.commit()
     db.refresh(ticket)
     return _serialise(db, ticket)
+
+
+@router.delete("/messages/{message_id}")
+def delete_support_message(
+    message_id: str,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    from fastapi import HTTPException
+    msg = db.query(models.TicketMessage).filter(models.TicketMessage.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    if msg.senderId != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to delete this message")
+    db.delete(msg)
+    db.commit()
+    return {"success": True, "messageId": message_id}
+
