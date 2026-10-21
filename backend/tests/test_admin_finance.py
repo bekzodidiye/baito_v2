@@ -138,13 +138,24 @@ def test_admin_transactions_list_reports_uzs_not_tiyin(client):
     # The payments screen both sides use reads a different endpoint that had
     # the same defect: it returned the ORM rows straight through, so a 250,000
     # so'm credit was rendered as "25 000 000".
+    #
+    # Employers now only see admin-confirmed payouts (type='payout').
+    # Before the admin confirms, the employer list should be empty.
+    login(client, employer)
+    rows = client.get("/api/v1/payments/transactions").json()
+    assert len(rows) == 0, "employer should not see non-payout transactions"
+
+    # Simulate admin confirming the payout so the employer can see it.
+    login(client, admin)
+    client.post(
+        f"/api/v1/admin/jobs/{job.id}/payout",
+        json={"amount": 250_000, "receiptUrl": "https://example.com/receipt.png", "note": "test"},
+    )
+
     login(client, employer)
     rows = client.get("/api/v1/payments/transactions").json()
     assert len(rows) == 1
     assert rows[0]["amount"] == 250_000
-    # The commission is charged to the employer when the wage is frozen, so it
-    # is on the row from the start rather than appearing at payout.
-    assert rows[0]["platformFee"] == 25_000
     assert body["items"][0]["platformFee"] == 25_000
 
 

@@ -111,13 +111,24 @@ def get_transactions(
     skip: int = 0,
     limit: int = 100,
 ):
-    rows = (
-        db.query(Transaction)
-        .filter(
+    q = db.query(Transaction)
+
+    # Employers should only see admin-confirmed payouts, not every
+    # pending or cancelled transaction.  Workers see everything.
+    if current_user.role == 'employer':
+        q = q.filter(
+            Transaction.employerId == current_user.id,
+            Transaction.type == 'payout',
+            Transaction.status == 'paid',
+        )
+    else:
+        q = q.filter(
             (Transaction.employerId == current_user.id)
             | (Transaction.workerId == current_user.id)
         )
-        .order_by(Transaction.createdAt.desc())
+
+    rows = (
+        q.order_by(Transaction.createdAt.desc())
         .offset(max(0, skip))
         .limit(min(max(1, limit), 200))
         .all()
