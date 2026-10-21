@@ -20,21 +20,12 @@ from app.redis_client import redis_is_mock
 
 
 def client_identifier(request: Request) -> str:
-    """Best-effort client IP, honouring the reverse proxy's forwarding header.
+    """Best-effort client IP.
 
     uvicorn is started with ``--proxy-headers``, so ``request.client.host`` is
-    already rewritten in the normal deployment; reading the header directly
-    keeps the limiter correct even if that flag is dropped.
+    already securely rewritten in the normal deployment by stripping trusted
+    private network proxies from the right side of X-Forwarded-For.
     """
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        # Left-most entry is the original client.
-        first = forwarded.split(",")[0].strip()
-        if first:
-            return first
-    real_ip = request.headers.get("x-real-ip")
-    if real_ip:
-        return real_ip.strip()
     return get_remote_address(request)
 
 

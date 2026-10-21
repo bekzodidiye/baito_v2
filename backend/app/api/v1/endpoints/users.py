@@ -45,10 +45,17 @@ def read_user_me(
             Transaction.status == 'paid'
         ).scalar() or 0
         setattr(current_user, 'totalSpent', total_spent // 100 if total_spent else 0)
+    elif current_user.role == 'worker':
+        total_earned = db.query(func.sum(Transaction.amount)).filter(
+            Transaction.workerId == current_user.id,
+            Transaction.type.in_(['payment', 'worker_earning', 'completion_bonus']),
+            Transaction.status.in_(['paid', 'credited'])
+        ).scalar() or 0
+        setattr(current_user, 'totalEarned', total_earned // 100 if total_earned else 0)
     return current_user
 
 
-@router.post("", response_model=schemas.User)
+@router.post("/", response_model=schemas.User)
 @limiter.limit("5/hour")
 @limiter.limit("3/minute")
 def create_user(

@@ -64,6 +64,10 @@ async def lifespan(app: FastAPI):
     as part of deployment); calling ``create_all`` there would quietly diverge
     from the migration history, so it is limited to development.
     """
+    import anyio
+    limiter = anyio.to_thread.current_default_thread_limiter()
+    limiter.total_tokens = 200
+
     if not settings.is_production:
         Base.metadata.create_all(bind=engine)
 

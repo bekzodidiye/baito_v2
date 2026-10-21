@@ -149,6 +149,13 @@ def get_verified_worker(
         raise HTTPException(status_code=403, detail="Faqat ishchilar ariza topshira oladi")
     return _require_verified(current_user)
 
+def get_verified_employer(
+    current_user: models.User = Depends(get_current_active_user),
+) -> models.User:
+    if current_user.role not in ("employer", "admin"):
+        raise HTTPException(status_code=403, detail="Ish beruvchi huquqi talab etiladi")
+    return _require_verified(current_user)
+
 def get_current_admin(
     current_user: models.User = Depends(get_current_active_user),
 ) -> models.User:

@@ -15,6 +15,7 @@ interface ProfileHeroProps {
   onEditClick: () => void;
   region?: string;
   isVerifiedUser: boolean;
+  totalEarned?: number;
 }
 
 export const ProfileHero: React.FC<ProfileHeroProps> = ({
@@ -28,7 +29,8 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
   t,
   onEditClick,
   region,
-  isVerifiedUser
+  isVerifiedUser,
+  totalEarned = 0
 }) => {
   const language = useAuthStore(s => s.language);
   const tGlobal = translations[language];
@@ -122,6 +124,15 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
           <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">{t.jobs}</p>
         </div>
         
+        <div className="w-px h-8 bg-slate-100" />
+        
+        <div className="flex flex-col items-center gap-1 flex-1">
+          <div className="flex items-center gap-1 text-emerald-500">
+            <p className="font-display font-black text-slate-800 text-sm">{totalEarned.toLocaleString('ru-RU')} <span className="text-[10px] text-slate-500">UZS</span></p>
+          </div>
+          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">{language === 'uz' ? 'Daromat' : language === 'ru' ? 'Доход' : 'Income'}</p>
+        </div>
+
         <div className="w-px h-8 bg-slate-100" />
         
         <div className="flex flex-col items-center gap-1 flex-1">

@@ -113,7 +113,7 @@ describe('JobDetailsFooter — an unverified worker is told, not rejected', () =
 
     render(<Unverified selectedJob={{ ...job, status: 'open' } as Job} applyToJob={applyToJob} />);
     fireEvent.click(screen.getByRole('button', { name: /Ariza topshirish/i }));
-    fireEvent.click(screen.getByRole('button', { name: /^Topshirish$/i }));
+    expect(screen.queryByRole('button', { name: /^Topshirish$/i })).toBeNull();
 
     await waitFor(() => expect(showToast).toHaveBeenCalled());
     expect(applyToJob).not.toHaveBeenCalled();
