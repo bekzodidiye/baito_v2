@@ -300,3 +300,78 @@ def test_admin_users_list_pii_excluded_and_detail_included(client):
     assert v_data["passportDocFront"] == "https://example.com/front.jpg"
     assert v_data["hasVerificationDocs"] is True
 
+
+def test_transaction_amount_bigint_no_overflow(client):
+    from app.models.transaction import Transaction
+    from app.services.earnings_service import WorkerEarnings
+    from app.models.job import Job
+
+    worker = make_user(role="worker", phone=_phone())
+    employer = make_user(role="employer", phone=_phone())
+
+    job = make_job(
+        employer.id,
+        title="Katta loyiha",
+        salary="50000000",
+        location="Toshkent",
+        status="in_progress",
+    )
+
+    with SessionLocal() as db:
+
+        # 50,000,000 UZS = 5,000,000,000 tiyin (> 2^31 - 1 = 2,147,483,647)
+        large_amount_uzs = 50_000_000
+        tx = WorkerEarnings.credit_worker(
+            db,
+            job=job,
+            worker_id=worker.id,
+            amount_uzs=large_amount_uzs,
+        )
+        db.commit()
+
+        stored_tx = db.query(Transaction).filter(Transaction.id == tx.id).first()
+        assert stored_tx.amount == 5_000_000_000
+        assert stored_tx.amount > 2_147_483_647
+
+
+def test_admin_stats_aggregated_queries(client):
+    admin = make_user(role="admin", phone=_phone())
+    employer = make_user(role="employer", phone=_phone())
+    worker = make_user(role="worker", phone=_phone(), balance=250_000)
+
+    job1 = make_job(employer.id, status=JobStatus.OPEN)
+    job2 = make_job(employer.id, status=JobStatus.IN_PROGRESS)
+    job3 = make_job(employer.id, status=JobStatus.COMPLETED)
+
+    with SessionLocal() as db:
+        db.add(Application(jobId=job1.id, workerId=worker.id, status="pending"))
+        db.add(
+            Transaction(
+                jobId=job3.id,
+                employerId=employer.id,
+                workerId=worker.id,
+                amount=100_000 * 100,
+                platformFee=15_000 * 100,
+                type="payout",
+                status="paid",
+            )
+        )
+        db.commit()
+
+    login(client, admin)
+    res = client.get("/api/v1/admin/stats")
+    assert res.status_code == 200
+    data = res.json()
+
+    assert data["totalUsers"] >= 3
+    assert data["workersCount"] >= 1
+    assert data["employersCount"] >= 1
+    assert data["totalJobs"] >= 3
+    assert data["openJobsCount"] >= 1
+    assert data["activeJobsCount"] >= 1
+    assert data["completedJobsCount"] >= 1
+    assert data["totalApplications"] >= 1
+    assert data["totalTransactions"] >= 1
+    assert data["totalRevenue"] >= 15_000
+    assert data["totalOwedToWorkers"] >= 250_000
+

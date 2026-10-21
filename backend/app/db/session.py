@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from app.core.config import settings
@@ -9,6 +9,18 @@ if settings.SQL_HOST.startswith("sqlite"):
     if ":memory:" in settings.SQL_HOST:
         engine_kwargs["poolclass"] = StaticPool
     engine = create_engine(settings.SQL_HOST, **engine_kwargs)
+
+    @event.listens_for(engine, "connect")
+    def _set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON;")
+        cursor.execute("PRAGMA busy_timeout=10000;")
+        if ":memory:" not in settings.SQL_HOST:
+            try:
+                cursor.execute("PRAGMA journal_mode=WAL;")
+            except Exception:
+                pass
+        cursor.close()
 else:
     # Every process that imports this gets its own pool, so the ceiling is
     # (pool_size + max_overflow) x processes, and it has to fit inside the

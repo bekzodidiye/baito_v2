@@ -2,14 +2,17 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchJobs, fetchMapJobs, fetchLocationCounts, JobQuery, bookmarkJobApi, applyToJobApi, requestStartJobApi, confirmStartJobApi } from '../api/queries';
 
 import { Job } from '../types';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 export function useJobsData(query: JobQuery = {}) {
   const queryClient = useQueryClient();
 
   const isMap = query.isMap ?? false;
   const search = query.search?.trim() ?? '';
-  const queryKey = isMap ? ['jobs', 'map'] : search ? ['jobs', { search }] : ['jobs'];
+  const queryKey = useMemo(
+    () => (isMap ? ['jobs', 'map'] : search ? ['jobs', { search }] : ['jobs']),
+    [isMap, search]
+  );
 
   const { data: jobs = [], isLoading } = useQuery({
     queryKey,
@@ -36,7 +39,7 @@ export function useJobsData(query: JobQuery = {}) {
       const newJobs = typeof action === 'function' ? action(old) : action;
       return newJobs;
     });
-  }, [queryClient, search]);
+  }, [queryClient, queryKey]);
 
   const toggleBookmark = useCallback(async (jobId: string) => {
     // Optimistic UI update

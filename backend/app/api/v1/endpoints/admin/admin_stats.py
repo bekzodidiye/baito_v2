@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import func, or_
+from sqlalchemy import case, func, or_
 from sqlalchemy.orm import Session
 
 from app import models
@@ -20,59 +20,47 @@ def get_stats(
     db: Session = Depends(deps.get_db),
     _: models.User = Depends(get_admin_user),
 ) -> Any:
-    total_users = db.query(func.count(models.User.id)).scalar() or 0
-    workers = db.query(func.count(models.User.id)).filter(models.User.role == 'worker').scalar() or 0
-    employers = db.query(func.count(models.User.id)).filter(models.User.role == 'employer').scalar() or 0
-    total_jobs = db.query(func.count(models.Job.id)).scalar() or 0
+    total_users, workers, employers, owed_to_workers = db.query(
+        func.count(models.User.id),
+        func.coalesce(func.sum(case((models.User.role == "worker", 1), else_=0)), 0),
+        func.coalesce(func.sum(case((models.User.role == "employer", 1), else_=0)), 0),
+        func.coalesce(func.sum(case((models.User.role == "worker", models.User.balance), else_=0)), 0),
+    ).one()
 
-    # 'open' is the column default; the previous code also counted a status
-    # named 'active' that nothing ever wrote, so this was always zero.
-    open_jobs = (
-        db.query(func.count(models.Job.id))
-        .filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
-        .scalar() or 0
-    )
-    active_jobs = (
-        db.query(func.count(models.Job.id))
-        .filter(models.Job.status == JobStatus.IN_PROGRESS)
-        .scalar() or 0
-    )
-    completed_jobs = (
-        db.query(func.count(models.Job.id))
-        .filter(models.Job.status == JobStatus.COMPLETED)
-        .scalar() or 0
-    )
+    total_jobs, open_jobs, active_jobs, completed_jobs = db.query(
+        func.count(models.Job.id),
+        func.coalesce(func.sum(case((models.Job.status.in_(JobStatus.OPEN_STATUSES), 1), else_=0)), 0),
+        func.coalesce(func.sum(case((models.Job.status == JobStatus.IN_PROGRESS, 1), else_=0)), 0),
+        func.coalesce(func.sum(case((models.Job.status == JobStatus.COMPLETED, 1), else_=0)), 0),
+    ).one()
+
     total_apps = db.query(func.count(models.Application.id)).scalar() or 0
-    total_tx = db.query(func.count(models.Transaction.id)).scalar() or 0
 
-    # These two were hardcoded to 0.
-    total_revenue = (
-        db.query(func.coalesce(func.sum(models.Transaction.platformFee), 0))
-        .filter(models.Transaction.status.in_(["paid", "released"]))
-        .scalar() or 0
-    )
-    # What the platform owes workers and has not yet handed over. A completed
-    # day credits the worker's balance; an administrator pays it out by bank
-    # transfer and the balance comes down. The figure here used to be the money
-    # frozen against employers, which no longer leaves them at all.
-    owed_to_workers = (
-        db.query(func.coalesce(func.sum(models.User.balance), 0))
-        .filter(models.User.role == "worker")
-        .scalar() or 0
-    )
+    total_tx, total_revenue = db.query(
+        func.count(models.Transaction.id),
+        func.coalesce(
+            func.sum(
+                case(
+                    (models.Transaction.status.in_(["paid", "released"]), models.Transaction.platformFee),
+                    else_=0,
+                )
+            ),
+            0,
+        ),
+    ).one()
 
     return {
-        "totalUsers": total_users,
-        "workersCount": workers,
-        "employersCount": employers,
-        "totalJobs": total_jobs,
-        "openJobsCount": open_jobs,
-        "activeJobsCount": active_jobs,
-        "completedJobsCount": completed_jobs,
-        "totalApplications": total_apps,
-        "totalTransactions": total_tx,
-        "totalRevenue": total_revenue // 100,   # tiyin -> UZS
-        "totalOwedToWorkers": owed_to_workers,
+        "totalUsers": int(total_users or 0),
+        "workersCount": int(workers or 0),
+        "employersCount": int(employers or 0),
+        "totalJobs": int(total_jobs or 0),
+        "openJobsCount": int(open_jobs or 0),
+        "activeJobsCount": int(active_jobs or 0),
+        "completedJobsCount": int(completed_jobs or 0),
+        "totalApplications": int(total_apps or 0),
+        "totalTransactions": int(total_tx or 0),
+        "totalRevenue": int((total_revenue or 0) // 100),   # tiyin -> UZS
+        "totalOwedToWorkers": int(owed_to_workers or 0),
     }
 
 

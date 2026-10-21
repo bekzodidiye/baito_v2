@@ -41,7 +41,7 @@ export const JobSearchScreen: React.FC = () => {
 
   const hasMore = visibleCount < sortedJobs.length;
 
-  const { sentinelRef } = useInfiniteScroll({
+  const { mobileSentinelRef, desktopSentinelRef } = useInfiniteScroll({
     onLoadMore: handleLoadMore,
     hasMore,
     isLoading: isLoadingMore,
@@ -111,7 +111,7 @@ export const JobSearchScreen: React.FC = () => {
 
         {/* Intersection Observer Sentinel for Mobile */}
         {hasMore && (
-          <div ref={sentinelRef} className="py-4">
+          <div ref={mobileSentinelRef} className="py-4">
             {isLoadingMore ? (
               <JobCardSkeleton count={2} layout="vertical" />
             ) : (
@@ -176,7 +176,7 @@ export const JobSearchScreen: React.FC = () => {
 
           {/* Intersection Observer Sentinel for Desktop */}
           {hasMore && (
-            <div ref={sentinelRef} className="py-2">
+            <div ref={desktopSentinelRef} className="py-2">
               {isLoadingMore ? (
                 <JobCardSkeleton count={2} layout="vertical" />
               ) : (
