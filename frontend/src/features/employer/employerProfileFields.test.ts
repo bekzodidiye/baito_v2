@@ -16,7 +16,7 @@ import { REQUIRED_FIELDS, OPTIONAL_FIELDS, missingFrom, isFilled } from './emplo
 import type { UserProfile } from '../../context/types';
 
 const JOBS_ENDPOINT = path.resolve(
-  __dirname, '../../../../backend/app/api/v1/endpoints/jobs/create.py',
+  __dirname, '../../../../backend/app/api/v1/endpoints/jobs/main.py',
 );
 
 /** The `all([...])` the job-creation guard is written as. */
