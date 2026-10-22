@@ -6,16 +6,74 @@ export const fetchJobs = async (): Promise<Job[]> => {
   return await apiClient('/jobs');
 };
 
+export const fetchChats = async () => {
+  return await apiClient('/chats');
+};
 
+export const fetchChatMessages = async (chatId: string) => {
+  return await apiClient(`/chats/${chatId}/messages`);
+};
 
+export const createChatApi = async (params: {
+  workerId?: string;
+  employerId?: string;
+  jobId?: string;
+}) => {
+  return await apiClient('/chats', {
+    method: 'POST',
+    body: JSON.stringify(params)
+  });
+};
 
+export const markChatReadApi = async (chatId: string) => {
+  return await apiClient(`/chats/${chatId}/read`, { method: 'POST' });
+};
 
+export const sendChatMessageApi = async (
+  chatId: string,
+  payload: { text: string; hasMap?: boolean; mapLocation?: string },
+) => {
+  return await apiClient(`/chats/${chatId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+};
 
+export const deleteChatMessageApi = async (chatId: string, messageId: string) => {
+  return await apiClient(`/chats/${chatId}/messages/${messageId}`, {
+    method: 'DELETE',
+  });
+};
 
+export const fetchSupportConversationApi = async () => {
+  return await apiClient('/support/conversation');
+};
 
+export const sendSupportMessageApi = async (text: string) => {
+  return await apiClient('/support/messages', {
+    method: 'POST',
+    body: JSON.stringify({ text }),
+  });
+};
 
+export const deleteSupportMessageApi = async (messageId: string) => {
+  return await apiClient(`/support/messages/${messageId}`, {
+    method: 'DELETE',
+  });
+};
 
+export type UploadPurpose = 'avatar' | 'job' | 'logo' | 'document' | 'chat';
 
+export const uploadFileApi = async (
+  file: File,
+  purpose: UploadPurpose = 'document',
+): Promise<string> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('purpose', purpose);
+  const data = await apiClient('/upload/', { method: 'POST', body: formData });
+  return data.url;
+};
 // Job Action API
 export const bookmarkJobApi = async (jobId: string) => {
   return await apiClient(`/jobs/${jobId}/bookmark`, { method: 'POST' });
