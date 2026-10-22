@@ -109,7 +109,7 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
         },
         {
           id: 'chats',
-          label: language === 'uz' ? 'Suhbatlar' : language === 'ru' ? 'Чаты' : 'Chats',
+          label: language === 'uz' ? 'Xabarlar' : language === 'ru' ? 'Сообщения' : 'Messages',
           icon: MessageSquare,
           badge: unreadMessages,
           action: () => { setDrawerOpen(false); setCurrentScreen('employer-chats'); },
