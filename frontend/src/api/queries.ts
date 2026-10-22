@@ -80,6 +80,13 @@ export const sendSupportMessageApi = async (text: string) => {
   });
 };
 
+export const deleteSupportMessageApi = async (messageId: string) => {
+  return await apiClient(`/support/messages/${messageId}`, {
+    method: 'DELETE',
+  });
+};
+
+
 /** Mark everything the other participant sent as read. Deliberately its own
     call rather than a side effect of fetching the messages. */
 export const markChatReadApi = async (chatId: string) => {
@@ -96,6 +103,13 @@ export const sendChatMessageApi = async (
     body: JSON.stringify(payload),
   });
 };
+
+export const deleteChatMessageApi = async (chatId: string, messageId: string) => {
+  return await apiClient(`/chats/${chatId}/messages/${messageId}`, {
+    method: 'DELETE',
+  });
+};
+
 
 export const bookmarkJobApi = async (jobId: string) => {
   return await apiClient(`/jobs/${jobId}/bookmark`, { method: 'POST' });
