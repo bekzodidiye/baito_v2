@@ -28,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
   const getMobileTitle = () => {
     if (isEmployer) {
       if (currentScreen === 'employer-applicants') return language === 'uz' ? "Arizalar" : language === 'ru' ? "Заявки" : "Applicants";
-      if (currentScreen === 'employer-chats') return language === 'uz' ? "Suhbatlar" : language === 'ru' ? "Чаты" : "Chats";
+      if (currentScreen === 'employer-chats') return language === 'uz' ? "Xabarlar" : language === 'ru' ? "Сообщения" : "Messages";
       if (currentScreen === 'employer-post') return language === 'uz' ? "E'lon joylash" : language === 'ru' ? "Новое объявление" : "Post Job";
       if (currentScreen === 'employer-profile') return language === 'uz' ? "Profil" : language === 'ru' ? "Профиль" : "Profile";
       if (currentScreen === 'employer-dashboard') return language === 'uz' ? "Boshqaruv paneli" : language === 'ru' ? "Панель управления" : "Dashboard";
