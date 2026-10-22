@@ -21,18 +21,34 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
   const isUserLastMsg = lastMsg?.sender === 'user';
   const fallbackText = t?.noConversations ?? '';
 
+  const getSubtitle = () => {
+    if (!lastMsg?.text) return fallbackText;
+    const hasImages = /\[Img:.*?\]/.test(lastMsg.text);
+    const cleanText = lastMsg.text.replace(/\[Img:.*?\]/g, '').replace(/\[Fayl:.*?\]/g, '').trim();
+    if (hasImages) {
+      return cleanText ? `📷 ${cleanText}` : '📷 Rasm';
+    }
+    const faylMatch = lastMsg.text.match(/^\[Fayl:\s*(.*?)\]\s*(.*)$/);
+    if (faylMatch) {
+      return faylMatch[2] ? `📎 ${faylMatch[2]}` : '📎 Fayl';
+    }
+    return lastMsg.text;
+  };
+
   return (
     <div
       onClick={onClick}
-      className={`flex items-center px-3.5 py-3 cursor-pointer transition-all border-b border-slate-100 group relative ${
+      className={`flex items-center px-3.5 py-3 mx-2.5 my-1 rounded-2xl cursor-pointer transition-all group relative ${
         isSelected
-          ? 'bg-blue-50/90 border-l-[3px] border-l-brand-primary'
-          : 'hover:bg-slate-50/80 bg-white border-l-[3px] border-l-transparent'
+          ? 'bg-brand-primary text-white shadow-xs'
+          : 'hover:bg-slate-50/80 bg-white text-slate-900'
       }`}
     >
       {/* Avatar with Online Indicator */}
       <div className="relative flex-shrink-0">
-        <div className="w-11 h-11 rounded-full overflow-hidden bg-slate-100 border border-slate-200/80 flex items-center justify-center">
+        <div className={`w-11 h-11 rounded-full overflow-hidden flex items-center justify-center ${
+          isSelected ? 'bg-white shadow-xs' : 'bg-slate-100 border border-slate-200/80'
+        }`}>
           {chat.recruiterAvatar ? (
             <img src={chat.recruiterAvatar} alt={chat.companyName} className="w-full h-full object-cover"  onError={(e) => {
         const target = e.currentTarget;
@@ -42,7 +58,9 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
         }
       }} />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-brand-primary text-white font-bold text-sm">
+            <div className={`w-full h-full flex items-center justify-center font-bold text-sm ${
+              isSelected ? 'bg-white text-brand-primary' : 'bg-brand-primary text-white'
+            }`}>
               {companyInitial}
             </div>
           )}
@@ -56,12 +74,12 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
       <div className="ml-3 flex-grow min-w-0">
         <div className="flex justify-between items-baseline gap-1">
           <h3 className={`font-sans font-bold text-xs sm:text-sm truncate ${
-            isSelected ? 'text-brand-primary' : 'text-slate-900 group-hover:text-brand-primary'
+            isSelected ? 'text-white' : 'text-slate-900 group-hover:text-brand-primary'
           }`}>
             {chat.companyName}
           </h3>
           <span className={`text-[10px] sm:text-xs shrink-0 font-medium ${
-            chat.unreadCount > 0 ? 'text-brand-primary font-bold' : 'text-slate-400'
+            chat.unreadCount > 0 ? (isSelected ? 'text-white font-bold' : 'text-brand-primary font-bold') : (isSelected ? 'text-slate-300' : 'text-slate-400')
           }`}>
             {chat.lastMessageTime || ''}
           </span>
@@ -70,17 +88,19 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
         <div className="flex justify-between items-center mt-0.5 gap-1">
           <div className="flex items-center gap-1 min-w-0 flex-1">
             {isUserLastMsg && (
-              <CheckCheck size={14} className="text-sky-500 shrink-0" />
+              <CheckCheck size={14} className={isSelected ? 'text-sky-300 shrink-0' : 'text-sky-500 shrink-0'} />
             )}
             <p className={`text-xs truncate ${
-              chat.unreadCount > 0 ? 'text-slate-900 font-bold' : 'text-slate-500 font-normal'
+              chat.unreadCount > 0 ? (isSelected ? 'text-white font-bold' : 'text-slate-900 font-bold') : (isSelected ? 'text-slate-200 font-normal' : 'text-slate-500 font-normal')
             }`}>
-              {lastMsg?.text || fallbackText}
+              {getSubtitle()}
             </p>
           </div>
 
           {chat.unreadCount > 0 && (
-            <span className="shrink-0 bg-brand-primary text-white text-[10px] font-black min-w-[18px] h-4 px-1 rounded-full flex items-center justify-center shadow-2xs">
+            <span className={`shrink-0 text-[10px] font-black min-w-[18px] h-4 px-1 rounded-full flex items-center justify-center shadow-2xs ${
+              isSelected ? 'bg-white text-brand-primary' : 'bg-brand-primary text-white'
+            }`}>
               {chat.unreadCount}
             </span>
           )}
