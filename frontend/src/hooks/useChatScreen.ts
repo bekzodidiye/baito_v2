@@ -31,9 +31,9 @@ export function useChatScreen(displayedChatId?: string | null) {
   const navigate = useNavigate();
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const language = useAuthStore(s => s.language);
-  const { chats, sendMessage, setActiveChatId } = useChatsData(language);
+  const { chats, sendMessage, deleteMessage, setActiveChatId } = useChatsData(language);
   const [inputText, setInputText] = useState('');
-  const [attachedFile, setAttachedFile] = useState<AttachedFileData | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFileData[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const t = translations[language];
@@ -59,33 +59,32 @@ export function useChatScreen(displayedChatId?: string | null) {
     // The form calls this with an event; the send button calls it with none,
     // and `e.preventDefault()` on the button path threw a TypeError.
     e?.preventDefault();
-    if (!activeChat || (!inputText.trim() && !attachedFile)) return;
+    if (!activeChat || (!inputText.trim() && attachedFiles.length === 0)) return;
 
     const chatId = activeChat.id;
-    const pending = attachedFile;
+    const pendingFiles = [...attachedFiles];
     const typed = inputText;
     setInputText('');
-    setAttachedFile(null);
+    setAttachedFiles([]);
 
     void (async () => {
       let textToSend = typed;
-      if (pending) {
-        // The message used to carry `blob:` — a URL that only resolves in the
-        // sender's own browser, so the other side saw a broken image. Upload
-        // it and reference the stored copy instead.
-        try {
-          const url = await uploadFileApi(pending.file, 'chat');
-          textToSend = `[Img:${url}]` + (textToSend ? ` ${textToSend}` : '');
-        } catch {
-          showToast(
-            language === 'uz'
-              ? "Faylni yuklab bo'lmadi. Xabar fayl-siz yuborildi."
-              : language === 'ru'
-                ? 'Не удалось загрузить файл. Сообщение отправлено без него.'
-                : 'The file could not be uploaded. The message was sent without it.',
-          );
-          if (!textToSend.trim()) return;
+      if (pendingFiles.length > 0) {
+        for (const pending of pendingFiles) {
+          try {
+            const url = await uploadFileApi(pending.file, 'chat');
+            textToSend = `[Img:${url}]` + (textToSend ? ` ${textToSend}` : '');
+          } catch {
+            showToast(
+              language === 'uz'
+                ? "Faylni yuklab bo'lmadi. Xabar fayl-siz yuborildi."
+                : language === 'ru'
+                  ? 'Не удалось загрузить файл. Сообщение отправлено без него.'
+                  : 'The file could not be uploaded. The message was sent without it.',
+            );
+          }
         }
+        if (!textToSend.trim()) return;
       }
       sendMessage(chatId, textToSend);
     })();
@@ -103,12 +102,14 @@ export function useChatScreen(displayedChatId?: string | null) {
     setCurrentScreen,
     inputText,
     setInputText,
-    attachedFile,
-    setAttachedFile,
+    attachedFiles,
+    setAttachedFiles,
     isTyping,
     setIsTyping,
     messagesEndRef,
     activeChat,
-    handleSend
+    handleSend,
+    deleteMessage
   };
 }
+
