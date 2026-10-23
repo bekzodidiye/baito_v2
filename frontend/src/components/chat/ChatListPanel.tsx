@@ -24,12 +24,13 @@ export const ChatListPanel: React.FC<ChatListPanelProps> = ({
     <div className="w-full h-full flex flex-col bg-white border-r border-slate-200/80 select-none">
       {/* Search Header Bar (Telegram Style) */}
       <div className="p-3 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50">
-        <div className="relative flex-1 flex items-center bg-slate-100/90 rounded-full px-3.5 h-9 group focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all">
+        <div className="relative flex-1 flex items-center bg-slate-100/90 rounded-full px-3.5 h-9 group focus-within:bg-white transition-all">
           <Search size={16} className="text-slate-400 group-focus-within:text-brand-primary shrink-0" />
           <input
-              aria-label={t.searchChatPlaceholder || "Ish beruvchi yoki xabarni izlash..."}
+            aria-label={t.searchChatPlaceholder || "Ish beruvchi yoki xabarni izlash..."}
             type="text"
-            className="w-full h-full ml-2 bg-transparent text-xs font-sans text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 placeholder:text-slate-400 font-medium"
+            style={{ outline: 'none', boxShadow: 'none' }}
+            className="w-full h-full ml-2 bg-transparent text-xs font-sans text-slate-800 border-none outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 placeholder:text-slate-400 font-medium shadow-none"
             placeholder={t.searchChatPlaceholder || "Ish beruvchi yoki xabarni izlash..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -46,7 +47,7 @@ export const ChatListPanel: React.FC<ChatListPanelProps> = ({
       </div>
 
       {/* Chat Contacts Scrollable List */}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100/60 no-scrollbar">
+      <div className="flex-1 overflow-y-auto py-2 space-y-0.5 no-scrollbar">
         {filteredChats.length > 0 ? (
           filteredChats.map((chat) => (
             <ChatListItem
