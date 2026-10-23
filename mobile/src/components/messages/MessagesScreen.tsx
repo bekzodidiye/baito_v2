@@ -18,8 +18,8 @@ export const MessagesScreen: React.FC = () => {
     activeChat,
     inputText,
     setInputText,
-    attachedFile,
-    setAttachedFile,
+    attachedFiles,
+    setAttachedFiles,
     isTyping,
     messagesEndRef,
     handleSend,
@@ -56,8 +56,8 @@ export const MessagesScreen: React.FC = () => {
             t={t}
             inputText={inputText}
             setInputText={setInputText}
-            attachedFile={attachedFile}
-            setAttachedFile={setAttachedFile}
+            attachedFiles={attachedFiles}
+            setAttachedFiles={setAttachedFiles}
             isTyping={isTyping}
             messagesEndRef={messagesEndRef}
             handleSend={handleSend}
