@@ -3,6 +3,7 @@ export type ScreenType = 'landing' | 'calendar' | 'jobs' | 'messages' | 'chat' |
 
 export interface UserProfile {
   id: string;
+  uid?: string;
   firstName: string;
   lastName: string;
   selectedRole: 'worker' | 'employer' | 'admin';

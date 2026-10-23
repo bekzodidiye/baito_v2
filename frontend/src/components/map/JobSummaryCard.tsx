@@ -352,7 +352,7 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                 {t.noJobsListedYet}
               </h4>
               <p className="text-xs text-slate-500 max-w-[280px] mt-1.5 leading-normal">
-                {searchQuery ? (language === 'uz' ? `"${searchQuery}" bo'yicha hech qanday e'lon topilmadi` : `Ничего не найдено по запросу "${searchQuery}"`) : t.noJobsListedYetDesc}
+                {searchQuery ? (language === 'uz' ? `"${searchQuery}" bo'yicha hech qanday e'lon topilmadi` : language === 'ru' ? `Ничего не найдено по запросу "${searchQuery}"` : `No jobs found matching "${searchQuery}"`) : t.noJobsListedYetDesc}
               </p>
               {filterLocation !== 'Barchasi' && (
                 <button

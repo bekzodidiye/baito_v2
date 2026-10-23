@@ -61,7 +61,7 @@ export const EmployerAnalytics: React.FC = () => {
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               {language === 'uz' ? "Bugungi arizalar" : language === 'ru' ? "Заявки сегодня" : "Applications today"}
             </span>
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
               <TrendingUp size={18} className="stroke-[2.5]" />
             </div>
           </div>

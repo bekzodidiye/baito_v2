@@ -623,6 +623,7 @@ def send_payout_invoice(
 @router.post("/jobs/{job_id}/payout/confirm-payment")
 def confirm_invoice_payment(
     job_id: str,
+    request: Request,
     db: Session = Depends(deps.get_db),
     admin: models.User = Depends(get_admin_user),
 ) -> Any:
@@ -656,6 +657,19 @@ def confirm_invoice_payment(
     payout.invoiceConfirmedByAdminId = admin.id
     payout.status = PayoutStatus.CONFIRMED
     db.add(payout)
+
+    record_admin_action(
+        db, admin, "invoice.confirm_payment",
+        target_type="job_payout", target_id=payout.id,
+        details={
+            "jobId": payout.jobId,
+            "invoiceNumber": payout.invoiceNumber,
+            "amountUzs": payout.invoiceAmount or payout.amount,
+            "method": payout.invoicePaidMethod,
+            "reference": payout.invoicePaidReference,
+        },
+        request=request, note=f"Hisob-faktura to'lovi tasdiqlandi ({payout.invoiceNumber})",
+    )
 
     # The employer has been waiting on this since they pressed pay; saying so
     # is the whole point of the state existing.

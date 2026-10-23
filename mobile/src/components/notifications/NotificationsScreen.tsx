@@ -61,11 +61,13 @@ export const NotificationsScreen: React.FC = () => {
       <div className="flex items-center justify-between bg-white px-5 py-4 rounded-2xl border border-slate-100 shadow-3xs">
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={() => setCurrentScreen('calendar')}
             className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-600 transition-colors active:scale-95 cursor-pointer border-0 bg-slate-50"
+            aria-label="Orqaga"
             title="Orqaga"
           >
-            <ArrowLeft size={18} className="stroke-[2.2]" />
+            <ArrowLeft size={18} className="stroke-[2.2]" aria-hidden="true" />
           </button>
           <div>
             <h1 className="font-display text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
@@ -81,10 +83,12 @@ export const NotificationsScreen: React.FC = () => {
 
         {unreadCount > 0 && (
           <button
+            type="button"
             onClick={handleMarkAllRead}
+            aria-label={t.markAllAsRead}
             className="px-3.5 py-2 flex items-center gap-2 rounded-xl text-xs font-bold text-brand-primary hover:bg-brand-primary/10 bg-brand-primary/5 cursor-pointer transition-all active:scale-95 border-none"
           >
-            <CheckCheck size={16} className="stroke-[2.5]" />
+            <CheckCheck size={16} className="stroke-[2.5]" aria-hidden="true" />
             <span className="hidden sm:inline">{t.markAllAsRead}</span>
           </button>
         )}

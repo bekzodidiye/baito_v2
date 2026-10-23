@@ -111,15 +111,16 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
                   const isActive = activeTab === item.id;
                   return (
                     <button
+                      type="button"
                       key={item.id}
                       onClick={() => { setActiveTab(item.id); onClose(); }}
                       className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        isActive ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
+                        isActive ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/20' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
                       }`}
                     >
-                      <Icon size={15} className="shrink-0" />
+                      <Icon size={15} className="shrink-0" aria-hidden="true" />
                       <span className="flex-1 text-left">{getItemLabel(item)}</span>
-                      {item.badge && <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${isActive ? 'bg-white text-blue-600' : 'bg-blue-600 text-white'}`}>{item.badge}</span>}
+                      {item.badge && <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${isActive ? 'bg-white text-brand-primary' : 'bg-brand-primary text-white'}`}>{item.badge}</span>}
                     </button>
                   );
                 })}
@@ -131,11 +132,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
         <div className="p-2.5 border-t border-slate-800 bg-slate-950/50 space-y-1.5">
           <div className="px-2 text-[10px] font-extrabold text-slate-500 uppercase">{language === 'ru' ? 'Перейти в панели:' : language === 'en' ? 'Switch Mode:' : "Panellarga o'tish:"}</div>
           <div className="grid grid-cols-2 gap-1.5">
-            <button onClick={() => handleSwitchRole('worker')} className="flex items-center justify-center gap-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold rounded-xl cursor-pointer">
-              <User size={12} className="text-blue-400" /> {language === 'ru' ? 'Работник' : language === 'en' ? 'Worker' : 'Ishchi'}
+            <button type="button" onClick={() => handleSwitchRole('worker')} className="flex items-center justify-center gap-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold rounded-xl cursor-pointer">
+              <User size={12} className="text-brand-primary" aria-hidden="true" /> {language === 'ru' ? 'Работник' : language === 'en' ? 'Worker' : 'Ishchi'}
             </button>
-            <button onClick={() => handleSwitchRole('employer')} className="flex items-center justify-center gap-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold rounded-xl cursor-pointer">
-              <Building2 size={12} className="text-emerald-400" /> {language === 'ru' ? 'Работодатель' : language === 'en' ? 'Employer' : 'Ish beruvchi'}
+            <button type="button" onClick={() => handleSwitchRole('employer')} className="flex items-center justify-center gap-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold rounded-xl cursor-pointer">
+              <Building2 size={12} className="text-emerald-400" aria-hidden="true" /> {language === 'ru' ? 'Работодатель' : language === 'en' ? 'Employer' : 'Ish beruvchi'}
             </button>
           </div>
         </div>

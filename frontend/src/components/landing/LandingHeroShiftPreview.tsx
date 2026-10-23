@@ -34,7 +34,7 @@ export const LandingHeroShiftPreview: React.FC<LandingHeroShiftPreviewProps> = (
       <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 relative overflow-hidden text-slate-900 backdrop-blur-xl">
         <div className="flex justify-between items-center border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse" />
+            <span className="w-2.5 h-2.5 rounded-full bg-brand-primary animate-pulse" />
             <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
               {language === 'ru' ? 'Свежие вакансии' : language === 'en' ? 'Active Daily Shifts' : 'Kunlik smenalar'}
             </span>
@@ -115,7 +115,7 @@ export const LandingHeroShiftPreview: React.FC<LandingHeroShiftPreviewProps> = (
 
                   <div className="text-base sm:text-lg font-black text-brand-primary pt-2.5 border-t border-slate-200/60 flex items-center justify-between">
                     <span>{currentShift.pay || currentShift.salary}</span>
-                    <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">{t.shiftDailyPay}</span>
+                    <span className="text-[10px] font-bold text-brand-primary bg-brand-primary/10 border border-brand-primary/20 px-2 py-0.5 rounded-md">{t.shiftDailyPay}</span>
                   </div>
 
                   <div className="space-y-2 text-xs text-slate-600 font-semibold pt-2 border-t border-slate-200/60">
@@ -133,7 +133,7 @@ export const LandingHeroShiftPreview: React.FC<LandingHeroShiftPreviewProps> = (
                   </div>
                 </div>
 
-                <button onClick={() => onSelectRole('worker')} className="w-full py-3 rounded-xl bg-brand-primary hover:bg-blue-700 text-white text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98] shadow-lg shadow-blue-600/20">
+                <button type="button" onClick={() => onSelectRole('worker')} className="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary-container text-white text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98] shadow-lg shadow-brand-primary/20">
                   <CheckCircle2 size={16} className="text-white shrink-0" />
                   <span>{t.shiftApplyCta}</span>
                 </button>

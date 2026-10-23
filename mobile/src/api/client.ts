@@ -5,10 +5,12 @@ export const getApiBaseUrl = (): string => {
   if (
     typeof window !== 'undefined' &&
     (window.location.protocol === 'capacitor:' ||
-      (window.location.hostname === 'localhost' && !window.location.port) ||
       (window as any).Capacitor?.isNativePlatform?.())
   ) {
     return 'https://baito.uz/api/v1';
+  }
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost' && window.location.port) {
+    return `http://${window.location.hostname}:8000/api/v1`;
   }
   return 'https://baito.uz/api/v1';
 };
@@ -87,8 +89,11 @@ const refreshSession = async (): Promise<boolean> => {
 
 export const apiClient = async (endpoint: string, options: RequestInit = {}, isRetry = false): Promise<any> => {
   const token = getStoredToken();
+  const hasBody = options.body !== undefined && options.body !== null;
+  const isFormData = hasBody && options.body instanceof FormData;
+
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(hasBody && !isFormData ? { 'Content-Type': 'application/json' } : {}),
     ...(options.headers as Record<string, string>),
   };
 

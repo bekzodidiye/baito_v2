@@ -76,6 +76,13 @@ body {
   }
 }
 
+/* Enforce cursor: not-allowed on all disabled interactive controls */
+button:disabled,
+[role="button"][aria-disabled="true"],
+[disabled] {
+  cursor: not-allowed !important;
+}
+
 /* Custom scrollbar - hidden but scrollable */
 ::-webkit-scrollbar {
   display: none !important;

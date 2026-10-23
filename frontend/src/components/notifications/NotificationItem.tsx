@@ -15,7 +15,7 @@ export interface NotificationItemData {
   timeRu: string;
   timeEn: string;
   isUnread: boolean;
-  group: 'today' | 'yesterday';
+  group: 'today' | 'yesterday' | 'earlier';
   relatedJobId?: string | null;
   rawType?: string | null;
 }
@@ -43,7 +43,7 @@ const getIcon = (type: NotificationItemData['type']) => {
       );
     case 'message':
       return (
-        <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 text-blue-600 border border-blue-100/50">
+        <div className="w-9 h-9 rounded-xl bg-brand-primary/10 flex items-center justify-center shrink-0 text-brand-primary border border-brand-primary/20">
           <MessageCircle size={16} className="stroke-[2.2]" />
         </div>
       );
@@ -84,7 +84,7 @@ const getTypeBadge = (type: NotificationItemData['type'], t: any) => {
     case 'apply':
       return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">{t.badgeApply}</span>;
     case 'message':
-      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-600">{t.badgeMessage}</span>;
+      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand-primary/10 text-brand-primary">{t.badgeMessage}</span>;
     case 'profile':
       return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-600">{t.badgeProfile}</span>;
     case 'payment':
@@ -109,9 +109,18 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
 
   return (
     <motion.article
+      role="button"
+      tabIndex={0}
       onClick={() => handleNotificationClick(noti.id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleNotificationClick(noti.id);
+        }
+      }}
+      aria-label={`${title}: ${desc}`}
       whileHover={{ y: -1 }}
-      className={`p-4 rounded-2xl transition-all duration-200 flex gap-3.5 items-start relative cursor-pointer select-none group border ${
+      className={`p-4 rounded-2xl transition-all duration-200 flex gap-3.5 items-start relative cursor-pointer select-none group border focus-visible:ring-2 focus-visible:ring-brand-primary ${
         noti.isUnread 
           ? 'bg-white border-brand-primary/15 shadow-2xs hover:shadow-xs hover:border-brand-primary/30' 
           : 'bg-white/70 hover:bg-white border-slate-100 hover:border-slate-200'

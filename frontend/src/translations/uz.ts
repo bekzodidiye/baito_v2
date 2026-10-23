@@ -314,5 +314,31 @@ export const uz = {
   noPhoneOnFile: "Telefon raqami ko'rsatilmagan",
   unknownDevice: "Noma'lum qurilma",
   unknownIp: "Noma'lum IP",
-  activeNow: "Hozir faol"
+  activeNow: "Hozir faol",
+
+  // Offline banner
+  offlineBanner: "Internet tarmog'iga ulanish yo'q. Iltimos, aloqani tekshiring!",
+
+  // Payment cards & management
+  cardAddedSuccess: "Karta muvaffaqiyatli qo'shildi!",
+  cardAddError: "Karta qo'shishda xatolik yuz berdi",
+  cardDeletedSuccess: "Karta muvaffaqiyatli o'chirildi",
+  cardDeleteError: "Kartani o'chirishda xatolik yuz berdi",
+  cardFrozenSuccess: "Karta muzlatildi",
+  cardUnfrozenSuccess: "Karta faollashtirildi",
+  cardTermsAgreement: "Karta saqlash qoidalariga roziman",
+  cardTermsSubtitle: "Karta ma'lumotlari xavfsiz saqlanadi va uchinchi shaxslarga berilmaydi.",
+  cardSecurityNotice: "Barcha to'lov ma'lumotlari xavfsiz shifrlangan. Biz sizning CVV kodingizni saqlamaymiz.",
+  linkCard: "Kartani bog'lash",
+  deleteCardConfirmTitle: "Kartani o'chirish",
+  deleteCardConfirmDesc: "Rostdan ham ushbu kartani o'chirib tashlamoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.",
+  freezeCard: "Kartani muzlatish",
+  unfreezeCard: "Kartani faollashtirish",
+  freezeCardConfirmDesc: "Karta vaqtincha muzlatib qo'yilsinmi?",
+  unfreezeCardConfirmDesc: "Karta qayta faollashtirilsinmi?",
+  cardStatusActive: "Faol",
+  cardStatusFrozen: "Muzlatilgan",
+  cardBank: "Bank nomi",
+  cardDetails: "Karta tafsilotlari",
+  cvvHint: "Karta orqasidagi 3 xonali raqam"
 };

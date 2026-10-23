@@ -48,7 +48,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
             value={newCatName}
             onChange={(e) => setNewCatName(e.target.value)}
             placeholder="Masalan: Mebel Yig'ish"
-            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -103,7 +103,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onCl
           </button>
           <button
             type="submit"
-            className="px-4 py-2 text-xs font-semibold bg-blue-600 text-white rounded-xl hover:bg-blue-700 cursor-pointer"
+            className="px-4 py-2 text-xs font-semibold bg-brand-primary text-white rounded-xl hover:bg-brand-primary-container cursor-pointer"
           >
             Saqlash
           </button>

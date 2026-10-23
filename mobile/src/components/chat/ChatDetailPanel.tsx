@@ -210,13 +210,15 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
                       {hasImages ? (
                         <div className="flex flex-col gap-1.5">
                           {images.length === 1 ? (
-                            <div 
-                              className="rounded-xl overflow-hidden shadow-xs bg-slate-900/10 w-52 h-52 cursor-pointer hover:opacity-95 transition-opacity"
+                            <button 
+                              type="button"
+                              className="rounded-xl overflow-hidden shadow-xs bg-slate-900/10 w-52 h-52 cursor-pointer hover:opacity-95 transition-opacity text-left p-0 border-0 focus-visible:outline-2 focus-visible:outline-brand-primary"
                               onClick={() => setModalImage(images[0])}
+                              aria-label={t.imageLabel}
                             >
                               <img 
                                 src={images[0]} 
-                                alt={t.imageLabel} 
+                                alt="" 
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   const target = e.currentTarget;
@@ -226,20 +228,22 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
                                   }
                                 }} 
                               />
-                            </div>
+                            </button>
                           ) : (
                             <div className="grid grid-cols-2 gap-1.5 max-w-[280px]">
                               {images.map((imgUrl, i) => (
-                                <div 
+                                <button 
+                                  type="button"
                                   key={i} 
-                                  className={`rounded-xl overflow-hidden shadow-xs bg-slate-900/10 cursor-pointer hover:opacity-95 transition-opacity ${
+                                  className={`rounded-xl overflow-hidden shadow-xs bg-slate-900/10 cursor-pointer hover:opacity-95 transition-opacity text-left p-0 border-0 focus-visible:outline-2 focus-visible:outline-brand-primary ${
                                     images.length === 3 && i === 0 ? 'col-span-2 h-36' : 'h-28'
                                   }`}
                                   onClick={() => setModalImage(imgUrl)}
+                                  aria-label={`${t.imageLabel} ${i + 1}`}
                                 >
                                   <img 
                                     src={imgUrl} 
-                                    alt={t.imageLabel} 
+                                    alt="" 
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
                                       const target = e.currentTarget;
@@ -249,7 +253,7 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
                                       }
                                     }} 
                                   />
-                                </div>
+                                </button>
                               ))}
                             </div>
                           )}

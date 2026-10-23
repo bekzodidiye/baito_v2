@@ -13,6 +13,7 @@ export const MapViewCallout: React.FC<MapViewCalloutProps> = ({ setCurrentScreen
           Lokatsiya bo'yicha qidiruv orqali uyingizga eng yaqin ish joylarini toping va yo'lga ketadigan vaqtni tejang.
         </p>
         <button
+          type="button"
           onClick={() => setCurrentScreen('jobs')}
           className="bg-brand-primary hover:bg-brand-primary/90 text-white font-bold text-xs py-2.5 px-6 rounded-xl w-fit transition-all mt-2 cursor-pointer shadow-sm active:scale-95 duration-200"
         >
@@ -22,7 +23,7 @@ export const MapViewCallout: React.FC<MapViewCalloutProps> = ({ setCurrentScreen
       <div className="md:w-1/2 h-40 md:h-full w-full relative overflow-hidden flex items-center justify-center">
         {/* Styled Map Illustration */}
         <div className="absolute inset-0 bg-sky-50 opacity-90" />
-        <svg viewBox="0 0 400 200" className="w-full h-full object-cover relative z-0 opacity-80">
+        <svg viewBox="0 0 400 200" className="w-full h-full object-cover relative z-0 opacity-80" aria-hidden="true">
           <path d="M 0 50 Q 150 150 400 30" fill="none" stroke="#cbd5e1" strokeWidth="12" />
           <path d="M 50 0 Q 200 200 350 200" fill="none" stroke="#cbd5e1" strokeWidth="10" />
           <path d="M 0 150 C 100 80 300 120 400 180" fill="none" stroke="#cbd5e1" strokeWidth="8" />

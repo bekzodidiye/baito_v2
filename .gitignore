@@ -26,6 +26,8 @@ mcp.json
 cookies.txt
 cookies2.txt
 cookies3.txt
+cookie.txt
+**/cookie.txt
 token.txt
 token*.txt
 .aider*
@@ -60,3 +62,5 @@ backups/
 .claude-flow/
 uploads/
 backend/uploads/
+graphify-out/
+.agents/teamwork/

@@ -4,6 +4,7 @@ from typing import Any, List
 from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 from starlette.requests import Request
 
 from app import models, schemas
@@ -82,28 +83,32 @@ async def post_chat_message(
     happens behind a proxy without ``Upgrade`` headers) left chat completely
     unusable. This is the fallback path.
     """
-    _get_participant_chat(db, chat_id, current_user)
+    def _create_message():
+        _get_participant_chat(db, chat_id, current_user)
 
-    msg = models.Message(
-        chatId=chat_id,
-        senderId=str(current_user.id),
-        text=payload.text,
-        hasMap=bool(payload.hasMap),
-        mapLocation=payload.mapLocation,
-    )
-    db.add(msg)
-    db.commit()
-    db.refresh(msg)
+        msg = models.Message(
+            chatId=chat_id,
+            senderId=str(current_user.id),
+            text=payload.text,
+            hasMap=bool(payload.hasMap),
+            mapLocation=payload.mapLocation,
+        )
+        db.add(msg)
+        db.commit()
+        db.refresh(msg)
 
-    msg_dict = {
-        "id": msg.id,
-        "chatId": msg.chatId,
-        "senderId": msg.senderId,
-        "text": msg.text,
-        "createdAt": msg.createdAt.isoformat() if msg.createdAt else None,
-        "hasMap": msg.hasMap,
-        "mapLocation": msg.mapLocation,
-    }
+        msg_dict = {
+            "id": msg.id,
+            "chatId": msg.chatId,
+            "senderId": msg.senderId,
+            "text": msg.text,
+            "createdAt": msg.createdAt.isoformat() if msg.createdAt else None,
+            "hasMap": msg.hasMap,
+            "mapLocation": msg.mapLocation,
+        }
+        return msg, msg_dict
+
+    msg, msg_dict = await run_in_threadpool(_create_message)
     await manager.broadcast_to_chat(msg_dict, chat_id)
 
     return msg
@@ -119,22 +124,25 @@ async def delete_chat_message(
     """Delete a chat message."""
     from fastapi import HTTPException
 
-    _get_participant_chat(db, chat_id, current_user)
+    def _delete_message():
+        _get_participant_chat(db, chat_id, current_user)
 
-    msg = (
-        db.query(models.Message)
-        .filter(models.Message.id == message_id, models.Message.chatId == chat_id)
-        .first()
-    )
-    if not msg:
-        raise HTTPException(status_code=404, detail="Xabar topilmadi")
+        msg = (
+            db.query(models.Message)
+            .filter(models.Message.id == message_id, models.Message.chatId == chat_id)
+            .first()
+        )
+        if not msg:
+            raise HTTPException(status_code=404, detail="Xabar topilmadi")
 
-    user_ids = [str(uid) for uid in [current_user.id, getattr(current_user, "uid", None)] if uid]
-    if str(msg.senderId) not in user_ids and getattr(current_user, "role", None) != "admin":
-        raise HTTPException(status_code=403, detail="Bu xabarni o'chirish huquqingiz yo'q")
+        user_ids = [str(uid) for uid in [current_user.id, getattr(current_user, "uid", None)] if uid]
+        if str(msg.senderId) not in user_ids and getattr(current_user, "role", None) != "admin":
+            raise HTTPException(status_code=403, detail="Bu xabarni o'chirish huquqingiz yo'q")
 
-    db.delete(msg)
-    db.commit()
+        db.delete(msg)
+        db.commit()
+
+    await run_in_threadpool(_delete_message)
 
     await manager.broadcast_to_chat(
         {

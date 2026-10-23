@@ -17,11 +17,11 @@ export const AddCardScreen: React.FC = () => {
     mutationFn: addPaymentCardApi,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['paymentCards'] });
-      window.dispatchEvent(new CustomEvent('global-toast', { detail: { message: "Karta muvaffaqiyatli qo'shildi!", type: 'success' } }));
+      window.dispatchEvent(new CustomEvent('global-toast', { detail: { message: t.cardAddedSuccess, type: 'success' } }));
       navigate('/payments');
     },
     onError: () => {
-      window.dispatchEvent(new CustomEvent('global-toast', { detail: { message: "Karta qo'shishda xatolik yuz berdi", type: 'error' } }));
+      window.dispatchEvent(new CustomEvent('global-toast', { detail: { message: t.cardAddError, type: 'error' } }));
     }
   });
   
@@ -162,6 +162,7 @@ export const AddCardScreen: React.FC = () => {
       <header className="bg-white/90 w-full top-0 sticky backdrop-blur-md shadow-[0px_4px_20px_rgba(26,35,126,0.04)] flex items-center justify-between px-6 h-[80px] z-50">
         <button
           onClick={handleBack}
+          aria-label={t.back}
           className="text-slate-900 hover:bg-slate-100 transition-colors active:scale-95 duration-200 p-2 rounded-full flex items-center justify-center"
         >
           <ArrowLeft size={24} />
@@ -191,7 +192,7 @@ export const AddCardScreen: React.FC = () => {
           <div className="flex flex-col gap-3 z-10 mt-6">
             <div className="flex items-center gap-3">
               {/* EMV Chip */}
-              <svg className="w-11 h-9 opacity-90 drop-shadow-sm" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-11 h-9 opacity-90 drop-shadow-sm" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <rect width="48" height="36" rx="6" fill="url(#chip-gradient)"/>
                 <path d="M0 12h14v12H0zM34 12h14v12H34z" fill="#000" fillOpacity=".1"/>
                 <path d="M14 0v36M34 0v36M0 18h48" stroke="#000" strokeOpacity=".2" strokeWidth="1.5"/>
@@ -268,7 +269,7 @@ export const AddCardScreen: React.FC = () => {
               <div className="flex flex-col gap-2 flex-1 relative">
                 <label className="font-semibold text-sm text-slate-600 flex justify-between items-center" htmlFor="cvv">
                   CVV
-                  <div title="Karta orqasidagi 3 xonali raqam">
+                  <div title={t.cvvHint}>
                     <HelpCircle size={16} className="text-slate-400 cursor-help" />
                   </div>
                 </label>
@@ -330,10 +331,10 @@ export const AddCardScreen: React.FC = () => {
               </div>
               <div className="flex flex-col">
                 <label htmlFor="terms" className="text-sm font-medium text-slate-700 cursor-pointer">
-                  Karta saqlash <span className="text-brand-primary underline">qoidalariga</span> roziman
+                  {t.cardTermsAgreement}
                 </label>
                 <p className="text-xs text-slate-500 mt-1">
-                  Karta ma'lumotlari xavfsiz saqlanadi va uchinchi shaxslarga berilmaydi.
+                  {t.cardTermsSubtitle}
                 </p>
               </div>
             </div>
@@ -343,9 +344,9 @@ export const AddCardScreen: React.FC = () => {
 
         {/* Security Notice */}
         <div className="flex items-center gap-3 px-2 justify-center text-slate-500 bg-slate-50 p-4 rounded-lg border border-slate-100">
-          <Lock size={20} className="text-[#4858ab] shrink-0" />
+          <Lock size={20} className="text-brand-primary shrink-0" aria-hidden="true" />
           <p className="text-xs leading-snug">
-            Barcha to'lov ma'lumotlari xavfsiz shifrlangan. Biz sizning CVV kodingizni saqlamaymiz.
+            {t.cardSecurityNotice}
           </p>
         </div>
       </main>
@@ -356,14 +357,14 @@ export const AddCardScreen: React.FC = () => {
           type="submit"
           form="add-card-form"
           disabled={isSubmitDisabled}
-          className="w-full bg-[#010766] text-white font-bold text-lg py-4 rounded-xl shadow-lg shadow-[#010766]/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100 disabled:active:scale-100"
+          className="w-full bg-brand-primary text-white font-bold text-lg py-4 rounded-xl shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100 disabled:active:scale-100"
         >
           {addCardMutation.isPending ? (
             <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             <>
-              <PlusCircle size={24} />
-              Kartani bog'lash
+              <PlusCircle size={24} aria-hidden="true" />
+              {t.linkCard}
             </>
           )}
         </button>

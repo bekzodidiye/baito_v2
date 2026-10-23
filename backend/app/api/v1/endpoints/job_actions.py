@@ -1,11 +1,14 @@
 import logging
+import threading
 import uuid
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from app.core.limiter import limiter
 from pydantic import BaseModel, Field
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app import models, crud
 from app.api import deps
@@ -18,6 +21,22 @@ from app.core.map_cache import invalidate_user_map_cache
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+_job_dispute_locks_guard = threading.Lock()
+_job_dispute_locks: dict[str, threading.Lock] = {}
+
+
+def _get_job_dispute_lock(job_id: str) -> threading.Lock:
+    with _job_dispute_locks_guard:
+        if len(_job_dispute_locks) > 5000:
+            unlocked = [k for k, v in _job_dispute_locks.items() if not v.locked()]
+            for k in unlocked[:2500]:
+                _job_dispute_locks.pop(k, None)
+        lock = _job_dispute_locks.get(job_id)
+        if lock is None:
+            lock = threading.Lock()
+            _job_dispute_locks[job_id] = lock
+        return lock
 
 
 class JobCompleteRequest(BaseModel):
@@ -130,119 +149,141 @@ def dispute_job(
     payload: JobDisputeRequest,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    job = JobService.get_job_or_fail(db, id)
-    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
-    is_employer = job.employerId in user_ids or current_user.role == 'admin'
-
-    caller_apps = (
-        db.query(models.Application)
-        .filter(
-            models.Application.jobId == id,
-            models.Application.workerId.in_(user_ids),
-            models.Application.status.in_(COMMITTED_APP_STATUSES + ['completed']),
+    dispute_lock = _get_job_dispute_lock(id)
+    with dispute_lock:
+        db.expire_all()
+        job = (
+            db.query(models.Job)
+            .filter(models.Job.id == id)
+            .populate_existing()
+            .with_for_update()
+            .first()
         )
-        .all()
-    )
-    is_worker = bool(caller_apps)
+        if not job:
+            raise HTTPException(status_code=404, detail="Ish topilmadi")
 
-    if not is_employer and not is_worker:
-        raise HTTPException(
-            status_code=403,
-            detail="Faqat ushbu ishning ish beruvchisi yoki tayinlangan ishchisi nizo ochishi mumkin",
-        )
+        user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+        is_employer = job.employerId in user_ids or current_user.role == 'admin'
 
-    if job.status == JobStatus.CANCELLED:
-        raise HTTPException(status_code=400, detail="Bekor qilingan ish bo'yicha nizo ochib bo'lmaydi")
-
-    if job.status == "dispute":
-        raise HTTPException(status_code=400, detail="Ushbu ish bo'yicha faol nizo allaqachon ko'rib chiqilmoqda")
-
-    existing_dispute = (
-        db.query(models.Dispute)
-        .filter(
-            models.Dispute.jobId == id,
-            models.Dispute.status.in_(["open", "in_progress", "pending"]),
-        )
-        .first()
-    )
-    if existing_dispute:
-        raise HTTPException(
-            status_code=400,
-            detail="Ushbu ish bo'yicha faol nizo allaqachon ko'rib chiqilmoqda",
-        )
-
-    worker_id = None
-    if is_worker:
-        worker_id = current_user.id
-    elif job.hiredWorkerId:
-        worker_id = job.hiredWorkerId
-    else:
-        hired_app = (
+        caller_apps = (
             db.query(models.Application)
             .filter(
                 models.Application.jobId == id,
+                models.Application.workerId.in_(user_ids),
                 models.Application.status.in_(COMMITTED_APP_STATUSES + ['completed']),
+            )
+            .all()
+        )
+        is_worker = bool(caller_apps)
+
+        if not is_employer and not is_worker:
+            raise HTTPException(
+                status_code=403,
+                detail="Faqat ushbu ishning ish beruvchisi yoki tayinlangan ishchisi nizo ochishi mumkin",
+            )
+
+        if job.status == JobStatus.CANCELLED:
+            raise HTTPException(status_code=400, detail="Bekor qilingan ish bo'yicha nizo ochib bo'lmaydi")
+
+        if job.status == "dispute":
+            raise HTTPException(status_code=400, detail="Ushbu ish bo'yicha faol nizo allaqachon ko'rib chiqilmoqda")
+
+        existing_dispute = (
+            db.query(models.Dispute)
+            .filter(
+                models.Dispute.jobId == id,
+                models.Dispute.status.in_(["open", "in_progress", "pending"]),
             )
             .first()
         )
-        if hired_app:
-            worker_id = hired_app.workerId
+        if existing_dispute:
+            raise HTTPException(
+                status_code=400,
+                detail="Ushbu ish bo'yicha faol nizo allaqachon ko'rib chiqilmoqda",
+            )
 
-    if not worker_id:
-        raise HTTPException(
-            status_code=400,
-            detail="Ishda tayinlangan ishchi yo'q, nizo ochish mumkin emas",
+        worker_id = None
+        if is_worker:
+            worker_id = current_user.id
+        elif job.hiredWorkerId:
+            worker_id = job.hiredWorkerId
+        else:
+            hired_app = (
+                db.query(models.Application)
+                .filter(
+                    models.Application.jobId == id,
+                    models.Application.status.in_(COMMITTED_APP_STATUSES + ['completed']),
+                )
+                .first()
+            )
+            if hired_app:
+                worker_id = hired_app.workerId
+
+        if not worker_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Ishda tayinlangan ishchi yo'q, nizo ochish mumkin emas",
+            )
+
+        dispute = models.Dispute(
+            id=str(uuid.uuid4()),
+            jobId=job.id,
+            employerId=job.employerId,
+            workerId=worker_id,
+            reason=payload.reason.strip(),
+            status="open",
         )
+        db.add(dispute)
 
-    dispute = models.Dispute(
-        id=str(uuid.uuid4()),
-        jobId=job.id,
-        employerId=job.employerId,
-        workerId=worker_id,
-        reason=payload.reason.strip(),
-        status="open",
-    )
-    db.add(dispute)
+        job.status = "dispute"
+        db.add(job)
 
-    job.status = "dispute"
-    db.add(job)
+        admins = db.query(models.User).filter(models.User.role == "admin").all()
+        for a in admins:
+            db.add(models.Notification(
+                id=str(uuid.uuid4()),
+                userId=a.id,
+                title="Yangi nizo kelib tushdi",
+                message=f"'{job.title}' ishi bo'yicha nizo ochildi. Sabab: {payload.reason[:100]}",
+                type="dispute",
+                relatedJobId=job.id,
+            ))
 
-    admins = db.query(models.User).filter(models.User.role == "admin").all()
-    for a in admins:
-        db.add(models.Notification(
-            id=str(uuid.uuid4()),
-            userId=a.id,
-            title="Yangi nizo kelib tushdi",
-            message=f"'{job.title}' ishi bo'yicha nizo ochildi. Sabab: {payload.reason[:100]}",
-            type="dispute",
-            relatedJobId=job.id,
-        ))
+        counterpart_id = worker_id if is_employer else job.employerId
+        if counterpart_id:
+            db.add(models.Notification(
+                id=str(uuid.uuid4()),
+                userId=counterpart_id,
+                title="Ish bo'yicha nizo ochildi",
+                message=f"'{job.title}' ishi bo'yicha nizo ochildi va moderatorlar ko'rib chiqmoqda.",
+                type="dispute",
+                relatedJobId=job.id,
+            ))
 
-    counterpart_id = worker_id if is_employer else job.employerId
-    if counterpart_id:
-        db.add(models.Notification(
-            id=str(uuid.uuid4()),
-            userId=counterpart_id,
-            title="Ish bo'yicha nizo ochildi",
-            message=f"'{job.title}' ishi bo'yicha nizo ochildi va moderatorlar ko'rib chiqmoqda.",
-            type="dispute",
-            relatedJobId=job.id,
-        ))
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(
+                status_code=400,
+                detail="Ushbu ish bo'yicha faol nizo allaqachon ko'rib chiqilmoqda",
+            )
 
-    db.commit()
-    db.refresh(dispute)
-    return {
-        "success": True,
-        "disputeId": dispute.id,
-        "status": dispute.status,
-        "jobStatus": job.status,
-    }
-
+        db.refresh(dispute)
+        return {
+            "success": True,
+            "disputeId": dispute.id,
+            "status": dispute.status,
+            "jobStatus": job.status,
+        }
 
 
+
+@limiter.limit('10/minute')
 @router.post("/{id}/review")
 def review_job(
     *,
+    request: Request,
     db: Session = Depends(deps.get_db),
     id: str,
     req: JobReviewRequest,
@@ -269,16 +310,20 @@ def review_job(
     if not apps:
         raise HTTPException(status_code=400, detail="Sharh qoldirish uchun ariza topilmadi")
 
-    bonus_each = req.bonus or 0
+    bonus_each = ((req.bonus or 0) // len(apps)) if apps else 0
     worker_ids = [app.workerId for app in apps]
-    workers_map = {w.id: w for w in db.query(models.User).filter(models.User.id.in_(worker_ids)).all()}
+    workers_map = {}
+    for w in db.query(models.User).filter(or_(models.User.id.in_(worker_ids), models.User.uid.in_(worker_ids))).all():
+        workers_map[w.id] = w
+        if w.uid:
+            workers_map[w.uid] = w
 
     for app in apps:
         app.status = "completed"
         app.rating = req.rating
         app.review = req.review
-        if bonus_each > 0:
-            app.bonus = (app.bonus or 0) + bonus_each
+        if bonus_each > 0 and (app.bonus or 0) == 0:
+            app.bonus = bonus_each
             try:
                 WorkerEarnings.pay_completion_bonus(
                     db, job=job, worker_id=app.workerId, amount_uzs=bonus_each,
@@ -321,9 +366,11 @@ def review_job(
     return {"success": True, "rating": req.rating, "review": req.review}
 
 
+@limiter.limit('30/minute')
 @router.post("/{id}/bookmark")
 def toggle_bookmark(
     *,
+    request: Request,
     db: Session = Depends(deps.get_db),
     id: str,
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -386,6 +433,7 @@ def get_job_payout_for_employer(
     return _payout_state(payout)
 
 
+@limiter.limit('10/minute')
 @router.post("/{id}/payout/declare")
 def declare_job_payout(
     *,
@@ -412,7 +460,12 @@ def declare_job_payout(
     if payout.invoicePaidDeclaredAt:
         raise HTTPException(status_code=409, detail="To'lov allaqachon qayd etilgan")
 
-    payout.invoicePaidMethod = req.method.strip()
+    valid_methods = {"bank_transfer", "card", "cash", "other"}
+    method = req.method.strip().lower()
+    if method not in valid_methods:
+        raise HTTPException(status_code=400, detail="Noto'g'ri to'lov usuli")
+
+    payout.invoicePaidMethod = method
     payout.invoicePaidReference = (req.reference or "").strip() or None
     payout.invoicePaidReceiptUrl = (req.receiptUrl or "").strip() or None
     payout.invoicePaidDeclaredAt = datetime.now(timezone.utc)

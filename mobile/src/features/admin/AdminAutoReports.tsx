@@ -41,7 +41,7 @@ export const AdminAutoReports: React.FC = () => {
       <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-            <FileText size={22} className="text-indigo-600" />
+            <FileText size={22} className="text-brand-primary" aria-hidden="true" />
             <span>Avto-Hisobot va Telegram Digest Bot</span>
           </h2>
           <p className="text-xs text-slate-500 font-medium mt-1">
@@ -51,17 +51,19 @@ export const AdminAutoReports: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={handleDownloadCsv}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition cursor-pointer"
           >
-            <Download size={15} />
+            <Download size={15} aria-hidden="true" />
             <span>CSV Yuklash</span>
           </button>
           <button
+            type="button"
             onClick={handleSendTelegramDigest}
-            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-xs transition cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand-primary hover:bg-brand-primary/90 text-white font-extrabold rounded-xl shadow-xs transition cursor-pointer"
           >
-            {sentSuccess ? <CheckCircle2 size={16} /> : <Send size={15} />}
+            {sentSuccess ? <CheckCircle2 size={16} aria-hidden="true" /> : <Send size={15} aria-hidden="true" />}
             <span>{sentSuccess ? 'Yuborilmoqda...' : 'Telegramga Yuborish'}</span>
           </button>
         </div>
@@ -70,7 +72,7 @@ export const AdminAutoReports: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4 lg:col-span-1">
           <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
-            <Clock size={16} className="text-amber-500" /> Avto-Yuborish Sozlamalari
+            <Clock size={16} className="text-amber-500" aria-hidden="true" /> Avto-Yuborish Sozlamalari
           </h3>
 
           <div className="space-y-3">
@@ -90,7 +92,7 @@ export const AdminAutoReports: React.FC = () => {
                   type="checkbox"
                   checked={dailyDigest}
                   onChange={(e) => setDailyDigest(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500"
+                  className="rounded text-brand-primary focus:ring-brand-primary"
                 />
                 Kunlik Telegram Digest (Har kuni 09:00 da)
               </label>
@@ -100,7 +102,7 @@ export const AdminAutoReports: React.FC = () => {
                   type="checkbox"
                   checked={weeklyReport}
                   onChange={(e) => setWeeklyReport(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500"
+                  className="rounded text-brand-primary focus:ring-brand-primary"
                 />
                 Haftalik Yakuniy Hisobot (Dushanba 08:00)
               </label>
@@ -111,7 +113,7 @@ export const AdminAutoReports: React.FC = () => {
         {/* Live Telegram Markdown Preview */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3 lg:col-span-2">
           <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
-            <MessageSquare size={16} className="text-blue-500" /> Live Telegram Post Preview
+            <MessageSquare size={16} className="text-brand-primary" aria-hidden="true" /> Live Telegram Post Preview
           </h3>
 
           <div className="p-4 bg-slate-900 text-slate-100 rounded-2xl font-mono text-xs leading-relaxed border border-slate-800 shadow-inner space-y-2">

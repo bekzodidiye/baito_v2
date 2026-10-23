@@ -29,8 +29,9 @@ export const NotFoundScreen: React.FC = () => {
         </p>
         
         <button
+          type="button"
           onClick={() => navigate('/')}
-          className="w-full flex items-center justify-center gap-2 bg-brand-primary text-white py-3.5 px-6 rounded-xl font-bold hover:bg-blue-700 transition-colors cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 bg-brand-primary text-white py-3.5 px-6 rounded-xl font-bold hover:bg-brand-primary-container transition-colors cursor-pointer"
         >
           <Home size={18} />
           {language === 'uz' ? 'Bosh sahifaga qaytish' : language === 'ru' ? 'Вернуться на главную' : 'Back to Home'}

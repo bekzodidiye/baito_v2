@@ -16,7 +16,7 @@ Create Date: 2026-08-22 19:30:00.000000
 
 from typing import Sequence, Union
 
-from alembic import op
+from alembic import context, op
 from sqlalchemy import inspect
 
 revision: str = '0001_initial'
@@ -43,6 +43,11 @@ def upgrade() -> None:
 
     Base.metadata.create_all(bind=bind, checkfirst=True)
 
+    if context.is_offline_mode():
+        for name, table, columns in INDEXES:
+            op.create_index(name, table, columns)
+        return
+
     inspector = inspect(bind)
     tables = set(inspector.get_table_names())
 
@@ -56,6 +61,11 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    if context.is_offline_mode():
+        for name, table, _ in reversed(INDEXES):
+            op.drop_index(name, table_name=table)
+        return
+
     bind = op.get_bind()
     inspector = inspect(bind)
     tables = set(inspector.get_table_names())

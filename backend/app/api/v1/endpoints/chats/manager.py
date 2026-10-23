@@ -46,7 +46,18 @@ class ConnectionManager:
             return
         self._pubsub_task = asyncio.create_task(self._consume_pubsub())
 
+    async def shutdown(self):
+        """Cleanly cancel the background pubsub consumer on server shutdown."""
+        if self._pubsub_task and not self._pubsub_task.done():
+            self._pubsub_task.cancel()
+            try:
+                await self._pubsub_task
+            except asyncio.CancelledError:
+                pass
+            self._pubsub_task = None
+
     async def _consume_pubsub(self):
+        pubsub = None
         try:
             pubsub = await run_in_threadpool(redis_client.pubsub)
             await run_in_threadpool(pubsub.psubscribe, "chat:*")
@@ -70,6 +81,12 @@ class ConnectionManager:
             raise
         except Exception as e:
             logger.warning("Chat pub/sub consumer stopped: %s", e)
+        finally:
+            if pubsub:
+                try:
+                    await run_in_threadpool(pubsub.close)
+                except Exception:
+                    pass
 
     async def _send_local(self, message: dict, chat_id: str):
         dead = []

@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Check } from 'lucide-react';
 import { translations } from '../../translations';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useFocusTrap } from '../common/useFocusTrap';
 
 interface ChangePasswordModalProps {
   showPasswordModal: boolean;
@@ -22,15 +23,32 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 }) => {
   const language = useAuthStore(s => s.language);
   const t = translations[language];
+  const trapRef = useFocusTrap<HTMLDivElement>({
+    isOpen: showPasswordModal,
+    onClose: () => setShowPasswordModal(false)
+  });
 
   if (!showPasswordModal) return null;
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-xl">
+      <div
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t.changePasswordTitle}
+        className="bg-white rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-xl"
+      >
         <div className="flex items-center justify-between border-b pb-3">
           <h3 className="font-extrabold text-slate-900 text-sm">{t.changePasswordTitle}</h3>
-          <button onClick={() => setShowPasswordModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer"><X size={18} /></button>
+          <button
+            type="button"
+            onClick={() => setShowPasswordModal(false)}
+            aria-label={t.cancel}
+            className="text-slate-400 hover:text-slate-600 cursor-pointer border-0 bg-transparent"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         <form onSubmit={handleChangePassword} className="space-y-3 text-xs">

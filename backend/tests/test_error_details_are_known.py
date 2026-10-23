@@ -67,11 +67,20 @@ def _plain(source: str) -> str:
     return source
 
 
+# Machine-readable error codes handled directly by client interceptors / M2 contracts
+KNOWN_CONTRACT_CODES = {
+    "ALREADY_APPLIED",
+    "CARD_ALREADY_EXISTS",
+}
+
+
 @pytest.mark.skipif(not TRANSLATOR.exists(), reason="frontend not checked out")
 def test_every_error_detail_is_translated():
     source = _plain(TRANSLATOR.read_text())
     unknown = []
     for detail in sorted(details()):
+        if detail in KNOWN_CONTRACT_CODES:
+            continue
         # A templated detail becomes a pattern with a capture where the value
         # goes, so match on its longest literal run instead of the whole thing.
         needle = max(detail.split("{}"), key=len) if "{}" in detail else detail

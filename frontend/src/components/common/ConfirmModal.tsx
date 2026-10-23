@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { useFocusTrap } from './useFocusTrap';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -16,17 +17,7 @@ interface ConfirmModalProps {
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isOpen, title, message, confirmText, cancelText, onConfirm, onCancel, isDestructive = true
 }) => {
-  // The backdrop closes this on a click, which leaves a keyboard user with no
-  // way out but tabbing to Cancel. Escape is what a dialog is expected to
-  // answer to.
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancel();
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [isOpen, onCancel]);
+  const trapRef = useFocusTrap<HTMLDivElement>({ isOpen, onClose: onCancel });
 
   if (typeof document === 'undefined') return null;
 
@@ -46,6 +37,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           onClick={(e) => { e.stopPropagation(); onCancel(); }}
         >
           <motion.div
+            ref={trapRef}
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}

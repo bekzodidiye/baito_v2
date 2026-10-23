@@ -1,8 +1,9 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Menu, Bell, Search, ArrowLeftRight } from 'lucide-react';
+import { Menu, Bell, Search, ArrowLeftRight, LayoutList, Map } from 'lucide-react';
 import { translations } from '../translations';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
+import { useUIStore } from '../store/useUIStore';
 
 interface HeaderProps {
   onOpenModal?: (type: 'profile' | 'settings' | 'help' | 'auth') => void;
@@ -22,6 +23,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
     employerSelectedChatId, 
     selectedChatId 
   } = useApp();
+  const jobsView = useUIStore(s => s.jobsView);
+  const setJobsView = useUIStore(s => s.setJobsView);
   const t = translations[language];
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
 
@@ -71,7 +74,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
       <div className="flex items-center gap-1.5">
         {isLoggedIn && (
           <button
+            type="button"
             onClick={handleRoleToggle}
+            aria-label={language === 'uz' ? 'Rolni almashtirish' : language === 'ru' ? 'Переключить роль' : 'Switch role'}
             className="flex items-center gap-1 px-2.5 py-1 bg-brand-surface-low hover:bg-brand-primary hover:text-white text-brand-primary border border-brand-outline-variant/40 rounded-full text-[10px] font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
             title="Rolni almashtirish"
           >
@@ -80,10 +85,24 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
           </button>
         )}
 
+        {currentScreen === 'jobs' && !isEmployer && (
+          <button
+            type="button"
+            onClick={() => setJobsView(jobsView === 'map' ? 'list' : 'map')}
+            className="p-1.5 cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors border-0 bg-transparent flex items-center justify-center"
+            title={jobsView === 'map' ? (t.listView || "Ro'yxat") : (t.mapView || "Xarita")}
+            aria-label={jobsView === 'map' ? (t.listView || "Ro'yxat") : (t.mapView || "Xarita")}
+          >
+            {jobsView === 'map' ? <LayoutList size={20} /> : <Map size={20} />}
+          </button>
+        )}
+
         {currentScreen === 'calendar' ? (
-          <div 
+          <button 
+            type="button"
             onClick={() => setCurrentScreen('notifications')}
-            className="relative p-1.5 cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
+            aria-label={language === 'uz' ? 'Bildirishnomalar' : language === 'ru' ? 'Уведомления' : 'Notifications'}
+            className="relative p-1.5 cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors border-0 bg-transparent"
           >
             <Bell size={20} />
             {unreadNotificationsCount > 0 && (
@@ -91,11 +110,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
                 {unreadNotificationsCount}
               </span>
             )}
-          </div>
+          </button>
         ) : (currentScreen === 'messages' || currentScreen === 'employer-chats') ? (
           <button 
+            type="button"
             onClick={() => setMessagesSearchOpen(!messagesSearchOpen)}
-            className={`p-1.5 cursor-pointer rounded-full transition-all duration-300 ${
+            aria-label={language === 'uz' ? 'Xabarlarni qidirish' : language === 'ru' ? 'Поиск сообщений' : 'Search messages'}
+            className={`p-1.5 cursor-pointer rounded-full transition-all duration-300 border-0 bg-transparent ${
               messagesSearchOpen 
                 ? 'text-white bg-brand-primary shadow-xs scale-105' 
                 : 'text-brand-primary hover:bg-brand-surface-low'
@@ -105,8 +126,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
           </button>
         ) : (
           <button
+            type="button"
             onClick={() => setCurrentScreen('notifications')}
-            className="relative p-1.5 cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
+            aria-label={language === 'uz' ? 'Bildirishnomalar' : language === 'ru' ? 'Уведомления' : 'Notifications'}
+            className="relative p-1.5 cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors border-0 bg-transparent"
           >
             <Bell size={20} />
             {unreadNotificationsCount > 0 && (
@@ -124,11 +147,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
     <>
       {/* Mobile Top App Bar */}
       {currentScreen !== 'chat' && !((currentScreen === 'messages' || currentScreen === 'employer-chats') && (selectedChatId || employerSelectedChatId)) && (
-        <header className="flex md:hidden justify-between items-center px-3.5 h-14 w-full z-50 bg-white/95 backdrop-blur-md shadow-[0_1px_3px_rgba(0,0,0,0.05)] fixed top-0 left-0 border-b border-slate-100/80">
+        <header className="flex md:hidden justify-between items-center px-3.5 h-14 box-content pt-[env(safe-area-inset-top,0px)] w-full z-50 bg-white/95 backdrop-blur-md shadow-[0_1px_3px_rgba(0,0,0,0.05)] fixed top-0 left-0 border-b border-slate-100/80">
           <button
             onClick={() => setDrawerOpen(true)}
             className="flex items-center justify-center p-2 rounded-full hover:bg-brand-surface-low transition-colors text-brand-primary cursor-pointer active:scale-95"
-            aria-label="Menyuni ochish"
+            aria-label={language === 'uz' ? "Menyuni ochish" : language === 'ru' ? "Открыть меню" : "Open menu"}
           >
             <Menu size={22} />
           </button>

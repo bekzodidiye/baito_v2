@@ -32,7 +32,7 @@ export function useMapFilterJobs({
 
   const cluster1Jobs = useMemo(() => 
     jobs.filter(j => {
-      const loc = j.rawLocation || j.location;
+      const loc = j.rawLocation || j.location || '';
       return loc.includes('Yunusobod') || loc.includes('Bektemir');
     }),
     [jobs]
@@ -40,7 +40,7 @@ export function useMapFilterJobs({
   
   const cluster2Jobs = useMemo(() => 
     jobs.filter(j => {
-      const loc = j.rawLocation || j.location;
+      const loc = j.rawLocation || j.location || '';
       return loc.includes('Chilonzor');
     }),
     [jobs]
@@ -52,7 +52,7 @@ export function useMapFilterJobs({
       const vac = Number(job.vacancies ?? (job.neededWorkers ? parseInt(job.neededWorkers) : 1));
       const isFilled = job.status !== 'open' && ((hired >= vac) || ['completed'].includes(job.status));
       const isHiredOrActive = ['hired', 'confirmed', 'todo', 'in_progress', 'completed'].includes(job.status);
-      return !isFilled && !isHiredOrActive;
+      return (!isFilled && !isHiredOrActive) || Boolean(job.applied);
     });
   }, [jobs]);
 
@@ -71,14 +71,16 @@ export function useMapFilterJobs({
 
       if (matchedRegion) {
         list = list.filter(j => {
-          const loc = j.rawLocation || j.location;
+          const loc = j.rawLocation || j.location || '';
+          if (!loc) return false;
           return loc.toLowerCase().includes(matchedRegion.id.toLowerCase()) ||
             loc.toLowerCase().includes(matchedRegion.name.toLowerCase()) ||
             (matchedRegion.id === 'Toshkent' && loc.toLowerCase().includes('toshkent'));
         });
       } else {
         list = list.filter(j => {
-          const loc = j.rawLocation || j.location;
+          const loc = j.rawLocation || j.location || '';
+          if (!loc) return false;
           return loc.toLowerCase().includes(filterLocation.toLowerCase()) ||
             areDistrictNamesEqual(loc, filterLocation);
         });

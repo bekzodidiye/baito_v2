@@ -4,6 +4,7 @@ import { X, Star, MessageCircle, PlusCircle, CalendarCheck, Check, Loader2 } fro
 import { motion, AnimatePresence } from 'motion/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchJobDaysApi, completeJobDayApi } from '../../../api/queries';
+import { useFocusTrap } from '../../../components/common/useFocusTrap';
 
 interface JobDay {
   id: string;
@@ -35,6 +36,7 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
   const [bonus, setBonus] = useState('');
   const [hoveredStar, setHoveredStar] = useState<number | null>(null);
   const queryClient = useQueryClient();
+  const trapRef = useFocusTrap<HTMLDivElement>({ isOpen, onClose });
 
   const { data: days = [] } = useQuery<JobDay[]>({
     queryKey: ['jobDays', jobId],
@@ -87,6 +89,10 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
           className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
         />
         <motion.div
+          ref={trapRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={language === 'uz' ? 'Ishni yakunlash' : language === 'ru' ? 'Завершить работу' : 'Complete Job'}
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -104,6 +110,7 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
             </div>
             <button
               onClick={onClose}
+              aria-label={language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
               className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
               <X size={18} className="stroke-[2.5]" />
@@ -209,6 +216,7 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
                     <button
                       key={star}
                       type="button"
+                      aria-label={`${star} ${language === 'uz' ? 'yulduz' : language === 'ru' ? 'звезд' : 'stars'}`}
                       onClick={() => setRating(star)}
                       onMouseEnter={() => setHoveredStar(star)}
                       onMouseLeave={() => setHoveredStar(null)}

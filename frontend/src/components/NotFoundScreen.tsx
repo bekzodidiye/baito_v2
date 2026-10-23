@@ -10,7 +10,7 @@ export const NotFoundScreen: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white p-8 md:p-12 rounded-3xl shadow-xl text-center max-w-lg w-full border border-slate-100">
-        <div className="w-24 h-24 bg-blue-50 text-brand-primary rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-24 h-24 bg-brand-primary/10 text-brand-primary rounded-full flex items-center justify-center mx-auto mb-6">
           <Search size={40} />
         </div>
         
@@ -30,7 +30,7 @@ export const NotFoundScreen: React.FC = () => {
         
         <button
           onClick={() => navigate('/')}
-          className="w-full flex items-center justify-center gap-2 bg-brand-primary text-white py-3.5 px-6 rounded-xl font-bold hover:bg-blue-700 transition-colors cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 bg-brand-primary text-white py-3.5 px-6 rounded-xl font-bold hover:bg-brand-primary/90 transition-colors cursor-pointer"
         >
           <Home size={18} />
           {language === 'uz' ? 'Bosh sahifaga qaytish' : language === 'ru' ? 'Вернуться на главную' : 'Back to Home'}

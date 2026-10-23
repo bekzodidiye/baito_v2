@@ -125,7 +125,7 @@ export const CalendarDayButton: React.FC<CalendarDayButtonProps> = ({
   } else if (status === 'completed') {
     tooltipColor = 'text-brand-primary';
   } else if (status === 'missed') {
-    tooltipColor = 'text-gray-500';
+    tooltipColor = 'text-slate-500';
   }
 
   const isFirstTwoRows = Math.floor(slotIndex / 7) <= 1;

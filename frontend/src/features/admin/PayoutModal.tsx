@@ -113,7 +113,12 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
     try {
       const created: Payout = await apiClient(`/admin/jobs/${jobId}/payout`, {
         method: 'POST',
-        body: JSON.stringify({ amount: Number(amount), receiptUrl, note: note || null }),
+        body: JSON.stringify({
+          amount: Number(amount),
+          receiptUrl,
+          note: note || null,
+          workerId: ctx?.worker?.id || null,
+        }),
       });
       setCtx((c) => (c ? { ...c, payout: created } : c));
       setInvoiceAmount(String(created.amount));

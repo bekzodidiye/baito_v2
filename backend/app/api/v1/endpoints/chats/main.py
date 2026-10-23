@@ -1,12 +1,13 @@
 import logging
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.api import deps
+from app.core.limiter import limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -120,7 +121,9 @@ def get_chats(
 
 
 @router.post("/", response_model=schemas.Chat)
+@limiter.limit("20/minute")
 def create_chat(
+    request: Request,
     chat_in: schemas.ChatCreate,
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),

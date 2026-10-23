@@ -37,8 +37,17 @@ export const ChatListItem: React.FC<ChatListItemProps> = ({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className={`flex items-center px-3.5 py-3 mx-2.5 my-1 rounded-2xl cursor-pointer transition-all group relative ${
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      aria-label={`${chat.companyName || chat.recruiterName || 'Suhbat'}, ${lastMsg?.text || ''}`}
+      className={`flex items-center px-3.5 py-3 mx-2.5 my-1 rounded-2xl cursor-pointer transition-all group relative focus-visible:ring-2 focus-visible:ring-brand-primary ${
         isSelected
           ? 'bg-brand-primary text-white shadow-xs'
           : 'hover:bg-slate-50/80 bg-white text-slate-900'

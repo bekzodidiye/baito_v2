@@ -26,26 +26,51 @@ export const useNotificationsData = (
 
   const notifications: NotificationItemData[] = useMemo(() => {
     if (!apiNotifs || apiNotifs.length === 0) return [];
-    return apiNotifs.map((n: any) => ({
-      id: n.id,
-      titleUz: translateNotification(n.title, 'uz'),
-      titleRu: translateNotification(n.title, 'ru'),
-      titleEn: translateNotification(n.title, 'en'),
-      descUz: translateNotification(n.message, 'uz'),
-      descRu: translateNotification(n.message, 'ru'),
-      descEn: translateNotification(n.message, 'en'),
-      timeAgoUz: 'Hozirgina',
-      timeAgoRu: 'Только что',
-      timeAgoEn: 'Just now',
-      timeUz: '10:00',
-      timeRu: '10:00',
-      timeEn: '10:00',
-      isUnread: !n.isRead,
-      type: notificationKind(n.type, n.title, n.message),
-      group: 'today',
-      relatedJobId: n.relatedJobId,
-      rawType: n.type,
-    }));
+    return apiNotifs.map((n: any) => {
+      let timeStr = '10:00';
+      let group: 'today' | 'yesterday' | 'earlier' = 'today';
+      if (n.createdAt) {
+        const d = new Date(n.createdAt);
+        if (!isNaN(d.getTime())) {
+          const hours = String(d.getHours()).padStart(2, '0');
+          const minutes = String(d.getMinutes()).padStart(2, '0');
+          timeStr = `${hours}:${minutes}`;
+
+          const now = new Date();
+          const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+          const startOfYesterday = startOfToday - 86400000;
+          const tTime = d.getTime();
+          if (tTime >= startOfToday) {
+            group = 'today';
+          } else if (tTime >= startOfYesterday) {
+            group = 'yesterday';
+          } else {
+            group = 'earlier';
+          }
+        }
+      }
+
+      return {
+        id: n.id,
+        titleUz: translateNotification(n.title, 'uz'),
+        titleRu: translateNotification(n.title, 'ru'),
+        titleEn: translateNotification(n.title, 'en'),
+        descUz: translateNotification(n.message, 'uz'),
+        descRu: translateNotification(n.message, 'ru'),
+        descEn: translateNotification(n.message, 'en'),
+        timeAgoUz: 'Hozirgina',
+        timeAgoRu: 'Только что',
+        timeAgoEn: 'Just now',
+        timeUz: timeStr,
+        timeRu: timeStr,
+        timeEn: timeStr,
+        isUnread: !n.isRead,
+        type: notificationKind(n.type, n.title, n.message),
+        group,
+        relatedJobId: n.relatedJobId,
+        rawType: n.type,
+      };
+    });
   }, [apiNotifs]);
 
   const handleMarkOneRead = async (id: string) => {

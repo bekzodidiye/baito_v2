@@ -44,7 +44,7 @@ export const EmployerProfileStats: React.FC<EmployerProfileStatsProps> = ({
       icon: Users,
       value: String(applicantsCount),
       label: t('Arizalar', 'Заявки', 'Applicants'),
-      tone: 'text-blue-600 bg-blue-50',
+      tone: 'text-brand-primary bg-brand-primary/10',
     },
     {
       icon: UserCheck,

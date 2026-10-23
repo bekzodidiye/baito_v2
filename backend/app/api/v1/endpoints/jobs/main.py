@@ -1,8 +1,13 @@
 import logging
+import re
+import threading
 from typing import Any, Optional
+from datetime import datetime, timezone, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, BackgroundTasks
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app import crud, models, schemas
 from app.api import deps
@@ -19,6 +24,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 HIRED_STATUSES = ['hired', 'confirmed', 'completed', 'in_progress', 'start_requested']
+
+_employer_job_locks_guard = threading.Lock()
+_employer_job_locks: dict[str, threading.Lock] = {}
+
+
+def _get_employer_job_lock(employer_id: str) -> threading.Lock:
+    with _employer_job_locks_guard:
+        if len(_employer_job_locks) > 5000:
+            unlocked = [k for k, v in _employer_job_locks.items() if not v.locked()]
+            for k in unlocked[:2500]:
+                _employer_job_locks.pop(k, None)
+        lock = _employer_job_locks.get(employer_id)
+        if lock is None:
+            lock = threading.Lock()
+            _employer_job_locks[employer_id] = lock
+        return lock
 
 # One counted view per viewer per job per hour.
 VIEW_DEDUPE_TTL_SECONDS = 3600
@@ -53,82 +74,126 @@ def create_job(
     db: Session = Depends(deps.get_db),
     job_in: schemas.JobCreate,
     current_user: models.User = Depends(deps.get_verified_employer),
+    idempotency_key: Optional[str] = Header(default=None, alias="Idempotency-Key"),
 ) -> Any:
     """Create a new job posting, screening it for fraud first."""
-    if not all([current_user.name, current_user.phone, current_user.region, current_user.email, current_user.bio]):
-        raise HTTPException(
-            status_code=403,
-            detail="Iltimos, ish yaratishdan oldin profilingizni to'liq to'ldiring"
+    employer_lock = _get_employer_job_lock(str(current_user.id))
+    with employer_lock:
+        db.expire_all()
+        db.query(models.User).filter(models.User.id == current_user.id).populate_existing().with_for_update().first()
+
+        if idempotency_key:
+            cached_response = deps.get_idempotent_response(db, idempotency_key, current_user.id)
+            if cached_response:
+                return cached_response
+
+        ten_seconds_ago = datetime.now(timezone.utc) - timedelta(seconds=10)
+        salary_digits = re.sub(r'\D', '', str(job_in.salary or ''))
+        salary_int = int(salary_digits) if salary_digits else None
+
+        filters = [
+            models.Job.employerId == current_user.id,
+            models.Job.title == job_in.title,
+            models.Job.workDate == job_in.workDate,
+            models.Job.description == job_in.description,
+            or_(
+                models.Job.createdAt >= ten_seconds_ago,
+                models.Job.createdAt >= ten_seconds_ago.replace(tzinfo=None),
+            ),
+        ]
+        if salary_int is not None:
+            filters.append(models.Job.salary == salary_int)
+
+        recent_duplicate = (
+            db.query(models.Job)
+            .filter(*filters)
+            .order_by(models.Job.createdAt.desc())
+            .first()
         )
-    verdict = SpamFraudDetector.analyze_job_posting(
-        job_in.title, job_in.description, job_in.salary,
-        keywords=keywords_from_settings(db),
-    )
-    if verdict["is_spam"]:
-        logger.warning(
-            "Rejected suspicious job posting from %s: %s", current_user.id, verdict["flags"]
+        if recent_duplicate:
+            return recent_duplicate
+
+        if not all([current_user.name, current_user.phone, current_user.region, current_user.email, current_user.bio]):
+            raise HTTPException(
+                status_code=403,
+                detail="Iltimos, ish yaratishdan oldin profilingizni to'liq to'ldiring"
+            )
+        verdict = SpamFraudDetector.analyze_job_posting(
+            job_in.title, job_in.description, job_in.salary,
+            keywords=keywords_from_settings(db),
         )
-        raise HTTPException(
-            status_code=400,
-            detail="E'lon shubhali deb topildi: " + "; ".join(verdict["flags"]),
-        )
+        if verdict["is_spam"]:
+            logger.warning(
+                "Rejected suspicious job posting from %s: %s", current_user.id, verdict["flags"]
+            )
+            raise HTTPException(
+                status_code=400,
+                detail="E'lon shubhali deb topildi: " + "; ".join(verdict["flags"]),
+            )
 
-    job_in_dict = job_in.model_dump()
-    # Never take these from the request body.
-    job_in_dict.pop("views", None)
-    lat = job_in_dict.pop("latitude", None)
-    lng = job_in_dict.pop("longitude", None)
-    if lat is not None and job_in_dict.get("coordinateX") is None:
-        job_in_dict["coordinateX"] = lat
-    if lng is not None and job_in_dict.get("coordinateY") is None:
-        job_in_dict["coordinateY"] = lng
-    job_in_dict["employerId"] = current_user.id
-    setting = db.query(models.SystemSetting).filter(models.SystemSetting.id == "singleton").first()
-    auto_approve = bool(setting and setting.autoApproveJobs)
-    job_in_dict["status"] = JobStatus.OPEN if auto_approve else JobStatus.PENDING
-    job_in_dict["views"] = 0
-    if not job_in_dict.get("company") or job_in_dict["company"] == "Ish beruvchi":
-        job_in_dict["company"] = current_user.companyName or current_user.name or "Ish beruvchi"
+        job_in_dict = job_in.model_dump()
+        # Never take these from the request body.
+        job_in_dict.pop("views", None)
+        lat = job_in_dict.pop("latitude", None)
+        lng = job_in_dict.pop("longitude", None)
+        if lat is not None and job_in_dict.get("coordinateX") is None:
+            job_in_dict["coordinateX"] = lat
+        if lng is not None and job_in_dict.get("coordinateY") is None:
+            job_in_dict["coordinateY"] = lng
+        job_in_dict["employerId"] = current_user.id
+        setting = db.query(models.SystemSetting).filter(models.SystemSetting.id == "singleton").first()
+        auto_approve = bool(setting and setting.autoApproveJobs)
+        job_in_dict["status"] = JobStatus.OPEN if auto_approve else JobStatus.PENDING
+        job_in_dict["views"] = 0
+        job_in_dict.setdefault("createdAt", datetime.now(timezone.utc))
+        if not job_in_dict.get("company") or job_in_dict["company"] == "Ish beruvchi":
+            job_in_dict["company"] = current_user.companyName or current_user.name or "Ish beruvchi"
 
-    # One posting, however many days it runs for.
-    #
-    # A five-day shift was briefly created as five separate Job rows, one per
-    # day, each labelled "1 kunlik". That put five identical cards in front of
-    # every worker searching, asked them to apply five times for one piece of
-    # work, and made five postings that were really
-    # one — none of which the splitting was needed for. The day rows below
-    # already carry a day's status and a day's wage, which is what lets a
-    # worker finish Monday without finishing Tuesday.
-    db_job = models.Job(**job_in_dict)
-    db.add(db_job)
-    db.flush()
-    # A five-day posting becomes five day rows here, not at hire: the calendar,
-    # the admin's day-by-day view and the employer's own list all need the days
-    # before anybody has been taken on.
-    job_days.sync_days(db, db_job)
+        db_job = models.Job(**job_in_dict)
+        db.add(db_job)
+        db.flush()
+        job_days.sync_days(db, db_job)
 
-    if not auto_approve:
-        admin_users = db.query(models.User).filter(models.User.role == "admin").all()
-        for admin in admin_users:
-            db.add(models.Notification(
-                userId=admin.id,
-                title="Yangi e'lon moderatsiyada",
-                message=f"'{db_job.title}' e'loni tasdiqlash uchun kutilmoqda.",
-                type="system",
-                relatedJobId=db_job.id,
-            ))
+        if not auto_approve:
+            admin_users = db.query(models.User).filter(models.User.role == "admin").all()
+            for admin in admin_users:
+                db.add(models.Notification(
+                    userId=admin.id,
+                    title="Yangi e'lon moderatsiyada",
+                    message=f"'{db_job.title}' e'loni tasdiqlash uchun kutilmoqda.",
+                    type="system",
+                    relatedJobId=db_job.id,
+                ))
 
-    db.commit()
-    db.refresh(db_job)
-    invalidate_map_cache()
-    background_tasks.add_task(_trigger_job_translation, db_job.id)
-    return db_job
+        if idempotency_key:
+            job_data = schemas.Job.model_validate(db_job).model_dump(mode="json")
+            deps.save_idempotent_response(db, idempotency_key, current_user.id, "/api/v1/jobs/", job_data)
+
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            if idempotency_key:
+                cached_response = deps.get_idempotent_response(db, idempotency_key, current_user.id)
+                if cached_response:
+                    return cached_response
+            recent = db.query(models.Job).filter(*filters).order_by(models.Job.createdAt.desc()).first()
+            if recent:
+                return recent
+            raise
+
+        db.refresh(db_job)
+        invalidate_map_cache()
+        background_tasks.add_task(_trigger_job_translation, db_job.id)
+        return db_job
 
 
 
 
 @router.put("/{job_id}", response_model=schemas.Job)
+@limiter.limit("20/minute")
 def update_job(
+    request: Request,
     job_id: str,
     job_in: schemas.JobUpdate,
     background_tasks: BackgroundTasks,
@@ -243,8 +308,10 @@ def view_job(
 
 
 @router.delete("/{id}")
+@limiter.limit("10/minute")
 def delete_job(
     *,
+    request: Request,
     db: Session = Depends(deps.get_db),
     id: str,
     current_user: models.User = Depends(deps.get_current_active_user),

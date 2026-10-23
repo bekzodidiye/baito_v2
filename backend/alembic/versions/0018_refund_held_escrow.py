@@ -35,7 +35,7 @@ import uuid
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from alembic import op
+from alembic import context, op
 
 revision: str = "0018_refund_held_escrow"
 down_revision: Union[str, None] = "0017_privacy_consent"
@@ -53,7 +53,16 @@ def _held_rows(conn):
     """)).fetchall()
 
 
+def _is_offline() -> bool:
+    try:
+        return context.is_offline_mode()
+    except Exception:
+        return False
+
+
 def upgrade() -> None:
+    if _is_offline():
+        return
     conn = op.get_bind()
     rows = _held_rows(conn)
     if not rows:
@@ -105,6 +114,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    if _is_offline():
+        return
     conn = op.get_bind()
     # Only the rows this migration wrote: a hold refunded by the old escrow
     # code has its own ledger entry and is none of our business.

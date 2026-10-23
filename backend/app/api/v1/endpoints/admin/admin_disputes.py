@@ -74,7 +74,9 @@ def _resolve_dispute(
                             db, job=job, worker_id=w_id, amount_uzs=wage, job_day_id=day.id, count_completed_job=is_last_day
                         )
                     except Exception as e:
-                        logger.warning("Dispute credit failed for worker %s: %s", w_id, e)
+                        logger.error("Dispute credit failed for worker %s: %s", w_id, e)
+                        db.rollback()
+                        raise HTTPException(status_code=500, detail="Ishchiga haq to'lashda xatolik yuz berdi") from e
         else:
             for w_id in target_worker_ids:
                 try:
@@ -82,7 +84,9 @@ def _resolve_dispute(
                         db, job=job, worker_id=w_id, amount_uzs=salary_to_uzs(job.salary), count_completed_job=True
                     )
                 except Exception as e:
-                    logger.warning("Dispute credit failed: %s", e)
+                    logger.error("Dispute credit failed for worker %s: %s", w_id, e)
+                    db.rollback()
+                    raise HTTPException(status_code=500, detail="Ishchiga haq to'lashda xatolik yuz berdi") from e
 
         job.status = JobStatus.COMPLETED
         job.completedAt = now

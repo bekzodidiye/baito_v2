@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'mobile',
+  appId: 'com.baito.mobile',
+  appName: 'Baito',
   webDir: 'dist'
 };
 

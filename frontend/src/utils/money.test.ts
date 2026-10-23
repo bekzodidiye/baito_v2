@@ -45,4 +45,28 @@ describe('a sum of money', () => {
     expect(formatSalary('', 'uz')).toBe('');
     expect(formatSalary(null, 'uz')).toBe('');
   });
+
+  it('formats salary ranges cleanly without concatenating digits', () => {
+    const uzRange = formatSalary('1 500 000 - 2 000 000', 'uz');
+    expect(uzRange).toContain("so'm");
+    expect(uzRange).toContain('–');
+    expect(uzRange).not.toContain('15000002000000');
+
+    const ruRange = formatSalary('1500000 - 2000000 UZS', 'ru');
+    expect(ruRange).toContain('сум');
+    expect(ruRange).toContain('–');
+
+    const withSuffix = formatSalary("250 000 so'm/kun", 'uz');
+    expect(withSuffix).toContain('/kun');
+
+    const verbalUz = formatSalary("1 500 000 dan 2 000 000 gacha", 'uz');
+    expect(verbalUz).toContain('–');
+    expect(verbalUz).toContain("so'm");
+    expect(verbalUz).not.toContain('15000002000000');
+
+    const verbalRu = formatSalary("от 1 500 000 до 2 000 000 сум", 'ru');
+    expect(verbalRu).toContain('–');
+    expect(verbalRu).toContain('сум');
+    expect(verbalRu).not.toContain('15000002000000');
+  });
 });

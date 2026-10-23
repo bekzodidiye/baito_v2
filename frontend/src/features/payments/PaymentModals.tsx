@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, PlusCircle, Wallet, CreditCard, CheckCircle2, AlertCircle, Trash2, Star, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { requestWithdrawalApi } from '../../api/queries';
+import { useQueryClient } from '@tanstack/react-query';
+import { requestWithdrawalApi, deletePaymentCardApi, updatePaymentCardApi } from '../../api/queries';
 import { showToast } from '../../utils/toast';
 import { useAuthStore } from "../../store/useAuthStore";
+import { useFocusTrap } from '../../components/common/useFocusTrap';
 
 export type PaymentModalType = 'deposit' | 'withdraw' | 'addCard' | 'myCards' | null;
 
@@ -22,9 +24,22 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedCardId, setSelectedCardId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const handleClose = () => {
+    onClose();
+    setTimeout(() => {
+      setAmount('');
+      setCardNumber('');
+      setCardExpiry('');
+      setSuccess(false);
+    }, 300);
+  };
+
+  const modalRef = useFocusTrap<HTMLDivElement>(Boolean(isOpen && type), handleClose);
 
   // Set default selected card
   useEffect(() => {
@@ -33,6 +48,17 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
       setSelectedCardId(defaultCard.id);
     }
   }, [isOpen, savedCards, selectedCardId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const formatMoney = (val: number | string) => {
     return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -99,6 +125,9 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
     try {
       await requestWithdrawalApi(Number(amount));
       setSuccess(true);
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet'] });
     } catch (err) {
       console.error(err);
       showToast(
@@ -112,14 +141,24 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
     }
   };
 
-  const handleClose = () => {
-    onClose();
-    setTimeout(() => {
-      setAmount('');
-      setCardNumber('');
-      setCardExpiry('');
-      setSuccess(false);
-    }, 300);
+  const handleSetDefaultCard = async (cardId: string) => {
+    try {
+      await updatePaymentCardApi(cardId, { isDefault: true });
+      await queryClient.invalidateQueries({ queryKey: ['paymentCards'] });
+      showToast(language === 'uz' ? 'Asosiy karta o\'rnatildi' : language === 'ru' ? 'Основная карта обновлена' : 'Default card updated', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Xatolik yuz berdi', 'error');
+    }
+  };
+
+  const handleDeleteCard = async (cardId: string) => {
+    try {
+      await deletePaymentCardApi(cardId);
+      await queryClient.invalidateQueries({ queryKey: ['paymentCards'] });
+      showToast(language === 'uz' ? 'Karta o\'chirildi' : language === 'ru' ? 'Карта удалена' : 'Card deleted', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Xatolik yuz berdi', 'error');
+    }
   };
 
   const renderIcon = () => {
@@ -127,7 +166,7 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
       case 'deposit': return <PlusCircle size={24} className="text-emerald-600" />;
       case 'withdraw': return <Wallet size={24} className="text-brand-primary" />;
       case 'addCard': return <CreditCard size={24} className="text-brand-primary" />;
-      case 'myCards': return <CreditCard size={24} className="text-blue-600" />;
+      case 'myCards': return <CreditCard size={24} className="text-brand-primary" />;
       default: return null;
     }
   };
@@ -159,6 +198,10 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
           />
 
           <motion.div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={renderTitle()}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -175,6 +218,7 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
               </h3>
               <button
                 onClick={handleClose}
+                aria-label={language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                 className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600 active:scale-95"
               >
                 <X size={20} />
@@ -384,11 +428,23 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
                                   </div>
                                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     {!card.isDefault && (
-                                      <button className="p-2 text-slate-400 hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50 rounded-lg transition-colors" title={t.makeDefault}>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSetDefaultCard(card.id)}
+                                        className="p-2 text-slate-400 hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                                        title={t.makeDefault}
+                                        aria-label={t.makeDefault}
+                                      >
                                         <Star size={18} />
                                       </button>
                                     )}
-                                    <button className="p-2 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-lg transition-colors" title={t.delete}>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteCard(card.id)}
+                                      className="p-2 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                      title={t.delete}
+                                      aria-label={t.delete}
+                                    >
                                       <Trash2 size={18} />
                                     </button>
                                   </div>

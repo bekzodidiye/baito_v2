@@ -228,7 +228,7 @@ export const PaymentsScreen: React.FC = () => {
             <p className="text-slate-500 text-[10px] uppercase font-bold tracking-tighter mb-1">
               {language === 'uz' ? 'Kutilmoqda' : language === 'ru' ? 'Ожидается' : 'Pending'}
             </p>
-            <p className="text-blue-600 font-bold text-sm">{formatMoney(pendingIncome)}</p>
+            <p className="text-brand-primary font-bold text-sm">{formatMoney(pendingIncome)}</p>
           </div>
           <div className="bg-white p-3 rounded-xl shadow-[0px_4px_20px_rgba(26,35,126,0.04)] text-center border border-slate-200">
             <p className="text-slate-500 text-[10px] uppercase font-bold tracking-tighter mb-1">
@@ -251,13 +251,13 @@ export const PaymentsScreen: React.FC = () => {
           </div>
           
           <div className="min-w-[160px] bg-white p-4 rounded-xl shadow-[0px_4px_12px_rgba(26,35,126,0.04)] border border-slate-200">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-              <CreditCard size={18} className="text-blue-600" />
+            <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center mb-3">
+              <CreditCard size={18} className="text-brand-primary" />
             </div>
             <p className="text-slate-500 text-xs font-medium">
               {language === 'uz' ? 'Aktiv kartalar' : language === 'ru' ? 'Активные карты' : 'Active Cards'}
             </p>
-            <p className="text-blue-600 font-bold text-lg">{savedCards.length} {language === 'uz' ? 'ta' : language === 'ru' ? 'шт' : 'pcs'}</p>
+            <p className="text-brand-primary font-bold text-lg">{savedCards.length} {language === 'uz' ? 'ta' : language === 'ru' ? 'шт' : 'pcs'}</p>
           </div>
           
           <div className="min-w-[160px] bg-white p-4 rounded-xl shadow-[0px_4px_12px_rgba(26,35,126,0.04)] border border-slate-200">
@@ -292,8 +292,8 @@ export const PaymentsScreen: React.FC = () => {
           </button>
           
           <button onClick={() => navigate('/payments/my-cards')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <CreditCard className="text-blue-600 w-6 h-6" />
+            <div className="p-2 bg-brand-primary/10 rounded-lg">
+              <CreditCard className="text-brand-primary w-6 h-6" />
             </div>
             <span className="font-semibold text-brand-primary text-sm tracking-tight">
               {language === 'uz' ? 'Kartalarim' : language === 'ru' ? 'Мои карты' : 'My Cards'}
@@ -389,7 +389,7 @@ export const PaymentsScreen: React.FC = () => {
                          <Landmark className="text-brand-primary w-6 h-6" />
                        </div>
                     ) : (
-                      <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center shadow-sm text-blue-600">
+                      <div className="w-12 h-12 rounded-xl bg-brand-primary/10 flex items-center justify-center shadow-sm text-brand-primary">
                         <Briefcase className="w-6 h-6" />
                       </div>
                     )}

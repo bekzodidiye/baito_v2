@@ -6,6 +6,8 @@ from typing import Any
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from sqlalchemy.orm import Session
 
+from starlette.concurrency import run_in_threadpool
+
 from app import models
 from app.api import deps
 from app.core.config import settings
@@ -143,29 +145,33 @@ async def upload_file(
     if not raw_contents:
         raise HTTPException(status_code=400, detail="Fayl bo'sh")
 
-    optimized_bytes, final_content_type, ext = _sniff_and_normalise(raw_contents, declared_type)
+    optimized_bytes, final_content_type, ext = await run_in_threadpool(
+        _sniff_and_normalise, raw_contents, declared_type
+    )
 
     object_key = f"{uuid.uuid4().hex}{ext}"
 
-    try:
+    def _save_to_s3_and_db():
         get_s3_client().upload_fileobj(
             io.BytesIO(optimized_bytes),
             settings.AWS_BUCKET_NAME,
             object_key,
             ExtraArgs={"ContentType": final_content_type},
         )
+        db.add(models.MediaFile(
+            objectKey=object_key,
+            ownerId=current_user.id,
+            visibility=visibility,
+            contentType=final_content_type,
+            sizeBytes=len(optimized_bytes),
+        ))
+        db.commit()
+
+    try:
+        await run_in_threadpool(_save_to_s3_and_db)
     except Exception as e:
         logger.error("S3 upload failed for %s: %s", object_key, e)
         raise HTTPException(status_code=502, detail="Faylni yuklashda xatolik yuz berdi")
-
-    db.add(models.MediaFile(
-        objectKey=object_key,
-        ownerId=current_user.id,
-        visibility=visibility,
-        contentType=final_content_type,
-        sizeBytes=len(optimized_bytes),
-    ))
-    db.commit()
 
     original_size = len(raw_contents)
     return {

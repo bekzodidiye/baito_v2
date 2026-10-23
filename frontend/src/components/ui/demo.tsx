@@ -25,6 +25,7 @@ export default function Demo() {
           <div className="flex flex-wrap gap-2">
             {(['working', 'gyro', 'spiral', 'surge', 'rings', 'lighthouse'] as LoadingOrbPreset[]).map((p) => (
               <button
+                type="button"
                 key={p}
                 onClick={() => setActivePreset(p)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
@@ -45,7 +46,7 @@ export default function Demo() {
             <LoadingOrb
               variant={activePreset}
               size="md"
-              colorClassName="text-brand-primary dark:text-blue-400"
+              colorClassName="text-brand-primary dark:text-brand-primary"
             />
           </div>
 
@@ -83,7 +84,7 @@ export default function Demo() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 p-6 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl">
           {looks.map((look) => (
             <div key={`${look.state}-${look.variant}`} className="flex flex-col items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-              <Orb {...look} size={48} className="text-brand-primary dark:text-indigo-400" />
+              <Orb {...look} size={48} className="text-brand-primary dark:text-brand-primary" />
               <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 text-center">
                 {look.state}
                 {look.variant !== "default" && ` · ${look.variant}`}

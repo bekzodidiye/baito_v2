@@ -157,6 +157,7 @@ def expire_stale_jobs() -> int:
     The admin panel exposes "auto expire jobs" settings; nothing was ever
     scheduled to act on them.
     """
+    from sqlalchemy import or_
     from app.db.session import SessionLocal
     from app.models import Application, Job, Notification, SystemSetting
     from app.models.job import JobStatus
@@ -168,9 +169,17 @@ def expire_stale_jobs() -> int:
         days = row.autoExpireDays if row and row.autoExpireDays else 14
 
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        today_tashkent = (datetime.now(timezone.utc) + timedelta(hours=5)).strftime("%Y-%m-%d")
+
         stale = (
             db.query(Job)
-            .filter(Job.status == JobStatus.OPEN, Job.createdAt < cutoff)
+            .filter(
+                Job.status == JobStatus.OPEN,
+                or_(
+                    (Job.workDate.isnot(None)) & (Job.workDate < today_tashkent),
+                    (Job.createdAt < cutoff) & ((Job.workDate.is_(None)) | (Job.workDate <= today_tashkent)),
+                ),
+            )
             .all()
         )
         for job in stale:

@@ -4,6 +4,7 @@ import time
 from typing import Optional
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from sqlalchemy import func
 from starlette.concurrency import run_in_threadpool
 
 from app import crud, models
@@ -93,14 +94,6 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str):
         while True:
             data = await websocket.receive_text()
 
-            # Flood control.
-            now = time.monotonic()
-            sent_times = [t for t in sent_times if now - t < MSG_RATE_WINDOW_SECONDS]
-            if len(sent_times) >= MSG_RATE_LIMIT:
-                await websocket.send_json({"error": "rate_limited"})
-                continue
-            sent_times.append(now)
-
             # Malformed frames used to escape as an unhandled exception and
             # kill the connection loop.
             try:
@@ -110,6 +103,54 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str):
             except (ValueError, TypeError):
                 await websocket.send_json({"error": "invalid_payload"})
                 continue
+
+            msg_type = message_data.get("type")
+            if msg_type == "ping":
+                await websocket.send_json({"type": "pong"})
+                continue
+            if msg_type == "typing":
+                is_typing_val = message_data.get("isTyping") if "isTyping" in message_data else message_data.get("is_typing", True)
+                await manager.broadcast_to_chat({
+                    "type": "typing",
+                    "senderId": user_id,
+                    "userId": user_id,
+                    "chatId": chat_id,
+                    "isTyping": bool(is_typing_val),
+                    "is_typing": bool(is_typing_val),
+                }, chat_id)
+                continue
+            if msg_type == "read":
+                def mark_read():
+                    with SessionLocal() as db:
+                        u_ids = [str(uid) for uid in [user_info["id"], user_info.get("uid")] if uid]
+                        updated = (
+                            db.query(models.Message)
+                            .filter(
+                                models.Message.chatId == chat_id,
+                                models.Message.senderId.notin_(u_ids),
+                                models.Message.readAt.is_(None),
+                            )
+                            .update({models.Message.readAt: func.now()}, synchronize_session=False)
+                        )
+                        db.commit()
+                        return updated
+                marked = await run_in_threadpool(mark_read)
+                if marked:
+                    await manager.broadcast_to_chat({
+                        "type": "read",
+                        "chatId": chat_id,
+                        "readerId": user_id,
+                        "userId": user_id,
+                    }, chat_id)
+                continue
+
+            # Flood control for chat messages.
+            now = time.monotonic()
+            sent_times = [t for t in sent_times if now - t < MSG_RATE_WINDOW_SECONDS]
+            if len(sent_times) >= MSG_RATE_LIMIT:
+                await websocket.send_json({"error": "rate_limited"})
+                continue
+            sent_times.append(now)
 
             text = (message_data.get("text") or "").strip()
             if not text:

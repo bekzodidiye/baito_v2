@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Trash2, AlertTriangle, Check } from 'lucide-react';
+import { useFocusTrap } from '../common/useFocusTrap';
 
 interface DeleteMessageModalProps {
   isOpen: boolean;
@@ -19,18 +20,7 @@ export const DeleteMessageModal: React.FC<DeleteMessageModalProps> = ({
   participantName,
 }) => {
   const [deleteForAll, setDeleteForAll] = useState(true);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  const trapRef = useFocusTrap<HTMLDivElement>({ isOpen, onClose });
 
   if (!isOpen) return null;
 
@@ -50,15 +40,15 @@ export const DeleteMessageModal: React.FC<DeleteMessageModalProps> = ({
     deleteForAll:
       language === 'uz'
         ? participantName
-          ? `${participantName} uchun ham o'chirish`
-          : "Barcha uchun o'chirish"
-        : language === 'ru'
-          ? participantName
-            ? `Удалить также для ${participantName}`
-            : 'Удалить для всех'
-          : participantName
-            ? `Also delete for ${participantName}`
-            : 'Delete for everyone',
+        ? `${participantName} uchun ham o'chirish`
+        : "Barcha uchun o'chirish"
+      : language === 'ru'
+        ? participantName
+        ? `Удалить также для ${participantName}`
+        : 'Удалить для всех'
+      : participantName
+        ? `Also delete for ${participantName}`
+        : 'Delete for everyone',
     cancel: language === 'uz' ? 'Bekor qilish' : language === 'ru' ? 'Отмена' : 'Cancel',
     delete: language === 'uz' ? "O'chirish" : language === 'ru' ? 'Удалить' : 'Delete',
   };
@@ -69,6 +59,10 @@ export const DeleteMessageModal: React.FC<DeleteMessageModalProps> = ({
       onClick={onClose}
     >
       <div
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t.title}
         className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 relative animate-in zoom-in-95 duration-150 text-slate-800"
         onClick={(e) => e.stopPropagation()}
       >

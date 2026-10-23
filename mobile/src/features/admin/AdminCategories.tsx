@@ -48,7 +48,7 @@ export const AdminCategories: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
         <div>
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <FolderTree className="text-blue-600" size={24} />
+            <FolderTree className="text-brand-primary" size={24} aria-hidden="true" />
             Kategoriyalar va Kasblar Boshqaruvi
           </h2>
           <p className="text-xs text-slate-500 mt-1">
@@ -56,23 +56,24 @@ export const AdminCategories: React.FC = () => {
           </p>
         </div>
         <button
+          type="button"
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-semibold text-xs rounded-xl hover:bg-blue-700 transition cursor-pointer shadow-sm"
+          className="flex items-center gap-2 px-4 py-2.5 bg-brand-primary text-white font-semibold text-xs rounded-xl hover:bg-brand-primary/90 transition cursor-pointer shadow-sm"
         >
-          <Plus size={16} />
+          <Plus size={16} aria-hidden="true" />
           Yangi Kategoriya Qo'shish
         </button>
       </div>
 
       {/* Filter Bar */}
       <div className="relative max-w-md">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Kategoriya yoki ko'nikmalarni qidirish..."
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-blue-500 transition"
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-brand-primary transition"
         />
       </div>
 

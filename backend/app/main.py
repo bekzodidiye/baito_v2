@@ -1,7 +1,7 @@
 import logging
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -83,6 +83,11 @@ async def lifespan(app: FastAPI):
         logger.warning("Demo data seeding skipped: %s", e)
         
     yield
+    try:
+        from app.api.v1.endpoints.chats.manager import manager
+        await manager.shutdown()
+    except Exception as e:
+        logger.debug("Chat manager shutdown: %s", e)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -216,5 +221,8 @@ def health_check(response: Response):
             health_status["redis"] = "unhealthy"
             if health_status["status"] == "ok":
                 health_status["status"] = "degraded"
+
+    if health_status["status"] == "degraded":
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
     return health_status

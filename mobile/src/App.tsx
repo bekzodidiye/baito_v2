@@ -1,5 +1,5 @@
 import { ToastContainer } from './components/ToastContainer';
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/Header';
@@ -13,16 +13,73 @@ import { MenuModals } from './components/MenuModals';
 import { OnboardingTour } from './components/OnboardingTour';
 import { MotionConfig } from 'motion/react';
 import { AlertCircle } from 'lucide-react';
+import { App as CapApp } from '@capacitor/app';
 
 import { AppRoutes } from './components/AppRoutes';
 import { useCurrentScreen } from './hooks/useCurrentScreen';
+import { useUIStore } from './store/useUIStore';
 
 function AppContent() {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
-  const { isLoggedIn, userProfile } = useApp();
+  const { isLoggedIn, userProfile, drawerOpen, setDrawerOpen, language } = useApp();
+  const jobsView = useUIStore(s => s.jobsView);
   const [hasOpenedMap, setHasOpenedMap] = useState(false);
   const [activeModal, setActiveModal] = useState<'profile' | 'settings' | 'help' | 'auth' | null>(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  const stateRef = useRef({ activeModal, drawerOpen });
+  useEffect(() => {
+    stateRef.current = { activeModal, drawerOpen };
+  }, [activeModal, drawerOpen]);
+
+  useEffect(() => {
+    let isMounted = true;
+    let listenerHandle: { remove: () => Promise<void> } | null = null;
+
+    const registerBackButton = async () => {
+      try {
+        const handle = await CapApp.addListener('backButton', ({ canGoBack }) => {
+          if (stateRef.current.activeModal !== null) {
+            setActiveModal(null);
+            return;
+          }
+          if (stateRef.current.drawerOpen) {
+            setDrawerOpen(false);
+            return;
+          }
+          const openDialog = document.querySelector('[role="dialog"]');
+          if (openDialog) {
+            const escEvent = new KeyboardEvent('keydown', {
+              key: 'Escape',
+              code: 'Escape',
+              bubbles: true,
+              cancelable: true,
+            });
+            openDialog.dispatchEvent(escEvent);
+            return;
+          }
+          if (canGoBack || window.history.length > 1) {
+            window.history.back();
+          } else {
+            CapApp.exitApp();
+          }
+        });
+        if (!isMounted) {
+          handle.remove();
+        } else {
+          listenerHandle = handle;
+        }
+      } catch {
+        // Non-Capacitor browser environment fallback
+      }
+    };
+
+    registerBackButton();
+    return () => {
+      isMounted = false;
+      listenerHandle?.remove?.();
+    };
+  }, [setDrawerOpen]);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -82,7 +139,11 @@ function AppContent() {
       {isOffline && (
         <div className="bg-red-500 text-white text-center py-2 px-4 text-sm font-semibold z-[9999] fixed top-0 w-full flex items-center justify-center gap-2">
           <AlertCircle size={16} />
-          Internet tarmog'iga ulanish yo'q. Iltimos, aloqani tekshiring!
+          {language === 'ru'
+            ? 'Нет подключения к интернету. Пожалуйста, проверьте соединение!'
+            : language === 'en'
+            ? 'No internet connection. Please check your network!'
+            : "Internet tarmog'iga ulanish yo'q. Iltimos, aloqani tekshiring!"}
         </div>
       )}
 
@@ -107,7 +168,7 @@ function AppContent() {
             ) : isEmployer && currentScreen === 'jobs' ? (
               <Navigate to="/employer-dashboard" replace />
             ) : (
-              currentScreen !== 'jobs' && <AppRoutes />
+              (currentScreen !== 'jobs' || jobsView === 'list') && <AppRoutes />
             )}
           </ErrorBoundary>
 
@@ -115,7 +176,7 @@ function AppContent() {
           {shouldMountMap && (
             <ErrorBoundary>
               <Suspense fallback={<div className="h-[calc(100vh-56px-64px)] flex items-center justify-center bg-slate-50"><div className="animate-pulse w-8 h-8 rounded-full bg-slate-300"></div></div>}>
-                <div className={currentScreen === 'jobs' ? 'block' : 'hidden'}>
+                <div className={currentScreen === 'jobs' && jobsView === 'map' ? 'block' : 'hidden'}>
                   <MapViewScreen />
                 </div>
               </Suspense>

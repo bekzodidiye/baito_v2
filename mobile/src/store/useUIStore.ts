@@ -39,6 +39,8 @@ interface UIState {
   setActiveCalendarDay: (day: string) => void;
   hasSeenTour: boolean;
   setHasSeenTour: (seen: boolean) => void;
+  jobsView: 'map' | 'list';
+  setJobsView: (view: 'map' | 'list') => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -93,5 +95,7 @@ export const useUIStore = create<UIState>((set) => ({
   setHasSeenTour: (seen) => {
     safeSetItem('baito_has_seen_tour', String(seen));
     set({ hasSeenTour: seen });
-  }
+  },
+  jobsView: 'map',
+  setJobsView: (view) => set({ jobsView: view }),
 }));

@@ -115,7 +115,7 @@ function AppContent() {
       {isOffline && (
         <div className="bg-red-500 text-white text-center py-2 px-4 text-sm font-semibold z-[9999] fixed top-0 w-full flex items-center justify-center gap-2">
           <AlertCircle size={16} />
-          Internet tarmog'iga ulanish yo'q. Iltimos, aloqani tekshiring!
+          {translations[language].offlineBanner}
         </div>
       )}
 
@@ -134,9 +134,9 @@ function AppContent() {
           {/* resetKey clears a crashed screen's fallback when the user navigates away,
               without destroying the component tree on every normal navigation. */}
           <ErrorBoundary resetKey={currentScreen}>
-            {/* If not logged in, and trying to access a protected screen, redirect to landing */}
+            {/* If not logged in, and trying to access a protected screen, redirect to login */}
             {isAuthGatedScreen ? (
-              <Navigate to="/" replace />
+              <Navigate to="/login" replace />
             ) : isEmployer && currentScreen === 'jobs' ? (
               <Navigate to="/employer-dashboard" replace />
             ) : (

@@ -46,7 +46,30 @@ export const money = (value: unknown, language: string): string =>
 export const formatSalary = (value: unknown, language: string): string => {
   if (value === null || value === undefined || value === '') return '';
   const str = String(value).trim();
-  const digits = str.replace(/[^0-9]/g, '');
+  if (!str) return '';
+
+  // Extract optional period/unit suffix like "/ oy", "/ kun", "/ soat"
+  const suffixMatch = str.match(/\s*(\/[a-zA-Zа-яА-ЯёЁo‘o'O‘O'\s]+)$/);
+  const suffix = suffixMatch ? ` ${suffixMatch[1].trim()}` : '';
+  let mainPart = suffixMatch ? str.slice(0, suffixMatch.index).trim() : str;
+
+  // Strip trailing currency words if any (so'm, сум, UZS)
+  mainPart = mainPart.replace(/\s*(?:so['\u2019]m|сум|UZS)\s*$/i, '').trim();
+  mainPart = mainPart.replace(/^(?:dan|от|from)\s+/i, '').trim();
+
+  // Check for salary range: "1 500 000 - 2 000 000", "1 500 000 dan 2 000 000 gacha", "от 1 500 000 до 2 000 000", "1.5m ~ 2m", etc.
+  const rangeMatch = mainPart.match(
+    /^(.+?)(?:\s*(?:[-–—~]|\.{2,})\s*|\s+(?:dan|to|до)\s+)(.+?)(?:\s*(?:gacha|до|to))?$/i,
+  );
+  if (rangeMatch) {
+    const d1 = rangeMatch[1].replace(/[^0-9]/g, '');
+    const d2 = rangeMatch[2].replace(/[^0-9]/g, '');
+    if (d1 && d2) {
+      return `${amount(d1, language)} – ${amount(d2, language)} ${CURRENCY[lang(language)]}${suffix}`;
+    }
+  }
+
+  const digits = mainPart.replace(/[^0-9]/g, '');
   if (!digits) return str;
-  return money(digits, language);
+  return `${amount(digits, language)} ${CURRENCY[lang(language)]}${suffix}`;
 };

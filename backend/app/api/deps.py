@@ -98,6 +98,7 @@ def get_db_optional() -> Optional[Session]:
 
 def get_current_user_optional(
     request: Request,
+    db: Session = Depends(get_db),
 ) -> Optional[models.User]:
     token = get_access_token(request)
     if not token:
@@ -106,23 +107,19 @@ def get_current_user_optional(
     if not token_data:
         return None
 
-    db = SessionLocal()
-    try:
-        if token_data.sid:
-            session_record = db.query(models.ActiveSession).filter(models.ActiveSession.id == token_data.sid).first()
-            if not is_live(session_record):
-                return None
-
-        user = crud.user.get_by_uid(db, uid=token_data.sub)
-        if not user or user.isBanned:
+    if token_data.sid:
+        session_record = db.query(models.ActiveSession).filter(models.ActiveSession.id == token_data.sid).first()
+        if not is_live(session_record):
             return None
 
-        if token_data.sid:
-            setattr(user, 'current_session_id', token_data.sid)
+    user = crud.user.get_by_uid(db, uid=token_data.sub)
+    if not user or user.isBanned:
+        return None
 
-        return user
-    finally:
-        db.close()
+    if token_data.sid:
+        setattr(user, 'current_session_id', token_data.sid)
+
+    return user
 
 def get_current_employer(
     current_user: models.User = Depends(get_current_active_user),

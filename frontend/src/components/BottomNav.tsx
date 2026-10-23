@@ -78,6 +78,7 @@ export const BottomNav: React.FC = () => {
                 <span className="relative z-10 flex items-center justify-center">
                   <Icon 
                     size={19} 
+                    aria-hidden="true"
                     className={`transition-colors duration-200 ${
                       active ? 'text-white stroke-[2.3]' : 'text-brand-text-variant/70 stroke-[1.8]'
                     }`} 

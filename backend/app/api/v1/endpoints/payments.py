@@ -1,11 +1,14 @@
 import logging
+import threading
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
+from app import models
 from app.api import deps
 from app.core.limiter import limiter
 from app.core.money import Money
@@ -24,6 +27,22 @@ MAX_CARDS_PER_USER = 5
 MIN_WITHDRAWAL_UZS = 5_000
 MAX_WITHDRAWAL_UZS = 50_000_000
 
+_card_locks_guard = threading.Lock()
+_user_card_locks: dict[str, threading.Lock] = {}
+
+
+def _get_card_lock_for_user(user_id: str) -> threading.Lock:
+    with _card_locks_guard:
+        if len(_user_card_locks) > 5000:
+            unlocked = [k for k, v in _user_card_locks.items() if not v.locked()]
+            for k in unlocked[:2500]:
+                _user_card_locks.pop(k, None)
+        lock = _user_card_locks.get(user_id)
+        if lock is None:
+            lock = threading.Lock()
+            _user_card_locks[user_id] = lock
+        return lock
+
 
 
 
@@ -37,33 +56,69 @@ def get_payment_cards(
 
 
 @router.post("/cards", response_model=PaymentCardOut)
+@limiter.limit("10/minute")
 def add_payment_card(
+    request: Request,
     card_in: PaymentCardCreate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ):
-    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
-    existing = db.query(PaymentCard).filter(PaymentCard.userId.in_(user_ids)).count()
-    if existing >= MAX_CARDS_PER_USER:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Ko'pi bilan {MAX_CARDS_PER_USER} ta karta qo'shish mumkin",
-        )
+    user_lock = _get_card_lock_for_user(str(current_user.id))
+    with user_lock:
+        db.expire_all()
+        user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+        db.query(models.User).filter(models.User.id == current_user.id).populate_existing().with_for_update().first()
 
-    card = PaymentCard(
-        userId=current_user.id,
-        type=card_in.type,
-        last4=card_in.last4,
-        bank=card_in.bank,
-        # The provider token is never accepted from the browser; it is only
-        # ever written by a server-side card-binding callback.
-        token=None,
-        isActive=card_in.isActive,
-    )
-    db.add(card)
-    db.commit()
-    db.refresh(card)
-    return card
+        duplicate_card = (
+            db.query(PaymentCard)
+            .filter(
+                PaymentCard.userId.in_(user_ids),
+                PaymentCard.last4 == card_in.last4,
+                PaymentCard.bank == card_in.bank,
+            )
+            .first()
+        )
+        if duplicate_card:
+            raise HTTPException(
+                status_code=409,
+                detail="CARD_ALREADY_EXISTS",
+            )
+
+        existing = (
+            db.query(PaymentCard)
+            .filter(
+                PaymentCard.userId.in_(user_ids),
+                PaymentCard.isActive.is_(True),
+            )
+            .count()
+        )
+        if existing >= MAX_CARDS_PER_USER:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Ko'pi bilan {MAX_CARDS_PER_USER} ta karta qo'shish mumkin",
+            )
+
+        card = PaymentCard(
+            userId=current_user.id,
+            type=card_in.type,
+            last4=card_in.last4,
+            bank=card_in.bank,
+            # The provider token is never accepted from the browser; it is only
+            # ever written by a server-side card-binding callback.
+            token=None,
+            isActive=card_in.isActive,
+        )
+        db.add(card)
+        if not current_user.bankCardMask:
+            current_user.bankCardMask = f"**** **** **** {card_in.last4}"
+            db.add(current_user)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(status_code=409, detail="CARD_ALREADY_EXISTS")
+        db.refresh(card)
+        return card
 
 
 @router.delete("/cards/{card_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -126,13 +181,13 @@ def get_transactions(
             Transaction.employerId.in_(user_ids),
             or_(
                 and_(Transaction.type == 'payout', Transaction.status == 'paid'),
-                and_(Transaction.type.in_(['withdraw', 'deposit', 'payment']), Transaction.workerId.is_(None)),
+                and_(Transaction.type.in_(['withdraw', 'deposit', 'payment', 'admin_adjustment']), Transaction.workerId.is_(None)),
             )
         )
     elif current_user.role == 'worker':
         q = q.filter(
             Transaction.workerId.in_(user_ids),
-            Transaction.type.in_(['payout', 'withdraw', 'worker_earning', 'completion_bonus'])
+            Transaction.type.in_(['payout', 'withdraw', 'worker_earning', 'completion_bonus', 'admin_adjustment'])
         )
 
     rows = (

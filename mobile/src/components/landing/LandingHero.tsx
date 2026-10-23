@@ -120,7 +120,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
                       handleSearch(e);
                     }
                   }}
-                  className="px-6 py-3.5 rounded-xl font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0 bg-brand-primary hover:bg-blue-700 text-white shadow-lg shadow-blue-600/30 active:scale-[0.98]"
+                  className="px-6 py-3.5 rounded-xl font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0 bg-brand-primary hover:bg-brand-primary-container text-white shadow-lg shadow-brand-primary/20 active:scale-[0.98]"
                 >
                   <span>{activeTab === 'worker' ? "Ishlarni ko'rish" : "E'lon berish"}</span><ArrowRight size={16} />
                 </button>
@@ -157,9 +157,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ onSelectRole }) => {
 
             {/* Badges */}
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-5 text-xs font-extrabold text-slate-700 pt-1">
-              <span className="flex items-center gap-1.5"><BadgeCheck size={17} className="text-blue-600 shrink-0" /> Tasdiqlangan ID</span>
-              <span className="flex items-center gap-1.5"><Wallet size={17} className="text-blue-600 shrink-0" /> Bir zumda to'lov</span>
-              <span className="flex items-center gap-1.5"><Percent size={17} className="text-blue-600 shrink-0" /> 0% komissiya</span>
+              <span className="flex items-center gap-1.5"><BadgeCheck size={17} className="text-brand-primary shrink-0" /> Tasdiqlangan ID</span>
+              <span className="flex items-center gap-1.5"><Wallet size={17} className="text-brand-primary shrink-0" /> Bir zumda to'lov</span>
+              <span className="flex items-center gap-1.5"><Percent size={17} className="text-brand-primary shrink-0" /> 0% komissiya</span>
             </div>
           </div>
 

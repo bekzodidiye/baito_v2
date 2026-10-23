@@ -55,7 +55,7 @@ export const CalendarGridCard: React.FC<CalendarGridCardProps> = ({
       className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col justify-between"
     >
       {/* SVG 3D Star filter definition */}
-      <svg width="0" height="0" className="absolute opacity-0 pointer-events-none">
+      <svg width="0" height="0" className="absolute opacity-0 pointer-events-none" aria-hidden="true">
         <defs>
           <filter id="star-3d" x="-20%" y="-20%" width="140%" height="140%">
             <feDropShadow dx="0" dy="2" stdDeviation="1" floodColor="#000" floodOpacity="0.25" />
@@ -75,18 +75,20 @@ export const CalendarGridCard: React.FC<CalendarGridCardProps> = ({
 
         <div className="flex items-center gap-1">
           <button
+            type="button"
             onClick={handlePrevMonth}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer active:scale-95"
-            aria-label="Oldingi oy"
+            className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer active:scale-95"
+            aria-label={language === 'ru' ? 'Предыдущий месяц' : language === 'en' ? 'Previous month' : 'Oldingi oy'}
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={18} aria-hidden="true" />
           </button>
           <button
+            type="button"
             onClick={handleNextMonth}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer active:scale-95"
-            aria-label="Keyingi oy"
+            className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors cursor-pointer active:scale-95"
+            aria-label={language === 'ru' ? 'Следующий месяц' : language === 'en' ? 'Next month' : 'Keyingi oy'}
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={18} aria-hidden="true" />
           </button>
         </div>
       </div>

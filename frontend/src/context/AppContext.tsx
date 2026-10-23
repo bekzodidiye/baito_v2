@@ -76,6 +76,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
               setUserProfile({
                 id: data.id || '',
+                uid: data.uid || data.id || '',
                 firstName: fName,
                 lastName: lName,
                 selectedRole: currentRole as 'worker' | 'employer' | 'admin',

@@ -86,7 +86,7 @@ export const CalendarDayTooltip: React.FC<CalendarDayTooltipProps> = ({
             {status === 'confirmed' && <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-[8px] px-1.5 py-0.5 rounded-full shrink-0 shadow-xs">{language === 'ru' ? 'Подтверждено' : language === 'en' ? 'Confirmed' : 'Tasdiqlandi'}</span>}
             {status === 'todo' && <span className={`border font-bold text-[8px] px-1.5 py-0.5 rounded-full shrink-0 shadow-xs ${getTodoStyle(job)}`}>{getTodoLabel(job)}</span>}
             {status === 'completed' && <span className="bg-indigo-50 text-brand-primary border border-indigo-100 font-bold text-[8px] px-1.5 py-0.5 rounded-full shrink-0 shadow-xs">{language === 'ru' ? 'Завершено' : language === 'en' ? 'Completed' : 'Yakunlandi'}</span>}
-            {status === 'missed' && <span className="bg-gray-100 text-gray-600 border border-gray-200 font-bold text-[8px] px-1.5 py-0.5 rounded-full shrink-0 shadow-xs">{language === 'ru' ? 'Пропущено' : language === 'en' ? 'Missed' : "O'tkazib yuborildi"}</span>}
+            {status === 'missed' && <span className="bg-slate-100 text-slate-600 border border-slate-200 font-bold text-[8px] px-1.5 py-0.5 rounded-full shrink-0 shadow-xs">{language === 'ru' ? 'Пропущено' : language === 'en' ? 'Missed' : "O'tkazib yuborildi"}</span>}
           </button>
         ))}
         {tooltipJobs.length > 3 && (

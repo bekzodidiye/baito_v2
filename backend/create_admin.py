@@ -9,6 +9,7 @@ Usage:
 The password is read interactively so it never lands in shell history.
 """
 import getpass
+import os
 import sys
 import uuid
 
@@ -18,19 +19,30 @@ from app.models import User
 
 
 def main() -> int:
-    if len(sys.argv) < 3:
+    args = [a for a in sys.argv[1:] if not a.startswith("--password=")]
+    password_flag = None
+    for a in sys.argv[1:]:
+        if a.startswith("--password="):
+            password_flag = a.split("=", 1)[1]
+
+    if len(args) < 2:
         print(__doc__)
         return 1
 
-    phone, email = sys.argv[1], sys.argv[2]
-    name = sys.argv[3] if len(sys.argv) > 3 else "Admin"
+    phone, email = args[0], args[1]
+    name = args[2] if len(args) > 2 else "Admin"
 
-    password = getpass.getpass("Password: ")
-    if len(password) < 12:
+    password = password_flag or os.environ.get("ADMIN_PASSWORD")
+    if not password:
+        password = getpass.getpass("Password: ")
+        if len(password) < 12:
+            print("Refusing: admin password must be at least 12 characters.")
+            return 1
+        if password != getpass.getpass("Confirm password: "):
+            print("Passwords do not match.")
+            return 1
+    elif len(password) < 12:
         print("Refusing: admin password must be at least 12 characters.")
-        return 1
-    if password != getpass.getpass("Confirm password: "):
-        print("Passwords do not match.")
         return 1
 
     with SessionLocal() as db:

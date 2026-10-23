@@ -31,15 +31,18 @@ export const ChatListPanel: React.FC<ChatListPanelProps> = ({
             style={{ outline: 'none', boxShadow: 'none' }}
             className="w-full h-full ml-2 bg-transparent text-xs font-sans text-slate-800 border-none outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 placeholder:text-slate-400 font-medium shadow-none"
             placeholder={t.searchChatPlaceholder || "Ish beruvchi yoki xabarni izlash..."}
+            aria-label={t.searchChatPlaceholder || "Ish beruvchi yoki xabarni izlash..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           {searchQuery && (
             <button
+              type="button"
               onClick={() => setSearchQuery('')}
+              aria-label={t.clearSearch || t.close || "Qidiruvni tozalash"}
               className="p-1 text-slate-400 hover:text-slate-600 rounded-full border-none bg-transparent cursor-pointer"
             >
-              <X size={14} />
+              <X size={14} aria-hidden="true" />
             </button>
           )}
         </div>

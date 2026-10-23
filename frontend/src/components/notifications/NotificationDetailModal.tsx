@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Bell, Briefcase, CheckCircle2, MessageCircle, Wallet, LifeBuoy, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NotificationItemData } from './NotificationItem';
+import { useFocusTrap } from '../common/useFocusTrap';
 
 interface NotificationDetailModalProps {
   isOpen: boolean;
@@ -28,7 +29,7 @@ const getModalIcon = (type?: NotificationItemData['type']) => {
       );
     case 'message':
       return (
-        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+        <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center border border-brand-primary/20">
           <MessageCircle size={22} className="stroke-[2.2]" />
         </div>
       );
@@ -68,6 +69,8 @@ export const NotificationDetailModal: React.FC<NotificationDetailModalProps> = (
   onActionClick,
   actionLabel,
 }) => {
+  const trapRef = useFocusTrap<HTMLDivElement>({ isOpen, onClose });
+
   if (!isOpen || !notification) return null;
 
   const title =
@@ -93,6 +96,10 @@ export const NotificationDetailModal: React.FC<NotificationDetailModalProps> = (
 
         {/* Modal content */}
         <motion.div
+          ref={trapRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -114,6 +121,7 @@ export const NotificationDetailModal: React.FC<NotificationDetailModalProps> = (
             </div>
             <button
               onClick={onClose}
+              aria-label={closeText}
               className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors border-0 cursor-pointer"
             >
               <X size={16} />

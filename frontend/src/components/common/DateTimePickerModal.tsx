@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { monthNames, weekdayNames, parseInitial24hTime, getDaysInMonth, getFirstDayOfWeek } from './DateTimePickerModal.utils';
 import { DateLanguage } from '../../utils/dateFormat';
+import { useFocusTrap } from './useFocusTrap';
 
 interface DateTimePickerModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
   const lang = (language as DateLanguage);
   const L = (uz: string, ru: string, en: string) =>
     lang === 'ru' ? ru : lang === 'en' ? en : uz;
+  const trapRef = useFocusTrap<HTMLDivElement>({ isOpen, onClose });
   if (!isOpen) return null;
 
   const initialDates = workDateValue ? workDateValue.split(', ').filter(Boolean) : [new Date().toISOString().split('T')[0]];
@@ -68,7 +70,16 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-3xl shadow-2xl border w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <motion.div
+          ref={trapRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={L('Sana va vaqtni tanlash', 'Выбор даты и времени', 'Select date and time')}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="bg-white rounded-3xl shadow-2xl border w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        >
           <div className="p-4 px-6 bg-gradient-to-r from-purple-50 to-indigo-50 border-b flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 bg-brand-primary text-white text-[10px] font-black uppercase rounded-full">{L(`${selectedDates.length} KUNLIK ISH`, `СМЕНА НА ${selectedDates.length} ДН.`, `${selectedDates.length}-DAY SHIFT`)}</span>
@@ -76,15 +87,33 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
                 <CalendarIcon size={15} className="text-brand-primary" /> {L(`${selectedDates.length} ta kun`, `${selectedDates.length} дн.`, selectedDates.length === 1 ? '1 day' : `${selectedDates.length} days`)} | <Clock size={15} className="text-brand-primary" /> {String(startHour).padStart(2, '0')}:{String(startMin).padStart(2, '0')} - {String(endHour).padStart(2, '0')}:{String(endMin).padStart(2, '0')}
               </span>
             </div>
-            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-200 text-slate-400 cursor-pointer shrink-0 ml-2"><X size={18} /></button>
+            <button
+              onClick={onClose}
+              aria-label={L('Yopish', 'Закрыть', 'Close')}
+              className="p-1.5 rounded-full hover:bg-slate-200 text-slate-400 cursor-pointer shrink-0 ml-2"
+            >
+              <X size={18} />
+            </button>
           </div>
 
           <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-12 gap-6 overflow-y-auto">
             <div className="md:col-span-7 flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <button onClick={() => setCurrMonth(m => (m === 0 ? 11 : m - 1))} className="p-1.5 rounded-xl hover:bg-slate-100 cursor-pointer"><ChevronLeft size={18} /></button>
+                <button
+                  onClick={() => setCurrMonth(m => (m === 0 ? 11 : m - 1))}
+                  aria-label={L('Oldingi oy', 'Предыдущий месяц', 'Previous month')}
+                  className="p-1.5 rounded-xl hover:bg-slate-100 cursor-pointer"
+                >
+                  <ChevronLeft size={18} />
+                </button>
                 <span className="font-extrabold text-slate-800 text-sm">{monthNames(lang)[currMonth]} {currYear}</span>
-                <button onClick={() => setCurrMonth(m => (m === 11 ? 0 : m + 1))} className="p-1.5 rounded-xl hover:bg-slate-100 cursor-pointer"><ChevronRight size={18} /></button>
+                <button
+                  onClick={() => setCurrMonth(m => (m === 11 ? 0 : m + 1))}
+                  aria-label={L('Keyingi oy', 'Следующий месяц', 'Next month')}
+                  className="p-1.5 rounded-xl hover:bg-slate-100 cursor-pointer"
+                >
+                  <ChevronRight size={18} />
+                </button>
               </div>
 
               <div className="grid grid-cols-7 gap-1 text-center">
@@ -111,14 +140,38 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
 
                 <div className="grid grid-cols-2 gap-3 text-center">
                   <div className="flex flex-col items-center gap-1">
-                    <button onClick={incHour} className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"><ChevronUp size={16} /></button>
+                    <button
+                      onClick={incHour}
+                      aria-label={L('Soatni oshirish', 'Увеличить час', 'Increase hour')}
+                      className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"
+                    >
+                      <ChevronUp size={16} />
+                    </button>
                     <div className="w-full py-2.5 bg-slate-50 border rounded-xl font-black text-lg text-slate-800">{String(curHour).padStart(2, '0')}</div>
-                    <button onClick={decHour} className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"><ChevronDown size={16} /></button>
+                    <button
+                      onClick={decHour}
+                      aria-label={L('Soatni kamaytirish', 'Уменьшить час', 'Decrease hour')}
+                      className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"
+                    >
+                      <ChevronDown size={16} />
+                    </button>
                   </div>
                   <div className="flex flex-col items-center gap-1">
-                    <button onClick={incMin} className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"><ChevronUp size={16} /></button>
+                    <button
+                      onClick={incMin}
+                      aria-label={L('Daqiqani oshirish', 'Увеличить минуту', 'Increase minute')}
+                      className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"
+                    >
+                      <ChevronUp size={16} />
+                    </button>
                     <div className="w-full py-2.5 bg-slate-50 border rounded-xl font-black text-lg text-slate-800">{String(curMin).padStart(2, '0')}</div>
-                    <button onClick={decMin} className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"><ChevronDown size={16} /></button>
+                    <button
+                      onClick={decMin}
+                      aria-label={L('Daqiqani kamaytirish', 'Уменьшить минуту', 'Decrease minute')}
+                      className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"
+                    >
+                      <ChevronDown size={16} />
+                    </button>
                   </div>
                 </div>
               </div>

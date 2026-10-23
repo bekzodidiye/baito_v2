@@ -187,9 +187,9 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
                   </p>
                 </div>
 
-                <div className="text-base sm:text-lg font-black text-blue-700 pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                <div className="text-base sm:text-lg font-black text-brand-primary pt-2 border-t border-slate-200/60 flex items-center justify-between">
                   <span>{activeShift.pay}</span>
-                  <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">Kunlik to'lov</span>
+                  <span className="text-[10px] font-bold text-brand-primary bg-brand-primary/10 border border-brand-primary/20 px-2 py-0.5 rounded-md">Kunlik to'lov</span>
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-600 font-semibold pt-2 border-t border-slate-200/60">
@@ -212,7 +212,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
                   </div>
                 </div>
 
-                <div className="pt-1.5 text-[10px] sm:text-[11px] text-slate-600 font-medium bg-blue-50/90 p-2 rounded-xl border border-blue-100 flex items-center gap-1.5">
+                <div className="pt-1.5 text-[10px] sm:text-[11px] text-slate-600 font-medium bg-brand-primary/5 p-2 rounded-xl border border-brand-primary/10 flex items-center gap-1.5">
                   <CheckCircle2 size={13} className="text-brand-primary shrink-0" />
                   <span>Smena tugashi bilan maosh kartaga o'tkaziladi</span>
                 </div>
@@ -223,11 +223,12 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
             {/* Fixed CTA Button at the very bottom */}
             <div className="pt-3 border-t border-slate-200/80 bg-white shrink-0 mt-auto">
               <button
+                type="button"
                 onClick={() => {
                   try { localStorage.setItem('baito_preselected_role', 'worker'); } catch (e) { console.error('Failed to set baito_preselected_role:', e); }
                   setCurrentScreen('login');
                 }}
-                className="w-full py-3 rounded-xl bg-brand-primary hover:bg-blue-700 text-white text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 active:scale-[0.98]"
+                className="w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primary-container text-white text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-brand-primary/20 active:scale-[0.98]"
               >
                 <span>Ushbu smenaga ariza topshirish</span>
                 <ArrowRight size={15} />

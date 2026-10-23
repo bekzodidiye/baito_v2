@@ -252,6 +252,8 @@ export const AdminPayouts: React.FC = () => {
       if (e.key === 'Escape') {
         setViewingReceipt(null);
         setDecisionModal(null);
+        setReconcileModal(null);
+        setAuditDetailModal(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);

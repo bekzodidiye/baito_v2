@@ -1,9 +1,12 @@
-from sqlalchemy import Column, String, Boolean, ForeignKey
+from sqlalchemy import Column, String, Boolean, ForeignKey, UniqueConstraint
 from app.db.base_class import Base
 from .user import generate_uuid
 
 class PaymentCard(Base):
     __tablename__ = "payment_cards"
+    __table_args__ = (
+        UniqueConstraint("userId", "last4", "bank", name="uq_payment_card_user_last4_bank"),
+    )
     
     id = Column(String, primary_key=True, default=generate_uuid, index=True)
     userId = Column(String, ForeignKey("users.id"), nullable=False, index=True)

@@ -95,7 +95,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
       }} />
             <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
               <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 bg-white text-slate-800 text-xs font-bold rounded-lg cursor-pointer">{language === 'ru' ? 'Изменить' : language === 'en' ? 'Change' : "O'zgartirish"}</button>
-              <button type="button" onClick={() => setImageUrl && setImageUrl('')} className="p-1.5 bg-rose-600 text-white rounded-lg cursor-pointer"><X size={16} /></button>
+              <button type="button" onClick={() => setImageUrl && setImageUrl('')} aria-label={language === 'ru' ? 'Удалить изображение' : language === 'en' ? 'Remove image' : "Rasmni o'chirish"} className="p-1.5 bg-rose-600 text-white rounded-lg cursor-pointer"><X size={16} /></button>
             </div>
           </div>
         ) : (
@@ -159,7 +159,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           {PRESET_TAGS.map(t => {
             const isSel = tags.includes(t);
             return (
-              <button key={t} type="button" onClick={() => toggleTag(t)} className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border cursor-pointer ${isSel ? 'bg-purple-600 text-white border-purple-600 shadow-xs' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}>{t}</button>
+              <button key={t} type="button" onClick={() => toggleTag(t)} className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border cursor-pointer ${isSel ? 'bg-brand-primary text-white border-brand-primary shadow-xs' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}>{t}</button>
             );
           })}
         </div>
