@@ -10,8 +10,8 @@ interface ChatDetailPanelProps {
   t: any;
   inputText: string;
   setInputText: (text: string) => void;
-  attachedFile: AttachedFileData | null;
-  setAttachedFile: (file: AttachedFileData | null) => void;
+  attachedFiles: AttachedFileData[];
+  setAttachedFiles: (files: AttachedFileData[]) => void;
   isTyping: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   handleSend: (e?: React.FormEvent) => void;
@@ -24,8 +24,8 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
   t,
   inputText,
   setInputText,
-  attachedFile,
-  setAttachedFile,
+  attachedFiles,
+  setAttachedFiles,
   isTyping,
   messagesEndRef,
   handleSend,
@@ -189,8 +189,8 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
       <ChatInputBar
         inputText={inputText}
         setInputText={setInputText}
-        attachedFile={attachedFile}
-        setAttachedFile={setAttachedFile}
+        attachedFiles={attachedFiles}
+        setAttachedFiles={setAttachedFiles}
         handleSend={handleSend}
         t={t}
       />
