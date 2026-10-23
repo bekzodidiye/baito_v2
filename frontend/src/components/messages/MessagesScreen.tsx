@@ -22,13 +22,13 @@ export const MessagesScreen: React.FC = () => {
     activeChat,
     inputText,
     setInputText,
-    attachedFile,
-    setAttachedFile,
+    attachedFiles,
+    setAttachedFiles,
     isTyping,
     messagesEndRef,
     handleSend,
     setCurrentScreen,
-    sendMessage
+    deleteMessage
   } = useChatScreen(displayedChatId);
 
   // If no chat selected yet on desktop, select the first one by default for continuous view
@@ -43,7 +43,7 @@ export const MessagesScreen: React.FC = () => {
       {/* Telegram Main 2-Column Desktop Canvas Container */}
       <div className="bg-white overflow-hidden flex flex-col md:flex-row h-full w-full relative">
         {/* Left Contact List Panel ("userlar") */}
-        <div className={`w-full md:w-80 lg:w-96 shrink-0 h-full ${selectedChatId ? 'hidden md:flex' : 'flex'} flex-col`}>
+        <div className={`w-full md:w-[420px] shrink-0 h-full ${selectedChatId ? 'hidden md:flex' : 'flex'} flex-col`}>
           <ChatListPanel
             filteredChats={filteredChats}
             selectedChatId={effectiveActiveChat?.id || null}
@@ -55,19 +55,24 @@ export const MessagesScreen: React.FC = () => {
         </div>
 
         {/* Right Active Chat Conversation Panel ("chat") */}
-        <div className={`flex-1 h-full ${!selectedChatId ? 'hidden md:flex' : 'flex'} flex-col bg-slate-50/50`}>
+        <div className={`flex-1 h-full ${!selectedChatId ? 'hidden md:flex' : 'flex'} flex-col bg-white`}>
           <ChatDetailPanel
             activeChat={effectiveActiveChat}
             t={t}
             inputText={inputText}
             setInputText={setInputText}
-            attachedFile={attachedFile}
-            setAttachedFile={setAttachedFile}
+            attachedFiles={attachedFiles}
+            setAttachedFiles={setAttachedFiles}
             isTyping={isTyping}
             messagesEndRef={messagesEndRef}
             handleSend={handleSend}
             onBackMobile={() => handleChatClick('')}
             setCurrentScreen={setCurrentScreen}
+            onDeleteMessage={(messageId) => {
+              if (effectiveActiveChat) {
+                deleteMessage(effectiveActiveChat.id, messageId);
+              }
+            }}
           />
         </div>
       </div>
