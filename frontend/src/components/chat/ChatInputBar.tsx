@@ -6,8 +6,8 @@ import { EmojiPicker } from './EmojiPicker';
 interface ChatInputBarProps {
   inputText: string;
   setInputText: (text: string) => void;
-  attachedFile?: AttachedFileData | null;
-  setAttachedFile?: (file: AttachedFileData | null) => void;
+  attachedFiles?: AttachedFileData[];
+  setAttachedFiles?: (files: AttachedFileData[]) => void;
   handleSend: (e?: React.FormEvent) => void;
   t: {
     attachFile: string;
@@ -21,8 +21,8 @@ interface ChatInputBarProps {
 export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   inputText,
   setInputText,
-  attachedFile,
-  setAttachedFile,
+  attachedFiles = [],
+  setAttachedFiles,
   handleSend,
   t
 }) => {
@@ -30,21 +30,37 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   const [showEmoji, setShowEmoji] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const previewUrl = URL.createObjectURL(file);
-      if (setAttachedFile) {
-        setAttachedFile({ name: file.name, previewUrl, file });
+    if (e.target.files && e.target.files.length > 0 && setAttachedFiles) {
+      const newFiles: AttachedFileData[] = [];
+      const currentLength = attachedFiles.length;
+      let count = 0;
+      
+      for (let i = 0; i < e.target.files.length; i++) {
+        if (currentLength + count >= 5) break;
+        const file = e.target.files[i];
+        const previewUrl = URL.createObjectURL(file);
+        newFiles.push({ name: file.name, previewUrl, file });
+        count++;
       }
-      window.dispatchEvent(new CustomEvent("global-toast", { detail: `${file.name} biriktirildi` }));
+      
+      if (newFiles.length > 0) {
+        setAttachedFiles([...attachedFiles, ...newFiles]);
+        if (newFiles.length === 1) {
+          window.dispatchEvent(new CustomEvent("global-toast", { detail: `${newFiles[0].name} biriktirildi` }));
+        } else {
+          window.dispatchEvent(new CustomEvent("global-toast", { detail: `${newFiles.length} rasm biriktirildi` }));
+        }
+      }
       e.target.value = '';
     }
   };
 
-  const handleRemoveFile = () => {
-    if (attachedFile && setAttachedFile) {
-      URL.revokeObjectURL(attachedFile.previewUrl);
-      setAttachedFile(null);
+  const handleRemoveFile = (index: number) => {
+    if (setAttachedFiles) {
+      const newFiles = [...attachedFiles];
+      URL.revokeObjectURL(newFiles[index].previewUrl);
+      newFiles.splice(index, 1);
+      setAttachedFiles(newFiles);
     }
   };
 
@@ -53,8 +69,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   };
 
   return (
-    <footer className="sticky bottom-0 w-full bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] px-0 py-0 z-30 relative">
-      {/* Telegram-style Emoji Picker */}
+    <footer className="sticky bottom-0 w-full bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.02)] px-4 py-3 z-30 relative">
       {showEmoji && (
         <EmojiPicker
           onSelect={handleEmojiSelect}
@@ -62,69 +77,86 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
         />
       )}
 
-      {/* Telegram-style Attachment Preview Bar */}
-      {attachedFile && (
-        <div className="w-full max-w-5xl mx-auto px-4 pt-3 pb-1 flex items-end gap-3 bg-white relative">
-          <div className="relative">
-            <div className="w-14 h-14 rounded-lg overflow-hidden shadow-sm bg-slate-50 border border-slate-200">
-              <img 
-                src={attachedFile.previewUrl} 
-                alt={t.previewLabel} 
-                className="w-full h-full object-cover"
-               onError={(e) => {
-        const target = e.currentTarget;
-        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
-        if (target.src !== fallback) {
-          target.src = fallback;
-        }
-      }} />
+      {attachedFiles.length > 0 && (
+        <div className="w-full pb-3 flex flex-wrap items-center gap-3 bg-white">
+          {attachedFiles.map((file, idx) => (
+            <div key={idx} className="flex items-center gap-2.5">
+              <div className="relative">
+                <div className="w-12 h-12 rounded-xl overflow-hidden shadow-xs bg-slate-900 border border-slate-200">
+                  <img 
+                    src={file.previewUrl} 
+                    alt={t.previewLabel} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+                      if (target.src !== fallback) {
+                        target.src = fallback;
+                      }
+                    }} 
+                  />
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => handleRemoveFile(idx)} 
+                  className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 bg-slate-500 text-white rounded-full flex items-center justify-center shadow-xs cursor-pointer z-10 hover:bg-slate-600 transition-colors border border-white"
+                >
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+              </div>
+              <span className="text-[12px] font-normal text-slate-500 truncate max-w-[220px]">
+                {file.name.length > 20 ? file.name.substring(0, 20) + '...' : file.name}
+              </span>
             </div>
-            <button 
-              type="button" 
-              onClick={handleRemoveFile} 
-              className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-slate-500 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer z-10 hover:bg-slate-600 transition-colors border border-white"
-            >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-          </div>
-          <div className="text-[11px] font-semibold text-slate-400 mb-1">
-            {attachedFile.name.length > 20 ? attachedFile.name.substring(0, 20) + '...' : attachedFile.name}
-          </div>
+          ))}
         </div>
       )}
 
-      <div className="w-full max-w-5xl mx-auto flex items-end gap-2 px-4 pb-3 pt-2 relative bg-white">
+      <div className="w-full flex items-center gap-3">
         <input
-              aria-label={t.attachFile} type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-        <button 
-          onClick={() => fileInputRef.current?.click()} 
-          type="button"
-          className="w-11 h-11 flex items-center justify-center rounded-full bg-white text-brand-text-variant shadow-xs hover:bg-slate-50 transition-all cursor-pointer border-0 shrink-0"
-          title={t.attachFile}
-        >
-          <Paperclip size={18} />
-        </button>
+          aria-label={t.attachFile}
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+          accept="image/*"
+          multiple
+        />
 
-        <form onSubmit={handleSend} className="flex-1 relative flex flex-col items-start w-full">
-          <div className="w-full relative flex items-center">
+        {/* Unified rounded input box matching reference screenshot */}
+        <div className="flex-1 flex items-center bg-white border border-[#E2E8F0] rounded-xl px-3 py-2 transition-all focus-within:border-brand-primary/40 focus-within:ring-2 focus-within:ring-brand-primary/10">
+          <button 
+            onClick={() => fileInputRef.current?.click()} 
+            type="button"
+            className="p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-0 bg-transparent flex items-center justify-center shrink-0"
+            title={t.attachFile}
+          >
+            <Paperclip size={20} />
+          </button>
+
+          <form onSubmit={handleSend} className="flex-1 mx-2 focus:outline-none outline-none">
             <input
               aria-label={t.typeMessage}
               type="text"
-              className="w-full bg-slate-50 text-brand-text font-sans rounded-full py-3 px-5 pr-12 border-none focus:outline-none transition-all placeholder:text-brand-outline text-xs font-semibold h-11"
-              placeholder={t.typeMessage}
+              style={{ outline: 'none', boxShadow: 'none' }}
+              className="w-full bg-transparent text-slate-800 text-xs sm:text-sm placeholder:text-slate-400 border-none outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 p-0 shadow-none"
+              placeholder="Xabar yozing..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
             />
-            <button 
-              onClick={() => setShowEmoji(!showEmoji)} 
-              type="button"
-              className={`absolute right-4 transition-colors cursor-pointer ${showEmoji ? 'text-brand-primary' : 'text-brand-outline hover:text-brand-primary'}`}
-              title={t.emoji}
-            >
-              <Smile size={18} />
-            </button>
-          </div>
-        </form>
+          </form>
+
+          <button 
+            onClick={() => setShowEmoji(!showEmoji)} 
+            type="button"
+            className={`p-1 transition-colors cursor-pointer border-0 bg-transparent flex items-center justify-center shrink-0 ${
+              showEmoji ? 'text-brand-primary' : 'text-slate-400 hover:text-slate-600'
+            }`}
+            title={t.emoji}
+          >
+            <Smile size={20} />
+          </button>
+        </div>
 
         <button
           onClick={() => handleSend()}
@@ -132,7 +164,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
           className="w-11 h-11 flex items-center justify-center rounded-full bg-brand-primary text-white shadow-md hover:shadow-lg active:scale-90 transition-all cursor-pointer shrink-0 border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           title={t.send}
         >
-          <Send size={18} className="translate-x-0.5" />
+          <Send size={18} />
         </button>
       </div>
     </footer>
