@@ -727,6 +727,7 @@ const WorkerPopover: React.FC<WorkerPopoverProps> = ({
                 onClick={() => setSearchQuery('')}
                 className="absolute right-2.5 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer"
                 title="Tozalash"
+                aria-label="Tozalash"
               >
                 <X size={13} />
               </button>
@@ -736,6 +737,7 @@ const WorkerPopover: React.FC<WorkerPopoverProps> = ({
                 onClick={onClose}
                 className="absolute right-2.5 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer"
                 title="Yopish"
+                aria-label="Yopish"
               >
                 <X size={13} />
               </button>

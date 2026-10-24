@@ -43,6 +43,8 @@ export const TaxesScreen: React.FC = () => {
     <div className="w-full max-w-6xl mx-auto pb-28 md:pb-6 flex flex-col h-full bg-slate-50 min-h-screen">
       <header className="flex items-center gap-3 px-4 md:px-6 pt-5 pb-3 sticky top-0 bg-slate-50/80 backdrop-blur-md z-40">
         <button
+          type="button"
+          aria-label="Ortga"
           onClick={() => setCurrentScreen('profile')}
           className="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 hover:bg-slate-50 transition-colors rounded-full text-slate-700 cursor-pointer shadow-sm"
         >
@@ -70,7 +72,7 @@ export const TaxesScreen: React.FC = () => {
                 }`}
               >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                  doc.status === 'ready' ? 'bg-indigo-50 text-brand-primary' : 'bg-slate-100 text-slate-400'
+                  doc.status === 'ready' ? 'bg-brand-primary/10 text-brand-primary' : 'bg-slate-100 text-slate-400'
                 }`}>
                   {doc.status === 'ready' ? <FileText size={24} className="stroke-[2]" /> : <FileJson size={24} className="stroke-[2]" />}
                 </div>
@@ -87,7 +89,11 @@ export const TaxesScreen: React.FC = () => {
                 </div>
 
                 {doc.status === 'ready' && (
-                  <button className="w-10 h-10 rounded-full bg-slate-50 text-slate-500 flex items-center justify-center group-hover:bg-brand-primary group-hover:text-white transition-colors shrink-0">
+                  <button
+                    type="button"
+                    aria-label="Yuklab olish"
+                    className="w-10 h-10 rounded-full bg-slate-50 text-slate-500 flex items-center justify-center group-hover:bg-brand-primary group-hover:text-white transition-colors shrink-0"
+                  >
                     <Download size={18} />
                   </button>
                 )}

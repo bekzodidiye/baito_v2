@@ -201,7 +201,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                     activeJob.status === 'in_progress'
                       ? 'bg-emerald-100 text-emerald-800'
                       : activeJob.status === 'completed'
-                        ? 'bg-blue-100 text-blue-800'
+                        ? 'bg-brand-primary/10 text-brand-primary'
                         : activeJob.status === 'pending'
                           ? 'bg-amber-100 text-amber-800'
                           : 'bg-slate-100 text-slate-700'
@@ -309,7 +309,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
               <section className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
                 <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-slate-100">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-brand-primary flex items-center justify-center font-bold">
+                    <div className="w-8 h-8 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold">
                       <Users size={16} />
                     </div>
                     <h3 className="font-bold text-slate-900 text-base">
@@ -319,7 +319,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                     hired >= vac
                       ? 'bg-emerald-100 text-emerald-800'
-                      : 'bg-blue-50 text-brand-primary'
+                      : 'bg-brand-primary/10 text-brand-primary'
                   }`}>
                     {hired} / {vac}
                   </span>

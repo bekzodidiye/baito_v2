@@ -120,9 +120,11 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
         {/* Header */}
         <div className="p-4 sm:p-5 bg-white relative shrink-0 border-b border-slate-100">
           <button
+            type="button"
             onClick={onClose}
             className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center cursor-pointer transition-colors"
             title="Yopish"
+            aria-label="Yopish"
           >
             <X size={16} />
           </button>

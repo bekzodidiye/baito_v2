@@ -34,7 +34,9 @@ export const LoginPromptHeader: React.FC<LoginPromptHeaderProps> = ({
 
       {isModal && onClose && (
         <button
+          type="button"
           onClick={onClose}
+          aria-label={t.close || "Yopish"}
           className="p-1 hover:bg-slate-50 transition-colors rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 border-0 bg-transparent"
         >
           <X size={17} className="stroke-[2.2]" />

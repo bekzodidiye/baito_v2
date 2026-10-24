@@ -388,24 +388,26 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
           </button>
 
           <button
+            type="button"
             onClick={() => handleNavigate('jobs')}
-            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 hover:bg-indigo-50/50 border border-slate-200/80 text-left transition-all hover:border-indigo-300 cursor-pointer group shadow-2xs"
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 hover:bg-brand-primary/5 border border-slate-200/80 text-left transition-all hover:border-brand-primary/30 cursor-pointer group shadow-2xs"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-indigo-100 text-indigo-600">
+              <div className="p-2.5 rounded-xl bg-brand-primary/10 text-brand-primary">
                 <Briefcase size={16} />
               </div>
               <div>
-                <div className="text-xs font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
+                <div className="text-xs font-bold text-slate-900 group-hover:text-brand-primary transition-colors">
                   {language === 'ru' ? 'Модерация вакансий' : language === 'en' ? 'Job Moderation' : 'E\'lonlar Moderatsiyasi'}
                 </div>
                 <div className="text-[10px] text-slate-500">{openJobs} ta yangi e'lon</div>
               </div>
             </div>
-            <ArrowRight size={14} className="text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
+            <ArrowRight size={14} className="text-slate-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all" />
           </button>
 
           <button
+            type="button"
             onClick={() => handleNavigate('transactions')}
             className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 hover:bg-emerald-50/50 border border-slate-200/80 text-left transition-all hover:border-emerald-300 cursor-pointer group shadow-2xs"
           >
@@ -424,6 +426,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
           </button>
 
           <button
+            type="button"
             onClick={() => handleNavigate('broadcast')}
             className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 hover:bg-purple-50/50 border border-slate-200/80 text-left transition-all hover:border-purple-300 cursor-pointer group shadow-2xs"
           >

@@ -54,7 +54,7 @@ export const EmployerChatMessageBubble: React.FC<EmployerChatMessageBubbleProps>
               return (
                 <div className="flex flex-col gap-1.5">
                   <div className="rounded-xl overflow-hidden shadow-sm border border-black/5 bg-slate-100 max-w-[240px] p-6 flex flex-col items-center justify-center gap-2">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                     <span className="text-[10px] font-semibold opacity-70">Fayl</span>
                   </div>
                   {faylMatch[2] && (
@@ -69,7 +69,7 @@ export const EmployerChatMessageBubble: React.FC<EmployerChatMessageBubbleProps>
           {msg.hasMap && (
             <div className="mt-3 rounded-xl overflow-hidden border border-slate-100 bg-white shadow-xs group max-w-sm">
               <div className="w-full h-28 bg-slate-50 flex items-center justify-center relative overflow-hidden">
-                <svg viewBox="0 0 320 112" className="w-full h-full object-cover select-none">
+                <svg viewBox="0 0 320 112" className="w-full h-full object-cover select-none" aria-hidden="true">
                   <rect width="320" height="112" fill="#fafafa" />
                   <path d="M -10 -10 C 40 10, 60 40, 30 75 Z" fill="#f0fdf4" />
                   <path d="M 240 -10 C 270 20, 290 10, 310 5 Z" fill="#f0fdf4" />
@@ -78,7 +78,7 @@ export const EmployerChatMessageBubble: React.FC<EmployerChatMessageBubbleProps>
                     <path d="M -10 40 L 330 40" />
                     <path d="M 120 -10 L 120 120" />
                   </g>
-                  <path d="M 120 90 L 120 40 L 160 40" fill="none" stroke="#3b82f6" strokeWidth="3" />
+                  <path d="M 120 90 L 120 40 L 160 40" fill="none" stroke="var(--color-brand-primary, #000666)" strokeWidth="3" />
                 </svg>
 
                 <div className="absolute top-[36%] left-[50%] -translate-x-[50%] -translate-y-[50%]">

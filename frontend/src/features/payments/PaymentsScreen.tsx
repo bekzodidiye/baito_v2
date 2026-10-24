@@ -149,6 +149,7 @@ export const PaymentsScreen: React.FC = () => {
       <header className="sticky top-0 w-full z-50 bg-brand-background flex items-center justify-between px-5 md:px-0 py-2 h-16 mb-4">
         <div className="flex items-center gap-4">
           <button 
+            type="button"
             onClick={handleBack}
             aria-label={language === 'uz' ? 'Orqaga' : language === 'ru' ? 'Назад' : 'Back'}
             className="active:scale-95 duration-200 p-2 hover:bg-slate-200 transition-colors rounded-full cursor-pointer"
@@ -160,6 +161,7 @@ export const PaymentsScreen: React.FC = () => {
           </h1>
         </div>
         <button 
+          type="button"
           onClick={() => {
             setShowSearch((open) => {
               if (open) setSearchQuery('');
@@ -204,11 +206,11 @@ export const PaymentsScreen: React.FC = () => {
               {formatMoney(currentBalance)} {language === 'uz' ? "so'm" : "UZS"}
             </h2>
             <div className="flex items-center gap-3 w-full mt-2">
-              <button onClick={() => navigate('/payments/top-up')} className="flex-1 bg-white text-brand-primary font-bold py-3.5 rounded-lg active:scale-95 transition-transform duration-150 flex items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 shadow-sm border border-transparent">
+              <button type="button" onClick={() => navigate('/payments/top-up')} className="flex-1 bg-white text-brand-primary font-bold py-3.5 rounded-lg active:scale-95 transition-transform duration-150 flex items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 shadow-sm border border-transparent">
                 <PlusCircle size={20} className="fill-current" />
                 {language === 'uz' ? "To'ldirish" : language === 'ru' ? 'Пополнить' : 'Deposit'}
               </button>
-              <button onClick={() => setModalType('withdraw')} className="flex-1 bg-white/20 text-white font-bold py-3.5 rounded-lg border border-white/30 active:scale-95 transition-transform duration-150 flex items-center justify-center gap-2 cursor-pointer hover:bg-white/30 backdrop-blur-sm shadow-sm">
+              <button type="button" onClick={() => setModalType('withdraw')} className="flex-1 bg-white/20 text-white font-bold py-3.5 rounded-lg border border-white/30 active:scale-95 transition-transform duration-150 flex items-center justify-center gap-2 cursor-pointer hover:bg-white/30 backdrop-blur-sm shadow-sm">
                 <Wallet size={20} className="fill-current" />
                 {language === 'uz' ? 'Yechish' : language === 'ru' ? 'Снять' : 'Withdraw'}
               </button>
@@ -273,7 +275,7 @@ export const PaymentsScreen: React.FC = () => {
 
         {/* Quick Actions */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button onClick={() => navigate('/payments/top-up')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
+          <button type="button" onClick={() => navigate('/payments/top-up')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
             <div className="p-2 bg-emerald-100 rounded-lg">
               <PlusCircle className="text-emerald-600 w-6 h-6" />
             </div>
@@ -282,7 +284,7 @@ export const PaymentsScreen: React.FC = () => {
             </span>
           </button>
 
-          <button onClick={() => setModalType('withdraw')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
+          <button type="button" onClick={() => setModalType('withdraw')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
             <div className="p-2 bg-brand-primary/10 rounded-lg">
               <Banknote className="text-brand-primary w-6 h-6" />
             </div>
@@ -291,7 +293,7 @@ export const PaymentsScreen: React.FC = () => {
             </span>
           </button>
           
-          <button onClick={() => navigate('/payments/my-cards')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
+          <button type="button" onClick={() => navigate('/payments/my-cards')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
             <div className="p-2 bg-brand-primary/10 rounded-lg">
               <CreditCard className="text-brand-primary w-6 h-6" />
             </div>
@@ -300,7 +302,7 @@ export const PaymentsScreen: React.FC = () => {
             </span>
           </button>
           
-          <button onClick={() => navigate('/payments/add-card')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
+          <button type="button" onClick={() => navigate('/payments/add-card')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
             <div className="p-2 bg-brand-primary-container/20 rounded-lg">
               <PlusCircle className="text-brand-primary w-6 h-6" />
             </div>
@@ -332,6 +334,7 @@ export const PaymentsScreen: React.FC = () => {
               {language === 'uz' ? "So'nggi operatsiyalar" : language === 'ru' ? 'Последние операции' : 'Recent Transactions'}
             </h3>
             <button 
+              type="button"
               onClick={() => setTxFilter('all')}
               className="text-brand-primary text-sm font-bold cursor-pointer"
             >
@@ -342,6 +345,7 @@ export const PaymentsScreen: React.FC = () => {
           {!isEmployer && (
           <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
             <button 
+              type="button"
               onClick={() => setTxFilter('all')}
               className={`px-4 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap cursor-pointer transition-colors ${
                 txFilter === 'all' 
@@ -352,6 +356,7 @@ export const PaymentsScreen: React.FC = () => {
               {language === 'uz' ? 'Hammasi' : language === 'ru' ? 'Все' : 'All'}
             </button>
             <button 
+              type="button"
               onClick={() => setTxFilter('in')}
               className={`px-4 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap cursor-pointer transition-colors ${
                 txFilter === 'in' 
@@ -362,6 +367,7 @@ export const PaymentsScreen: React.FC = () => {
               {language === 'uz' ? 'Kirim' : language === 'ru' ? 'Приход' : 'Income'}
             </button>
             <button 
+              type="button"
               onClick={() => setTxFilter('out')}
               className={`px-4 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap cursor-pointer transition-colors ${
                 txFilter === 'out' 

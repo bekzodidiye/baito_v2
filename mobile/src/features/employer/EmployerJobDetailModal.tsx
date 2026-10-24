@@ -5,6 +5,7 @@ import { Job } from '../../types';
 import { getJobDetails } from '../../utils/jobDetailHelpers';
 import { getJobBannerImage } from './EmployerJobCard';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
+import { useFocusTrap } from '../../components/common/useFocusTrap';
 
 interface EmployerJobDetailModalProps {
   job: Job | null;
@@ -22,6 +23,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
   onDelete,
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const trapRef = useFocusTrap<HTMLDivElement>(Boolean(job), onClose);
   
   if (!job) return null;
 
@@ -41,6 +43,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
     <AnimatePresence>
       <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/40 backdrop-blur-sm">
         <motion.div
+          ref={trapRef}
           initial={{ opacity: 0, y: 100 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 100 }}
@@ -51,7 +54,9 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
           <div className="flex items-center justify-between px-5 py-4 bg-white z-10 shrink-0">
             <div className="flex items-center gap-3">
               <button 
+                type="button"
                 onClick={onClose} 
+                aria-label={language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                 className="text-slate-900 hover:text-brand-primary transition-colors cursor-pointer w-8 h-8 flex items-center justify-center -ml-2"
               >
                 <ArrowLeft size={24} strokeWidth={2.5} />
@@ -110,7 +115,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                 <div className="bg-[#E5F9ED] text-[#00B85E] px-3 py-1.5 rounded-lg text-[13px] font-bold">
                   12 soat muddatgacha
                 </div>
-                <div className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg text-[13px] font-bold flex items-center gap-1.5 border border-indigo-100/50">
+                <div className="bg-brand-primary/10 text-brand-primary px-3 py-1.5 rounded-lg text-[13px] font-bold flex items-center gap-1.5 border border-brand-primary/20">
                   <Users size={16} strokeWidth={2.5} /> {language === 'uz' ? 'Ishchilar:' : 'Workers:'} {hired}/{vac}
                 </div>
                 <div className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-[13px] font-bold">
@@ -259,6 +264,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                     <span>{language === 'uz' ? "O'chirish" : 'Удалить'}</span>
                   </button>
                   <button
+                    type="button"
                     onClick={onClose}
                     className="flex-1 py-4 px-6 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
                   >
@@ -267,7 +273,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                 </>
               ) : job.status === 'in_progress' ? (
                 <div className="w-full flex flex-col gap-2.5">
-                  <div className="w-full py-3 px-4 bg-blue-50 text-blue-700 border border-blue-100 rounded-xl text-xs font-bold text-center">
+                  <div className="w-full py-3 px-4 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 rounded-xl text-xs font-bold text-center">
                     {language === 'uz'
                       ? 'Ish jarayonda — smena xodim tomonidan yakunlanadi'
                       : language === 'ru'
@@ -275,6 +281,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                         : 'Work in progress — worker will complete the shift'}
                   </div>
                   <button
+                    type="button"
                     onClick={onClose}
                     className="w-full py-4 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
                   >

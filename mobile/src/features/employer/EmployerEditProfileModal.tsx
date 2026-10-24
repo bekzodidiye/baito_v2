@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { showToast } from '../../utils/toast';
+import { useFocusTrap } from '../../components/common/useFocusTrap';
 
 interface EmployerEditProfileModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
   const [name, setName] = useState(currentName);
   const [phone, setPhone] = useState(currentPhone);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const trapRef = useFocusTrap<HTMLDivElement>({ isOpen, onClose: !isSubmitting ? onClose : undefined });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +58,10 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
 
           {/* Modal Content */}
           <motion.div 
+            ref={trapRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={language === 'uz' ? "Profilni tahrirlash" : "Редактировать профиль"}
             initial={{ scale: 0.95, opacity: 0, y: 10 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 10 }}
@@ -66,6 +72,8 @@ export const EmployerEditProfileModal: React.FC<EmployerEditProfileModalProps> =
                 {language === 'uz' ? "Profilni tahrirlash" : "Редактировать профиль"}
               </h3>
               <button 
+                type="button"
+                aria-label={language === 'uz' ? "Yopish" : "Закрыть"}
                 onClick={onClose}
                 disabled={isSubmitting}
                 className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer disabled:opacity-50"

@@ -674,7 +674,7 @@ export const InvoicePayScreen: React.FC = () => {
             className="shrink-0 p-2 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex flex-col items-center"
             title="QR-kod orqali tekshirish"
           >
-            <svg className="w-11 h-11 text-slate-800" viewBox="0 0 24 24" fill="currentColor">
+            <svg aria-hidden="true" className="w-11 h-11 text-slate-800" viewBox="0 0 24 24" fill="currentColor">
               <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm10-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm14-2h4v4h-4v-4zm-4 4h4v4h-4v-4zm4 4h4v4h-4v-4zm-4-8h4v4h-4v-4z" />
             </svg>
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">
@@ -853,7 +853,7 @@ export const InvoicePayScreen: React.FC = () => {
             className="shrink-0 p-2 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex flex-col items-center"
             title="QR-kod orqali tekshirish"
           >
-            <svg className="w-11 h-11 text-slate-800" viewBox="0 0 24 24" fill="currentColor">
+            <svg aria-hidden="true" className="w-11 h-11 text-slate-800" viewBox="0 0 24 24" fill="currentColor">
               <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm10-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm14-2h4v4h-4v-4zm-4 4h4v4h-4v-4zm4 4h4v4h-4v-4zm-4-8h4v4h-4v-4z" />
             </svg>
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">

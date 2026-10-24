@@ -138,7 +138,9 @@ export const EmployerPayInvoiceModal: React.FC<EmployerPayInvoiceModalProps> = (
                 {t("To'lovni qayd etish", 'Отметить оплату', 'Record payment')}
               </h3>
               <button
+                type="button"
                 onClick={onClose}
+                aria-label={t("Yopish", "Закрыть", "Close")}
                 disabled={isSubmitting || isUploading}
                 className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer disabled:opacity-50"
               >

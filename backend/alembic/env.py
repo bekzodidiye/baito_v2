@@ -4,6 +4,8 @@ import sys
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from sqlalchemy.engine.mock import MockConnection
+from sqlalchemy.inspection import _inspects
 
 from alembic import context
 
@@ -23,9 +25,6 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
-
-from sqlalchemy.engine.mock import MockConnection
-from sqlalchemy.inspection import _inspects
 
 class MockInspector:
     """Mock inspector allowing offline migrations (--sql) to inspect metadata."""

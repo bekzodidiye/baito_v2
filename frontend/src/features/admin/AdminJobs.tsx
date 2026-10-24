@@ -13,6 +13,7 @@ import { RejectJobModal } from './RejectJobModal';
 import { AdminJobsAutoDeleteBanner } from './AdminJobsAutoDeleteBanner';
 import { JobDetailModal } from './JobDetailModal';
 import { StatusSelect } from './AdminCustomControls';
+import { clickable } from '../../utils/clickable';
 
 const getCompanyBrand = (name: string = '') => {
   const clean = name.trim() || 'B';
@@ -500,7 +501,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({
                 ) : (
                   filteredJobs.map((j) => (
                     <tr key={j.id} className="hover:bg-slate-50/90 transition-colors group">
-                      <td className="p-4 pl-5 font-bold text-slate-900 group-hover:text-brand-primary cursor-pointer" onClick={() => setOpenJob(j)}>
+                      <td className="p-4 pl-5 font-bold text-slate-900 group-hover:text-brand-primary cursor-pointer" {...clickable(() => setOpenJob(j))}>
                         <div className="flex items-center gap-3">
                           <CompanyAvatar
                             size="sm"

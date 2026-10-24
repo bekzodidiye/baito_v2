@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, PlusCircle, Wallet, CreditCard, CheckCircle2, AlertCircle, Trash2, Star, ChevronDown } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useNavigate } from 'react-router-dom';
+import { useFocusTrap } from '../../components/common/useFocusTrap';
 
 export type PaymentModalType = 'deposit' | 'withdraw' | 'addCard' | 'myCards' | null;
 
@@ -23,6 +24,18 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
   const [selectedCardId, setSelectedCardId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const handleClose = () => {
+    onClose();
+    setTimeout(() => {
+      setAmount('');
+      setCardNumber('');
+      setCardExpiry('');
+      setSuccess(false);
+    }, 300);
+  };
+
+  const trapRef = useFocusTrap<HTMLDivElement>({ isOpen: Boolean(isOpen && type), onClose: handleClose });
 
   // Set default selected card
   useEffect(() => {
@@ -95,22 +108,12 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
     }, 1500);
   };
 
-  const handleClose = () => {
-    onClose();
-    setTimeout(() => {
-      setAmount('');
-      setCardNumber('');
-      setCardExpiry('');
-      setSuccess(false);
-    }, 300);
-  };
-
   const renderIcon = () => {
     switch (type) {
       case 'deposit': return <PlusCircle size={24} className="text-emerald-600" />;
       case 'withdraw': return <Wallet size={24} className="text-brand-primary" />;
       case 'addCard': return <CreditCard size={24} className="text-brand-primary" />;
-      case 'myCards': return <CreditCard size={24} className="text-blue-600" />;
+      case 'myCards': return <CreditCard size={24} className="text-brand-primary" />;
       default: return null;
     }
   };
@@ -142,6 +145,10 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
           />
 
           <motion.div
+            ref={trapRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={renderTitle()}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -157,6 +164,8 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
                 <span>{renderTitle()}</span>
               </h3>
               <button
+                type="button"
+                aria-label={t.close || 'Yopish'}
                 onClick={handleClose}
                 className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600 active:scale-95"
               >
@@ -177,6 +186,7 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
                   <h4 className="text-2xl font-display font-bold text-slate-800">{t.successTitle}</h4>
                   <p className="text-slate-500 text-lg">{t.successDesc}</p>
                   <button
+                    type="button"
                     onClick={handleClose}
                     className="w-full mt-8 bg-slate-100 text-slate-700 font-bold py-4 rounded-xl hover:bg-slate-200 active:scale-95 transition-all text-lg"
                   >
@@ -364,11 +374,23 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
                                   </div>
                                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     {!card.isDefault && (
-                                      <button className="p-2 text-slate-400 hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50 rounded-lg transition-colors" title={t.makeDefault}>
+                                      <button
+                                        type="button"
+                                        aria-label={t.makeDefault}
+                                        onClick={() => {}}
+                                        className="p-2 text-slate-400 hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50 rounded-lg transition-colors"
+                                        title={t.makeDefault}
+                                      >
                                         <Star size={18} />
                                       </button>
                                     )}
-                                    <button className="p-2 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-lg transition-colors" title={t.delete}>
+                                    <button
+                                      type="button"
+                                      aria-label={t.delete}
+                                      onClick={() => {}}
+                                      className="p-2 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-lg transition-colors"
+                                      title={t.delete}
+                                    >
                                       <Trash2 size={18} />
                                     </button>
                                   </div>
@@ -387,6 +409,7 @@ export const PaymentModals: React.FC<PaymentModalsProps> = ({ isOpen, onClose, t
                       )}
                       
                       <button
+                        type="button"
                         onClick={() => {
                           onClose();
                           navigate('/payments/add-card');

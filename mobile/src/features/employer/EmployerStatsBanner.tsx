@@ -1,6 +1,7 @@
 import React from 'react';
 import { Briefcase, FileText, Eye, Activity, Plus } from 'lucide-react';
 import { Language } from '../../translations';
+import { clickable } from '../../utils/clickable';
 
 interface EmployerStatsBannerProps {
   language: Language;
@@ -44,17 +45,18 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
             </p>
           </div>
           <button 
+            type="button"
             onClick={onViewAnalyticsClick}
             className="px-4 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl text-white text-xs font-bold transition-all active:scale-95 cursor-pointer border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex items-center gap-2"
           >
             <Activity size={14} className="stroke-[2.5]" />
-            {language === 'uz' ? "Statistika" : "Аналитика"}
+            {language === 'uz' ? "Statistika" : language === 'ru' ? "Аналитика" : "Analytics"}
           </button>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
           {/* Card 1 */}
-          <div onClick={onViewAllJobsClick} className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 cursor-pointer hover:border-white/30 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all overflow-hidden relative">
+          <div {...clickable(onViewAllJobsClick)} className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 cursor-pointer hover:border-white/30 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all overflow-hidden relative">
             <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
             <div className="flex flex-col gap-3 relative z-10">
               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/90">
@@ -70,7 +72,7 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
           </div>
 
           {/* Card 2 */}
-          <div onClick={onViewApplicantsClick} className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 cursor-pointer hover:border-white/30 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all overflow-hidden relative">
+          <div {...clickable(onViewApplicantsClick)} className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 cursor-pointer hover:border-white/30 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all overflow-hidden relative">
             <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
             {pendingApplicantsCount > 0 && (
               <span className="absolute top-4 right-4 flex h-3 w-3">
@@ -112,7 +114,7 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
             <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
             <div className="flex flex-col gap-3 relative z-10">
               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/90">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
               </div>
               <div>
                 <p className="text-3xl md:text-4xl font-black tracking-tight">{avgFillRate}%</p>
@@ -125,6 +127,7 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
         </div>
 
         <button
+          type="button"
           onClick={onPostJobClick}
           className="mt-8 w-full py-4.5 bg-white text-brand-primary hover:bg-slate-50 hover:shadow-[0_12px_24px_rgba(255,255,255,0.2)] font-display font-black text-[15px] rounded-2xl shadow-[0_8px_16px_rgba(0,0,0,0.1)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer group"
         >
