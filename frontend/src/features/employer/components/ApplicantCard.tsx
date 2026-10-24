@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, X, Star, Briefcase, MapPin, Clock, CheckCircle, Loader2 } from 'lucide-react';
+import { Check, X, Star, Briefcase, MapPin, Clock, CheckCircle, Loader2, MessageSquare } from 'lucide-react';
 import { motion } from 'motion/react';
 import { confirmStartJobApi } from '../../../api/queries';
 import { ConfirmModal } from '../../../components/common/ConfirmModal';
@@ -128,9 +128,22 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
         
         <div className="flex-1 min-w-0 pt-1">
           <div className="flex justify-between items-start">
-            <h3 className="font-display font-black text-base text-slate-800 truncate">
-              {app.workerName || app.candidateName}
-            </h3>
+            <div className="flex items-center gap-2 min-w-0">
+              <h3 className="font-display font-black text-base text-slate-800 truncate">
+                {app.workerName || app.candidateName}
+              </h3>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChatClick(app.workerName || app.candidateName);
+                }}
+                title={language === 'uz' ? "Xabar yozish" : language === 'ru' ? "Написать сообщение" : "Chat"}
+                className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-100 text-brand-primary flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              >
+                <MessageSquare size={13} className="stroke-[2.5]" />
+              </button>
+            </div>
             {/* Status Badges */}
             {isHired && (
               <span className="shrink-0 bg-emerald-50 text-emerald-600 text-[9px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md ml-2 border border-emerald-100/50">
