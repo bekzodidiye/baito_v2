@@ -58,7 +58,8 @@ export const EmployerChatList: React.FC<EmployerChatListProps> = ({
               <input
                 type="text"
                 autoFocus
-                className="w-full h-full pl-3 pr-8 bg-transparent text-sm font-sans focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-400 font-semibold text-slate-800 border-none"
+                style={{ outline: 'none', boxShadow: 'none' }}
+                className="w-full h-full pl-3 pr-8 bg-transparent text-sm font-sans border-none outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 placeholder:text-slate-400 font-semibold text-slate-800 shadow-none"
                 placeholder={t.searchChatPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -123,7 +124,7 @@ export const EmployerChatList: React.FC<EmployerChatListProps> = ({
                 
                 <div className="flex justify-between items-center mt-1">
                   <p className={`text-xs truncate pr-4 text-brand-text-variant font-medium`}>
-                    {lastMsg?.text || t.conversationNotStarted}
+                    {lastMsg?.text?.includes('[Img:') ? '📷 Rasm' : (lastMsg?.text || t.conversationNotStarted)}
                   </p>
                 </div>
               </div>
