@@ -1,26 +1,31 @@
 import React from 'react';
 import { translations } from '../../../translations';
 import { useAuthStore } from '../../../store/useAuthStore';
-import { MapPin } from 'lucide-react';
+import { MapPin, MoreVertical } from 'lucide-react';
 import { ChatSession } from '../../../hooks/useEmployerChat';
+import { ImageModal } from '../../../components/chat/ImageModal';
 
 interface EmployerChatMessageBubbleProps {
   msg: any;
   isRecruiter: boolean;
   activeSession: ChatSession;
   workplaceText: string;
+  onOpenMenu?: (msg: any, x: number, y: number) => void;
 }
 
 export const EmployerChatMessageBubble: React.FC<EmployerChatMessageBubbleProps> = ({
   msg,
   isRecruiter,
   activeSession,
-  workplaceText
+  workplaceText,
+  onOpenMenu
 }) => {
+  const [modalImage, setModalImage] = React.useState<string | null>(null);
+  const lastTapRef = React.useRef<{ id: string; time: number }>({ id: '', time: 0 });
   const language = useAuthStore(st => st.language);
   const t = translations[language];
   return (
-    <div className={`flex items-end gap-2 max-w-[85%] ${isRecruiter ? 'self-end flex-row-reverse' : 'self-start'}`}>
+    <div className={`flex items-end gap-1.5 max-w-[85%] group relative ${isRecruiter ? 'self-end flex-row-reverse' : 'self-start'}`}>
       {!isRecruiter && (
         <div className="w-8 h-8 rounded-full bg-brand-surface-low flex-shrink-0 flex items-center justify-center overflow-hidden border border-brand-outline-variant shadow-xs">
           {activeSession.candidateAvatar ? (
@@ -36,30 +41,134 @@ export const EmployerChatMessageBubble: React.FC<EmployerChatMessageBubbleProps>
           )}
         </div>
       )}
-      <div className="flex flex-col gap-0.5">
+
+      {onOpenMenu && (
+        <div
+          className={`opacity-0 group-hover:opacity-100 transition-opacity flex items-center mb-1 shrink-0 ${
+            isRecruiter ? 'order-first' : 'order-last'
+          }`}
+        >
+          <button
+            type="button"
+            title={language === 'uz' ? 'Amallar' : language === 'ru' ? 'Действия' : 'Actions'}
+            onClick={(e) => {
+              e.stopPropagation();
+              const rect = e.currentTarget.getBoundingClientRect();
+              onOpenMenu(
+                msg,
+                isRecruiter ? Math.max(10, rect.left - 165) : Math.min(window.innerWidth - 180, rect.right + 6),
+                Math.min(rect.top, window.innerHeight - 120),
+              );
+            }}
+            className="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
+          >
+            <MoreVertical size={13} />
+          </button>
+        </div>
+      )}
+
+      <div
+        className="flex flex-col gap-0.5 cursor-pointer select-none"
+        onContextMenu={(e) => {
+          if (onOpenMenu) {
+            e.preventDefault();
+            e.stopPropagation();
+            onOpenMenu(
+              msg,
+              Math.min(e.clientX, window.innerWidth - 180),
+              Math.min(e.clientY, window.innerHeight - 120),
+            );
+          }
+        }}
+        onDoubleClick={(e) => {
+          if (onOpenMenu) {
+            e.preventDefault();
+            e.stopPropagation();
+            onOpenMenu(
+              msg,
+              Math.min(e.clientX, window.innerWidth - 180),
+              Math.min(e.clientY, window.innerHeight - 120),
+            );
+          }
+        }}
+        onTouchEnd={(e) => {
+          if (!onOpenMenu) return;
+          const now = Date.now();
+          if (lastTapRef.current.id === msg.id && now - lastTapRef.current.time < 350) {
+            const touch = e.changedTouches[0];
+            if (touch) {
+              e.preventDefault();
+              onOpenMenu(
+                msg,
+                Math.min(touch.clientX, window.innerWidth - 180),
+                Math.min(touch.clientY, window.innerHeight - 120),
+              );
+            }
+            lastTapRef.current = { id: '', time: 0 };
+          } else {
+            lastTapRef.current = { id: msg.id, time: now };
+          }
+        }}
+      >
         <div className={`p-3.5 rounded-2xl text-xs font-semibold leading-relaxed ${isRecruiter ? 'bg-brand-primary text-white rounded-br-none shadow-[inset_0_4px_8px_rgba(0,0,0,0.25),_inset_0_1px_3px_rgba(0,0,0,0.12),_0_4px_12px_rgba(26,35,126,0.25)]' : 'bg-white text-brand-text rounded-bl-none border border-brand-outline-variant/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.03),_0_2px_6px_rgba(0,0,0,0.04)]'}`}>
           {(() => {
-            // New format: [Img:<blobUrl>] optional text
-            const imgMatch = msg.text.match(/^\[Img:(.*?)\]\s*(.*)$/);
-            if (imgMatch) {
+            const imgRegex = /\[Img:(.*?)\]/g;
+            const images: string[] = [];
+            let match;
+            while ((match = imgRegex.exec(msg.text)) !== null) {
+              if (match[1]) images.push(match[1]);
+            }
+
+            if (images.length > 0) {
+              const cleanCaption = msg.text.replace(/\[Img:.*?\]/g, '').trim();
               return (
                 <div className="flex flex-col gap-1.5">
-                  <div className="rounded-xl overflow-hidden shadow-sm border border-black/5 bg-slate-100 max-w-[240px]">
-                    <img 
-                      src={imgMatch[1]} 
-                      alt={t.imageLabel} 
-                      className="w-full h-auto object-cover rounded-xl"
-                      style={{ maxHeight: '280px' }}
-                     onError={(e) => {
-        const target = e.currentTarget;
-        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
-        if (target.src !== fallback) {
-          target.src = fallback;
-        }
-      }} />
-                  </div>
-                  {imgMatch[2] && (
-                    <p className="whitespace-pre-wrap leading-relaxed">{imgMatch[2]}</p>
+                  {images.length === 1 ? (
+                    <div 
+                      className="rounded-xl overflow-hidden shadow-sm border border-black/5 bg-slate-100 w-48 h-48 cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => setModalImage(images[0])}
+                    >
+                      <img 
+                        src={images[0]} 
+                        alt={t.imageLabel} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+                          if (target.src !== fallback) {
+                            target.src = fallback;
+                          }
+                        }} 
+                      />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-1.5 max-w-[280px]">
+                      {images.map((imgUrl, i) => (
+                        <div 
+                          key={i} 
+                          className={`rounded-xl overflow-hidden shadow-sm border border-black/5 bg-slate-100 cursor-pointer hover:opacity-90 transition-opacity ${
+                            images.length === 3 && i === 0 ? 'col-span-2 h-36' : 'h-28'
+                          }`}
+                          onClick={() => setModalImage(imgUrl)}
+                        >
+                          <img 
+                            src={imgUrl} 
+                            alt={t.imageLabel} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+                              if (target.src !== fallback) {
+                                target.src = fallback;
+                              }
+                            }} 
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {cleanCaption && (
+                    <p className="whitespace-pre-wrap leading-relaxed mt-1">{cleanCaption}</p>
                   )}
                 </div>
               );
@@ -120,6 +229,7 @@ export const EmployerChatMessageBubble: React.FC<EmployerChatMessageBubbleProps>
           {isRecruiter && <span className="text-[10px] text-brand-primary shrink-0">✓✓</span>}
         </div>
       </div>
+      <ImageModal isOpen={!!modalImage} imageUrl={modalImage || ''} onClose={() => setModalImage(null)} />
     </div>
   );
 };
