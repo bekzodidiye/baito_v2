@@ -56,10 +56,11 @@ export const EmployerChatList: React.FC<EmployerChatListProps> = ({
             <div className="relative flex items-center bg-white border border-slate-200/90 rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.04)] h-12 px-4 group/search">
               <Search className="text-slate-400 group-focus-within/search:text-brand-primary transition-colors flex-shrink-0" size={18} />
               <input
-              aria-label={t.searchChatPlaceholder}
+                aria-label={t.searchChatPlaceholder}
                 type="text"
                 autoFocus
-                className="w-full h-full pl-3 pr-8 bg-transparent text-sm font-sans focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 transition-all placeholder:text-slate-400 font-semibold text-slate-800 border-none"
+                style={{ outline: 'none', boxShadow: 'none' }}
+                className="w-full h-full pl-3 pr-8 bg-transparent text-sm font-sans border-none outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 placeholder:text-slate-400 font-semibold text-slate-800 shadow-none"
                 placeholder={t.searchChatPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -130,7 +131,15 @@ export const EmployerChatList: React.FC<EmployerChatListProps> = ({
                 
                 <div className="flex justify-between items-center mt-1">
                   <p className={`text-xs truncate pr-4 text-brand-text-variant font-medium`}>
-                    {lastMsg?.text || t.conversationNotStarted}
+                    {(() => {
+                      if (!lastMsg?.text) return t.conversationNotStarted;
+                      const hasImages = /\[Img:.*?\]/.test(lastMsg.text);
+                      const cleanText = lastMsg.text.replace(/\[Img:.*?\]/g, '').replace(/\[Fayl:.*?\]/g, '').trim();
+                      if (hasImages) {
+                        return cleanText ? `📷 ${cleanText}` : '📷 Rasm';
+                      }
+                      return lastMsg.text;
+                    })()}
                   </p>
                 </div>
               </div>
