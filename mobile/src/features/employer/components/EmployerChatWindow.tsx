@@ -20,7 +20,7 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
   isTyping
 }) => {
   const [inputText, setInputText] = useState('');
-  const [attachedFile, setAttachedFile] = useState<{ name: string; previewUrl: string } | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<{ name: string; previewUrl: string; file?: File }[]>([]);
   const [showEmoji, setShowEmoji] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -41,16 +41,18 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
 
   const handleSend = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!inputText.trim() && !attachedFile) return;
+    if (!inputText.trim() && attachedFiles.length === 0) return;
     
     let textToSend = inputText;
-    if (attachedFile) {
-      textToSend = `[Img:${attachedFile.previewUrl}]` + (textToSend ? ` ${textToSend}` : '');
+    if (attachedFiles.length > 0) {
+      attachedFiles.forEach(file => {
+        textToSend = `[Img:${file.previewUrl}]` + (textToSend ? ` ${textToSend}` : '');
+      });
     }
     
     onSendMessage(textToSend);
     setInputText('');
-    setAttachedFile(null);
+    setAttachedFiles([]);
   };
 
   const safeMessages = Array.isArray(activeSession.messages) 
@@ -152,27 +154,31 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
         )}
 
         {/* Telegram-style Attachment Preview Bar */}
-        {attachedFile && (
-          <div className="w-full max-w-5xl mx-auto px-4 pt-3 pb-1 flex items-end gap-3 bg-white relative">
-            <div className="relative">
-              <div className="w-14 h-14 rounded-lg overflow-hidden shadow-sm bg-slate-50 border border-slate-200">
-                <img 
-                  src={attachedFile.previewUrl} 
-                  alt="Preview" 
-                  className="w-full h-full object-cover"
-                />
+        {attachedFiles.length > 0 && (
+          <div className="w-full max-w-5xl mx-auto px-4 pt-3 pb-1 flex flex-wrap gap-3 bg-white relative">
+            {attachedFiles.map((file, idx) => (
+              <div key={idx} className="relative">
+                <div className="w-14 h-14 rounded-lg overflow-hidden shadow-sm bg-slate-50 border border-slate-200">
+                  <img 
+                    src={file.previewUrl} 
+                    alt="Preview" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    const newFiles = [...attachedFiles];
+                    URL.revokeObjectURL(newFiles[idx].previewUrl);
+                    newFiles.splice(idx, 1);
+                    setAttachedFiles(newFiles);
+                  }} 
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-slate-500 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer z-10 hover:bg-slate-600 transition-colors border border-white"
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
               </div>
-              <button 
-                type="button" 
-                onClick={() => { URL.revokeObjectURL(attachedFile.previewUrl); setAttachedFile(null); }} 
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-slate-500 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer z-10 hover:bg-slate-600 transition-colors border border-white"
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </button>
-            </div>
-            <div className="text-[11px] font-semibold text-slate-400 mb-1">
-              {attachedFile.name.length > 20 ? attachedFile.name.substring(0, 20) + '...' : attachedFile.name}
-            </div>
+            ))}
           </div>
         )}
 
@@ -182,12 +188,21 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
             id="employer-chat-file" 
             className="hidden" 
             accept="image/*,application/pdf,.doc,.docx"
+            multiple
             onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                const file = e.target.files[0];
-                const previewUrl = URL.createObjectURL(file);
-                setAttachedFile({ name: file.name, previewUrl });
-                window.dispatchEvent(new CustomEvent("global-toast", { detail: `${file.name} biriktirildi` }));
+              if (e.target.files) {
+                const newFiles = Array.from(e.target.files);
+                if (attachedFiles.length + newFiles.length > 5) {
+                  window.dispatchEvent(new CustomEvent("global-toast", { detail: "Siz ko'pi bilan 5 ta rasm tanlashingiz mumkin" }));
+                  return;
+                }
+                const newAttachedFiles = newFiles.map(f => ({
+                  name: f.name,
+                  previewUrl: URL.createObjectURL(f),
+                  file: f
+                }));
+                setAttachedFiles([...attachedFiles, ...newAttachedFiles]);
+                window.dispatchEvent(new CustomEvent("global-toast", { detail: `${newFiles.length} rasm biriktirildi` }));
                 e.target.value = '';
               }
             }} 
