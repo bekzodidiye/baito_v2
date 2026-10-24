@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEmployer } from './useEmployer';
 import { openChatSocket, SocketMessage } from '../api/chatSocket';
-import { fetchChats, fetchChatMessages, sendChatMessageApi, createChatApi, markChatReadApi } from '../api/queries';
+import { fetchChats, fetchChatMessages, sendChatMessageApi, deleteChatMessageApi, createChatApi, markChatReadApi } from '../api/queries';
 
 /**
  * The employer's side of the same conversations.
@@ -152,6 +152,14 @@ export const useEmployerChat = (
     const chatId = selectedSessionId;
 
     const socket = openChatSocket(chatId, (msg: SocketMessage) => {
+      if ((msg as any).type === 'delete' && (msg as any).messageId) {
+        const deletedId = (msg as any).messageId;
+        queryClient.setQueryData<ApiMessage[]>([MESSAGES_KEY, chatId], (prev) =>
+          (prev ?? []).filter((m) => m.id !== deletedId),
+        );
+        queryClient.invalidateQueries({ queryKey: CHATS_KEY });
+        return;
+      }
       queryClient.setQueryData<ApiMessage[]>([MESSAGES_KEY, chatId], (prev) => {
         const list = prev ?? [];
         if (list.some((m) => m.id === msg.id)) return list;
@@ -191,6 +199,24 @@ export const useEmployerChat = (
     [selectedSessionId, employer?.id, queryClient],
   );
 
+  const deleteMessage = useCallback(
+    async (messageId: string) => {
+      if (!selectedSessionId || !messageId) return;
+
+      queryClient.setQueryData<ApiMessage[]>([MESSAGES_KEY, selectedSessionId], (prev) =>
+        (prev ?? []).filter((m) => m.id !== messageId),
+      );
+
+      try {
+        await deleteChatMessageApi(selectedSessionId, messageId);
+      } finally {
+        queryClient.invalidateQueries({ queryKey: [MESSAGES_KEY, selectedSessionId] });
+        queryClient.invalidateQueries({ queryKey: CHATS_KEY });
+      }
+    },
+    [selectedSessionId, queryClient],
+  );
+
   /** Open a conversation with a candidate, creating it if there is not one. */
   const createSession = useCallback(
     async (_candidateName: string, initialMessage: string, targetUserId?: string, jobId?: string) => {
@@ -216,6 +242,7 @@ export const useEmployerChat = (
     activeSession,
     isTyping,
     sendMessage,
+    deleteMessage,
     createSession,
     language,
   };
