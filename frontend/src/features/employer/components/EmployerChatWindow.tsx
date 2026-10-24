@@ -1,16 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AttachedFileData } from '../../../hooks/useChatScreen';
 import { uploadFileApi } from '../../../api/queries';
-import { ArrowLeft, Paperclip, Smile, Send } from 'lucide-react';
+import { ArrowLeft, Paperclip, Smile, Send, Copy, Trash2 } from 'lucide-react';
 import { ChatSession } from '../../../hooks/useEmployerChat';
 import { EmployerChatMessageBubble } from './EmployerChatMessageBubble';
 import { EmojiPicker } from '../../../components/chat/EmojiPicker';
+import { DeleteMessageModal } from '../../../components/chat/DeleteMessageModal';
+import { showToast } from '../../../utils/toast';
 
 interface EmployerChatWindowProps {
   language: string;
   activeSession: ChatSession;
   onBack: () => void;
   onSendMessage: (text: string) => void;
+  onDeleteMessage?: (messageId: string) => void;
   isTyping: boolean;
 }
 
@@ -19,12 +22,29 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
   activeSession,
   onBack,
   onSendMessage,
+  onDeleteMessage,
   isTyping
 }) => {
   const [inputText, setInputText] = useState('');
-  const [attachedFile, setAttachedFile] = useState<AttachedFileData | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFileData[]>([]);
   const [showEmoji, setShowEmoji] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{
+    message: any;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClose = () => setContextMenu(null);
+    window.addEventListener('click', handleClose);
+    window.addEventListener('scroll', handleClose, true);
+    return () => {
+      window.removeEventListener('click', handleClose);
+      window.removeEventListener('scroll', handleClose, true);
+    };
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -44,27 +64,27 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
 
   const handleSend = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!inputText.trim() && !attachedFile) return;
+    if (!inputText.trim() && attachedFiles.length === 0) return;
 
-    const pending = attachedFile;
+    const pendingFiles = [...attachedFiles];
     const typed = inputText;
     setInputText('');
-    setAttachedFile(null);
+    setAttachedFiles([]);
 
     void (async () => {
       let textToSend = typed;
-      if (pending) {
-        // `blob:` resolves only in the sender's browser; upload and send the
-        // stored URL so the candidate can actually open it.
-        try {
-          const url = await uploadFileApi(pending.file, 'chat');
-          textToSend = `[Img:${url}]` + (textToSend ? ` ${textToSend}` : '');
-        } catch {
-          window.dispatchEvent(new CustomEvent('global-toast', {
-            detail: "Faylni yuklab bo'lmadi. Xabar fayl-siz yuborildi.",
-          }));
-          if (!textToSend.trim()) return;
+      if (pendingFiles.length > 0) {
+        for (const pending of pendingFiles) {
+          try {
+            const url = await uploadFileApi(pending.file, 'chat');
+            textToSend = `[Img:${url}]` + (textToSend ? ` ${textToSend}` : '');
+          } catch {
+            window.dispatchEvent(new CustomEvent('global-toast', {
+              detail: "Faylni yuklab bo'lmadi. Xabar fayl-siz yuborildi.",
+            }));
+          }
         }
+        if (!textToSend.trim()) return;
       }
       onSendMessage(textToSend);
     })();
@@ -140,6 +160,9 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
               isRecruiter={isRecruiter}
               activeSession={activeSession}
               workplaceText={t.workplace}
+              onOpenMenu={(msgItem, x, y) => {
+                setContextMenu({ message: msgItem, x, y });
+              }}
             />
           );
         })}
@@ -181,81 +204,108 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
         )}
 
         {/* Telegram-style Attachment Preview Bar */}
-        {attachedFile && (
-          <div className="w-full max-w-5xl mx-auto px-4 pt-3 pb-1 flex items-end gap-3 bg-white relative">
-            <div className="relative">
-              <div className="w-14 h-14 rounded-lg overflow-hidden shadow-sm bg-slate-50 border border-slate-200">
-                <img 
-                  src={attachedFile.previewUrl} 
-                  alt={t.previewLabel} 
-                  className="w-full h-full object-cover"
-                 onError={(e) => {
-        const target = e.currentTarget;
-        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
-        if (target.src !== fallback) {
-          target.src = fallback;
-        }
-      }} />
+        {attachedFiles.length > 0 && (
+          <div className="w-full max-w-5xl mx-auto px-4 pt-3 pb-1 flex flex-wrap gap-4 bg-white relative">
+            {attachedFiles.map((file, idx) => (
+              <div key={idx} className="flex items-end gap-3">
+                <div className="relative">
+                  <div className="w-14 h-14 rounded-lg overflow-hidden shadow-sm bg-slate-50 border border-slate-200">
+                    <img 
+                      src={file.previewUrl} 
+                      alt={t.previewLabel} 
+                      className="w-full h-full object-cover"
+                     onError={(e) => {
+            const target = e.currentTarget;
+            const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+            if (target.src !== fallback) {
+              target.src = fallback;
+            }
+          }} />
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      const newFiles = [...attachedFiles];
+                      URL.revokeObjectURL(newFiles[idx].previewUrl);
+                      newFiles.splice(idx, 1);
+                      setAttachedFiles(newFiles);
+                    }} 
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-slate-500 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer z-10 hover:bg-slate-600 transition-colors border border-white"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                  </button>
+                </div>
+                <div className="text-[11px] font-semibold text-slate-400 mb-1">
+                  {file.name.length > 20 ? file.name.substring(0, 20) + '...' : file.name}
+                </div>
               </div>
-              <button 
-                type="button" 
-                onClick={() => { URL.revokeObjectURL(attachedFile.previewUrl); setAttachedFile(null); }} 
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-slate-500 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer z-10 hover:bg-slate-600 transition-colors border border-white"
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </button>
-            </div>
-            <div className="text-[11px] font-semibold text-slate-400 mb-1">
-              {attachedFile.name.length > 20 ? attachedFile.name.substring(0, 20) + '...' : attachedFile.name}
-            </div>
+            ))}
           </div>
         )}
 
-        <div className="w-full max-w-5xl mx-auto flex items-end gap-2 px-4 pb-3 pt-2 relative bg-white">
+        <div className="w-full flex items-center gap-3">
           <input 
             type="file" 
             id="employer-chat-file" 
             className="hidden" 
             accept="image/*"
+            multiple
             onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                const file = e.target.files[0];
-                const previewUrl = URL.createObjectURL(file);
-                setAttachedFile({ name: file.name, previewUrl, file });
-                window.dispatchEvent(new CustomEvent("global-toast", { detail: `${file.name} biriktirildi` }));
+              if (e.target.files) {
+                const newFiles = Array.from(e.target.files);
+                if (attachedFiles.length + newFiles.length > 5) {
+                  window.dispatchEvent(new CustomEvent("global-toast", { detail: "Siz ko'pi bilan 5 ta rasm tanlashingiz mumkin" }));
+                  return;
+                }
+                const newAttachedFiles = newFiles.map(f => ({
+                  name: f.name,
+                  previewUrl: URL.createObjectURL(f),
+                  file: f
+                }));
+                setAttachedFiles([...attachedFiles, ...newAttachedFiles]);
+                if (newFiles.length === 1) {
+                  window.dispatchEvent(new CustomEvent("global-toast", { detail: `${newFiles[0].name} biriktirildi` }));
+                } else {
+                  window.dispatchEvent(new CustomEvent("global-toast", { detail: `${newFiles.length} rasm biriktirildi` }));
+                }
                 e.target.value = '';
               }
             }} 
           />
-          <button 
-            onClick={() => document.getElementById('employer-chat-file')?.click()} 
-            type="button"
-            className="w-11 h-11 flex items-center justify-center rounded-full bg-white text-brand-text-variant shadow-xs hover:bg-slate-50 transition-all cursor-pointer border-none shrink-0 bg-transparent"
-            title={t.attachFile}
-          >
-            <Paperclip size={18} />
-          </button>
 
-          <form onSubmit={handleSend} className="flex-1 relative flex flex-col items-start gap-1 w-full">
-            <div className="w-full relative flex items-center">
+          <div className="flex-1 flex items-center bg-white border border-[#E2E8F0] rounded-xl px-3 py-2 transition-all focus-within:border-brand-primary/40 focus-within:ring-2 focus-within:ring-brand-primary/10">
+            <button 
+              onClick={() => document.getElementById('employer-chat-file')?.click()} 
+              type="button"
+              className="p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-center shrink-0"
+              title={t.attachFile}
+            >
+              <Paperclip size={20} />
+            </button>
+
+            <form onSubmit={handleSend} className="flex-1 mx-2 focus:outline-none outline-none">
               <input
-              aria-label={t.typeMessage}
+                aria-label={t.typeMessage}
                 type="text"
-                className="w-full bg-slate-50 text-brand-text font-sans rounded-full py-3 px-5 pr-12 border-none focus:outline-none transition-all placeholder:text-brand-outline text-xs font-semibold h-11"
+                style={{ outline: 'none', boxShadow: 'none' }}
+                className="w-full bg-transparent text-slate-800 text-xs sm:text-sm placeholder:text-slate-400 border-none outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 p-0 shadow-none"
                 placeholder={t.typeMessage}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
               />
-              <button 
-                onClick={() => setShowEmoji(!showEmoji)} 
-                type="button"
-                className={`absolute right-4 transition-colors cursor-pointer border-none bg-transparent ${showEmoji ? 'text-brand-primary' : 'text-brand-outline hover:text-brand-primary'}`}
-                title={t.emoji}
-              >
-                <Smile size={18} />
-              </button>
-            </div>
-          </form>
+            </form>
+
+            <button 
+              onClick={() => setShowEmoji(!showEmoji)} 
+              type="button"
+              className={`p-1 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-center shrink-0 ${
+                showEmoji ? 'text-brand-primary' : 'text-slate-400 hover:text-slate-600'
+              }`}
+              title={t.emoji}
+            >
+              <Smile size={20} />
+            </button>
+          </div>
 
           <button
             onClick={() => handleSend()}
@@ -263,10 +313,82 @@ export const EmployerChatWindow: React.FC<EmployerChatWindowProps> = ({
             className="w-11 h-11 flex items-center justify-center rounded-full bg-brand-primary text-white shadow-md hover:shadow-lg active:scale-90 transition-all cursor-pointer shrink-0 border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
             title={t.sendMessage}
           >
-            <Send size={18} className="translate-x-0.5" />
+            <Send size={18} />
           </button>
         </div>
       </footer>
+
+      {/* Telegram-style Message Context Menu */}
+      {contextMenu && (
+        <div
+          className="fixed z-50 bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-slate-200/90 py-1 min-w-[160px] animate-in fade-in zoom-in-95 duration-100 select-none"
+          style={{
+            top: `${contextMenu.y}px`,
+            left: `${contextMenu.x}px`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              const cleanText =
+                contextMenu.message.text
+                  .replace(/\[Img:.*?\]/g, '')
+                  .replace(/\[Fayl:.*?\]/g, '')
+                  .trim() || contextMenu.message.text;
+              navigator.clipboard.writeText(cleanText);
+              showToast(
+                language === 'uz'
+                  ? 'Xabar nusxalandi'
+                  : language === 'ru'
+                    ? 'Текст скопирован'
+                    : 'Copied to clipboard',
+                'info',
+              );
+              setContextMenu(null);
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-primary transition-colors cursor-pointer text-left"
+          >
+            <Copy size={15} />
+            <span>{language === 'uz' ? 'Nusxa olish' : language === 'ru' ? 'Копировать' : 'Copy'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const target = contextMenu.message;
+              setContextMenu(null);
+              setDeleteTarget(target);
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer text-left border-t border-slate-100"
+          >
+            <Trash2 size={15} />
+            <span>{language === 'uz' ? "O'chirish" : language === 'ru' ? 'Удалить' : 'Delete'}</span>
+          </button>
+        </div>
+      )}
+
+      {/* Telegram-style Delete Message Modal */}
+      <DeleteMessageModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget && onDeleteMessage) {
+            onDeleteMessage(deleteTarget.id);
+            showToast(
+              language === 'uz'
+                ? "Xabar o'chirildi"
+                : language === 'ru'
+                  ? 'Сообщение удалено'
+                  : 'Message deleted',
+              'info',
+            );
+          }
+          setDeleteTarget(null);
+        }}
+        language={language as 'uz' | 'ru' | 'en'}
+        isOwnMessage={deleteTarget?.sender === 'recruiter'}
+        participantName={activeSession.candidateName}
+      />
     </div>
   );
 };
