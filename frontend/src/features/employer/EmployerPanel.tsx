@@ -118,7 +118,7 @@ export const EmployerPanel: React.FC = () => {
     { id: 'employer-dashboard', label: language === 'uz' ? "Asosiy" : language === 'ru' ? "Главная" : "Dashboard", icon: LayoutDashboard },
     { id: 'employer-jobs', label: language === 'uz' ? "E'lonlar" : language === 'ru' ? "Объявления" : "Jobs", icon: Briefcase },
     { id: 'employer-applicants', label: language === 'uz' ? "Arizalar" : language === 'ru' ? "Заявки" : "Applicants", icon: FileText },
-    { id: 'employer-chats', label: language === 'uz' ? "Suhbatlar" : language === 'ru' ? "Чаты" : "Chats", icon: MessageSquare },
+    { id: 'employer-chats', label: language === 'uz' ? "Xabarlar" : language === 'ru' ? "Сообщения" : "Messages", icon: MessageSquare },
     { id: 'employer-profile', label: language === 'uz' ? "Profil" : language === 'ru' ? "Профиль" : "Profile", icon: User },
   ];
 
@@ -141,7 +141,7 @@ export const EmployerPanel: React.FC = () => {
       <Sidebar />
 
       {/* ===== MAIN CONTENT AREA ===== */}
-      <div className={`flex-1 overflow-y-auto ${isChatOpenOnMobile ? 'pb-0' : 'pb-24 md:pb-0'}`}>
+      <div className={`flex-1 ${isChatScreen ? 'h-full overflow-hidden' : 'overflow-y-auto'} ${isChatOpenOnMobile ? 'pb-0' : 'pb-24 md:pb-0'}`}>
         {renderContent()}
       </div>
 
