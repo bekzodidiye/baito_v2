@@ -82,7 +82,8 @@ describe('ApplicantCard — hiring asks before it freezes money', () => {
 
   it('still rejects on a single press — nothing is frozen by rejecting', () => {
     const { updateApplicationStatus } = renderCard();
-    const [, reject] = screen.getAllByRole('button');
+    const buttons = screen.getAllByRole('button');
+    const reject = buttons[buttons.length - 1];
     fireEvent.click(reject);
     expect(updateApplicationStatus).toHaveBeenCalledWith('app-1', 'rejected');
   });

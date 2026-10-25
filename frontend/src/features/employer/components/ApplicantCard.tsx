@@ -297,6 +297,8 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
               </button>
               <button
                 onClick={() => updateApplicationStatus(app.id, 'rejected')}
+                aria-label={language === 'uz' ? "Rad etish" : language === 'ru' ? "Отклонить" : "Reject"}
+                title={language === 'uz' ? "Rad etish" : language === 'ru' ? "Отклонить" : "Reject"}
                 className="w-12 h-11 bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-500 rounded-xl transition-all active:scale-95 flex items-center justify-center cursor-pointer flex-shrink-0"
               >
                 <X size={18} className="stroke-[2.5]" />
