@@ -28,7 +28,7 @@ jobs:
   # ==========================================================
   test-backend:
     name: 🐍 1. Backend Tests
-    runs-on: [self-hosted, laptop-test-runner]
+    runs-on: [self-hosted, baito-aws]
 
     # The suite used to run on SQLite while production runs PostgreSQL, so the
     # things that only Postgres does were never exercised: SELECT ... FOR UPDATE
@@ -165,7 +165,7 @@ jobs:
   # ==========================================================
   test-frontend:
     name: 🎨 2. Frontend Typecheck & Build
-    runs-on: [self-hosted, laptop-test-runner]
+    runs-on: [self-hosted, baito-aws]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -237,7 +237,7 @@ jobs:
   # ==========================================================
   test-e2e:
     name: 🎭 2b. End-to-End
-    runs-on: [self-hosted, laptop-test-runner]
+    runs-on: [self-hosted, baito-aws]
 
     # Five Playwright specs sat in the repo and nothing ran them. Running them
     # for the first time found that two asserted a flow this app has never had,
@@ -620,7 +620,7 @@ jobs:
     # baito-server, but this is the alarm for "the deploy runner is not picking
     # jobs up" — put it on the runner it watches and it sits in the same queue,
     # silent, exactly when it is needed. It polls an API; it needs no memory.
-    runs-on: [self-hosted, laptop-test-runner]
+    runs-on: [self-hosted, baito-aws]
     permissions:
       actions: read
     timeout-minutes: 20
