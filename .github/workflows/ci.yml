@@ -43,7 +43,7 @@ jobs:
           POSTGRES_PASSWORD: baito
           POSTGRES_DB: baito_test
         ports:
-          - 5433:5432
+          - 5436:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -52,7 +52,7 @@ jobs:
       redis:
         image: redis:7-alpine
         ports:
-          - 6380:6379
+          - 6382:6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -107,8 +107,8 @@ jobs:
       - name: Run Backend Test Suite
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://baito:baito@localhost:5433/baito_test
-          REDIS_URL: redis://localhost:6380/9
+          DATABASE_URL: postgresql://baito:baito@localhost:5436/baito_test
+          REDIS_URL: redis://localhost:6382/9
           SECRET_KEY: ci_only_secret_key_0123456789abcdef0123456789
           ENVIRONMENT: test
           BCRYPT_ROUNDS: "4"
@@ -128,7 +128,7 @@ jobs:
           import psycopg2
 
           conn = psycopg2.connect(
-              host="localhost", port=5433, user="baito",
+              host="localhost", port=5436, user="baito",
               password="baito", dbname="baito_test",
           )
           # CREATE DATABASE cannot run inside a transaction block.
@@ -143,7 +143,7 @@ jobs:
       - name: Verify Migrations Apply Cleanly
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://baito:baito@localhost:5433/baito_migrate
+          DATABASE_URL: postgresql://baito:baito@localhost:5436/baito_migrate
           SECRET_KEY: ci_only_secret_key_0123456789abcdef0123456789
           ENVIRONMENT: test
           PYTHONPATH: .
