@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 
 const language = vi.hoisted(() => ({ current: 'ru' as 'uz' | 'ru' | 'en' }));
 
@@ -102,4 +102,26 @@ describe('Guide — all three steps follow the chosen language', () => {
       expect(screen.getByText(line)).toBeTruthy();
     }
   });
+
+  it('filters by category when employer tab is selected', () => {
+    language.current = 'uz';
+    render(<QollanmaScreen />);
+    const employerChip = screen.getByText('Ish beruvchilarga');
+    fireEvent.click(employerChip);
+
+    expect(screen.getByText("1. Kompaniya profilini ochish va Tasdiqlash")).toBeTruthy();
+    expect(screen.getByText("2. E'lon (Vakansiya) joylashtirish")).toBeTruthy();
+    expect(screen.queryByText("1. Profilingizni to'ldiring")).toBeNull();
+  });
+
+  it('filters steps through the search bar', () => {
+    language.current = 'uz';
+    render(<QollanmaScreen />);
+    const searchInput = screen.getByPlaceholderText("Qo'llanma bo'yicha qidirish (masalan: ariza, to'lov, smena, karta)...");
+    fireEvent.change(searchInput, { target: { value: 'Eskrou' } });
+
+    expect(screen.getByText("Xavfsiz to'lov va Eskrou kafolati")).toBeTruthy();
+    expect(screen.queryByText("1. Profilingizni to'ldiring")).toBeNull();
+  });
 });
+
