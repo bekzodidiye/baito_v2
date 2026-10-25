@@ -22,6 +22,7 @@ import { translations } from './translations';
 import { useUIStore } from "./store/useUIStore";
 import { useAuthStore } from "./store/useAuthStore";
 
+
 function AppContent() {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const isLoggedIn = useAuthStore(s => s.isLoggedIn);
@@ -91,7 +92,7 @@ function AppContent() {
 
   return (
     <div className={`flex flex-col md:flex-row bg-brand-background text-brand-text antialiased font-sans selection:bg-brand-primary-container selection:text-white ${
-      currentScreen === 'admin' || (currentScreen.startsWith('employer-') && currentScreen !== 'employer-post') || currentScreen === 'messages' || currentScreen === 'chat'
+      currentScreen === 'admin' || (currentScreen.startsWith('employer-') && currentScreen !== 'employer-post') || currentScreen === 'messages' || currentScreen === 'chat' || currentScreen === 'support-chat'
         ? 'h-screen overflow-hidden'
         : 'min-h-screen'
     }`}>

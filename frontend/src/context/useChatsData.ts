@@ -6,9 +6,11 @@ import {
   fetchChats,
   fetchChatMessages,
   sendChatMessageApi,
+  deleteChatMessageApi,
   markChatReadApi,
   fetchSupportConversationApi,
   sendSupportMessageApi,
+  deleteSupportMessageApi,
 } from '../api/queries';
 import { useAuthStore } from "../store/useAuthStore";
 
@@ -147,12 +149,27 @@ export function useChatsData(language: 'uz' | 'ru' | 'en') {
   const supportName =
     language === 'uz' ? 'Yordam markazi' : language === 'ru' ? 'Служба поддержки' : 'Support Center';
 
-  const supportMessages: Message[] = (support?.messages ?? []).map((m) => ({
-    id: m.id,
-    sender: m.fromSupport ? 'recruiter' : 'user',
-    text: m.text,
-    time: clockTime(m.timestamp),
-  }));
+  const greetingText =
+    language === 'uz'
+      ? "Assalomu alaykum! Baito yordam xizmatiga xush kelibsiz. Sizga qanday yordam bera olaman?"
+      : language === 'ru'
+        ? "Здравствуйте! Добро пожаловать в службу поддержки Baito. Чем мы можем вам помочь?"
+        : "Hello! Welcome to Baito Support. How can we help you?";
+
+  const supportMessages: Message[] = [
+    {
+      id: 'greeting',
+      sender: 'recruiter',
+      text: greetingText,
+      time: '',
+    },
+    ...(support?.messages ?? []).map((m) => ({
+      id: m.id,
+      sender: (m.fromSupport ? 'recruiter' : 'user') as 'user' | 'recruiter',
+      text: m.text,
+      time: clockTime(m.timestamp),
+    })),
+  ];
 
   const supportChat: Chat = {
     id: SUPPORT_CHAT_ID,
@@ -187,6 +204,14 @@ export function useChatsData(language: 'uz' | 'ru' | 'en') {
     const chatId = activeChatId;
 
     const socket = openChatSocket(chatId, (msg: SocketMessage) => {
+      if ((msg as any).type === 'delete' && (msg as any).messageId) {
+        const deletedId = (msg as any).messageId;
+        queryClient.setQueryData<ApiMessage[]>([MESSAGES_KEY, chatId], (prev) =>
+          (prev ?? []).filter((m) => m.id !== deletedId),
+        );
+        queryClient.invalidateQueries({ queryKey: CHATS_KEY });
+        return;
+      }
       queryClient.setQueryData<ApiMessage[]>([MESSAGES_KEY, chatId], (prev) => {
         const list = prev ?? [];
         // The server echoes to everyone including the author, who already has
@@ -238,6 +263,42 @@ export function useChatsData(language: 'uz' | 'ru' | 'en') {
     [queryClient, userProfile?.id],
   );
 
+  const deleteMessage = useCallback(
+    async (chatId: string, messageId: string) => {
+      if (!chatId || !messageId) return;
+
+      if (chatId === SUPPORT_CHAT_ID) {
+        if (messageId === 'greeting') return;
+        queryClient.setQueryData<ApiSupportConversation>(SUPPORT_KEY, (prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            messages: prev.messages.filter((m) => m.id !== messageId),
+          };
+        });
+        try {
+          await deleteSupportMessageApi(messageId);
+        } finally {
+          queryClient.invalidateQueries({ queryKey: SUPPORT_KEY });
+        }
+        return;
+      }
+
+      // Optimistic message removal
+      queryClient.setQueryData<ApiMessage[]>([MESSAGES_KEY, chatId], (prev) =>
+        (prev ?? []).filter((m) => m.id !== messageId),
+      );
+
+      try {
+        await deleteChatMessageApi(chatId, messageId);
+      } finally {
+        queryClient.invalidateQueries({ queryKey: [MESSAGES_KEY, chatId] });
+        queryClient.invalidateQueries({ queryKey: CHATS_KEY });
+      }
+    },
+    [queryClient],
+  );
+
   /** Clear a conversation's badge, on the server and here. */
   const markChatRead = useCallback(
     async (chatId: string) => {
@@ -260,5 +321,5 @@ export function useChatsData(language: 'uz' | 'ru' | 'en') {
     queryClient.invalidateQueries({ queryKey: CHATS_KEY });
   }, [queryClient]);
 
-  return { chats, sendMessage, setActiveChatId, markChatRead, refreshChats };
+  return { chats, sendMessage, deleteMessage, setActiveChatId, markChatRead, refreshChats };
 }
