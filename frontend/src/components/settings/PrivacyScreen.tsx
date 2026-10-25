@@ -115,7 +115,7 @@ export const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack, onConfirm 
         <div className="w-10 h-10"></div>
       </header>
 
-      <main className="md:pt-8 flex-1 overflow-y-auto pt-4 pb-12 px-4 max-w-2xl mx-auto w-full">
+      <main className="md:pt-8 flex-1 overflow-y-auto pt-4 pb-12 px-4 md:px-10 max-w-4xl w-full">
         
         {!isSuccess ? (
           <>

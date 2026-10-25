@@ -14,6 +14,7 @@ import { useCurrentScreen } from '../hooks/useCurrentScreen';
 import { useSidebarBadges } from '../hooks/useSidebarBadges';
 import { useUIStore } from "../store/useUIStore";
 import { useAuthStore } from "../store/useAuthStore";
+import { isProfileComplete } from '../utils/profileCompleteness';
 
 interface SidebarProps {
   onOpenModal?: (type: 'profile' | 'settings' | 'help' | 'auth') => void;
@@ -90,7 +91,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => requireAuth(item.screen)}
+                    onClick={() => {
+                      if (item.screen === 'employer-post' && !isProfileComplete(userProfile)) {
+                        showToast(
+                          language === 'uz'
+                            ? "Iltimos, e'lon berishdan oldin profilingizni to'liq to'ldiring (kompaniya nomi, telefon, manzil, email, haqida)."
+                            : language === 'ru'
+                            ? "Пожалуйста, полностью заполните профиль перед публикацией (название компании, телефон, адрес, email, о компании)."
+                            : "Please complete your profile before posting a job (company name, phone, address, email, about)."
+                        );
+                        setCurrentScreen('employer-profile');
+                        return;
+                      }
+                      requireAuth(item.screen);
+                    }}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-[13px] transition-all duration-200 cursor-pointer ${
                       item.active ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/15' : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
                     }`}

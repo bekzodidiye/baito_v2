@@ -31,7 +31,7 @@ export const FaqScreen: React.FC = () => {
         <div className="w-10 h-10"></div>
       </header>
 
-      <main className="md:pt-8 flex-1 overflow-y-auto pt-6 pb-12 px-5 max-w-4xl mx-auto w-full space-y-4">
+      <main className="md:pt-8 flex-1 overflow-y-auto pt-6 pb-12 px-5 md:px-10 max-w-4xl w-full space-y-4">
         {faqs.map((faq, index) => (
           <div key={index} className="bg-brand-surface-lowest rounded-2xl shadow-[0_4px_20px_rgba(0,6,102,0.05)] overflow-hidden">
             <button

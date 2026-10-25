@@ -109,7 +109,7 @@ export const SecurityScreen: React.FC = () => {
       </header>
 
 
-      <main className="md:pt-8 flex-1 overflow-y-auto pt-6 pb-12 px-5 max-w-4xl mx-auto w-full">
+      <main className="md:pt-8 flex-1 overflow-y-auto pt-6 pb-12 px-5 md:px-10 max-w-4xl w-full">
         {/* Brand Illustration */}
         <div className="mb-8 flex flex-col items-center">
           <div className="w-20 h-20 bg-brand-primary-container/5 rounded-2xl flex items-center justify-center mb-3">

@@ -28,7 +28,7 @@ export const HelpScreen: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="md:pt-8 flex-1 overflow-y-auto pt-6 pb-12 px-5 max-w-4xl mx-auto w-full space-y-8">
+      <main className="md:pt-8 flex-1 overflow-y-auto pt-6 pb-12 px-5 md:px-10 max-w-4xl w-full space-y-8">
         
         {/* Contact Support */}
         <section>

@@ -51,6 +51,9 @@ export const EmployerPanel: React.FC = () => {
   const renderContent = () => {
     switch (currentScreen) {
       case 'employer-post':
+        if (!isProfileComplete(userProfile)) {
+          return <EmployerProfile />;
+        }
         return (
           <JobPostForm 
             onBack={() => setCurrentScreen('employer-jobs')} 

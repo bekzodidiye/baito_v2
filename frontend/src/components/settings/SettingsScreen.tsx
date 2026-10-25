@@ -55,7 +55,7 @@ export const SettingsScreen: React.FC = () => {
       </header>
 
       {/* Main Content Canvas */}
-      <main className="md:pt-8 flex-1 overflow-y-auto pt-2 pb-6 px-5 max-w-4xl mx-auto w-full space-y-6">
+      <main className="md:pt-8 flex-1 overflow-y-auto pt-2 pb-6 px-5 md:px-10 max-w-4xl w-full space-y-6">
         
         {/* Account Section */}
         <section className="md:hidden">

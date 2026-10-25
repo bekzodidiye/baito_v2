@@ -92,7 +92,7 @@ function AppContent() {
 
   return (
     <div className={`flex flex-col md:flex-row bg-brand-background text-brand-text antialiased font-sans selection:bg-brand-primary-container selection:text-white ${
-      currentScreen === 'admin' || (currentScreen.startsWith('employer-') && currentScreen !== 'employer-post') || currentScreen === 'messages' || currentScreen === 'chat' || currentScreen === 'support-chat'
+      currentScreen === 'admin' || (currentScreen.startsWith('employer-') && currentScreen !== 'employer-post') || currentScreen === 'messages' || currentScreen === 'chat' || currentScreen === 'support-chat' || isSettingsOrHelp
         ? 'h-screen overflow-hidden'
         : 'min-h-screen'
     }`}>
@@ -110,7 +110,7 @@ function AppContent() {
       {/* Desktop Permanent Sidebar */}
       {showSidebar && <Sidebar onOpenModal={handleOpenModal} />}
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className={`flex-1 flex flex-col min-w-0 ${isSettingsOrHelp || currentScreen === 'messages' || currentScreen === 'chat' || currentScreen === 'support-chat' ? 'h-full overflow-hidden' : ''}`}>
         {/* Dynamic Header */}
         {showNavigation && <Header onOpenModal={handleOpenModal} />}
 
@@ -118,7 +118,7 @@ function AppContent() {
         {showNavigation && <Drawer onOpenModal={handleOpenModal} />}
 
         {/* Main Content Layout */}
-        <main id="main-content" tabIndex={-1} className={`flex-1 w-full min-w-0 ${['landing', 'admin', 'jobs', 'messages', 'chat', 'verification', 'login', 'settings', 'security', 'help', 'faq', 'guide', 'terms', 'privacy', 'support-chat', 'profile', 'reviews', 'applications', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'jobs'].includes(currentScreen) ? 'max-w-none px-0 md:px-0' : 'max-w-7xl mx-auto px-4 md:px-6'}`}>
+        <main id="main-content" tabIndex={-1} className={`flex-1 w-full min-w-0 ${['landing', 'admin', 'jobs', 'messages', 'chat', 'verification', 'login', 'settings', 'security', 'help', 'faq', 'guide', 'terms', 'privacy', 'support-chat', 'profile', 'reviews', 'applications', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'jobs'].includes(currentScreen) ? 'max-w-none px-0 md:px-0' : 'max-w-7xl mx-auto px-4 md:px-6'} ${isSettingsOrHelp || currentScreen === 'messages' || currentScreen === 'chat' || currentScreen === 'support-chat' ? 'h-full flex flex-col' : ''}`}>
           {/* Keyed on the screen so a crashed screen's fallback clears as soon as
               the user navigates away. Only route content belongs in here. */}
           <ErrorBoundary key={currentScreen}>

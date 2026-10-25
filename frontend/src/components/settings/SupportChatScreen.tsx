@@ -61,7 +61,7 @@ export const SupportChatScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full md:h-[680px] min-h-0 w-full bg-white relative overflow-hidden select-none">
+    <div className="flex-1 flex flex-col h-full min-h-0 w-full bg-white relative overflow-hidden select-none">
       <ChatDetailPanel
         activeChat={activeChat}
         t={t}

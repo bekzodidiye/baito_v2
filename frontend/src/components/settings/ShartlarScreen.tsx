@@ -28,7 +28,7 @@ export const ShartlarScreen: React.FC = () => {
         <div className="w-10 h-10"></div>
       </header>
 
-      <main className="md:pt-8 flex-1 overflow-y-auto pt-6 pb-12 px-5 max-w-4xl mx-auto w-full">
+      <main className="md:pt-8 flex-1 overflow-y-auto pt-6 pb-12 px-5 md:px-10 max-w-4xl w-full">
         <div className="bg-brand-surface-lowest rounded-3xl shadow-[0_4px_20px_rgba(0,6,102,0.05)] p-6 md:p-8">
           <p className="text-[13px] text-brand-text-variant mb-6 font-medium">{doc.lastUpdated}</p>
           
