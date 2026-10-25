@@ -113,3 +113,33 @@ describe('Terms of service — the same, for the shorter document', () => {
     expect(TERMS.en.sections).toHaveLength(TERMS.uz.sections.length);
   });
 });
+
+describe('Privacy policy — locked consent state', () => {
+  it('displays policy, 100% progress, and disabled checkboxes when consent was already given', () => {
+    localStorage.setItem('baito_privacy_consent', 'true');
+    language.current = 'uz';
+    render(<PrivacyScreen />);
+
+    // Shows 11 / 11 read count and banner
+    expect(screen.getByText("Maxfiylik siyosatiga to'liq rozilik berilgan")).toBeTruthy();
+    expect(screen.getByText("Barcha bo'limlar to'liq o'qilgan")).toBeTruthy();
+    expect(screen.getByText("11 / 11")).toBeTruthy();
+
+    // All section titles are visible and can be read
+    for (const sec of PRIVACY.uz.sections) {
+      expect(screen.getByText(sec.title)).toBeTruthy();
+    }
+
+    // Consent checkboxes are rendered, checked, and disabled
+    const checkboxes = screen.getAllByRole('checkbox', { hidden: true }) as HTMLInputElement[];
+    expect(checkboxes.length).toBe(PRIVACY.uz.consentChecks.length);
+    checkboxes.forEach((cb) => {
+      expect(cb.checked).toBe(true);
+      expect(cb.disabled).toBe(true);
+    });
+
+    // Displays the locked confirmation message
+    expect(screen.getByText("Rozilik to'liq berilgan (O'zgartirib bo'lmaydi)")).toBeTruthy();
+  });
+});
+
