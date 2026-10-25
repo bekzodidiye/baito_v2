@@ -20,7 +20,8 @@ interface UseJobMarkersProps {
   filterLocation: string;
   settledLocation?: string;
   setIsPanelExpanded: (expanded: boolean) => void;
-  getDisplayedJobs: () => Job[];
+  displayedJobs?: Job[];
+  getDisplayedJobs?: () => Job[];
   language: Language;
   districtsGeoJsonData?: any;
   isVisible?: boolean;
@@ -38,6 +39,7 @@ export const useJobMarkers = ({
   filterLocation,
   settledLocation,
   setIsPanelExpanded,
+  displayedJobs: propDisplayedJobs,
   getDisplayedJobs,
   language,
   districtsGeoJsonData,
@@ -89,7 +91,7 @@ export const useJobMarkers = ({
       return;
     }
 
-    const displayedJobs = getDisplayedJobs();
+    const displayedJobs = propDisplayedJobs || (getDisplayedJobs ? getDisplayedJobs() : []);
     const maxPinsToRender = 120;
     const truncatedJobs = displayedJobs.slice(0, maxPinsToRender);
 

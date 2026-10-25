@@ -56,7 +56,7 @@ export function useMapFilterJobs({
     });
   }, [jobs]);
 
-  const getDisplayedJobs = useCallback((): Job[] => {
+  const displayedJobs = useMemo((): Job[] => {
     let list = availableJobs;
     if (filterLocation === 'Barchasi') {
       if (activeCluster === 'cluster1') list = cluster1Jobs.filter(j => availableJobs.some(a => a.id === j.id));
@@ -88,6 +88,8 @@ export function useMapFilterJobs({
     }
     return list;
   }, [availableJobs, filterLocation, activeCluster, cluster1Jobs, cluster2Jobs]);
+
+  const getDisplayedJobs = useCallback((): Job[] => displayedJobs, [displayedJobs]);
 
   useEffect(() => {
     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
@@ -136,5 +138,5 @@ export function useMapFilterJobs({
     }
   }, [mapFocusedJobId, jobs, setFilterLocation, setMapFocusedJobId, districtsGeoJsonData, panToCoords, setSelectedJob, setIsPanelExpanded]);
 
-  return { activeCluster, getDisplayedJobs, setActiveCluster };
+  return { activeCluster, displayedJobs, getDisplayedJobs, setActiveCluster };
 }

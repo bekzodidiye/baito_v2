@@ -119,7 +119,7 @@ export function useMapViewScreen() {
     };
   }, [handleCalculateDistance, setSelectedJob, setIsPanelExpanded]);
 
-  const { activeCluster, getDisplayedJobs, setActiveCluster } = useMapFilterJobs({
+  const { activeCluster, displayedJobs, getDisplayedJobs, setActiveCluster } = useMapFilterJobs({
     jobs,
     filterLocation,
     geoJsonData,
@@ -161,6 +161,7 @@ export function useMapViewScreen() {
     filterLocation,
     settledLocation,
     setIsPanelExpanded,
+    displayedJobs,
     getDisplayedJobs,
     language,
     districtsGeoJsonData,
@@ -229,6 +230,7 @@ export function useMapViewScreen() {
     clearRoute,
     handleCalculateDistance,
     handleReverseRoute,
+    displayedJobs,
     getDisplayedJobs,
     handleRefresh,
     handleJobSelect,

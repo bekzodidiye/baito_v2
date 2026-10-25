@@ -17,6 +17,25 @@ class CachedTileLayer extends L.TileLayer {
   createTile(coords: L.Coords, done: L.DoneCallback): HTMLElement {
     const tile = super.createTile(coords, done) as HTMLImageElement;
     tile.decoding = 'async';
+
+    // Hanging tile guard: if a tile server drops or hangs TCP connection,
+    // prevent tab from spinning "Loading..." forever by failing over to reliable OSM
+    const timeout = setTimeout(() => {
+      if (!tile.complete || tile.naturalWidth === 0) {
+        if (!tile.dataset.fallbackTried) {
+          tile.dataset.fallbackTried = 'true';
+          const fallback = osmFallbackUrl(coords);
+          if (fallback && tile.src !== fallback) {
+            tile.src = fallback;
+          }
+        }
+      }
+    }, 2500);
+
+    const cleanup = () => clearTimeout(timeout);
+    tile.addEventListener('load', cleanup, { once: true });
+    tile.addEventListener('error', cleanup, { once: true });
+
     return tile;
   }
 
@@ -78,23 +97,33 @@ export const cartoFallbackUrl = (coords?: L.Coords | null): string | null => {
   return `https://${s}.basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}.png`;
 };
 
+/** High-availability secondary OSM mirror fallback (OSM France) without API key requirement. */
+export const osmSecondaryFallbackUrl = (coords?: L.Coords | null): string | null => {
+  if (!coords || coords.z > OSM_MAX_ZOOM) return null;
+  const { x, y, z } = coords;
+  if ([x, y, z].some(n => typeof n !== 'number' || !Number.isFinite(n))) return null;
+  const subdomains = ['a', 'b', 'c'];
+  const s = subdomains[Math.abs(x + y) % subdomains.length];
+  return `https://${s}.tile.openstreetmap.fr/osmfr/${z}/${x}/${y}.png`;
+};
+
 /** Put that square in place of the tile that failed, once. */
 export const tileErrorFallback = (e: L.TileErrorEvent): void => {
   const target = e.tile as HTMLImageElement | undefined;
   // Retrying a tile that already fell back would loop if the fallback fails too.
   if (!target || target.dataset.fallbackTried) return;
-  const url = osmFallbackUrl(e.coords);
+  const isAlreadyOsm = target.src && target.src.includes('tile.openstreetmap.org');
+  const url = isAlreadyOsm ? (osmSecondaryFallbackUrl(e.coords) || cartoFallbackUrl(e.coords)) : osmFallbackUrl(e.coords);
   if (!url) return;
   target.dataset.fallbackTried = 'true';
 
-  // If the initial fallback to OSM fails (e.g. temporary network drop during sleep),
-  // try CartoDB Voyager as a high-reliability secondary fallback.
+  // If the initial fallback fails, try secondary high-reliability fallback
   if (typeof target.addEventListener === 'function') {
     const onOsmError = () => {
       target.removeEventListener('error', onOsmError);
       if (!target.dataset.secondaryTried) {
         target.dataset.secondaryTried = 'true';
-        const backupUrl = cartoFallbackUrl(e.coords);
+        const backupUrl = osmSecondaryFallbackUrl(e.coords) || cartoFallbackUrl(e.coords);
         if (backupUrl) {
           target.src = backupUrl;
         }
@@ -126,6 +155,16 @@ export const healMapTiles = (map?: L.Map | null): number => {
           delete img.dataset.secondaryTried;
           const src = img.src;
           if (src) {
+            if (src.includes('google.com/vt')) {
+              const coordsMatch = src.match(/x=(\d+)&y=(\d+)&z=(\d+)/);
+              if (coordsMatch) {
+                const x = coordsMatch[1];
+                const y = coordsMatch[2];
+                const z = coordsMatch[3];
+                img.src = `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+                return;
+              }
+            }
             img.src = '';
             img.src = src;
           }
@@ -182,10 +221,10 @@ export const createTileLayers = (mapType: MapType, map: L.Map) => {
 
   const defaultTileOptions: L.TileLayerOptions & { edgeBufferTiles?: number } = {
     updateWhenIdle: false,
-    updateWhenZooming: true,
-    updateInterval: 30,
-    keepBuffer: 4,
-    edgeBufferTiles: 0,
+    updateWhenZooming: false,
+    updateInterval: 100,
+    keepBuffer: 6,
+    edgeBufferTiles: 1,
     tileSize: 256,
     maxNativeZoom: 19,
     maxZoom: 20,
@@ -237,10 +276,9 @@ export const createTileLayers = (mapType: MapType, map: L.Map) => {
       attribution: '&copy; Google Maps'
     });
   } else {
-    baseLayer = createCachedTileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    baseLayer = createCachedTileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       ...defaultTileOptions,
-      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; Google Maps'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     });
   }
 
