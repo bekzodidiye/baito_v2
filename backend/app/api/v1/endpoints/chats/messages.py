@@ -218,10 +218,10 @@ def delete_chat_message(
         .first()
     )
     if not msg:
-        raise HTTPException(status_code=404, detail="Message not found")
+        raise HTTPException(status_code=404, detail="Xabar topilmadi")
 
     if msg.senderId != current_user.id and current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Not authorized to delete this message")
+        raise HTTPException(status_code=403, detail="Bu xabarni o'chirish huquqingiz yo'q")
 
     db.delete(msg)
     db.commit()
