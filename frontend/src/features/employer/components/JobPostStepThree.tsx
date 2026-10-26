@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, Navigation, CheckCircle2, Crosshair, Search, Loader2, Compass, Sparkles, Info } from 'lucide-react';
+import { MapPin, Navigation, CheckCircle2, Crosshair, Search, Loader2, Compass, Info } from 'lucide-react';
 import { searchAddressSuggestions, reverseGeocodeAddressFull, CITY_COORDINATES, POPULAR_DISTRICTS, AddressSuggestion } from './JobPostStepThree.utils';
 import { JobLocationLeafletMap } from './JobLocationLeafletMap';
 
@@ -105,7 +105,7 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
       {districts.length > 0 && (
         <div className="flex flex-col gap-1.5">
           <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-            <Sparkles size={13} className="text-amber-500" />
+            <Compass size={13} className="text-brand-primary" />
             {language === 'ru' ? `Популярные места — ${city}:` : language === 'en' ? `Popular places in ${city}:` : `${city} bo'yicha mashhur joylar:`}
           </span>
           <div className="flex flex-wrap gap-1.5">

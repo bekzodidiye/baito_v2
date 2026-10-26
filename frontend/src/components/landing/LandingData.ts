@@ -357,5 +357,5 @@ export const JOB_CATEGORIES = [
   { id: 'warehouse', nameUz: 'Omborxona & Logistika', nameRu: 'Склад и логистика', nameEn: 'Warehouse & Logistics', count: '1,510+', rate: '200,000 - 400,000 so\'m/kun', iconName: 'Package' },
   { id: 'construction', nameUz: 'Qurilish & Tamirlash', nameRu: 'Строительство и ремонт', nameEn: 'Construction & Repair', count: '2,100+', rate: '250,000 - 600,000 so\'m/kun', iconName: 'HardHat' },
   { id: 'promo', nameUz: 'Savdo & Promouter', nameRu: 'Продажи и промоутер', nameEn: 'Sales & Promo', count: '640+', rate: '140,000 - 250,000 so\'m/kun', iconName: 'ShoppingBag' },
-  { id: 'cleaning', nameUz: 'Tozalash & Xizmat', nameRu: 'Уборка и сервис', nameEn: 'Cleaning & Service', count: '820+', rate: '160,000 - 300,000 so\'m/kun', iconName: 'Sparkles' }
+  { id: 'cleaning', nameUz: 'Tozalash & Xizmat', nameRu: 'Уборка и сервис', nameEn: 'Cleaning & Service', count: '820+', rate: '160,000 - 300,000 so\'m/kun', iconName: 'Briefcase' }
 ];

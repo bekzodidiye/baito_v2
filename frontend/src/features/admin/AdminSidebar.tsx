@@ -2,7 +2,7 @@ import React from 'react';
 import { AdminTab } from './types';
 import {
   Wallet, LayoutDashboard, Users, Briefcase, FileCheck, DollarSign, AlertTriangle, Send, Sliders, X, User,
-  Building2, Headphones, BarChart3, FolderTree, ShieldAlert, Ticket, MapPin, Bell, BellRing, Bot, Zap, FileText,
+  Building2, Headphones, BarChart3, FolderTree, ShieldAlert, Ticket, MapPin, Bell, BellRing, Zap, FileText,
 } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useAdminData } from './useAdminData';
@@ -50,7 +50,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
       titleRu: 'Автоматизация & ИИ',
       titleEn: 'Automation & AI',
       items: [
-        { id: 'auto_moderation' as AdminTab, labelUz: 'Avto-Shtraf & Spam Bot', labelRu: 'Авто-Штраф & Спам Бот', labelEn: 'Auto-Penalty & Spam Bot', icon: Bot },
+        { id: 'auto_moderation' as AdminTab, labelUz: 'Avto-Shtraf & Spam Bot', labelRu: 'Авто-Штраф & Спам Бот', labelEn: 'Auto-Penalty & Spam Bot', icon: ShieldAlert },
         { id: 'auto_matching' as AdminTab, labelUz: 'AI Avto-Matching', labelRu: 'AI Авто-Подбор', labelEn: 'AI Auto-Matching', icon: Zap },
         { id: 'auto_reports' as AdminTab, labelUz: 'Avto-Hisobot & Telegram', labelRu: 'Авто-Отчеты & Telegram', labelEn: 'Auto-Reports & Telegram', icon: FileText },
         { id: 'notification_rules' as AdminTab, labelUz: 'Auto-Xabarnoma Qoidalari', labelRu: 'Правила уведомлений', labelEn: 'Notification Rules', icon: BellRing },

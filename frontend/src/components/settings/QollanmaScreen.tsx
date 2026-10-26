@@ -16,7 +16,7 @@ import {
   Lightbulb, 
   MessageSquare, 
   X,
-  Sparkles,
+  Star,
   HelpCircle
 } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
@@ -52,7 +52,7 @@ export const QollanmaScreen: React.FC = () => {
     { id: 'employers' as const, label: g.filterEmployers, icon: Building2 },
     { id: 'payments' as const, label: g.filterPayments, icon: CreditCard },
     { id: 'safety' as const, label: g.filterSafety, icon: ShieldCheck },
-    { id: 'tips' as const, label: g.filterTips, icon: Sparkles },
+    { id: 'tips' as const, label: g.filterTips, icon: Lightbulb },
   ], [g]);
 
   const filteredSteps = useMemo(() => {
@@ -76,7 +76,7 @@ export const QollanmaScreen: React.FC = () => {
     if (step.category === 'workers') {
       if (step.id === 'w-shift') return <Calendar size={22} className="text-brand-primary" />;
       if (step.id === 'w-payment') return <CreditCard size={22} className="text-emerald-600" />;
-      if (step.id === 'w-review') return <Sparkles size={22} className="text-amber-500" />;
+      if (step.id === 'w-review') return <Star size={22} className="text-amber-500 fill-amber-500/20" />;
       return <UserCheck size={22} className="text-brand-primary" />;
     }
     if (step.category === 'employers') {
@@ -151,7 +151,7 @@ export const QollanmaScreen: React.FC = () => {
         <div className="bg-gradient-to-br from-brand-primary to-slate-900 text-white p-6 sm:p-7 rounded-3xl shadow-md relative overflow-hidden">
           <div className="relative z-10 max-w-xl">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-white text-[12px] font-semibold mb-3 backdrop-blur-sm border border-white/10">
-              <Sparkles size={14} className="text-amber-300" />
+              <BookOpen size={14} className="text-white/80" />
               <span>Baito Guide & Handbook</span>
             </div>
             <h2 className="text-[22px] sm:text-[24px] font-bold mb-2 tracking-tight">

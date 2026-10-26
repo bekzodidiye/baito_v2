@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
-import { FileText, Send, CheckCircle2, Clock, Download, MessageSquare, Sparkles } from 'lucide-react';
+import { FileText, Send, CheckCircle2, Clock, Download, MessageSquare } from 'lucide-react';
 
 import { AdminStats, SystemSettings } from './types';
 import { sendDigestNowApi } from '../../api/queries';
@@ -171,7 +171,7 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
 
           <div className="p-4 bg-slate-900 text-slate-100 rounded-2xl font-mono text-xs leading-relaxed border border-slate-800 shadow-inner space-y-2">
             <div className="text-amber-400 font-bold flex items-center gap-1.5">
-              <Sparkles size={14} /> 📊 BAITO PLATFORMA KUNLIK DIGEST ({reportData.date})
+              <FileText size={14} /> 📊 BAITO PLATFORMA KUNLIK DIGEST ({reportData.date})
             </div>
             <div className="text-slate-300">
               ─────────────────────────────<br />

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { AdminUser } from './types';
-import { Phone, Mail, MapPin, EyeOff, Eye, MonitorSmartphone, Target, CreditCard, Sparkles } from 'lucide-react';
+import { Phone, Mail, MapPin, EyeOff, Eye, MonitorSmartphone, Target, CreditCard } from 'lucide-react';
 import { UserDocumentsSection } from './UserDocumentsSection';
 
 interface UserTabsMainProps {
@@ -146,7 +146,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
                 <div className="flex flex-wrap gap-2">
                   {skillsList.map((s, i) => (
                     <span key={i} className="px-3 py-1.5 bg-blue-50/50 text-blue-700 border border-blue-100 rounded-xl text-xs font-bold flex items-center gap-1.5">
-                      <Sparkles size={12} className="text-blue-500" />
+                      <Target size={12} className="text-blue-500" />
                       {String(s)}
                     </span>
                   ))}

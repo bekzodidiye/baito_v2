@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
-import { ShieldAlert, Bot, Plus, Trash2, ToggleLeft, ToggleRight, AlertTriangle, AlertCircle } from 'lucide-react';
+import { ShieldAlert, Plus, Trash2, ToggleLeft, ToggleRight, AlertTriangle, AlertCircle } from 'lucide-react';
 import { SystemSettings } from './types';
 
 interface AdminAutoModerationProps {
@@ -82,7 +82,7 @@ export const AdminAutoModeration: React.FC<AdminAutoModerationProps> = ({
       <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-            <Bot size={22} className="text-red-600" />
+            <ShieldAlert size={22} className="text-red-600" />
             <span>{a.autoModerationTitle}</span>
           </h2>
           <p className="text-xs text-slate-500 font-medium mt-1">

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
-import { Zap, CheckCircle2, UserCheck, Star, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { Zap, CheckCircle2, UserCheck, Star, SlidersHorizontal } from 'lucide-react';
 
 import { SystemSettings } from './types';
 
@@ -75,7 +75,7 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
           onClick={handleRunSimulator}
           className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0"
         >
-          <Sparkles size={16} />
+          <Zap size={16} />
           <span>Algoritmni Sinash (Test Push)</span>
         </button>
       </div>
