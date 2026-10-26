@@ -5,7 +5,7 @@ import { getLatLng, calculateDistance } from './mapUtils';
 import { getJobShiftTime, getJobDuration } from '../../utils/jobTimeUtils';
 import { shareJob } from '../../utils/shareJob';
 import { formatSalary } from '../../utils/money';
-import { getJobTitle, getJobDescription } from '../../utils/jobTranslationUtils';
+import { getJobTitle, getJobDescription, getJobLocation } from '../../utils/jobTranslationUtils';
 import { translations, Language } from '../../translations';
 import { ConfirmModal } from '../common/ConfirmModal';
 
@@ -135,7 +135,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
               </div>
               <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium truncate">
                 <MapPin size={11} className="text-slate-400 shrink-0" />
-                <span className="truncate">{job.location}</span>
+                <span className="truncate">{getJobLocation(job, language)}</span>
               </div>
             </div>
             <span className="text-[11px] font-bold text-brand-primary shrink-0 self-end mb-0.5">

@@ -20,6 +20,7 @@ def build_job_translation_prompt(
     requirements: str = "",
     important_note: str = "",
     category: str = "",
+    location: str = "",
 ) -> str:
     """Build the prompt for Gemini translation."""
     job_payload = {
@@ -34,30 +35,38 @@ def build_job_translation_prompt(
         job_payload["importantNote"] = important_note
     if category:
         job_payload["category"] = category
+    if location:
+        job_payload["location"] = location
 
     import json
     input_json = json.dumps(job_payload, ensure_ascii=False, indent=2)
+
+    loc_schema = ', "location": "..."' if location else ''
+    resp_schema = ', "responsibilities": "..."' if responsibilities else ''
+    req_schema = ', "requirements": "..."' if requirements else ''
+    note_schema = ', "importantNote": "..."' if important_note else ''
 
     return f"""{SYSTEM_PROMPT}
 
 Input Job Announcement Data:
 {input_json}
 
-Translate each text field into 'uz', 'ru', and 'en'.
+Translate each text field into 'uz', 'ru', and 'en' (including location/district names into natural standard equivalents, e.g., 'Buxoro, Eski shahar' -> 'Бухара, Старый город' / 'Bukhara, Old City').
 Respond ONLY with this exact JSON schema:
 {{
   "uz": {{
     "title": "...",
-    "description": "..."{', "responsibilities": "..."' if responsibilities else ''}{', "requirements": "..."' if requirements else ''}{', "importantNote": "..."' if important_note else ''}
+    "description": "..."{loc_schema}{resp_schema}{req_schema}{note_schema}
   }},
   "ru": {{
     "title": "...",
-    "description": "..."{', "responsibilities": "..."' if responsibilities else ''}{', "requirements": "..."' if requirements else ''}{', "importantNote": "..."' if important_note else ''}
+    "description": "..."{loc_schema}{resp_schema}{req_schema}{note_schema}
   }},
   "en": {{
     "title": "...",
-    "description": "..."{', "responsibilities": "..."' if responsibilities else ''}{', "requirements": "..."' if requirements else ''}{', "importantNote": "..."' if important_note else ''}
+    "description": "..."{loc_schema}{resp_schema}{req_schema}{note_schema}
   }}
 }}
 Return raw JSON only.
 """
+

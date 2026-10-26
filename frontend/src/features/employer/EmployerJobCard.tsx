@@ -4,7 +4,7 @@ import { MapPin, CheckCircle2, Trash2, Users, Calendar, Wallet, Hourglass, XCirc
 import { Job } from '../../types';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { workDateSummary } from '../../utils/workDates';
-import { getJobTitle } from '../../utils/jobTranslationUtils';
+import { getJobTitle, getJobLocation } from '../../utils/jobTranslationUtils';
 
 interface EmployerJobCardProps {
   job: Job;
@@ -107,10 +107,10 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
             <div className="flex items-center gap-1.5 text-slate-500 min-w-0">
               <MapPin size={15} className="shrink-0" strokeWidth={2.5} />
               <span
-                title={job.rawLocation || job.location}
+                title={getJobLocation(job, language)}
                 className="text-[13px] font-semibold truncate"
               >
-                {job.rawLocation || job.location}
+                {getJobLocation(job, language)}
               </span>
             </div>
             {dates && (

@@ -67,12 +67,15 @@ def _build_fallback_translations(
     responsibilities: str = "",
     requirements: str = "",
     important_note: str = "",
+    location: str = "",
 ) -> Dict[str, Dict[str, str]]:
     """Construct fallback translations if AI service is temporarily unavailable."""
     base = {
         "title": title or "",
         "description": description or "",
     }
+    if location:
+        base["location"] = location
     if responsibilities:
         base["responsibilities"] = responsibilities
     if requirements:
@@ -94,6 +97,7 @@ def translate_job_content(
     requirements: str = "",
     important_note: str = "",
     category: str = "",
+    location: str = "",
     client: Optional[GeminiClient] = None,
 ) -> Dict[str, Any]:
     """Translate job announcement fields into uz, ru, and en.
@@ -102,7 +106,7 @@ def translate_job_content(
     Falls back gracefully if the translation model is unavailable.
     """
     if not title and not description:
-        return _build_fallback_translations(title, description, responsibilities, requirements, important_note)
+        return _build_fallback_translations(title, description, responsibilities, requirements, important_note, location)
 
     prompt = build_job_translation_prompt(
         title=title,
@@ -111,12 +115,13 @@ def translate_job_content(
         requirements=requirements,
         important_note=important_note,
         category=category,
+        location=location,
     )
 
     ai_client = client or get_gemini_client()
 
     try:
-        logger.info("Requesting Gemini translation for job title: %s", title[:50])
+        logger.info("Requesting Gemini translation for job title: %s (location: %s)", title[:50], location)
         response_text = ai_client.generate(prompt)
         parsed = _parse_json_from_response(response_text)
 
@@ -134,7 +139,7 @@ def translate_job_content(
     except Exception as e:
         logger.warning("Gemini translation error (falling back to original): %s", e)
 
-    return _build_fallback_translations(title, description, responsibilities, requirements, important_note)
+    return _build_fallback_translations(title, description, responsibilities, requirements, important_note, location)
 
 
 def translate_and_save_job(db: Session, job_id: str) -> Optional[Dict[str, Any]]:
@@ -153,6 +158,7 @@ def translate_and_save_job(db: Session, job_id: str) -> Optional[Dict[str, Any]]
         requirements=job.requirements or "",
         important_note=job.importantNote or "",
         category=job.category or "",
+        location=job.location or "",
     )
 
     job.translations = translations
@@ -161,3 +167,4 @@ def translate_and_save_job(db: Session, job_id: str) -> Optional[Dict[str, Any]]
     db.refresh(job)
     logger.info("Saved translations for job %s: %s", job_id, list(translations.keys()))
     return translations
+

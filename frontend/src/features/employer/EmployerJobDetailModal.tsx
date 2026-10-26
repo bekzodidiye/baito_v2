@@ -132,7 +132,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                       {language === 'uz' ? 'Joylashuv' : language === 'ru' ? 'Локация' : 'Location'}
                     </span>
                     <span className="text-[14px] font-bold text-[#1A1A40] truncate block">
-                      {job.rawLocation || job.location}
+                      {localized.location || job.rawLocation || job.location}
                     </span>
                  </div>
               </div>

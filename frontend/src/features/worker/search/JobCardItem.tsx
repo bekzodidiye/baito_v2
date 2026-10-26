@@ -7,7 +7,7 @@ import { getJobShiftTime, getJobDuration } from '../../../utils/jobTimeUtils';
 import { getJobCategory } from '../../../utils/jobCategoryUtils';
 import { shareJob } from '../../../utils/shareJob';
 import { formatSalary } from '../../../utils/money';
-import { getJobTitle } from '../../../utils/jobTranslationUtils';
+import { getJobTitle, getJobLocation } from '../../../utils/jobTranslationUtils';
 import { useAuthStore } from "../../../store/useAuthStore";
 
 interface JobCardItemProps {
@@ -132,7 +132,7 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium truncate">
             <MapPin size={11} className="text-slate-300 shrink-0" />
-            <span className="truncate">{job.location}</span>
+            <span className="truncate">{getJobLocation(job, language)}</span>
             {job.distanceKm !== undefined && (
               <>
                 <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0" />

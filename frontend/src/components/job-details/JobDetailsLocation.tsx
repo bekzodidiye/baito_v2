@@ -7,6 +7,8 @@ import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useUIStore } from "../../store/useUIStore";
 import { useAuthStore } from "../../store/useAuthStore";
 
+import { getJobLocation } from '../../utils/jobTranslationUtils';
+
 interface JobDetailsLocationProps {
   selectedJob: Job;
   onOpenOnMap?: () => void;
@@ -59,7 +61,7 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
         <MapPin size={20} className="text-brand-primary mt-0.5 shrink-0" />
         <div>
           <p className="text-sm font-semibold text-slate-800 leading-snug">
-            {selectedJob.location}
+            {getJobLocation(selectedJob, language)}
             {selectedJob.distanceKm !== undefined && (
               <span className="ml-2 text-brand-primary">
                 ({selectedJob.distanceKm < 1 ? '< 1 km' : `${Math.round(selectedJob.distanceKm)} km`})
