@@ -5,6 +5,7 @@ import { getJobDateDisplay, getJobShiftTime } from '../../utils/jobTimeUtils';
 import { getJobCategory } from '../../utils/jobCategoryUtils';
 import { translations } from '../../translations';
 import { formatSalary } from '../../utils/money';
+import { getJobTitle } from '../../utils/jobTranslationUtils';
 import { useAuthStore } from "../../store/useAuthStore";
 
 interface JobDetailsCardProps {
@@ -59,7 +60,7 @@ export const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ selectedJob }) =
           <span className="text-slate-400 font-bold text-xs truncate">{selectedJob.company}</span>
         </div>
         <h2 className="text-base sm:text-lg font-extrabold text-brand-primary leading-snug">
-          {selectedJob.title}
+          {getJobTitle(selectedJob, language)}
         </h2>
       </div>
 

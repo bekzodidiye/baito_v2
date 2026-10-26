@@ -26,6 +26,21 @@ Object.keys(combinedRu).forEach(id => {
 });
 
 export const getTranslatedJob = (job: Job, lang: Language): Job => {
+  if (!job) return job;
+
+  // 1. Check for dynamic AI translations saved with the job
+  if (job.translations && job.translations[lang]) {
+    const t = job.translations[lang];
+    return {
+      ...job,
+      title: t.title || job.title,
+      description: t.description || job.description,
+      responsibilities: t.responsibilities || job.responsibilities,
+      requirements: t.requirements || job.requirements,
+      importantNote: t.importantNote || job.importantNote,
+    };
+  }
+
   if (lang === 'uz') return job;
 
   const trans = jobTransData[job.id];

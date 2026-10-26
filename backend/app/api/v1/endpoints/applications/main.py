@@ -101,6 +101,7 @@ def get_worker_applications(
             "jobCompany": job.company or "Baito",
             "jobLocation": job.location,
             "jobDate": str(job.workDate) if job.workDate else "",
+            "jobTranslations": job.translations or {},
             "status": app.status,
             "appliedDate": str(app.appliedDate) if app.appliedDate else None,
             "rating": app.rating,

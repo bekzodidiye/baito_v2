@@ -4,6 +4,7 @@ import { MapPin, CheckCircle2, Trash2, Users, Calendar, Wallet, Hourglass, XCirc
 import { Job } from '../../types';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { workDateSummary } from '../../utils/workDates';
+import { getJobTitle } from '../../utils/jobTranslationUtils';
 
 interface EmployerJobCardProps {
   job: Job;
@@ -48,6 +49,8 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
   const bannerUrl = getJobBannerImage(job);
   const dates = workDateSummary(job.workDate, language);
 
+  const localizedTitle = getJobTitle(job, language);
+
   return (
     <motion.div
       layout
@@ -62,7 +65,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
         <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-slate-100 shrink-0">
           <img
             src={bannerUrl}
-            alt={job.title}
+            alt={localizedTitle}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
            onError={(e) => {
         const target = e.currentTarget;
@@ -77,10 +80,10 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
         <div className="flex-1 min-w-0 pt-0.5">
           <div className="flex items-start justify-between gap-2 mb-1">
             <h3
-              title={job.title}
+              title={localizedTitle}
               className="font-black text-base text-slate-800 line-clamp-2 leading-snug break-words min-w-0"
             >
-              {job.title}
+              {localizedTitle}
             </h3>
             {/* Delete Button */}
             {job.status === 'open' && (

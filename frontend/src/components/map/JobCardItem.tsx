@@ -5,6 +5,7 @@ import { getLatLng, calculateDistance } from './mapUtils';
 import { getJobShiftTime, getJobDuration } from '../../utils/jobTimeUtils';
 import { shareJob } from '../../utils/shareJob';
 import { formatSalary } from '../../utils/money';
+import { getJobTitle, getJobDescription } from '../../utils/jobTranslationUtils';
 import { translations, Language } from '../../translations';
 import { ConfirmModal } from '../common/ConfirmModal';
 
@@ -41,11 +42,13 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
 
   const shiftWhen = [(job as any).workDate, (job as any).workTime].filter(Boolean).join(', ');
   const formattedSalary = formatSalary(job.salary, language);
+  const localizedTitle = getJobTitle(job, language);
+  const localizedDescription = getJobDescription(job, language);
   const applyQuestion = {
-    ru: `«${job.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Оплата: ${formattedSalary}.` : ''} Работодатель увидит вашу заявку.`,
-    en: `"${job.title}"${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Pay: ${formattedSalary}.` : ''} The employer will see your application.`,
-    uz: `«${job.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `To'lov: ${formattedSalary}.` : ''} Ish beruvchi arizangizni ko'radi.`,
-  }[language as 'uz' | 'ru' | 'en'] ?? `«${job.title}» uchun ariza topshirasizmi?`;
+    ru: `«${localizedTitle}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Оплата: ${formattedSalary}.` : ''} Работодатель увидит вашу заявку.`,
+    en: `"${localizedTitle}"${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Pay: ${formattedSalary}.` : ''} The employer will see your application.`,
+    uz: `«${localizedTitle}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `To'lov: ${formattedSalary}.` : ''} Ish beruvchi arizangizni ko'radi.`,
+  }[language as 'uz' | 'ru' | 'en'] ?? `«${localizedTitle}» uchun ariza topshirasizmi?`;
 
   return (
     <>
@@ -90,7 +93,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
             </div>
             <div className="min-w-0 pr-6 flex-1">
               <h3 className="text-xs font-bold text-slate-800 leading-tight truncate">
-                {job.title}
+                {localizedTitle}
               </h3>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <p className="text-[11px] text-slate-400 font-medium truncate">
@@ -166,7 +169,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
           <div className="flex-1 my-1.5 flex flex-col justify-center min-h-0">
             {/* Main description quote */}
             <p className="text-[10.5px] leading-relaxed text-slate-600 font-medium line-clamp-3 overflow-hidden whitespace-pre-line">
-              {job.description || (
+              {localizedDescription || (
                 language === 'uz' ? "Kunlik ish faoliyati, barcha zaruriy jihozlar va tushlik ish beruvchi tomonidan ta'minlanadi." : language === 'ru' ? "Ежедневная работа, всё необходимое оборудование и обед предоставляются работодателем." : "Daily job, all necessary equipment and lunch are provided by the employer."
               )}
             </p>

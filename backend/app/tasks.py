@@ -261,4 +261,28 @@ def send_telegram_digest() -> bool:
     return True
 
 
+@celery_app.task(
+    name="app.tasks.translate_job_task",
+    bind=True,
+    max_retries=2,
+    default_retry_delay=5,
+)
+def translate_job_task(self, job_id: str) -> bool:
+    """Translate a job posting into Uzbek, Russian, and English using Gemini."""
+    logger.info("Executing translate_job_task for job_id=%s", job_id)
+    from app.db.session import SessionLocal
+    from app.services.ai_translator import translate_and_save_job
+
+    db = SessionLocal()
+    try:
+        res = translate_and_save_job(db, job_id)
+        return bool(res)
+    except Exception as exc:
+        logger.error("translate_job_task failed for job_id=%s: %s", job_id, exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
+
 

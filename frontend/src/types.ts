@@ -51,6 +51,13 @@ export interface Job {
   importantNote?: string;
   createdAt?: string;
   appliedDate?: string;
+  translations?: Record<string, {
+    title?: string;
+    description?: string;
+    responsibilities?: string;
+    requirements?: string;
+    importantNote?: string;
+  }>;
 }
 
 export interface Message {
@@ -97,6 +104,7 @@ export interface WorkerApplication {
   bonus?: number | null;
   earnedAmount?: number;
   expectedAmount?: number;
+  jobTranslations?: Record<string, { title?: string }>;
 }
 
 export interface Application {

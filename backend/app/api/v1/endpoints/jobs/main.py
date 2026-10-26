@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -22,28 +22,32 @@ HIRED_STATUSES = ['hired', 'confirmed', 'completed', 'in_progress', 'start_reque
 VIEW_DEDUPE_TTL_SECONDS = 3600
 
 
-
-
-
-
-
-
-
-
-
-
+def _trigger_job_translation(job_id: str):
+    """Trigger background job translation via Celery with direct thread fallback."""
+    try:
+        from app.tasks import translate_job_task
+        translate_job_task.delay(job_id)
+    except Exception as e:
+        logger.warning("Celery translation dispatch failed, running directly: %s", e)
+        from app.db.session import SessionLocal
+        from app.services.ai_translator import translate_and_save_job
+        bg_db = SessionLocal()
+        try:
+            translate_and_save_job(bg_db, job_id)
+        except Exception as err:
+            logger.error("Direct translation failed for job %s: %s", job_id, err)
+        finally:
+            bg_db.close()
 
 
 @router.post("/", response_model=schemas.Job)
 @limiter.limit("20/hour")
 def create_job(
     request: Request,
+    background_tasks: BackgroundTasks,
     *,
     db: Session = Depends(deps.get_db),
     job_in: schemas.JobCreate,
-    # Posting is what puts a stranger's address in front of workers and what
-    # draws on a balance, so the account behind it has to have been
-    # checked first.
     current_user: models.User = Depends(deps.get_verified_employer),
 ) -> Any:
     """Create a new job posting, screening it for fraud first."""
@@ -92,6 +96,7 @@ def create_job(
     job_days.sync_days(db, db_job)
     db.commit()
     db.refresh(db_job)
+    background_tasks.add_task(_trigger_job_translation, db_job.id)
     return db_job
 
 
@@ -101,6 +106,7 @@ def create_job(
 def update_job(
     job_id: str,
     job_in: schemas.JobUpdate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_verified_employer),
 ) -> Any:
@@ -160,6 +166,8 @@ def update_job(
         job_days.sync_days(db, job)
     db.commit()
     db.refresh(job)
+    if {"title", "description", "responsibilities", "requirements", "importantNote"} & set(update_data):
+        background_tasks.add_task(_trigger_job_translation, job.id)
     return job
 
 

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Clock, Users, Calendar, MapPin, CheckCircle2, Trash2, ChevronRight, Zap } from 'lucide-react';
 import { Job } from '../../types';
 import { getJobDetails } from '../../utils/jobDetailHelpers';
+import { getJobLocalizedFields } from '../../utils/jobTranslationUtils';
 import { getJobBannerImage } from './EmployerJobCard';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 
@@ -27,9 +28,10 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
   
   if (!job) return null;
 
-  const fallback = getJobDetails(job.title, language);
-  const tasks = job.responsibilities ? job.responsibilities.split('\n').filter(Boolean) : fallback.tasks;
-  const requirements = job.requirements ? job.requirements.split('\n').filter(Boolean) : fallback.requirements;
+  const localized = getJobLocalizedFields(job, language);
+  const fallback = getJobDetails(localized.title, language);
+  const tasks = localized.responsibilities ? localized.responsibilities.split('\n').filter(Boolean) : fallback.tasks;
+  const requirements = localized.requirements ? localized.requirements.split('\n').filter(Boolean) : fallback.requirements;
 
   const hired = Number(job.hiredCount ?? 0);
   const vac = Number(job.vacancies ?? (job.neededWorkers ? parseInt(job.neededWorkers) : 1));
@@ -111,7 +113,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
               </div>
 
               {/* Job Title */}
-              <h1 className="text-[22px] font-black text-[#1A1A40] mb-4 leading-tight">{job.title}</h1>
+              <h1 className="text-[22px] font-black text-[#1A1A40] mb-4 leading-tight">{localized.title}</h1>
 
               {/* Tags Row */}
               <div className="flex flex-wrap gap-2 mb-6">

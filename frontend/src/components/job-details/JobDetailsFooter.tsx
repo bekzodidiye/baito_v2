@@ -6,6 +6,7 @@ import { showToast } from '../../utils/toast';
 import { requestStartJobApi, completeJobApi } from '../../api/queries';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { formatSalary } from '../../utils/money';
+import { getJobTitle } from '../../utils/jobTranslationUtils';
 import { QueryClientContext } from '@tanstack/react-query';
 import { useAuthStore } from "../../store/useAuthStore";
 
@@ -120,11 +121,12 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
   // to recognise they are about to commit to the right job.
   const shiftWhen = [selectedJob.workDate, selectedJob.workTime].filter(Boolean).join(', ');
   const formattedSalary = formatSalary(selectedJob.salary, language);
+  const localizedTitle = getJobTitle(selectedJob, language);
   const applyQuestion = {
-    ru: `«${selectedJob.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Оплата: ${formattedSalary}.` : ''} Работодатель увидит вашу заявку.`,
-    en: `"${selectedJob.title}"${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Pay: ${formattedSalary}.` : ''} The employer will see your application.`,
-    uz: `«${selectedJob.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `To'lov: ${formattedSalary}.` : ''} Ish beruvchi arizangizni ko'radi.`,
-  }[language as 'uz' | 'ru' | 'en'] ?? `«${selectedJob.title}» uchun ariza topshirasizmi?`;
+    ru: `«${localizedTitle}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Оплата: ${formattedSalary}.` : ''} Работодатель увидит вашу заявку.`,
+    en: `"${localizedTitle}"${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Pay: ${formattedSalary}.` : ''} The employer will see your application.`,
+    uz: `«${localizedTitle}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `To'lov: ${formattedSalary}.` : ''} Ish beruvchi arizangizni ko'radi.`,
+  }[language as 'uz' | 'ru' | 'en'] ?? `«${localizedTitle}» uchun ariza topshirasizmi?`;
 
   const isHiredOrConfirmed = ['hired', 'confirmed', 'todo', 'approved'].includes(selectedJob.status) || (selectedJob as any).hired;
 
@@ -240,10 +242,10 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
         title={language === 'uz' ? "Ishni yakunlash" : language === 'ru' ? "Завершить работу?" : "Complete Job?"}
         message={
           language === 'uz'
-            ? `«${selectedJob.title}» ishini haqiqatan ham yakunladingizmi? Ish beruvchiga xabar yuboriladi.`
+            ? `«${localizedTitle}» ishini haqiqatan ham yakunladingizmi? Ish beruvchiga xabar yuboriladi.`
             : language === 'ru'
-            ? `Вы уверены, что завершили работу «${selectedJob.title}»? Работодатель получит уведомление.`
-            : `Are you sure you completed "${selectedJob.title}"? Employer will be notified.`
+            ? `Вы уверены, что завершили работу «${localizedTitle}»? Работодатель получит уведомление.`
+            : `Are you sure you completed "${localizedTitle}"? Employer will be notified.`
         }
         confirmText={language === 'uz' ? "Ha, yakunladim" : language === 'ru' ? "Да, завершил" : "Yes, complete"}
         cancelText={language === 'uz' ? "Bekor qilish" : language === 'ru' ? "Отмена" : "Cancel"}

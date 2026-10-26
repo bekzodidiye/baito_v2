@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 
@@ -84,6 +84,7 @@ class JobBase(BaseModel):
     views: Optional[int] = 0
     coordinateX: Optional[float] = None
     coordinateY: Optional[float] = None
+    translations: Optional[Dict[str, Any]] = None
 
 class JobCreate(JobBase):
     """What a client may send.

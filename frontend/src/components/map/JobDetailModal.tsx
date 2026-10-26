@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Job } from '../../types';
 import { getJobDetails } from '../../utils/jobDetailHelpers';
+import { getJobLocalizedFields } from '../../utils/jobTranslationUtils';
 import { JobDetailsHeader } from '../job-details/JobDetailsHeader';
 import { JobDetailsHero } from '../job-details/JobDetailsHero';
 import { JobDetailsCard } from '../job-details/JobDetailsCard';
@@ -32,7 +33,18 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   onOpenOnMap,
 }) => {
   const language = useAuthStore(s => s.language);
-  const jobDetails = getJobDetails(selectedJob.title, language);
+  const localized = getJobLocalizedFields(selectedJob, language);
+  const fallbackDetails = getJobDetails(localized.title, language);
+
+  const tasks = localized.responsibilities
+    ? localized.responsibilities.split('\n').filter(Boolean)
+    : fallbackDetails.tasks;
+
+  const requirements = localized.requirements
+    ? localized.requirements.split('\n').filter(Boolean)
+    : fallbackDetails.requirements;
+
+  const warning = localized.importantNote || fallbackDetails.warning;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -90,10 +102,10 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               handleCalculateDistance={handleCalculateDistance}
               isLocating={isLocating}
             />
-            <JobDetailsTasks tasks={jobDetails.tasks} />
+            <JobDetailsTasks tasks={tasks} />
             <JobDetailsRequirements 
-              requirements={jobDetails.requirements} 
-              warning={jobDetails.warning} 
+              requirements={requirements} 
+              warning={warning} 
             />
           </div>
         </div>

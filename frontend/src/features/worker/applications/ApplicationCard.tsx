@@ -105,6 +105,8 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
     return name.substring(0, 2).toUpperCase();
   };
 
+  const displayTitle = (application as any).jobTranslations?.[language]?.title || application.jobTitle;
+
   return (
     <div 
       onClick={onClick}
@@ -121,7 +123,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
           </div>
           <div>
             <h3 className="font-display font-bold text-slate-800 text-base leading-tight mb-0.5 group-hover:text-brand-primary transition-colors line-clamp-1">
-              {application.jobTitle}
+              {displayTitle}
             </h3>
             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               <Building2 size={11} className="shrink-0" />

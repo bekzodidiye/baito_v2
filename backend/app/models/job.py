@@ -66,6 +66,7 @@ class Job(Base):
     responsibilities = Column(String)
     requirements = Column(String)
     importantNote = Column(String)
+    translations = Column(JSON, nullable=True, default=dict)
 
     employer = relationship("User", foreign_keys=[employerId])
     hiredWorker = relationship("User", foreign_keys=[hiredWorkerId])

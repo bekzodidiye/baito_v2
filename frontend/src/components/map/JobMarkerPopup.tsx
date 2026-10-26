@@ -1,6 +1,10 @@
 import React from 'react';
 import { Job } from '../../types';
 import { CategoryInfo } from '../../utils/jobCategoryUtils';
+import { getJobTitle } from '../../utils/jobTranslationUtils';
+import { formatSalary } from '../../utils/money';
+import { translations } from '../../translations';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface JobMarkerPopupProps {
   job: Job;
@@ -17,15 +21,20 @@ export const JobMarkerPopup = React.memo(({
   setSelectedJob,
   closePopup
 }: JobMarkerPopupProps) => {
+  const language = useAuthStore(s => s.language);
+  const t = translations[language];
+  const localizedTitle = getJobTitle(job, language);
+  const formattedSalary = formatSalary(job.salary, language);
+
   return (
     <div className="font-sans text-left min-w-[180px] max-w-[240px]">
       <div className="flex items-center gap-1.5 mb-1.5">
         <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-sm ${category.badgeBg} ${category.badgeText}`}>
           {categoryName}
         </span>
-        <span className="text-[9px] font-semibold text-brand-secondary ml-auto">{job.salary}</span>
+        <span className="text-[9px] font-semibold text-brand-secondary ml-auto">{formattedSalary}</span>
       </div>
-      <h4 className="text-xs font-bold text-brand-primary leading-tight font-display mb-1 truncate">{job.title}</h4>
+      <h4 className="text-xs font-bold text-brand-primary leading-tight font-display mb-1 truncate">{localizedTitle}</h4>
       <div className="flex items-center gap-2 mb-1.5">
         <p className="text-[10px] text-brand-text-variant font-semibold truncate">{job.company}</p>
         <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0"></span>
@@ -42,7 +51,7 @@ export const JobMarkerPopup = React.memo(({
           closePopup();
         }}
       >
-        Batafsil
+        {language === 'ru' ? 'Подробнее' : language === 'en' ? 'Details' : 'Batafsil'}
       </button>
     </div>
   );
