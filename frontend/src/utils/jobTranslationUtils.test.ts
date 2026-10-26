@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { getJobTitle, getJobDescription, getJobLocalizedFields } from './jobTranslationUtils';
+import { 
+  getJobTitle, 
+  getJobDescription, 
+  getJobLocalizedFields,
+  translateJobLocation,
+  getJobLocation,
+} from './jobTranslationUtils';
 import { getTranslatedJob } from '../jobTranslations';
 import { Job } from '../types';
 
@@ -93,4 +99,41 @@ describe('Job Translation Utilities', () => {
     const translatedUz = getTranslatedJob(mockJob, 'uz');
     expect(translatedUz.title).toBe('Kassir kerak');
   });
+
+  describe('Location Translation QA Edge Cases', () => {
+    it('correctly translates composite location into Russian and English', () => {
+      expect(translateJobLocation('Buxoro, Eski shahar', 'ru')).toBe('Бухара, Старый город');
+      expect(translateJobLocation('Buxoro, Eski shahar', 'en')).toBe('Bukhara, Old City');
+      expect(translateJobLocation('Toshkent, Yunusobod', 'ru')).toBe('Ташкент, Юнусабад');
+      expect(translateJobLocation('Toshkent, Yunusobod', 'en')).toBe('Tashkent, Yunusabad');
+      expect(translateJobLocation('Urganch, Xiva', 'ru')).toBe('Ургенч, Хива');
+      expect(translateJobLocation('Urganch, Xiva', 'en')).toBe('Urgench, Khiva');
+    });
+
+    it('preserves Uzbek original on uz locale', () => {
+      expect(translateJobLocation('Buxoro, Eski shahar', 'uz')).toBe('Buxoro, Eski shahar');
+    });
+
+    it('gracefully handles missing, unknown, or empty locations without throwing', () => {
+      expect(translateJobLocation('', 'ru')).toBe('');
+      expect(translateJobLocation(null as any, 'ru')).toBe('');
+      expect(translateJobLocation(undefined as any, 'en')).toBe('');
+      expect(translateJobLocation('Unknown Street 99', 'ru')).toBe('Unknown Street 99');
+    });
+
+    it('prioritizes dynamic AI location if present in translations', () => {
+      const jobWithAILoc: Job = {
+        ...mockJob,
+        location: 'Buxoro, Eski shahar',
+        translations: {
+          ru: {
+            title: 'Повар',
+            location: 'Бухара, Древняя крепость',
+          },
+        },
+      };
+      expect(getJobLocation(jobWithAILoc, 'ru')).toBe('Бухара, Древняя крепость');
+    });
+  });
 });
+
