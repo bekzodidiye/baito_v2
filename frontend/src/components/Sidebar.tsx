@@ -4,7 +4,7 @@ import { useApp, ScreenType } from '../context/AppContext';
 import { 
   Map, Calendar, Mail, Bell, User, Settings, HelpCircle, 
   ShieldCheck, LogOut, Briefcase, FileText, MessageSquare, 
-  LayoutDashboard, PlusCircle, ChevronRight 
+  LayoutDashboard, PlusCircle, ChevronRight, ClipboardList 
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { translations } from '../translations';
@@ -51,6 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   const workerNav: NavItem[] = [
     { id: 'jobs', label: t.jobSearch, icon: Map, screen: 'jobs' as ScreenType, active: currentScreen === 'jobs' },
     { id: 'calendar', label: t.calendar, icon: Calendar, screen: 'calendar' as ScreenType, active: currentScreen === 'calendar' },
+    { id: 'applications', label: t.myApplications, icon: ClipboardList, screen: 'applications' as ScreenType, active: currentScreen === 'applications' },
     { id: 'messages', label: t.messages, icon: Mail, screen: 'messages' as ScreenType, active: currentScreen === 'messages' || currentScreen === 'chat', badge: unreadMessages },
     { id: 'notifications', label: language === 'uz' ? "Bildirishnomalar" : language === 'ru' ? "Уведомления" : "Notifications", icon: Bell, screen: 'notifications' as ScreenType, active: currentScreen === 'notifications', badge: unreadNotificationsCount },
   ];

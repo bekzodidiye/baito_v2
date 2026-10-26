@@ -61,7 +61,7 @@ describe('JobDetailsFooter — applying asks before it commits the worker', () =
     expect(shown).toContain('Ombor yuk tashuvchi');
     expect(shown).toContain('2026-09-10');
     expect(shown).toContain('09:00 - 18:00');
-    expect(shown).toContain("400 000 so'm");
+    expect(shown.replace(/[\s ]/g, ' ')).toContain("400 000 so'm");
   });
 
   it('cancelling applies to nothing', () => {

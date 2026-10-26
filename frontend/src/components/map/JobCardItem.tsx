@@ -4,6 +4,7 @@ import { Job } from '../../types';
 import { getLatLng, calculateDistance } from './mapUtils';
 import { getJobShiftTime, getJobDuration } from '../../utils/jobTimeUtils';
 import { shareJob } from '../../utils/shareJob';
+import { formatSalary } from '../../utils/money';
 import { translations, Language } from '../../translations';
 import { ConfirmModal } from '../common/ConfirmModal';
 
@@ -39,10 +40,11 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
   const displayDuration = getJobDuration(job, language as 'uz' | 'ru' | 'en');
 
   const shiftWhen = [(job as any).workDate, (job as any).workTime].filter(Boolean).join(', ');
+  const formattedSalary = formatSalary(job.salary, language);
   const applyQuestion = {
-    ru: `«${job.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${job.salary ? `Оплата: ${job.salary}.` : ''} Работодатель увидит вашу заявку.`,
-    en: `"${job.title}"${shiftWhen ? ` — ${shiftWhen}` : ''}. ${job.salary ? `Pay: ${job.salary}.` : ''} The employer will see your application.`,
-    uz: `«${job.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${job.salary ? `To'lov: ${job.salary}.` : ''} Ish beruvchi arizangizni ko'radi.`,
+    ru: `«${job.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Оплата: ${formattedSalary}.` : ''} Работодатель увидит вашу заявку.`,
+    en: `"${job.title}"${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Pay: ${formattedSalary}.` : ''} The employer will see your application.`,
+    uz: `«${job.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `To'lov: ${formattedSalary}.` : ''} Ish beruvchi arizangizni ko'radi.`,
   }[language as 'uz' | 'ru' | 'en'] ?? `«${job.title}» uchun ariza topshirasizmi?`;
 
   return (
@@ -104,7 +106,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
 
           <div className="mt-0.5 flex flex-col">
             <p className="font-sans font-bold text-slate-900 text-[14px] leading-tight">
-              {job.salary}
+              {formatSalary(job.salary, language)}
             </p>
           </div>
 

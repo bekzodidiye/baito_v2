@@ -6,6 +6,7 @@ import { translations } from '../../../translations';
 import { getJobShiftTime, getJobDuration } from '../../../utils/jobTimeUtils';
 import { getJobCategory } from '../../../utils/jobCategoryUtils';
 import { shareJob } from '../../../utils/shareJob';
+import { formatSalary } from '../../../utils/money';
 import { useAuthStore } from "../../../store/useAuthStore";
 
 interface JobCardItemProps {
@@ -116,7 +117,7 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
 
       <div className="flex flex-col">
         <p className="font-sans font-extrabold text-brand-primary text-base leading-none">
-          {job.salary}
+          {formatSalary(job.salary, language)}
         </p>
       </div>
 

@@ -5,6 +5,7 @@ import { translations } from '../../translations';
 import { showToast } from '../../utils/toast';
 import { requestStartJobApi, completeJobApi } from '../../api/queries';
 import { ConfirmModal } from '../common/ConfirmModal';
+import { formatSalary } from '../../utils/money';
 import { QueryClientContext } from '@tanstack/react-query';
 import { useAuthStore } from "../../store/useAuthStore";
 
@@ -118,10 +119,11 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
   // Say which shift, when, and for how much — the three things a worker needs
   // to recognise they are about to commit to the right job.
   const shiftWhen = [selectedJob.workDate, selectedJob.workTime].filter(Boolean).join(', ');
+  const formattedSalary = formatSalary(selectedJob.salary, language);
   const applyQuestion = {
-    ru: `«${selectedJob.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${selectedJob.salary ? `Оплата: ${selectedJob.salary}.` : ''} Работодатель увидит вашу заявку.`,
-    en: `"${selectedJob.title}"${shiftWhen ? ` — ${shiftWhen}` : ''}. ${selectedJob.salary ? `Pay: ${selectedJob.salary}.` : ''} The employer will see your application.`,
-    uz: `«${selectedJob.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${selectedJob.salary ? `To'lov: ${selectedJob.salary}.` : ''} Ish beruvchi arizangizni ko'radi.`,
+    ru: `«${selectedJob.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Оплата: ${formattedSalary}.` : ''} Работодатель увидит вашу заявку.`,
+    en: `"${selectedJob.title}"${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Pay: ${formattedSalary}.` : ''} The employer will see your application.`,
+    uz: `«${selectedJob.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `To'lov: ${formattedSalary}.` : ''} Ish beruvchi arizangizni ko'radi.`,
   }[language as 'uz' | 'ru' | 'en'] ?? `«${selectedJob.title}» uchun ariza topshirasizmi?`;
 
   const isHiredOrConfirmed = ['hired', 'confirmed', 'todo', 'approved'].includes(selectedJob.status) || (selectedJob as any).hired;

@@ -22,7 +22,9 @@ interface SummaryCardProps {
 
 export const SummaryCard: React.FC<SummaryCardProps> = ({
   avgRating, reviewsCount, totalEarned, distribution, t
-}) => (
+}) => {
+  const language = useAuthStore(s => s.language);
+  return (
   <motion.section
     initial={{ opacity: 0, y: 16 }}
     animate={{ opacity: 1, y: 0 }}
@@ -88,14 +90,15 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase">{t.totalEarned}</p>
             <p className="font-display font-black text-sm text-emerald-600">
-              {money(totalEarned, useAuthStore.getState().language)}
+              {money(totalEarned, language)}
             </p>
           </div>
         </div>
       )}
     </div>
   </motion.section>
-);
+  );
+};
 
 /* ── Single Review Card ── */
 interface ReviewCardProps {
