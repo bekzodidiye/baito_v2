@@ -84,9 +84,9 @@ describe('FAQ interactivity — search and category filter', () => {
     language.current = 'uz';
     render(<FaqScreen />);
     const searchInput = screen.getByPlaceholderText("Savollardan qidirish (masalan: to'lov, bepulmi, ariza, profil)...");
-    fireEvent.change(searchInput, { target: { value: 'Eskrou' } });
+    fireEvent.change(searchInput, { target: { value: 'xavfsizligi' } });
 
-    expect(screen.getByText("To'lovlar xavfsizligi qanday ta'minlanadi (Eskrou)?")).toBeTruthy();
+    expect(screen.getByText("To'lovlar xavfsizligi qanday ta'minlanadi?")).toBeTruthy();
     expect(screen.queryByText("Baito nima?")).toBeNull();
   });
 });

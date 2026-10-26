@@ -44,7 +44,7 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
     statusAcceptedTitle: "Foydalanish shartlari qabul qilingan va amalda",
     statusAcceptedSubtitle: "Siz platformadan foydalanish orqali ushbu shartlarga to'liq rozilik bildirgansiz. Shartlar barcha foydalanuvchilar uchun majburiydir va o'zgartirib bo'lmaydi.",
     statusAcceptedBadge: 'Amalda • 2026-yil',
-    searchPlaceholder: "Shartlar bo'yicha qidirish (masalan: to'lov, escrow, bekor qilish, jarima)...",
+    searchPlaceholder: "Shartlar bo'yicha qidirish (masalan: to'lov, ish haqi, bekor qilish, jarima)...",
     clearSearch: 'Qidiruvni tozalash',
     noResults: 'Hech qanday band topilmadi',
     noResultsDesc: "Kiritilgan so'rov bo'yicha shartlar topilmadi. Qidiruv so'zini o'zgartirib ko'ring.",
@@ -59,7 +59,7 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
     sections: [
       {
         heading: '1. Umumiy qoidalar',
-        body: "Ushbu Foydalanish shartlari (\"Shartlar\") Baito elektron axborot platformasidan (\"Platforma\" yoki \"Ilova\") foydalanish tartibini, huquq va majburiyatlarni belgilovchi rasmiy ommaviy oferta hisoblanadi. Baito O'zbekiston Respublikasi qonunchiligiga muvofiq, ish qidiruvchilar (talabalar, frilanserlar, mutaxassislar) hamda ish beruvchilar (yuridik va jismoniy shaxslar) o'rtasida qisqa muddatli, smenali va bir martalik ishlarni tashkil etish, o'zaro aloqa va xavfsiz to'lovlarni amalga oshirish bo'yicha vositachilik xizmatlarini taqdim etadi. Platformada ro'yxatdan o'tish yoki undan foydalanish foydalanuvchi ushbu Shartlarni hech qanday istisnolarsiz to'liq qabul qilganini (aksept) bildiradi.",
+        body: "Ushbu Foydalanish shartlari (\"Shartlar\") Baito elektron axborot platformasidan (\"Platforma\" yoki \"Ilova\") foydalanish tartibini, huquq va majburiyatlarni belgilovchi rasmiy ommaviy oferta hisoblanadi. Baito O'zbekiston Respublikasi qonunchiligiga muvofiq, ish qidiruvchilar (talabalar, frilanserlar, mutaxassislar) hamda ish beruvchilar (yuridik va jismoniy shaxslar) o'rtasida qisqa muddatli, smenali va bir martalik ishlarni tashkil etish, o'zaro aloqa va to'lovlarni amalga oshirish bo'yicha vositachilik xizmatlarini taqdim etadi. Platformada ro'yxatdan o'tish yoki undan foydalanish foydalanuvchi ushbu Shartlarni hech qanday istisnolarsiz to'liq qabul qilganini (aksept) bildiradi.",
         bulletPoints: [
           "Platforma O'zbekiston Respublikasi hududida faoliyat yuritadi va mamlakatning Fuqarolik kodeksi hamda Mehnat to'g'risidagi qonunchiligiga tayanadi.",
           "Ilovadan foydalanish shartlari Baito ma'muriyati va foydalanuvchi o'rtasidagi yuridik kuchga ega bitim hisoblanadi.",
@@ -81,7 +81,7 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
         bulletPoints: [
           "Smenaga yetib kela olmaslik holati yuz berganda, ish boshlanishidan kamida 3 soat oldin ilova orqali arizani bekor qilish shart.",
           "Sababsiz ishga kelmaslik (No-Show) yoki ogohlantirmasdan kechikish foydalanuvchining ishonch reytingini pasaytiradi va profilni bloklashga sabab bo'ladi.",
-          "Ish qidiruvchi smena tugagach, to'lovni Escrow tizimi orqali to'liq va kechiktirilmasdan olish huquqiga ega.",
+          "Ish qidiruvchi smena muvaffaqiyatli yakunlangach, kelishilgan ish haqini to'liq va kechiktirilmasdan olish huquqiga ega.",
           "Ish joyida noqonuniy yoki xavfli sharoitlarga duch kelganda, ijrochi smenani to'xtatish va Baito arbitrajiga murojaat qilish huquqiga ega.",
         ],
       },
@@ -90,21 +90,21 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
         body: "Ish beruvchi (buyurtmachi) e'lon joylashtirishda ish tavsifi, talab qilinadigan ko'nikmalar, aniq ish vaqti, manzil va to'lov summasini to'g'ri va haqqoniy ko'rsatishi shart. Ish beruvchi xavfsiz mehnat sharoitlarini ta'minlash, xodimning sha'ni va qadr-qimmatini hurmat qilish hamda ish yakunlangach, bajarilgan ishni o'z vaqtida tasdiqlashi majburiydir.",
         bulletPoints: [
           "Ish beruvchi e'londa ko'rsatilmagan qo'shimcha yoki xavfli vazifalarni bajarishni talab qilishga haqli emas.",
-          "Smena muvaffaqiyatli yakunlangach, ish beruvchi 24 soat ichida ishni tasdiqlashi shart; aks holda tizim avtomatik ravishda to'lovni ijrochiga o'tkazadi.",
+          "Smena muvaffaqiyatli yakunlangach, ish beruvchi 24 soat ichida ishni tasdiqlashi va to'lovni rasmiylashtirishi shart.",
           "Qonunga zid bo'lgan, litsenziyasiz yoki xavfli faoliyat turlariga e'lon berish qat'iyan man etiladi.",
           "Ish beruvchi platformada faqat tekshirilgan va tasdiqlangan kompaniya yoki jismoniy shaxs sifatida ish olib boradi.",
         ],
       },
       {
-        heading: "5. Xavfsiz to'lov (Escrow) va moliyaviy hisob-kitoblar",
-        body: "Baito platformasida barcha to'lovlar Xavfsiz to'lov (Escrow) tizimi orqali amalga oshiriladi. Ish beruvchi xodimni tanlagan paytda, belgilangan ish haqi va platforma komissiyasi ish beruvchining hisobidan oldindan yechib olinadi va maxsus tranzit hisobda xavfsiz muzlatiladi (depozit qilinadi). Smena to'liq yakunlanib, ish beruvchi tasdiqlaganidan so'ng mablag' bir necha soniya ichida xodimning balansiga o'tkaziladi.",
+        heading: "5. To'lovlar va moliyaviy hisob-kitoblar tartibi",
+        body: "Baito platformasida ish haqi miqdori har bir e'londa aniq ko'rsatiladi va smena tasdiqlanganda tomonlar o'rtasida qat'iy kelishilgan hisoblanadi. Smena to'liq yakunlanib, ish beruvchi tomonidan ish qabul qilinganidan so'ng, to'lov belgilangan tartibda rasmiylashtiriladi va xodimga to'lab beriladi.",
         bulletPoints: [
-          "Xodim o'z balansidagi mablag'ni O'zbekiston banklari tomonidan chiqarilgan Uzcard yoki Humo kartalariga komissiyasiz chiqarib olishi mumkin.",
-          "To'lovlarni platformadan tashqarida (naqd pul, boshqa kartalarga to'g'ridan-to'g'ri o'tkazish) amalga oshirish qat'iyan taqiqlanadi.",
-          "Platformadan tashqarida kelishilgan to'lovlar uchun Baito ma'muriyati hech qanday moliyaviy yoki huquqiy kafolat bermaydi.",
-          "To'lovlar bo'yicha elektron kvitansiya va operatsiyalar tarixi ilovaning Moliya bo'limida saqlanadi.",
+          "Ish beruvchi smena muvaffaqiyatli yakunlangach, 24 soat ichida bajarilgan ishni tasdiqlashi va to'lovni kechiktirmasdan amalga oshirishi shart.",
+          "Xodim o'ziga hisoblangan ish haqini o'zining bank kartalariga (Uzcard, Humo) qabul qiladi.",
+          "To'lovlarni asossiz kechiktirish yoki kelishilgan summadan kam to'lash qat'iyan taqiqlanadi va ish beruvchi hisobining cheklanishiga olib keladi.",
+          "Barcha hisob-fakturalar va to'lov kvitansiyalari tizimda rasmiy buxgalteriya hisobi uchun saqlanadi.",
         ],
-        note: "Muhim: Baito orqali o'tkazilmagan naqd to'lovlar platforma qoidalarini buzish hisoblanadi va ikkala tomon profilining cheklanishiga olib keladi.",
+        note: "Muhim: Ish beruvchi e'londa ko'rsatilgan va tasdiqlangan ish haqi miqdorini to'liq to'lashga majburdir. To'lov bo'yicha nizolar yuzaga kelsa, Baito arbitraji tomonidan adolatli hal qilinadi.",
       },
       {
         heading: "6. Smenalarni bekor qilish va reyting tizimi",
@@ -135,7 +135,7 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
         bulletPoints: [
           "Nizo smena yakunlanganidan keyin 24 soat ichida ochilishi lozim.",
           "Baito arbitraj komissiyasi tomonlar taqdim etgan dalillarni (chat yozishmalari, fotosuratlar, geo-lokatsiya ma'lumotlari) xolisona o'rganadi.",
-          "Arbitraj qarori 3 ish kuni ichida chiqariladi va muzlatilgan depozit mablag'i adolatli taqsimlanadi.",
+          "Arbitraj qarori 3 ish kuni ichida chiqariladi va to'lovlar bo'yicha yakuniy xulosa beriladi.",
           "Platforma doirasida hal etilmagan nizolar O'zbekiston Respublikasi qonunlariga binoan Toshkent shahridagi vakolatli sudlarda ko'rib chiqiladi.",
         ],
       },
@@ -185,7 +185,7 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
     statusAcceptedTitle: 'Условия использования приняты и действуют',
     statusAcceptedSubtitle: 'Используя платформу, вы подтверждаете полное согласие с данными условиями. Условия обязательны для всех пользователей и не подлежат изменению в одностороннем порядке.',
     statusAcceptedBadge: 'Действует • 2026 г.',
-    searchPlaceholder: 'Поиск по условиям (например: оплата, escrow, отмена, штрафы)...',
+    searchPlaceholder: 'Поиск по условиям (например: оплата, зарплата, отмена, штрафы)...',
     clearSearch: 'Очистить поиск',
     noResults: 'Пункты не найдены',
     noResultsDesc: 'По вашему запросу условий не найдено. Попробуйте изменить поисковые слова.',
@@ -222,7 +222,7 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
         bulletPoints: [
           'В случае невозможности выхода на смену соискатель обязан отменить заявку через приложение не менее чем за 3 часа до начала смены.',
           'Неявка на смену без уважительной причины (No-Show) или опоздание снижает рейтинг доверия пользователя и может привести к блокировке аккаунта.',
-          'Соискатель имеет право на получение полной и своевременной оплаты через систему Escrow сразу после подтверждения завершения работы.',
+          'Соискатель имеет право на получение полной и своевременной оплаты труда сразу после подтверждения завершения работы.',
           'При обнаружении опасных или незаконных условий труда исполнитель вправе прекратить работу и обратиться в арбитраж Baito.',
         ],
       },
@@ -231,21 +231,21 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
         body: 'Работодатель (заказчик) при публикации вакансии обязан указывать точное описание задач, требуемые навыки, график, адрес и размер оплаты. Работодатель обязан обеспечить безопасные условия труда, уважать права сотрудников и своевременно подтверждать выполнение работ.',
         bulletPoints: [
           'Работодатель не вправе требовать выполнения опасных или не указанных в объявлении обязанностей.',
-          'После успешного завершения смены работодатель обязан подтвердить работу в течение 24 часов; иначе оплата переводится автоматически.',
+          'После успешного завершения смены работодатель обязан подтвердить работу в течение 24 часов и произвести расчёт.',
           'Публикация вакансий, связанных с незаконной или вводящей в заблуждение деятельностью, строго запрещена.',
           'Работодатель ведёт деятельность на Платформе исключительно в качестве верифицированной компании или физического лица.',
         ],
       },
       {
-        heading: '5. Безопасная сделка (Escrow) и финансовые расчёты',
-        body: 'Все финансовые расчеты на платформе Baito осуществляются через систему «Безопасная сделка» (Escrow). В момент выбора соискателя сумма оплаты труда и сервисный сбор предварительно списываются со счета работодателя и блокируются на специальном счете. После подтверждения выполнения работы средства мгновенно зачисляются на баланс соискателя.',
+        heading: '5. Порядок оплаты и финансовых расчётов',
+        body: 'Размер оплаты труда фиксируется в объявлении о вакансии и считается согласованным при подтверждении смены. После завершения смены и приёмки работы работодателем выплата оформляется в установленном порядке и начисляется исполнителю.',
         bulletPoints: [
-          'Соискатель может без комиссии вывести средства с баланса на карты Uzcard или Humo банков Узбекистана.',
-          'Расчёты вне Платформы (наличными или прямыми переводами на карты) строго запрещены.',
-          'Baito не несёт ответственности и не даёт гарантий по сделкам, совершенным за пределами Платформы.',
-          'Электронные квитанции и история всех транзакций сохраняются в разделе «Финансы» приложения.',
+          'Работодатель обязан подтвердить выполнение работ в течение 24 часов после окончания смены и произвести расчёт без задержек.',
+          'Исполнитель получает заработанные средства на свои банковские карты (Uzcard, Humo).',
+          'Необоснованная задержка выплат или выплата суммы меньше согласованной строго запрещена и ведёт к блокировке работодателя.',
+          'Все официальные счета и квитанции об оплате фиксируются в системе.',
         ],
-        note: 'Важно: попытка оплаты наличными в обход Платформы является грубым нарушением и ведёт к перманентной блокировке обоих аккаунтов.',
+        note: 'Важно: Работодатель обязан полностью выплатить подтверждённую сумму оплаты труда. В случае споров по выплатам вопрос передаётся в арбитраж Baito.',
       },
       {
         heading: '6. Отмена смен и система рейтинга',
@@ -276,7 +276,7 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
         bulletPoints: [
           'Спор может быть открыт в течение 24 часов с момента окончания смены.',
           'Арбитражная комиссия изучает переписку, геолокацию, чеки и фотоотчёты обеих сторон.',
-          'Решение арбитража принимается в течение 3 рабочих дней с последующим справедливым распределением депонированных средств.',
+          'Решение арбитража принимается в течение 3 рабочих дней с вынесением обязательного решения по расчётам.',
           'Неурегулированные споры подлежат рассмотрению в судебных органах города Ташкента согласно законодательству Республики Узбекистан.',
         ],
       },
@@ -326,7 +326,7 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
     statusAcceptedTitle: 'Terms of Service accepted and active',
     statusAcceptedSubtitle: 'By using the platform, you confirm full agreement with these terms. The terms are binding on all users and cannot be modified unilaterally.',
     statusAcceptedBadge: 'Active • 2026',
-    searchPlaceholder: 'Search terms (e.g. payment, escrow, cancellation, penalties)...',
+    searchPlaceholder: 'Search terms (e.g. payment, wages, cancellation, penalties)...',
     clearSearch: 'Clear search',
     noResults: 'No clauses found',
     noResultsDesc: 'No terms matched your query. Try different search keywords.',
@@ -341,7 +341,7 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
     sections: [
       {
         heading: '1. General provisions',
-        body: 'These Terms of Service ("Terms") constitute an official public offer governing the use of the Baito digital platform ("Platform" or "App"), establishing the mutual rights and obligations of the parties. Operating in compliance with the laws of the Republic of Uzbekistan, Baito acts as an intermediary connecting job seekers (students, freelancers, workers) and employers (businesses and individuals) for shift-based, short-term, and on-demand tasks, facilitating communication and secure transactions. Registering or using the Platform signifies your full and unreserved acceptance of these Terms.',
+        body: 'These Terms of Service ("Terms") constitute an official public offer governing the use of the Baito digital platform ("Platform" or "App"), establishing the mutual rights and obligations of the parties. Operating in compliance with the laws of the Republic of Uzbekistan, Baito acts as an intermediary connecting job seekers (students, freelancers, workers) and employers (businesses and individuals) for shift-based, short-term, and on-demand tasks, facilitating communication and transactions. Registering or using the Platform signifies your full and unreserved acceptance of these Terms.',
         bulletPoints: [
           'The Platform operates in the Republic of Uzbekistan pursuant to the Civil and Labor Codes.',
           'These Terms represent a legally binding agreement between Baito administration and the user.',
@@ -363,7 +363,7 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
         bulletPoints: [
           'If unable to attend a shift, the worker must cancel the application via the app at least 3 hours prior to shift commencement.',
           'Unexcused absence (No-Show) or unannounced tardiness lowers the trust rating and may lead to account suspension.',
-          'Workers have the right to receive full and timely payment via the Escrow system upon completion of approved work.',
+          'Workers have the right to receive full and timely payment upon completion of approved work.',
           'If hazardous or unlawful conditions are encountered, workers are entitled to stop work and contact Baito arbitration.',
         ],
       },
@@ -372,21 +372,21 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
         body: 'Employers (clients) publishing job listings must provide accurate descriptions of duties, required skills, work hours, location, and payment. Employers are required to maintain a safe working environment, respect worker rights, and promptly confirm completed work.',
         bulletPoints: [
           'Employers may not demand hazardous tasks or duties outside the scope of the original job posting.',
-          'Upon shift completion, employers must approve the work within 24 hours; otherwise funds release automatically.',
+          'Upon shift completion, employers must approve the work within 24 hours and process payment.',
           'Posting listings involving unlawful, deceptive, or unlicensed activities is strictly forbidden.',
           'Employers operate on the Platform solely as verified enterprises or accredited individuals.',
         ],
       },
       {
-        heading: '5. Escrow and financial settlements',
-        body: 'All payments on Baito are processed through our Escrow (Secure Payment) system. When an employer confirms a worker, the agreed wage and platform fee are held in escrow on a dedicated transit account. Once the shift is completed and approved, funds are immediately credited to the worker balance.',
+        heading: '5. Payment and financial settlement procedures',
+        body: 'Wage amounts are explicitly stated in each job posting and agreed upon confirmation of the shift. Upon shift completion and employer acceptance of the work, payment is processed and disbursed to the worker according to established platform procedures.',
         bulletPoints: [
-          'Workers may withdraw their balance to Uzcard or Humo bank cards issued by banks in Uzbekistan without commission.',
-          'Conducting transactions off-platform (cash or direct card transfers) is strictly prohibited.',
-          'Baito offers no warranty or protection for arrangements made outside the Platform.',
-          'Electronic receipts and transaction records are maintained in the Finance section of the app.',
+          'Employers must confirm completed work within 24 hours of shift conclusion and disburse payment without delay.',
+          'Workers receive their earned wages to their personal bank cards (Uzcard, Humo).',
+          'Unjustified payment delays or paying less than the agreed amount is strictly prohibited and results in employer suspension.',
+          'All official invoices and payment receipts are recorded within the system.',
         ],
-        note: 'Important: Cash settlements bypassing the Platform violate our rules and will result in permanent suspension of both accounts.',
+        note: 'Important: The employer is obligated to pay the confirmed wage amount in full. Payment disputes are resolved through Baito arbitration.',
       },
       {
         heading: '6. Shift cancellations and rating system',
@@ -417,7 +417,7 @@ export const TERMS: Record<'uz' | 'ru' | 'en', TermsContent> = {
         bulletPoints: [
           'Disputes must be opened within 24 hours of shift conclusion.',
           'The arbitration team evaluates chat history, GPS check-ins, and evidence submitted by both sides.',
-          'Arbitration decisions are issued within 3 business days and held funds are disbursed accordingly.',
+          'Arbitration decisions are issued within 3 business days with a binding resolution regarding payments.',
           'Unresolved disputes are subject to the jurisdiction of competent courts in Tashkent, Republic of Uzbekistan.',
         ],
       },

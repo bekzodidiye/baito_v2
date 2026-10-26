@@ -160,9 +160,9 @@ describe('Terms of service — parity, search and active status', () => {
     language.current = 'uz';
     render(<ShartlarScreen />);
     const searchInput = screen.getByPlaceholderText(/Shartlar bo'yicha qidirish/i);
-    fireEvent.change(searchInput, { target: { value: 'Escrow' } });
+    fireEvent.change(searchInput, { target: { value: 'Hisob-kitob' } });
 
-    expect(screen.getByText(/5\. Xavfsiz to'lov \(Escrow\)/i)).toBeTruthy();
+    expect(screen.getByText(/5\. To'lovlar va moliyaviy hisob-kitoblar tartibi/i)).toBeTruthy();
     expect(screen.queryByText(/2\. Ro'yxatdan o'tish/i)).toBeNull();
   });
 });

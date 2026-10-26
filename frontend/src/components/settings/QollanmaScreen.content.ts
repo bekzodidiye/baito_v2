@@ -246,14 +246,14 @@ export const QOLLANMA: Record<'uz' | 'ru' | 'en', GuideContent> = {
         actionScreen: "employer-dashboard"
       },
       {
-        id: 'p-escrow',
+        id: 'p-guaranteed-payments',
         category: 'payments',
-        title: "Xavfsiz to'lov va Eskrou kafolati",
-        description: "Baito platformasida barcha to'lovlar 100% himoyalangan tizim orqali amalga oshiriladi.",
+        title: "Xavfsiz to'lov va hisob-kitob kafolati",
+        description: "Baito platformasida barcha to'lovlar shaffof va qonuniy tartibda amalga oshiriladi.",
         details: [
-          "To'lov kafolati: Ish beruvchi e'lon berganda kerakli mablag' tizim tomonidan kafolatlanadi.",
-          "Smena yakuni: Xodim ishni muvaffaqiyatli yakunlagach, mablag' to'g'ridan-to'g'ri xodim hisobiga tushadi.",
-          "Himoyalangan tranzaksiyalar: Tizim xodimni maoshsiz qolishdan, ish beruvchini esa bajarmagan ish uchun ortiqcha to'lashdan himoya qiladi."
+          "To'lov kafolati: Ish beruvchi e'lon berganda ish haqi miqdori qat'iy kelishiladi.",
+          "Smena yakuni: Xodim ishni muvaffaqiyatli yakunlagach, ish beruvchi ishni tasdiqlaydi va to'lov xodim hisobiga o'tkaziladi.",
+          "Himoyalangan munosabatlar: Tizim xodimni maoshsiz qolishdan, ish beruvchini esa sifatsiz bajarilgan ishdan himoya qiladi."
         ],
         tip: "Mablag'ingiz xavfsizligi uchun barcha to'lovlarni faqat Baito platformasi orqali amalga oshiring.",
         badge: "Kafolat",
@@ -511,12 +511,12 @@ export const QOLLANMA: Record<'uz' | 'ru' | 'en', GuideContent> = {
         actionScreen: "employer-dashboard"
       },
       {
-        id: 'p-escrow',
+        id: 'p-guaranteed-payments',
         category: 'payments',
-        title: "Безопасная сделка и эскроу-гарантия",
-        description: "Все расчёты на платформе Baito защищены безопасным механизмом заморозки средств.",
+        title: "Безопасные расчёты и гарантия выплат",
+        description: "Все расчёты на платформе Baito осуществляются прозрачно и в установленном порядке.",
         details: [
-          "Гарантия средств: при публикации смены сумма оплаты резервируется системой.",
+          "Фиксация оплаты: при публикации смены размер вознаграждения чётко закрепляется.",
           "Выплата по факту: исполнитель получает средства сразу после подтверждения выполнения смены.",
           "Защита обеих сторон: защита работника от невыплаты и работодателя от срыва смены."
         ],
@@ -683,7 +683,7 @@ export const QOLLANMA: Record<'uz' | 'ru' | 'en', GuideContent> = {
         title: "5. Earnings and Payouts",
         description: "When the shift concludes, the employer marks the job finished and earnings are released to your balance.",
         details: [
-          "Guaranteed payment: Baito holds the payment in escrow before shifts begin, guaranteeing payment upon completion.",
+          "Guaranteed payment: Wage amounts are verified in advance, guaranteeing prompt payout upon completed shifts.",
           "Card linking: Link your Uzcard or Humo bank card for instant and secure withdrawals.",
           "Transparent ledger: View your full transaction history and receipts in the 'Payments' section.",
           "Zero commission for students: Using Baito to find work is 100% free."
@@ -776,17 +776,17 @@ export const QOLLANMA: Record<'uz' | 'ru' | 'en', GuideContent> = {
         actionScreen: "employer-dashboard"
       },
       {
-        id: 'p-escrow',
+        id: 'p-guaranteed-payments',
         category: 'payments',
-        title: "Escrow-Protected Secure Payments",
-        description: "All transactions on Baito are safeguarded by our automated escrow system.",
+        title: "Guaranteed Payouts and Safe Settlements",
+        description: "All transactions on Baito are safeguarded by our verified payment workflow.",
         details: [
-          "Payment guarantee: Funds are reserved in advance when a shift is published.",
-          "Automatic release: Earnings are released to the worker once shift completion is confirmed.",
+          "Payment commitment: Wage amounts are explicitly agreed upon when shifts are published.",
+          "Timely release: Earnings are disbursed to the worker once shift completion is confirmed.",
           "Two-way protection: Workers are protected from non-payment; employers are protected from no-shows."
         ],
         tip: "Never arrange off-platform cash transactions, as they void platform protections.",
-        badge: "Escrow Protection",
+        badge: "Guaranteed Payout",
         actionText: "Payments Overview",
         actionScreen: "payments"
       },
