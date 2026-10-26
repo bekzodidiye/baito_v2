@@ -200,6 +200,11 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-baito}
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+      - AWS_ENDPOINT_URL=${AWS_ENDPOINT_URL:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-auto}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-baito}
     logging: *default-logging
 
   backup_bot:
