@@ -1,0 +1,258 @@
+version: "3.8"
+
+networks:
+  baito_net:
+    driver: bridge
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "20m"
+    max-file: "3"
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    mem_limit: 768m
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c work_mem=8MB
+      -c maintenance_work_mem=64MB
+      -c random_page_cost=1.1
+      -c statement_timeout=30s
+      -c idle_in_transaction_session_timeout=60s
+      -c max_connections=60
+    networks:
+      - baito_net
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-baito}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-baito}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging: *default-logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    mem_limit: 128m
+    networks:
+      - baito_net
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    logging: *default-logging
+
+  migrate:
+    image: baito-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: alembic upgrade head
+    restart: "no"
+    networks:
+      - baito_net
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-baito}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - AWS_ENDPOINT_URL=${AWS_ENDPOINT_URL:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-auto}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-baito-bucket}
+    logging: *default-logging
+
+  backend:
+    image: baito-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    mem_limit: 768m
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0 --port 8000
+      --workers 2
+      --timeout-keep-alive 30
+      --proxy-headers
+      --forwarded-allow-ips "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1"
+    networks:
+      - baito_net
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      - TZ=Asia/Tashkent
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-baito}
+      - REDIS_URL=redis://redis:6379/0
+      # Cloudflare R2 object storage
+      - AWS_ENDPOINT_URL=${AWS_ENDPOINT_URL:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-auto}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-baito-bucket}
+      - CORS_ORIGINS=${CORS_ORIGINS:-}
+      - TEXTUP_EMAIL=${TEXTUP_EMAIL:-}
+      - TEXTUP_PASSWORD=${TEXTUP_PASSWORD:-}
+      - UZUM_TERMINAL_ID=${UZUM_TERMINAL_ID:-}
+      - UZUM_SECRET_KEY=${UZUM_SECRET_KEY:-}
+      - UZUM_API_URL=${UZUM_API_URL:-https://api.uzum.uz/epos/v1}
+      - UZUM_MERCHANT_SERVICE_ID=${UZUM_MERCHANT_SERVICE_ID:-0}
+      - UZUM_MERCHANT_USERNAME=${UZUM_MERCHANT_USERNAME:-}
+      - UZUM_MERCHANT_PASSWORD=${UZUM_MERCHANT_PASSWORD:-}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_FROM=${SMTP_FROM:-}
+      - SMTP_STARTTLS=${SMTP_STARTTLS:-true}
+      - PUBLIC_APP_URL=${PUBLIC_APP_URL:-}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging: *default-logging
+
+  celery_worker:
+    image: baito-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A app.celery_app worker --loglevel=info --concurrency=1
+    restart: unless-stopped
+    mem_limit: 256m
+    networks:
+      - baito_net
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - TZ=Asia/Tashkent
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-baito}
+      - REDIS_URL=redis://redis:6379/0
+      - AWS_ENDPOINT_URL=${AWS_ENDPOINT_URL:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-auto}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-baito-bucket}
+      - TEXTUP_EMAIL=${TEXTUP_EMAIL:-}
+      - TEXTUP_PASSWORD=${TEXTUP_PASSWORD:-}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.celery_app inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging: *default-logging
+
+  celery_beat:
+    image: baito-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A app.celery_app beat --loglevel=info
+    restart: unless-stopped
+    mem_limit: 128m
+    networks:
+      - baito_net
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - TZ=Asia/Tashkent
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-baito}
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+    logging: *default-logging
+
+  backup_bot:
+    image: baito-backup-bot:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.bot
+    restart: unless-stopped
+    mem_limit: 256m
+    networks:
+      - baito_net
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backups:/app/backups
+      - ./backend/scripts/backup_bot.py:/app/backup_bot.py:ro
+    environment:
+      - TZ=Asia/Tashkent
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID:-}
+      - TELEGRAM_ALLOWED_IDS=${TELEGRAM_ALLOWED_IDS:-}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-baito}
+      - POSTGRES_HOST=db
+      # Cloudflare R2 backup destination
+      - AWS_ENDPOINT_URL=${AWS_ENDPOINT_URL:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-auto}
+      - S3_BUCKET_PATH=s3://${BACKUP_BUCKET_NAME:-baito-backups}/
+    logging: *default-logging
+
+  frontend:
+    image: baito-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-v3.0.0}
+    restart: unless-stopped
+    mem_limit: 256m
+    networks:
+      - baito_net
+    ports:
+      - "${FRONTEND_BIND:-0.0.0.0}:80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    logging: *default-logging
+
+volumes:
+  postgres_data:
+  redis_data:
