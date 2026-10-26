@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 
 const language = vi.hoisted(() => ({ current: 'ru' as 'uz' | 'ru' | 'en' }));
 
@@ -68,3 +68,26 @@ describe('FAQ content', () => {
     }
   });
 });
+
+describe('FAQ interactivity — search and category filter', () => {
+  it('filters questions by category', () => {
+    language.current = 'uz';
+    render(<FaqScreen />);
+    const employerChip = screen.getAllByRole('button', { name: /Ish beruvchilarga/ })[0];
+    fireEvent.click(employerChip);
+
+    expect(screen.getByText("Kompaniya sifatida qanday yangi e'lon joylashtirish mumkin?")).toBeTruthy();
+    expect(screen.queryByText("Baito nima?")).toBeNull();
+  });
+
+  it('filters questions by search query', () => {
+    language.current = 'uz';
+    render(<FaqScreen />);
+    const searchInput = screen.getByPlaceholderText("Savollardan qidirish (masalan: to'lov, bepulmi, ariza, profil)...");
+    fireEvent.change(searchInput, { target: { value: 'Eskrou' } });
+
+    expect(screen.getByText("To'lovlar xavfsizligi qanday ta'minlanadi (Eskrou)?")).toBeTruthy();
+    expect(screen.queryByText("Baito nima?")).toBeNull();
+  });
+});
+
