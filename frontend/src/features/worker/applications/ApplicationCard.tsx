@@ -1,6 +1,6 @@
 import React from 'react';
 import { WorkerApplication } from '../../../types';
-import { MapPin, Calendar, Clock, ChevronRight, Building2, CheckCircle2, XCircle, Clock3 } from 'lucide-react';
+import { MapPin, Calendar, Clock, ChevronRight, Building2, CheckCircle2, XCircle, Clock3, MessageCircle } from 'lucide-react';
 import { Language } from '../../../translations';
 import { formatShortDate } from '../../../utils/dateFormat';
 
@@ -8,9 +8,10 @@ interface ApplicationCardProps {
   application: WorkerApplication;
   language: Language;
   onClick: () => void;
+  onOpenChat?: () => void;
 }
 
-export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, language, onClick }) => {
+export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, language, onClick, onOpenChat }) => {
   const getStatusConfig = (status: string, lang: Language) => {
     switch (status) {
       case 'applied':
@@ -155,8 +156,23 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
           <Clock size={12} />
           <span>{language === 'uz' ? 'Topshirildi: ' : language === 'ru' ? 'Подано: ' : 'Applied: '} {formatDate(application.appliedDate)}</span>
         </div>
-        <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-brand-primary group-hover:border-brand-primary transition-all duration-300 shadow-sm">
-          <ChevronRight size={16} className="text-slate-400 group-hover:text-white transition-colors" />
+        <div className="flex items-center gap-2">
+          {['hired', 'confirmed', 'in_progress'].includes(application.status) && onOpenChat && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenChat();
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#000666] border border-blue-200/60 text-xs font-bold hover:bg-blue-100 transition-colors cursor-pointer"
+            >
+              <MessageCircle size={13} className="text-[#000666]" />
+              <span>{language === 'uz' ? 'Xabar' : language === 'ru' ? 'Чат' : 'Chat'}</span>
+            </button>
+          )}
+          <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-brand-primary group-hover:border-brand-primary transition-all duration-300 shadow-sm">
+            <ChevronRight size={16} className="text-slate-400 group-hover:text-white transition-colors" />
+          </div>
         </div>
       </div>
     </div>

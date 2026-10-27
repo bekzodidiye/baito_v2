@@ -1,5 +1,5 @@
 import React from 'react';
-import { Smartphone, Lock, Eye, EyeOff, Check } from 'lucide-react';
+import { Smartphone, Lock, Eye, EyeOff, Check, X } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface LoginViewProps {
@@ -72,8 +72,18 @@ export const LoginView: React.FC<LoginViewProps> = ({
               value={loginPhone}
               onChange={(e) => setLoginPhone(e.target.value)}
               placeholder={t.phonePlaceholder || '+998 (90) 123-45-67'}
-              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-4 text-xs font-semibold focus:border-brand-primary/40 focus:ring-2 focus:ring-brand-primary/20 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
+              className="w-full bg-white border border-slate-200/80 hover:border-slate-300 rounded-xl py-3 pl-11 pr-10 text-xs font-semibold focus:border-brand-primary/40 focus:ring-2 focus:ring-brand-primary/20 focus:outline-none transition-all placeholder:text-slate-350 shadow-3xs text-slate-755"
             />
+            {loginPhone && (
+              <button
+                type="button"
+                onClick={() => setLoginPhone('')}
+                aria-label="Telefon raqamni tozalash"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
         </div>
 

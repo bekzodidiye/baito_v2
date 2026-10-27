@@ -82,8 +82,19 @@ export const useUIStore = create<UIState>((set) => ({
   activeCalendarDay: new Date().toLocaleDateString('en-CA'),
   setActiveCalendarDay: (day) => set({ activeCalendarDay: day }),
   
-  jobsView: 'map',
-  setJobsView: (view) => set({ jobsView: view }),
+  jobsView: (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('view') === 'list') ? 'list' : 'map',
+  setJobsView: (view) => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (view === 'list') {
+        url.searchParams.set('view', 'list');
+      } else {
+        url.searchParams.delete('view');
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+    set({ jobsView: view });
+  },
 
   hasSeenTour: safeGetItem('baito_has_seen_tour') === 'true',
   setHasSeenTour: (seen) => {

@@ -57,6 +57,7 @@ export interface Job {
     responsibilities?: string;
     requirements?: string;
     importantNote?: string;
+    location?: string;
   }>;
 }
 

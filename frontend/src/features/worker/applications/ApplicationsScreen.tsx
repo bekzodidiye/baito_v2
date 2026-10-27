@@ -180,6 +180,10 @@ export const ApplicationsScreen: React.FC = () => {
                 application={app} 
                 language={language}
                 onClick={() => handleCardClick(app.jobId)}
+                onOpenChat={() => {
+                  setCurrentScreen('messages');
+                  navigate('/messages');
+                }}
               />
             ))}
           </div>
