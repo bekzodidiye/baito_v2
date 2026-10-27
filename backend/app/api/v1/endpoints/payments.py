@@ -124,7 +124,7 @@ def get_transactions(
     elif current_user.role == 'worker':
         q = q.filter(
             Transaction.workerId == current_user.id,
-            Transaction.type.in_(['payout', 'withdraw'])
+            Transaction.type.in_(['payout', 'withdraw', 'worker_earning', 'completion_bonus'])
         )
 
     rows = (

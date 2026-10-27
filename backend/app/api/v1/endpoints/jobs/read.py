@@ -241,23 +241,57 @@ def read_jobs(
 
 
 
-@router.get("/{job_id}", response_model=schemas.Job)
+@router.get("/{job_id}", response_model=schemas.JobWithApplicationStatus)
 def read_job(
     job_id: str,
     db: Session = Depends(deps.get_db),
     current_user: Optional[models.User] = Depends(deps.get_current_user_optional),
 ) -> Any:
-    """Fetch a single job."""
+    """Fetch a single job with application status for the caller."""
     job = crud.job.get(db=db, id=job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
 
     is_owner = bool(current_user and job.employerId == current_user.id)
     is_admin = bool(current_user and current_user.role == 'admin')
-    if job.status in JobStatus.CLOSED_STATUSES and not (is_owner or is_admin):
+
+    app_item = None
+    if current_user:
+        app_item = (
+            db.query(models.Application)
+            .filter(
+                models.Application.jobId == job_id,
+                models.Application.workerId == current_user.id,
+            )
+            .first()
+        )
+
+    if job.status in JobStatus.CLOSED_STATUSES and not (is_owner or is_admin or app_item):
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
 
-    return job
+    job_dict = schemas.JobWithApplicationStatus.model_validate(job)
+    job_status = job.status
+    if app_item:
+        job_dict.applied = True
+        job_dict.appliedDate = app_item.appliedDate
+        if app_item.status in ('hired', 'confirmed', 'in_progress', 'completed', 'start_requested'):
+            job_status = app_item.status
+        elif app_item.status == 'applied':
+            job_status = 'applied'
+    job_dict.status = job_status
+
+    if current_user:
+        job_dict.bookmarked = (
+            db.query(models.Bookmark.id)
+            .filter(
+                models.Bookmark.userId == current_user.id,
+                models.Bookmark.jobId == job_id,
+            )
+            .first()
+            is not None
+        )
+
+    return job_dict
 
 
 

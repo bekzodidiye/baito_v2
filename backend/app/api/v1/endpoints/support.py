@@ -103,6 +103,7 @@ def send_support_message(
 ) -> Any:
     """Write to support, opening a ticket if there is not one already."""
     ticket = _open_ticket(db, current_user)
+    is_new = False
     if ticket is None:
         ticket = models.SupportTicket(
             userId=current_user.id,
@@ -113,6 +114,7 @@ def send_support_message(
         )
         db.add(ticket)
         db.flush()
+        is_new = True
 
     message = models.TicketMessage(
         ticketId=ticket.id,
@@ -121,10 +123,24 @@ def send_support_message(
     )
     db.add(message)
 
-    # A resolved ticket that the user writes into again is open once more.
-    if ticket.status == "resolved":
+    # If ticket was waiting in pending/answered status, mark it open again
+    if ticket.status in ("pending", "answered"):
         ticket.status = "open"
         db.add(ticket)
+
+    # Notify administrators of incoming user message or ticket
+    admins = db.query(models.User).filter(models.User.role == "admin").all()
+    user_label = current_user.name or current_user.phone or "Foydalanuvchi"
+    summary_text = payload.text.strip()
+    if len(summary_text) > 80:
+        summary_text = summary_text[:77] + "..."
+    for admin in admins:
+        db.add(models.Notification(
+            userId=admin.id,
+            title="Yangi yordam so'rovi" if is_new else "Yordam markaziga xabar",
+            message=f"{user_label}: {summary_text}",
+            type="support",
+        ))
 
     db.commit()
     db.refresh(ticket)

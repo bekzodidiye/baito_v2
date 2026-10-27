@@ -158,7 +158,7 @@ def expire_stale_jobs() -> int:
     scheduled to act on them.
     """
     from app.db.session import SessionLocal
-    from app.models import Job, SystemSetting
+    from app.models import Job, JobApplication, Notification, SystemSetting
     from app.models.job import JobStatus
 
     with SessionLocal() as db:
@@ -175,6 +175,24 @@ def expire_stale_jobs() -> int:
         )
         for job in stale:
             job.status = JobStatus.CANCELLED
+            # Also withdraw pending applications on this job so they don't remain orphaned
+            pending_apps = (
+                db.query(JobApplication)
+                .filter(
+                    JobApplication.jobId == job.id,
+                    JobApplication.status.in_(["applied", "pending"]),
+                )
+                .all()
+            )
+            for app in pending_apps:
+                app.status = "rejected"
+                db.add(Notification(
+                    userId=app.workerId,
+                    title="E'lon muddati tugadi",
+                    message=f"'{job.title}' e'loni muddati tugaganligi sababli bekor qilindi.",
+                    type="job",
+                ))
+
         db.commit()
         if stale:
             logger.info("Expired %d stale job postings", len(stale))

@@ -1,11 +1,19 @@
-from typing import Any
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Any, Optional
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from app import models
 from app.api import deps
 from .admin_users import get_admin_user
+from .admin_audit import record_admin_action
 
 router = APIRouter()
+
+
+class DisputeUpdate(BaseModel):
+    status: Optional[str] = Field(None, pattern="^(pending|resolved|rejected|closed)$")
+    adminNotes: Optional[str] = Field(None, max_length=2000)
+
 
 @router.get("/disputes")
 def get_disputes(
@@ -40,21 +48,43 @@ def get_disputes(
         })
     return result
 
+
 @router.patch("/disputes/{dispute_id}")
 def update_dispute(
     dispute_id: str,
-    payload: dict,
+    payload: DisputeUpdate,
+    request: Request,
     db: Session = Depends(deps.get_db),
-    _: models.User = Depends(get_admin_user),
+    admin: models.User = Depends(get_admin_user),
 ) -> Any:
     dispute = db.query(models.Dispute).filter(models.Dispute.id == dispute_id).first()
     if not dispute:
         raise HTTPException(status_code=404, detail="Nizo topilmadi")
         
-    if "status" in payload:
-        dispute.status = payload["status"]
-    if "adminNotes" in payload:
-        dispute.adminNotes = payload["adminNotes"]
+    old_status = dispute.status
+    if payload.status is not None:
+        dispute.status = payload.status
+    if payload.adminNotes is not None:
+        dispute.adminNotes = payload.adminNotes
+
+    # If the dispute was resolved or rejected, notify both worker and employer
+    if payload.status and payload.status != old_status:
+        notice_users = [uid for uid in (dispute.workerId, dispute.employerId) if uid]
+        status_text = "hal qilindi" if payload.status == "resolved" else "rad etildi" if payload.status == "rejected" else payload.status
+        for uid in notice_users:
+            db.add(models.Notification(
+                userId=uid,
+                title="Nizo holati o'zgardi",
+                message=f"Siz ishtirok etgan nizo bo'yicha qaror qabul qilindi: {status_text}.",
+                type="system",
+            ))
+
+    record_admin_action(
+        db, admin, "dispute.update", target_type="dispute", target_id=dispute.id,
+        details={"oldStatus": old_status, "newStatus": dispute.status, "notes": dispute.adminNotes},
+        request=request,
+    )
         
     db.commit()
     return {"success": True}
+

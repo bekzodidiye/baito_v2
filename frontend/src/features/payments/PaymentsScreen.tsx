@@ -78,7 +78,7 @@ export const PaymentsScreen: React.FC = () => {
   // transactions the list underneath shows, so the two always agree.
   const sum = (rows: any[]) => rows.reduce((n, tx) => n + (Number(tx.amount) || 0), 0);
   const earned = transactions.filter((tx: any) =>
-    tx.type !== 'withdraw' && ['paid', 'released', 'completed'].includes(tx.status));
+    tx.type !== 'withdraw' && ['paid', 'released', 'completed', 'credited'].includes(tx.status));
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
@@ -98,6 +98,10 @@ export const PaymentsScreen: React.FC = () => {
       ? (language === 'uz' ? "Bank orqali to'lov" : language === 'ru' ? "Выплата на счёт" : "Bank payout")
       : tx.type === 'withdraw'
       ? (language === 'uz' ? "Mablag' yechish" : language === 'ru' ? "Снятие средств" : "Withdrawal")
+      : tx.type === 'completion_bonus'
+      ? (language === 'uz' ? "Bonus" : language === 'ru' ? "Бонус" : "Bonus")
+      : tx.type === 'worker_earning'
+      ? (language === 'uz' ? "Ish haqi" : language === 'ru' ? "Заработная плата" : "Salary payment")
       : isIncoming(tx)
         ? (language === 'uz' ? "Kirim" : language === 'ru' ? "Поступление" : "Incoming")
         : (language === 'uz' ? "Ish uchun to'lov" : language === 'ru' ? "Оплата за работу" : "Payment for work");
@@ -122,8 +126,8 @@ export const PaymentsScreen: React.FC = () => {
 
   const filteredTransactions = transactions.filter((tx: any) => {
     if (!matchesQuery(tx)) return false;
-    if (txFilter === 'in') return tx.type === 'deposit';
-    if (txFilter === 'out') return tx.type === 'withdraw';
+    if (txFilter === 'in') return isIncoming(tx);
+    if (txFilter === 'out') return !isIncoming(tx);
     return true;
   });
 

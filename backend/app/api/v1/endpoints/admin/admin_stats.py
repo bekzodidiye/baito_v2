@@ -110,8 +110,8 @@ def get_transactions(
                 "employerName": getattr(user_map.get(t.employerId), "name", ""),
                 "workerId": t.workerId,
                 "workerName": getattr(user_map.get(t.workerId), "name", "") if t.workerId else "",
-                "amount": t.amount // 100,  # tiyin -> UZS
-                "platformFee": t.platformFee // 100,  # tiyin -> UZS
+                "amount": (t.amount or 0) // 100,  # tiyin -> UZS
+                "platformFee": (t.platformFee or 0) // 100,  # tiyin -> UZS
                 "type": t.type,
                 "status": t.status,
                 "createdAt": str(t.createdAt) if t.createdAt else None,
