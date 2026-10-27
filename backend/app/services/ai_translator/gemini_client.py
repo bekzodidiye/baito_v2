@@ -141,8 +141,41 @@ class GeminiClient:
 
         return self._clean_text(last_text)
 
+    def _generate_via_official_api(self, prompt: str, api_key: str) -> str:
+        """Call the official Google Generative Language REST API."""
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.2,
+                "responseMimeType": "application/json"
+            }
+        }
+        data = json.dumps(payload).encode("utf-8")
+        headers = {"Content-Type": "application/json"}
+        req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+        with urllib.request.urlopen(req, context=self._ssl_ctx, timeout=self.timeout_sec) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+            res_json = json.loads(raw)
+            candidates = res_json.get("candidates", [])
+            if candidates and "content" in candidates[0]:
+                parts = candidates[0]["content"].get("parts", [])
+                if parts and "text" in parts[0]:
+                    return parts[0]["text"].strip()
+        raise RuntimeError("Official Gemini API returned unexpected response structure")
+
     def generate(self, prompt: str, model_id: int = 1, think_mode: int = 4) -> str:
-        """Execute a text generation call against Gemini StreamGenerate with retry."""
+        """Execute a text generation call against official API or Gemini StreamGenerate with retry."""
+        # 1. Prefer official Google API Key if provided
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        if api_key and api_key.strip():
+            try:
+                logger.info("Using official Gemini API with configured key")
+                return self._generate_via_official_api(prompt, api_key.strip())
+            except Exception as e:
+                logger.warning("Official Gemini API call failed, falling back to cookie client: %s", e)
+
+        # 2. Fall back to cookie-authenticated StreamGenerate protocol
         inner = [None] * 80
         inner[0] = [prompt, 0, None, None, None, None, 0]
         inner[1] = ["en"]

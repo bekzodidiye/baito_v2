@@ -35,7 +35,6 @@ class PayoutDeclarationRequest(BaseModel):
     receiptUrl: Optional[str] = Field(default=None, max_length=500)
 
 
-@limiter.limit('10/minute')
 @limiter.limit('5/minute')
 @router.post("/{id}/apply")
 def apply_to_job(

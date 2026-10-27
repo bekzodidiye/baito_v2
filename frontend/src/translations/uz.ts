@@ -226,6 +226,7 @@ export const uz = {
   reload: "Qayta yuklash",
   photoSaved: "Rasm muvaffaqiyatli saqlandi!",
   somethingWentWrong: "Nimadir xato ketdi",
+  screenLoadFailed: "Ushbu bo'limni yuklashda kutilmagan xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
   chatLoadFailed: "Suhbat yuklanishida kutilmagan xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
   workTime24: "Ish vaqti (24-soat)",
   completeJob: "Ishni yakunlash",

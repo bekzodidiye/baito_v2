@@ -83,8 +83,8 @@ export function useJobSearchFilters({
 
     if (sortBy === 'maosh') {
       result.sort((a, b) => {
-        const aVal = parseInt(a.salary.replace(/[^0-9]/g, '')) || 0;
-        const bVal = parseInt(b.salary.replace(/[^0-9]/g, '')) || 0;
+        const aVal = parseInt(String(a.salary ?? '').replace(/[^0-9]/g, '')) || 0;
+        const bVal = parseInt(String(b.salary ?? '').replace(/[^0-9]/g, '')) || 0;
         return bVal - aVal;
       });
     } else if (sortBy === 'yaqin' && userLocation) {

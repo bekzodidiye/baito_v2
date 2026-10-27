@@ -226,6 +226,7 @@ export const en = {
   reload: "Reload",
   photoSaved: "Photo saved!",
   somethingWentWrong: "Something went wrong",
+  screenLoadFailed: "An unexpected error occurred while loading this section. Please try again.",
   chatLoadFailed: "The chat failed to load. Please try again.",
   workTime24: "Working hours (24h)",
   completeJob: "Complete the job",

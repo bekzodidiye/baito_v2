@@ -27,9 +27,11 @@ export interface DistrictMeta {
 
 let cachedDistrictMetaList: DistrictMeta[] | null = null;
 
+import { defaultDistrictsMeta } from '../../data/geo/districtsMeta';
+
 export const getDistrictMetaList = (districtsGeoJsonData: any): DistrictMeta[] => {
   if (cachedDistrictMetaList) return cachedDistrictMetaList;
-  if (!districtsGeoJsonData || !districtsGeoJsonData.features) return [];
+  if (!districtsGeoJsonData || !districtsGeoJsonData.features) return defaultDistrictsMeta;
 
   // Import imports dynamically or standard matching helpers
   const map = new Map<string, DistrictMeta>();
