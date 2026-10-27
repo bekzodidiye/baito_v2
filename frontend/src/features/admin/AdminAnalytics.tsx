@@ -16,14 +16,14 @@ export const AdminAnalytics: React.FC = () => {
     return isNaN(n) ? 0 : n;
   };
 
-  // Real data calculations
-  const totalVolume = transactions.reduce((acc, t) => acc + parseNum(t.amount), 0) ||
-    (stats?.totalRevenue ? stats.totalRevenue * 10 : 0) ||
-    jobs.reduce((acc, j) => acc + parseNum(j.salary), 0);
+  // Real turnover & fee calculations based on verified records
+  const realTransactionVolume = transactions.reduce((acc, t) => acc + parseNum(t.amount), 0);
+  const totalVolume = realTransactionVolume > 0 
+    ? realTransactionVolume 
+    : (stats?.totalRevenue ? stats.totalRevenue : 0);
 
-  const platformRevenue = stats?.totalRevenue || 
-    transactions.reduce((acc, t) => acc + parseNum(t.platformFee), 0) || 
-    Math.round(totalVolume * 0.1);
+  const realFees = transactions.reduce((acc, t) => acc + parseNum(t.platformFee), 0);
+  const platformRevenue = stats?.totalRevenue || realFees || 0;
 
   const totalUsersCount = stats?.totalUsers || users.length;
   const workersCount = stats?.workersCount || users.filter(u => u.role === 'worker').length;

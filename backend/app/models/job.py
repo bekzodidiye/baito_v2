@@ -75,3 +75,21 @@ class Job(Base):
     def vacancies(self) -> int:
         raw = (self.neededWorkers or "1").strip()
         return int(raw) if raw.isdigit() and int(raw) > 0 else 1
+
+    @property
+    def latitude(self):
+        """Canonical latitude (stored in legacy coordinateX column)."""
+        return self.coordinateX
+
+    @latitude.setter
+    def latitude(self, val):
+        self.coordinateX = val
+
+    @property
+    def longitude(self):
+        """Canonical longitude (stored in legacy coordinateY column)."""
+        return self.coordinateY
+
+    @longitude.setter
+    def longitude(self, val):
+        self.coordinateY = val

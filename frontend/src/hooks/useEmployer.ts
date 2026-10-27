@@ -129,8 +129,8 @@ export const useEmployer = () => {
           requirements: newJobData.requirements || '',
           importantNote: newJobData.importantNote || '',
           tags: newJobData.tags || [],
-          coordinateX: newJobData.coordinates?.x ?? 50,
-          coordinateY: newJobData.coordinates?.y ?? 50,
+          coordinateX: (newJobData.coordinates?.x && newJobData.coordinates.x !== 50) ? newJobData.coordinates.x : 41.3111,
+          coordinateY: (newJobData.coordinates?.y && newJobData.coordinates.y !== 50) ? newJobData.coordinates.y : 69.2406,
         })
       });
     },

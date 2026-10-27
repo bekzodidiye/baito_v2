@@ -73,16 +73,17 @@ export const useProfileScreen = () => {
   });
 
   const [isEditing, setIsEditing] = useState(false);
-  const [by, bm, bd] = (userProfile?.birthDate || '1996-01-19').split('-');
+  const defaultBirthDate = `${new Date().getFullYear() - 22}-01-01`;
+  const [by, bm, bd] = (userProfile?.birthDate || defaultBirthDate).split('-');
 
   const [editForm, setEditForm] = useState({
     firstName: userProfile?.firstName || '',
     lastName: userProfile?.lastName || '',
     phone: userProfile?.phone || '',
     email: userProfile?.email || '',
-    birthDay: String(parseInt(bd || '19', 10)),
-    birthMonth: String(parseInt(bm || '1', 10)),
-    birthYear: by || '1996',
+    birthDay: bd ? String(parseInt(bd, 10)) : '1',
+    birthMonth: bm ? String(parseInt(bm, 10)) : '1',
+    birthYear: by || String(new Date().getFullYear() - 22),
     gender: userProfile?.gender || 'male',
     region: userProfile?.region || '',
     profession: userProfile?.profession || '',
@@ -100,15 +101,16 @@ export const useProfileScreen = () => {
 
   useEffect(() => {
     if (userProfile && !isEditing) {
-      const [by, bm, bd] = (userProfile.birthDate || '1996-01-19').split('-');
+      const defaultDate = `${new Date().getFullYear() - 22}-01-01`;
+      const [by, bm, bd] = (userProfile.birthDate || defaultDate).split('-');
       setEditForm({
         firstName: userProfile.firstName || '',
         lastName: userProfile.lastName || '',
         phone: userProfile.phone || '',
         email: userProfile.email || '',
-        birthDay: String(parseInt(bd || '19', 10)),
-        birthMonth: String(parseInt(bm || '1', 10)),
-        birthYear: by || '1996',
+        birthDay: bd ? String(parseInt(bd, 10)) : '1',
+        birthMonth: bm ? String(parseInt(bm, 10)) : '1',
+        birthYear: by || String(new Date().getFullYear() - 22),
         gender: userProfile.gender || 'male',
         region: userProfile.region || '',
         profession: userProfile.profession || '',
