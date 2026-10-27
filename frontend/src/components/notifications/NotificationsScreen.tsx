@@ -37,6 +37,15 @@ export const NotificationsScreen: React.FC = () => {
     if (to !== 'notifications') setCurrentScreen(to as any);
   };
 
+  const user = useAuthStore(s => s.user);
+  const handleBack = () => {
+    if (user?.selectedRole === 'employer') {
+      setCurrentScreen('employer-dashboard');
+    } else {
+      setCurrentScreen('jobs');
+    }
+  };
+
   const todayNotifications = filteredNotifications.filter(n => n.group === 'today');
   const yesterdayNotifications = filteredNotifications.filter(n => n.group === 'yesterday');
 
@@ -45,7 +54,7 @@ export const NotificationsScreen: React.FC = () => {
       <div className="flex items-center justify-between bg-white px-5 py-4 rounded-2xl border border-slate-100 shadow-3xs">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setCurrentScreen('calendar')}
+            onClick={handleBack}
             className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-600 transition-colors active:scale-95 cursor-pointer border-0 bg-slate-50"
             title={language === 'ru' ? 'Назад' : language === 'en' ? 'Back' : 'Orqaga'}
           >
