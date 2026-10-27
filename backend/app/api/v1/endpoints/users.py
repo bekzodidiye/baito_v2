@@ -92,11 +92,14 @@ def create_user(
     # 'worker' or 'employer'.
     assigned_role = user_in.role if user_in.role in ("worker", "employer") else "worker"
 
+    user_id = str(uuid.uuid4())
+    user_uid = user_in.uid if user_in.uid else user_id
     db_obj = models.User(
+        id=user_id,
+        uid=user_uid,
         email=user_in.email,
         hashed_password=get_password_hash(user_in.password),
         name=user_in.name,
-        uid=user_in.uid if user_in.uid else str(uuid.uuid4()),
         phone=phone,
         role=assigned_role,
         companyName=user_in.companyName,

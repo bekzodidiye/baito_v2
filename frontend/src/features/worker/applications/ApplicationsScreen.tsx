@@ -44,6 +44,9 @@ export const ApplicationsScreen: React.FC = () => {
 
   const filteredApplications = applications.filter((app: WorkerApplication) => {
     if (activeTab === 'all') return true;
+    if (activeTab === 'hired') {
+      return ['hired', 'confirmed', 'start_requested', 'in_progress', 'completed'].includes(app.status);
+    }
     return app.status === activeTab;
   });
 

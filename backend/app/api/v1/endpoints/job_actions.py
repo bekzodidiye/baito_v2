@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app import models, crud
 from app.api import deps
 from app.services.job_service import JobService
+from app.services.earnings_service import WorkerEarnings
 
 from app.models.job_payout import PayoutStatus
 from datetime import datetime, timezone
@@ -131,14 +132,6 @@ def review_job(
         raise HTTPException(status_code=400, detail="Sharh qoldirish uchun ariza topilmadi")
 
     bonus_each = req.bonus or 0
-    if bonus_each > 0:
-        employer = db.query(models.User).filter(models.User.id == job.employerId).first()
-        total_bonus = bonus_each * len(apps)
-        if not employer:
-            raise HTTPException(status_code=404, detail="Ish beruvchi topilmadi")
-        employer.balance = (employer.balance or 0) - total_bonus
-        db.add(employer)
-
     worker_ids = [app.workerId for app in apps]
     workers_map = {w.id: w for w in db.query(models.User).filter(models.User.id.in_(worker_ids)).all()}
 
@@ -148,21 +141,15 @@ def review_job(
         app.review = req.review
         if bonus_each > 0:
             app.bonus = (app.bonus or 0) + bonus_each
-            worker = workers_map.get(app.workerId)
-            if worker:
-                worker.balance = (worker.balance or 0) + bonus_each
-                db.add(worker)
-                import uuid
-                db.add(models.Transaction(
-                    id=str(uuid.uuid4()),
-                    userId=app.workerId,
-                    employerId=job.employerId,
-                    jobId=job.id,
-                    amount=bonus_each * 100,
-                    type="bonus",
-                    status="completed",
-                    description=f"Bonus: '{job.title}'",
-                ))
+            try:
+                WorkerEarnings.pay_completion_bonus(
+                    db, job=job, worker_id=app.workerId, amount_uzs=bonus_each,
+                )
+            except Exception as e:
+                logger.warning(
+                    "Completion bonus failed in review for job %s / worker %s: %s",
+                    job.id, app.workerId, str(e),
+                )
         db.add(app)
     
     db.flush()

@@ -74,7 +74,7 @@ def mark_chat_read(
 
 
 @router.post("/{chat_id}/messages", response_model=schemas.Message)
-def post_chat_message(
+async def post_chat_message(
     chat_id: str,
     payload: schemas.MessageSend,
     db: Session = Depends(deps.get_db),
@@ -99,25 +99,22 @@ def post_chat_message(
     db.commit()
     db.refresh(msg)
 
-    if not redis_is_mock():
-        try:
-            redis_client.publish(f"chat:{chat_id}", json.dumps({
-                "id": msg.id,
-                "chatId": msg.chatId,
-                "senderId": msg.senderId,
-                "text": msg.text,
-                "createdAt": msg.createdAt.isoformat() if msg.createdAt else None,
-                "hasMap": msg.hasMap,
-                "mapLocation": msg.mapLocation,
-            }))
-        except Exception as e:
-            logger.debug("Chat publish failed: %s", e)
+    msg_dict = {
+        "id": msg.id,
+        "chatId": msg.chatId,
+        "senderId": msg.senderId,
+        "text": msg.text,
+        "createdAt": msg.createdAt.isoformat() if msg.createdAt else None,
+        "hasMap": msg.hasMap,
+        "mapLocation": msg.mapLocation,
+    }
+    await manager.broadcast_to_chat(msg_dict, chat_id)
 
     return msg
 
 
 @router.delete("/{chat_id}/messages/{message_id}")
-def delete_chat_message(
+async def delete_chat_message(
     chat_id: str,
     message_id: str,
     db: Session = Depends(deps.get_db),
@@ -142,17 +139,13 @@ def delete_chat_message(
     db.delete(msg)
     db.commit()
 
-    if not redis_is_mock():
-        try:
-            redis_client.publish(
-                f"chat:{chat_id}",
-                json.dumps({
-                    "type": "delete",
-                    "messageId": message_id,
-                    "chatId": chat_id,
-                }),
-            )
-        except Exception as e:
-            logger.debug("Chat delete publish failed: %s", e)
+    await manager.broadcast_to_chat(
+        {
+            "type": "delete",
+            "messageId": message_id,
+            "chatId": chat_id,
+        },
+        chat_id,
+    )
 
     return {"success": True, "messageId": message_id}

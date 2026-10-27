@@ -76,7 +76,12 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}, isR
         ? error.detail.map((e: any) => e.msg).join(', ')
         : '';
 
-    if (!isRetry && response.status === 401) {
+    if (
+      !isRetry &&
+      response.status === 401 &&
+      !endpoint.includes('/auth/refresh') &&
+      !endpoint.includes('/auth/logout')
+    ) {
       if (await refreshSession()) {
         return apiClient(endpoint, options, true);
       }

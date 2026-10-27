@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import uuid
 from typing import Optional
 
 from fastapi import WebSocket
@@ -16,13 +17,13 @@ class ConnectionManager:
 
     Messages are published to Redis so that sockets served by a *different*
     uvicorn worker also receive them; each process subscribes once and
-    re-broadcasts to its own local connections. Previously the publish existed
-    but nothing ever subscribed, so cross-worker delivery silently did nothing.
+    re-broadcasts to its own local connections.
     """
 
     def __init__(self):
         self.active_connections: dict[str, list[WebSocket]] = {}
         self._pubsub_task: Optional[asyncio.Task] = None
+        self._instance_id = str(uuid.uuid4())
 
     async def connect(self, websocket: WebSocket, chat_id: str):
         await websocket.accept()
@@ -60,6 +61,8 @@ class ConnectionManager:
                     channel = message["channel"]
                     chat_id = channel.split(":", 1)[1]
                     payload = json.loads(message["data"])
+                    if payload.pop("_origin", None) == self._instance_id:
+                        continue  # Skip echo from this worker
                 except Exception:
                     continue
                 await self._send_local(payload, chat_id)
@@ -84,9 +87,11 @@ class ConnectionManager:
             return
         try:
             # Other workers pick this up in _consume_pubsub and deliver it to
-            # their own sockets. They skip their local copy via "origin".
+            # their own sockets. They skip their local copy via "_origin".
+            payload = dict(message)
+            payload["_origin"] = self._instance_id
             await run_in_threadpool(
-                redis_client.publish, f"chat:{chat_id}", json.dumps(message)
+                redis_client.publish, f"chat:{chat_id}", json.dumps(payload)
             )
         except Exception as e:
             logger.debug("Chat publish failed: %s", e)

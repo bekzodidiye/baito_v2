@@ -90,9 +90,7 @@ const DesktopJobDetailsPanelComponent: React.FC<DesktopJobDetailsPanelProps> = (
           selectedJob={activeJob} 
           applyToJob={applyToJob}
           onApplied={() => {
-            if (selectedJob && selectedJob.id === activeJob.id) {
-              setSelectedJob({ ...selectedJob, applied: true, status: 'applied' });
-            }
+            setSelectedJob({ ...activeJob, applied: true, status: 'applied' });
           }}
         />
       </motion.div>

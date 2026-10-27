@@ -67,6 +67,7 @@ def get_worker_applications(
         db.query(models.Transaction)
         .filter(
             models.Transaction.jobId.in_(job_ids),
+            models.Transaction.workerId == current_user.id,
             # The wage only. A bonus is carried on the application row and
             # added below, so counting it here too would double it.
             models.Transaction.type == "worker_earning",

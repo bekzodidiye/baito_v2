@@ -187,6 +187,7 @@ def request_withdrawal(
 
     tx = Transaction(
         employerId=user.id,
+        workerId=user.id if user.role == 'worker' else None,
         amount=Money.to_tiyin(req.amount),
         type="withdraw",
         status="pending",
