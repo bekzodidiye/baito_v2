@@ -158,7 +158,7 @@ def expire_stale_jobs() -> int:
     scheduled to act on them.
     """
     from app.db.session import SessionLocal
-    from app.models import Job, JobApplication, Notification, SystemSetting
+    from app.models import Application, Job, Notification, SystemSetting
     from app.models.job import JobStatus
 
     with SessionLocal() as db:
@@ -177,10 +177,10 @@ def expire_stale_jobs() -> int:
             job.status = JobStatus.CANCELLED
             # Also withdraw pending applications on this job so they don't remain orphaned
             pending_apps = (
-                db.query(JobApplication)
+                db.query(Application)
                 .filter(
-                    JobApplication.jobId == job.id,
-                    JobApplication.status.in_(["applied", "pending"]),
+                    Application.jobId == job.id,
+                    Application.status.in_(["applied", "pending"]),
                 )
                 .all()
             )

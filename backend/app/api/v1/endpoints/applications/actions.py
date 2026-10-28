@@ -72,13 +72,15 @@ def hire_applicant(
             detail=f"Bu ish bo'yicha barcha {vacancies} ta o'rin to'lgan",
         )
 
+    worker = db.query(models.User).filter((models.User.id == app.workerId) | (models.User.uid == app.workerId)).first()
+    worker_ids = [uid for uid in ([worker.id, getattr(worker, 'uid', None)] if worker else [app.workerId]) if uid]
     job_dates = get_job_dates_set(job)
     if job_dates:
         committed_jobs = (
             db.query(models.Job)
             .join(models.Application, models.Application.jobId == models.Job.id)
             .filter(
-                models.Application.workerId == app.workerId,
+                models.Application.workerId.in_(worker_ids),
                 models.Application.id != app.id,
                 models.Application.status.in_(COMMITTED_APP_STATUSES),
             )
@@ -146,7 +148,7 @@ def hire_applicant(
         other_apps = (
             db.query(models.Application)
             .filter(
-                models.Application.workerId == app.workerId,
+                models.Application.workerId.in_(worker_ids),
                 models.Application.id != app.id,
                 models.Application.status == "applied",
             )

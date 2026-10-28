@@ -46,6 +46,7 @@ class NotePayload(BaseModel):
 def _serialize_user(u: models.User) -> dict:
     return {
         "id": u.id,
+        "uid": u.uid,
         "name": u.name,
         "phone": u.phone,
         "email": u.email,
@@ -111,10 +112,10 @@ def ban_user(
     db: Session = Depends(deps.get_db),
     admin: models.User = Depends(get_admin_user),
 ) -> Any:
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+    user = db.query(models.User).filter(or_(models.User.id == user_id, models.User.uid == user_id)).first()
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
-    if user.id == admin.id:
+    if user.id == admin.id or (user.uid and user.uid == getattr(admin, "uid", None)):
         raise HTTPException(status_code=400, detail="O'zingizni bloklay olmaysiz")
 
     user.isBanned = payload.isBanned
@@ -153,7 +154,7 @@ def change_role(
     db: Session = Depends(deps.get_db),
     admin: models.User = Depends(get_admin_user),
 ) -> Any:
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+    user = db.query(models.User).filter(or_(models.User.id == user_id, models.User.uid == user_id)).first()
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
 
@@ -245,7 +246,11 @@ def add_balance(
         raise HTTPException(status_code=400, detail="Summa noldan farqli bo'lishi kerak")
 
     user = (
-        db.query(models.User).filter(models.User.id == user_id).populate_existing().with_for_update().first()
+        db.query(models.User)
+        .filter(or_(models.User.id == user_id, models.User.uid == user_id))
+        .populate_existing()
+        .with_for_update()
+        .first()
     )
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
@@ -282,9 +287,11 @@ def get_user_detail(
     db: Session = Depends(deps.get_db),
     _: models.User = Depends(get_admin_user),
 ) -> Any:
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+    user = db.query(models.User).filter(or_(models.User.id == user_id, models.User.uid == user_id)).first()
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+
+    user_ids = [uid for uid in [user.id, getattr(user, 'uid', None)] if uid]
 
     sessions = (
         db.query(models.ActiveSession)
@@ -306,8 +313,8 @@ def get_user_detail(
         db.query(models.Transaction)
         .filter(
             or_(
-                models.Transaction.employerId == user.id,
-                models.Transaction.workerId == user.id,
+                models.Transaction.employerId.in_(user_ids),
+                models.Transaction.workerId.in_(user_ids),
             )
         )
         .order_by(models.Transaction.createdAt.desc())
@@ -331,7 +338,7 @@ def get_user_detail(
     if user.role == 'worker':
         apps = (
             db.query(models.Application)
-            .filter(models.Application.workerId == user.id)
+            .filter(models.Application.workerId.in_(user_ids))
             .limit(500)
             .all()
         )
@@ -375,7 +382,7 @@ def get_user_detail(
     else:
         jobs = (
             db.query(models.Job)
-            .filter(models.Job.employerId == user.id)
+            .filter(models.Job.employerId.in_(user_ids))
             .limit(500)
             .all()
         )
@@ -410,7 +417,7 @@ def add_user_note(
     db: Session = Depends(deps.get_db),
     admin: models.User = Depends(get_admin_user),
 ) -> Any:
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+    user = db.query(models.User).filter(or_(models.User.id == user_id, models.User.uid == user_id)).first()
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
 
