@@ -93,6 +93,7 @@ const EXACT: Record<string, { ru: string; en: string }> = {
   'Ish beruvchi topilmadi': { ru: 'Работодатель не найден', en: 'Employer not found' },
   'Ish e\'loni topilmadi': { ru: 'Объявление о работе не найдено', en: 'Job posting not found' },
   'Ish topilmadi': { ru: 'Работа не найдена', en: 'Job not found' },
+  'Ishda tayinlangan ishchi yo\'q, nizo ochish mumkin emas': { ru: 'На работу не назначен работник, открыть спор невозможно', en: 'No worker is assigned to this job; a dispute cannot be opened' },
   'Ishchi bu kun uchun allaqachon tasdiqlangan ishga ega': { ru: 'У работника на этот день уже есть подтверждённая работа', en: 'The worker already has a confirmed job that day' },
   'Ishchi ko\'rsatilmagan': { ru: 'Работник не указан', en: 'No worker specified' },
   'Ishchi topilmadi': { ru: 'Работник не найден', en: 'Worker not found' },

@@ -238,7 +238,7 @@ def withdraw_application(
             detail="Faqat ko'rib chiqilayotgan (kutilayotgan) arizani qaytarib olish mumkin",
         )
 
-    job = crud.job.get(db=db, id=app.jobId)
+    job = db.query(models.Job).filter(models.Job.id == app.jobId).first()
     app.status = "withdrawn"
     db.add(app)
 

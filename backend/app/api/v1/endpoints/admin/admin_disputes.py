@@ -14,7 +14,7 @@ from app.services.earnings_service import WorkerEarnings
 from app.core.money import salary_to_uzs
 
 from .admin_users import get_admin_user
-from .admin_audit import record_admin_action
+from .audit import record_admin_action
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -54,6 +54,9 @@ def _resolve_dispute(
         .all()
     )
 
+    target_worker_ids = [dispute.workerId] if dispute.workerId else [app.workerId for app in apps]
+    disputed_apps = [a for a in apps if a.workerId in target_worker_ids] or apps
+
     now = datetime.now(timezone.utc)
     if winner == "worker":
         payable = job_days.payable_days(db, job.id)
@@ -62,19 +65,20 @@ def _resolve_dispute(
                 day.status = JobDayStatus.COMPLETED
                 day.completedAt = now
                 db.add(day)
-                for app in apps:
+                is_last_day = (day == payable[-1])
+                for w_id in target_worker_ids:
                     try:
                         wage = int(day.amount) if getattr(day, "amount", None) else salary_to_uzs(job.salary)
                         WorkerEarnings.credit_worker(
-                            db, job=job, worker_id=app.workerId, amount_uzs=wage, job_day_id=day.id, count_completed_job=True
+                            db, job=job, worker_id=w_id, amount_uzs=wage, job_day_id=day.id, count_completed_job=is_last_day
                         )
                     except Exception as e:
-                        logger.warning("Dispute credit failed for worker %s: %s", app.workerId, e)
+                        logger.warning("Dispute credit failed for worker %s: %s", w_id, e)
         else:
-            for app in apps:
+            for w_id in target_worker_ids:
                 try:
                     WorkerEarnings.credit_worker(
-                        db, job=job, worker_id=app.workerId, amount_uzs=salary_to_uzs(job.salary), count_completed_job=True
+                        db, job=job, worker_id=w_id, amount_uzs=salary_to_uzs(job.salary), count_completed_job=True
                     )
                 except Exception as e:
                     logger.warning("Dispute credit failed: %s", e)
@@ -83,7 +87,7 @@ def _resolve_dispute(
         job.completedAt = now
         db.add(job)
 
-        for app in apps:
+        for app in disputed_apps:
             app.status = "completed"
             db.add(app)
 
@@ -91,9 +95,9 @@ def _resolve_dispute(
         dispute.adminNotes = reason or "Ishchi foydasiga hal qilindi"
         db.add(dispute)
 
-        for app in apps:
+        for w_id in target_worker_ids:
             db.add(models.Notification(
-                userId=app.workerId,
+                userId=w_id,
                 title="Nizo hal qilindi",
                 message=f"'{job.title}' ishi bo'yicha nizo sizning foydangizga hal qilindi va to'lov hisobingizga o'tkazildi.",
                 type="completed",
@@ -115,7 +119,7 @@ def _resolve_dispute(
         job.status = JobStatus.CANCELLED
         db.add(job)
 
-        for app in apps:
+        for app in disputed_apps:
             app.status = "cancelled"
             db.add(app)
 
@@ -130,9 +134,9 @@ def _resolve_dispute(
             type="system",
             relatedJobId=job.id,
         ))
-        for app in apps:
+        for w_id in target_worker_ids:
             db.add(models.Notification(
-                userId=app.workerId,
+                userId=w_id,
                 title="Nizo hal qilindi",
                 message=f"'{job.title}' ishi bo'yicha nizo ish beruvchi foydasiga hal qilindi.",
                 type="system",

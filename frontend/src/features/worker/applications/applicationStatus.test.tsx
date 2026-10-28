@@ -15,7 +15,7 @@ afterEach(cleanup);
 
 /** Every status the backend writes to an application. */
 const STATUSES = ['applied', 'hired', 'rejected', 'confirmed',
-                  'start_requested', 'in_progress', 'completed'] as const;
+                  'start_requested', 'in_progress', 'completed', 'withdrawn'] as const;
 
 const LANGS = ['uz', 'ru', 'en'] as const;
 

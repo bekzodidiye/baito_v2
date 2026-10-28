@@ -37,14 +37,14 @@ export const AdminDisputes: React.FC = () => {
           <span>{a.disputesTitle}</span>
         </h2>
         <p className="text-xs text-slate-500 mt-1 font-medium">
-          Ish beruvchi va ishchi o'rtasidagi kelishmovchiliklarni hal qilish
+          {a.disputesSubtitle}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {disputeJobs.length === 0 ? (
           <div className="col-span-full bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-400 font-semibold">
-            Hozirda hech qanday faol nizo yoki shikoyatlar mavjud emas
+            {a.noDisputesFound}
           </div>
         ) : (
           disputeJobs.map((j) => (
@@ -55,7 +55,7 @@ export const AdminDisputes: React.FC = () => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-amber-50 text-amber-700 border border-amber-200">
-                    Nizo Ko'rilmoqda
+                    {a.disputeReviewing}
                   </span>
                   <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
                     <DollarSign size={13} />
@@ -69,10 +69,10 @@ export const AdminDisputes: React.FC = () => {
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 mt-3 text-xs text-slate-700 font-medium space-y-1">
                   <div className="font-bold text-slate-900 flex items-center gap-1">
                     <ArrowRightLeft size={14} className="text-slate-400" />
-                    Shikoyat mazmuni:
+                    {a.complaintDetails}
                   </div>
                   <p className="text-slate-600 text-[11px] leading-relaxed">
-                    {j.reason || "Ish topshirilgan muddatda sifatli bajarilmadi / ish beruvchi to'lovni tasdiqlamayapti"}
+                    {j.reason || a.complaintDefaultReason}
                   </p>
                 </div>
               </div>
@@ -83,7 +83,7 @@ export const AdminDisputes: React.FC = () => {
                   disabled={resolvingId === j.id}
                   className="flex-1 py-2 px-3 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-xl transition-colors cursor-pointer text-center disabled:opacity-50"
                 >
-                  Ish beruvchiga qaytarish
+                  {a.refundEmployer}
                 </button>
                 <button
                   onClick={() => handleResolve(j.id, j.jobId, 'worker')}
@@ -91,7 +91,7 @@ export const AdminDisputes: React.FC = () => {
                   className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50"
                 >
                   <CheckCircle2 size={14} />
-                  Ishchiga to'lash
+                  {a.payWorker}
                 </button>
               </div>
             </div>

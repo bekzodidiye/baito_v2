@@ -153,6 +153,9 @@ def dispute_job(
     if job.status == JobStatus.CANCELLED:
         raise HTTPException(status_code=400, detail="Bekor qilingan ish bo'yicha nizo ochib bo'lmaydi")
 
+    if job.status == "dispute":
+        raise HTTPException(status_code=400, detail="Ushbu ish bo'yicha faol nizo allaqachon ko'rib chiqilmoqda")
+
     existing_dispute = (
         db.query(models.Dispute)
         .filter(
@@ -184,11 +187,17 @@ def dispute_job(
         if hired_app:
             worker_id = hired_app.workerId
 
+    if not worker_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Ishda tayinlangan ishchi yo'q, nizo ochish mumkin emas",
+        )
+
     dispute = models.Dispute(
         id=str(uuid.uuid4()),
         jobId=job.id,
         employerId=job.employerId,
-        workerId=worker_id or current_user.id,
+        workerId=worker_id,
         reason=payload.reason.strip(),
         status="open",
     )

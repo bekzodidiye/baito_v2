@@ -16,6 +16,7 @@ import { useUIStore } from "../../store/useUIStore";
 import { useAuthStore } from "../../store/useAuthStore";
 import { isProfileComplete } from '../../utils/profileCompleteness';
 import { showToast } from '../../utils/toast';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 
 export const EmployerPanel: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
@@ -102,7 +103,9 @@ export const EmployerPanel: React.FC = () => {
   if (isFormScreen) {
     return (
       <div className="w-full min-h-screen bg-slate-50 overflow-y-auto">
-        {renderContent()}
+        <ErrorBoundary key={currentScreen}>
+          {renderContent()}
+        </ErrorBoundary>
         <MandatoryReviewModal
           isOpen={!!pendingReviewApp}
           application={pendingReviewApp || null}
@@ -145,7 +148,9 @@ export const EmployerPanel: React.FC = () => {
 
       {/* ===== MAIN CONTENT AREA ===== */}
       <div className={`flex-1 ${isChatScreen ? 'h-full overflow-hidden' : 'overflow-y-auto'} ${isChatOpenOnMobile ? 'pb-0' : 'pb-24 md:pb-0'}`}>
-        {renderContent()}
+        <ErrorBoundary key={currentScreen}>
+          {renderContent()}
+        </ErrorBoundary>
       </div>
 
       {/* ===== MOBILE BOTTOM NAV (< md) ===== */}

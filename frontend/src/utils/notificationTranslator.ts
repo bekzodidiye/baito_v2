@@ -6,10 +6,14 @@ export const translateNotification = (
 
   // Exact matches for titles
   const exactMatches: Record<string, { ru: string; en: string }> = {
+    "Ariza qaytarib olindi": { ru: "Заявка отозвана", en: "Application withdrawn" },
     "Ariza rad etildi": { ru: "Заявка отклонена", en: "Application rejected" },
+    "E'lon muddati tugadi": { ru: "Срок объявления истек", en: "Job posting expired" },
     "Hisob-faktura to'landi deb belgilandi": { ru: "Счет-фактура отмечен как оплаченный", en: "Invoice marked as paid" },
+    "Ish beruvchi sharh qoldirdi": { ru: "Работодатель оставил отзыв", en: "Employer left a review" },
     "Ish boshlandi!": { ru: "Работа началась!", en: "Job started!" },
     "Ish boshlandi": { ru: "Работа началась", en: "Job started" },
+    "Ish bo'yicha nizo ochildi": { ru: "Открыт спор по работе", en: "Dispute opened for job" },
     "Ish e'loni bekor qilindi": { ru: "Объявление отменено", en: "Job ad cancelled" },
     "Ish holati o'zgardi": { ru: "Статус работы изменен", en: "Job status changed" },
     "Ish kuni yakunlandi": { ru: "Рабочий день завершен", en: "Workday completed" },
@@ -21,13 +25,19 @@ export const translateNotification = (
     "Mablag' qaytarildi": { ru: "Средства возвращены", en: "Funds refunded" },
     "Mablag' yechildi": { ru: "Средства списаны", en: "Funds withdrawn" },
     "Murojaatingizga javob": { ru: "Ответ на ваш запрос", en: "Response to your request" },
+    "Nizo hal qilindi": { ru: "Спор разрешен", en: "Dispute resolved" },
+    "Nizo holati o'zgardi": { ru: "Статус спора изменен", en: "Dispute status changed" },
     "Sizni ishga qabul qilishdi!": { ru: "Вас приняли на работу!", en: "You were hired!" },
     "Sizni ishga tayinlashdi": { ru: "Вас назначили на работу", en: "You were assigned to a job" },
+    "To'lov amalga oshirildi": { ru: "Оплата выполнена", en: "Payment processed" },
     "To'lov chiqarildi": { ru: "Выплата произведена", en: "Payment issued" },
     "To'lov tasdiqlandi": { ru: "Оплата подтверждена", en: "Payment confirmed" },
     "Verifikatsiya holati": { ru: "Статус верификации", en: "Verification status" },
     "Yangi ariza keldi": { ru: "Поступила новая заявка", en: "New application received" },
-    "Yechish so'rovi rad etildi": { ru: "Запрос на вывод отклонен", en: "Withdrawal request rejected" }
+    "Yangi nizo kelib tushdi": { ru: "Поступил новый спор", en: "New dispute submitted" },
+    "Yangi yordam so'rovi": { ru: "Новый запрос в поддержку", en: "New support request" },
+    "Yechish so'rovi rad etildi": { ru: "Запрос на вывод отклонен", en: "Withdrawal request rejected" },
+    "Yordam markaziga xabar": { ru: "Сообщение в службу поддержки", en: "Message to support" }
   };
 
   if (exactMatches[text]) {
@@ -245,6 +255,99 @@ export const translateNotification = (
     return lang === 'ru'
       ? `${match[1]} — ${match[2]} · ${match[3]} сум. Чек не приложен. Сверьте с банковской выпиской.`
       : `${match[1]} — ${match[2]} · ${match[3]} UZS. No receipt attached. Reconcile against the bank statement.`;
+  }
+
+  match = text.match(/^'(.*)' e'loni muddati tugaganligi sababli bekor qilindi\.$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Объявление '${match[1]}' отменено в связи с истечением срока.`
+      : `Job ad '${match[1]}' was cancelled due to expiration.`;
+  }
+
+  match = text.match(/^'(.*)' ishi bo'yicha ish beruvchi sizga (.+) yulduzli baho va sharh qoldirdi\.$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Работодатель поставил вам оценку ${match[2]} звезд и оставил отзыв по работе '${match[1]}'.`
+      : `Employer gave you a ${match[2]}-star rating and left a review for job '${match[1]}'.`;
+  }
+
+  match = text.match(/^'(.*)' ishi bo'yicha nizo ish beruvchi foydasiga hal qilindi\.$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Спор по работе '${match[1]}' разрешен в пользу работодателя.`
+      : `Dispute for job '${match[1]}' was resolved in favor of the employer.`;
+  }
+
+  match = text.match(/^'(.*)' ishi bo'yicha nizo ishchi foydasiga hal qilindi\.$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Спор по работе '${match[1]}' разрешен в пользу работника.`
+      : `Dispute for job '${match[1]}' was resolved in favor of the worker.`;
+  }
+
+  match = text.match(/^'(.*)' ishi bo'yicha nizo ochildi va moderatorlar ko'rib chiqmoqda\.$/);
+  if (match) {
+    return lang === 'ru'
+      ? `По работе '${match[1]}' открыт спор, модераторы рассматривают его.`
+      : `A dispute has been opened for job '${match[1]}' and is being reviewed by moderators.`;
+  }
+
+  match = text.match(/^'(.*)' ishi bo'yicha nizo ochildi\. Sabab: (.*)$/);
+  if (match) {
+    return lang === 'ru'
+      ? `По работе '${match[1]}' открыт спор. Причина: ${match[2]}`
+      : `A dispute has been opened for job '${match[1]}'. Reason: ${match[2]}`;
+  }
+
+  match = text.match(/^'(.*)' ishi bo'yicha nizo sizning foydangizga hal qilindi va to'lov hisobingizga o'tkazildi\.$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Спор по работе '${match[1]}' разрешен в вашу пользу, оплата переведена на ваш счет.`
+      : `Dispute for job '${match[1]}' was resolved in your favor and payment was credited to your account.`;
+  }
+
+  match = text.match(/^'(.*)' ishi bo'yicha nizo sizning foydangizga hal qilindi\.$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Спор по работе '${match[1]}' разрешен в вашу пользу.`
+      : `Dispute for job '${match[1]}' was resolved in your favor.`;
+  }
+
+  match = text.match(/^'(.*)' ishi bo'yicha (.+) so'm to'lovingiz bank hisobingizga o'tkazildi\.$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Выплата в размере ${match[2]} сум по работе '${match[1]}' переведена на ваш банковский счет.`
+      : `Payment of ${match[2]} UZS for job '${match[1]}' was transferred to your bank account.`;
+  }
+
+  match = text.match(/^Ishchi '(.*)' ishiga topshirgan arizasini qaytarib oldi\.$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Работник отозвал свою заявку на работу '${match[1]}'.`
+      : `Worker withdrew their application for job '${match[1]}'.`;
+  }
+
+  match = text.match(/^Siz ishtirok etgan nizo bo'yicha qaror qabul qilindi: (.*)\.$/);
+  if (match) {
+    const rawStatus = match[1];
+    const statusMap: Record<string, { ru: string; en: string }> = {
+      'hal qilindi': { ru: 'разрешен', en: 'resolved' },
+      'rad etildi': { ru: 'отклонен', en: 'rejected' },
+      'resolved': { ru: 'разрешен', en: 'resolved' },
+      'rejected': { ru: 'отклонен', en: 'rejected' },
+      'closed': { ru: 'закрыт', en: 'closed' },
+    };
+    const s = statusMap[rawStatus] || { ru: rawStatus, en: rawStatus };
+    return lang === 'ru'
+      ? `Принято решение по спору с вашим участием: ${s.ru}.`
+      : `A decision was reached on your dispute: ${s.en}.`;
+  }
+
+  match = text.match(/^Foydalanuvchi (.*) yordam so'radi: (.*)$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Пользователь ${match[1]} обратился в поддержку: ${match[2]}`
+      : `User ${match[1]} requested support: ${match[2]}`;
   }
 
   // Fallback if not matched

@@ -36,6 +36,7 @@ const SAMPLES = [
   'Fayl hajmi 15 MB dan oshmasligi kerak',
   "To'lov tizimi hozircha ulanmagan. Iltimos, keyinroq urinib ko'ring.",
   "Yakunlangan ishni bekor qilib bo'lmaydi",
+  "Ishda tayinlangan ishchi yo'q, nizo ochish mumkin emas",
 ];
 
 describe('translateApiError', () => {

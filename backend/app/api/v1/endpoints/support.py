@@ -138,7 +138,7 @@ def send_support_message(
         db.add(models.Notification(
             userId=admin.id,
             title="Yangi yordam so'rovi" if is_new else "Yordam markaziga xabar",
-            message=f"{user_label}: {summary_text}",
+            message=f"Foydalanuvchi {user_label} yordam so'radi: {summary_text}",
             type="support",
         ))
 

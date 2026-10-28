@@ -102,16 +102,17 @@ class JobService:
         if _hired_count(db, job.id) >= job.vacancies:
             raise InvalidJobStateError("Bu ish bo'yicha o'rinlar to'lgan")
 
+        worker_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
         existing_app = (
             db.query(models.Application)
             .filter(
                 models.Application.jobId == job_id,
-                models.Application.workerId == current_user.id,
+                models.Application.workerId.in_(worker_ids),
             )
             .first()
         )
 
-        if existing_app:
+        if existing_app and existing_app.status != "withdrawn":
             return {
                 "success": True,
                 "id": existing_app.id,
@@ -123,7 +124,7 @@ class JobService:
         worker_apps = (
             db.query(models.Application)
             .filter(
-                models.Application.workerId == current_user.id,
+                models.Application.workerId.in_(worker_ids),
                 models.Application.status.in_(ACTIVE_APP_STATUSES),
             )
             .all()
@@ -150,9 +151,14 @@ class JobService:
                     raise ApplicationError("Bir kunda ko'pi bilan 2 ta ishga ariza topshirishingiz mumkin!")
 
         with db.begin_nested():
-            db_app = models.Application(
-                id=str(uuid.uuid4()), jobId=job_id, workerId=current_user.id, status="applied"
-            )
+            if existing_app and existing_app.status == "withdrawn":
+                db_app = existing_app
+                db_app.status = "applied"
+                db_app.appliedDate = func.now()
+            else:
+                db_app = models.Application(
+                    id=str(uuid.uuid4()), jobId=job_id, workerId=current_user.id, status="applied"
+                )
             db.add(db_app)
             db.add(models.Notification(
                 id=str(uuid.uuid4()), userId=job.employerId, title="Yangi ariza keldi",

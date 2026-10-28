@@ -33,10 +33,14 @@ TRANSLATOR = (
 # escrow. Their rows are still in the database and still on screen, so the
 # client keeps translating them — that list is its own.
 KNOWN_TITLES = {
+    "Ariza qaytarib olindi",
     "Ariza rad etildi",
+    "E'lon muddati tugadi",
     "Hisob-faktura to'landi deb belgilandi",
+    "Ish beruvchi sharh qoldirdi",
     "Ish boshlandi",
     "Ish boshlandi!",
+    "Ish bo'yicha nizo ochildi",
     "Ish e'loni bekor qilindi",
     "Ish holati o'zgardi",
     "Ish kuni yakunlandi",
@@ -44,12 +48,18 @@ KNOWN_TITLES = {
     "Ish yakunlandi",
     "Mablag' yechildi",
     "Murojaatingizga javob",
+    "Nizo hal qilindi",
+    "Nizo holati o'zgardi",
     "Sizni ishga qabul qilishdi!",
     "Sizni ishga tayinlashdi",
+    "To'lov amalga oshirildi",
     "To'lov tasdiqlandi",
     "Verifikatsiya holati",
     "Yangi ariza keldi",
+    "Yangi nizo kelib tushdi",
+    "Yangi yordam so'rovi",
     "Yechish so'rovi rad etildi",
+    "Yordam markaziga xabar",
 }
 
 # The refund and admin-payout messages are not here either: they went with
@@ -58,11 +68,20 @@ KNOWN_MESSAGES = {
     "'{}' bo'yicha qo'llab-quvvatlash javob berdi.",
     "'{}' e'loni administrator tomonidan bekor qilindi.",
     "'{}' e'loni ish beruvchi tomonidan bekor qilindi.",
+    "'{}' e'loni muddati tugaganligi sababli bekor qilindi.",
     "'{}' ishi bo'yicha arizangiz rad etildi.",
+    "'{}' ishi bo'yicha ish beruvchi sizga {} yulduzli baho va sharh qoldirdi.",
     "'{}' ishi bo'yicha ishchi ishni boshladi.",
+    "'{}' ishi bo'yicha nizo ish beruvchi foydasiga hal qilindi.",
+    "'{}' ishi bo'yicha nizo ishchi foydasiga hal qilindi.",
+    "'{}' ishi bo'yicha nizo ochildi va moderatorlar ko'rib chiqmoqda.",
+    "'{}' ishi bo'yicha nizo ochildi. Sabab: {}",
+    "'{}' ishi bo'yicha nizo sizning foydangizga hal qilindi va to'lov hisobingizga o'tkazildi.",
+    "'{}' ishi bo'yicha nizo sizning foydangizga hal qilindi.",
     "'{}' ishi bo'yicha tayinlov administrator tomonidan o'zgartirildi.",
     "'{}' ishi bo'yicha to'lov hisobingizga o'tkazildi.",
     "'{}' ishi bo'yicha to'lov hisobingizga o'tkazildi. Ish beruvchi qo'shimcha {} so'm bonus qo'shdi.",
+    "'{}' ishi bo'yicha {} so'm to'lovingiz bank hisobingizga o'tkazildi.",
     "'{}' ishi ishchi tomonidan yakunlandi. Iltimos, ishchiga baho va sharh qoldiring.",
     "'{}' ishi qaytadan ochiq holatga o'tkazildi.",
     "'{}' ishi rasman boshlandi.",
@@ -71,7 +90,10 @@ KNOWN_MESSAGES = {
     "'{}' ishiga qabul qilindingiz. Tafsilotlarni ko'ring.",
     "'{}' ishining {} kuni yakunlandi, shu kun uchun to'lov hisobingizga o'tkazildi.",
     "'{}' ishining {} kuni yakunlandi. To'lov ish beruvchi tomonidan alohida amalga oshiriladi.",
+    "Foydalanuvchi {} yordam so'radi: {}",
     "Ishchi '{}' ishiga ariza topshirdi.",
+    "Ishchi '{}' ishiga topshirgan arizasini qaytarib oldi.",
+    "Siz ishtirok etgan nizo bo'yicha qaror qabul qilindi: {}.",
     # The two verification defaults are picked at runtime from an editable
     # settings row, so this scan cannot see them. The client covers them and
     # test_the_variable_built_messages_reach_the_translator holds them there.
