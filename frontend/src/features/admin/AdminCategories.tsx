@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { CategoryItem } from './types';
 import { useAdminData } from './useAdminData';
 import { apiClient } from '../../api/client';
-import { FolderTree, Plus, Trash2, Percent, Briefcase, Users, Search } from 'lucide-react';
+import { FolderTree, Plus, Trash2, Edit2, Percent, Briefcase, Users, Search } from 'lucide-react';
 import { AddCategoryModal } from './AddCategoryModal';
 
 
@@ -15,18 +15,26 @@ export const AdminCategories: React.FC = () => {
   const { categories, refresh, loading } = useAdminData();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
 
   const filtered = categories.filter((c) =>
     c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddCategory = async (item: CategoryItem) => {
+  const handleSaveCategory = async (item: CategoryItem) => {
     try {
-      await apiClient('/admin/categories', {
-        method: 'POST',
-        body: JSON.stringify(item)
-      });
+      if (editingCategory) {
+        await apiClient(`/admin/categories/${editingCategory.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(item)
+        });
+      } else {
+        await apiClient('/admin/categories', {
+          method: 'POST',
+          body: JSON.stringify(item)
+        });
+      }
       refresh();
     } catch (e) {
       console.error(e);
@@ -60,7 +68,7 @@ export const AdminCategories: React.FC = () => {
           </p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => { setEditingCategory(null); setShowAddModal(true); }}
           className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-semibold text-xs rounded-xl hover:bg-blue-700 transition cursor-pointer shadow-sm"
         >
           <Plus size={16} />
@@ -100,12 +108,24 @@ export const AdminCategories: React.FC = () => {
                   <p className="text-xs text-slate-500 line-clamp-1">{cat.description}</p>
                 </div>
               </div>
-              <button
-                onClick={() => handleDelete(cat.id, cat.name)}
-                className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition cursor-pointer"
-              >
-                <Trash2 size={16} />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => { setEditingCategory(cat); setShowAddModal(true); }}
+                  aria-label="Tahrirlash"
+                  title="Tahrirlash"
+                  className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition cursor-pointer"
+                >
+                  <Edit2 size={16} />
+                </button>
+                <button
+                  onClick={() => handleDelete(cat.id, cat.name)}
+                  aria-label="O'chirish"
+                  title="O'chirish"
+                  className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition cursor-pointer"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
 
             {/* Metrics */}
@@ -153,8 +173,9 @@ export const AdminCategories: React.FC = () => {
 
       <AddCategoryModal
         isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onAdd={handleAddCategory}
+        onClose={() => { setShowAddModal(false); setEditingCategory(null); }}
+        onAdd={handleSaveCategory}
+        initialData={editingCategory}
       />
     </div>
   );
