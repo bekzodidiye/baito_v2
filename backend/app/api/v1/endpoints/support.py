@@ -34,10 +34,11 @@ class SupportMessageIn(BaseModel):
 
 
 def _open_ticket(db: Session, user: models.User) -> models.SupportTicket | None:
+    user_ids = [uid for uid in [user.id, getattr(user, 'uid', None)] if uid]
     return (
         db.query(models.SupportTicket)
         .filter(
-            models.SupportTicket.userId == user.id,
+            models.SupportTicket.userId.in_(user_ids),
             models.SupportTicket.status.in_(OPEN_STATUSES),
         )
         .order_by(models.SupportTicket.createdAt.desc())
@@ -157,7 +158,8 @@ def delete_support_message(
     msg = db.query(models.TicketMessage).filter(models.TicketMessage.id == message_id).first()
     if not msg:
         raise HTTPException(status_code=404, detail="Xabar topilmadi")
-    if msg.senderId != current_user.id and current_user.role != "admin":
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+    if msg.senderId not in user_ids and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Bu xabarni o'chirish huquqingiz yo'q")
     db.delete(msg)
     db.commit()
