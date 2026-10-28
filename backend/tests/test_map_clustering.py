@@ -358,6 +358,30 @@ def test_map_clustering_invalid_and_out_of_range_coordinates(client):
                 employerId="emp-invalid-coord",
             ),
             models.Job(
+                id="inv-job-outside-uzb-1",
+                title="Moscow Job Outside Uzb",
+                company="Inv Corp",
+                location="Moscow",
+                description="Tavsif",
+                coordinateX=55.75,  # Outside Uzbekistan (lat > 45.8)
+                coordinateY=37.61,  # Outside Uzbekistan (lng < 55.9)
+                salary=100000,
+                status=JobStatus.OPEN,
+                employerId="emp-invalid-coord",
+            ),
+            models.Job(
+                id="inv-job-outside-uzb-2",
+                title="Baghdad Job Outside Uzb",
+                company="Inv Corp",
+                location="Baghdad",
+                description="Tavsif",
+                coordinateX=33.31,  # Outside Uzbekistan (lat < 37.0)
+                coordinateY=44.36,  # Outside Uzbekistan (lng < 55.9)
+                salary=100000,
+                status=JobStatus.OPEN,
+                employerId="emp-invalid-coord",
+            ),
+            models.Job(
                 id="inv-job-3",
                 title="Zero Zero Island",
                 company="Inv Corp",
@@ -460,3 +484,200 @@ def test_map_clustering_application_status_personalization(client):
     assert c["count"] == 2
     assert c["applied"] is True
     assert c["bookmarked"] is False
+
+
+def test_filled_job_applied_by_user_does_not_leak_into_public_cache(client):
+    """
+    Test that an is_filled (e.g. in_progress / completed) job that an authenticated user applied to
+    is returned to that user, BUT does NOT enter the public cache base_pins or leak to other users / guests.
+    """
+    from tests.conftest import make_user, login
+    from app.core.map_cache import build_map_pins_cache_key, get_map_cache_version
+    import json
+
+    worker_applied = make_user(role="worker", phone="+998901112233")
+    worker_other = make_user(role="worker", phone="+998904445566")
+
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = db_session.query(models.User).filter_by(id="emp-leak-test").first()
+        if not emp:
+            emp = models.User(id="emp-leak-test", phone="+998909998877", role="employer", name="Leak Emp")
+            db_session.add(emp)
+            db_session.flush()
+
+        open_job = models.Job(
+            id="job-public-open",
+            title="Public Open Job",
+            company="Leak Corp",
+            location="Toshkent, Chilonzor",
+            description="Tavsif",
+            coordinateX=41.285,
+            coordinateY=69.205,
+            salary=200000,
+            status=JobStatus.OPEN,
+            employerId="emp-leak-test",
+            neededWorkers="1",
+        )
+        filled_job = models.Job(
+            id="job-user-filled",
+            title="Filled InProgress Job",
+            company="Leak Corp",
+            location="Toshkent, Chilonzor",
+            description="Tavsif",
+            coordinateX=41.286,
+            coordinateY=69.206,
+            salary=250000,
+            status=JobStatus.IN_PROGRESS,  # is_filled == True!
+            employerId="emp-leak-test",
+            neededWorkers="1",
+        )
+        db_session.add_all([open_job, filled_job])
+        db_session.commit()
+
+        # worker_applied applies to filled_job
+        app_entry = models.Application(
+            id="app-leak-1",
+            jobId="job-user-filled",
+            workerId=worker_applied.id,
+            status="in_progress",
+        )
+        db_session.add(app_entry)
+        db_session.commit()
+
+    # 1. worker_applied hits the Cold DB Path first
+    login(client, worker_applied)
+    res_applied = client.get("/api/v1/jobs/map?clustered=false&search=Leak")
+    assert res_applied.status_code == 200
+    applied_pins = res_applied.json()
+    applied_ids = {p["id"] for p in applied_pins}
+    assert "job-public-open" in applied_ids
+    assert "job-user-filled" in applied_ids  # user sees their own applied filled job!
+
+    # 2. Check the public cache in Redis directly
+    version = get_map_cache_version()
+    base_key = build_map_pins_cache_key(
+        version=version,
+        min_lat=None,
+        max_lat=None,
+        min_lng=None,
+        max_lng=None,
+        location=None,
+        category=None,
+        search="leak",
+        limit=500,
+    )
+    raw_cached = redis_client.get(base_key)
+    assert raw_cached is not None, "Base cache must be populated"
+    base_pins_cached = json.loads(raw_cached.decode("utf-8") if isinstance(raw_cached, bytes) else str(raw_cached))
+    cached_ids = {p["id"] for p in base_pins_cached}
+    assert "job-public-open" in cached_ids
+    assert "job-user-filled" not in cached_ids, "Filled job MUST NOT leak into public base cache!"
+
+    # 3. Anonymous visitor hits the map -> must NOT see job-user-filled
+    client.cookies.clear()
+    client.headers.pop("Authorization", None)
+    res_anon = client.get("/api/v1/jobs/map?clustered=false&search=Leak")
+    assert res_anon.status_code == 200
+    anon_pins = res_anon.json()
+    anon_ids = {p["id"] for p in anon_pins}
+    assert "job-public-open" in anon_ids
+    assert "job-user-filled" not in anon_ids
+
+    # 4. Another user (worker_other) hits the map -> must NOT see job-user-filled
+    login(client, worker_other)
+    res_other = client.get("/api/v1/jobs/map?clustered=false&search=Leak")
+    assert res_other.status_code == 200
+    other_pins = res_other.json()
+    other_ids = {p["id"] for p in other_pins}
+    assert "job-public-open" in other_ids
+    assert "job-user-filled" not in other_ids
+
+
+def test_user_sees_applied_filled_job_even_when_public_cache_prefilled(client):
+    """
+    Test that when public cache was prefilled by an anonymous visitor (no filled jobs in base_pins),
+    an authenticated user who applied to a filled job STILL receives that job via Fast Assembly Path.
+    """
+    from tests.conftest import make_user, login
+    import json
+
+    worker_applied = make_user(role="worker", phone="+998902223344")
+
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = db_session.query(models.User).filter_by(id="emp-prefill-test").first()
+        if not emp:
+            emp = models.User(id="emp-prefill-test", phone="+998908887766", role="employer", name="Prefill Emp")
+            db_session.add(emp)
+            db_session.flush()
+
+        open_job = models.Job(
+            id="job-prefill-open",
+            title="Prefill Open Job",
+            company="Prefill Corp",
+            location="Toshkent, Yunusobod",
+            description="Tavsif",
+            coordinateX=41.365,
+            coordinateY=69.285,
+            salary=210000,
+            status=JobStatus.OPEN,
+            employerId="emp-prefill-test",
+            neededWorkers="1",
+        )
+        filled_job = models.Job(
+            id="job-prefill-filled",
+            title="Prefill Filled InProgress Job",
+            company="Prefill Corp",
+            location="Toshkent, Yunusobod",
+            description="Tavsif",
+            coordinateX=41.366,
+            coordinateY=69.286,
+            salary=260000,
+            status=JobStatus.IN_PROGRESS,
+            employerId="emp-prefill-test",
+            neededWorkers="1",
+        )
+        db_session.add_all([open_job, filled_job])
+        db_session.commit()
+
+        app_entry = models.Application(
+            id="app-prefill-1",
+            jobId="job-prefill-filled",
+            workerId=worker_applied.id,
+            status="in_progress",
+        )
+        db_session.add(app_entry)
+        db_session.commit()
+
+    # 1. Anonymous visitor hits the map FIRST -> primes the public base cache
+    client.cookies.clear()
+    client.headers.pop("Authorization", None)
+    res_anon = client.get("/api/v1/jobs/map?clustered=false&search=Prefill")
+    assert res_anon.status_code == 200
+    anon_pins = res_anon.json()
+    anon_ids = {p["id"] for p in anon_pins}
+    assert "job-prefill-open" in anon_ids
+    assert "job-prefill-filled" not in anon_ids
+
+    # 2. worker_applied visits now -> hits Fast Assembly Path from cached_base
+    login(client, worker_applied)
+    res_applied = client.get("/api/v1/jobs/map?clustered=false&search=Prefill")
+    assert res_applied.status_code == 200
+    applied_pins = res_applied.json()
+    applied_ids = {p["id"] for p in applied_pins}
+    assert "job-prefill-open" in applied_ids
+    assert "job-prefill-filled" in applied_ids, "User must receive their applied filled job via Fast Assembly Path!"
+    applied_job_pin = next(p for p in applied_pins if p["id"] == "job-prefill-filled")
+    assert applied_job_pin["applied"] is True
+    assert applied_job_pin["status"] == "in_progress"

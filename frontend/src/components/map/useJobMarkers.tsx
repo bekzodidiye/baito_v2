@@ -163,9 +163,14 @@ export const useJobMarkers = ({
 
   // Compute a stable signature so that background polling of jobs (which creates
   // new array references every 10s) does NOT tear down all Leaflet markers unless
-  // the job IDs, statuses, bookmarks, or applications actually changed.
+  // the job IDs, statuses, bookmarks, applications, or cluster metrics/coordinates actually changed.
   const jobsSignature = useMemo(() => {
-    return jobs.map(j => `${j.id}:${j.status}:${j.bookmarked}:${j.applied}`).join('|');
+    return jobs.map(j => {
+      const anyJ = j as any;
+      const coordX = anyJ.coordinateX ?? anyJ.latitude ?? '';
+      const coordY = anyJ.coordinateY ?? anyJ.longitude ?? '';
+      return `${j.id}:${j.status}:${j.bookmarked}:${j.applied}:${Boolean(j.isCluster)}:${j.count ?? 1}:${coordX}:${coordY}`;
+    }).join('|');
   }, [jobs]);
 
   const activeRootsRef = useRef<Map<string, import('react-dom/client').Root>>(new Map());
