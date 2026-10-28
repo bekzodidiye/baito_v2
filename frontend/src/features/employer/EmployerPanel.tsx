@@ -108,7 +108,7 @@ export const EmployerPanel: React.FC = () => {
           application={pendingReviewApp || null}
           onConfirm={async (data) => {
             if (pendingReviewApp) {
-              await reviewJob(pendingReviewApp.jobId, data);
+              await reviewJob(pendingReviewApp.jobId, { ...data, applicationId: pendingReviewApp.id });
             }
           }}
           language={language}
@@ -201,7 +201,7 @@ export const EmployerPanel: React.FC = () => {
         application={pendingReviewApp || null}
         onConfirm={async (data) => {
           if (pendingReviewApp) {
-            await reviewJob(pendingReviewApp.jobId, data);
+            await reviewJob(pendingReviewApp.jobId, { ...data, applicationId: pendingReviewApp.id });
           }
         }}
         language={language}

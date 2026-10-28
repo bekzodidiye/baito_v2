@@ -157,7 +157,8 @@ def create_chat(
         raise HTTPException(status_code=400, detail="O'zingiz bilan suhbat ochib bo'lmaydi")
 
     counterpart_id = employer_id if current_user.id == worker_id else worker_id
-    if not db.query(models.User.id).filter(models.User.id == counterpart_id).first():
+    counterpart = db.query(models.User).filter(models.User.id == counterpart_id).first()
+    if not counterpart:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
 
     existing = (
@@ -170,13 +171,43 @@ def create_chat(
         .first()
     )
     if existing:
-        return existing
+        last_msg = (
+            db.query(models.Message)
+            .filter(models.Message.chatId == existing.id)
+            .order_by(models.Message.createdAt.desc())
+            .first()
+        )
+        return {
+            "id": existing.id,
+            "workerId": existing.workerId,
+            "employerId": existing.employerId,
+            "jobId": existing.jobId,
+            "isContactRevealed": existing.isContactRevealed,
+            "createdAt": existing.createdAt,
+            "otherUserName": counterpart.name or counterpart.companyName or "Foydalanuvchi",
+            "otherUserAvatar": counterpart.avatarUrl,
+            "lastMessage": last_msg.text if last_msg else "",
+            "lastMessageTime": last_msg.createdAt if last_msg else existing.createdAt,
+            "unreadCount": 0,
+        }
 
     db_chat = models.Chat(workerId=worker_id, employerId=employer_id, jobId=chat_in.jobId)
     db.add(db_chat)
     db.commit()
     db.refresh(db_chat)
-    return db_chat
+    return {
+        "id": db_chat.id,
+        "workerId": db_chat.workerId,
+        "employerId": db_chat.employerId,
+        "jobId": db_chat.jobId,
+        "isContactRevealed": db_chat.isContactRevealed,
+        "createdAt": db_chat.createdAt,
+        "otherUserName": counterpart.name or counterpart.companyName or "Foydalanuvchi",
+        "otherUserAvatar": counterpart.avatarUrl,
+        "lastMessage": "",
+        "lastMessageTime": db_chat.createdAt,
+        "unreadCount": 0,
+    }
 
 
 

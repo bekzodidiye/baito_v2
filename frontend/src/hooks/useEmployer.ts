@@ -201,7 +201,7 @@ export const useEmployer = () => {
   });
 
   const reviewJobMutation = useMutation({
-    mutationFn: async ({ jobId, data }: { jobId: string; data: { rating: number; review: string; bonus?: number } }) => {
+    mutationFn: async ({ jobId, data }: { jobId: string; data: { rating: number; review: string; bonus?: number; applicationId?: string } }) => {
       return apiClient(`/jobs/${jobId}/review`, {
         method: 'POST',
         body: JSON.stringify(data),
@@ -234,7 +234,7 @@ export const useEmployer = () => {
     updateApplicationStatus: async (appId: string, status: 'hired' | 'rejected') => updateApplicationMutation.mutate({ appId, status }),
     confirmStartJob: async (jobId: string) => confirmStartJobMutation.mutate(jobId),
     completeJob: async (jobId: string, data?: { rating?: number; review?: string; bonus?: number }) => completeJobMutation.mutate({ jobId, data }),
-    reviewJob: async (jobId: string, data: { rating: number; review: string; bonus?: number }) => reviewJobMutation.mutateAsync({ jobId, data }),
+    reviewJob: async (jobId: string, data: { rating: number; review: string; bonus?: number; applicationId?: string }) => reviewJobMutation.mutateAsync({ jobId, data }),
     deleteJob: async (jobId: string) => deleteJobMutation.mutate(jobId),
     language,
     companyName,

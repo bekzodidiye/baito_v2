@@ -28,6 +28,7 @@ class JobReviewRequest(BaseModel):
     rating: int = Field(ge=1, le=5)
     review: str = Field(min_length=3, max_length=2000)
     bonus: Optional[int] = Field(default=0, ge=0, le=50_000_000)
+    applicationId: Optional[str] = None
 
 
 class PayoutDeclarationRequest(BaseModel):
@@ -120,14 +121,17 @@ def review_job(
     if not is_employer:
         raise HTTPException(status_code=403, detail="Faqat ish beruvchi sharh qoldira oladi")
 
-    apps = (
-        db.query(models.Application)
-        .filter(
-            models.Application.jobId == id,
-            models.Application.status.in_(["completed", "in_progress", "hired", "confirmed"]),
-        )
-        .all()
+    from app.models.job import JobStatus
+    if job.status != JobStatus.COMPLETED:
+        return JobService.complete_job(db, id, req.rating, req.review, req.bonus, current_user)
+
+    apps_query = db.query(models.Application).filter(
+        models.Application.jobId == id,
+        models.Application.status.in_(["completed", "in_progress", "hired", "confirmed"]),
     )
+    if req.applicationId:
+        apps_query = apps_query.filter(models.Application.id == req.applicationId)
+    apps = apps_query.all()
     if not apps:
         raise HTTPException(status_code=400, detail="Sharh qoldirish uchun ariza topilmadi")
 
@@ -151,7 +155,14 @@ def review_job(
                     job.id, app.workerId, str(e),
                 )
         db.add(app)
-    
+        db.add(models.Notification(
+            userId=app.workerId,
+            title="Ish beruvchi sharh qoldirdi",
+            message=f"'{job.title}' ishi bo'yicha ish beruvchi sizga {req.rating} yulduzli baho va sharh qoldirdi.",
+            type="system",
+            relatedJobId=job.id,
+        ))
+
     db.flush()
 
     if req.rating:
@@ -171,12 +182,6 @@ def review_job(
             if worker and avg is not None:
                 worker.rating = round(avg, 2)
                 db.add(worker)
-
-    from app.models.job import JobStatus
-    if job.status != JobStatus.COMPLETED:
-        job.status = JobStatus.COMPLETED
-        job.completedAt = datetime.now(timezone.utc)
-        db.add(job)
 
     db.commit()
     return {"success": True, "rating": req.rating, "review": req.review}

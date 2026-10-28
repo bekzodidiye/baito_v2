@@ -120,7 +120,8 @@ def update_job(
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
 
     is_admin = current_user.role == 'admin'
-    if not is_admin and job.employerId != current_user.id:
+    employer_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+    if not is_admin and job.employerId not in employer_ids:
         raise HTTPException(status_code=403, detail="Bu e'lonni tahrirlash huquqingiz yo'q")
 
     if job.status in JobStatus.CLOSED_STATUSES and not is_admin:
@@ -226,7 +227,8 @@ def delete_job(
     job = crud.job.get(db=db, id=id)
     if not job:
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
-    if job.employerId != current_user.id and current_user.role != 'admin':
+    employer_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+    if job.employerId not in employer_ids and current_user.role != 'admin':
         raise HTTPException(status_code=403, detail="Bu e'lonni o'chirish huquqingiz yo'q")
 
     if job.status == JobStatus.IN_PROGRESS:
