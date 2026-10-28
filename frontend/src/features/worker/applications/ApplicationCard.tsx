@@ -9,9 +9,10 @@ interface ApplicationCardProps {
   language: Language;
   onClick: () => void;
   onOpenChat?: () => void;
+  onWithdraw?: (id: string) => void;
 }
 
-export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, language, onClick, onOpenChat }) => {
+export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, language, onClick, onOpenChat, onWithdraw }) => {
   const getStatusConfig = (status: string, lang: Language) => {
     switch (status) {
       case 'applied':
@@ -80,6 +81,15 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
           borderCol: 'border-slate-200',
           gradient: 'from-slate-400 to-slate-500',
           icon: <CheckCircle2 size={12} className="mr-1" />
+        };
+      case 'withdrawn':
+        return {
+          text: lang === 'uz' ? 'Qaytarib olingan' : lang === 'ru' ? 'Отозвана' : 'Withdrawn',
+          bg: 'bg-slate-100',
+          textCol: 'text-slate-500',
+          borderCol: 'border-slate-300',
+          gradient: 'from-slate-300 to-slate-400',
+          icon: <XCircle size={12} className="mr-1" />
         };
       default:
         // A status we do not know is not something to spell out at the reader.
@@ -157,6 +167,18 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
           <span>{language === 'uz' ? 'Topshirildi: ' : language === 'ru' ? 'Подано: ' : 'Applied: '} {formatDate(application.appliedDate)}</span>
         </div>
         <div className="flex items-center gap-2">
+          {application.status === 'applied' && onWithdraw && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onWithdraw(application.id);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 border border-rose-200/60 text-xs font-bold hover:bg-rose-100 transition-colors cursor-pointer"
+            >
+              <span>{language === 'uz' ? 'Bekor qilish' : language === 'ru' ? 'Отозвать' : 'Withdraw'}</span>
+            </button>
+          )}
           {['hired', 'confirmed', 'in_progress'].includes(application.status) && onOpenChat && (
             <button
               type="button"

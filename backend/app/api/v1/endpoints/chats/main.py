@@ -24,7 +24,10 @@ def _get_participant_chat(db: Session, chat_id: str, user: models.User) -> model
     chat = db.query(models.Chat).filter(models.Chat.id == chat_id).first()
     if not chat:
         raise HTTPException(status_code=404, detail="Suhbat topilmadi")
-    if user.id not in (chat.workerId, chat.employerId):
+    user_id_str = str(user.id)
+    chat_worker_id = str(chat.workerId) if chat.workerId else None
+    chat_employer_id = str(chat.employerId) if chat.employerId else None
+    if user_id_str not in (chat_worker_id, chat_employer_id) and getattr(user, "role", None) != "admin":
         raise HTTPException(status_code=403, detail="Bu suhbatga kirish huquqingiz yo'q")
     return chat
 
@@ -37,12 +40,13 @@ def get_chats(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
+    user_id_str = str(current_user.id)
     chats = (
         db.query(models.Chat)
         .filter(
             or_(
-                models.Chat.workerId == current_user.id,
-                models.Chat.employerId == current_user.id,
+                models.Chat.workerId == user_id_str,
+                models.Chat.employerId == user_id_str,
             )
         )
         .all()
@@ -52,13 +56,13 @@ def get_chats(
 
     chat_ids = [c.id for c in chats]
     other_user_ids = [
-        c.employerId if current_user.id == c.workerId else c.workerId for c in chats
+        c.employerId if user_id_str == str(c.workerId) else c.workerId for c in chats
     ]
 
     other_users = (
         db.query(models.User).filter(models.User.id.in_(set(other_user_ids))).all()
     )
-    user_map = {u.id: u for u in other_users}
+    user_map = {str(u.id): u for u in other_users}
 
     # Fetch only the newest message per chat. The previous implementation
     # loaded EVERY message of EVERY chat into memory just to pick the last one.
@@ -86,7 +90,7 @@ def get_chats(
         db.query(models.Message.chatId, func.count(models.Message.id))
         .filter(
             models.Message.chatId.in_(chat_ids),
-            models.Message.senderId != current_user.id,
+            models.Message.senderId != user_id_str,
             models.Message.readAt.is_(None),
         )
         .group_by(models.Message.chatId)
@@ -96,7 +100,7 @@ def get_chats(
 
     enriched = []
     for c in chats:
-        other_user_id = c.employerId if current_user.id == c.workerId else c.workerId
+        other_user_id = str(c.employerId) if user_id_str == str(c.workerId) else str(c.workerId)
         other_user = user_map.get(other_user_id)
         last_message = last_messages.get(c.id)
 
@@ -128,13 +132,14 @@ def create_chat(
     Whichever side the caller is on is taken from the session, so the client
     only has to name the other participant.
     """
+    user_id_str = str(current_user.id)
     worker_id = chat_in.workerId
     employer_id = chat_in.employerId
 
     if current_user.role == "employer":
-        employer_id = employer_id or current_user.id
+        employer_id = employer_id or user_id_str
     else:
-        worker_id = worker_id or current_user.id
+        worker_id = worker_id or user_id_str
 
     # Fall back to deriving the counterpart from the job when only one side
     # was supplied.
@@ -150,13 +155,13 @@ def create_chat(
 
     # The caller must be one side of the chat they are creating, otherwise
     # anyone could open a conversation between two unrelated users.
-    if current_user.id not in (worker_id, employer_id):
+    if user_id_str not in (str(worker_id), str(employer_id)):
         raise HTTPException(status_code=403, detail="Faqat o'z suhbatingizni ocha olasiz")
 
-    if worker_id == employer_id:
+    if str(worker_id) == str(employer_id):
         raise HTTPException(status_code=400, detail="O'zingiz bilan suhbat ochib bo'lmaydi")
 
-    counterpart_id = employer_id if current_user.id == worker_id else worker_id
+    counterpart_id = employer_id if user_id_str == str(worker_id) else worker_id
     counterpart = db.query(models.User).filter(models.User.id == counterpart_id).first()
     if not counterpart:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")

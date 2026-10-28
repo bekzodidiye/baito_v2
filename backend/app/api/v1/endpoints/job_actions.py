@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -8,9 +9,9 @@ from sqlalchemy.orm import Session
 
 from app import models, crud
 from app.api import deps
-from app.services.job_service import JobService
+from app.services.job_service import JobService, COMMITTED_APP_STATUSES
 from app.services.earnings_service import WorkerEarnings
-
+from app.models.job import JobStatus
 from app.models.job_payout import PayoutStatus
 from datetime import datetime, timezone
 
@@ -31,6 +32,10 @@ class JobReviewRequest(BaseModel):
     applicationId: Optional[str] = None
 
 
+class JobDisputeRequest(BaseModel):
+    reason: str = Field(min_length=5, max_length=2000)
+
+
 class PayoutDeclarationRequest(BaseModel):
     method: str = Field(min_length=1, max_length=40)
     reference: Optional[str] = Field(default=None, max_length=120)
@@ -49,9 +54,11 @@ def apply_to_job(
     return JobService.apply_to_job(db, id, current_user)
 
 
+@limiter.limit('10/minute')
 @router.post("/{id}/request-start")
 def request_start_job(
     *,
+    request: Request,
     db: Session = Depends(deps.get_db),
     id: str,
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -59,10 +66,12 @@ def request_start_job(
     return JobService.request_start_job(db, id, current_user)
 
 
+@limiter.limit('10/minute')
 @router.post("/{id}/confirm-start")
 @router.post("/{id}/start")
 def confirm_start_job(
     *,
+    request: Request,
     db: Session = Depends(deps.get_db),
     id: str,
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -84,9 +93,11 @@ def list_job_days(
     return [job_days_service.serialise(d) for d in job_days_service.days_of(db, job.id)]
 
 
+@limiter.limit('20/minute')
 @router.post("/{id}/days/{day_id}/complete")
 def complete_job_day(
     *,
+    request: Request,
     db: Session = Depends(deps.get_db),
     id: str,
     day_id: str,
@@ -95,15 +106,128 @@ def complete_job_day(
     return JobService.complete_job_day(db, id, day_id, current_user)
 
 
+@limiter.limit('10/minute')
 @router.post("/{id}/complete")
 def complete_job(
     *,
+    request: Request,
     db: Session = Depends(deps.get_db),
     id: str,
     req: JobCompleteRequest,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     return JobService.complete_job(db, id, req.rating, req.review, req.bonus, current_user)
+
+
+@limiter.limit('5/hour')
+@router.post("/{id}/dispute")
+def dispute_job(
+    *,
+    request: Request,
+    db: Session = Depends(deps.get_db),
+    id: str,
+    payload: JobDisputeRequest,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    job = JobService.get_job_or_fail(db, id)
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+    is_employer = job.employerId in user_ids or current_user.role == 'admin'
+
+    caller_apps = (
+        db.query(models.Application)
+        .filter(
+            models.Application.jobId == id,
+            models.Application.workerId.in_(user_ids),
+            models.Application.status.in_(COMMITTED_APP_STATUSES + ['completed']),
+        )
+        .all()
+    )
+    is_worker = bool(caller_apps)
+
+    if not is_employer and not is_worker:
+        raise HTTPException(
+            status_code=403,
+            detail="Faqat ushbu ishning ish beruvchisi yoki tayinlangan ishchisi nizo ochishi mumkin",
+        )
+
+    if job.status == JobStatus.CANCELLED:
+        raise HTTPException(status_code=400, detail="Bekor qilingan ish bo'yicha nizo ochib bo'lmaydi")
+
+    existing_dispute = (
+        db.query(models.Dispute)
+        .filter(
+            models.Dispute.jobId == id,
+            models.Dispute.status.in_(["open", "in_progress", "pending"]),
+        )
+        .first()
+    )
+    if existing_dispute:
+        raise HTTPException(
+            status_code=400,
+            detail="Ushbu ish bo'yicha faol nizo allaqachon ko'rib chiqilmoqda",
+        )
+
+    worker_id = None
+    if is_worker:
+        worker_id = current_user.id
+    elif job.hiredWorkerId:
+        worker_id = job.hiredWorkerId
+    else:
+        hired_app = (
+            db.query(models.Application)
+            .filter(
+                models.Application.jobId == id,
+                models.Application.status.in_(COMMITTED_APP_STATUSES + ['completed']),
+            )
+            .first()
+        )
+        if hired_app:
+            worker_id = hired_app.workerId
+
+    dispute = models.Dispute(
+        id=str(uuid.uuid4()),
+        jobId=job.id,
+        employerId=job.employerId,
+        workerId=worker_id or current_user.id,
+        reason=payload.reason.strip(),
+        status="open",
+    )
+    db.add(dispute)
+
+    job.status = "dispute"
+    db.add(job)
+
+    admins = db.query(models.User).filter(models.User.role == "admin").all()
+    for a in admins:
+        db.add(models.Notification(
+            id=str(uuid.uuid4()),
+            userId=a.id,
+            title="Yangi nizo kelib tushdi",
+            message=f"'{job.title}' ishi bo'yicha nizo ochildi. Sabab: {payload.reason[:100]}",
+            type="dispute",
+            relatedJobId=job.id,
+        ))
+
+    counterpart_id = worker_id if is_employer else job.employerId
+    if counterpart_id:
+        db.add(models.Notification(
+            id=str(uuid.uuid4()),
+            userId=counterpart_id,
+            title="Ish bo'yicha nizo ochildi",
+            message=f"'{job.title}' ishi bo'yicha nizo ochildi va moderatorlar ko'rib chiqmoqda.",
+            type="dispute",
+            relatedJobId=job.id,
+        ))
+
+    db.commit()
+    db.refresh(dispute)
+    return {
+        "success": True,
+        "disputeId": dispute.id,
+        "status": dispute.status,
+        "jobStatus": job.status,
+    }
+
 
 
 @router.post("/{id}/review")

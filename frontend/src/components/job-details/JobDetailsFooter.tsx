@@ -183,6 +183,24 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
               {t.appliedLabel || "Ariza topshirildi"}
             </button>
           );
+        } else if (selectedJob.status === 'cancelled') {
+          return (
+            <button
+              disabled
+              className="flex-1 text-slate-500 bg-slate-100 h-13 sm:h-14 rounded-xl text-sm font-extrabold cursor-not-allowed flex items-center justify-center gap-2 border border-slate-200"
+            >
+              {language === 'uz' ? "Ish bekor qilingan" : language === 'ru' ? "Работа отменена" : "Job cancelled"}
+            </button>
+          );
+        } else if (selectedJob.status === 'dispute') {
+          return (
+            <button
+              disabled
+              className="flex-1 text-amber-700 bg-amber-100 h-13 sm:h-14 rounded-xl text-sm font-extrabold cursor-not-allowed flex items-center justify-center gap-2 border border-amber-300"
+            >
+              {language === 'uz' ? "Nizo holatida (Moderatsiyada)" : language === 'ru' ? "В споре (На модерации)" : "In dispute (Under review)"}
+            </button>
+          );
         } else {
           return (
             <button

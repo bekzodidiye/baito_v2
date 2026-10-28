@@ -14,27 +14,19 @@ export const AdminDisputes: React.FC = () => {
 
   const disputeJobs = disputes.filter(d => d.status === 'open' || d.status === 'in_progress');
 
-  const handleResolve = async (disputeId: string, jobId: string, winner: 'employer' | 'worker') => {
+  const handleResolve = async (disputeId: string, _jobId: string, winner: 'employer' | 'worker') => {
     setResolvingId(disputeId);
     try {
-      await apiClient(`/admin/jobs/${jobId}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: winner === 'worker' ? 'completed' : 'cancelled' })
-      });
-      await apiClient(`/admin/disputes/${disputeId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'resolved', adminNotes: `Resolved in favor of ${winner}` })
+      await apiClient(`/admin/disputes/${disputeId}/resolve`, {
+        method: 'POST',
+        body: JSON.stringify({ winner, reason: `Resolved in favor of ${winner}` })
       });
       refresh();
-      (
-        winner === 'worker'
-          ? "Nizo hal qilindi: ishchi foydasiga"
-          : "Nizo hal qilindi: ish beruvchi foydasiga"
-      );
     } catch(e) {
-      console.error(e);
+      console.error("Dispute resolution failed:", e);
+    } finally {
+      setResolvingId(null);
     }
-    setResolvingId(null);
   };
 
   return (

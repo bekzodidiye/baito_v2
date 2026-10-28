@@ -135,6 +135,7 @@ export const AppRoutes = () => {
         <Route path="/terms" element={<SettingsLayout><ShartlarScreen /></SettingsLayout>} />
         <Route path="/privacy" element={<SettingsLayout><PrivacyScreen /></SettingsLayout>} />
         <Route path="/support-chat" element={<ProtectedRoute><SettingsLayout><SupportChatScreen /></SettingsLayout></ProtectedRoute>} />
+        <Route path="/support" element={<Navigate to="/support-chat" replace />} />
         
         {/* Employer routes grouped */}
         <Route path="/employer-dashboard" element={<ProtectedRoute allowedRoles={['employer']}><EmployerPanel /></ProtectedRoute>} />

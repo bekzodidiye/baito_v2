@@ -8,9 +8,11 @@ from fastapi import APIRouter, Depends, WebSocket
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
+from starlette.requests import Request
 
 from app import models, schemas
 from app.api import deps
+from app.core.limiter import limiter
 from app.redis_client import redis_client, redis_is_mock
 
 logger = logging.getLogger(__name__)
@@ -64,7 +66,7 @@ def mark_chat_read(
         db.query(models.Message)
         .filter(
             models.Message.chatId == chat_id,
-            models.Message.senderId != current_user.id,
+            models.Message.senderId != str(current_user.id),
             models.Message.readAt.is_(None),
         )
         .update({models.Message.readAt: func.now()}, synchronize_session=False)
@@ -74,7 +76,9 @@ def mark_chat_read(
 
 
 @router.post("/{chat_id}/messages", response_model=schemas.Message)
+@limiter.limit("60/minute")
 async def post_chat_message(
+    request: Request,
     chat_id: str,
     payload: schemas.MessageSend,
     db: Session = Depends(deps.get_db),
@@ -90,7 +94,7 @@ async def post_chat_message(
 
     msg = models.Message(
         chatId=chat_id,
-        senderId=current_user.id,
+        senderId=str(current_user.id),
         text=payload.text,
         hasMap=bool(payload.hasMap),
         mapLocation=payload.mapLocation,
@@ -133,7 +137,7 @@ async def delete_chat_message(
     if not msg:
         raise HTTPException(status_code=404, detail="Xabar topilmadi")
 
-    if msg.senderId != current_user.id and current_user.role != "admin":
+    if str(msg.senderId) != str(current_user.id) and getattr(current_user, "role", None) != "admin":
         raise HTTPException(status_code=403, detail="Bu xabarni o'chirish huquqingiz yo'q")
 
     db.delete(msg)

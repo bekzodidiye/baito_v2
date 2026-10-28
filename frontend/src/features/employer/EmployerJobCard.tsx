@@ -166,14 +166,16 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
                 {language === 'uz' ? "To'lov tasdiqlandi" : language === 'ru' ? "Оплата подтверждена" : "Payment confirmed"}
               </span>
             </span>
-          ) : job.status === 'cancelled' ? (
+          ) : (job.status === 'cancelled' || job.status === 'dispute') ? (
             /* There was no branch for this, so a cancelled posting fell through
                to "Kutilyapti" and claimed on the dashboard to be waiting for a
                worker while the jobs screen counted it, correctly, as history. */
             <span className="w-full min-w-0 h-11 rounded-lg bg-rose-50 text-rose-600 border border-rose-100 text-[12px] font-bold flex items-center justify-center gap-1.5">
               <XCircle size={14} />
               <span className="truncate">
-                {language === 'uz' ? "Bekor qilindi" : language === 'ru' ? "Отменено" : "Cancelled"}
+                {job.status === 'dispute'
+                  ? (language === 'uz' ? "Nizo holatida" : language === 'ru' ? "В споре" : "In dispute")
+                  : (language === 'uz' ? "Bekor qilindi" : language === 'ru' ? "Отменено" : "Cancelled")}
               </span>
             </span>
           ) : job.status === 'completed' ? (

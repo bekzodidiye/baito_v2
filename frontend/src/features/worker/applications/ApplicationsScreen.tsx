@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Inbox, BriefcaseBusiness, CheckCircle2, XCircle, Clock3 } from 'lucide-react';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 import { translations } from '../../../translations';
-import { fetchWorkerApplicationsApi } from '../../../api/queries';
+import { fetchWorkerApplicationsApi, withdrawApplicationApi } from '../../../api/queries';
 import { ApplicationCard } from './ApplicationCard';
 import { WorkerApplication } from '../../../types';
 
@@ -18,6 +18,7 @@ export const ApplicationsScreen: React.FC = () => {
   
   // Tab state
   const [activeTab, setActiveTab] = useState<'all' | 'applied' | 'hired' | 'rejected'>('all');
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
 
   const { data: applications = [], isLoading: loading, error: queryError, refetch } = useQuery({
     queryKey: ['workerApplications'],
@@ -25,6 +26,25 @@ export const ApplicationsScreen: React.FC = () => {
   });
 
   const error = queryError ? (language === 'uz' ? 'Arizalarni yuklashda xatolik yuz berdi' : language === 'ru' ? 'Ошибка загрузки заявок' : 'Failed to load applications') : null;
+
+  const handleWithdraw = async (id: string) => {
+    const confirmMsg = language === 'uz'
+      ? "Haqiqatan ham ushbu arizani bekor qilmoqchimisiz?"
+      : language === 'ru'
+      ? "Вы действительно хотите отозвать эту заявку?"
+      : "Are you sure you want to withdraw this application?";
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      setWithdrawingId(id);
+      await withdrawApplicationApi(id);
+      await refetch();
+    } catch (err: any) {
+      alert(err.message || (language === 'uz' ? 'Arizani bekor qilishda xatolik yuz berdi' : language === 'ru' ? 'Не удалось отозвать заявку' : 'Failed to withdraw application'));
+    } finally {
+      setWithdrawingId(null);
+    }
+  };
 
   const handleCardClick = (jobId: string) => {
     if (jobId) {
@@ -183,6 +203,7 @@ export const ApplicationsScreen: React.FC = () => {
                 application={app} 
                 language={language}
                 onClick={() => handleCardClick(app.jobId)}
+                onWithdraw={handleWithdraw}
                 onOpenChat={() => {
                   setCurrentScreen('messages');
                   navigate('/messages');

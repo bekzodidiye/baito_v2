@@ -212,3 +212,47 @@ def reject_applicant(
     db.refresh(app)
 
     return {"success": True, "application_status": "rejected"}
+
+
+@limiter.limit('10/minute')
+@router.post("/{id}/withdraw")
+def withdraw_application(
+    *,
+    request: Request,
+    db: Session = Depends(deps.get_db),
+    id: str,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """A worker withdraws their own pending application."""
+    app = db.query(models.Application).filter(models.Application.id == id).first()
+    if not app:
+        raise HTTPException(status_code=404, detail="Ariza topilmadi")
+
+    worker_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+    if app.workerId not in worker_ids and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Bu arizani qaytarib olish huquqingiz yo'q")
+
+    if app.status != "applied":
+        raise HTTPException(
+            status_code=400,
+            detail="Faqat ko'rib chiqilayotgan (kutilayotgan) arizani qaytarib olish mumkin",
+        )
+
+    job = crud.job.get(db=db, id=app.jobId)
+    app.status = "withdrawn"
+    db.add(app)
+
+    if job:
+        db.add(models.Notification(
+            id=str(uuid.uuid4()),
+            userId=job.employerId,
+            title="Ariza qaytarib olindi",
+            message=f"Ishchi '{job.title}' ishiga topshirgan arizasini qaytarib oldi.",
+            type="system",
+            relatedJobId=job.id,
+        ))
+
+    db.commit()
+    db.refresh(app)
+
+    return {"success": True, "application_status": "withdrawn"}

@@ -285,6 +285,15 @@ def confirm_payout(
         status="paid",
     ))
 
+    amount_str = f"{payload.amount:,}".replace(",", " ")
+    db.add(models.Notification(
+        userId=worker.id,
+        title="To'lov amalga oshirildi",
+        message=f"'{job.title}' ishi bo'yicha {amount_str} so'm to'lovingiz bank hisobingizga o'tkazildi.",
+        type="payout",
+        relatedJobId=job.id,
+    ))
+
     record_admin_action(
         db, admin, "payout.confirm",
         target_type="job", target_id=job.id,

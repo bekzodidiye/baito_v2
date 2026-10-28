@@ -25,7 +25,8 @@ def _load_owned_application(db: Session, app_id: str, current_user: models.User)
     if not job:
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
 
-    if current_user.role != "admin" and job.employerId != current_user.id:
+    employer_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+    if current_user.role != "admin" and job.employerId not in employer_ids:
         raise HTTPException(status_code=403, detail="Bu arizani boshqarish huquqingiz yo'q")
 
     return app, job
@@ -46,9 +47,10 @@ def get_worker_applications(
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """All applications for the current worker, enriched with job details."""
+    worker_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
     apps = (
         db.query(models.Application)
-        .filter(models.Application.workerId == current_user.id)
+        .filter(models.Application.workerId.in_(worker_ids))
         .all()
     )
     if not apps:
@@ -67,7 +69,7 @@ def get_worker_applications(
         db.query(models.Transaction)
         .filter(
             models.Transaction.jobId.in_(job_ids),
-            models.Transaction.workerId == current_user.id,
+            models.Transaction.workerId.in_(worker_ids),
             # The wage only. A bonus is carried on the application row and
             # added below, so counting it here too would double it.
             models.Transaction.type == "worker_earning",
@@ -122,9 +124,10 @@ def get_employer_applications(
     current_user: models.User = Depends(deps.get_current_employer),
 ) -> Any:
     """Applications for jobs posted by the current employer only."""
+    employer_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
     employer_jobs = (
         db.query(models.Job)
-        .filter(models.Job.employerId == current_user.id)
+        .filter(models.Job.employerId.in_(employer_ids))
         .all()
     )
     if not employer_jobs:
