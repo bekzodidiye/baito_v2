@@ -8,6 +8,7 @@ import { translations } from '../translations';
 import { UZBEKISTAN_REGIONS } from '../components/map/mapConstants';
 import { useUzbekistanGeoJson } from '../components/map/useUzbekistanGeoJson';
 import { useMapSetup } from '../components/map/useMapSetup';
+import { useMapViewportBounds } from '../components/map/useMapViewportBounds';
 import { healMapTiles } from '../components/map/mapTileLayers';
 import { useRegionPolygons } from '../components/map/useRegionPolygons';
 import { useJobMarkers } from '../components/map/useJobMarkers';
@@ -22,11 +23,6 @@ import { useCurrentScreen } from '../hooks/useCurrentScreen';
 export function useMapViewScreen() {
   const { currentScreen } = useCurrentScreen();
   const { filterLocation, setFilterLocation, showRegionSelector, setShowRegionSelector, mapFocusedJobId, setMapFocusedJobId, language } = useApp();
-  const { jobs: rawJobs, toggleBookmark, applyToJob } = useJobsData();
-
-  const jobs = useMemo(() => {
-    return rawJobs.map(j => getTranslatedJob(j, language));
-  }, [rawJobs, language]);
 
   const t = translations[language];
 
@@ -59,6 +55,21 @@ export function useMapViewScreen() {
     },
     mapType
   });
+
+  const { viewportBounds, isViewportReady } = useMapViewportBounds({
+    mapInstanceRef,
+    isMapReady,
+  });
+
+  const { jobs: rawJobs, toggleBookmark, applyToJob } = useJobsData({
+    isMap: true,
+    bounds: viewportBounds,
+    enabled: isViewportReady,
+  });
+
+  const jobs = useMemo(() => {
+    return rawJobs.map(j => getTranslatedJob(j, language));
+  }, [rawJobs, language]);
 
   const panToCoords = useCallback((lat: number, lng: number, zoom: number) => {
     if (mapInstanceRef.current) {

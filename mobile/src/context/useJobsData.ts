@@ -1,30 +1,82 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchJobs, bookmarkJobApi, applyToJobApi, requestStartJobApi, confirmStartJobApi } from '../api/queries';
+import { fetchJobs, fetchMapJobs, JobQuery, bookmarkJobApi, applyToJobApi, requestStartJobApi, confirmStartJobApi } from '../api/queries';
 
 import { Job } from '../types';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
-export function useJobsData() {
+export function useJobsData(query: JobQuery = {}) {
   const queryClient = useQueryClient();
 
+  const isMap = query.isMap ?? false;
+  const search = query.search?.trim() ?? '';
+  const bounds = query.bounds;
+  const isEnabled = query.enabled !== undefined ? query.enabled : true;
+
+  const queryKey = useMemo(() => {
+    if (isMap) {
+      if (
+        bounds &&
+        typeof bounds.minLat === 'number' &&
+        typeof bounds.maxLat === 'number' &&
+        typeof bounds.minLng === 'number' &&
+        typeof bounds.maxLng === 'number'
+      ) {
+        return [
+          'jobs',
+          'map',
+          {
+            minLat: bounds.minLat,
+            maxLat: bounds.maxLat,
+            minLng: bounds.minLng,
+            maxLng: bounds.maxLng,
+          },
+        ];
+      }
+      return ['jobs', 'map', { clustered: true }];
+    }
+    return search ? ['jobs', { search }] : ['jobs'];
+  }, [isMap, search, bounds]);
+
   const { data: jobs = [], isLoading } = useQuery({
-    queryKey: ['jobs'],
+    queryKey,
     queryFn: async () => {
+      if (isMap) {
+        if (
+          bounds &&
+          typeof bounds.minLat === 'number' &&
+          typeof bounds.maxLat === 'number' &&
+          typeof bounds.minLng === 'number' &&
+          typeof bounds.maxLng === 'number'
+        ) {
+          const res = await fetchMapJobs({
+            minLat: bounds.minLat,
+            maxLat: bounds.maxLat,
+            minLng: bounds.minLng,
+            maxLng: bounds.maxLng,
+            clustered: false,
+          });
+          return Array.isArray(res) ? res : [];
+        }
+        const res = await fetchMapJobs({ clustered: true });
+        return Array.isArray(res) ? res : [];
+      }
       const res = await fetchJobs();
       return Array.isArray(res) ? res : [];
     },
-    refetchInterval: 30000,
+    refetchInterval: isMap ? 45000 : 30000,
+    enabled: isEnabled,
     refetchIntervalInBackground: false,
     retry: 2,
-    staleTime: 1000,
+    staleTime: isMap ? 30000 : 1000,
+    placeholderData: (previous) => previous,
   });
 
   const setJobs = useCallback((action: React.SetStateAction<Job[]>) => {
-    queryClient.setQueryData<Job[]>(['jobs'], (old = []) => {
+    queryClient.setQueryData<Job[]>(queryKey, (old = []) => {
       const newJobs = typeof action === 'function' ? action(old) : action;
       return newJobs;
     });
-  }, [queryClient]);
+  }, [queryClient, queryKey]);
 
   const toggleBookmark = useCallback(async (jobId: string) => {
     // Optimistic UI update

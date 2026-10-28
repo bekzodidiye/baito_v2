@@ -6,9 +6,11 @@ export interface GeoJsonData {
   districtsGeoJsonData: any;
 }
 
-// Global memory cache & prefetch promises to prevent load delays
+// Global memory cache & in-flight promises to prevent redundant fetches and re-parsing
 let cachedRegionsData: any = null;
 let cachedDistrictsData: any = null;
+let regionsInFlight: Promise<any> | null = null;
+let districtsInFlight: Promise<any> | null = null;
 
 export interface DistrictMeta {
   shapeName: string;
@@ -71,56 +73,97 @@ export const getDistrictMetaList = (districtsGeoJsonData: any): DistrictMeta[] =
   return cachedDistrictMetaList;
 };
 
-const loadRegionsData = async () => {
+export const loadRegionsData = async () => {
   if (cachedRegionsData) return cachedRegionsData;
-  try {
-    const res = await fetch('/uzbekistan_regions_std.json');
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.features) {
-        cachedRegionsData = shiftGeoJson(data, LNG_OFFSET, LAT_OFFSET);
-        return cachedRegionsData;
+  if (regionsInFlight) return regionsInFlight;
+
+  let currentPromise: Promise<any>;
+  currentPromise = Promise.resolve().then(async () => {
+    try {
+      const res = await fetch('/uzbekistan_regions_std.json');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.features) {
+          cachedRegionsData = shiftGeoJson(data, LNG_OFFSET, LAT_OFFSET);
+          return cachedRegionsData;
+        }
+      }
+    } catch (e) {
+      console.error("fetch /uzbekistan_regions_std.json failed", e);
+    } finally {
+      // Identity-checked cleanup: only clear if registry still points to this exact Promise
+      if (regionsInFlight === currentPromise) {
+        regionsInFlight = null;
       }
     }
-  } catch (e) {
-    console.error("fetch /uzbekistan_regions_std.json failed", e);
-  }
-  return null;
+    return null;
+  });
+
+  regionsInFlight = currentPromise;
+  return regionsInFlight;
 };
 
-const loadDistrictsData = async () => {
+export const loadDistrictsData = async () => {
   if (cachedDistrictsData) return cachedDistrictsData;
-  let rawData: any = null;
-  try {
-    const res = await fetch('/uzbekistan_districts.json');
-    if (res.ok) {
-      rawData = await res.json();
-    }
-  } catch (e) {
-    console.error("fetch /uzbekistan_districts.json failed", e);
-  }
+  if (districtsInFlight) return districtsInFlight;
 
-  if (rawData && rawData.features) {
-    const shiftedData = shiftGeoJson(rawData, LNG_OFFSET, LAT_OFFSET);
-    if (shiftedData && shiftedData.features) {
-      shiftedData.features = shiftedData.features.map((f: any) => {
-        if (f.properties && f.properties.shapeName) {
-          return {
-            ...f,
-            properties: {
-              ...f.properties,
-              shapeName: formatDistrictName(f.properties.shapeName)
-            }
-          };
+  let currentPromise: Promise<any>;
+  currentPromise = Promise.resolve().then(async () => {
+    try {
+      let rawData: any = null;
+      try {
+        const res = await fetch('/uzbekistan_districts.json');
+        if (res.ok) {
+          rawData = await res.json();
         }
-        return f;
-      });
+      } catch (e) {
+        console.error("fetch /uzbekistan_districts.json failed", e);
+      }
+
+      if (rawData && rawData.features) {
+        const shiftedData = shiftGeoJson(rawData, LNG_OFFSET, LAT_OFFSET);
+        if (shiftedData && shiftedData.features) {
+          shiftedData.features = shiftedData.features.map((f: any) => {
+            if (f.properties && f.properties.shapeName) {
+              return {
+                ...f,
+                properties: {
+                  ...f.properties,
+                  shapeName: formatDistrictName(f.properties.shapeName)
+                }
+              };
+            }
+            return f;
+          });
+        }
+        cachedDistrictsData = shiftedData;
+        return cachedDistrictsData;
+      }
+      return null;
+    } finally {
+      // Identity-checked cleanup: only clear if registry still points to this exact Promise
+      if (districtsInFlight === currentPromise) {
+        districtsInFlight = null;
+      }
     }
-    cachedDistrictsData = shiftedData;
-    return cachedDistrictsData;
-  }
-  return null;
+  });
+
+  districtsInFlight = currentPromise;
+  return districtsInFlight;
 };
+
+export const _resetGeoJsonCacheForTesting = () => {
+  cachedRegionsData = null;
+  cachedDistrictsData = null;
+  regionsInFlight = null;
+  districtsInFlight = null;
+  cachedDistrictMetaList = null;
+};
+
+export const _getInFlightForTesting = () => ({
+  regionsInFlight,
+  districtsInFlight,
+});
 
 export const useUzbekistanGeoJson = (): GeoJsonData => {
   const [geoJsonData, setGeoJsonData] = useState<any>(cachedRegionsData);

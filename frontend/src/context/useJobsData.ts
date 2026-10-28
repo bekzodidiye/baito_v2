@@ -9,22 +9,62 @@ export function useJobsData(query: JobQuery = {}) {
 
   const isMap = query.isMap ?? false;
   const search = query.search?.trim() ?? '';
-  const queryKey = useMemo(
-    () => (isMap ? ['jobs', 'map'] : search ? ['jobs', { search }] : ['jobs']),
-    [isMap, search]
-  );
+  const bounds = query.bounds;
+  const isEnabled = query.enabled !== undefined ? query.enabled : true;
+
+  const queryKey = useMemo(() => {
+    if (isMap) {
+      if (
+        bounds &&
+        typeof bounds.minLat === 'number' &&
+        typeof bounds.maxLat === 'number' &&
+        typeof bounds.minLng === 'number' &&
+        typeof bounds.maxLng === 'number'
+      ) {
+        return [
+          'jobs',
+          'map',
+          {
+            minLat: bounds.minLat,
+            maxLat: bounds.maxLat,
+            minLng: bounds.minLng,
+            maxLng: bounds.maxLng,
+          },
+        ];
+      }
+      return ['jobs', 'map', { clustered: true }];
+    }
+    return search ? ['jobs', { search }] : ['jobs'];
+  }, [isMap, search, bounds]);
 
   const { data: jobs = [], isLoading } = useQuery({
     queryKey,
     queryFn: async () => {
       if (isMap) {
-        const res = await fetchMapJobs();
+        if (
+          bounds &&
+          typeof bounds.minLat === 'number' &&
+          typeof bounds.maxLat === 'number' &&
+          typeof bounds.minLng === 'number' &&
+          typeof bounds.maxLng === 'number'
+        ) {
+          const res = await fetchMapJobs({
+            minLat: bounds.minLat,
+            maxLat: bounds.maxLat,
+            minLng: bounds.minLng,
+            maxLng: bounds.maxLng,
+            clustered: false,
+          });
+          return Array.isArray(res) ? res : [];
+        }
+        const res = await fetchMapJobs({ clustered: true });
         return Array.isArray(res) ? res : [];
       }
       const res = await fetchJobs({ search });
       return Array.isArray(res) ? res : [];
     },
     refetchInterval: isMap ? 45000 : 30000,
+    enabled: isEnabled,
     staleTime: isMap ? 30000 : 15000,
     refetchOnWindowFocus: false,
     // Keep the previous results on screen while the next search loads, so the

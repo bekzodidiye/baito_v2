@@ -6,7 +6,12 @@ export type MapType = 'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retr
 const tileMemoryCache = new Map<string, string>();
 const MAX_TILE_CACHE = 800;
 
-class CachedTileLayer extends L.TileLayer {
+export class CachedTileLayer extends L.TileLayer {
+  private _activeTimeouts = new Set<ReturnType<typeof setTimeout>>();
+  private _recoveryInProgress = false;
+  private _recoveryCount = 0;
+  private readonly _maxRecoveries = 3;
+
   _pxBoundsToTileRange(bounds: L.Bounds): L.Bounds {
     if (!bounds || !bounds.min || !bounds.max) {
       return new L.Bounds([0, 0], [0, 0]);
@@ -60,6 +65,7 @@ class CachedTileLayer extends L.TileLayer {
     // Hanging tile guard: if a tile server drops or hangs TCP connection,
     // prevent tab from spinning "Loading..." forever by failing over to reliable OSM
     const timeout = setTimeout(() => {
+      this._activeTimeouts.delete(timeout);
       if (!tile.complete || tile.naturalWidth === 0) {
         if (!tile.dataset.fallbackTried) {
           tile.dataset.fallbackTried = 'true';
@@ -70,16 +76,19 @@ class CachedTileLayer extends L.TileLayer {
         }
       }
     }, 2500);
+    this._activeTimeouts.add(timeout);
 
     const origOnload = tile.onload;
     tile.onload = (e) => {
       clearTimeout(timeout);
+      this._activeTimeouts.delete(timeout);
       if (typeof origOnload === 'function') origOnload.call(tile, e);
     };
 
     const origOnerror = tile.onerror;
     tile.onerror = (e) => {
       clearTimeout(timeout);
+      this._activeTimeouts.delete(timeout);
       if (typeof origOnerror === 'function') origOnerror.call(tile, e);
     };
 
@@ -87,28 +96,70 @@ class CachedTileLayer extends L.TileLayer {
     return tile;
   }
 
+  resetRecovery(): void {
+    this._recoveryInProgress = false;
+    this._recoveryCount = 0;
+  }
+
+  isRecoveryInProgress(): boolean {
+    return this._recoveryInProgress;
+  }
+
+  getRecoveryCount(): number {
+    return this._recoveryCount;
+  }
+
   healTiles(): void {
     if (!(this as any)._map) return;
+    if (this._recoveryInProgress) return;
     const tiles = (this as any)._tiles;
     if (!tiles) return;
 
+    let hasLoading = false;
     let hasBroken = false;
+
     for (const key in tiles) {
       const el = tiles[key]?.el as HTMLImageElement | undefined;
-      if (el && (!el.complete || el.naturalWidth === 0)) {
+      if (!el) continue;
+      if (!el.complete) {
+        hasLoading = true;
+      } else if (el.naturalWidth === 0) {
         hasBroken = true;
-        break;
       }
     }
-    if (hasBroken) {
+
+    // If tiles are still actively loading, do NOT redraw or disrupt in-flight requests
+    if (hasLoading) {
+      return;
+    }
+
+    // Only attempt recovery if there are confirmed broken tiles and retry limit is not exceeded
+    if (hasBroken && this._recoveryCount < this._maxRecoveries) {
+      this._recoveryInProgress = true;
+      this._recoveryCount++;
       this.redraw();
     }
   }
 
+  private _onLayerLoad = (): void => {
+    this._recoveryInProgress = false;
+  };
+
   onAdd(map: L.Map): this {
     super.onAdd(map);
-    this.healTiles();
+    this.off('load', this._onLayerLoad);
+    this.on('load', this._onLayerLoad);
     return this;
+  }
+
+  onRemove(map: L.Map): this {
+    for (const timeout of this._activeTimeouts) {
+      clearTimeout(timeout);
+    }
+    this._activeTimeouts.clear();
+    this.resetRecovery();
+    this.off('load', this._onLayerLoad);
+    return super.onRemove(map);
   }
 }
 
@@ -177,14 +228,20 @@ export const healMapTiles = (map?: L.Map | null): number => {
     if (container) {
       const tileImages = container.querySelectorAll<HTMLImageElement>('img.leaflet-tile');
       tileImages.forEach((img) => {
-        if (!img.complete || img.naturalWidth === 0) {
-          healedCount++;
-          delete img.dataset.fallbackTried;
-          delete img.dataset.secondaryTried;
-          const src = img.src;
-          if (src) {
-            img.src = '';
-            img.src = src;
+        // Only target confirmed broken tiles (complete === true AND naturalWidth === 0).
+        // Never touch tiles that are still actively loading (!complete).
+        if (img.complete && img.naturalWidth === 0) {
+          const retries = Number(img.dataset.healRetries || '0');
+          if (retries < 3) {
+            healedCount++;
+            img.dataset.healRetries = String(retries + 1);
+            delete img.dataset.fallbackTried;
+            delete img.dataset.secondaryTried;
+            const src = img.src;
+            if (src) {
+              img.src = '';
+              img.src = src;
+            }
           }
         }
       });
@@ -196,15 +253,19 @@ export const healMapTiles = (map?: L.Map | null): number => {
       } else if (layer instanceof L.TileLayer) {
         const tiles = (layer as any)._tiles;
         if (tiles) {
+          let hasLoading = false;
           let brokenInLayer = false;
           for (const key in tiles) {
             const el = tiles[key]?.el as HTMLImageElement | undefined;
-            if (el && (!el.complete || el.naturalWidth === 0)) {
-              brokenInLayer = true;
-              break;
+            if (el) {
+              if (!el.complete) {
+                hasLoading = true;
+              } else if (el.naturalWidth === 0) {
+                brokenInLayer = true;
+              }
             }
           }
-          if (brokenInLayer) {
+          if (brokenInLayer && !hasLoading) {
             layer.redraw();
           }
         }
