@@ -231,6 +231,16 @@ def delete_job(
     if job.employerId not in employer_ids and current_user.role != 'admin':
         raise HTTPException(status_code=403, detail="Bu e'lonni o'chirish huquqingiz yo'q")
 
+    if job.status == "dispute":
+        raise HTTPException(
+            status_code=400,
+            detail="Nizo holatidagi ishni bekor qilib bo'lmaydi, avval nizoni hal qiling",
+        )
+    if job.status == JobStatus.CANCELLED:
+        raise HTTPException(
+            status_code=400,
+            detail="Bu ish allaqachon bekor qilingan",
+        )
     if job.status == JobStatus.IN_PROGRESS:
         raise HTTPException(
             status_code=400,

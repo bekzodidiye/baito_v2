@@ -62,11 +62,12 @@ def mark_chat_read(
     """
     _get_participant_chat(db, chat_id, current_user)
 
+    user_ids = [str(uid) for uid in [current_user.id, getattr(current_user, "uid", None)] if uid]
     updated = (
         db.query(models.Message)
         .filter(
             models.Message.chatId == chat_id,
-            models.Message.senderId != str(current_user.id),
+            models.Message.senderId.notin_(user_ids),
             models.Message.readAt.is_(None),
         )
         .update({models.Message.readAt: func.now()}, synchronize_session=False)

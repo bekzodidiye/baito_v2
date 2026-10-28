@@ -24,10 +24,10 @@ def _get_participant_chat(db: Session, chat_id: str, user: models.User) -> model
     chat = db.query(models.Chat).filter(models.Chat.id == chat_id).first()
     if not chat:
         raise HTTPException(status_code=404, detail="Suhbat topilmadi")
-    user_id_str = str(user.id)
+    user_ids = [str(uid) for uid in [user.id, getattr(user, "uid", None)] if uid]
     chat_worker_id = str(chat.workerId) if chat.workerId else None
     chat_employer_id = str(chat.employerId) if chat.employerId else None
-    if user_id_str not in (chat_worker_id, chat_employer_id) and getattr(user, "role", None) != "admin":
+    if not (set(user_ids) & {chat_worker_id, chat_employer_id}) and getattr(user, "role", None) != "admin":
         raise HTTPException(status_code=403, detail="Bu suhbatga kirish huquqingiz yo'q")
     return chat
 
@@ -40,13 +40,13 @@ def get_chats(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
-    user_id_str = str(current_user.id)
+    user_ids = [str(uid) for uid in [current_user.id, getattr(current_user, "uid", None)] if uid]
     chats = (
         db.query(models.Chat)
         .filter(
             or_(
-                models.Chat.workerId == user_id_str,
-                models.Chat.employerId == user_id_str,
+                models.Chat.workerId.in_(user_ids),
+                models.Chat.employerId.in_(user_ids),
             )
         )
         .all()
@@ -56,13 +56,22 @@ def get_chats(
 
     chat_ids = [c.id for c in chats]
     other_user_ids = [
-        c.employerId if user_id_str == str(c.workerId) else c.workerId for c in chats
+        c.employerId if str(c.workerId) in user_ids else c.workerId for c in chats
     ]
 
     other_users = (
-        db.query(models.User).filter(models.User.id.in_(set(other_user_ids))).all()
+        db.query(models.User).filter(
+            or_(
+                models.User.id.in_(set(other_user_ids)),
+                models.User.uid.in_(set(other_user_ids)),
+            )
+        ).all()
     )
-    user_map = {str(u.id): u for u in other_users}
+    user_map = {}
+    for u in other_users:
+        user_map[str(u.id)] = u
+        if u.uid:
+            user_map[str(u.uid)] = u
 
     # Fetch only the newest message per chat. The previous implementation
     # loaded EVERY message of EVERY chat into memory just to pick the last one.
@@ -90,7 +99,7 @@ def get_chats(
         db.query(models.Message.chatId, func.count(models.Message.id))
         .filter(
             models.Message.chatId.in_(chat_ids),
-            models.Message.senderId != user_id_str,
+            models.Message.senderId.notin_(user_ids),
             models.Message.readAt.is_(None),
         )
         .group_by(models.Message.chatId)
@@ -100,7 +109,7 @@ def get_chats(
 
     enriched = []
     for c in chats:
-        other_user_id = str(c.employerId) if user_id_str == str(c.workerId) else str(c.workerId)
+        other_user_id = str(c.employerId) if str(c.workerId) in user_ids else str(c.workerId)
         other_user = user_map.get(other_user_id)
         last_message = last_messages.get(c.id)
 

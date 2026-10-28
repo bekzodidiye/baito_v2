@@ -174,11 +174,12 @@ class JobService:
     def request_start_job(db: Session, job_id: str, current_user: models.User) -> dict:
         job = JobService.get_job_or_fail(db, job_id)
 
+        worker_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
         app = (
             db.query(models.Application)
             .filter(
                 models.Application.jobId == job_id,
-                models.Application.workerId == current_user.id,
+                models.Application.workerId.in_(worker_ids),
                 models.Application.status.in_(COMMITTED_APP_STATUSES),
             )
             .first()
@@ -245,7 +246,8 @@ class JobService:
     def confirm_start_job(db: Session, job_id: str, current_user: models.User) -> dict:
         job = JobService.get_job_or_fail(db, job_id)
 
-        is_employer = job.employerId == current_user.id
+        employer_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+        is_employer = job.employerId in employer_ids
         if not (is_employer or current_user.role == 'admin'):
             raise ActionForbiddenError("Faqat ish beruvchi ishni tasdiqlay oladi")
 
@@ -327,7 +329,8 @@ class JobService:
         # Lock the job row to serialize completions and safely evaluate is_last_day
         job = db.query(models.Job).filter(models.Job.id == job.id).populate_existing().with_for_update().first()
 
-        if job.employerId != current_user.id and current_user.role != 'admin':
+        employer_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+        if job.employerId not in employer_ids and current_user.role != 'admin':
             raise ActionForbiddenError("Faqat ish beruvchi ishni yakunlay oladi")
 
         if job.status == JobStatus.CANCELLED:

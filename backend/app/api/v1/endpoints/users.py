@@ -38,13 +38,14 @@ def read_user_me(
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """Get current user."""
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
     if current_user.role == 'employer':
         spent_from_payouts = db.query(func.sum(func.coalesce(models.JobPayout.invoiceAmount, models.JobPayout.amount))).filter(
-            models.JobPayout.employerId == current_user.id,
+            models.JobPayout.employerId.in_(user_ids),
             models.JobPayout.status.in_(["payment_confirmed", "paid"]),
         ).scalar() or 0
         spent_from_tx = db.query(func.sum(Transaction.amount)).filter(
-            Transaction.employerId == current_user.id,
+            Transaction.employerId.in_(user_ids),
             Transaction.type == 'payout',
             Transaction.status == 'paid'
         ).scalar() or 0
@@ -52,13 +53,13 @@ def read_user_me(
         setattr(current_user, 'totalSpent', total_spent)
     elif current_user.role == 'worker':
         earnings_sum = db.query(func.sum(Transaction.amount)).filter(
-            Transaction.workerId == current_user.id,
+            Transaction.workerId.in_(user_ids),
             Transaction.type.in_(['worker_earning', 'completion_bonus']),
             Transaction.status == 'credited'
         ).scalar() or 0
         if not earnings_sum:
             earnings_sum = db.query(func.sum(Transaction.amount)).filter(
-                Transaction.workerId == current_user.id,
+                Transaction.workerId.in_(user_ids),
                 Transaction.type == 'payout',
                 Transaction.status == 'paid'
             ).scalar() or 0
