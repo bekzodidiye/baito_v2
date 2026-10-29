@@ -2,6 +2,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
@@ -101,9 +102,16 @@ def get_admin_jobs(
     job_ids = [j.id for j in jobs]
     employer_ids = {j.employerId for j in jobs}
 
-    employer_map = {
-        u.id: u for u in db.query(models.User).filter(models.User.id.in_(employer_ids)).all()
-    }
+    employer_users = (
+        db.query(models.User)
+        .filter(or_(models.User.id.in_(employer_ids), models.User.uid.in_(employer_ids)))
+        .all()
+    ) if employer_ids else []
+    employer_map = {}
+    for u in employer_users:
+        employer_map[u.id] = u
+        if u.uid:
+            employer_map[u.uid] = u
 
     hired_apps = (
         db.query(models.Application)
@@ -119,9 +127,16 @@ def get_admin_jobs(
 
     fallback_worker_ids = {j.hiredWorkerId for j in jobs if j.hiredWorkerId}
     worker_ids = {a.workerId for a in hired_apps} | fallback_worker_ids
-    worker_map = {
-        u.id: u for u in db.query(models.User).filter(models.User.id.in_(worker_ids)).all()
-    } if worker_ids else {}
+    worker_users = (
+        db.query(models.User)
+        .filter(or_(models.User.id.in_(worker_ids), models.User.uid.in_(worker_ids)))
+        .all()
+    ) if worker_ids else []
+    worker_map = {}
+    for u in worker_users:
+        worker_map[u.id] = u
+        if u.uid:
+            worker_map[u.uid] = u
 
     items = []
     for j in jobs:
@@ -240,8 +255,8 @@ def get_admin_job_detail(
     if not job:
         raise HTTPException(status_code=404, detail="Ish topilmadi")
 
-    employer = db.query(models.User).filter(models.User.id == job.employerId).first()
-
+    employer = db.query(models.User).filter(or_(models.User.id == job.employerId, models.User.uid == job.employerId)).first()
+ 
     applications = (
         db.query(models.Application).filter(models.Application.jobId == job_id).all()
     )
@@ -255,10 +270,16 @@ def get_admin_job_detail(
         | {t.employerId for t in transactions}
         | {t.workerId for t in transactions if t.workerId}
     )
-    participant_map = {
-        u.id: u
-        for u in db.query(models.User).filter(models.User.id.in_(participant_ids)).all()
-    } if participant_ids else {}
+    participant_users = (
+        db.query(models.User)
+        .filter(or_(models.User.id.in_(participant_ids), models.User.uid.in_(participant_ids)))
+        .all()
+    ) if participant_ids else []
+    participant_map = {}
+    for u in participant_users:
+        participant_map[u.id] = u
+        if u.uid:
+            participant_map[u.uid] = u
 
     apps_data = []
     hired_app = None

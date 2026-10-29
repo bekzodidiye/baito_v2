@@ -31,9 +31,7 @@ def get_my_jobs(
     limit: int = Query(100, ge=1, le=200),
 ) -> Any:
     """Retrieve all jobs posted by the currently authenticated employer only."""
-    employer_ids = [current_user.id]
-    if getattr(current_user, 'uid', None):
-        employer_ids.append(current_user.id)
+    employer_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
 
     jobs = (
         db.query(models.Job)

@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from app import models, crud
 from app.models.job import JobStatus
@@ -474,7 +474,7 @@ class JobService:
 
         bonus_each = (bonus or 0) if is_employer else 0
         if bonus_each > 0:
-            employer = db.query(models.User).filter(models.User.id == job.employerId).first()
+            employer = db.query(models.User).filter(or_(models.User.id == job.employerId, models.User.uid == job.employerId)).first()
             if not employer:
                 raise JobNotFoundError("Ish beruvchi topilmadi")
 
@@ -544,9 +544,11 @@ class JobService:
                 )
                 avg_ratings_map = {w_id: avg for w_id, avg in avg_ratings_query}
                 
-                workers = db.query(models.User).filter(models.User.id.in_(worker_ids)).all()
+                workers = db.query(models.User).filter(
+                    or_(models.User.id.in_(worker_ids), models.User.uid.in_(worker_ids))
+                ).all()
                 for worker in workers:
-                    avg = avg_ratings_map.get(worker.id)
+                    avg = avg_ratings_map.get(worker.id) or (avg_ratings_map.get(worker.uid) if worker.uid else None)
                     if avg is not None:
                         worker.rating = round(avg, 2)
                         db.add(worker)

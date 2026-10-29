@@ -138,7 +138,8 @@ async def delete_chat_message(
     if not msg:
         raise HTTPException(status_code=404, detail="Xabar topilmadi")
 
-    if str(msg.senderId) != str(current_user.id) and getattr(current_user, "role", None) != "admin":
+    user_ids = [str(uid) for uid in [current_user.id, getattr(current_user, "uid", None)] if uid]
+    if str(msg.senderId) not in user_ids and getattr(current_user, "role", None) != "admin":
         raise HTTPException(status_code=403, detail="Bu xabarni o'chirish huquqingiz yo'q")
 
     db.delete(msg)

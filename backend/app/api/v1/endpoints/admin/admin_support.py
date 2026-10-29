@@ -9,6 +9,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
@@ -56,10 +57,16 @@ def get_ticket(
     )
 
     author_ids = {m.senderId for m in messages} | {ticket.userId}
-    authors = {
-        u.id: u
-        for u in db.query(models.User).filter(models.User.id.in_(author_ids)).all()
-    }
+    author_users = (
+        db.query(models.User)
+        .filter(or_(models.User.id.in_(author_ids), models.User.uid.in_(author_ids)))
+        .all()
+    ) if author_ids else []
+    authors = {}
+    for u in author_users:
+        authors[u.id] = u
+        if u.uid:
+            authors[u.uid] = u
 
     return {
         "id": ticket.id,

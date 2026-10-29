@@ -34,7 +34,7 @@ from .manager import manager, ConnectionManager
 
 
 
-def _authenticate_socket(token: Optional[str]) -> Optional[str]:
+def _authenticate_socket(token: Optional[str]) -> Optional[dict]:
     """Resolve a socket's user id using a short-lived DB session.
 
     A request-scoped ``Depends(get_db)`` stayed open for the entire life of the
@@ -55,7 +55,7 @@ def _authenticate_socket(token: Optional[str]) -> Optional[str]:
             )
             if not session or not session.is_active:
                 return None
-        return user.id
+        return {"id": user.id, "uid": getattr(user, "uid", None), "role": user.role}
 
 
 @router.websocket("/ws/{chat_id}")
@@ -67,20 +67,24 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str):
         or websocket.query_params.get("token")
     )
 
-    user_id = await run_in_threadpool(_authenticate_socket, token)
-    if not user_id:
+    user_info = await run_in_threadpool(_authenticate_socket, token)
+    if not user_info:
         await websocket.close(code=1008)
         return
+
+    user_id = user_info["id"]
+    user_ids = {str(uid) for uid in [user_info["id"], user_info.get("uid")] if uid}
+    user_role = user_info.get("role")
 
     def _load_chat():
         with SessionLocal() as db:
             chat = db.query(models.Chat).filter(models.Chat.id == chat_id).first()
             if not chat:
                 return None
-            return (chat.workerId, chat.employerId)
+            return {str(chat.workerId), str(chat.employerId)}
 
     participants = await run_in_threadpool(_load_chat)
-    if not participants or user_id not in participants:
+    if not participants or (user_role != "admin" and not (user_ids & participants)):
         await websocket.close(code=1008)
         return
 

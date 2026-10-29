@@ -331,9 +331,10 @@ def toggle_bookmark(
     if not job:
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
 
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
     existing = (
         db.query(models.Bookmark)
-        .filter(models.Bookmark.jobId == id, models.Bookmark.userId == current_user.id)
+        .filter(models.Bookmark.jobId == id, models.Bookmark.userId.in_(user_ids))
         .first()
     )
     if existing:

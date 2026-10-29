@@ -162,25 +162,29 @@ def create_chat(
     if not worker_id or not employer_id:
         raise HTTPException(status_code=400, detail="Suhbat ishtirokchisi aniqlanmadi")
 
-    # The caller must be one side of the chat they are creating, otherwise
-    # anyone could open a conversation between two unrelated users.
-    if user_id_str not in (str(worker_id), str(employer_id)):
+    user_ids = [str(uid) for uid in [current_user.id, getattr(current_user, "uid", None)] if uid]
+    if not (set(user_ids) & {str(worker_id), str(employer_id)}):
         raise HTTPException(status_code=403, detail="Faqat o'z suhbatingizni ocha olasiz")
 
     if str(worker_id) == str(employer_id):
         raise HTTPException(status_code=400, detail="O'zingiz bilan suhbat ochib bo'lmaydi")
 
-    counterpart_id = employer_id if user_id_str == str(worker_id) else worker_id
-    counterpart = db.query(models.User).filter(models.User.id == counterpart_id).first()
+    counterpart_id = employer_id if set(user_ids) & {str(worker_id)} else worker_id
+    counterpart = db.query(models.User).filter(or_(models.User.id == counterpart_id, models.User.uid == counterpart_id)).first()
     if not counterpart:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+
+    worker_user = db.query(models.User).filter(or_(models.User.id == worker_id, models.User.uid == worker_id)).first()
+    employer_user = db.query(models.User).filter(or_(models.User.id == employer_id, models.User.uid == employer_id)).first()
+    w_ids = [str(uid) for uid in ([worker_user.id, getattr(worker_user, 'uid', None)] if worker_user else [worker_id]) if uid]
+    e_ids = [str(uid) for uid in ([employer_user.id, getattr(employer_user, 'uid', None)] if employer_user else [employer_id]) if uid]
 
     existing = (
         db.query(models.Chat)
         .filter(
             models.Chat.jobId == chat_in.jobId,
-            models.Chat.workerId == worker_id,
-            models.Chat.employerId == employer_id,
+            models.Chat.workerId.in_(w_ids),
+            models.Chat.employerId.in_(e_ids),
         )
         .first()
     )

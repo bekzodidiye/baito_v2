@@ -17,6 +17,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
@@ -116,7 +117,7 @@ def get_invoice(
     """Everything the pay-this-invoice page shows, prefilled."""
     payout = _load(token, db)
     job = db.query(models.Job).filter(models.Job.id == payout.jobId).first()
-    employer = db.query(User).filter(User.id == payout.employerId).first()
+    employer = db.query(User).filter(or_(User.id == payout.employerId, User.uid == payout.employerId)).first()
     cfg = db.query(models.SystemSetting).first()
     return _state(payout, job, employer, cfg)
 
@@ -165,7 +166,7 @@ def declare_payment(
     db.add(payout)
 
     job = db.query(models.Job).filter(models.Job.id == payout.jobId).first()
-    employer = db.query(User).filter(User.id == payout.employerId).first()
+    employer = db.query(User).filter(or_(User.id == payout.employerId, User.uid == payout.employerId)).first()
     cfg = db.query(models.SystemSetting).first()
 
     # Money that has supposedly arrived is worth nobody noticing only if

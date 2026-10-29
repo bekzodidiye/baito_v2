@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from app import models
 from app.api import deps
@@ -165,7 +166,17 @@ def get_disputes(
     worker_ids = {d.workerId for d in disputes if d.workerId}
 
     jobs = {j.id: j for j in db.query(models.Job).filter(models.Job.id.in_(job_ids)).all()} if job_ids else {}
-    users = {u.id: u for u in db.query(models.User).filter(models.User.id.in_(employer_ids | worker_ids)).all()} if employer_ids or worker_ids else {}
+    user_ids = employer_ids | worker_ids
+    user_objs = (
+        db.query(models.User)
+        .filter(or_(models.User.id.in_(user_ids), models.User.uid.in_(user_ids)))
+        .all()
+    ) if user_ids else []
+    users = {}
+    for u in user_objs:
+        users[u.id] = u
+        if u.uid:
+            users[u.uid] = u
 
     result = []
     for d in disputes:

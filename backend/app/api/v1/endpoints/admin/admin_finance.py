@@ -12,6 +12,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
@@ -57,10 +58,16 @@ def list_withdrawals(
         return {"total": total, "items": []}
 
     user_ids = {r.workerId or r.employerId for r in rows if (r.workerId or r.employerId)}
-    user_map = {
-        u.id: u
-        for u in db.query(User).filter(User.id.in_(user_ids)).all()
-    } if user_ids else {}
+    user_objs = (
+        db.query(User)
+        .filter(or_(User.id.in_(user_ids), User.uid.in_(user_ids)))
+        .all()
+    ) if user_ids else []
+    user_map = {}
+    for u in user_objs:
+        user_map[u.id] = u
+        if u.uid:
+            user_map[u.uid] = u
 
     return {
         "total": total,
@@ -133,7 +140,7 @@ def decide_withdrawal(
         ))
     else:
         user = (
-            db.query(User).filter(User.id == target_user_id).populate_existing().with_for_update().first()
+            db.query(User).filter(or_(User.id == target_user_id, User.uid == target_user_id)).populate_existing().with_for_update().first()
         )
         if not user:
             raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")

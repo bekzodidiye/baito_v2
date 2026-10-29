@@ -106,7 +106,7 @@ def read_jobs(
         worker_apps = (
             db.query(models.Application)
             .filter(
-                models.Application.workerId == current_user.id,
+                models.Application.workerId.in_(user_ids),
                 models.Application.jobId.in_(job_ids),
             )
             .all()
@@ -120,7 +120,7 @@ def read_jobs(
             b.jobId
             for b in db.query(models.Bookmark.jobId)
             .filter(
-                models.Bookmark.userId == current_user.id,
+                models.Bookmark.userId.in_(user_ids),
                 models.Bookmark.jobId.in_(job_ids),
             )
             .all()
@@ -275,7 +275,7 @@ def read_job(
         job_dict.bookmarked = (
             db.query(models.Bookmark.id)
             .filter(
-                models.Bookmark.userId == current_user.id,
+                models.Bookmark.userId.in_(user_ids),
                 models.Bookmark.jobId == job_id,
             )
             .first()
