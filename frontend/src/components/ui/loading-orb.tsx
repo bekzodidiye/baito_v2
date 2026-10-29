@@ -34,7 +34,7 @@ export interface LoadingOrbProps {
   card?: boolean;
   /** Custom container class */
   className?: string;
-  /** Color class for the orb SVG (default: text-brand-primary) */
+  /** Color class for the orb SVG (default: text-brand-primary dark:text-blue-400) */
   colorClassName?: string;
 }
 
@@ -71,7 +71,7 @@ export const LoadingOrb: React.FC<LoadingOrbProps> = ({
   fullScreen = false,
   card = false,
   className = '',
-  colorClassName = 'text-amber-500 dark:text-amber-400',
+  colorClassName = 'text-brand-primary dark:text-blue-400',
 }) => {
   const pixelSize = typeof size === 'number' ? size : SIZE_MAP[size] || 34;
   const look = getLook(variant);

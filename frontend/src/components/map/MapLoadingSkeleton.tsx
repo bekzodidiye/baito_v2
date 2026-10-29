@@ -29,7 +29,7 @@ export const MapLoadingSkeleton: React.FC = () => {
       {/* Centered Reload Spinner Badge */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
         <div className="px-5 py-3.5 rounded-2xl bg-slate-900/95 border border-slate-700/90 shadow-2xl flex items-center gap-3 text-white pointer-events-auto">
-          <Orb state="working" size={32} className="text-amber-400 shrink-0" />
+          <Orb state="working" size={20} className="text-blue-400 shrink-0" />
           <span className="text-xs font-black tracking-wide text-slate-100">{t.mapLoading}</span>
         </div>
       </div>

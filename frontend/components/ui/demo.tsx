@@ -46,7 +46,7 @@ export default function Demo() {
               variant={activePreset}
               size="md"
               label="Yuklanmoqda..."
-              colorClassName="text-amber-500 dark:text-amber-400"
+              colorClassName="text-brand-primary dark:text-blue-400"
             />
           </div>
 
