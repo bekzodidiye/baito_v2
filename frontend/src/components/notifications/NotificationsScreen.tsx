@@ -37,7 +37,7 @@ export const NotificationsScreen: React.FC = () => {
     if (to !== 'notifications') setCurrentScreen(to as any);
   };
 
-  const user = useAuthStore(s => s.user);
+  const user = useAuthStore(s => s.userProfile);
   const handleBack = () => {
     if (user?.selectedRole === 'employer') {
       setCurrentScreen('employer-dashboard');

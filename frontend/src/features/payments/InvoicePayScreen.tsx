@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building2, Check, Copy, Landmark, CreditCard, ShieldCheck, AlertTriangle, Loader2,
 } from 'lucide-react';
+import { Orb } from "@/components/ui/thinking-orbs";
 import { fetchInvoiceApi, declareInvoicePaymentApi } from '../../api/queries';
 
 /** Paying an invoice, opened from the button in the billing email.
@@ -99,7 +100,7 @@ export const InvoicePayScreen: React.FC = () => {
     return (
       <Shell>
         <div className="bg-white rounded-2xl border border-slate-200 p-12 flex justify-center">
-          <Loader2 className="animate-spin text-slate-300" size={32} />
+          <Orb state="waiting" size={36} className="text-brand-primary" />
         </div>
       </Shell>
     );

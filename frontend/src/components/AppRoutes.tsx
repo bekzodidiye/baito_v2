@@ -31,10 +31,12 @@ const LoginPromptScreen = React.lazy(() => import('./login/LoginPromptScreen').t
 const EmployerPanel = React.lazy(() => import('../features/employer/EmployerPanel').then(m => ({ default: m.EmployerPanel })));
 const NotFoundScreen = React.lazy(() => import('./NotFoundScreen').then(m => ({ default: m.NotFoundScreen })));
 const AdminPanel = React.lazy(() => import('../features/admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
+const Demo = React.lazy(() => import('@/components/ui/demo'));
+import { Orb } from "@/components/ui/thinking-orbs";
 
 const SuspenseFallback = () => (
-  <div className="flex-1 flex items-center justify-center p-8">
-    <div className="animate-pulse w-8 h-8 rounded-full bg-slate-300"></div>
+  <div className="flex-1 flex items-center justify-center p-8 min-h-[300px]">
+    <Orb state="reasoning" variant="twins" size={36} className="text-brand-primary" />
   </div>
 );
 import { useAuthStore } from "../store/useAuthStore";
@@ -48,7 +50,7 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   if (isLoggedIn && !userProfile) {
     return (
       <div className="flex-1 flex items-center justify-center p-8 min-h-screen bg-slate-50 dark:bg-slate-900">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <Orb state="working" variant="gyro" size={44} className="text-brand-primary" />
       </div>
     );
   }
@@ -154,6 +156,7 @@ export const AppRoutes = () => {
             Bare /admin keeps working and lands on the overview. */}
         <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />
         <Route path="/admin/:tab" element={<ProtectedRoute allowedRoles={['admin']}><AdminPanel /></ProtectedRoute>} />
+        <Route path="/ui-demo" element={<Demo />} />
         <Route path="*" element={<NotFoundScreen />} />
       </Routes>
     </Suspense>
