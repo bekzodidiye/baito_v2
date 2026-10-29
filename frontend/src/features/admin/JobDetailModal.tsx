@@ -3,7 +3,7 @@ import { money } from '../../utils/money';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { motion, AnimatePresence } from 'motion/react';
-import { Orb } from "@/components/ui/thinking-orbs";
+import { LoadingOrb } from "@/components/ui/loading-orb";
 import { apiClient } from '../../api/client';
 import { 
   ArrowLeft, 
@@ -176,7 +176,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) 
           <div className="flex-1 overflow-y-auto no-scrollbar bg-slate-50">
             {loading ? (
               <div className="flex items-center justify-center py-20">
-                <Orb state="compacting" variant="squeeze" size={32} className="text-brand-primary" />
+                <LoadingOrb size="md" variant="gyro" label="Tafsilotlar yuklanmoqda..." />
               </div>
             ) : (
               <>

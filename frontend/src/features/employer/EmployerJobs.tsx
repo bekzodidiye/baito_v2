@@ -8,6 +8,7 @@ import { EmployerJobDetailModal } from './EmployerJobDetailModal';
 import { EmployerJobCard } from './EmployerJobCard';
 import { EmployerPayInvoiceModal } from './EmployerPayInvoiceModal';
 import { FinishJobModal } from './components/FinishJobModal';
+import { LoadingOrb } from "@/components/ui/loading-orb";
 import { Job } from '../../types';
 
 interface EmployerJobsProps {
@@ -256,7 +257,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
             {/* Intersection Observer target */}
             {visibleCount < searchedJobs.length && (
               <div ref={loadMoreRef} className="w-full h-20 flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                <LoadingOrb size="sm" variant="spiral" />
               </div>
             )}
           </div>

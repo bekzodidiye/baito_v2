@@ -1,4 +1,5 @@
 import React, { Suspense } from 'react';
+import { LoadingOrb } from "@/components/ui/loading-orb";
 import { useLoginPrompt } from '../../hooks/useLoginPrompt';
 import { LoginPromptHeader } from './LoginPromptHeader';
 import { LoginPromptStepper } from './LoginPromptStepper';
@@ -80,7 +81,7 @@ export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = ({
 
       {p.showPrivacy && (
         <div className="absolute inset-0 z-50 bg-white flex flex-col h-full w-full">
-          <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><div className="animate-spin w-8 h-8 rounded-full border-2 border-brand-primary border-t-transparent" /></div>}>
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><LoadingOrb size="md" variant="spiral" /></div>}>
             <PrivacyScreen 
               onBack={() => p.setShowPrivacy(false)} 
               onConfirm={() => {

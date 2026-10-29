@@ -32,11 +32,11 @@ const EmployerPanel = React.lazy(() => import('../features/employer/EmployerPane
 const NotFoundScreen = React.lazy(() => import('./NotFoundScreen').then(m => ({ default: m.NotFoundScreen })));
 const AdminPanel = React.lazy(() => import('../features/admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
 const Demo = React.lazy(() => import('@/components/ui/demo'));
-import { Orb } from "@/components/ui/thinking-orbs";
+import { LoadingOrb } from "@/components/ui/loading-orb";
 
 const SuspenseFallback = () => (
-  <div className="flex-1 flex items-center justify-center p-8 min-h-[300px]">
-    <Orb state="reasoning" variant="twins" size={36} className="text-brand-primary" />
+  <div className="flex-1 flex items-center justify-center p-8 min-h-[400px]">
+    <LoadingOrb size="lg" variant="spiral" label="Baito yuklanmoqda..." />
   </div>
 );
 import { useAuthStore } from "../store/useAuthStore";
@@ -50,7 +50,7 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   if (isLoggedIn && !userProfile) {
     return (
       <div className="flex-1 flex items-center justify-center p-8 min-h-screen bg-slate-50 dark:bg-slate-900">
-        <Orb state="working" variant="gyro" size={44} className="text-brand-primary" />
+        <LoadingOrb size="lg" variant="gyro" label="Profil tekshirilmoqda..." sublabel="Iltimos, kuting..." />
       </div>
     );
   }
