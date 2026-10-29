@@ -36,7 +36,7 @@ import { LoadingOrb } from "@/components/ui/loading-orb";
 
 const SuspenseFallback = () => (
   <div className="flex-1 min-h-[65vh] flex flex-col items-center justify-center p-8">
-    <LoadingOrb size={34} variant="working" label="Yuklanmoqda..." />
+    <LoadingOrb size={34} variant="working" />
   </div>
 );
 import { useAuthStore } from "../store/useAuthStore";
@@ -50,7 +50,7 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   if (isLoggedIn && !userProfile) {
     return (
       <div className="flex-1 min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-8">
-        <LoadingOrb size={34} variant="working" label="Yuklanmoqda..." />
+        <LoadingOrb size={34} variant="working" />
       </div>
     );
   }

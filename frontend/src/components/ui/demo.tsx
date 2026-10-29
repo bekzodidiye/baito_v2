@@ -45,7 +45,6 @@ export default function Demo() {
             <LoadingOrb
               variant={activePreset}
               size="md"
-              label="Yuklanmoqda..."
               colorClassName="text-brand-primary dark:text-blue-400"
             />
           </div>
