@@ -81,7 +81,7 @@ export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = ({
 
       {p.showPrivacy && (
         <div className="absolute inset-0 z-50 bg-white flex flex-col h-full w-full">
-          <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><LoadingOrb size="md" variant="spiral" /></div>}>
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><LoadingOrb size="md" variant="working" /></div>}>
             <PrivacyScreen 
               onBack={() => p.setShowPrivacy(false)} 
               onConfirm={() => {

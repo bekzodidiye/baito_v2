@@ -7,7 +7,7 @@ const looks = Object.entries(VARIANTS).flatMap(([state, variants]) =>
 );
 
 export default function Demo() {
-  const [activePreset, setActivePreset] = useState<LoadingOrbPreset>('spiral');
+  const [activePreset, setActivePreset] = useState<LoadingOrbPreset>('working');
 
   return (
     <div className="max-w-5xl mx-auto p-6 sm:p-10 space-y-12">
@@ -19,11 +19,11 @@ export default function Demo() {
               Tavsiya etilgan Premium Loading Orblari
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Eng jozibali, gipnotik va yuqori darajadagi 3D yuklanish animatsiyalari
+              "Working" (Saturn halqali to'lqin) va 3D giroskopik dinamik yuklanish holatlari
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {(['spiral', 'gyro', 'surge', 'rings', 'lighthouse'] as LoadingOrbPreset[]).map((p) => (
+            {(['working', 'gyro', 'spiral', 'surge', 'rings', 'lighthouse'] as LoadingOrbPreset[]).map((p) => (
               <button
                 key={p}
                 onClick={() => setActivePreset(p)}
@@ -41,7 +41,7 @@ export default function Demo() {
 
         {/* Live Active Showcase Card */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-          <div className="md:col-span-2 flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm">
+          <div className="md:col-span-2 flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm min-h-[220px]">
             <LoadingOrb
               variant={activePreset}
               size="lg"
@@ -53,24 +53,24 @@ export default function Demo() {
 
           <div className="flex flex-col gap-3">
             <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
-              <LoadingOrb variant="spiral" size="sm" />
+              <LoadingOrb variant="working" size="sm" />
               <div>
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Spiral Galaxy (#1 Best)</p>
-                <p className="text-[11px] text-slate-500">8 ta spiral galaktika qo'llari</p>
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Working (#1 Standart)</p>
+                <p className="text-[11px] text-slate-500">Saturn halqali yorug'lik to'lqini</p>
               </div>
             </div>
             <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
               <LoadingOrb variant="gyro" size="sm" />
               <div>
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Gyroscope 3D</p>
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Working Gyro 3D</p>
                 <p className="text-[11px] text-slate-500">Teskari aylanuvchi 3D giroskop</p>
               </div>
             </div>
             <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
-              <LoadingOrb variant="surge" size="sm" />
+              <LoadingOrb variant="spiral" size="sm" />
               <div>
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Surge Burst</p>
-                <p className="text-[11px] text-slate-500">Tezlanuvchi dinamik impuls</p>
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Spiral Galaxy</p>
+                <p className="text-[11px] text-slate-500">8 ta spiral galaktika qo'llari</p>
               </div>
             </div>
           </div>

@@ -1,13 +1,14 @@
 import { Orb, type OrbLook } from './thinking-orbs';
 
-export type LoadingOrbPreset = 'spiral' | 'gyro' | 'surge' | 'rings' | 'lighthouse';
+export type LoadingOrbPreset = 'working' | 'gyro' | 'spiral' | 'surge' | 'rings' | 'lighthouse';
 export type LoadingOrbSize = 'sm' | 'md' | 'lg' | 'xl' | number;
 
 export interface LoadingOrbProps {
   /**
    * Animation preset.
-   * - 'spiral': (Default) Mesmerizing 8-arm galaxy spiral, rich & hypnotic.
+   * - 'working': (Default) Active working state with cascading Saturn-style ring of light.
    * - 'gyro': 3D gyroscopic twisting sphere with counter-rotating poles.
+   * - 'spiral': Mesmerizing 8-arm galaxy spiral, rich & hypnotic.
    * - 'surge': High-energy spin surge with elastic rebound.
    * - 'rings': Saturn-style cascading ring of light.
    * - 'lighthouse': Sweeping radar beam search effect.
@@ -49,18 +50,19 @@ function getLook(variant: LoadingOrbPreset): OrbLook {
       return { state: 'working', variant: 'gyro' };
     case 'surge':
       return { state: 'retrying', variant: 'surge' };
-    case 'rings':
-      return { state: 'working' };
+    case 'spiral':
+      return { state: 'background', variant: 'spiral' };
     case 'lighthouse':
       return { state: 'searching', variant: 'lighthouse' };
-    case 'spiral':
+    case 'working':
+    case 'rings':
     default:
-      return { state: 'background', variant: 'spiral' };
+      return { state: 'working' };
   }
 }
 
 export const LoadingOrb: React.FC<LoadingOrbProps> = ({
-  variant = 'spiral',
+  variant = 'working',
   size = 'md',
   label,
   sublabel,

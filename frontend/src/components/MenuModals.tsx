@@ -46,7 +46,7 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
         >
           {type === 'auth' ? (
             <div className="flex-1 h-full min-h-0 flex flex-col overflow-hidden">
-              <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><LoadingOrb size="md" variant="spiral" /></div>}>
+              <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><LoadingOrb size="md" variant="working" /></div>}>
                 <LoginPromptScreen isModal onClose={onClose} />
               </Suspense>
             </div>

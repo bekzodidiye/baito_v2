@@ -257,7 +257,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
             {/* Intersection Observer target */}
             {visibleCount < searchedJobs.length && (
               <div ref={loadMoreRef} className="w-full h-20 flex items-center justify-center">
-                <LoadingOrb size="sm" variant="spiral" />
+                <LoadingOrb size="sm" variant="working" />
               </div>
             )}
           </div>

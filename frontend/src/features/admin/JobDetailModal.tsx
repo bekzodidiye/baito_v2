@@ -176,7 +176,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) 
           <div className="flex-1 overflow-y-auto no-scrollbar bg-slate-50">
             {loading ? (
               <div className="flex items-center justify-center py-20">
-                <LoadingOrb size="md" variant="gyro" label="Tafsilotlar yuklanmoqda..." />
+                <LoadingOrb size="md" variant="working" label="Tafsilotlar yuklanmoqda..." />
               </div>
             ) : (
               <>

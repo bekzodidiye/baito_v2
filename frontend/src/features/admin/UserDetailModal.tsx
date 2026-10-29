@@ -164,7 +164,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
         <div className="p-5 overflow-y-auto flex-1 bg-slate-50/50 no-scrollbar">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <LoadingOrb size="md" variant="gyro" label="Foydalanuvchi ma'lumotlari yuklanmoqda..." />
+              <LoadingOrb size="md" variant="working" label="Foydalanuvchi ma'lumotlari yuklanmoqda..." />
             </div>
           ) : detail ? (
             <>
