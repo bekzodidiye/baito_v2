@@ -99,8 +99,8 @@ export const InvoicePayScreen: React.FC = () => {
   if (isLoading) {
     return (
       <Shell>
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 flex justify-center">
-          <LoadingOrb size="md" variant="working" label="Hisob-faktura ochilmoqda..." />
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 min-h-[300px] flex flex-col items-center justify-center">
+          <LoadingOrb size={34} variant="working" label="Yuklanmoqda..." />
         </div>
       </Shell>
     );

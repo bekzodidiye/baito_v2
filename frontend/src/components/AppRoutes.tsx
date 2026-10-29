@@ -35,8 +35,8 @@ const Demo = React.lazy(() => import('@/components/ui/demo'));
 import { LoadingOrb } from "@/components/ui/loading-orb";
 
 const SuspenseFallback = () => (
-  <div className="flex-1 flex items-center justify-center p-8 min-h-[400px]">
-    <LoadingOrb size="lg" variant="working" label="Baito yuklanmoqda..." />
+  <div className="flex-1 min-h-[65vh] flex flex-col items-center justify-center p-8">
+    <LoadingOrb size={34} variant="working" label="Yuklanmoqda..." />
   </div>
 );
 import { useAuthStore } from "../store/useAuthStore";
@@ -49,8 +49,8 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   
   if (isLoggedIn && !userProfile) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8 min-h-screen bg-slate-50 dark:bg-slate-900">
-        <LoadingOrb size="lg" variant="working" label="Profil tekshirilmoqda..." sublabel="Iltimos, kuting..." />
+      <div className="flex-1 min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-8">
+        <LoadingOrb size={34} variant="working" label="Yuklanmoqda..." />
       </div>
     );
   }

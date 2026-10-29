@@ -4,6 +4,7 @@ import { counted } from '../../utils/plural';
 import { useAuthStore } from '../../store/useAuthStore';
 import { AdminStats } from './types';
 import { Users, Briefcase, DollarSign, ArrowUpRight, Clock, CheckCircle2, ShieldCheck, FileCheck } from 'lucide-react';
+import { LoadingOrb } from "@/components/ui/loading-orb";
 
 interface AdminOverviewProps {
   stats: AdminStats | null;
@@ -15,8 +16,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   if (loading && !stats) {
     return (
-      <div className="p-8 text-center text-slate-500 font-medium">
-        Ma'lumotlar yuklanmoqda...
+      <div className="flex-1 min-h-[60vh] flex flex-col items-center justify-center p-8">
+        <LoadingOrb size={34} variant="working" label="Yuklanmoqda..." />
       </div>
     );
   }

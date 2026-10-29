@@ -44,10 +44,9 @@ export default function Demo() {
           <div className="md:col-span-2 flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm min-h-[220px]">
             <LoadingOrb
               variant={activePreset}
-              size="lg"
-              label={`Yuklanmoqda (${activePreset})`}
-              sublabel="Baito ma'lumotlari sinxronlashtirilmoqda..."
-              colorClassName="text-brand-primary dark:text-indigo-400"
+              size="md"
+              label="Yuklanmoqda..."
+              colorClassName="text-amber-500 dark:text-amber-400"
             />
           </div>
 

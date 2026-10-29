@@ -16,7 +16,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { apiClient } from '../../api/client';
-import { LoadingOrb } from "@/components/ui/loading-orb";
+import { Orb } from "@/components/ui/thinking-orbs";
 import { BanUserModal } from './BanUserModal';
 import { UserTabsMain } from './UserTabsMain';
 import { UserTabsExtra } from './UserTabsExtra';
@@ -164,7 +164,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
         <div className="p-5 overflow-y-auto flex-1 bg-slate-50/50 no-scrollbar">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <LoadingOrb size="md" variant="working" label="Foydalanuvchi ma'lumotlari yuklanmoqda..." />
+              <Orb state="working" size={28} className="text-brand-primary" />
             </div>
           ) : detail ? (
             <>

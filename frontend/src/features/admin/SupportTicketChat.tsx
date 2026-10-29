@@ -3,6 +3,7 @@ import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { SupportTicketDetail } from './types';
 import { CheckCircle, Send, X, MessageSquare } from 'lucide-react';
+import { LoadingOrb } from "@/components/ui/loading-orb";
 
 interface SupportTicketChatProps {
   ticket: SupportTicketDetail | null;
@@ -29,8 +30,8 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center text-slate-400 flex flex-col items-center justify-center h-[520px]">
-        <p className="font-extrabold text-slate-700 text-sm">Yuklanmoqda...</p>
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-12 flex flex-col items-center justify-center h-[520px]">
+        <LoadingOrb size={34} variant="working" label="Yuklanmoqda..." />
       </div>
     );
   }

@@ -6,7 +6,7 @@ import { ProfileContent } from './menu/ProfileContent';
 import { SettingsContent } from './menu/SettingsContent';
 import { HelpContent } from './menu/HelpContent';
 import { useAuthStore } from "../store/useAuthStore";
-import { LoadingOrb } from "@/components/ui/loading-orb";
+import { Orb } from "@/components/ui/thinking-orbs";
 
 const LoginPromptScreen = React.lazy(() => import('./login/LoginPromptScreen').then(m => ({ default: m.LoginPromptScreen })));
 
@@ -46,7 +46,7 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
         >
           {type === 'auth' ? (
             <div className="flex-1 h-full min-h-0 flex flex-col overflow-hidden">
-              <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><LoadingOrb size="md" variant="working" /></div>}>
+              <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><Orb state="working" size={24} className="text-brand-primary" /></div>}>
                 <LoginPromptScreen isModal onClose={onClose} />
               </Suspense>
             </div>

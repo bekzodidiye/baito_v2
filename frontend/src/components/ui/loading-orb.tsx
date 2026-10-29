@@ -1,7 +1,7 @@
 import { Orb, type OrbLook } from './thinking-orbs';
 
 export type LoadingOrbPreset = 'working' | 'gyro' | 'spiral' | 'surge' | 'rings' | 'lighthouse';
-export type LoadingOrbSize = 'sm' | 'md' | 'lg' | 'xl' | number;
+export type LoadingOrbSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | number;
 
 export interface LoadingOrbProps {
   /**
@@ -16,10 +16,11 @@ export interface LoadingOrbProps {
   variant?: LoadingOrbPreset;
   /**
    * Preset sizes:
-   * - 'sm': 24px (buttons, small badges, inline chips)
-   * - 'md': 40px (modals, cards, dropdowns)
-   * - 'lg': 60px (page suspense, sections)
-   * - 'xl': 80px (full-page initial load, hero)
+   * - 'xs': 18px (inline chips, small button icons)
+   * - 'sm': 24px (standard buttons, infinite scroll)
+   * - 'md': 32px (default - modals, cards, standard spinners)
+   * - 'lg': 40px (page suspense, screen headers)
+   * - 'xl': 48px (featured showcases)
    * Or specify a custom numeric pixel size.
    */
   size?: LoadingOrbSize;
@@ -29,7 +30,7 @@ export interface LoadingOrbProps {
   sublabel?: string;
   /** Render centered in a full-screen viewport */
   fullScreen?: boolean;
-  /** Render inside a sleek glassmorphic elevated card */
+  /** Render inside a sleek elevated card */
   card?: boolean;
   /** Custom container class */
   className?: string;
@@ -37,11 +38,12 @@ export interface LoadingOrbProps {
   colorClassName?: string;
 }
 
-const SIZE_MAP: Record<'sm' | 'md' | 'lg' | 'xl', number> = {
+const SIZE_MAP: Record<'xs' | 'sm' | 'md' | 'lg' | 'xl', number> = {
+  xs: 18,
   sm: 24,
-  md: 40,
-  lg: 60,
-  xl: 80,
+  md: 34,
+  lg: 42,
+  xl: 52,
 };
 
 function getLook(variant: LoadingOrbPreset): OrbLook {
@@ -69,43 +71,40 @@ export const LoadingOrb: React.FC<LoadingOrbProps> = ({
   fullScreen = false,
   card = false,
   className = '',
-  colorClassName = 'text-brand-primary dark:text-indigo-400',
+  colorClassName = 'text-amber-500 dark:text-amber-400',
 }) => {
-  const pixelSize = typeof size === 'number' ? size : SIZE_MAP[size] || 40;
+  const pixelSize = typeof size === 'number' ? size : SIZE_MAP[size] || 34;
   const look = getLook(variant);
 
   const orbNode = (
-    <div className="relative flex items-center justify-center">
-      {/* Ambient glowing radial aura for large/xl loaders */}
-      {pixelSize >= 40 && (
-        <div
-          className="absolute rounded-full bg-brand-primary/10 dark:bg-indigo-500/20 blur-xl pointer-events-none"
-          style={{
-            width: pixelSize * 1.6,
-            height: pixelSize * 1.6,
-          }}
-        />
-      )}
-      <Orb
-        {...look}
-        size={pixelSize}
-        className={`${colorClassName} relative z-10 transition-transform duration-300`}
-      />
-    </div>
+    <Orb
+      {...look}
+      size={pixelSize}
+      className={`${colorClassName} relative z-10 shrink-0`}
+    />
   );
 
+  // If no labels, render a compact inline-flex node without extra gaps
+  if (!label && !sublabel && !fullScreen && !card) {
+    return (
+      <div className={`inline-flex items-center justify-center ${className}`}>
+        {orbNode}
+      </div>
+    );
+  }
+
   const content = (
-    <div className={`flex flex-col items-center justify-center gap-3.5 text-center ${className}`}>
+    <div className={`flex flex-col items-center justify-center gap-2.5 text-center ${className}`}>
       {orbNode}
       {(label || sublabel) && (
-        <div className="flex flex-col items-center gap-1 max-w-xs animate-in fade-in duration-300">
+        <div className="flex flex-col items-center gap-0.5 max-w-xs animate-in fade-in duration-200">
           {label && (
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 tracking-tight">
+            <p className="text-xs font-normal text-slate-400 dark:text-slate-500 tracking-normal select-none">
               {label}
             </p>
           )}
           {sublabel && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500">
               {sublabel}
             </p>
           )}
@@ -116,8 +115,8 @@ export const LoadingOrb: React.FC<LoadingOrbProps> = ({
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/20 dark:bg-slate-950/60 backdrop-blur-md p-4">
-        <div className="bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 shadow-2xl rounded-3xl p-8 max-w-sm w-full flex flex-col items-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/20 dark:bg-slate-950/60 backdrop-blur-sm p-4">
+        <div className="bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 shadow-xl rounded-2xl p-6 max-w-xs w-full flex flex-col items-center">
           {content}
         </div>
       </div>
@@ -126,7 +125,7 @@ export const LoadingOrb: React.FC<LoadingOrbProps> = ({
 
   if (card) {
     return (
-      <div className="bg-white/90 dark:bg-slate-900/90 border border-slate-100 dark:border-slate-800/80 shadow-lg rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center">
+      <div className="bg-white/90 dark:bg-slate-900/90 border border-slate-100 dark:border-slate-800/80 shadow-md rounded-xl p-5 flex flex-col items-center justify-center">
         {content}
       </div>
     );
