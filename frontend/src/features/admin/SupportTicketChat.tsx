@@ -31,7 +31,7 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
   if (loading) {
     return (
       <div className="bg-white rounded-2xl border border-slate-200/80 p-12 flex flex-col items-center justify-center h-[520px]">
-        <LoadingOrb size={36} variant="working" />
+        <LoadingOrb size={32} variant="working" />
       </div>
     );
   }

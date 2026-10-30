@@ -28,8 +28,6 @@ export interface LoadingOrbProps {
   label?: string;
   /** Optional secondary helper text */
   sublabel?: string;
-  /** Show animated three dots (...) below the orb (default: true) */
-  showDots?: boolean;
   /** Render centered in a full-screen viewport */
   fullScreen?: boolean;
   /** Render inside a sleek elevated card */
@@ -43,9 +41,9 @@ export interface LoadingOrbProps {
 const SIZE_MAP: Record<'xs' | 'sm' | 'md' | 'lg' | 'xl', number> = {
   xs: 18,
   sm: 24,
-  md: 36, // 2px bigger than 34px -> 36px
-  lg: 44,
-  xl: 54,
+  md: 32,
+  lg: 40,
+  xl: 48,
 };
 
 function getLook(variant: LoadingOrbPreset): OrbLook {
@@ -70,13 +68,12 @@ export const LoadingOrb: React.FC<LoadingOrbProps> = ({
   size = 'md',
   label,
   sublabel,
-  showDots = true,
   fullScreen = false,
   card = false,
   className = '',
   colorClassName = 'text-brand-primary dark:text-blue-400',
 }) => {
-  const pixelSize = typeof size === 'number' ? size : SIZE_MAP[size] || 36;
+  const pixelSize = typeof size === 'number' ? size : SIZE_MAP[size] || 32;
   const look = getLook(variant);
 
   const orbNode = (
@@ -87,16 +84,8 @@ export const LoadingOrb: React.FC<LoadingOrbProps> = ({
     />
   );
 
-  const dotsNode = showDots && (
-    <div className={`flex items-center justify-center gap-1 ${colorClassName} select-none`} aria-hidden="true">
-      <span className="w-1 h-1 rounded-full bg-current animate-dot-1" />
-      <span className="w-1 h-1 rounded-full bg-current animate-dot-2" />
-      <span className="w-1 h-1 rounded-full bg-current animate-dot-3" />
-    </div>
-  );
-
-  // If no labels, no dots, and not card/fullscreen, render compact inline-flex
-  if (!label && !sublabel && !showDots && !fullScreen && !card) {
+  // If no labels, and not card/fullscreen, render compact inline-flex
+  if (!label && !sublabel && !fullScreen && !card) {
     return (
       <div className={`inline-flex items-center justify-center ${className}`}>
         {orbNode}
@@ -107,7 +96,6 @@ export const LoadingOrb: React.FC<LoadingOrbProps> = ({
   const content = (
     <div className={`flex flex-col items-center justify-center gap-2.5 text-center ${className}`}>
       {orbNode}
-      {dotsNode}
       {(label || sublabel) && (
         <div className="flex flex-col items-center gap-0.5 max-w-xs animate-in fade-in duration-200">
           {label && (

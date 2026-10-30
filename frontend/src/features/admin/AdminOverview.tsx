@@ -16,8 +16,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   if (loading && !stats) {
     return (
-      <div className="flex-1 min-h-[60vh] flex flex-col items-center justify-center p-8">
-        <LoadingOrb size={36} variant="working" />
+      <div className="flex-1 min-h-[60vh] flex flex-col items-center justify-start pt-12 p-8">
+        <LoadingOrb size={32} variant="working" />
       </div>
     );
   }
