@@ -14,7 +14,7 @@ import {
   ChevronDown, 
   ArrowRight, 
   Lightbulb, 
-  MessageSquare, 
+  MessageCircle, 
   X,
   Star,
   HelpCircle
@@ -342,7 +342,7 @@ export const QollanmaScreen: React.FC = () => {
                 onClick={() => setCurrentScreen('support-chat')}
                 className="px-5 py-2.5 bg-brand-primary text-white text-[13px] font-bold rounded-xl hover:bg-brand-primary/90 transition-colors flex items-center gap-2 shadow-xs cursor-pointer"
               >
-                <MessageSquare size={16} />
+                <MessageCircle size={16} />
                 <span>{g.liveChatButton}</span>
               </button>
               <button

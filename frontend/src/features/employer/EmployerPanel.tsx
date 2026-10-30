@@ -7,7 +7,7 @@ import { EmployerChats } from './EmployerChats';
 import { EmployerProfile } from './EmployerProfile';
 import { JobPostForm } from './JobPostForm';
 import { EmployerAnalytics } from './EmployerAnalytics';
-import { Briefcase, FileText, MessageSquare, LayoutDashboard, User } from 'lucide-react';
+import { Briefcase, FileText, MessageCircle, LayoutDashboard, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { MandatoryReviewModal } from './components/MandatoryReviewModal';
@@ -124,7 +124,7 @@ export const EmployerPanel: React.FC = () => {
     { id: 'employer-dashboard', label: language === 'uz' ? "Asosiy" : language === 'ru' ? "Главная" : "Dashboard", icon: LayoutDashboard },
     { id: 'employer-jobs', label: language === 'uz' ? "E'lonlar" : language === 'ru' ? "Объявления" : "Jobs", icon: Briefcase },
     { id: 'employer-applicants', label: language === 'uz' ? "Arizalar" : language === 'ru' ? "Заявки" : "Applicants", icon: FileText },
-    { id: 'employer-chats', label: language === 'uz' ? "Xabarlar" : language === 'ru' ? "Сообщения" : "Messages", icon: MessageSquare },
+    { id: 'employer-chats', label: language === 'uz' ? "Xabarlar" : language === 'ru' ? "Сообщения" : "Messages", icon: MessageCircle },
     { id: 'employer-profile', label: language === 'uz' ? "Profil" : language === 'ru' ? "Профиль" : "Profile", icon: User },
   ];
 

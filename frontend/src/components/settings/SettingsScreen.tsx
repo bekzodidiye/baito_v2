@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { translations } from '../../translations';
-import { ArrowLeft, Lock, Globe, Bell, Info, HelpCircle, ChevronRight, Briefcase, MessageSquare, Loader2 } from 'lucide-react';
+import { ArrowLeft, Lock, Globe, Bell, Info, HelpCircle, ChevronRight, Briefcase, MessageCircle, Loader2 } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { updateUserProfileApi } from '../../api/queries';
 import { useAuthStore } from "../../store/useAuthStore";
@@ -144,7 +144,7 @@ export const SettingsScreen: React.FC = () => {
             >
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-brand-primary group-hover:text-white group-hover:border-brand-primary group-hover:scale-105 transition-all duration-200">
-                  <MessageSquare size={20} className="stroke-[2.2]" />
+                  <MessageCircle size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
                   <p className="text-[16px] font-semibold text-brand-text">{isEmployer ? (language === 'uz' ? 'Yangi xabarlar' : language === 'ru' ? 'Новые сообщения' : 'New messages') : t.notifyChat}</p>

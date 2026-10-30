@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, X, Star, Briefcase, MapPin, Clock, CheckCircle, Loader2, MessageSquare } from 'lucide-react';
+import { Check, X, Star, Briefcase, MapPin, Clock, CheckCircle, Loader2, MessageCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { confirmStartJobApi } from '../../../api/queries';
 import { ConfirmModal } from '../../../components/common/ConfirmModal';
@@ -141,7 +141,7 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
                 title={language === 'uz' ? "Xabar yozish" : language === 'ru' ? "Написать сообщение" : "Chat"}
                 className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-100 text-brand-primary flex items-center justify-center transition-colors cursor-pointer shrink-0"
               >
-                <MessageSquare size={13} className="stroke-[2.5]" />
+                <MessageCircle size={13} className="stroke-[2.5]" />
               </button>
             </div>
             {/* Status Badges */}

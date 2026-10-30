@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Bell, Briefcase, CheckCircle2, MessageSquare, ShieldAlert } from 'lucide-react';
+import { Layers, Bell, Briefcase, CheckCircle2, MessageCircle, ShieldAlert } from 'lucide-react';
 import { NotificationCategory } from './NotificationFilterPanel';
 
 interface NotificationMobileChipsProps {
@@ -20,7 +20,7 @@ export const NotificationMobileChips: React.FC<NotificationMobileChipsProps> = (
     { id: 'unread', label: t.catUnread, icon: <Bell size={13} /> },
     { id: 'job', label: t.catJob, icon: <Briefcase size={13} /> },
     { id: 'apply', label: t.catApply, icon: <CheckCircle2 size={13} /> },
-    { id: 'message', label: t.catMessage, icon: <MessageSquare size={13} /> },
+    { id: 'message', label: t.catMessage, icon: <MessageCircle size={13} /> },
     { id: 'system', label: t.catSystem, icon: <ShieldAlert size={13} /> },
   ];
 

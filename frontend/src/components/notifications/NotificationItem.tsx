@@ -1,5 +1,5 @@
 import React from 'react';
-import { Briefcase, CheckCircle2, MessageSquare, AlertCircle, Bell, Wallet, LifeBuoy, ArrowRight, Check } from 'lucide-react';
+import { Briefcase, CheckCircle2, MessageCircle, AlertCircle, Bell, Wallet, LifeBuoy, ArrowRight, Check } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export interface NotificationItemData {
@@ -42,7 +42,7 @@ const getIcon = (type: NotificationItemData['type']) => {
     case 'message':
       return (
         <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 text-blue-600 border border-blue-100/50">
-          <MessageSquare size={16} className="stroke-[2.2]" />
+          <MessageCircle size={16} className="stroke-[2.2]" />
         </div>
       );
     case 'profile':

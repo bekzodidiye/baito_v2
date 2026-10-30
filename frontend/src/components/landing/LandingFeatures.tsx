@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, ShieldCheck, MapPin, Clock, Award, Star, MessageSquare } from 'lucide-react';
+import { CreditCard, ShieldCheck, MapPin, Clock, Award, Star, MessageCircle } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { FEATURES_TEXTS } from './LandingFeatures.content';
 
@@ -11,7 +11,7 @@ const CARD_STYLE = [
   { Icon: ShieldCheck,   box: 'bg-blue-50 text-brand-primary border-blue-200/80' },
   { Icon: MapPin,        box: 'bg-sky-50 text-sky-600 border-sky-200/80' },
   { Icon: Clock,         box: 'bg-indigo-50 text-indigo-600 border-indigo-200/80' },
-  { Icon: MessageSquare, box: 'bg-rose-50 text-rose-600 border-rose-200/80' },
+  { Icon: MessageCircle, box: 'bg-rose-50 text-rose-600 border-rose-200/80' },
   { Icon: Star,          box: 'bg-amber-50 text-amber-600 border-amber-200/80' },
 ];
 

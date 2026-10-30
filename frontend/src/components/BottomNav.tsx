@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp, ScreenType } from '../context/AppContext';
-import { Calendar, Map, Mail } from 'lucide-react';
+import { Calendar, Map, MessageCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { translations } from '../translations';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
@@ -38,7 +38,7 @@ export const BottomNav: React.FC = () => {
   const navItems = [
     { id: 'calendar', label: t.calendar, icon: Calendar, screen: 'calendar' as ScreenType },
     { id: 'jobs', label: t.jobSearch, icon: Map, screen: 'jobs' as ScreenType },
-    { id: 'messages', label: t.messages, icon: Mail, screen: 'messages' as ScreenType },
+    { id: 'messages', label: t.messages, icon: MessageCircle, screen: 'messages' as ScreenType },
   ];
 
   return (

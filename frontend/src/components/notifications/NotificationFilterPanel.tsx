@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, CheckCheck, Briefcase, CheckCircle2, MessageSquare, ShieldAlert, Layers } from 'lucide-react';
+import { Bell, CheckCheck, Briefcase, CheckCircle2, MessageCircle, ShieldAlert, Layers } from 'lucide-react';
 
 export type NotificationCategory = 'all' | 'unread' | 'job' | 'apply' | 'message' | 'system';
 
@@ -26,7 +26,7 @@ export const NotificationFilterPanel: React.FC<NotificationFilterPanelProps> = (
     { id: 'unread', label: t.catUnread || "O'qilmaganlar", icon: <Bell size={15} /> },
     { id: 'job', label: t.catJob || "Ish takliflari", icon: <Briefcase size={15} /> },
     { id: 'apply', label: t.catApply || 'Arizalar', icon: <CheckCircle2 size={15} /> },
-    { id: 'message', label: t.catMessage || 'Xabarlar', icon: <MessageSquare size={15} /> },
+    { id: 'message', label: t.catMessage || 'Xabarlar', icon: <MessageCircle size={15} /> },
     { id: 'system', label: t.catSystem || 'Tizim va profil', icon: <ShieldAlert size={15} /> },
   ];
 

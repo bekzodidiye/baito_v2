@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { money } from '../../../utils/money';
-import { Star, MessageSquare, TrendingUp, Award, Gift } from 'lucide-react';
+import { Star, MessageCircle, TrendingUp, Award, Gift } from 'lucide-react';
 import { Application } from '../../../types';
 import { motion } from 'motion/react';
 
@@ -126,7 +126,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, index }) => (
 
     {review.review && (
       <div className="mt-3 flex items-start gap-2 bg-slate-50 rounded-lg p-2.5 border border-slate-100/80">
-        <MessageSquare size={13} className="text-slate-400 mt-0.5 shrink-0" />
+        <MessageCircle size={13} className="text-slate-400 mt-0.5 shrink-0" />
         <p className="text-xs text-slate-600 font-medium leading-relaxed">"{review.review}"</p>
       </div>
     )}

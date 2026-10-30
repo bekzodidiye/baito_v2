@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
-import { FileText, Send, CheckCircle2, Clock, Download, MessageSquare } from 'lucide-react';
+import { FileText, Send, CheckCircle2, Clock, Download, MessageCircle } from 'lucide-react';
 
 import { AdminStats, SystemSettings } from './types';
 import { sendDigestNowApi } from '../../api/queries';
@@ -166,7 +166,7 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
         {/* Live Telegram Markdown Preview */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3 lg:col-span-2">
           <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
-            <MessageSquare size={16} className="text-blue-500" /> Live Telegram Post Preview
+            <MessageCircle size={16} className="text-blue-500" /> Live Telegram Post Preview
           </h3>
 
           <div className="p-4 bg-slate-900 text-slate-100 rounded-2xl font-mono text-xs leading-relaxed border border-slate-800 shadow-inner space-y-2">

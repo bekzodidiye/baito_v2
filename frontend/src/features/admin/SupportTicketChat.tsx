@@ -2,7 +2,7 @@ import React from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { SupportTicketDetail } from './types';
-import { CheckCircle, Send, X, MessageSquare } from 'lucide-react';
+import { CheckCircle, Send, X, MessageCircle } from 'lucide-react';
 import { LoadingOrb } from "@/components/ui/loading-orb";
 
 interface SupportTicketChatProps {
@@ -39,7 +39,7 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
   if (!ticket) {
     return (
       <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center text-slate-400 flex flex-col items-center justify-center h-[520px]">
-        <MessageSquare size={40} className="text-slate-300 mb-2" />
+        <MessageCircle size={40} className="text-slate-300 mb-2" />
         <p className="font-extrabold text-slate-700 text-sm">Ticket tanlanmadi</p>
         <p className="text-xs text-slate-400 max-w-xs mt-1">{a.pickATicket}</p>
       </div>
