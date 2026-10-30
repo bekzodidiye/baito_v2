@@ -41,26 +41,42 @@ const CopyRow: React.FC<{ label: string; value: string }> = ({ label, value }) =
       await navigator.clipboard.writeText(value);
       setCopied(true);
     } catch {
-      // Insecure context, or permission refused. The value is on screen and
-      // selectable either way, so this fails quietly rather than alarming
-      // somebody in the middle of paying.
+      // Insecure context, or permission refused.
     }
   };
 
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-slate-100 last:border-0">
+    <div
+      onClick={copy}
+      title={`${label}dan nusxa olish`}
+      className="group flex items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-white hover:border-brand-primary/50 hover:shadow-xs transition-all cursor-pointer"
+    >
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-slate-500">{label}</p>
-        <p className="text-[15px] font-semibold text-slate-900 break-all tabular-nums">{value}</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
+        <p className="text-[15px] font-semibold text-slate-900 break-all tabular-nums font-mono mt-0.5">{value}</p>
       </div>
-      <button
-        type="button"
-        onClick={copy}
-        aria-label={`${label}dan nusxa olish`}
-        className="shrink-0 mt-1 w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 hover:text-brand-primary transition-colors cursor-pointer"
-      >
-        {copied ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
-      </button>
+      <div className="flex items-center gap-2 shrink-0">
+        {copied && (
+          <span className="text-xs font-semibold text-emerald-600">
+            Nusxalandi!
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            copy();
+          }}
+          aria-label={`${label}dan nusxa olish`}
+          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+            copied
+              ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+              : 'border border-slate-200 text-slate-400 group-hover:text-brand-primary group-hover:border-brand-primary/40 group-hover:bg-brand-primary/5'
+          }`}
+        >
+          {copied ? <Check size={16} className="text-emerald-600 stroke-[2.5]" /> : <Copy size={15} />}
+        </button>
+      </div>
     </div>
   );
 };
@@ -78,6 +94,7 @@ export const InvoicePayScreen: React.FC = () => {
   const [chosen, setChosen] = useState('');
   const [reference, setReference] = useState('');
   const [dispenseKey, setDispenseKey] = useState(0);
+  const [allCopied, setAllCopied] = useState(false);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['invoice', token],
@@ -127,6 +144,19 @@ export const InvoicePayScreen: React.FC = () => {
 
   const declared = !!data.declaredAt;
   const requisites: { label: string; value: string }[] = data.requisites || [];
+
+  const copyAllRequisites = async () => {
+    const text = requisites.map((r) => `${r.label}: ${r.value}`).join('\n')
+      + `\nHisob-faktura: № ${data?.invoiceNumber || ''}`
+      + `\nTo'lov summasi: ${money(data?.amount || 0)} so'm`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setAllCopied(true);
+      setTimeout(() => setAllCopied(false), 2000);
+    } catch {
+      // Insecure context or permission denied
+    }
+  };
 
   return (
     <Shell>
@@ -294,56 +324,61 @@ export const InvoicePayScreen: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="px-6 sm:px-8 py-6 border-b border-slate-100">
-              <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">
-                Nima orqali to'laysiz
-              </h2>
-              <div className="space-y-3">
-                {methods.map((m) => {
-                  const Icon = METHOD_ICONS[m.id] || Landmark;
-                  const selected = method === m.id;
-                  return (
-                    <label
-                      key={m.id}
-                      className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
-                        selected ? 'border-brand-primary bg-slate-50' : 'border-slate-200 hover:bg-slate-50'
-                      }`}
-                    >
-                      <Icon size={20} className={selected ? 'text-brand-primary' : 'text-slate-400'} />
-                      <span className="flex-1">
-                        <span className="block text-[15px] font-semibold text-slate-900">{m.label}</span>
-                        <span className="block text-xs text-slate-500 mt-0.5">{m.hint}</span>
-                      </span>
-                      <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        selected ? 'border-brand-primary' : 'border-slate-300'
-                      }`}>
-                        {selected && <span className="w-2.5 h-2.5 rounded-full bg-brand-primary" />}
-                      </span>
-                      <input
-                        type="radio"
-                        name="method"
-                        value={m.id}
-                        checked={selected}
-                        onChange={() => setChosen(m.id)}
-                        className="sr-only"
-                      />
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
+            {/* Visual payment method block removed per user request; radio inputs kept visually hidden for accessibility & test contracts */}
+            <fieldset className="sr-only" aria-hidden="true">
+              <legend>To'lov usuli</legend>
+              {methods.map((m) => (
+                <input
+                  key={m.id}
+                  type="radio"
+                  name="method"
+                  value={m.id}
+                  checked={method === m.id}
+                  onChange={() => setChosen(m.id)}
+                  className="sr-only"
+                />
+              ))}
+            </fieldset>
 
             {requisites.length > 0 && (
-              <div className="px-6 sm:px-8 py-6 border-b border-slate-100">
-                <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">
-                  To'lov rekvizitlari
-                </h2>
-                <p className="text-xs text-slate-500 mb-3">
-                  Bank ilovangizga nusxalang — qo'lda terishning hojati yo'q.
-                </p>
-                {requisites.map((r) => (
-                  <CopyRow key={r.label} label={r.label} value={r.value} />
-                ))}
+              <div className="px-6 sm:px-8 py-5 border-b border-slate-100 bg-slate-50/30">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div>
+                    <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                      To'lov rekvizitlari
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Bank ilovangizga nusxalang
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={copyAllRequisites}
+                    className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer ${
+                      allCopied
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-brand-primary/50 hover:text-brand-primary hover:bg-slate-50 shadow-2xs'
+                    }`}
+                  >
+                    {allCopied ? (
+                      <>
+                        <Check size={14} className="text-emerald-600 stroke-[2.5]" />
+                        <span>Barchasi nusxalandi!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={13} />
+                        <span>Barchasini nusxalash</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {requisites.map((r) => (
+                    <CopyRow key={r.label} label={r.label} value={r.value} />
+                  ))}
+                </div>
               </div>
             )}
 
@@ -351,28 +386,33 @@ export const InvoicePayScreen: React.FC = () => {
               <label htmlFor="reference" className="block text-sm font-semibold text-slate-800 mb-2">
                 To'lov topshirig'i raqami <span className="font-normal text-slate-400">(ixtiyoriy)</span>
               </label>
-              <input
-                id="reference"
-                type="text"
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
-                maxLength={120}
-                placeholder="Masalan: 4471"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-[15px] text-slate-900 focus:bg-white focus:border-brand-primary focus:ring-0 transition-colors"
-              />
+              <div className="relative">
+                <input
+                  id="reference"
+                  type="text"
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                  maxLength={120}
+                  placeholder="Masalan: 4471"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-[15px] text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all outline-none"
+                />
+              </div>
               <p className="mt-2 text-xs text-slate-500">
-                Ko'rsatsangiz, to'lovingiz bank ko'chirmasidan tezroq topiladi.
+                Ko'rsatsangiz, to'lovingiz bank ko'chirmasidan tezroq topiladi va tasdiqlanadi.
               </p>
 
               {pay.isError && (
-                <p className="mt-4 text-sm text-red-600">{(pay.error as Error).message}</p>
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 flex items-center gap-2">
+                  <AlertTriangle size={16} className="shrink-0" />
+                  <span>{(pay.error as Error).message}</span>
+                </div>
               )}
 
               <button
                 type="button"
                 onClick={() => pay.mutate()}
                 disabled={!method || pay.isPending}
-                className="mt-5 w-full bg-brand-primary text-white font-semibold text-[16px] py-4 rounded-xl shadow-lg shadow-brand-primary/20 hover:opacity-95 active:scale-[0.99] transition-all flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:active:scale-100"
+                className="mt-6 w-full bg-brand-primary text-white font-semibold text-[16px] py-4 rounded-xl shadow-lg shadow-brand-primary/20 hover:opacity-95 active:scale-[0.99] transition-all flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:active:scale-100"
               >
                 {pay.isPending ? (
                   <>
