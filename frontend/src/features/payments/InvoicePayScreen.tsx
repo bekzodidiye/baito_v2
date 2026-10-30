@@ -77,6 +77,7 @@ export const InvoicePayScreen: React.FC = () => {
 
   const [chosen, setChosen] = useState('');
   const [reference, setReference] = useState('');
+  const [dispenseKey, setDispenseKey] = useState(0);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['invoice', token],
@@ -130,16 +131,24 @@ export const InvoicePayScreen: React.FC = () => {
   return (
     <Shell>
       <div className="invoice-dispenser-wrapper">
-        {/* Yuqori dispenser kapsulasi (aylanuvchi neon nur) */}
-        <div className="invoice-dispenser-slot">
+        {/* Yuqori dispenser kapsulasi (kattalashtirilgan terminal korpusi) */}
+        <div
+          className="invoice-dispenser-slot"
+          onClick={() => setDispenseKey((k) => k + 1)}
+          title="Invoysni qayta chiqarish uchun bosing"
+        >
           <div className="wrap-colors-1"><div className="bg-colors" /></div>
           <div className="wrap-colors-2"><div className="bg-colors" /></div>
           <div className="cover" />
+          <div className="slit-opening" />
         </div>
 
         {/* Pastda slotdan invoys bo'lib chiqib keluvchi yagona karta */}
         <div className="invoice-dispense-mask">
-          <div className="invoice-dispensed-card bg-white rounded-2xl border border-slate-200/90 shadow-xl overflow-hidden">
+          <div
+            key={dispenseKey}
+            className="invoice-dispensed-card bg-white rounded-2xl border border-slate-200/90 shadow-xl overflow-hidden"
+          >
             {/* INVOYS RAQAMLI PASPORT / RECEIPT HEADER */}
             <div className="invoice-pass-header relative p-6 sm:p-8 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/40">
               <div className="invoice-reflex" />
