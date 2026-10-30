@@ -2,28 +2,163 @@
   --ease-elastic: cubic-bezier(0.5, 2, 0.3, 0.8);
   position: relative;
   width: 100%;
-  max-width: 440px;
-  min-height: 480px;
+  max-width: 576px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   user-select: none;
   overflow: visible;
+  padding-top: 6px;
 }
 
+/* Master dispenser container */
+.invoice-dispenser-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 576px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Yuqori dispenser kapsulasi (terminal slit) */
+.invoice-dispenser-slot {
+  align-self: center;
+  background: inherit;
+  border-radius: 100px;
+  padding: 0 12px 0 10px;
+  height: 32px;
+  width: 82%;
+  max-width: 360px;
+  position: relative;
+  z-index: 25;
+  box-shadow: 0 8px 24px -2px rgba(15, 23, 42, 0.45);
+}
+
+.invoice-dispenser-slot .cover {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  bottom: 2px;
+  left: 2px;
+  border-radius: 100px;
+  clip-path: inset(0 0 0 0 round 100px);
+  background: #0f172a;
+  transition: filter 1000ms cubic-bezier(0, 0, 0, 1);
+  filter: blur(3px);
+}
+
+.invoice-dispenser-slot .cover::after {
+  content: "";
+  top: -8px;
+  right: -8px;
+  bottom: -8px;
+  left: -8px;
+  border-radius: 100px;
+  position: absolute;
+  background: inherit;
+  opacity: 0.5;
+}
+
+.invoice-dispenser-slot .wrap-colors-1,
+.invoice-dispenser-slot .wrap-colors-2 {
+  overflow: hidden;
+  border-radius: 100px;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.invoice-dispenser-slot .wrap-colors-1 {
+  opacity: 0.5;
+  filter: blur(3px);
+}
+
+.invoice-dispenser-slot .bg-colors {
+  background: conic-gradient(
+    transparent 0deg,
+    #8400ff 65deg,
+    #00ccff 144deg,
+    #1356b4 180deg,
+    transparent 324deg,
+    transparent 360deg
+  );
+  position: absolute;
+  width: 450px;
+  height: 450px;
+  margin: auto;
+  inset: 0;
+  left: 50%;
+  transform: translateX(-50%) rotate(220deg);
+  border-radius: 50%;
+  animation: invoice-cycle-rotate 3s ease-in-out infinite;
+}
+
+.invoice-dispenser-slot::before {
+  content: "";
+  inset: 0;
+  border-radius: inherit;
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: #ffffff14;
+  opacity: 0.5;
+}
+
+.invoice-dispenser-slot::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 12px;
+  background: linear-gradient(0deg, transparent, rgba(0, 0, 0, 0.95));
+  height: 8px;
+  mix-blend-mode: soft-light;
+  border-radius: 100px;
+}
+
+/* Card emerges smoothly from underneath the slot */
+.invoice-dispense-mask {
+  position: relative;
+  width: 100%;
+  margin-top: -14px;
+  z-index: 10;
+  mask-image: linear-gradient(to bottom, transparent 0px, black 20px, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 20px, black 100%);
+}
+
+.invoice-dispensed-card {
+  animation: invoice-card-dispense 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes invoice-card-dispense {
+  0% {
+    transform: translateY(-120px);
+    opacity: 0.2;
+  }
+  30% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Yuqori dispenser kapsulasi (terminal slit) legacy */
 .invoice-output {
   align-self: center;
   background: inherit;
   border-radius: 100px;
   padding: 0 12px 0 10px;
-  height: 36px;
-  width: 90%;
-  max-width: 350px;
+  height: 32px;
+  width: 85%;
+  max-width: 380px;
   position: relative;
-  top: -140px;
-  z-index: 5;
+  z-index: 25;
+  box-shadow: 0 6px 20px -3px rgba(0, 0, 0, 0.35);
 }
 
 .invoice-output .cover {
@@ -34,17 +169,17 @@
   left: 2px;
   border-radius: 100px;
   clip-path: inset(0 0 0 0 round 100px);
-  background: #101216;
+  background: #0f172a;
   transition: filter 1000ms cubic-bezier(0, 0, 0, 1);
-  filter: blur(5px);
+  filter: blur(4px);
 }
 
 .invoice-output .cover::after {
   content: "";
-  top: -10px;
-  right: -10px;
-  bottom: -10px;
-  left: -10px;
+  top: -8px;
+  right: -8px;
+  bottom: -8px;
+  left: -8px;
   border-radius: 100px;
   position: absolute;
   background: inherit;
@@ -56,15 +191,12 @@
   overflow: hidden;
   border-radius: 100px;
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  inset: 0;
   pointer-events: none;
 }
 
 .invoice-output .wrap-colors-1 {
-  opacity: 0.35;
+  opacity: 0.45;
   filter: blur(3px);
 }
 
@@ -78,8 +210,8 @@
     transparent 360deg
   );
   position: absolute;
-  width: 400px;
-  height: 400px;
+  width: 450px;
+  height: 450px;
   margin: auto;
   inset: 0;
   left: 50%;
@@ -90,26 +222,23 @@
 
 .invoice-output::before {
   content: "";
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  inset: 0;
   border-radius: inherit;
   position: absolute;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   background: #ffffff14;
-  opacity: 0.4;
-  transition: opacity 400ms linear, background-color 400ms linear;
+  opacity: 0.5;
+  transition: opacity 400ms linear;
 }
 
 .invoice-output::after {
   content: "";
   position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 14px;
-  background: linear-gradient(0deg, transparent, black);
-  height: 9px;
+  left: 16px;
+  right: 16px;
+  top: 12px;
+  background: linear-gradient(0deg, transparent, rgba(0, 0, 0, 0.95));
+  height: 8px;
   mix-blend-mode: soft-light;
   border-radius: 100px;
 }
@@ -127,39 +256,37 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
-  inset: 0;
+  position: relative;
+  width: 100%;
+  margin-top: -14px;
+  z-index: 10;
 }
 
 .invoice-area::after {
   pointer-events: none;
   content: "";
   position: absolute;
-  top: 66%;
+  top: 60%;
   left: 0;
   right: 0;
-  height: 100px;
-  width: 60%;
+  height: 80px;
+  width: 70%;
   margin: auto;
   background-color: #648cc630;
-  filter: blur(2em);
-  opacity: 0.7;
+  filter: blur(2.5em);
+  opacity: 0.6;
   transform: perspective(10px) rotateX(5deg) scale(1, 0.5);
   z-index: 0;
 }
 
 .invoice-ticket-mask {
-  position: absolute;
+  position: relative;
   overflow: visible;
   display: flex;
   justify-content: center;
-  mask-image: linear-gradient(rgba(0, 0, 0, 0.1) 0%, white 20px);
+  mask-image: linear-gradient(rgba(0, 0, 0, 0) 0%, white 24px);
   perspective: 1000px;
-  top: calc(50% - 142px);
-  left: 0;
-  right: 0;
-  height: 100%;
-  min-height: 540px;
+  width: 100%;
 }
 
 /* Continuously looping dispense animation */
@@ -169,61 +296,60 @@
 
 /* Single dispense and hold in place for readable invoices */
 .invoice-ticket.is-static {
-  transform: translateY(45px);
-  animation: invoice-ticket-dispense 1.8s ease-out forwards;
+  transform: translateY(10px);
+  animation: invoice-ticket-dispense 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .invoice-ticket {
-  transform: translateY(45px);
+  transform: translateY(10px);
   perspective: 3000px;
   cursor: pointer;
+  width: 100%;
+  max-width: 480px;
 }
 
 @keyframes invoice-ticket-move {
   0% {
-    transform: translateY(-300px);
+    transform: translateY(-220px);
   }
   7% {
-    transform: translateY(-250px);
+    transform: translateY(-160px);
   }
   12% {
-    transform: translateY(-200px);
+    transform: translateY(-110px);
   }
   16% {
-    transform: translateY(-170px);
+    transform: translateY(-60px);
   }
   22% {
-    transform: translateY(-100px);
+    transform: translateY(-20px);
   }
   27% {
-    transform: translateY(-40px);
+    transform: translateY(4px);
   }
   34%,
   88% {
-    transform: translateY(45px);
+    transform: translateY(10px);
   }
   100% {
-    transform: translateY(100%) rotateX(160deg) scale(5);
+    transform: translateY(100%) rotateX(160deg) scale(3);
   }
 }
 
 @keyframes invoice-ticket-dispense {
   0% {
-    transform: translateY(-280px);
-    opacity: 0.2;
+    transform: translateY(-160px);
+    opacity: 0.15;
   }
-  20% {
-    transform: translateY(-180px);
-    opacity: 0.8;
-  }
-  50% {
+  35% {
     transform: translateY(-60px);
+    opacity: 0.75;
   }
   75% {
-    transform: translateY(52px);
+    transform: translateY(16px);
   }
   100% {
-    transform: translateY(45px);
+    transform: translateY(10px);
     opacity: 1;
   }
 }
@@ -232,6 +358,7 @@
   transition: transform 0.65s var(--ease-elastic);
   transform-style: preserve-3d;
   position: relative;
+  width: 100%;
 }
 
 /* Hover or active class flips the ticket */
@@ -243,6 +370,7 @@
 .invoice-float {
   transform-style: preserve-3d;
   animation: invoice-float 3.5s ease-in-out infinite;
+  width: 100%;
 }
 
 @keyframes invoice-float {
@@ -250,7 +378,7 @@
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-12px);
+    transform: translateY(-8px);
   }
   100% {
     transform: translateY(0);
@@ -259,12 +387,12 @@
 
 .invoice-front,
 .invoice-back {
-  display: inline-block;
+  display: block;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transform-style: preserve-3d;
-  border-radius: 12px 12px 0 0;
-  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.35), 0 5px 15px rgba(0, 0, 0, 0.15);
+  border-radius: 14px 14px 0 0;
+  width: 100%;
 }
 
 .invoice-front {
@@ -287,7 +415,7 @@
   right: 0;
   margin: auto;
   mix-blend-mode: soft-light;
-  opacity: 0.6;
+  opacity: 0.65;
   pointer-events: none;
 }
 
@@ -363,15 +491,17 @@
 .invoice-ticket-body {
   display: block;
   position: relative;
-  width: 320px;
-  margin-bottom: 20px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
   padding: 0;
-  border-radius: 12px 12px 0px 0px;
+  border-radius: 14px 14px 0px 0px;
   background-color: white;
   text-align: center;
   background: linear-gradient(to bottom, #ffffff, #e0faff);
   color: black;
   overflow: visible;
+  box-shadow: 0 18px 40px -8px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 .invoice-ticket-body svg,
@@ -388,20 +518,20 @@
   align-items: center;
   justify-content: space-between;
   position: relative;
-  padding: 14px 16px;
+  padding: 14px 20px;
   border-bottom: 1px dashed rgba(0, 0, 0, 0.35);
   text-align: left;
   height: 56px;
 }
 
 .invoice-ticket-body header .ticket-name {
-  font-weight: 300;
-  font-size: 1.05em;
+  font-weight: 400;
+  font-size: 1.1em;
   line-height: normal;
   align-items: center;
   display: flex;
   gap: 4px;
-  letter-spacing: -1.5px;
+  letter-spacing: -1.2px;
 }
 
 .invoice-ticket-body header span {
@@ -410,7 +540,7 @@
 
 .invoice-ticket-body header time {
   display: flex;
-  font-size: 0.9em;
+  font-size: 0.95em;
 }
 
 .invoice-ticket-body header .slash {
@@ -424,24 +554,25 @@
   display: block;
   width: 14px;
   height: 14px;
-  background-color: #0f1114;
+  background-color: #f1f5f9;
   position: absolute;
-  right: -8px;
+  right: -7px;
   border-radius: 50%;
   z-index: 11;
   bottom: -7px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .invoice-ticket-body header:after {
-  left: -8px;
+  left: -7px;
 }
 
 .invoice-ticket-body .contents {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 20px 16px;
-  min-height: 200px;
+  justify-content: space-between;
+  padding: 22px 20px;
+  min-height: 190px;
   position: relative;
   pointer-events: all;
 }
@@ -451,7 +582,7 @@
   content: "";
   display: block;
   position: absolute;
-  bottom: -16px;
+  bottom: -15px;
   left: 0;
   background:
     -webkit-linear-gradient(-135deg, #e0faff 50%, transparent 50%) 0 50%,
@@ -500,7 +631,7 @@
   height: 28px;
   width: 0;
   position: absolute;
-  right: 18px;
+  right: 20px;
   top: 14px;
 }
 
@@ -548,21 +679,24 @@
 }
 
 .invoice-qrcode {
-  position: absolute;
+  position: relative;
   z-index: 1;
   color: #1e3a8a;
+  flex-shrink: 0;
 }
 
-.invoice-qrcode img {
+.invoice-qrcode img,
+.invoice-qrcode svg {
   display: block;
 }
 
 .invoice-back .invoice-qrcode {
-  margin-top: 4px;
+  margin: 6px auto;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: fit-content;
 }
 
 .invoice-back .invoice-qrcode::after {
@@ -601,14 +735,12 @@
 }
 
 .invoice-front .invoice-qrcode {
-  right: 12px;
-  bottom: 8px;
+  align-self: flex-end;
 }
 
-.invoice-front .invoice-qrcode img {
-  height: 64px;
-  width: 64px;
-  border-radius: 6px;
+.invoice-front .invoice-qrcode svg {
+  height: 60px;
+  width: 60px;
 }
 
 .invoice-reflex {
@@ -618,13 +750,13 @@
   bottom: -5px;
   z-index: 10;
   overflow: hidden;
-  border-radius: 12px 12px 0 0;
+  border-radius: 14px 14px 0 0;
 }
 
 .invoice-reflex::before {
   content: "";
   position: absolute;
-  width: 300px;
+  width: 450px;
   background: linear-gradient(
     to right,
     rgba(221, 249, 255, 0.3) 10%,
@@ -654,7 +786,7 @@
   position: absolute;
   inset: 0;
   mask-image: linear-gradient(white 50%, transparent 100%);
-  border-radius: 12px 12px 0px 0px;
+  border-radius: 14px 14px 0px 0px;
   background: radial-gradient(at 30% -5%, #90f1f1, #d3ccf0, rgba(255, 255, 255, 0) 25%),
     radial-gradient(at 30% 40%, #aad1f0, rgba(255, 255, 255, 0) 20%),
     radial-gradient(at 50% 70%, #c4f2e5, rgba(255, 255, 255, 0) 30%),
@@ -692,11 +824,8 @@
 
 .invoice-noise {
   position: absolute;
-  top: -25px;
-  bottom: -20px;
-  left: 0;
-  right: 0;
-  opacity: 0.07;
+  inset: 0;
+  opacity: 0.06;
   mask-image: linear-gradient(transparent 5%, white 30%, white 70%, transparent 95%);
   filter: grayscale(1);
   pointer-events: none;

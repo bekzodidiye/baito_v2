@@ -5,7 +5,7 @@ import {
   Building2, Check, Copy, Landmark, CreditCard, ShieldCheck, AlertTriangle, Loader2,
 } from 'lucide-react';
 import { LoadingOrb } from "@/components/ui/loading-orb";
-import { InvoiceCard } from "@/components/ui/invoice-card";
+import '@/components/ui/invoice-card.css';
 import { fetchInvoiceApi, declareInvoicePaymentApi } from '../../api/queries';
 
 /** Paying an invoice, opened from the button in the billing email.
@@ -66,8 +66,8 @@ const CopyRow: React.FC<{ label: string; value: string }> = ({ label, value }) =
 };
 
 const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="min-h-screen bg-slate-100 py-6 px-4 sm:py-12">
-    <div className="max-w-2xl mx-auto">{children}</div>
+  <div className="min-h-screen bg-slate-100 py-6 px-4 sm:py-10">
+    <div className="max-w-xl mx-auto">{children}</div>
   </div>
 );
 
@@ -129,57 +129,140 @@ export const InvoicePayScreen: React.FC = () => {
 
   return (
     <Shell>
-      {/* 3D Holographic Digital Invoice Pass */}
-      <div className="mb-6 flex flex-col items-center">
-        <InvoiceCard
-          invoiceNumber={data.invoiceNumber}
-          amount={data.amount}
-          company={data.company}
-          jobTitle={data.jobTitle || 'Xizmat to\'lovi'}
-          date={data.workDate || '27/08/2026'}
-          status={data.status || 'invoiced'}
-          loop={false}
-        />
-        <p className="text-xs text-slate-500 -mt-2 mb-2 text-center font-medium">
-          👆 Chiptani aylantirish (chek tafsilotlarini ko'rish) uchun ustiga bosing yoki sichqonchani olib boring
-        </p>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-6 sm:px-8 pt-7 pb-6 border-b border-slate-100">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                Hisob-faktura
-              </p>
-              <p className="text-[15px] font-semibold text-slate-900 mt-0.5 tabular-nums">
-                № {data.invoiceNumber}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 text-slate-400">
-              <Building2 size={16} />
-              <span className="text-sm font-medium text-slate-600">{data.company}</span>
-            </div>
-          </div>
-
-          {/* The number they came for, and the one they will not have to type. */}
-          <div className="mt-6 rounded-xl bg-slate-50 border border-slate-200 px-5 py-4">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-              To'lov summasi
-            </p>
-            <p className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-1 tabular-nums">
-              {money(data.amount)} <span className="text-lg font-semibold text-slate-500">so'm</span>
-            </p>
-          </div>
-
-          {data.jobTitle && (
-            <p className="mt-4 text-sm text-slate-500">
-              {data.jobTitle}
-              {data.workDate ? ` · ${data.workDate}` : ''}
-              {data.location ? ` · ${data.location}` : ''}
-            </p>
-          )}
+      <div className="invoice-dispenser-wrapper">
+        {/* Yuqori dispenser kapsulasi (aylanuvchi neon nur) */}
+        <div className="invoice-dispenser-slot">
+          <div className="wrap-colors-1"><div className="bg-colors" /></div>
+          <div className="wrap-colors-2"><div className="bg-colors" /></div>
+          <div className="cover" />
         </div>
+
+        {/* Pastda slotdan invoys bo'lib chiqib keluvchi yagona karta */}
+        <div className="invoice-dispense-mask">
+          <div className="invoice-dispensed-card bg-white rounded-2xl border border-slate-200/90 shadow-xl overflow-hidden">
+            {/* INVOYS RAQAMLI PASPORT / RECEIPT HEADER */}
+            <div className="invoice-pass-header relative p-6 sm:p-8 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/40">
+              <div className="invoice-reflex" />
+
+              {/* 3D Wireframe Kubik fon dekoratsiyasi */}
+              <svg
+                className="invoice-icon-cube"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path style={{ ['--i' as any]: 1 }} className="path-center" d="M12 12.75L14.25 11.437M12 12.75L9.75 11.437M12 12.75V15" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+                <path style={{ ['--i' as any]: 2 }} className="path-t" d="M9.75 3.562L12 2.25L14.25 3.563" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+                <path style={{ ['--i' as any]: 3 }} className="path-tr" d="M21 7.5L18.75 6.187M21 7.5V9.75M21 7.5L18.75 8.813" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+                <path style={{ ['--i' as any]: 4 }} className="path-br" d="M21 14.25V16.5L18.75 17.813" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+                <path style={{ ['--i' as any]: 5 }} className="path-b" d="M12 21.75L14.25 20.437M12 21.75V19.5M12 21.75L9.75 20.437" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+                <path style={{ ['--i' as any]: 6 }} className="path-bl" d="M5.25 17.813L3 16.5V14.25" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+                <path style={{ ['--i' as any]: 7 }} className="path-tl" d="M3 7.5L5.25 6.187M3 7.5L5.25 8.813M3 7.5V9.75" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+
+              {/* Pass logotipi, Shtrix-kod va Holat indikatori */}
+              <div className="relative z-10 flex items-center justify-between gap-4 mb-5">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-brand-primary animate-pulse" />
+                  <span className="text-xs font-black tracking-widest text-slate-800 uppercase">
+                    BAITO PASS
+                  </span>
+                  <span className="hidden sm:inline-block text-[10px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded">
+                    Digital Invoice
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-full flex items-center gap-1.5 ${
+                      declared || data.status === 'paid'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        declared || data.status === 'paid'
+                          ? 'bg-emerald-500'
+                          : 'bg-amber-500 animate-pulse'
+                      }`}
+                    />
+                    {declared || data.status === 'paid' ? "TO'LANGAN" : 'KUTILMOQDA'}
+                  </span>
+
+                  {/* Shtrix-kod */}
+                  <div className="h-6 flex items-center gap-[2px] opacity-75" title={`Shtrix-kod: ${data.invoiceNumber}`}>
+                    <span className="w-[2px] h-full bg-slate-900" />
+                    <span className="w-[1px] h-full bg-slate-900" />
+                    <span className="w-[3px] h-full bg-slate-900" />
+                    <span className="w-[1px] h-full bg-slate-900" />
+                    <span className="w-[2px] h-full bg-slate-900" />
+                    <span className="w-[1.5px] h-full bg-slate-900" />
+                    <span className="w-[3px] h-full bg-slate-900" />
+                    <span className="w-[1px] h-full bg-slate-900" />
+                    <span className="w-[2px] h-full bg-slate-900" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Invoys raqami va Kompaniya */}
+              <div className="relative z-10 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                    Hisob-faktura
+                  </p>
+                  <p className="text-base sm:text-lg font-bold text-slate-900 mt-0.5 tabular-nums">
+                    № {data.invoiceNumber}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 text-slate-700 bg-white/95 backdrop-blur-sm px-3.5 py-1.5 rounded-xl border border-slate-200/80 shadow-2xs">
+                  <Building2 size={16} className="text-slate-400" />
+                  <span className="text-xs font-semibold">{data.company}</span>
+                </div>
+              </div>
+
+              {/* To'lov summasi, xizmat nomi va QR-kod */}
+              <div className="relative z-10 mt-5 pt-5 border-t border-slate-200/60 flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                    To'lov summasi
+                  </p>
+                  <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-0.5 tabular-nums tracking-tight">
+                    {money(data.amount)} <span className="text-sm font-semibold text-slate-500">so'm</span>
+                  </p>
+                  {data.jobTitle && (
+                    <div className="mt-2 text-xs text-slate-600 flex items-center gap-2">
+                      <span className="font-semibold text-slate-800">{data.jobTitle}</span>
+                      <span className="text-slate-300">·</span>
+                      <span className="text-slate-500">
+                        {data.workDate ? `${data.workDate} · ` : ''}{data.location || ''}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* QR-kod vidjeti */}
+                <div
+                  className="shrink-0 p-2 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex flex-col items-center"
+                  title="QR-kod orqali tekshirish"
+                >
+                  <svg className="w-11 h-11 text-slate-800" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm10-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm14-2h4v4h-4v-4zm-4 4h4v4h-4v-4zm4 4h4v4h-4v-4zm-4-8h4v4h-4v-4z" />
+                  </svg>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">
+                    Baito QR
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* PERFORATSIYA (Chek qirqim chizig'i) */}
+            <div className="relative flex items-center justify-between py-1 bg-white">
+              <div className="w-6 h-6 -ml-3 rounded-full bg-slate-100 border-r border-slate-200/90 shadow-inner" />
+              <div className="flex-1 border-b-2 border-dashed border-slate-200" />
+              <div className="w-6 h-6 -mr-3 rounded-full bg-slate-100 border-l border-slate-200/90 shadow-inner" />
+            </div>
 
         {declared ? (
           <div className="px-6 sm:px-8 py-10 text-center">
@@ -300,6 +383,14 @@ export const InvoicePayScreen: React.FC = () => {
             </div>
           </>
         )}
+
+            {/* Baito hisob-faktura xavfsizlik va muhr paneli */}
+            <div className="px-6 sm:px-8 py-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-400">
+              <ShieldCheck size={14} className="text-slate-400" />
+              <span>Baito · xavfsiz to'lov va rasmiy elektron hisob-faktura</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <p className="mt-5 text-center text-xs text-slate-400">
