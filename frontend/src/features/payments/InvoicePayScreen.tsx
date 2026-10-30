@@ -100,7 +100,7 @@ export const InvoicePayScreen: React.FC = () => {
     return (
       <Shell>
         <div className="bg-white rounded-2xl border border-slate-200 p-12 min-h-[300px] flex flex-col items-center justify-center">
-          <LoadingOrb size={34} variant="working" />
+          <LoadingOrb size={36} variant="working" />
         </div>
       </Shell>
     );

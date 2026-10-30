@@ -17,7 +17,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
   if (loading && !stats) {
     return (
       <div className="flex-1 min-h-[60vh] flex flex-col items-center justify-center p-8">
-        <LoadingOrb size={34} variant="working" />
+        <LoadingOrb size={36} variant="working" />
       </div>
     );
   }
