@@ -1,0 +1,704 @@
+.invoice-card-root {
+  --ease-elastic: cubic-bezier(0.5, 2, 0.3, 0.8);
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  min-height: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  overflow: visible;
+}
+
+.invoice-output {
+  align-self: center;
+  background: inherit;
+  border-radius: 100px;
+  padding: 0 12px 0 10px;
+  height: 36px;
+  width: 90%;
+  max-width: 350px;
+  position: relative;
+  top: -140px;
+  z-index: 5;
+}
+
+.invoice-output .cover {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  bottom: 2px;
+  left: 2px;
+  border-radius: 100px;
+  clip-path: inset(0 0 0 0 round 100px);
+  background: #101216;
+  transition: filter 1000ms cubic-bezier(0, 0, 0, 1);
+  filter: blur(5px);
+}
+
+.invoice-output .cover::after {
+  content: "";
+  top: -10px;
+  right: -10px;
+  bottom: -10px;
+  left: -10px;
+  border-radius: 100px;
+  position: absolute;
+  background: inherit;
+  opacity: 0.5;
+}
+
+.invoice-output .wrap-colors-1,
+.invoice-output .wrap-colors-2 {
+  overflow: hidden;
+  border-radius: 100px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.invoice-output .wrap-colors-1 {
+  opacity: 0.35;
+  filter: blur(3px);
+}
+
+.invoice-output .bg-colors {
+  background: conic-gradient(
+    transparent 0deg,
+    #8400ff 65deg,
+    #00ccff 144deg,
+    #1356b4 180deg,
+    transparent 324deg,
+    transparent 360deg
+  );
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  margin: auto;
+  inset: 0;
+  left: 50%;
+  transform: translateX(-50%) rotate(220deg);
+  border-radius: 50%;
+  animation: invoice-cycle-rotate 3s ease-in-out infinite;
+}
+
+.invoice-output::before {
+  content: "";
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: inherit;
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #ffffff14;
+  opacity: 0.4;
+  transition: opacity 400ms linear, background-color 400ms linear;
+}
+
+.invoice-output::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 14px;
+  background: linear-gradient(0deg, transparent, black);
+  height: 9px;
+  mix-blend-mode: soft-light;
+  border-radius: 100px;
+}
+
+@keyframes invoice-cycle-rotate {
+  from {
+    transform: translateX(-50%) rotate(0deg);
+  }
+  to {
+    transform: translateX(-50%) rotate(360deg);
+  }
+}
+
+.invoice-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  inset: 0;
+}
+
+.invoice-area::after {
+  pointer-events: none;
+  content: "";
+  position: absolute;
+  top: 66%;
+  left: 0;
+  right: 0;
+  height: 100px;
+  width: 60%;
+  margin: auto;
+  background-color: #648cc630;
+  filter: blur(2em);
+  opacity: 0.7;
+  transform: perspective(10px) rotateX(5deg) scale(1, 0.5);
+  z-index: 0;
+}
+
+.invoice-ticket-mask {
+  position: absolute;
+  overflow: visible;
+  display: flex;
+  justify-content: center;
+  mask-image: linear-gradient(rgba(0, 0, 0, 0.1) 0%, white 20px);
+  perspective: 1000px;
+  top: calc(50% - 142px);
+  left: 0;
+  right: 0;
+  height: 100%;
+  min-height: 540px;
+}
+
+/* Continuously looping dispense animation */
+.invoice-ticket.is-looping {
+  animation: invoice-ticket-move 11s ease-in-out infinite;
+}
+
+/* Single dispense and hold in place for readable invoices */
+.invoice-ticket.is-static {
+  transform: translateY(45px);
+  animation: invoice-ticket-dispense 1.8s ease-out forwards;
+}
+
+.invoice-ticket {
+  transform: translateY(45px);
+  perspective: 3000px;
+  cursor: pointer;
+}
+
+@keyframes invoice-ticket-move {
+  0% {
+    transform: translateY(-300px);
+  }
+  7% {
+    transform: translateY(-250px);
+  }
+  12% {
+    transform: translateY(-200px);
+  }
+  16% {
+    transform: translateY(-170px);
+  }
+  22% {
+    transform: translateY(-100px);
+  }
+  27% {
+    transform: translateY(-40px);
+  }
+  34%,
+  88% {
+    transform: translateY(45px);
+  }
+  100% {
+    transform: translateY(100%) rotateX(160deg) scale(5);
+  }
+}
+
+@keyframes invoice-ticket-dispense {
+  0% {
+    transform: translateY(-280px);
+    opacity: 0.2;
+  }
+  20% {
+    transform: translateY(-180px);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-60px);
+  }
+  75% {
+    transform: translateY(52px);
+  }
+  100% {
+    transform: translateY(45px);
+    opacity: 1;
+  }
+}
+
+.invoice-ticket-flip-container {
+  transition: transform 0.65s var(--ease-elastic);
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+/* Hover or active class flips the ticket */
+.invoice-ticket:hover .invoice-ticket-flip-container,
+.invoice-ticket.is-flipped .invoice-ticket-flip-container {
+  transform: rotateY(180deg);
+}
+
+.invoice-float {
+  transform-style: preserve-3d;
+  animation: invoice-float 3.5s ease-in-out infinite;
+}
+
+@keyframes invoice-float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.invoice-front,
+.invoice-back {
+  display: inline-block;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.35), 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.invoice-front {
+  z-index: 1;
+}
+
+.invoice-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotateY(-180deg);
+}
+
+.invoice-icon-cube {
+  position: absolute;
+  height: 110%;
+  z-index: 1;
+  top: -3px;
+  left: 0;
+  right: 0;
+  margin: auto;
+  mix-blend-mode: soft-light;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.invoice-icon-cube path {
+  animation-delay: calc(var(--i, 1) * 100ms) !important;
+  transform-origin: center;
+}
+
+.invoice-icon-cube .path-center {
+  animation: invoice-path-center 3s ease-in-out infinite;
+}
+
+@keyframes invoice-path-center {
+  50% {
+    transform: scale(1.3);
+  }
+}
+
+.invoice-icon-cube .path-t {
+  animation: invoice-path-t 1.6s ease-in-out infinite;
+}
+@keyframes invoice-path-t {
+  50% {
+    transform: translateY(1px);
+  }
+}
+
+.invoice-icon-cube .path-tl {
+  animation: invoice-path-tl 1.6s ease-in-out infinite;
+}
+@keyframes invoice-path-tl {
+  50% {
+    transform: translateX(1px) translateY(1px);
+  }
+}
+
+.invoice-icon-cube .path-tr {
+  animation: invoice-path-tr 1.6s ease-in-out infinite;
+}
+@keyframes invoice-path-tr {
+  50% {
+    transform: translateX(-1px) translateY(1px);
+  }
+}
+
+.invoice-icon-cube .path-br {
+  animation: invoice-path-br 1.6s ease-in-out infinite;
+}
+@keyframes invoice-path-br {
+  50% {
+    transform: translateX(-1px) translateY(-1px);
+  }
+}
+
+.invoice-icon-cube .path-bl {
+  animation: invoice-path-bl 1.6s ease-in-out infinite;
+}
+@keyframes invoice-path-bl {
+  50% {
+    transform: translateX(1px) translateY(-1px);
+  }
+}
+
+.invoice-icon-cube .path-b {
+  animation: invoice-path-b 1.6s ease-in-out infinite;
+}
+@keyframes invoice-path-b {
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+.invoice-ticket-body {
+  display: block;
+  position: relative;
+  width: 320px;
+  margin-bottom: 20px;
+  padding: 0;
+  border-radius: 12px 12px 0px 0px;
+  background-color: white;
+  text-align: center;
+  background: linear-gradient(to bottom, #ffffff, #e0faff);
+  color: black;
+  overflow: visible;
+}
+
+.invoice-ticket-body svg,
+.invoice-ticket-body img {
+  pointer-events: none;
+}
+
+.invoice-ticket-body .bold {
+  font-weight: 800;
+}
+
+.invoice-ticket-body header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding: 14px 16px;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.35);
+  text-align: left;
+  height: 56px;
+}
+
+.invoice-ticket-body header .ticket-name {
+  font-weight: 300;
+  font-size: 1.05em;
+  line-height: normal;
+  align-items: center;
+  display: flex;
+  gap: 4px;
+  letter-spacing: -1.5px;
+}
+
+.invoice-ticket-body header span {
+  display: inline-block;
+}
+
+.invoice-ticket-body header time {
+  display: flex;
+  font-size: 0.9em;
+}
+
+.invoice-ticket-body header .slash {
+  padding: 0 1px;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.invoice-ticket-body header::after,
+.invoice-ticket-body header::before {
+  content: "";
+  display: block;
+  width: 14px;
+  height: 14px;
+  background-color: #0f1114;
+  position: absolute;
+  right: -8px;
+  border-radius: 50%;
+  z-index: 11;
+  bottom: -7px;
+}
+
+.invoice-ticket-body header:after {
+  left: -8px;
+}
+
+.invoice-ticket-body .contents {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  min-height: 200px;
+  position: relative;
+  pointer-events: all;
+}
+
+/* Sawtooth receipt edge at bottom */
+.invoice-ticket-body::after {
+  content: "";
+  display: block;
+  position: absolute;
+  bottom: -16px;
+  left: 0;
+  background:
+    -webkit-linear-gradient(-135deg, #e0faff 50%, transparent 50%) 0 50%,
+    -webkit-linear-gradient(-45deg, #e0faff 50%, transparent 50%) 0 50%,
+    transparent;
+  background-repeat: repeat-x;
+  background-size: 16px 16px, 16px 16px, cover, cover;
+  height: 16px;
+  width: 100%;
+  pointer-events: none;
+}
+
+/* Barcode rendered with pure CSS box-shadow */
+.invoice-barcode {
+  box-shadow:
+    1px 0 0 1px,
+    4px 0 0 1px,
+    8px 0 0 1px,
+    10px 0 0 1px,
+    13px 0 0 1px,
+    16px 0 0 1px,
+    20px 0 0 1px,
+    22px 0 0 1px,
+    25px 0 0 1px,
+    28px 0 0 1px,
+    33px 0 0 1px,
+    35px 0 0 1px,
+    39px 0 0 1px,
+    42px 0 0 1px,
+    45px 0 0 1px,
+    49px 0 0 1px,
+    54px 0 0 1px,
+    57px 0 0 1px,
+    62px 0 0 1px,
+    66px 0 0 1px,
+    70px 0 0 1px,
+    73px 0 0 1px,
+    76px 0 0 1px,
+    80px 0 0 1px,
+    84px 0 0 1px,
+    87px 0 0 1px,
+    91px 0 0 1px,
+    94px 0 0 1px,
+    96px 0 0 1px;
+  display: inline-block;
+  height: 28px;
+  width: 0;
+  position: absolute;
+  right: 18px;
+  top: 14px;
+}
+
+@keyframes invoice-appear {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes invoice-appear2 {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.invoice-back header span {
+  animation: none;
+}
+
+.invoice-ticket:hover .invoice-back header span,
+.invoice-ticket.is-flipped .invoice-back header span {
+  opacity: 0;
+  animation: invoice-appear 0.5s var(--ease-elastic) forwards calc(var(--i, 1) * 20ms + 400ms);
+}
+
+.invoice-ticket:hover .invoice-front header span,
+.invoice-ticket.is-flipped .invoice-front header span {
+  opacity: 1;
+  animation: invoice-appear2;
+}
+
+.invoice-front header span {
+  opacity: 0;
+  animation: invoice-appear 0.5s var(--ease-elastic) forwards calc(var(--i, 1) * 20ms + 400ms);
+}
+
+.invoice-qrcode {
+  position: absolute;
+  z-index: 1;
+  color: #1e3a8a;
+}
+
+.invoice-qrcode img {
+  display: block;
+}
+
+.invoice-back .invoice-qrcode {
+  margin-top: 4px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.invoice-back .invoice-qrcode::after {
+  --stroke-width: 0.2rem;
+  --corner-size: 1rem;
+  position: absolute;
+  content: "";
+  background:
+    linear-gradient(to right, currentColor var(--stroke-width), transparent var(--stroke-width)) 0 0,
+    linear-gradient(to right, currentColor var(--stroke-width), transparent var(--stroke-width)) 0 100%,
+    linear-gradient(to left, currentColor var(--stroke-width), transparent var(--stroke-width)) 100% 0,
+    linear-gradient(to left, currentColor var(--stroke-width), transparent var(--stroke-width)) 100% 100%,
+    linear-gradient(to bottom, currentColor var(--stroke-width), transparent var(--stroke-width)) 0 0,
+    linear-gradient(to bottom, currentColor var(--stroke-width), transparent var(--stroke-width)) 100% 0,
+    linear-gradient(to top, currentColor var(--stroke-width), transparent var(--stroke-width)) 0 100%,
+    linear-gradient(to top, currentColor var(--stroke-width), transparent var(--stroke-width)) 100% 100%;
+  background-size: var(--corner-size) var(--corner-size);
+  inset: -6px;
+  background-repeat: no-repeat;
+  animation: invoice-breath 3s var(--ease-elastic) infinite;
+}
+
+@keyframes invoice-breath {
+  0% {
+    transform: scale(1.03);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.03);
+    opacity: 0.4;
+  }
+}
+
+.invoice-front .invoice-qrcode {
+  right: 12px;
+  bottom: 8px;
+}
+
+.invoice-front .invoice-qrcode img {
+  height: 64px;
+  width: 64px;
+  border-radius: 6px;
+}
+
+.invoice-reflex {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  bottom: -5px;
+  z-index: 10;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+}
+
+.invoice-reflex::before {
+  content: "";
+  position: absolute;
+  width: 300px;
+  background: linear-gradient(
+    to right,
+    rgba(221, 249, 255, 0.3) 10%,
+    rgba(221, 245, 255, 0.7) 60%,
+    rgba(221, 246, 255, 0.6) 60%,
+    rgba(221, 255, 254, 0.3) 90%
+  );
+  top: -10%;
+  bottom: -10%;
+  left: -132%;
+  transform: translateX(0) skew(-30deg);
+  transition: all 0.7s ease;
+}
+
+.invoice-ticket:hover .invoice-reflex::before,
+.invoice-float:hover .invoice-reflex::before {
+  transform: translate(280%, 0) skew(-30deg);
+}
+
+.invoice-float .invoice-front .invoice-reflex::before {
+  transition-delay: 0.3s;
+}
+
+/* Iridescent holographic sheen background */
+.invoice-ticket-body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  mask-image: linear-gradient(white 50%, transparent 100%);
+  border-radius: 12px 12px 0px 0px;
+  background: radial-gradient(at 30% -5%, #90f1f1, #d3ccf0, rgba(255, 255, 255, 0) 25%),
+    radial-gradient(at 30% 40%, #aad1f0, rgba(255, 255, 255, 0) 20%),
+    radial-gradient(at 50% 70%, #c4f2e5, rgba(255, 255, 255, 0) 30%),
+    radial-gradient(at 70% 0%, #d3ccf0, rgba(255, 255, 255, 0) 20%),
+    linear-gradient(
+      75deg,
+      #90f1f1 5%,
+      rgba(255, 255, 255, 0),
+      #aad1f0,
+      rgba(255, 255, 255, 0),
+      #e9d0ed,
+      rgba(255, 255, 255, 0),
+      #d3ccf0,
+      rgba(255, 255, 255, 0),
+      #c4f2e5 90%
+    ),
+    radial-gradient(at 30% 50%, #90f1f1, rgba(255, 255, 255, 0) 30%),
+    radial-gradient(at 30% 50%, #9cb9fc, rgba(255, 255, 255, 0) 30%),
+    radial-gradient(at 100% 50%, #90f1f1, #c2dcf2, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(
+      115deg,
+      #90f1f1 5%,
+      #aad1f0 10%,
+      #d3ccf0,
+      #e9d0ed 20%,
+      #aad1f0,
+      #aad1f0 30%,
+      #d3ccf0,
+      #c2dcf2 40%,
+      #90f1f1,
+      #aad1f0 70%
+    );
+  pointer-events: none;
+}
+
+.invoice-noise {
+  position: absolute;
+  top: -25px;
+  bottom: -20px;
+  left: 0;
+  right: 0;
+  opacity: 0.07;
+  mask-image: linear-gradient(transparent 5%, white 30%, white 70%, transparent 95%);
+  filter: grayscale(1);
+  pointer-events: none;
+  z-index: 1;
+}

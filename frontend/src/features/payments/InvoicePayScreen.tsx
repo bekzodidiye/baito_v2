@@ -5,6 +5,7 @@ import {
   Building2, Check, Copy, Landmark, CreditCard, ShieldCheck, AlertTriangle, Loader2,
 } from 'lucide-react';
 import { LoadingOrb } from "@/components/ui/loading-orb";
+import { InvoiceCard } from "@/components/ui/invoice-card";
 import { fetchInvoiceApi, declareInvoicePaymentApi } from '../../api/queries';
 
 /** Paying an invoice, opened from the button in the billing email.
@@ -128,6 +129,22 @@ export const InvoicePayScreen: React.FC = () => {
 
   return (
     <Shell>
+      {/* 3D Holographic Digital Invoice Pass */}
+      <div className="mb-6 flex flex-col items-center">
+        <InvoiceCard
+          invoiceNumber={data.invoiceNumber}
+          amount={data.amount}
+          company={data.company}
+          jobTitle={data.jobTitle || 'Xizmat to\'lovi'}
+          date={data.workDate || '27/08/2026'}
+          status={data.status || 'invoiced'}
+          loop={false}
+        />
+        <p className="text-xs text-slate-500 -mt-2 mb-2 text-center font-medium">
+          👆 Chiptani aylantirish (chek tafsilotlarini ko'rish) uchun ustiga bosing yoki sichqonchani olib boring
+        </p>
+      </div>
+
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-6 sm:px-8 pt-7 pb-6 border-b border-slate-100">
           <div className="flex items-start justify-between gap-4">
