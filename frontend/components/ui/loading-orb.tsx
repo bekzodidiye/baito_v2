@@ -88,10 +88,10 @@ export const LoadingOrb: React.FC<LoadingOrbProps> = ({
   );
 
   const dotsNode = showDots && (
-    <div className={`flex items-center justify-center gap-1.5 ${colorClassName} select-none`} aria-hidden="true">
-      <span className="w-1.5 h-1.5 rounded-full bg-current animate-dot-1" />
-      <span className="w-1.5 h-1.5 rounded-full bg-current animate-dot-2" />
-      <span className="w-1.5 h-1.5 rounded-full bg-current animate-dot-3" />
+    <div className={`flex items-center justify-center gap-1 ${colorClassName} select-none`} aria-hidden="true">
+      <span className="w-1 h-1 rounded-full bg-current animate-dot-1" />
+      <span className="w-1 h-1 rounded-full bg-current animate-dot-2" />
+      <span className="w-1 h-1 rounded-full bg-current animate-dot-3" />
     </div>
   );
 
