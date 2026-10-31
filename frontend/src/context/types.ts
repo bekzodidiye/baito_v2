@@ -1,5 +1,5 @@
 
-export type ScreenType = 'landing' | 'calendar' | 'jobs' | 'messages' | 'chat' | 'notifications' | 'profile' | 'reviews' | 'applications' | 'verification' | 'payments' | 'login' | 'register' | 'settings' | 'security' | 'help' | 'faq' | 'guide' | 'terms' | 'support-chat' | 'taxes' | 'privacy' | 'payments/my-cards' | 'payments/add-card' | 'payments/top-up' | 'employer-dashboard' | 'employer-jobs' | 'employer-applicants' | 'employer-chats' | 'employer-profile' | 'employer-analytics' | 'employer-post' | 'admin';
+export type ScreenType = 'landing' | 'calendar' | 'jobs' | 'messages' | 'chat' | 'notifications' | 'profile' | 'reviews' | 'applications' | 'verification' | 'payments' | 'login' | 'register' | 'settings' | 'security' | 'help' | 'faq' | 'guide' | 'terms' | 'support-chat' | 'taxes' | 'privacy' | 'payments/my-cards' | 'payments/add-card' | 'payments/top-up' | 'employer-dashboard' | 'employer-jobs' | 'employer-applicants' | 'employer-chats' | 'employer-profile' | 'employer-analytics' | 'employer-post' | 'admin' | 'invoice-pay';
 
 export interface UserProfile {
   id: string;

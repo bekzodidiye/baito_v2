@@ -72,7 +72,7 @@ function AppContent() {
   };
 
   const isSettingsOrHelp = ['settings', 'security', 'help', 'faq', 'guide', 'terms', 'privacy', 'support-chat'].includes(currentScreen);
-  const showNavigation = currentScreen !== 'admin' && currentScreen !== 'verification' && currentScreen !== 'login' && currentScreen !== 'register' && currentScreen !== 'landing' && !currentScreen.startsWith('employer-') && !isSettingsOrHelp;
+  const showNavigation = currentScreen !== 'admin' && currentScreen !== 'verification' && currentScreen !== 'login' && currentScreen !== 'register' && currentScreen !== 'landing' && currentScreen !== 'invoice-pay' && !currentScreen.startsWith('employer-') && !isSettingsOrHelp;
 
   // The settings screens kept the app's own rail hidden and offered a "back to
   // main menu" button in its place, which is why they read as a separate site
@@ -85,7 +85,7 @@ function AppContent() {
   const showSidebar = showNavigation || isSettingsOrHelp;
 
   // Screens nobody may reach while logged out; they bounce back to the landing.
-  const isAuthGatedScreen = !isLoggedIn && !['landing', 'login', 'register', 'faq', 'terms', 'help', 'guide'].includes(currentScreen);
+  const isAuthGatedScreen = !isLoggedIn && !['landing', 'login', 'register', 'faq', 'terms', 'help', 'guide', 'invoice-pay'].includes(currentScreen);
 
   // The map is only reachable while logged in, and unmounts on other screens to save memory on low-end devices.
   const shouldMountMap = isLoggedIn && !isEmployer && currentScreen === 'jobs' && (hasOpenedMap || jobsView === 'map');
@@ -160,13 +160,13 @@ function AppContent() {
       </div>
 
       {/* Region selector fallback overlay for non-map screens */}
-      {currentScreen !== 'jobs' && currentScreen !== 'landing' && <RegionSelector />}
+      {currentScreen !== 'jobs' && currentScreen !== 'landing' && currentScreen !== 'admin' && currentScreen !== 'invoice-pay' && <RegionSelector />}
 
       {/* Menu item modal views */}
       <MenuModals isOpen={activeModal !== null} onClose={() => setActiveModal(null)} type={activeModal} />
 
-      {/* Onboarding Tour for new users */}
-      <OnboardingTour />
+      {/* Onboarding Tour for new users (only for workers on job search) */}
+      {isLoggedIn && !isEmployer && currentScreen === 'jobs' && <OnboardingTour />}
     </div>
   );
 }

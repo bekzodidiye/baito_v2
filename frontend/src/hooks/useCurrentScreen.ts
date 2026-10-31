@@ -8,9 +8,10 @@ export function useCurrentScreen() {
   const getScreenFromPath = (path: string): ScreenType => {
     const p = path.slice(1).split('/')[0];
     if (!p) return 'landing';
-    if (p === 'jobs' || p === 'jobs') return 'jobs';
+    if (p === 'jobs') return 'jobs';
     if (p === 'chats') return 'chat';
     if (p === 'support') return 'support-chat';
+    if (p === 'invoice') return 'invoice-pay';
     if (['landing', 'calendar', 'messages', 'jobs', 'chat', 'notifications', 'profile', 'reviews', 'applications', 'verification', 'payments', 'login', 'register', 'settings', 'security', 'help', 'faq', 'guide', 'terms', 'privacy', 'support-chat', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'admin'].includes(p)) {
       return p as ScreenType;
     }
