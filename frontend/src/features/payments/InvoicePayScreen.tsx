@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Building2, Check, Copy, Landmark, CreditCard, ShieldCheck, AlertTriangle, Loader2,
+  Building2, Check, Copy, Landmark, CreditCard, ShieldCheck, AlertTriangle, Loader2, RefreshCw,
 } from 'lucide-react';
 import { LoadingOrb } from "@/components/ui/loading-orb";
 import '@/components/ui/invoice-card.css';
@@ -161,20 +161,39 @@ export const InvoicePayScreen: React.FC = () => {
   return (
     <Shell>
       <div className="invoice-dispenser-wrapper">
-        {/* Yuqori dispenser kapsulasi (kattalashtirilgan terminal korpusi) */}
-        <div
-          className="invoice-dispenser-slot"
-          onClick={() => setDispenseKey((k) => k + 1)}
-          title="Invoysni qayta chiqarish uchun bosing"
-        >
-          <div className="wrap-colors-1"><div className="bg-colors" /></div>
-          <div className="wrap-colors-2"><div className="bg-colors" /></div>
-          <div className="cover" />
-          <div className="slit-opening" />
-          <div className="slit-lip" />
+        {/* Yuqori dispenser terminal korpusi (oq, zamonaviy Baito terminali) */}
+        <div className="invoice-dispenser-housing">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-white rounded-t-2xl">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-800">
+                Baito Pay Terminal
+              </span>
+              <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                Avtomatik chiqarish
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDispenseKey((k) => k + 1)}
+              className="text-[11px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition cursor-pointer"
+              title="Invoysni qayta chiqarish"
+            >
+              <RefreshCw size={12} />
+              <span>Qayta chiqarish</span>
+            </button>
+          </div>
+
+          {/* Slot og'zi va oldingi yoritilgan guide paneli */}
+          <div className="invoice-dispenser-mouth">
+            <div className="invoice-slit-recess" title="Chiqish sloti">
+              <div className="w-3/4 h-[2px] bg-slate-800 rounded-full" />
+            </div>
+            <div className="invoice-dispenser-front-lip" />
+          </div>
         </div>
 
-        {/* Pastda slotdan invoys bo'lib chiqib keluvchi yagona karta */}
+        {/* Slot ichidan chiqib keluvchi invoys kartasi */}
         <div className="invoice-dispense-mask">
           <div
             key={dispenseKey}

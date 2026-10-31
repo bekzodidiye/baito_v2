@@ -17,23 +17,25 @@ export const AdminJobsAutoDeleteBanner: React.FC<AdminJobsAutoDeleteBannerProps>
   const language = useAuthStore(st => st.language);
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   return (
-    <div className="bg-slate-900 text-white p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
+    <div className="bg-white text-slate-900 p-4 rounded-2xl border border-amber-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-slate-800 rounded-xl text-amber-400">
+        <div className="p-2.5 bg-amber-50 border border-amber-200/60 rounded-xl text-amber-600">
           <ShieldAlert size={20} />
         </div>
         <div>
           <div className="text-xs font-bold flex items-center gap-2">
-            <span>{a.autoDeleteBannerTitle}</span>
+            <span className="text-slate-900 font-black">{a.autoDeleteBannerTitle}</span>
             <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                autoDeleteEnabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+              className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                autoDeleteEnabled
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-rose-50 text-rose-700 border-rose-200'
               }`}
             >
               {autoDeleteEnabled ? 'FAOL' : 'O\'CHIRILGAN'}
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+          <p className="text-[11px] text-slate-500 font-medium mt-0.5">
             {a.autoDeleteBannerDesc}
           </p>
         </div>
@@ -42,10 +44,10 @@ export const AdminJobsAutoDeleteBanner: React.FC<AdminJobsAutoDeleteBannerProps>
       <div className="flex items-center gap-2 shrink-0">
         <button
           onClick={onToggleAutoDelete}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80 rounded-xl text-xs font-bold transition cursor-pointer"
         >
           {autoDeleteEnabled ? (
-            <ToggleRight size={20} className="text-emerald-400" />
+            <ToggleRight size={20} className="text-emerald-600" />
           ) : (
             <ToggleLeft size={20} className="text-slate-400" />
           )}
@@ -53,7 +55,7 @@ export const AdminJobsAutoDeleteBanner: React.FC<AdminJobsAutoDeleteBannerProps>
         </button>
         <button
           onClick={onRunCleanup}
-          className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl transition cursor-pointer shadow-xs"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl transition cursor-pointer shadow-xs active:scale-95"
         >
           <RefreshCw size={13} />
           <span>Tozalashni Ishga Tushirish</span>

@@ -239,9 +239,9 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
             <div className="pt-2 flex justify-end">
               <button
                 type="submit"
-                className="h-11 px-6 bg-slate-900 text-white font-extrabold text-xs rounded-xl hover:bg-slate-800 transition cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+                className="h-11 px-6 bg-blue-600 text-white font-extrabold text-xs rounded-xl hover:bg-blue-700 transition cursor-pointer flex items-center justify-center gap-2 shadow-xs active:scale-95"
               >
-                {saved ? <CheckCircle2 size={16} className="text-emerald-400" /> : <Save size={16} />}
+                {saved ? <CheckCircle2 size={16} className="text-white" /> : <Save size={16} />}
                 <span>{saved ? 'Saqlandi!' : 'Sozlamalarni Saqlash'}</span>
               </button>
             </div>
@@ -322,7 +322,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
 
       {/* Add Admin In-Page Modal */}
       {isAddAdminOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl border border-slate-200 overflow-hidden">
             <div className="p-5 bg-slate-50 border-b border-slate-200/80 flex items-center justify-between">
               <div className="flex items-center gap-2">

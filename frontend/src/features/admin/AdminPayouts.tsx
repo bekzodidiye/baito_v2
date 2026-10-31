@@ -225,14 +225,14 @@ export const AdminPayouts: React.FC = () => {
             onClick={() => setTab('withdrawals')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               tab === 'withdrawals'
-                ? 'bg-slate-900 text-white shadow-xs'
+                ? 'bg-blue-600 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
             <Wallet size={14} />
             <span>{a.withdrawalRequests}</span>
             {pendingList.length > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950">
+              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-900">
                 {pendingList.length}
               </span>
             )}
@@ -242,7 +242,7 @@ export const AdminPayouts: React.FC = () => {
             onClick={() => setTab('payouts')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               tab === 'payouts'
-                ? 'bg-slate-900 text-white shadow-xs'
+                ? 'bg-blue-600 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -259,7 +259,7 @@ export const AdminPayouts: React.FC = () => {
             onClick={() => setTab('bank')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               tab === 'bank'
-                ? 'bg-slate-900 text-white shadow-xs'
+                ? 'bg-blue-600 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -480,7 +480,7 @@ export const AdminPayouts: React.FC = () => {
 
       {/* Decision Modal */}
       {decisionModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
             <div className={`p-5 ${decisionModal.action === 'approve' ? 'bg-emerald-50 border-b border-emerald-100' : 'bg-rose-50 border-b border-rose-100'}`}>
               <div className="flex items-center justify-between">
@@ -674,7 +674,7 @@ const BankDetailsForm: React.FC<{ data?: BankDetails; onSaved: () => void }> = (
         <button
           onClick={save}
           disabled={saving}
-          className="h-11 px-6 rounded-xl bg-slate-900 text-white font-extrabold text-xs hover:bg-slate-800 transition-colors disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer shadow-sm"
+          className="h-11 px-6 rounded-xl bg-blue-600 text-white font-extrabold text-xs hover:bg-blue-700 transition-colors disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer shadow-xs active:scale-95"
         >
           {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
           Bank rekvizitlarini saqlash

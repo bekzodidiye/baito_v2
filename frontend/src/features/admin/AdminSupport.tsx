@@ -142,7 +142,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
               onClick={() => setActiveTab(tab)}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize cursor-pointer transition-all ${
                 activeTab === tab
-                  ? 'bg-slate-900 text-white shadow-2xs'
+                  ? 'bg-blue-600 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
               }`}
             >

@@ -169,18 +169,18 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
             <MessageCircle size={16} className="text-blue-500" /> Live Telegram Post Preview
           </h3>
 
-          <div className="p-4 bg-slate-900 text-slate-100 rounded-2xl font-mono text-xs leading-relaxed border border-slate-800 shadow-inner space-y-2">
-            <div className="text-amber-400 font-bold flex items-center gap-1.5">
+          <div className="p-4 bg-slate-50 text-slate-800 rounded-2xl font-mono text-xs leading-relaxed border border-blue-200/70 shadow-2xs space-y-2">
+            <div className="text-blue-700 font-bold flex items-center gap-1.5">
               <FileText size={14} /> 📊 BAITO PLATFORMA KUNLIK DIGEST ({reportData.date})
             </div>
-            <div className="text-slate-300">
-              ─────────────────────────────<br />
-              💰 <b>{a.dailyNetRevenue}</b> {reportData.totalRevenue}<br />
-              💰 <b>Ishchilarga qarz:</b> {reportData.owedToWorkers}<br />
-              👥 <b>{a.newSignups}</b> +{reportData.newUsers} ta<br />
-              🛠️ <b>{a.activeJobs}</b> {reportData.activeJobs} ta<br />
-              ✅ <b>{a.finishedJobs}</b> {reportData.completedJobs} ta<br />
-              ─────────────────────────────
+            <div className="text-slate-700">
+              <span className="text-slate-300">─────────────────────────────</span><br />
+              💰 <b className="text-slate-900">{a.dailyNetRevenue}</b> {reportData.totalRevenue}<br />
+              💰 <b className="text-slate-900">Ishchilarga qarz:</b> {reportData.owedToWorkers}<br />
+              👥 <b className="text-slate-900">{a.newSignups}</b> +{reportData.newUsers} ta<br />
+              🛠️ <b className="text-slate-900">{a.activeJobs}</b> {reportData.activeJobs} ta<br />
+              ✅ <b className="text-slate-900">{a.finishedJobs}</b> {reportData.completedJobs} ta<br />
+              <span className="text-slate-300">─────────────────────────────</span>
             </div>
             <div className="text-slate-400 text-[11px] font-sans">
               🤖 Avtomatik tayyorlandi: Baito System Admin Bot v2.4
@@ -195,7 +195,7 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs rounded-xl cursor-pointer shrink-0"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl cursor-pointer shrink-0 shadow-xs transition active:scale-95"
               >
                 {saving ? 'Saqlanmoqda...' : 'Saqlash'}
               </button>

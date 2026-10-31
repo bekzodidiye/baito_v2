@@ -269,7 +269,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
               onClick={() => setStatusFilter(tab.id)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                 statusFilter === tab.id
-                  ? 'bg-slate-900 text-white'
+                  ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >

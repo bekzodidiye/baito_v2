@@ -3,7 +3,6 @@ import { AdminTab } from './types';
 import {
   Wallet, LayoutDashboard, Users, Briefcase, FileCheck, DollarSign, AlertTriangle, Send, Sliders, X, User,
   Building2, Headphones, BarChart3, FolderTree, ShieldAlert, Ticket, MapPin, Bell, BellRing, Zap, FileText,
-  ChevronRight,
 } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useAdminData } from './useAdminData';
@@ -99,26 +98,26 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-40 md:hidden transition-opacity"
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden transition-opacity"
         />
       )}
       <aside
-        className={`fixed top-0 left-0 bottom-0 z-50 w-64 bg-slate-950 text-slate-300 border-r border-slate-800/80 flex flex-col justify-between transition-transform duration-300 md:translate-x-0 md:static md:z-10 shadow-xl ${
+        className={`fixed top-0 left-0 bottom-0 z-50 w-64 bg-white text-slate-700 border-r border-slate-200/80 flex flex-col justify-between transition-transform duration-300 md:translate-x-0 md:static md:z-10 shadow-xs ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full overflow-hidden">
           {/* Top Brand Header */}
-          <div className="p-4 border-b border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-950/60">
+          <div className="p-4 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-blue-500/25">
+              <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-xs">
                 B
               </div>
               <div>
-                <h2 className="text-sm font-black text-white leading-tight tracking-tight">Baito Admin</h2>
+                <h2 className="text-sm font-black text-slate-900 leading-tight tracking-tight">Baito Admin</h2>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[10px] font-black text-blue-400 tracking-wider uppercase">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[10px] font-black text-blue-600 tracking-wider uppercase">
                     SUPER ADMIN
                   </span>
                 </div>
@@ -126,7 +125,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-900 rounded-lg md:hidden cursor-pointer transition-colors"
+              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg md:hidden cursor-pointer transition-colors"
               aria-label="Close sidebar"
             >
               <X size={18} />
@@ -138,7 +137,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
             {navGroups.map((group, idx) => (
               <div key={idx} className="space-y-1">
                 <div className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <span className="w-1 h-1 rounded-full bg-slate-500" />
+                  <span className="w-1 h-1 rounded-full bg-slate-300" />
                   <span>{getGroupTitle(group)}</span>
                 </div>
                 {group.items.map((item) => {
@@ -153,21 +152,21 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
                       }}
                       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer group ${
                         isActive
-                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/90'
+                          ? 'bg-blue-50 text-blue-700 shadow-2xs border border-blue-200/60'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                       }`}
                     >
                       <Icon
                         size={15}
-                        className={`shrink-0 transition-transform group-hover:scale-110 ${
-                          isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
+                        className={`shrink-0 transition-transform group-hover:scale-105 ${
+                          isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'
                         }`}
                       />
                       <span className="flex-1 text-left truncate">{getItemLabel(item)}</span>
                       {item.badge && (
                         <span
                           className={`px-1.5 py-0.5 rounded-full text-[9px] font-black tracking-tight ${
-                            isActive ? 'bg-white text-blue-600' : 'bg-blue-600 text-white'
+                            isActive ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200/80'
                           }`}
                         >
                           {item.badge}
@@ -181,23 +180,23 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
           </div>
 
           {/* Bottom Switcher Card */}
-          <div className="p-3 border-t border-slate-800/80 bg-slate-950 shrink-0 space-y-2">
+          <div className="p-3 border-t border-slate-200/80 bg-slate-50/70 shrink-0 space-y-2">
             <div className="px-1 text-[10px] font-black text-slate-400 uppercase tracking-wider">
               {language === 'ru' ? 'Перейти в панели:' : language === 'en' ? 'Switch Workspace:' : "Panellarga o'tish:"}
             </div>
             <div className="grid grid-cols-2 gap-1.5">
               <button
                 onClick={() => handleSwitchRole('worker')}
-                className="flex items-center justify-center gap-1.5 py-2 bg-slate-900 hover:bg-slate-800/90 text-slate-200 text-[11px] font-bold rounded-xl border border-slate-800/80 cursor-pointer transition-all hover:border-blue-500/30"
+                className="flex items-center justify-center gap-1.5 py-2 bg-white hover:bg-slate-100 text-slate-700 text-[11px] font-bold rounded-xl border border-slate-200 shadow-2xs cursor-pointer transition-all hover:border-blue-400/50"
               >
-                <User size={12} className="text-blue-400" />
+                <User size={12} className="text-blue-600" />
                 <span>{language === 'ru' ? 'Работник' : language === 'en' ? 'Worker' : 'Ishchi'}</span>
               </button>
               <button
                 onClick={() => handleSwitchRole('employer')}
-                className="flex items-center justify-center gap-1.5 py-2 bg-slate-900 hover:bg-slate-800/90 text-slate-200 text-[11px] font-bold rounded-xl border border-slate-800/80 cursor-pointer transition-all hover:border-emerald-500/30"
+                className="flex items-center justify-center gap-1.5 py-2 bg-white hover:bg-slate-100 text-slate-700 text-[11px] font-bold rounded-xl border border-slate-200 shadow-2xs cursor-pointer transition-all hover:border-emerald-400/50"
               >
-                <Building2 size={12} className="text-emerald-400" />
+                <Building2 size={12} className="text-emerald-600" />
                 <span>{language === 'ru' ? 'Работодатель' : language === 'en' ? 'Employer' : 'Ish beruvchi'}</span>
               </button>
             </div>

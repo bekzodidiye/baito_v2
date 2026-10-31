@@ -41,9 +41,9 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
-        <h3 className="font-bold text-slate-800 text-base">{a.newRegionTitle}</h3>
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <form onSubmit={handleSubmit} className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+        <h3 className="font-extrabold text-slate-900 text-base">{a.newRegionTitle}</h3>
         
         <div>
           <label className="text-xs font-semibold text-slate-700 block mb-1">{a.regionNameLabel}</label>
@@ -54,7 +54,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Masalan: Buxoro viloyati"
-            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus:border-red-500"
+            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500"
           />
         </div>
 
@@ -118,7 +118,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
           </button>
           <button
             type="submit"
-            className="px-4 py-2 text-xs font-semibold bg-red-600 text-white rounded-xl hover:bg-red-700 cursor-pointer"
+            className="px-5 py-2.5 text-xs font-extrabold bg-blue-600 hover:bg-blue-700 text-white rounded-xl cursor-pointer shadow-xs active:scale-95"
           >
             Qo'shish
           </button>

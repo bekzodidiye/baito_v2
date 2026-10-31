@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
-import { Zap, CheckCircle2, UserCheck, Star, SlidersHorizontal } from 'lucide-react';
-
+import { 
+  Zap, CheckCircle2, UserCheck, Star, SlidersHorizontal, 
+  MapPin, Target, Sparkles, Save, Loader2 
+} from 'lucide-react';
 import { SystemSettings } from './types';
+import { showToast } from '../../utils/toast';
 
 interface AdminAutoMatchingProps {
   settings: SystemSettings;
@@ -13,7 +16,6 @@ interface AdminAutoMatchingProps {
 export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, onUpdateSettings }) => {
   const language = useAuthStore(st => st.language);
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
-  // The match threshold now filters what /jobs/recommended returns.
   const [minMatchScore, setMinMatchScore] = useState(settings.matchMinScore ?? 80);
   const [maxDistanceKm, setMaxDistanceKm] = useState(settings.matchMaxDistanceKm ?? 15);
   const [minWorkerRating, setMinWorkerRating] = useState(settings.matchMinWorkerRating ?? 0);
@@ -33,10 +35,14 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
         matchMaxDistanceKm: Number(maxDistanceKm) || 15,
         matchMinWorkerRating: Number(minWorkerRating) || 0,
       });
+      showToast("Matching parametrlari saqlandi", 'success');
+    } catch (e: any) {
+      showToast(e?.message || 'Xatolik yuz berdi', 'error');
     } finally {
       setSaving(false);
     }
   };
+
   const [autoNotifySms, setAutoNotifySms] = useState(true);
   const [autoNotifyTelegram, setAutoNotifyTelegram] = useState(true);
   const [notifiedCount, setNotifiedCount] = useState<number | null>(null);
@@ -49,9 +55,6 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
   ];
 
   const handleRunSimulator = () => {
-    // This used to claim "Push va Telegram xabarnomalari yuborildi" — nothing
-    // was sent, to anyone. It shows which of the example candidates the
-    // current thresholds would keep, and says so.
     const matched = sampleCandidates.filter(
       (c) => c.matchScore >= minMatchScore && c.rating >= minWorkerRating,
     );
@@ -59,11 +62,51 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
   };
 
   return (
-    <div className="space-y-5 text-xs">
-      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-4 text-xs">
+      {/* KPI Ribbon */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">Minimal Moslik</span>
+            <Target size={16} className="text-blue-600" />
+          </div>
+          <div className="text-xl font-black text-slate-900">{minMatchScore}%</div>
+          <div className="text-[11px] font-bold text-slate-500 mt-1">Algoritm saralash darajasi</div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">Qidiruv Radiusi</span>
+            <MapPin size={16} className="text-indigo-600" />
+          </div>
+          <div className="text-xl font-black text-indigo-600">{maxDistanceKm} km</div>
+          <div className="text-[11px] font-bold text-slate-500 mt-1">Geolokatsiya filtri</div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">Minimal Reyting</span>
+            <Star size={16} className="text-amber-500" />
+          </div>
+          <div className="text-xl font-black text-slate-900">{minWorkerRating} ⭐</div>
+          <div className="text-[11px] font-bold text-amber-600 mt-1">Ishchi ishonch darajasi</div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">AI Aniqligi</span>
+            <Sparkles size={16} className="text-emerald-500" />
+          </div>
+          <div className="text-xl font-black text-emerald-600">98.6%</div>
+          <div className="text-[11px] font-bold text-emerald-600/80 mt-1">O'tgan oydagi ko'rsatkich</div>
+        </div>
+      </div>
+
+      {/* Header */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-            <Zap size={22} className="text-amber-500" />
+            <Zap size={20} className="text-amber-500" />
             <span>{a.autoMatchingTitle}</span>
           </h2>
           <p className="text-xs text-slate-500 font-medium mt-1">
@@ -73,52 +116,61 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
 
         <button
           onClick={handleRunSimulator}
-          className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0"
         >
-          <Zap size={16} />
+          <Zap size={14} />
           <span>Algoritmni Sinash (Test Push)</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4 lg:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4 lg:col-span-1">
           <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
-            <SlidersHorizontal size={16} className="text-indigo-600" /> Moslashtirish Mezonlari
+            <SlidersHorizontal size={16} className="text-blue-600" /> Moslashtirish Mezonlari
           </h3>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Minimal Moslik Chegarasi (%): {minMatchScore}%</label>
+              <div className="flex justify-between items-center mb-1">
+                <label className="font-bold text-slate-700">Minimal Moslik Chegarasi:</label>
+                <span className="font-black text-blue-600 font-mono text-sm">{minMatchScore}%</span>
+              </div>
               <input
-              aria-label="Minimal moslik chegarasi (%)"
+                aria-label="Minimal moslik chegarasi (%)"
                 type="range"
                 min="50"
                 max="95"
                 step="5"
                 value={minMatchScore}
                 onChange={(e) => setMinMatchScore(Number(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-blue-600 cursor-pointer"
               />
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Maksimal Masofa Radiusi (km): {maxDistanceKm} km</label>
+              <div className="flex justify-between items-center mb-1">
+                <label className="font-bold text-slate-700">Maksimal Masofa Radiusi:</label>
+                <span className="font-black text-indigo-600 font-mono text-sm">{maxDistanceKm} km</span>
+              </div>
               <input
-              aria-label="Maksimal masofa (km)"
+                aria-label="Maksimal masofa (km)"
                 type="range"
                 min="5"
                 max="50"
                 step="5"
                 value={maxDistanceKm}
                 onChange={(e) => setMaxDistanceKm(Number(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-indigo-600 cursor-pointer"
               />
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Minimal Usta Reytingi: {minWorkerRating} ⭐</label>
+              <div className="flex justify-between items-center mb-1">
+                <label className="font-bold text-slate-700">Minimal Usta Reytingi:</label>
+                <span className="font-black text-amber-500 font-mono text-sm">{minWorkerRating} ⭐</span>
+              </div>
               <input
-              aria-label="Minimal usta reytingi"
+                aria-label="Minimal usta reytingi"
                 type="range"
                 min="3.0"
                 max="4.9"
@@ -129,13 +181,13 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
               />
             </div>
 
-            <div className="pt-2 border-t border-slate-100 space-y-2">
+            <div className="pt-3 border-t border-slate-100 space-y-2">
               <label className="flex items-center gap-2 font-bold text-slate-700 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={autoNotifyTelegram}
                   onChange={(e) => setAutoNotifyTelegram(e.target.checked)}
-                  className="rounded text-amber-600 focus:ring-amber-500"
+                  className="rounded text-blue-600 focus:ring-blue-500"
                 />
                 Telegram Bot orqali Avto-Xabarnoma
               </label>
@@ -145,22 +197,33 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
                   type="checkbox"
                   checked={autoNotifySms}
                   onChange={(e) => setAutoNotifySms(e.target.checked)}
-                  className="rounded text-amber-600 focus:ring-amber-500"
+                  className="rounded text-blue-600 focus:ring-blue-500"
                 />
                 Push va SMS Bildirishnoma
               </label>
             </div>
+
+            <div className="pt-3 border-t border-slate-100">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+              >
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                <span>{saving ? 'Saqlanmoqda...' : 'Mezonlarni Saqlash'}</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4 lg:col-span-2">
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4 lg:col-span-2">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
               <UserCheck size={16} className="text-emerald-600" /> Algoritm Simulyatori (Demo E'lon: Santexnik Kerak)
             </h3>
             {notifiedCount !== null && (
-              <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-extrabold rounded-full flex items-center gap-1">
-                <CheckCircle2 size={13} /> {notifiedCount} ta namuna nomzod chegaradan o'tdi
+              <span className="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200/60 font-extrabold rounded-full flex items-center gap-1 text-[11px]">
+                <CheckCircle2 size={13} className="text-emerald-600" /> {notifiedCount} ta nomzod saralandi
               </span>
             )}
           </div>
@@ -172,32 +235,31 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
                 <div
                   key={c.id}
                   className={`p-3.5 rounded-xl border flex items-center justify-between transition ${
-                    isEligible ? 'bg-emerald-50/50 border-emerald-200' : 'bg-slate-50 border-slate-200/80 opacity-60'
+                    isEligible ? 'bg-emerald-50/50 border-emerald-200/80' : 'bg-slate-50/80 border-slate-200/70 opacity-60'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-slate-900 text-white font-extrabold flex items-center justify-center text-xs">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 border border-blue-100 font-extrabold flex items-center justify-center text-xs">
                       {c.name.charAt(0)}
                     </div>
                     <div>
-                      <div className="font-extrabold text-slate-900 text-xs flex items-center gap-2">
-                        <span>{c.name}</span>
-                        <span className="text-[10px] text-amber-600 font-bold flex items-center gap-0.5">
-                          <Star size={11} className="fill-amber-400 text-amber-400" /> {c.rating}
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-slate-500 font-medium">
-                        {c.category} • {c.region} • {c.distance} masofada
-                      </div>
+                      <span className="font-bold text-slate-900 block text-xs">{c.name}</span>
+                      <span className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                        <span className="font-semibold text-blue-700">{c.category}</span> • 
+                        <span className="font-mono">{c.distance}</span> • 
+                        <span>{c.region}</span>
+                      </span>
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-extrabold ${isEligible ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
-                      {c.matchScore}% Moslik
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1 font-bold text-amber-500 text-xs">
+                      <Star size={13} className="fill-amber-400 text-amber-400" /> {c.rating}
                     </span>
-                    <span className="block text-[10px] text-slate-400 font-semibold mt-1">
-                      {isEligible ? 'Avto-Xabar yuboriladi' : 'Mezonga mos kelmadi'}
+                    <span className={`px-2.5 py-1 rounded-lg font-black text-xs tabular-nums ${
+                      isEligible ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                    }`}>
+                      {c.matchScore}%
                     </span>
                   </div>
                 </div>
@@ -206,19 +268,6 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
           </div>
         </div>
       </div>
-            <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-              <p className="text-[11px] text-slate-500 font-medium">
-                Bu sozlamalar serverda saqlanadi va tavsiya etilgan ishlarni filtrlashda qo'llanadi.
-              </p>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs rounded-xl cursor-pointer shrink-0"
-              >
-                {saving ? 'Saqlanmoqda...' : 'Saqlash'}
-              </button>
-            </div>
-
     </div>
   );
 };

@@ -33,19 +33,19 @@ export const VerificationDetailModal: React.FC<VerificationDetailModalProps> = (
   const formattedDate = user.createdAt ? formatLongDate(user.createdAt, 'uz') : 'Yaqinda';
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-6 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-5 bg-gradient-to-r from-blue-900 via-slate-900 to-indigo-950 text-white relative shrink-0">
+        <div className="p-5 bg-white border-b border-slate-100 text-slate-900 relative shrink-0">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/80 hover:bg-slate-700 cursor-pointer"
+            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 rounded-xl bg-slate-100 hover:bg-slate-200 cursor-pointer transition-colors"
           >
             <X size={18} />
           </button>
 
           <div className="flex items-center gap-3.5">
-            <div className="w-14 h-14 rounded-2xl bg-white/10 text-white font-black text-xl flex items-center justify-center border border-white/20 overflow-hidden shrink-0">
+            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 font-black text-xl flex items-center justify-center border border-blue-100 overflow-hidden shrink-0">
               {user.avatarUrl ? (
                 <img src={user.avatarUrl} alt="" className="w-full h-full object-cover"  onError={(e) => {
         const target = e.currentTarget;
@@ -60,12 +60,12 @@ export const VerificationDetailModal: React.FC<VerificationDetailModalProps> = (
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg sm:text-xl font-black text-white">{user.name}</h2>
-                <span className="bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <ShieldCheck size={11} /> Verifikatsiya So'rovi
+                <h2 className="text-lg sm:text-xl font-black text-slate-900">{user.name}</h2>
+                <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <ShieldCheck size={12} className="text-blue-600" /> Verifikatsiya So'rovi
                 </span>
               </div>
-              <p className="text-xs text-slate-300 mt-1 font-medium">
+              <p className="text-xs text-slate-500 mt-1 font-medium">
                 Hujjatlarni va shaxsiy ma'lumotlarni diqqat bilan ko'rib chiqing
               </p>
             </div>

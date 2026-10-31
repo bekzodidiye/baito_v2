@@ -138,7 +138,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
                 onClick={() => setRoleFilter(rf)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer capitalize transition-all ${
                   roleFilter === rf
-                    ? 'bg-slate-900 text-white shadow-xs'
+                    ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
                 }`}
               >

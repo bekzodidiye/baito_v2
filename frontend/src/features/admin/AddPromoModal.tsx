@@ -41,9 +41,9 @@ export const AddPromoModal: React.FC<AddPromoModalProps> = ({ isOpen, onClose, o
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
-        <h3 className="font-bold text-slate-800 text-base">{a.newPromoTitle}</h3>
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <form onSubmit={handleSubmit} className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+        <h3 className="font-extrabold text-slate-900 text-base">{a.newPromoTitle}</h3>
         <div>
           <label className="text-xs font-semibold text-slate-700 block mb-1">Promokod kodi</label>
           <input
@@ -53,7 +53,7 @@ export const AddPromoModal: React.FC<AddPromoModalProps> = ({ isOpen, onClose, o
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="Masalan: YAZ2026"
-            className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs uppercase font-mono"
+            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs uppercase font-mono font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -120,7 +120,7 @@ export const AddPromoModal: React.FC<AddPromoModalProps> = ({ isOpen, onClose, o
           </button>
           <button
             type="submit"
-            className="px-4 py-2 text-xs font-semibold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 cursor-pointer"
+            className="px-5 py-2.5 text-xs font-extrabold bg-blue-600 text-white rounded-xl hover:bg-blue-700 cursor-pointer shadow-xs active:scale-95"
           >
             Yaratish
           </button>

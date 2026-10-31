@@ -6,8 +6,7 @@ import { AdminStats, AdminTab } from './types';
 import { adminPath } from './adminTabs';
 import {
   Users, Briefcase, DollarSign, ArrowUpRight, Clock, CheckCircle2, ShieldCheck, FileCheck,
-  TrendingUp, Activity, Zap, MessageSquare, AlertCircle, ArrowRight, Server, Check, UserPlus,
-  Send, FileSpreadsheet
+  Zap, ArrowRight, Server, MessageSquare, Send
 } from 'lucide-react';
 import { LoadingOrb } from "@/components/ui/loading-orb";
 
@@ -54,23 +53,28 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
   const activeJobs = stats?.activeJobsCount || 0;
   const completedJobs = stats?.completedJobsCount || 0;
 
+  const dateLocale = new Date().toLocaleDateString(
+    ({ ru: 'ru-RU', en: 'en-US', uz: 'uz-UZ' } as Record<string, string>)[language] || 'uz-UZ',
+    { month: 'long', day: 'numeric', year: 'numeric' }
+  );
+
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-5 pb-8">
       {/* Executive Welcome & Time Range Filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-5 sm:p-6 rounded-3xl text-white shadow-xl border border-slate-800/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-xs">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-black uppercase tracking-wider border border-blue-400/30">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-wider border border-blue-200/60">
               {language === 'ru' ? 'Сводка системы' : language === 'en' ? 'System Summary' : 'Tizim Xulosasi'}
             </span>
             <span className="text-slate-400 text-xs font-semibold hidden md:inline">
-              • {new Date().toLocaleDateString(({ ru: 'ru-RU', en: 'en-US', uz: 'uz-UZ' } as Record<string, string>)[language] || 'uz-UZ', { month: 'long', day: 'numeric', year: 'numeric' })}
+              • {dateLocale}
             </span>
           </div>
-          <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
+          <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
             {language === 'ru' ? 'Центр управления Baito Platform' : language === 'en' ? 'Baito Control Center' : 'Baito Boshqaruv Markazi'}
           </h2>
-          <p className="text-xs text-slate-300 mt-1 max-w-xl font-medium">
+          <p className="text-xs text-slate-500 mt-1 max-w-xl font-medium">
             {language === 'ru'
               ? 'Оперативные метрики, финансовые потоки, активность пользователей и статус безопасности платформы в реальном времени.'
               : language === 'en'
@@ -80,7 +84,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
         </div>
 
         {/* Time Period Filter Pills */}
-        <div className="flex items-center bg-slate-950/70 p-1 rounded-2xl border border-slate-700/60 self-start sm:self-center">
+        <div className="flex items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200/60 self-start sm:self-center">
           {[
             { id: 'today', labelUz: 'Bugun', labelRu: 'Сегодня', labelEn: 'Today' },
             { id: '7d', labelUz: '7 kun', labelRu: '7 дней', labelEn: '7d' },
@@ -90,10 +94,10 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
             <button
               key={p.id}
               onClick={() => setTimeRange(p.id as any)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 timeRange === p.id
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  ? 'bg-white text-blue-700 shadow-2xs font-extrabold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
             >
               {language === 'ru' ? p.labelRu : language === 'en' ? p.labelEn : p.labelUz}
@@ -104,53 +108,59 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
 
       {/* Primary KPI Cards Grid (4 Columns) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        {/* Total Revenue Card */}
-        <div className="relative overflow-hidden p-5 rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-800 text-white shadow-lg shadow-indigo-600/15 border border-indigo-400/20">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-blue-100 uppercase tracking-wider">{a.commissionRevenue}</span>
-            <div className="p-2 rounded-xl bg-white/15 backdrop-blur-md text-white shadow-xs">
-              <DollarSign size={18} />
+        {/* Total Commission Revenue Card */}
+        <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{a.commissionRevenue}</span>
+              <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 shadow-2xs">
+                <DollarSign size={18} />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              {formatSum(stats?.totalRevenue)}
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black tracking-tight">{formatSum(stats?.totalRevenue)}</div>
           
-          <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-blue-100 font-medium">
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
             <span className="flex items-center gap-1">
-              <ArrowUpRight size={14} className="text-emerald-300" />
+              <ArrowUpRight size={14} className="text-emerald-600" />
               <span>{a.platformCommissionNote}</span>
             </span>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-200 font-black text-[10px]">
+            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-black text-[10px]">
               +14.2%
             </span>
           </div>
         </div>
 
         {/* Escrow Owed to Workers */}
-        <div className="relative overflow-hidden p-5 rounded-3xl bg-slate-900 text-white shadow-lg shadow-slate-950/20 border border-slate-800">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{a.owedToWorkers}</span>
-            <div className="p-2 rounded-xl bg-slate-800 text-emerald-400 border border-emerald-500/20">
-              <ShieldCheck size={18} />
+        <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{a.owedToWorkers}</span>
+              <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-2xs">
+                <ShieldCheck size={18} />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-emerald-700 tracking-tight">
+              {formatSum(stats?.totalOwedToWorkers)}
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">
-            {formatSum(stats?.totalOwedToWorkers)}
-          </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
             <span className="truncate pr-2">{a.owedToWorkersNote}</span>
-            <span className="shrink-0 px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 font-black text-[10px]">
+            <span className="shrink-0 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-black text-[10px]">
               Eskrou
             </span>
           </div>
         </div>
 
         {/* Total Users Metric with Ratio Bar */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex flex-col justify-between">
+        <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{a.usersLabel}</span>
-              <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+              <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-2xs">
                 <Users size={18} />
               </div>
             </div>
@@ -176,11 +186,11 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
         </div>
 
         {/* Jobs Metric with Status Breakdown */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex flex-col justify-between">
+        <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{a.totalPostings}</span>
-              <div className="p-2 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
+              <div className="p-2.5 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 shadow-2xs">
                 <Briefcase size={18} />
               </div>
             </div>
@@ -208,62 +218,63 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
 
       {/* Secondary Operational Counters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center gap-4 shadow-2xs">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 flex items-center gap-4 shadow-2xs">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
             <CheckCircle2 size={22} />
           </div>
           <div>
             <div className="text-lg font-black text-slate-900">
               {counted(stats?.completedJobsCount || 0, a.postingsShort, language)}
             </div>
-            <p className="text-xs text-slate-600 font-medium">{a.completedAndPaid}</p>
+            <p className="text-xs text-slate-500 font-medium">{a.completedAndPaid}</p>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex items-center gap-4 shadow-2xs">
-          <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 flex items-center gap-4 shadow-2xs">
+          <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-700 border border-amber-100 flex items-center justify-center shrink-0">
             <Clock size={22} />
           </div>
           <div>
             <div className="text-lg font-black text-slate-900">
               {counted(stats?.totalApplications || 0, a.applicationsShort, language)}
             </div>
-            <p className="text-xs text-slate-600 font-medium">{a.applicationsFromWorkers}</p>
+            <p className="text-xs text-slate-500 font-medium">{a.applicationsFromWorkers}</p>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-200/80 flex items-center gap-4 shadow-2xs">
-          <div className="w-11 h-11 rounded-2xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 flex items-center gap-4 shadow-2xs">
+          <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-700 border border-purple-100 flex items-center justify-center shrink-0">
             <FileCheck size={22} />
           </div>
           <div>
             <div className="text-lg font-black text-slate-900">
               {counted(stats?.totalTransactions || 0, a.transfersShort, language)}
             </div>
-            <p className="text-xs text-slate-600 font-medium">{a.financialTransactionsDone}</p>
+            <p className="text-xs text-slate-500 font-medium">{a.financialTransactionsDone}</p>
           </div>
         </div>
       </div>
 
-      {/* Real-time Infrastructure & Operational Health */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs space-y-4">
+      {/* System Infrastructure Health Status */}
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <Server size={18} className="text-slate-700" />
+            <Server size={18} className="text-slate-600" />
             <h3 className="text-sm font-black text-slate-900">
-              {language === 'ru' ? 'Состояние инфраструктуры и сервисов' : language === 'en' ? 'System Infrastructure & Health' : 'Tizim Infratuzilmasi va Xizmatlar Holati'}
+              {language === 'ru' ? 'Инфраструктура платформы и сервисы' : language === 'en' ? 'Platform Infrastructure & Services' : 'Tizim Infratuzilmasi va Xizmatlar Holati'}
             </h3>
           </div>
-          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-            {language === 'ru' ? 'Все системы работают нормально' : language === 'en' ? 'All Systems Operational' : 'Barcha tizimlar faol'}
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            {language === 'ru' ? 'Все системы в норме' : language === 'en' ? 'All systems operational' : 'Barcha tizimlar faol'}
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500">Escrow Engine</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
             </div>
             <div className="text-sm font-black text-slate-800 mt-1">100% Himoyalangan</div>
             <div className="text-[10px] text-slate-400 font-medium">Bank darajasidagi zaxira</div>
@@ -299,13 +310,13 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
       </div>
 
       {/* Quick Action Commands & Short Cuts */}
-      <div className="bg-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-lg border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+      <div className="bg-white rounded-3xl p-5 sm:p-6 text-slate-900 shadow-xs border border-slate-200/80 space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
-            <h3 className="text-sm font-black text-white">
+            <h3 className="text-sm font-black text-slate-900">
               {language === 'ru' ? 'Быстрые оперативные действия' : language === 'en' ? 'Quick Operations Hub' : 'Tezkor Operatsiyalar Boshqaruvi'}
             </h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <p className="text-[11px] text-slate-500 mt-0.5">
               {language === 'ru' ? 'Прямой доступ к ключевым модулям администрирования' : language === 'en' ? 'Direct shortcuts to critical administrative modules' : "Asosiy boshqaruv modullariga bir bosishda o'tish"}
             </p>
           </div>
@@ -314,74 +325,74 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <button
             onClick={() => handleNavigate('users')}
-            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-left transition-all hover:border-blue-500/50 cursor-pointer group"
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 hover:bg-blue-50/50 border border-slate-200/80 text-left transition-all hover:border-blue-300 cursor-pointer group shadow-2xs"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-blue-500/20 text-blue-400">
+              <div className="p-2.5 rounded-xl bg-blue-100 text-blue-600">
                 <Users size={16} />
               </div>
               <div>
-                <div className="text-xs font-bold text-white group-hover:text-blue-300 transition-colors">
+                <div className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
                   {language === 'ru' ? 'Пользователи' : language === 'en' ? 'Users' : 'Foydalanuvchilar'}
                 </div>
-                <div className="text-[10px] text-slate-400">Rollar & Balanslar</div>
+                <div className="text-[10px] text-slate-500">Rollar & Balanslar</div>
               </div>
             </div>
-            <ArrowRight size={14} className="text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+            <ArrowRight size={14} className="text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
           </button>
 
           <button
             onClick={() => handleNavigate('jobs')}
-            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-left transition-all hover:border-indigo-500/50 cursor-pointer group"
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 hover:bg-indigo-50/50 border border-slate-200/80 text-left transition-all hover:border-indigo-300 cursor-pointer group shadow-2xs"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-indigo-500/20 text-indigo-400">
+              <div className="p-2.5 rounded-xl bg-indigo-100 text-indigo-600">
                 <Briefcase size={16} />
               </div>
               <div>
-                <div className="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors">
+                <div className="text-xs font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
                   {language === 'ru' ? 'Модерация вакансий' : language === 'en' ? 'Job Moderation' : 'E\'lonlar Moderatsiyasi'}
                 </div>
-                <div className="text-[10px] text-slate-400">{openJobs} ta yangi e'lon</div>
+                <div className="text-[10px] text-slate-500">{openJobs} ta yangi e'lon</div>
               </div>
             </div>
-            <ArrowRight size={14} className="text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+            <ArrowRight size={14} className="text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
           </button>
 
           <button
             onClick={() => handleNavigate('transactions')}
-            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-left transition-all hover:border-emerald-500/50 cursor-pointer group"
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 hover:bg-emerald-50/50 border border-slate-200/80 text-left transition-all hover:border-emerald-300 cursor-pointer group shadow-2xs"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400">
+              <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-600">
                 <DollarSign size={16} />
               </div>
               <div>
-                <div className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
+                <div className="text-xs font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
                   {language === 'ru' ? 'Транзакции и касса' : language === 'en' ? 'Ledger & Payments' : 'Moliya & Tranzaksiyalar'}
                 </div>
-                <div className="text-[10px] text-slate-400">To'lovlar jurnali</div>
+                <div className="text-[10px] text-slate-500">To'lovlar jurnali</div>
               </div>
             </div>
-            <ArrowRight size={14} className="text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+            <ArrowRight size={14} className="text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all" />
           </button>
 
           <button
             onClick={() => handleNavigate('broadcast')}
-            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-left transition-all hover:border-purple-500/50 cursor-pointer group"
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 hover:bg-purple-50/50 border border-slate-200/80 text-left transition-all hover:border-purple-300 cursor-pointer group shadow-2xs"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-400">
+              <div className="p-2.5 rounded-xl bg-purple-100 text-purple-600">
                 <Send size={16} />
               </div>
               <div>
-                <div className="text-xs font-bold text-white group-hover:text-purple-300 transition-colors">
+                <div className="text-xs font-bold text-slate-900 group-hover:text-purple-700 transition-colors">
                   {language === 'ru' ? 'Массовая рассылка' : language === 'en' ? 'Broadcast Message' : 'Ommaviy Xabarnoma'}
                 </div>
-                <div className="text-[10px] text-slate-400">Push & SMS yuborish</div>
+                <div className="text-[10px] text-slate-500">Push & SMS yuborish</div>
               </div>
             </div>
-            <ArrowRight size={14} className="text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+            <ArrowRight size={14} className="text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all" />
           </button>
         </div>
       </div>

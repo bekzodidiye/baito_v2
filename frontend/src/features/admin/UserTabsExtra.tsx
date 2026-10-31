@@ -344,7 +344,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
                 required 
                 disabled={isSubmitting}
               />
-              <button disabled={isSubmitting} type="submit" className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl cursor-pointer transition-colors flex items-center gap-2 disabled:opacity-50">
+              <button disabled={isSubmitting} type="submit" className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl cursor-pointer transition-colors flex items-center gap-2 disabled:opacity-50 shadow-xs active:scale-95">
                 Qo'shish <Send size={14} />
               </button>
             </form>

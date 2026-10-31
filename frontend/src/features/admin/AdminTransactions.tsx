@@ -184,14 +184,14 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-slate-900 text-white shadow-xs'
+                    ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
                 }`}
               >
                 <Icon size={14} />
                 <span>{tab.label}</span>
                 {tab.badge && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${isActive ? 'bg-amber-400 text-slate-900' : 'bg-amber-500 text-white'}`}>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${isActive ? 'bg-white text-blue-700' : 'bg-amber-500 text-white'}`}>
                     {tab.badge}
                   </span>
                 )}

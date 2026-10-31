@@ -169,7 +169,7 @@ export const AdminAuditLogs: React.FC = () => {
 
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 text-white font-bold text-xs rounded-xl hover:bg-slate-800 transition cursor-pointer shadow-xs"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 text-white font-bold text-xs rounded-xl hover:bg-blue-700 transition cursor-pointer shadow-xs active:scale-95"
           >
             <Download size={14} />
             CSV yuklab olish
