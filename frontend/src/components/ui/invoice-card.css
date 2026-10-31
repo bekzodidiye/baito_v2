@@ -12,97 +12,206 @@
   padding-top: 6px;
 }
 
-/* Master dispenser container */
-.invoice-dispenser-wrapper {
+/* ==========================================================================
+   BAITO POS TERMINAL & INVOICE PRINTER APPARATUS
+   Authentic Hardware Terminal & Thermal Receipt Paper Dispenser
+   ========================================================================== */
+
+.invoice-dispenser-wrapper,
+.baito-terminal-apparatus {
   position: relative;
   width: 100%;
-  max-width: 576px;
+  max-width: 580px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* Pristine white hardware dispenser terminal casing */
-.invoice-dispenser-housing {
+/* 3D Physical POS Terminal Housing Casing */
+.invoice-dispenser-housing,
+.baito-terminal-casing {
   width: 100%;
   background: #ffffff;
-  border-radius: 20px 20px 0 0;
-  border: 1px solid rgba(226, 232, 240, 0.95);
-  border-bottom: none;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  border-radius: 28px 28px 12px 12px;
+  border: 1px solid rgba(203, 213, 225, 0.95);
+  box-shadow: 
+    0 20px 45px -10px rgba(15, 23, 42, 0.12),
+    0 4px 12px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
   position: relative;
+  z-index: 35;
+  padding: 18px 0 0 0;
+  background-image: linear-gradient(180deg, #ffffff 0%, #f8fafc 75%, #edf2f7 100%);
+  overflow: hidden;
+}
+
+/* Terminal Hardware Visor Header */
+.baito-terminal-visor {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 20px 12px 20px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+/* Embedded High-Tech OLED Terminal Screen */
+.baito-terminal-oled {
+  margin: 12px 20px 0 20px;
+  background: #060911;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 
+    inset 0 3px 8px rgba(0, 0, 0, 0.9),
+    0 1px 1px rgba(255, 255, 255, 0.9);
+  position: relative;
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.baito-terminal-oled::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Recessed Thermal Printer Throat & Slot - Framed by chassis shoulders */
+.invoice-dispenser-mouth,
+.baito-printer-throat {
+  position: relative;
+  margin-top: 16px;
+  padding: 8px 20px 0 20px; /* Visible chassis shoulders flanking the slot */
+  background: linear-gradient(180deg, #edf2f7 0%, #e2e8f0 100%);
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Black Inner Feed Cavity - Deep chamber inside the apparatus */
+.invoice-slit-recess,
+.baito-slot-cavity {
+  height: 22px;
+  background: #040711;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 
+    inset 0 8px 16px rgba(0, 0, 0, 0.98),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.8);
+  position: relative;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #0f172a;
+  border-bottom: none;
+}
+
+/* Rubberized feeder roller bar inside the dark cavity */
+.baito-roller-bar {
+  width: 70%;
+  height: 4px;
+  background: linear-gradient(90deg, #1e293b, #475569, #1e293b);
+  border-radius: 9999px;
+  opacity: 0.6;
+}
+
+/* Stainless Steel Cutter Blade Lip that physically overlaps the slit and paper */
+.invoice-dispenser-front-lip,
+.baito-cutter-blade {
+  position: absolute;
+  top: 8px;
+  left: 20px;
+  right: 20px;
+  height: 9px;
+  background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 45%, #94a3b8 100%);
+  border-bottom: 2px solid #475569;
+  border-radius: 6px 6px 0 0;
+  box-shadow: 
+    0 6px 14px rgba(15, 23, 42, 0.4),
+    0 2px 4px rgba(15, 23, 42, 0.25);
+  z-index: 40;
+  pointer-events: none;
+}
+
+/* Micro-serration teeth on cutter blade */
+.baito-cutter-blade::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 3px,
+    #64748b 3px,
+    #64748b 4px
+  );
+  opacity: 0.5;
+}
+
+/* Reveal Window - paper feeds downward strictly from inside the slot, perfectly matching slot width */
+.invoice-dispense-mask,
+.baito-paper-window {
+  position: relative;
+  width: calc(100% - 40px); /* Matches slot width (100% minus 2 * 20px shoulders) */
+  margin-top: -14px; /* Tucks top 14px of paper right into the slot cavity! */
   z-index: 25;
   overflow: hidden;
 }
 
-/* Mouth containing the recessed feeding slit */
-.invoice-dispenser-mouth {
-  position: relative;
-  padding: 10px 20px 0 20px;
-  background: #f8fafc;
-  border-top: 1px solid rgba(241, 245, 249, 0.9);
-}
-
-/* Deep recessed dark feed slit cavity */
-.invoice-slit-recess {
-  height: 12px;
-  background: #0f172a;
-  border-radius: 9999px;
-  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.8), 0 1px 1px rgba(255, 255, 255, 0.8);
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Front lip bezel that overlaps the card top edge and casts authentic optical depth shadow */
-.invoice-dispenser-front-lip {
-  height: 6px;
-  background: linear-gradient(180deg, #f1f5f9, #e2e8f0);
-  border-bottom: 1px solid #cbd5e1;
-  box-shadow: 0 4px 8px -1px rgba(15, 23, 42, 0.12);
-  margin-top: 4px;
-  border-radius: 0 0 6px 6px;
-  position: relative;
-  z-index: 30;
-  pointer-events: none;
-}
-
-/* Card emerges directly from INSIDE the slit */
-.invoice-dispense-mask {
-  position: relative;
-  width: 100%;
-  margin-top: -6px;
-  z-index: 15;
-  overflow: hidden;
-}
-
-.invoice-dispensed-card {
-  animation: invoice-card-dispense 1.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Authentic Thermal Paper Voucher */
+.invoice-dispensed-card,
+.baito-dispensed-paper {
+  animation: baito-thermal-dispense 1.45s cubic-bezier(0.12, 0.95, 0.25, 1) forwards;
   will-change: transform, opacity;
+  position: relative;
+  z-index: 20;
+  background: #ffffff;
+  border: 1px solid rgba(203, 213, 225, 0.9);
   border-top: none !important;
+  box-shadow: 
+    0 25px 60px -12px rgba(15, 23, 42, 0.16),
+    0 8px 24px -4px rgba(15, 23, 42, 0.08);
 }
 
-@keyframes invoice-card-dispense {
+@keyframes baito-thermal-dispense {
   0% {
-    transform: translateY(-100%);
+    transform: translateY(-94%);
     opacity: 0.1;
   }
-  15% {
+  18% {
     opacity: 1;
   }
-  75% {
-    transform: translateY(8px);
+  72% {
+    transform: translateY(12px);
   }
-  88% {
-    transform: translateY(-2px);
+  86% {
+    transform: translateY(-3px);
   }
   100% {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* Bottom Sawtooth Zigzag Cut for Thermal Receipts */
+.invoice-sawtooth-bottom {
+  position: relative;
+  height: 14px;
+  width: 100%;
+  background-image: 
+    linear-gradient(135deg, #ffffff 33.333%, transparent 33.333%),
+    linear-gradient(225deg, #ffffff 33.333%, transparent 33.333%);
+  background-position: 0 0;
+  background-size: 16px 14px;
+  margin-top: -1px;
+  filter: drop-shadow(0 4px 4px rgba(15, 23, 42, 0.06));
 }
 
 /* Yuqori dispenser kapsulasi (terminal slit) legacy */

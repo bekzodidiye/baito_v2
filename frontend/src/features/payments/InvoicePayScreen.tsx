@@ -160,47 +160,89 @@ export const InvoicePayScreen: React.FC = () => {
 
   return (
     <Shell>
-      <div className="invoice-dispenser-wrapper">
-        {/* Yuqori dispenser terminal korpusi (oq, zamonaviy Baito terminali) */}
-        <div className="invoice-dispenser-housing">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-white rounded-t-2xl">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-              <span className="text-[11px] font-black uppercase tracking-wider text-slate-800">
-                Baito Pay Terminal
-              </span>
-              <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-                Avtomatik chiqarish
-              </span>
+      <div className="invoice-dispenser-wrapper baito-terminal-apparatus">
+        {/* Yuqori dispenser terminal korpusi (oq, 3D zamonaviy Baito terminali) */}
+        <div className="invoice-dispenser-housing baito-terminal-casing">
+          {/* Terminal hardware visor boshqaruvi */}
+          <div className="baito-terminal-visor">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                B
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-800">
+                    Baito Pay Terminal
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/60">
+                    T-8000 POS
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Online
+                  </span>
+                  <span className="text-slate-300">·</span>
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    Termik dispenser
+                  </span>
+                </div>
+              </div>
             </div>
+
+            {/* Qayta chiqarish hardware tugmasi */}
             <button
               type="button"
               onClick={() => setDispenseKey((k) => k + 1)}
-              className="text-[11px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition cursor-pointer"
-              title="Invoysni qayta chiqarish"
+              className="group flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-brand-primary/50 text-slate-700 hover:text-brand-primary text-xs font-bold shadow-2xs hover:shadow-xs active:scale-95 transition-all cursor-pointer"
+              title="Invoysni qayta chiqarish (Feed)"
             >
-              <RefreshCw size={12} />
+              <RefreshCw size={13} className="text-slate-500 group-hover:text-brand-primary transition-transform group-hover:rotate-180 duration-500" />
               <span>Qayta chiqarish</span>
             </button>
           </div>
 
-          {/* Slot og'zi va oldingi yoritilgan guide paneli */}
-          <div className="invoice-dispenser-mouth">
-            <div className="invoice-slit-recess" title="Chiqish sloti">
-              <div className="w-3/4 h-[2px] bg-slate-800 rounded-full" />
+          {/* Yuqori texnologik qora shisha OLED diagnostika ekrani */}
+          <div className="baito-terminal-oled">
+            <div className="flex items-center justify-between text-[11px] leading-tight font-mono mb-1.5">
+              <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                BAITO-SYS v4.2 · POS
+              </span>
+              <span className="text-sky-400 font-semibold tracking-wider">
+                BULUT: ULANGAN
+              </span>
             </div>
-            <div className="invoice-dispenser-front-lip" />
+            <div className="flex items-center justify-between text-[11px] font-mono text-slate-300">
+              <span>
+                HOLAT: <strong className={declared || data.status === 'paid' ? 'text-emerald-400' : 'text-amber-300'}>
+                  {declared || data.status === 'paid' ? "TO'LANGAN" : "KUTILMOQDA"}
+                </strong>
+              </span>
+              <span className="text-slate-400">
+                REJIM: AVTO-FEED
+              </span>
+            </div>
+          </div>
+
+          {/* Slot og'zi, po'lat pichoq va chuqurlashtirilgan chiqarish tirqishi */}
+          <div className="invoice-dispenser-mouth baito-printer-throat">
+            <div className="invoice-dispenser-front-lip baito-cutter-blade" />
+            <div className="invoice-slit-recess baito-slot-cavity" title="Chiqish sloti">
+              <div className="baito-roller-bar" />
+            </div>
           </div>
         </div>
 
         {/* Slot ichidan chiqib keluvchi invoys kartasi */}
-        <div className="invoice-dispense-mask">
+        <div className="invoice-dispense-mask baito-paper-window">
           <div
             key={dispenseKey}
-            className="invoice-dispensed-card bg-white rounded-b-2xl rounded-t-none border-x border-b border-t-0 border-slate-200/90 shadow-xl overflow-hidden"
+            className="invoice-dispensed-card baito-dispensed-paper bg-white rounded-b-2xl rounded-t-none border-x border-b border-t-0 border-slate-200/90 shadow-xl overflow-hidden"
           >
             {/* INVOYS RAQAMLI PASPORT / RECEIPT HEADER */}
-            <div className="invoice-pass-header relative p-6 sm:p-8 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/40">
+            <div className="invoice-pass-header relative pt-8 pb-6 px-6 sm:pt-10 sm:pb-8 sm:px-8 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/40">
               <div className="invoice-reflex" />
 
               {/* 3D Wireframe Kubik fon dekoratsiyasi */}
@@ -458,6 +500,9 @@ export const InvoicePayScreen: React.FC = () => {
               <ShieldCheck size={14} className="text-slate-400" />
               <span>Baito · xavfsiz to'lov va rasmiy elektron hisob-faktura</span>
             </div>
+
+            {/* Termik chek tishli qirqim chekkasi */}
+            <div className="invoice-sawtooth-bottom" />
           </div>
         </div>
       </div>
