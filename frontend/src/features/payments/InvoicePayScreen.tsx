@@ -87,6 +87,88 @@ const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   </div>
 );
 
+/** Synthesizes authentic thermal printer stepper motor pulses and cutter snip */
+const playThermalPrinterSound = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    const now = ctx.currentTime;
+    const printDuration = 2.7;
+
+    // 1. Rhythmic stepper motor micro-pulses
+    const stepCount = 22;
+    const interval = printDuration / stepCount;
+
+    for (let i = 0; i < stepCount; i++) {
+      const t = now + (i * interval);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(130 + (i % 4) * 20, t);
+
+      gain.gain.setValueAtTime(0.025, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + 0.045);
+    }
+
+    // 2. Paper thermal feed bandpass noise
+    const bufferSize = Math.floor(ctx.sampleRate * printDuration);
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = (Math.random() * 2 - 1) * 0.012;
+    }
+    const whiteNoise = ctx.createBufferSource();
+    whiteNoise.buffer = noiseBuffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 2200;
+    filter.Q.value = 2.5;
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.015, now);
+    noiseGain.gain.linearRampToValueAtTime(0.02, now + 1.2);
+    noiseGain.gain.linearRampToValueAtTime(0.0001, now + printDuration);
+
+    whiteNoise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+
+    whiteNoise.start(now);
+    whiteNoise.stop(now + printDuration);
+
+    // 3. Cutter blade snip sound at end of print
+    const cutTime = now + printDuration;
+    const cutOsc = ctx.createOscillator();
+    const cutGain = ctx.createGain();
+    cutOsc.type = 'triangle';
+    cutOsc.frequency.setValueAtTime(650, cutTime);
+    cutOsc.frequency.exponentialRampToValueAtTime(90, cutTime + 0.07);
+    cutGain.gain.setValueAtTime(0.06, cutTime);
+    cutGain.gain.exponentialRampToValueAtTime(0.0001, cutTime + 0.08);
+
+    cutOsc.connect(cutGain);
+    cutGain.connect(ctx.destination);
+    cutOsc.start(cutTime);
+    cutOsc.stop(cutTime + 0.09);
+  } catch {
+    // Autoplay restrictions or test environment - safely ignore
+  }
+};
+
 export const InvoicePayScreen: React.FC = () => {
   const { token = '' } = useParams();
   const queryClient = useQueryClient();
@@ -94,7 +176,17 @@ export const InvoicePayScreen: React.FC = () => {
   const [chosen, setChosen] = useState('');
   const [reference, setReference] = useState('');
   const [dispenseKey, setDispenseKey] = useState(0);
+  const [isPrinting, setIsPrinting] = useState(true);
   const [allCopied, setAllCopied] = useState(false);
+
+  useEffect(() => {
+    setIsPrinting(true);
+    playThermalPrinterSound();
+    const timer = setTimeout(() => {
+      setIsPrinting(false);
+    }, 3100);
+    return () => clearTimeout(timer);
+  }, [dispenseKey]);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['invoice', token],
@@ -179,10 +271,17 @@ export const InvoicePayScreen: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Online
-                  </span>
+                  {isPrinting ? (
+                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-amber-600">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                      Chop etilmoqda...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-600">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Online · Tayyor
+                    </span>
+                  )}
                   <span className="text-slate-300">·</span>
                   <span className="text-[10px] text-slate-400 font-medium">
                     Termik dispenser
@@ -194,34 +293,54 @@ export const InvoicePayScreen: React.FC = () => {
             {/* Qayta chiqarish hardware tugmasi */}
             <button
               type="button"
-              onClick={() => setDispenseKey((k) => k + 1)}
-              className="group flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-brand-primary/50 text-slate-700 hover:text-brand-primary text-xs font-bold shadow-2xs hover:shadow-xs active:scale-95 transition-all cursor-pointer"
+              onClick={() => {
+                if (!isPrinting) {
+                  setDispenseKey((k) => k + 1);
+                }
+              }}
+              disabled={isPrinting}
+              className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+                isPrinting
+                  ? 'border-amber-200 bg-amber-50 text-amber-700 cursor-not-allowed opacity-90'
+                  : 'border-slate-200 bg-slate-50 hover:bg-white hover:border-brand-primary/50 text-slate-700 hover:text-brand-primary shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer'
+              }`}
               title="Invoysni qayta chiqarish (Feed)"
             >
-              <RefreshCw size={13} className="text-slate-500 group-hover:text-brand-primary transition-transform group-hover:rotate-180 duration-500" />
-              <span>Qayta chiqarish</span>
+              <RefreshCw
+                size={13}
+                className={
+                  isPrinting
+                    ? 'animate-spin text-amber-600'
+                    : 'text-slate-500 group-hover:text-brand-primary transition-transform group-hover:rotate-180 duration-500'
+                }
+              />
+              <span>{isPrinting ? 'Chop etilmoqda...' : 'Qayta chiqarish'}</span>
             </button>
           </div>
 
           {/* Yuqori texnologik qora shisha OLED diagnostika ekrani */}
           <div className="baito-terminal-oled">
             <div className="flex items-center justify-between text-[11px] leading-tight font-mono mb-1.5">
-              <span className="text-emerald-400 font-bold flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                BAITO-SYS v4.2 · POS
+              <span className={`font-bold flex items-center gap-1.5 ${isPrinting ? 'text-amber-400' : 'text-emerald-400'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isPrinting ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
+                {isPrinting ? 'BAITO-SYS · [CHOP ETILMOQDA]' : 'BAITO-SYS v4.2 · POS'}
               </span>
-              <span className="text-sky-400 font-semibold tracking-wider">
-                BULUT: ULANGAN
+              <span className={`font-semibold tracking-wider ${isPrinting ? 'text-amber-300 animate-pulse' : 'text-sky-400'}`}>
+                {isPrinting ? 'FEED: 85 mm/s' : 'BULUT: ULANGAN'}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px] font-mono text-slate-300">
               <span>
-                HOLAT: <strong className={declared || data.status === 'paid' ? 'text-emerald-400' : 'text-amber-300'}>
-                  {declared || data.status === 'paid' ? "TO'LANGAN" : "KUTILMOQDA"}
-                </strong>
+                {isPrinting ? (
+                  <>TERMIK BOSMA: <strong className="text-amber-300">STEPPER MOTOR</strong></>
+                ) : (
+                  <>HOLAT: <strong className={declared || data.status === 'paid' ? 'text-emerald-400' : 'text-amber-300'}>
+                    {declared || data.status === 'paid' ? "TO'LANGAN" : "KUTILMOQDA"}
+                  </strong></>
+                )}
               </span>
-              <span className="text-slate-400">
-                REJIM: AVTO-FEED
+              <span className={isPrinting ? 'text-amber-400 font-bold' : 'text-slate-400'}>
+                {isPrinting ? 'UZATILMOQDA...' : 'CHEK TAYYOR (OK)'}
               </span>
             </div>
           </div>

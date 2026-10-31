@@ -165,10 +165,10 @@
   overflow: hidden;
 }
 
-/* Authentic Thermal Paper Voucher */
+/* Authentic Thermal Paper Voucher - 3.1s Stepper Motor Feed */
 .invoice-dispensed-card,
 .baito-dispensed-paper {
-  animation: baito-thermal-dispense 1.45s cubic-bezier(0.12, 0.95, 0.25, 1) forwards;
+  animation: baito-thermal-dispense 3.1s cubic-bezier(0.2, 0.85, 0.25, 1) forwards;
   will-change: transform, opacity;
   position: relative;
   z-index: 20;
@@ -182,17 +182,42 @@
 
 @keyframes baito-thermal-dispense {
   0% {
-    transform: translateY(-94%);
+    transform: translateY(-96%);
     opacity: 0.1;
   }
-  18% {
+  3% {
     opacity: 1;
+    transform: translateY(-90%);
+  }
+  10% {
+    transform: translateY(-84%);
+  }
+  18% {
+    transform: translateY(-75%);
+  }
+  26% {
+    transform: translateY(-63%);
+  }
+  36% {
+    transform: translateY(-50%);
+  }
+  48% {
+    transform: translateY(-37%);
+  }
+  60% {
+    transform: translateY(-24%);
   }
   72% {
-    transform: translateY(12px);
+    transform: translateY(-12%);
   }
-  86% {
-    transform: translateY(-3px);
+  84% {
+    transform: translateY(-2%);
+  }
+  92% {
+    transform: translateY(3px); /* Subtle mechanical feed overshoot */
+  }
+  97% {
+    transform: translateY(-1px); /* Cutter settle */
   }
   100% {
     transform: translateY(0);
