@@ -169,6 +169,110 @@ const playThermalPrinterSound = () => {
   }
 };
 
+/** Synthesizes authentic crisp paper tear / rip sound */
+const playPaperTearSound = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    const now = ctx.currentTime;
+    const tearDuration = 0.52;
+
+    // 1. Paper fiber friction tear noise (high-pass/bandpass noise with erratic micro-bursts)
+    const bufferSize = Math.floor(ctx.sampleRate * tearDuration);
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      const ripPhase = Math.sin(i * 0.05) * 0.3 + 0.7;
+      output[i] = (Math.random() * 2 - 1) * ripPhase * 0.09;
+    }
+    const whiteNoise = ctx.createBufferSource();
+    whiteNoise.buffer = noiseBuffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2800, now);
+    filter.frequency.linearRampToValueAtTime(1400, now + tearDuration);
+    filter.Q.value = 2.0;
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.01, now);
+    noiseGain.gain.linearRampToValueAtTime(0.095, now + 0.08); // Initial rip bite
+    noiseGain.gain.setValueAtTime(0.07, now + 0.2);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + tearDuration);
+
+    whiteNoise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+
+    whiteNoise.start(now);
+    whiteNoise.stop(now + tearDuration);
+
+    // 2. Physical snap release (quick high-to-low oscillator chirp)
+    const snapOsc = ctx.createOscillator();
+    const snapGain = ctx.createGain();
+    snapOsc.type = 'sawtooth';
+    snapOsc.frequency.setValueAtTime(950, now);
+    snapOsc.frequency.exponentialRampToValueAtTime(120, now + 0.12);
+
+    snapGain.gain.setValueAtTime(0.06, now);
+    snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+    snapOsc.connect(snapGain);
+    snapGain.connect(ctx.destination);
+    snapOsc.start(now);
+    snapOsc.stop(now + 0.13);
+  } catch {
+    // Autoplay restrictions or test environment - safely ignore
+  }
+};
+
+/** Synthesizes two-tone POS register payment confirmation chime */
+const playSuccessChime = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    const now = ctx.currentTime;
+    // Tone 1: E5 (659.25 Hz)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(659.25, now);
+    gain1.gain.setValueAtTime(0.08, now);
+    gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.36);
+
+    // Tone 2: A5 (880 Hz)
+    const t2 = now + 0.14;
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(880, t2);
+    gain2.gain.setValueAtTime(0.09, t2);
+    gain2.gain.exponentialRampToValueAtTime(0.0001, t2 + 0.55);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(t2);
+    osc2.stop(t2 + 0.56);
+  } catch {
+    // Autoplay restrictions or test environment - safely ignore
+  }
+};
+
 export const InvoicePayScreen: React.FC = () => {
   const { token = '' } = useParams();
   const queryClient = useQueryClient();
@@ -177,6 +281,7 @@ export const InvoicePayScreen: React.FC = () => {
   const [reference, setReference] = useState('');
   const [dispenseKey, setDispenseKey] = useState(0);
   const [isPrinting, setIsPrinting] = useState(true);
+  const [isTearing, setIsTearing] = useState(false);
   const [allCopied, setAllCopied] = useState(false);
 
   useEffect(() => {
@@ -204,8 +309,21 @@ export const InvoicePayScreen: React.FC = () => {
 
   const pay = useMutation({
     mutationFn: () => declareInvoicePaymentApi(token, { method, reference: reference.trim() || undefined }),
-    onSuccess: (updated) => queryClient.setQueryData(['invoice', token], updated),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['invoice', token], updated);
+      playSuccessChime();
+    },
   });
+
+  const handleConfirmPayment = () => {
+    if (!method || pay.isPending) return;
+    setIsTearing(true);
+    playPaperTearSound();
+    pay.mutate();
+    setTimeout(() => {
+      setIsTearing(false);
+    }, 1250);
+  };
 
   if (isLoading) {
     return (
@@ -255,6 +373,24 @@ export const InvoicePayScreen: React.FC = () => {
       <div className="invoice-dispenser-wrapper baito-terminal-apparatus">
         {/* Yuqori dispenser terminal korpusi (oq, 3D zamonaviy Baito terminali) */}
         <div className="invoice-dispenser-housing baito-terminal-casing">
+          {/* 4 Inset Hardware Chassis Torx Screws in Corners */}
+          <div className="baito-chassis-bolt baito-bolt-tl" title="Chassis bolt" />
+          <div className="baito-chassis-bolt baito-bolt-tr" title="Chassis bolt" />
+
+          {/* Side ventilation cooling gills */}
+          <div className="baito-casing-vents baito-vents-left">
+            <span className="baito-casing-vent-slot" />
+            <span className="baito-casing-vent-slot" />
+            <span className="baito-casing-vent-slot" />
+            <span className="baito-casing-vent-slot" />
+          </div>
+          <div className="baito-casing-vents baito-vents-right">
+            <span className="baito-casing-vent-slot" />
+            <span className="baito-casing-vent-slot" />
+            <span className="baito-casing-vent-slot" />
+            <span className="baito-casing-vent-slot" />
+          </div>
+
           {/* Terminal hardware visor boshqaruvi */}
           <div className="baito-terminal-visor">
             <div className="flex items-center gap-2.5">
@@ -271,7 +407,12 @@ export const InvoicePayScreen: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
-                  {isPrinting ? (
+                  {isTearing ? (
+                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                      Chek yirtildi · Tasdiqlandi
+                    </span>
+                  ) : isPrinting ? (
                     <span className="flex items-center gap-1.5 text-[10px] font-bold text-amber-600">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
                       Chop etilmoqda...
@@ -279,7 +420,7 @@ export const InvoicePayScreen: React.FC = () => {
                   ) : (
                     <span className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-600">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      Online · Tayyor
+                      {declared ? "Online · To'langan" : "Online · Tayyor"}
                     </span>
                   )}
                   <span className="text-slate-300">·</span>
@@ -290,48 +431,74 @@ export const InvoicePayScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Qayta chiqarish hardware tugmasi */}
-            <button
-              type="button"
-              onClick={() => {
-                if (!isPrinting) {
-                  setDispenseKey((k) => k + 1);
-                }
-              }}
-              disabled={isPrinting}
-              className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
-                isPrinting
-                  ? 'border-amber-200 bg-amber-50 text-amber-700 cursor-not-allowed opacity-90'
-                  : 'border-slate-200 bg-slate-50 hover:bg-white hover:border-brand-primary/50 text-slate-700 hover:text-brand-primary shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer'
-              }`}
-              title="Invoysni qayta chiqarish (Feed)"
-            >
-              <RefreshCw
-                size={13}
-                className={
-                  isPrinting
-                    ? 'animate-spin text-amber-600'
-                    : 'text-slate-500 group-hover:text-brand-primary transition-transform group-hover:rotate-180 duration-500'
-                }
-              />
-              <span>{isPrinting ? 'Chop etilmoqda...' : 'Qayta chiqarish'}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Mexanik qopqoqni ochish tutqichi */}
+              <div className="baito-cover-latch hidden sm:inline-flex" title="Termik boshcha qopqog'i">
+                <span>⏏</span>
+                <span>OPEN</span>
+              </div>
+
+              {/* Qayta chiqarish hardware tugmasi */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isPrinting && !isTearing) {
+                    setDispenseKey((k) => k + 1);
+                  }
+                }}
+                disabled={isPrinting || isTearing}
+                className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+                  isPrinting || isTearing
+                    ? 'border-amber-200 bg-amber-50 text-amber-700 cursor-not-allowed opacity-90'
+                    : 'border-slate-200 bg-slate-50 hover:bg-white hover:border-brand-primary/50 text-slate-700 hover:text-brand-primary shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer'
+                }`}
+                title="Invoysni qayta chiqarish (Feed)"
+              >
+                <RefreshCw
+                  size={13}
+                  className={
+                    isPrinting || isTearing
+                      ? 'animate-spin text-amber-600'
+                      : 'text-slate-500 group-hover:text-brand-primary transition-transform group-hover:rotate-180 duration-500'
+                  }
+                />
+                <span>{isTearing ? 'Yirtilmoqda...' : isPrinting ? 'Chop etilmoqda...' : 'Qayta chiqarish'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Lazer bilan o'yilgan metall texnik pasport / brend plastinasi */}
+          <div className="baito-chassis-spec-badge">
+            <span>BAITO POS-T8000 // HEAVY-DUTY THERMAL TERMINAL // AUTO-CUTTER</span>
+            <span className="hidden sm:inline">INPUT: 24V ⎓ 2.5A · CE · RoHS</span>
           </div>
 
           {/* Yuqori texnologik qora shisha OLED diagnostika ekrani */}
           <div className="baito-terminal-oled">
             <div className="flex items-center justify-between text-[11px] leading-tight font-mono mb-1.5">
-              <span className={`font-bold flex items-center gap-1.5 ${isPrinting ? 'text-amber-400' : 'text-emerald-400'}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${isPrinting ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
-                {isPrinting ? 'BAITO-SYS · [CHOP ETILMOQDA]' : 'BAITO-SYS v4.2 · POS'}
+              <span className={`font-bold flex items-center gap-1.5 ${
+                isTearing ? 'text-cyan-400' : isPrinting ? 'text-amber-400' : 'text-emerald-400'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  isTearing ? 'bg-cyan-400 animate-ping' : isPrinting ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'
+                }`} />
+                {isTearing
+                  ? 'BAITO-SYS · [TO\'LOV TASDIQLANDI]'
+                  : isPrinting
+                  ? 'BAITO-SYS · [CHOP ETILMOQDA]'
+                  : 'BAITO-SYS v4.2 · POS'}
               </span>
-              <span className={`font-semibold tracking-wider ${isPrinting ? 'text-amber-300 animate-pulse' : 'text-sky-400'}`}>
-                {isPrinting ? 'FEED: 85 mm/s' : 'BULUT: ULANGAN'}
+              <span className={`font-semibold tracking-wider ${
+                isTearing ? 'text-emerald-400 font-bold' : isPrinting ? 'text-amber-300 animate-pulse' : 'text-sky-400'
+              }`}>
+                {isTearing ? 'CHEK: YIRTILDI' : isPrinting ? 'FEED: 85 mm/s' : 'BULUT: ULANGAN'}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px] font-mono text-slate-300">
               <span>
-                {isPrinting ? (
+                {isTearing ? (
+                  <>HOLAT: <strong className="text-emerald-400">CHEK YIRTIB OLINDI</strong></>
+                ) : isPrinting ? (
                   <>TERMIK BOSMA: <strong className="text-amber-300">STEPPER MOTOR</strong></>
                 ) : (
                   <>HOLAT: <strong className={declared || data.status === 'paid' ? 'text-emerald-400' : 'text-amber-300'}>
@@ -339,8 +506,8 @@ export const InvoicePayScreen: React.FC = () => {
                   </strong></>
                 )}
               </span>
-              <span className={isPrinting ? 'text-amber-400 font-bold' : 'text-slate-400'}>
-                {isPrinting ? 'UZATILMOQDA...' : 'CHEK TAYYOR (OK)'}
+              <span className={isTearing ? 'text-emerald-400 font-bold' : isPrinting ? 'text-amber-400 font-bold' : 'text-slate-400'}>
+                {isTearing ? '200 OK' : isPrinting ? 'UZATILMOQDA...' : declared ? 'TO\'LOV QAYD ETILDI' : 'STANDBY (OK)'}
               </span>
             </div>
           </div>
@@ -350,12 +517,61 @@ export const InvoicePayScreen: React.FC = () => {
             <div className="invoice-dispenser-front-lip baito-cutter-blade" />
             <div className="invoice-slit-recess baito-slot-cavity" title="Chiqish sloti">
               <div className="baito-roller-bar" />
+              <div className="baito-optical-sensor" title="Optik qog'oz datchigi" />
             </div>
           </div>
         </div>
 
         {/* Slot ichidan chiqib keluvchi invoys kartasi */}
         <div className="invoice-dispense-mask baito-paper-window">
+          {/* Agar to'lov tasdiqlansa, yirtilib pastga tushib ketuvchi chek animatsiyasi */}
+          {isTearing && (
+            <div
+              aria-hidden="true"
+              className="invoice-dispensed-card baito-dispensed-paper baito-paper-tearing-and-falling absolute top-0 left-0 right-0 z-30 pointer-events-none select-none bg-white rounded-b-2xl border-x border-b border-slate-200/90 shadow-2xl overflow-hidden"
+            >
+              <div className="baito-torn-top-edge" />
+              <div className="invoice-pass-header relative pt-8 pb-6 px-6 sm:pt-10 sm:pb-8 sm:px-8 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/40">
+                <div className="relative z-10 flex items-center justify-between gap-4 mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                    <span className="text-xs font-black tracking-widest text-slate-800 uppercase">
+                      BAITO PASS
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                      YIRTILMOQDA
+                    </span>
+                  </div>
+                </div>
+                <div className="relative z-10 flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                      Hisob-faktura
+                    </p>
+                    <p className="text-base sm:text-lg font-bold text-slate-900 mt-0.5 tabular-nums">
+                      № {data.invoiceNumber}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                      To'lov summasi
+                    </p>
+                    <p className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 tabular-nums">
+                      {money(data.amount)} so'm
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="px-6 py-8 text-center bg-slate-50/60">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
+                  <Check size={14} className="stroke-[3]" />
+                  <span>Chek muvaffaqiyatli yirtib olindi</span>
+                </div>
+              </div>
+              <div className="invoice-sawtooth-bottom" />
+            </div>
+          )}
+
           <div
             key={dispenseKey}
             className="invoice-dispensed-card baito-dispensed-paper bg-white rounded-b-2xl rounded-t-none border-x border-b border-t-0 border-slate-200/90 shadow-xl overflow-hidden"
@@ -485,9 +701,22 @@ export const InvoicePayScreen: React.FC = () => {
             </div>
 
         {declared ? (
-          <div className="px-6 sm:px-8 py-10 text-center">
-            <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-5">
-              <Check size={28} />
+          <div className="relative px-6 sm:px-8 py-10 text-center">
+            {/* Rasmiy Yashil Shtamp - TO'LANGAN / PAID */}
+            <div className="baito-paid-rubber-stamp" title="Rasmiy tasdiqlangan elektron to'lov muhr">
+              <div className="text-[13px] font-black tracking-widest text-emerald-800 leading-none">
+                TO'LANGAN
+              </div>
+              <div className="text-[9px] font-bold text-emerald-700 tracking-wider mt-0.5">
+                PAID · 200 OK
+              </div>
+              <div className="text-[8px] font-semibold text-emerald-600/80 tracking-widest mt-0.5">
+                BAITO ELEKTRON CHEK
+              </div>
+            </div>
+
+            <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-5 shadow-xs">
+              <Check size={28} className="stroke-[2.5]" />
             </div>
             <h2 className="text-xl font-bold text-slate-900 mb-2">To'lov qayd etildi</h2>
             {/* Said plainly, because it is the truth: this records their word,
@@ -502,6 +731,20 @@ export const InvoicePayScreen: React.FC = () => {
                 To'lov topshirig'i: <span className="font-semibold text-slate-700">{data.paidReference}</span>
               </p>
             )}
+
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined' && window.print) {
+                    window.print();
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+              >
+                <span>Chekni chop etish</span>
+              </button>
+            </div>
           </div>
         ) : (
           <>
@@ -591,7 +834,7 @@ export const InvoicePayScreen: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => pay.mutate()}
+                onClick={handleConfirmPayment}
                 disabled={!method || pay.isPending}
                 className="mt-6 w-full bg-brand-primary text-white font-semibold text-[16px] py-4 rounded-xl shadow-lg shadow-brand-primary/20 hover:opacity-95 active:scale-[0.99] transition-all flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:active:scale-100"
               >
