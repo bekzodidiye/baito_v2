@@ -171,13 +171,14 @@ export const InvoicePayScreen: React.FC = () => {
           <div className="wrap-colors-2"><div className="bg-colors" /></div>
           <div className="cover" />
           <div className="slit-opening" />
+          <div className="slit-lip" />
         </div>
 
         {/* Pastda slotdan invoys bo'lib chiqib keluvchi yagona karta */}
         <div className="invoice-dispense-mask">
           <div
             key={dispenseKey}
-            className="invoice-dispensed-card bg-white rounded-2xl border border-slate-200/90 shadow-xl overflow-hidden"
+            className="invoice-dispensed-card bg-white rounded-b-2xl rounded-t-none border-x border-b border-t-0 border-slate-200/90 shadow-xl overflow-hidden"
           >
             {/* INVOYS RAQAMLI PASPORT / RECEIPT HEADER */}
             <div className="invoice-pass-header relative p-6 sm:p-8 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/40">
