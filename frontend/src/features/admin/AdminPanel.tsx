@@ -76,7 +76,7 @@ export const AdminPanel: React.FC = () => {
   } = useAdminData();
 
   return (
-    <div className="h-screen bg-slate-50 text-slate-900 flex overflow-hidden w-full">
+    <div className="h-screen bg-slate-100/70 text-slate-900 flex overflow-hidden w-full antialiased">
       {/* Sidebar Navigation */}
       <AdminSidebar
         activeTab={activeTab}
@@ -97,7 +97,7 @@ export const AdminPanel: React.FC = () => {
         <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           <ErrorBoundary key={activeTab}>
             {activeTab === 'overview' && (
-              <AdminOverview stats={stats} loading={loading} />
+              <AdminOverview stats={stats} loading={loading} onNavigate={setActiveTab} />
             )}
 
             {activeTab === 'users' && (

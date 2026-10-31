@@ -3,16 +3,13 @@ import { money as sum } from '../../utils/money';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Wallet, Check, X, Loader2, RefreshCw, Receipt, Landmark, Save } from 'lucide-react';
+import { 
+  Wallet, Check, X, Loader2, RefreshCw, Receipt, Landmark, Save, 
+  CreditCard, ArrowUpRight, CheckCircle2, AlertCircle, Building2,
+  FileText, ShieldCheck
+} from 'lucide-react';
 import { apiClient, unwrapList } from '../../api/client';
 import { showToast } from '../../utils/toast';
-
-/**
- * Payout requests and frozen wages.
- *
- * Both existed only in the database before: a withdrawal debited the worker's
- * balance and then sat as `pending` forever because nothing could act on it,
- */
 
 interface Withdrawal {
   id: string;
@@ -26,9 +23,6 @@ interface Withdrawal {
   createdAt: string | null;
 }
 
-/** A shift settled by hand: money actually sent to a worker, and the invoice
- *  that recovers it from the company. Distinct from a withdrawal request,
- *  which is the worker asking; this is us having already paid. */
 interface JobPayout {
   id: string;
   jobId: string;
@@ -43,14 +37,9 @@ interface JobPayout {
   invoiceAmount: number | null;
   invoiceSentTo: string | null;
   invoiceSentAt: string | null;
-  /** What the company said back through the link in its invoice email. Their
-   *  word, not a bank statement — the row labels it as such. */
   invoicePaidMethod: string | null;
   invoicePaidReference: string | null;
   invoicePaidDeclaredAt: string | null;
-  /** Their receipt for the transfer, and whether an administrator has matched
-   *  it against the bank statement. Two separate facts on purpose: the first
-   *  is what to look at, the second is whether anyone has looked. */
   invoicePaidReceiptUrl: string | null;
   invoiceConfirmedAt: string | null;
 }
@@ -65,7 +54,15 @@ interface BankDetails {
 }
 
 const money = (n: number) => sum(n, useAuthStore.getState().language);
-const when = (s: string | null) => (s ? new Date(s).toLocaleString('uz-UZ') : '—');
+const when = (s: string | null) => {
+  if (!s) return '—';
+  try {
+    const d = new Date(s);
+    return `${d.toLocaleDateString('uz-UZ')} ${d.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}`;
+  } catch {
+    return '—';
+  }
+};
 
 export const AdminPayouts: React.FC = () => {
   const language = useAuthStore(st => st.language);
@@ -74,21 +71,25 @@ export const AdminPayouts: React.FC = () => {
   const [tab, setTab] = useState<'withdrawals' | 'payouts' | 'bank'>('withdrawals');
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  // Decision Modal State
+  const [decisionModal, setDecisionModal] = useState<{
+    withdrawal: Withdrawal;
+    action: 'approve' | 'reject';
+  } | null>(null);
+  const [decisionReason, setDecisionReason] = useState('');
+  const [bankReference, setBankReference] = useState('');
+
   const withdrawals = useQuery({
     queryKey: ['adminWithdrawals'],
     queryFn: async () =>
       unwrapList(await apiClient('/admin/withdrawals?status=pending')) as Withdrawal[],
   });
 
-
-  // Saying the money arrived. Deliberately a separate action from everything
-  // else on this screen: the rest of it records what we did, and this records
-  // that somebody checked a bank statement.
   const confirmPayment = useMutation({
     mutationFn: async (jobId: string) =>
       apiClient(`/admin/jobs/${jobId}/payout/confirm-payment`, { method: 'POST' }),
     onSuccess: () => {
-      showToast("To'lov tasdiqlandi");
+      showToast("To'lov muvaffaqiyatli tasdiqlandi", 'success');
       queryClient.invalidateQueries({ queryKey: ['adminJobPayouts'] });
     },
     onError: (e: any) => showToast(e?.message || 'Xatolik yuz berdi', 'error'),
@@ -110,132 +111,255 @@ export const AdminPayouts: React.FC = () => {
     queryClient.invalidateQueries({ queryKey: ['adminSettings'] });
   };
 
-  // Every one of these moves real money, so each requires a typed reason that
-  // lands in the audit log next to the administrator's name.
-  const decideWithdrawal = async (w: Withdrawal, action: 'approve' | 'reject') => {
-    const verb = action === 'approve' ? 'tasdiqlash' : 'rad etish';
-    const reason = window.prompt(
-      `${money(w.amountUzs)} — ${w.userName}\n\n${verb} sababi (audit jurnaliga yoziladi):`,
-    );
-    if (!reason || reason.trim().length < 3) return;
+  const handleOpenDecision = (w: Withdrawal, action: 'approve' | 'reject') => {
+    setDecisionReason('');
+    setBankReference('');
+    setDecisionModal({ withdrawal: w, action });
+  };
 
-    let reference: string | null = null;
-    if (action === 'approve') {
-      reference = window.prompt("Bank ma'lumotnomasi (ixtiyoriy):") || null;
+  const handleExecuteDecision = async () => {
+    if (!decisionModal) return;
+    const { withdrawal: w, action } = decisionModal;
+
+    if (!decisionReason || decisionReason.trim().length < 3) {
+      showToast("Iltimos, audit jurnali uchun sababni yozing (kamida 3 belgi)", 'error');
+      return;
     }
 
     setBusyId(w.id);
     try {
       await apiClient(`/admin/withdrawals/${w.id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ action, reason: reason.trim(), reference }),
+        body: JSON.stringify({
+          action,
+          reason: decisionReason.trim(),
+          reference: action === 'approve' && bankReference.trim() ? bankReference.trim() : null,
+        }),
       });
       showToast(
         action === 'approve'
-          ? "Yechish tasdiqlandi"
+          ? "Yechish muvaffaqiyatli tasdiqlandi"
           : `Rad etildi — ${money(w.amountUzs)} balansga qaytarildi`,
+        'success'
       );
+      setDecisionModal(null);
       refreshAll();
     } catch (e: any) {
-      showToast(e?.message || 'Amal bajarilmadi');
+      showToast(e?.message || 'Amal bajarilmadi', 'error');
     } finally {
       setBusyId(null);
     }
   };
 
-
-  const pendingTotal = (withdrawals.data ?? []).reduce((s, w) => s + w.amountUzs, 0);
-
-  const Tab = ({ id, label, count }: { id: typeof tab; label: string; count?: number }) => (
-    <button
-      onClick={() => setTab(id)}
-      className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition ${
-        tab === id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-      }`}
-    >
-      {label}{count !== undefined && <span className="opacity-70"> ({count})</span>}
-    </button>
-  );
+  const pendingList = withdrawals.data ?? [];
+  const pendingTotal = pendingList.reduce((s, w) => s + w.amountUzs, 0);
+  const payoutsList = payouts.data ?? [];
+  const totalSettledAmount = payoutsList.reduce((s, p) => s + (p.amount || 0), 0);
+  const confirmedCount = payoutsList.filter(p => !!p.invoiceConfirmedAt).length;
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80">
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold">
-            <Wallet size={15} /> Kutilayotgan yechishlar
+      {/* KPI Ribbon */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">Kutilayotgan Yechishlar</span>
+            <Wallet size={16} className="text-amber-500" />
           </div>
-          <div className="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">
+          <div className="text-lg font-black text-slate-900 tabular-nums">
             {money(pendingTotal)}
+          </div>
+          <div className="text-[11px] font-bold text-amber-600 flex items-center gap-1 mt-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            {pendingList.length} ta navbatda
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">To'langan Ish Haqlar</span>
+            <Receipt size={16} className="text-emerald-500" />
+          </div>
+          <div className="text-lg font-black text-slate-900 tabular-nums">
+            {money(totalSettledAmount)}
+          </div>
+          <div className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-1">
+            <ArrowUpRight size={13} />
+            {payoutsList.length} ta to'lov operatsiyasi
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">Tasdiqlangan Fakturalar</span>
+            <ShieldCheck size={16} className="text-blue-500" />
+          </div>
+          <div className="text-lg font-black text-blue-600 tabular-nums">
+            {confirmedCount} ta
+          </div>
+          <div className="text-[11px] font-bold text-slate-500 flex items-center gap-1 mt-1">
+            <FileText size={13} />
+            Bank ko'chirmasi tekshirilgan
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-400 mb-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">Baito Rekvizitlari</span>
+            <Landmark size={16} className="text-indigo-500" />
+          </div>
+          <div className="text-sm font-bold text-slate-800 truncate mt-0.5">
+            {bank.data?.payoutBankName || "Ko'rsatilmagan"}
+          </div>
+          <div className="text-[11px] font-bold text-indigo-600 flex items-center gap-1 mt-1">
+            <CheckCircle2 size={13} />
+            {bank.data?.payoutBankAccount ? "Faol hisob raqami" : "Sozlash kutilmoqda"}
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 bg-white p-3 rounded-2xl border border-slate-200/80">
-        <Tab id="withdrawals" label={a.withdrawalRequests} count={withdrawals.data?.length ?? 0} />
-        <Tab id="payouts" label={a.manualPayouts} count={payouts.data?.length ?? 0} />
-        <Tab id="bank" label="Bank rekvizitlari" />
+      {/* Tabs and Controls Bar */}
+      <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setTab('withdrawals')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              tab === 'withdrawals'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <Wallet size={14} />
+            <span>{a.withdrawalRequests}</span>
+            {pendingList.length > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950">
+                {pendingList.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setTab('payouts')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              tab === 'payouts'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <Receipt size={14} />
+            <span>{a.manualPayouts}</span>
+            {payoutsList.length > 0 && (
+              <span className="ml-1 opacity-75 text-[10px]">
+                ({payoutsList.length})
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setTab('bank')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              tab === 'bank'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <Landmark size={14} />
+            <span>Bank rekvizitlari</span>
+          </button>
+        </div>
+
         <button
           onClick={refreshAll}
-          className="ml-auto p-2 rounded-xl bg-slate-100 hover:bg-slate-200 cursor-pointer"
+          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+          title="Yangilash"
           aria-label="Yangilash"
         >
-          <RefreshCw size={15} className="text-slate-600" />
+          <RefreshCw size={15} />
         </button>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
-          {tab === 'bank' ? (
-            <BankDetailsForm data={bank.data} onSaved={refreshAll} />
-          ) : tab === 'payouts' ? (
+      {/* Main Content Area */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
+        {tab === 'bank' ? (
+          <BankDetailsForm data={bank.data} onSaved={refreshAll} />
+        ) : tab === 'payouts' ? (
+          <div className="overflow-x-auto">
             <table className="w-full text-xs">
-              <thead className="bg-slate-50 text-slate-500">
+              <thead className="bg-slate-50 text-slate-500 border-b border-slate-100">
                 <tr>
-                  <th className="text-left font-semibold px-4 py-3">{a.jobLabel}</th>
-                  <th className="text-left font-semibold px-4 py-3">{a.roleWorker}</th>
-                  <th className="text-left font-semibold px-4 py-3">{a.paidLabel}</th>
-                  <th className="text-left font-semibold px-4 py-3">Chek</th>
-                  <th className="text-left font-semibold px-4 py-3">Hisob-faktura</th>
-                  <th className="text-left font-semibold px-4 py-3">{a.dateLabel}</th>
+                  <th className="text-left font-bold px-4 py-3.5 uppercase tracking-wider text-[11px]">{a.jobLabel}</th>
+                  <th className="text-left font-bold px-4 py-3.5 uppercase tracking-wider text-[11px]">{a.roleWorker}</th>
+                  <th className="text-left font-bold px-4 py-3.5 uppercase tracking-wider text-[11px]">{a.paidLabel}</th>
+                  <th className="text-left font-bold px-4 py-3.5 uppercase tracking-wider text-[11px]">Chek</th>
+                  <th className="text-left font-bold px-4 py-3.5 uppercase tracking-wider text-[11px]">Hisob-faktura</th>
+                  <th className="text-right font-bold px-4 py-3.5 uppercase tracking-wider text-[11px]">{a.dateLabel}</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {payouts.isLoading ? (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">Yuklanmoqda…</td></tr>
-                ) : (payouts.data ?? []).length === 0 ? (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">
-                    Hali qo'lda to'lov qilinmagan
-                  </td></tr>
+                  <tr>
+                    <td colSpan={6} className="px-4 py-12 text-center text-slate-400">
+                      <Loader2 size={24} className="animate-spin mx-auto mb-2 text-indigo-600" />
+                      Yuklanmoqda…
+                    </td>
+                  </tr>
+                ) : payoutsList.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-12 text-center text-slate-400">
+                      Hali qo'lda to'lov qilinmagan
+                    </td>
+                  </tr>
                 ) : (
-                  (payouts.data ?? []).map((p) => (
-                    <tr key={p.id} className="border-t border-slate-100 hover:bg-slate-50/80">
-                      <td className="px-4 py-3">
-                        <span className="font-semibold text-slate-800 block">{p.jobTitle ?? '—'}</span>
-                        <span className="text-slate-400">{p.company ?? ''}</span>
+                  payoutsList.map((p) => (
+                    <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="px-4 py-3.5">
+                        <span className="font-bold text-slate-900 block">{p.jobTitle ?? '—'}</span>
+                        <span className="text-slate-400 flex items-center gap-1 mt-0.5">
+                          <Building2 size={12} /> {p.company ?? 'Baito'}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 text-slate-700">{p.workerName ?? '—'}</td>
-                      <td className="px-4 py-3 font-bold text-slate-900 tabular-nums">{money(p.amount)}</td>
-                      <td className="px-4 py-3">
-                        <a href={p.receiptUrl} target="_blank" rel="noreferrer"
-                           className="inline-flex items-center gap-1 text-brand-primary font-semibold underline">
-                          <Receipt size={13} /> Ochish
-                        </a>
+                      <td className="px-4 py-3.5">
+                        <span className="font-semibold text-slate-800 block">{p.workerName ?? '—'}</span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
+                        <span className="font-black text-slate-900 tabular-nums text-sm">
+                          {money(p.amount)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        {p.receiptUrl ? (
+                          <a
+                            href={p.receiptUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-100 transition-colors"
+                          >
+                            <Receipt size={13} /> Chekni ko'rish
+                          </a>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5">
                         {p.invoiceSentAt ? (
-                          <span className="text-slate-700">
-                            <span className="font-mono">{p.invoiceNumber}</span>
-                            <span className="block text-slate-400">
-                              {money(p.invoiceAmount ?? 0)} · {p.invoiceSentTo}
-                            </span>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-xs font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded">
+                                {p.invoiceNumber}
+                              </span>
+                              <span className="text-slate-500 font-semibold">
+                                {money(p.invoiceAmount ?? 0)}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-slate-400">
+                              Yuborildi: {p.invoiceSentTo}
+                            </div>
                             {p.invoicePaidDeclaredAt && (
-                              // "Says it paid", never "paid": nobody has looked
-                              // at a bank statement yet, and a row that reads
-                              // as settled is how an unpaid invoice gets closed.
-                              <span className="block mt-1 text-emerald-700 font-semibold">
+                              <div className="text-[11px] text-emerald-700 font-bold flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60 w-fit">
+                                <CheckCircle2 size={12} />
                                 To'ladim dedi · {when(p.invoicePaidDeclaredAt)}
                                 {p.invoicePaidReference ? ` · №${p.invoicePaidReference}` : ''}
-                              </span>
+                              </div>
                             )}
                             {p.invoicePaidReceiptUrl && (
                               <a
@@ -243,85 +367,105 @@ export const AdminPayouts: React.FC = () => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
-                                className="block mt-1 text-brand-primary font-semibold underline underline-offset-2"
+                                className="inline-flex items-center gap-1 text-brand-primary font-bold underline underline-offset-2 text-[11px]"
                               >
-                                Chekni ochish
+                                Bank chekini tekshirish
                               </a>
                             )}
                             {p.invoiceConfirmedAt ? (
-                              <span className="block mt-1 text-emerald-700 font-bold">
+                              <div className="text-[11px] text-emerald-800 font-black flex items-center gap-1 bg-emerald-100 px-2 py-0.5 rounded w-fit">
+                                <ShieldCheck size={12} />
                                 Tasdiqlandi · {when(p.invoiceConfirmedAt)}
-                              </span>
+                              </div>
                             ) : p.invoicePaidDeclaredAt ? (
-                              // The step that actually closes the job. Offered
-                              // only once there is a declaration to check, so
-                              // nobody can confirm a payment nobody claims to
-                              // have made.
                               <button
                                 onClick={(e) => { e.stopPropagation(); confirmPayment.mutate(p.jobId); }}
                                 disabled={confirmPayment.isPending}
-                                className="mt-1.5 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-[11px] font-bold cursor-pointer disabled:cursor-not-allowed"
+                                className="mt-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-[11px] font-extrabold cursor-pointer transition-colors shadow-xs"
                               >
                                 To'lovni tasdiqlash
                               </button>
                             ) : null}
-                          </span>
+                          </div>
                         ) : (
-                          <span className="text-amber-600 font-semibold">Yuborilmagan</span>
+                          <span className="inline-flex items-center gap-1 text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-bold text-[11px]">
+                            <AlertCircle size={12} />
+                            Faktura yuborilmagan
+                          </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-500">{when(p.paidAt)}</td>
+                      <td className="px-4 py-3.5 text-right text-slate-500 font-medium">
+                        {when(p.paidAt)}
+                      </td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
-          ) : tab === 'withdrawals' ? (
+          </div>
+        ) : tab === 'withdrawals' ? (
+          <div className="overflow-x-auto">
             <table className="w-full text-xs">
-              <thead className="bg-slate-50 text-slate-500">
+              <thead className="bg-slate-50 text-slate-500 border-b border-slate-100">
                 <tr>
-                  <th className="text-left font-semibold px-4 py-3">{a.roleWorker}</th>
-                  <th className="text-left font-semibold px-4 py-3">Summa</th>
-                  <th className="text-left font-semibold px-4 py-3">Karta</th>
-                  <th className="text-left font-semibold px-4 py-3">{a.dateLabel}</th>
-                  <th className="text-right font-semibold px-4 py-3">Qaror</th>
+                  <th className="text-left font-bold px-4 py-3.5 uppercase tracking-wider text-[11px]">{a.roleWorker}</th>
+                  <th className="text-left font-bold px-4 py-3.5 uppercase tracking-wider text-[11px]">So'ralgan Summa</th>
+                  <th className="text-left font-bold px-4 py-3.5 uppercase tracking-wider text-[11px]">Bank Kartasi</th>
+                  <th className="text-left font-bold px-4 py-3.5 uppercase tracking-wider text-[11px]">{a.dateLabel}</th>
+                  <th className="text-right font-bold px-4 py-3.5 uppercase tracking-wider text-[11px]">Qaror</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {withdrawals.isLoading ? (
-                  <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Yuklanmoqda…</td></tr>
-                ) : (withdrawals.data ?? []).length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">
-                    Kutilayotgan so'rov yo'q
-                  </td></tr>
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-slate-400">
+                      <Loader2 size={24} className="animate-spin mx-auto mb-2 text-indigo-600" />
+                      Yuklanmoqda…
+                    </td>
+                  </tr>
+                ) : pendingList.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-slate-400">
+                      <CheckCircle2 size={32} className="mx-auto mb-2 text-emerald-500 opacity-60" />
+                      Kutilayotgan pul yechish so'rovlari yo'q
+                    </td>
+                  </tr>
                 ) : (
-                  (withdrawals.data ?? []).map((w) => (
-                    <tr key={w.id} className="border-t border-slate-100 hover:bg-slate-50/80">
-                      <td className="px-4 py-3">
-                        <span className="font-semibold text-slate-800 block">{w.userName}</span>
-                        <span className="text-slate-400 font-mono">{w.userPhone}</span>
+                  pendingList.map((w) => (
+                    <tr key={w.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="px-4 py-3.5">
+                        <span className="font-bold text-slate-900 block text-sm">{w.userName}</span>
+                        <span className="text-slate-400 font-mono text-[11px]">{w.userPhone}</span>
                       </td>
-                      <td className="px-4 py-3 font-bold text-slate-900 tabular-nums">
+                      <td className="px-4 py-3.5 font-black text-slate-900 tabular-nums text-base">
                         {money(w.amountUzs)}
                       </td>
-                      <td className="px-4 py-3 text-slate-500 font-mono">{w.bankCardMask || '—'}</td>
-                      <td className="px-4 py-3 text-slate-500">{when(w.createdAt)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 font-mono text-slate-700 font-bold border border-slate-200">
+                          <CreditCard size={13} className="text-slate-400" />
+                          {w.bankCardMask || '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5 text-slate-500 font-medium">
+                        {when(w.createdAt)}
+                      </td>
+                      <td className="px-4 py-3.5">
                         <div className="flex items-center justify-end gap-2">
                           <button
                             disabled={busyId === w.id}
-                            onClick={() => decideWithdrawal(w, 'approve')}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold cursor-pointer hover:bg-emerald-700 disabled:opacity-50"
+                            onClick={() => handleOpenDecision(w, 'approve')}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold cursor-pointer hover:bg-emerald-700 transition shadow-xs disabled:opacity-50"
                           >
                             {busyId === w.id ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
                             Tasdiqlash
                           </button>
                           <button
                             disabled={busyId === w.id}
-                            onClick={() => decideWithdrawal(w, 'reject')}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-100 text-rose-700 font-bold cursor-pointer hover:bg-rose-200 disabled:opacity-50"
+                            onClick={() => handleOpenDecision(w, 'reject')}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 font-bold cursor-pointer hover:bg-rose-100 transition disabled:opacity-50"
                           >
-                            <X size={13} /> Rad etish
+                            <X size={13} />
+                            Rad etish
                           </button>
                         </div>
                       </td>
@@ -330,20 +474,129 @@ export const AdminPayouts: React.FC = () => {
                 )}
               </tbody>
             </table>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </div>
+
+      {/* Decision Modal */}
+      {decisionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+            <div className={`p-5 ${decisionModal.action === 'approve' ? 'bg-emerald-50 border-b border-emerald-100' : 'bg-rose-50 border-b border-rose-100'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {decisionModal.action === 'approve' ? (
+                    <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
+                      <Check size={18} />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold">
+                      <X size={18} />
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 text-base">
+                      {decisionModal.action === 'approve' ? "Yechishni Tasdiqlash" : "Yechishni Rad Etish"}
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium">Audit jurnali uchun rasmiy qaror</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setDecisionModal(null)}
+                  className="p-1 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-white/80 cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-semibold">Foydalanuvchi:</span>
+                  <span className="font-extrabold text-slate-900">{decisionModal.withdrawal.userName}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-semibold">Telefon:</span>
+                  <span className="font-mono text-slate-700">{decisionModal.withdrawal.userPhone}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-semibold">Karta raqami:</span>
+                  <span className="font-mono text-slate-700 font-bold">{decisionModal.withdrawal.bankCardMask || '—'}</span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-slate-200">
+                  <span className="text-slate-500 font-semibold">Yechilayotgan summa:</span>
+                  <span className="font-black text-slate-900 text-sm tabular-nums">
+                    {money(decisionModal.withdrawal.amountUzs)}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                  Qaror sababi <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  rows={2}
+                  value={decisionReason}
+                  onChange={(e) => setDecisionReason(e.target.value)}
+                  placeholder={decisionModal.action === 'approve' ? "Masalan: Tranzaksiya o'tkazildi, chek tekshirildi" : "Masalan: Karta raqamida noaniqlik mavjud"}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+                  required
+                />
+              </div>
+
+              {decisionModal.action === 'approve' && (
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    Bank ma'lumotnomasi / Tranzaksiya ID (ixtiyoriy)
+                  </label>
+                  <input
+                    type="text"
+                    value={bankReference}
+                    onChange={(e) => setBankReference(e.target.value)}
+                    placeholder="Masalan: PAYME-98721345"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setDecisionModal(null)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 text-xs hover:bg-slate-50 transition cursor-pointer"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExecuteDecision}
+                  disabled={busyId === decisionModal.withdrawal.id || !decisionReason.trim()}
+                  className={`px-5 py-2.5 rounded-xl font-extrabold text-white text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm disabled:opacity-50 ${
+                    decisionModal.action === 'approve'
+                      ? 'bg-emerald-600 hover:bg-emerald-700'
+                      : 'bg-rose-600 hover:bg-rose-700'
+                  }`}
+                >
+                  {busyId === decisionModal.withdrawal.id ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : decisionModal.action === 'approve' ? (
+                    <Check size={14} />
+                  ) : (
+                    <X size={14} />
+                  )}
+                  {decisionModal.action === 'approve' ? "Tasdiqlash" : "Rad etish"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-/** Our own bank details.
- *
- *  They go on the invoice a company receives after a shift is paid out. Until
- *  now there was nowhere to put them, which would have meant hard-coding an
- *  account number into the invoice template — the kind of thing that stays
- *  wrong for months because nothing ever reads it back.
- */
 const BankDetailsForm: React.FC<{ data?: BankDetails; onSaved: () => void }> = ({ data, onSaved }) => {
   const language = useAuthStore(st => st.language);
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
@@ -354,8 +607,6 @@ const BankDetailsForm: React.FC<{ data?: BankDetails; onSaved: () => void }> = (
   const [saving, setSaving] = useState(false);
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
 
-  // Fills once the query resolves, and does not clobber what is being typed
-  // if the query happens to refetch mid-edit.
   const key = data ? JSON.stringify(data) : null;
   if (data && key !== loadedFor) {
     setLoadedFor(key);
@@ -376,7 +627,7 @@ const BankDetailsForm: React.FC<{ data?: BankDetails; onSaved: () => void }> = (
     setSaving(true);
     try {
       await apiClient('/admin/settings', { method: 'POST', body: JSON.stringify(form) });
-      showToast('Bank rekvizitlari saqlandi', 'success');
+      showToast('Bank rekvizitlari muvaffaqiyatli saqlandi', 'success');
       onSaved();
     } catch (e: any) {
       showToast(e?.message || 'Saqlab bo`lmadi', 'error');
@@ -395,38 +646,40 @@ const BankDetailsForm: React.FC<{ data?: BankDetails; onSaved: () => void }> = (
   ];
 
   return (
-    <div className="p-5">
-      <div className="flex items-center gap-2 mb-1">
-        <Landmark size={16} className="text-slate-500" />
-        <h3 className="font-bold text-slate-900 text-sm">{a.ourPaymentDetails}</h3>
+    <div className="p-6">
+      <div className="flex items-center gap-2 mb-1.5">
+        <Landmark size={18} className="text-indigo-600" />
+        <h3 className="font-extrabold text-slate-900 text-sm">{a.ourPaymentDetails}</h3>
       </div>
-      <p className="text-xs text-slate-500 mb-4">
-        Korxonaga yuboriladigan hisob-fakturada shu ma'lumotlar chiqadi.
+      <p className="text-xs text-slate-500 mb-5">
+        Korxonaga yuboriladigan rasmiy hisob-fakturalarda shu ma'lumotlar avtomatik ko'rsatiladi.
       </p>
 
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="grid sm:grid-cols-2 gap-4">
         {fields.map(([k, label, placeholder]) => (
           <label key={k} className="block">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</span>
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">{label}</span>
             <input
               type="text"
               value={form[k] ?? ''}
               onChange={set(k)}
               placeholder={placeholder}
-              className="mt-1.5 w-full h-11 px-4 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:bg-white transition-colors"
+              className="mt-1.5 w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary transition-all"
             />
           </label>
         ))}
       </div>
 
-      <button
-        onClick={save}
-        disabled={saving}
-        className="mt-5 h-11 px-5 rounded-2xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-colors disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer"
-      >
-        {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-        Saqlash
-      </button>
+      <div className="mt-6 flex justify-end">
+        <button
+          onClick={save}
+          disabled={saving}
+          className="h-11 px-6 rounded-xl bg-slate-900 text-white font-extrabold text-xs hover:bg-slate-800 transition-colors disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer shadow-sm"
+        >
+          {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+          Bank rekvizitlarini saqlash
+        </button>
+      </div>
     </div>
   );
 };

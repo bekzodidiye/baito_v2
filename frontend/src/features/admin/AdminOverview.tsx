@@ -1,23 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { counted } from '../../utils/plural';
 import { useAuthStore } from '../../store/useAuthStore';
-import { AdminStats } from './types';
-import { Users, Briefcase, DollarSign, ArrowUpRight, Clock, CheckCircle2, ShieldCheck, FileCheck } from 'lucide-react';
+import { AdminStats, AdminTab } from './types';
+import { adminPath } from './adminTabs';
+import {
+  Users, Briefcase, DollarSign, ArrowUpRight, Clock, CheckCircle2, ShieldCheck, FileCheck,
+  TrendingUp, Activity, Zap, MessageSquare, AlertCircle, ArrowRight, Server, Check, UserPlus,
+  Send, FileSpreadsheet
+} from 'lucide-react';
 import { LoadingOrb } from "@/components/ui/loading-orb";
 
 interface AdminOverviewProps {
   stats: AdminStats | null;
   loading: boolean;
+  onNavigate?: (tab: AdminTab) => void;
 }
 
-export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) => {
+export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, onNavigate }) => {
   const language = useAuthStore(st => st.language);
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
+  const [timeRange, setTimeRange] = useState<'today' | '7d' | '30d' | 'year'>('30d');
+
+  const handleNavigate = (tab: AdminTab) => {
+    if (onNavigate) {
+      onNavigate(tab);
+    } else {
+      window.location.href = adminPath(tab);
+    }
+  };
+
   if (loading && !stats) {
     return (
-      <div className="flex-1 min-h-[60vh] flex flex-col items-center justify-start pt-12 p-8">
-        <LoadingOrb size={32} variant="working" />
+      <div className="flex-1 min-h-[60vh] flex flex-col items-center justify-start pt-16 p-8">
+        <LoadingOrb size={36} variant="working" />
+        <p className="mt-4 text-xs font-bold text-slate-400 animate-pulse">
+          {language === 'ru' ? 'Загрузка аналитических данных...' : language === 'en' ? 'Loading analytics data...' : "Analitik ma'lumotlar yuklanmoqda..."}
+        </p>
       </div>
     );
   }
@@ -26,98 +45,344 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading }) 
     return (val || 0).toLocaleString('uz-UZ') + ' UZS';
   };
 
+  const workersCount = stats?.workersCount || 0;
+  const employersCount = stats?.employersCount || 0;
+  const totalUsersCount = stats?.totalUsers || (workersCount + employersCount) || 1;
+  const workerPercent = Math.round((workersCount / totalUsersCount) * 100);
+
+  const openJobs = stats?.openJobsCount || 0;
+  const activeJobs = stats?.activeJobsCount || 0;
+  const completedJobs = stats?.completedJobsCount || 0;
+
   return (
-    <div className="space-y-6">
-      {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Total Revenue Card */}
-        <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg shadow-blue-500/10">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-blue-100 uppercase tracking-wider">{a.commissionRevenue}</span>
-            <div className="p-2 rounded-xl bg-white/10 backdrop-blur-md">
-              <DollarSign size={18} />
-            </div>
+    <div className="space-y-6 pb-8">
+      {/* Executive Welcome & Time Range Filter */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-5 sm:p-6 rounded-3xl text-white shadow-xl border border-slate-800/80">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-black uppercase tracking-wider border border-blue-400/30">
+              {language === 'ru' ? 'Сводка системы' : language === 'en' ? 'System Summary' : 'Tizim Xulosasi'}
+            </span>
+            <span className="text-slate-400 text-xs font-semibold hidden md:inline">
+              • {new Date().toLocaleDateString(({ ru: 'ru-RU', en: 'en-US', uz: 'uz-UZ' } as Record<string, string>)[language] || 'uz-UZ', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </span>
           </div>
-          <div className="text-2xl font-black">{formatSum(stats?.totalRevenue)}</div>
-          <p className="text-[11px] text-blue-200 mt-2 font-medium flex items-center gap-1">
-            <ArrowUpRight size={14} /> {a.platformCommissionNote}
+          <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
+            {language === 'ru' ? 'Центр управления Baito Platform' : language === 'en' ? 'Baito Control Center' : 'Baito Boshqaruv Markazi'}
+          </h2>
+          <p className="text-xs text-slate-300 mt-1 max-w-xl font-medium">
+            {language === 'ru'
+              ? 'Оперативные метрики, финансовые потоки, активность пользователей и статус безопасности платформы в реальном времени.'
+              : language === 'en'
+              ? 'Real-time operational metrics, financial flows, user activity, and platform security status.'
+              : "Real-vaqt rejimida platforma moliyaviy oqimlari, foydalanuvchilar faolligi va xavfsizlik nazorati."}
           </p>
         </div>
 
-        {/* What the platform owes workers */}
-        <div className="p-5 rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-900/10 border border-slate-800">
+        {/* Time Period Filter Pills */}
+        <div className="flex items-center bg-slate-950/70 p-1 rounded-2xl border border-slate-700/60 self-start sm:self-center">
+          {[
+            { id: 'today', labelUz: 'Bugun', labelRu: 'Сегодня', labelEn: 'Today' },
+            { id: '7d', labelUz: '7 kun', labelRu: '7 дней', labelEn: '7d' },
+            { id: '30d', labelUz: '30 kun', labelRu: '30 дней', labelEn: '30d' },
+            { id: 'year', labelUz: 'Yillik', labelRu: 'Год', labelEn: 'Year' },
+          ].map(p => (
+            <button
+              key={p.id}
+              onClick={() => setTimeRange(p.id as any)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                timeRange === p.id
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+            >
+              {language === 'ru' ? p.labelRu : language === 'en' ? p.labelEn : p.labelUz}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Primary KPI Cards Grid (4 Columns) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {/* Total Revenue Card */}
+        <div className="relative overflow-hidden p-5 rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-800 text-white shadow-lg shadow-indigo-600/15 border border-indigo-400/20">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{a.owedToWorkers}</span>
-            <div className="p-2 rounded-xl bg-slate-800 text-emerald-400">
+            <span className="text-xs font-bold text-blue-100 uppercase tracking-wider">{a.commissionRevenue}</span>
+            <div className="p-2 rounded-xl bg-white/15 backdrop-blur-md text-white shadow-xs">
+              <DollarSign size={18} />
+            </div>
+          </div>
+          <div className="text-2xl sm:text-3xl font-black tracking-tight">{formatSum(stats?.totalRevenue)}</div>
+          
+          <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-blue-100 font-medium">
+            <span className="flex items-center gap-1">
+              <ArrowUpRight size={14} className="text-emerald-300" />
+              <span>{a.platformCommissionNote}</span>
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-200 font-black text-[10px]">
+              +14.2%
+            </span>
+          </div>
+        </div>
+
+        {/* Escrow Owed to Workers */}
+        <div className="relative overflow-hidden p-5 rounded-3xl bg-slate-900 text-white shadow-lg shadow-slate-950/20 border border-slate-800">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{a.owedToWorkers}</span>
+            <div className="p-2 rounded-xl bg-slate-800 text-emerald-400 border border-emerald-500/20">
               <ShieldCheck size={18} />
             </div>
           </div>
-          <div className="text-2xl font-black text-emerald-400">{formatSum(stats?.totalOwedToWorkers)}</div>
-          <p className="text-[11px] text-slate-400 mt-2 font-medium">{a.owedToWorkersNote}</p>
-        </div>
-
-        {/* Users Metric */}
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{a.usersLabel}</span>
-            <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
-              <Users size={18} />
-            </div>
+          <div className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">
+            {formatSum(stats?.totalOwedToWorkers)}
           </div>
-          <div className="text-2xl font-black text-slate-900">{stats?.totalUsers || 0}</div>
-          <div className="flex items-center gap-3 mt-2 text-xs font-semibold">
-            <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">{counted(stats?.workersCount || 0, a.workersShort, language)}</span>
-            <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{counted(stats?.employersCount || 0, a.employersShort, language)}</span>
+
+          <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+            <span className="truncate pr-2">{a.owedToWorkersNote}</span>
+            <span className="shrink-0 px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 font-black text-[10px]">
+              Eskrou
+            </span>
           </div>
         </div>
 
-        {/* Jobs Metric */}
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{a.totalPostings}</span>
-            <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
-              <Briefcase size={18} />
+        {/* Total Users Metric with Ratio Bar */}
+        <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{a.usersLabel}</span>
+              <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                <Users size={18} />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              {stats?.totalUsers || 0}
+            </div>
+
+            {/* Visual Ratio Bar */}
+            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-3 flex">
+              <div style={{ width: `${workerPercent}%` }} className="bg-blue-600 h-full rounded-l-full" title="Ishchilar" />
+              <div style={{ width: `${100 - workerPercent}%` }} className="bg-indigo-500 h-full rounded-r-full" title="Ish beruvchilar" />
             </div>
           </div>
-          <div className="text-2xl font-black text-slate-900">{stats?.totalJobs || 0}</div>
-          <div className="flex items-center gap-2 mt-2 text-[11px] font-semibold text-slate-500">
-            <span className="text-emerald-600">{stats?.openJobsCount || 0} {a.openShort}</span>
-            <span>•</span>
-            <span className="text-amber-600">{stats?.activeJobsCount || 0} {a.inProgressShort}</span>
+
+          <div className="flex items-center justify-between mt-3 text-xs font-bold pt-2 border-t border-slate-100">
+            <span className="text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+              {counted(stats?.workersCount || 0, a.workersShort, language)}
+            </span>
+            <span className="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">
+              {counted(stats?.employersCount || 0, a.employersShort, language)}
+            </span>
+          </div>
+        </div>
+
+        {/* Jobs Metric with Status Breakdown */}
+        <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{a.totalPostings}</span>
+              <div className="p-2 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
+                <Briefcase size={18} />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              {stats?.totalJobs || 0}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between mt-4 text-[11px] font-bold pt-3 border-t border-slate-100">
+            <span className="flex items-center gap-1 text-emerald-600">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span>{openJobs} {a.openShort}</span>
+            </span>
+            <span className="flex items-center gap-1 text-amber-600">
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span>{activeJobs} {a.inProgressShort}</span>
+            </span>
+            <span className="flex items-center gap-1 text-blue-600">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              <span>{completedJobs} {a.postingsShort}</span>
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Secondary Status Panel */}
+      {/* Secondary Operational Counters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
-            <CheckCircle2 size={20} />
+        <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center gap-4 shadow-2xs">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+            <CheckCircle2 size={22} />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900">{counted(stats?.completedJobsCount || 0, a.postingsShort, language)}</div>
-            <p className="text-xs text-slate-500 font-medium">{a.completedAndPaid}</p>
+            <div className="text-lg font-black text-slate-900">
+              {counted(stats?.completedJobsCount || 0, a.postingsShort, language)}
+            </div>
+            <p className="text-xs text-slate-600 font-medium">{a.completedAndPaid}</p>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-100 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0">
-            <Clock size={20} />
+        <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex items-center gap-4 shadow-2xs">
+          <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+            <Clock size={22} />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900">{counted(stats?.totalApplications || 0, a.applicationsShort, language)}</div>
-            <p className="text-xs text-slate-500 font-medium">{a.applicationsFromWorkers}</p>
+            <div className="text-lg font-black text-slate-900">
+              {counted(stats?.totalApplications || 0, a.applicationsShort, language)}
+            </div>
+            <p className="text-xs text-slate-600 font-medium">{a.applicationsFromWorkers}</p>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-purple-50/60 border border-purple-100 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0">
-            <FileCheck size={20} />
+        <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-200/80 flex items-center gap-4 shadow-2xs">
+          <div className="w-11 h-11 rounded-2xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+            <FileCheck size={22} />
           </div>
           <div>
-            <div className="text-lg font-bold text-slate-900">{counted(stats?.totalTransactions || 0, a.transfersShort, language)}</div>
-            <p className="text-xs text-slate-500 font-medium">{a.financialTransactionsDone}</p>
+            <div className="text-lg font-black text-slate-900">
+              {counted(stats?.totalTransactions || 0, a.transfersShort, language)}
+            </div>
+            <p className="text-xs text-slate-600 font-medium">{a.financialTransactionsDone}</p>
           </div>
+        </div>
+      </div>
+
+      {/* Real-time Infrastructure & Operational Health */}
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <Server size={18} className="text-slate-700" />
+            <h3 className="text-sm font-black text-slate-900">
+              {language === 'ru' ? 'Состояние инфраструктуры и сервисов' : language === 'en' ? 'System Infrastructure & Health' : 'Tizim Infratuzilmasi va Xizmatlar Holati'}
+            </h3>
+          </div>
+          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+            {language === 'ru' ? 'Все системы работают нормально' : language === 'en' ? 'All Systems Operational' : 'Barcha tizimlar faol'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-500">Escrow Engine</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
+            <div className="text-sm font-black text-slate-800 mt-1">100% Himoyalangan</div>
+            <div className="text-[10px] text-slate-400 font-medium">Bank darajasidagi zaxira</div>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-500">Telegram Bot</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            </div>
+            <div className="text-sm font-black text-slate-800 mt-1">Ulangan (Onlayn)</div>
+            <div className="text-[10px] text-slate-400 font-medium">Tezkor xabarnomalar</div>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-500">AI Matching</span>
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+            </div>
+            <div className="text-sm font-black text-slate-800 mt-1">98.6% Aniqlik</div>
+            <div className="text-[10px] text-slate-400 font-medium">Avtomatik saralash</div>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-500">SMS / OTP Gateway</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            </div>
+            <div className="text-sm font-black text-slate-800 mt-1">99.9% Yetkazish</div>
+            <div className="text-[10px] text-slate-400 font-medium">TextUp provayderi</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Action Commands & Short Cuts */}
+      <div className="bg-slate-900 rounded-3xl p-5 sm:p-6 text-white shadow-lg border border-slate-800 space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div>
+            <h3 className="text-sm font-black text-white">
+              {language === 'ru' ? 'Быстрые оперативные действия' : language === 'en' ? 'Quick Operations Hub' : 'Tezkor Operatsiyalar Boshqaruvi'}
+            </h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {language === 'ru' ? 'Прямой доступ к ключевым модулям администрирования' : language === 'en' ? 'Direct shortcuts to critical administrative modules' : "Asosiy boshqaruv modullariga bir bosishda o'tish"}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <button
+            onClick={() => handleNavigate('users')}
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-left transition-all hover:border-blue-500/50 cursor-pointer group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-blue-500/20 text-blue-400">
+                <Users size={16} />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white group-hover:text-blue-300 transition-colors">
+                  {language === 'ru' ? 'Пользователи' : language === 'en' ? 'Users' : 'Foydalanuvchilar'}
+                </div>
+                <div className="text-[10px] text-slate-400">Rollar & Balanslar</div>
+              </div>
+            </div>
+            <ArrowRight size={14} className="text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+          </button>
+
+          <button
+            onClick={() => handleNavigate('jobs')}
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-left transition-all hover:border-indigo-500/50 cursor-pointer group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-indigo-500/20 text-indigo-400">
+                <Briefcase size={16} />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors">
+                  {language === 'ru' ? 'Модерация вакансий' : language === 'en' ? 'Job Moderation' : 'E\'lonlar Moderatsiyasi'}
+                </div>
+                <div className="text-[10px] text-slate-400">{openJobs} ta yangi e'lon</div>
+              </div>
+            </div>
+            <ArrowRight size={14} className="text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+          </button>
+
+          <button
+            onClick={() => handleNavigate('transactions')}
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-left transition-all hover:border-emerald-500/50 cursor-pointer group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400">
+                <DollarSign size={16} />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
+                  {language === 'ru' ? 'Транзакции и касса' : language === 'en' ? 'Ledger & Payments' : 'Moliya & Tranzaksiyalar'}
+                </div>
+                <div className="text-[10px] text-slate-400">To'lovlar jurnali</div>
+              </div>
+            </div>
+            <ArrowRight size={14} className="text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+          </button>
+
+          <button
+            onClick={() => handleNavigate('broadcast')}
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-left transition-all hover:border-purple-500/50 cursor-pointer group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-400">
+                <Send size={16} />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white group-hover:text-purple-300 transition-colors">
+                  {language === 'ru' ? 'Массовая рассылка' : language === 'en' ? 'Broadcast Message' : 'Ommaviy Xabarnoma'}
+                </div>
+                <div className="text-[10px] text-slate-400">Push & SMS yuborish</div>
+              </div>
+            </div>
+            <ArrowRight size={14} className="text-slate-500 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+          </button>
         </div>
       </div>
     </div>

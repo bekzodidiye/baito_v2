@@ -160,23 +160,97 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
 
 
 
+  const setQuickDate = (offsetDays: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    setSelectedDate(`${y}-${m}-${day}`);
+  };
+
+  const isMatchDate = (j: AdminJob, dateStr: string) => {
+    const workDates = parseWorkDates(j.workDate);
+    if (workDates.length > 0) {
+      return workDates.includes(dateStr);
+    }
+    let created = todayStr;
+    if (j.createdAt) {
+      const d = new Date(j.createdAt);
+      if (!isNaN(d.getTime())) created = toIsoDate(d);
+    }
+    return created === dateStr;
+  };
+
+  const dayJobs = jobs.filter(j => isMatchDate(j, selectedDate));
+  const openCount = dayJobs.filter(j => j.status === 'open').length;
+  const activeCount = dayJobs.filter(j => j.status === 'confirmed' || j.status === 'in_progress').length;
+  const completedCount = dayJobs.filter(j => j.status === 'completed').length;
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+      {/* Date-specific Stats Ribbon */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Kunlik E'lonlar</div>
+          <div className="text-xl font-black text-slate-900 mt-1">{dayJobs.length} ta</div>
+          <div className="text-[11px] font-semibold text-slate-500 mt-0.5">{selectedDate} sanasi</div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Ochiq E'lonlar</div>
+          <div className="text-xl font-black text-blue-600 mt-1">{openCount} ta</div>
+          <div className="text-[11px] font-semibold text-blue-600 mt-0.5">Ishchi qidirilmoqda</div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Jarayonda / Band</div>
+          <div className="text-xl font-black text-amber-600 mt-1">{activeCount} ta</div>
+          <div className="text-[11px] font-semibold text-amber-600 mt-0.5">Ishchi biriktirilgan</div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+          <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Yakunlangan</div>
+          <div className="text-xl font-black text-emerald-600 mt-1">{completedCount} ta</div>
+          <div className="text-[11px] font-semibold text-emerald-600 mt-0.5">To'lovga tayyor</div>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
           <CustomDatePicker 
             value={selectedDate}
             onChange={(val) => setSelectedDate(val)}
           />
-          <div className="relative w-full sm:w-64">
-            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setQuickDate(-1)}
+              className="px-2.5 py-1 text-xs font-bold rounded-lg hover:bg-white text-slate-600 transition-colors cursor-pointer"
+            >
+              Kecha
+            </button>
+            <button
+              type="button"
+              onClick={() => setQuickDate(0)}
+              className="px-2.5 py-1 text-xs font-bold rounded-lg hover:bg-white text-slate-600 transition-colors cursor-pointer"
+            >
+              Bugun
+            </button>
+            <button
+              type="button"
+              onClick={() => setQuickDate(1)}
+              className="px-2.5 py-1 text-xs font-bold rounded-lg hover:bg-white text-slate-600 transition-colors cursor-pointer"
+            >
+              Ertaga
+            </button>
+          </div>
+          <div className="relative w-full sm:w-56">
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               aria-label={a.searchShort}
               type="text"
               placeholder={a.searchShort}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             />
           </div>
         </div>
