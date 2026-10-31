@@ -87,22 +87,53 @@ const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   </div>
 );
 
+// Shared AudioContext singleton with user gesture unlocking
+let sharedAudioCtx: AudioContext | null = null;
+
+const getAudioContext = (): AudioContext | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return null;
+    if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+      sharedAudioCtx = new AudioCtx();
+    }
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+};
+
+if (typeof window !== 'undefined') {
+  const unlockAudio = () => {
+    getAudioContext();
+    window.removeEventListener('click', unlockAudio);
+    window.removeEventListener('touchstart', unlockAudio);
+    window.removeEventListener('keydown', unlockAudio);
+  };
+  window.addEventListener('click', unlockAudio, { passive: true, once: true });
+  window.addEventListener('touchstart', unlockAudio, { passive: true, once: true });
+  window.addEventListener('keydown', unlockAudio, { passive: true, once: true });
+}
+
 /** Synthesizes authentic thermal printer stepper motor pulses and cutter snip */
 const playThermalPrinterSound = () => {
   if (typeof window === 'undefined') return;
   try {
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     if (ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
     }
 
     const now = ctx.currentTime;
-    const printDuration = 2.7;
+    const printDuration = 3.0;
 
-    // 1. Rhythmic stepper motor micro-pulses
-    const stepCount = 22;
+    // 1. Rhythmic stepper motor micro-pulses (26 distinct mechanical steps)
+    const stepCount = 26;
     const interval = printDuration / stepCount;
 
     for (let i = 0; i < stepCount; i++) {
@@ -111,36 +142,38 @@ const playThermalPrinterSound = () => {
       const gain = ctx.createGain();
 
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(130 + (i % 4) * 20, t);
+      // Varied mechanical resonance frequency between 140Hz and 200Hz
+      osc.frequency.setValueAtTime(140 + (i % 5) * 15, t);
 
-      gain.gain.setValueAtTime(0.025, t);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+      // Distinct audible punchy stepper click
+      gain.gain.setValueAtTime(0.16, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.045);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start(t);
-      osc.stop(t + 0.045);
+      osc.stop(t + 0.05);
     }
 
-    // 2. Paper thermal feed bandpass noise
+    // 2. Paper thermal feed bandpass noise (crisp thermal paper sliding hiss)
     const bufferSize = Math.floor(ctx.sampleRate * printDuration);
     const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
-      output[i] = (Math.random() * 2 - 1) * 0.012;
+      output[i] = (Math.random() * 2 - 1) * 0.035;
     }
     const whiteNoise = ctx.createBufferSource();
     whiteNoise.buffer = noiseBuffer;
 
     const filter = ctx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.value = 2200;
-    filter.Q.value = 2.5;
+    filter.frequency.value = 2400;
+    filter.Q.value = 2.2;
 
     const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.015, now);
-    noiseGain.gain.linearRampToValueAtTime(0.02, now + 1.2);
+    noiseGain.gain.setValueAtTime(0.06, now);
+    noiseGain.gain.linearRampToValueAtTime(0.08, now + 1.2);
     noiseGain.gain.linearRampToValueAtTime(0.0001, now + printDuration);
 
     whiteNoise.connect(filter);
@@ -150,20 +183,20 @@ const playThermalPrinterSound = () => {
     whiteNoise.start(now);
     whiteNoise.stop(now + printDuration);
 
-    // 3. Cutter blade snip sound at end of print
+    // 3. Cutter blade snip sound at end of print (sharp physical auto-cutter chop)
     const cutTime = now + printDuration;
     const cutOsc = ctx.createOscillator();
     const cutGain = ctx.createGain();
     cutOsc.type = 'triangle';
-    cutOsc.frequency.setValueAtTime(650, cutTime);
-    cutOsc.frequency.exponentialRampToValueAtTime(90, cutTime + 0.07);
-    cutGain.gain.setValueAtTime(0.06, cutTime);
-    cutGain.gain.exponentialRampToValueAtTime(0.0001, cutTime + 0.08);
+    cutOsc.frequency.setValueAtTime(750, cutTime);
+    cutOsc.frequency.exponentialRampToValueAtTime(80, cutTime + 0.08);
+    cutGain.gain.setValueAtTime(0.20, cutTime);
+    cutGain.gain.exponentialRampToValueAtTime(0.0001, cutTime + 0.09);
 
     cutOsc.connect(cutGain);
     cutGain.connect(ctx.destination);
     cutOsc.start(cutTime);
-    cutOsc.stop(cutTime + 0.09);
+    cutOsc.stop(cutTime + 0.10);
   } catch {
     // Autoplay restrictions or test environment - safely ignore
   }
@@ -173,23 +206,22 @@ const playThermalPrinterSound = () => {
 const playPaperTearSound = () => {
   if (typeof window === 'undefined') return;
   try {
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     if (ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
     }
 
     const now = ctx.currentTime;
-    const tearDuration = 0.52;
+    const tearDuration = 0.55;
 
-    // 1. Paper fiber friction tear noise (high-pass/bandpass noise with erratic micro-bursts)
+    // 1. Paper fiber friction tear noise
     const bufferSize = Math.floor(ctx.sampleRate * tearDuration);
     const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
-      const ripPhase = Math.sin(i * 0.05) * 0.3 + 0.7;
-      output[i] = (Math.random() * 2 - 1) * ripPhase * 0.09;
+      const ripPhase = Math.sin(i * 0.05) * 0.35 + 0.65;
+      output[i] = (Math.random() * 2 - 1) * ripPhase * 0.12;
     }
     const whiteNoise = ctx.createBufferSource();
     whiteNoise.buffer = noiseBuffer;
@@ -198,12 +230,12 @@ const playPaperTearSound = () => {
     filter.type = 'bandpass';
     filter.frequency.setValueAtTime(2800, now);
     filter.frequency.linearRampToValueAtTime(1400, now + tearDuration);
-    filter.Q.value = 2.0;
+    filter.Q.value = 1.8;
 
     const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.01, now);
-    noiseGain.gain.linearRampToValueAtTime(0.095, now + 0.08); // Initial rip bite
-    noiseGain.gain.setValueAtTime(0.07, now + 0.2);
+    noiseGain.gain.setValueAtTime(0.02, now);
+    noiseGain.gain.linearRampToValueAtTime(0.18, now + 0.07); // Initial rip bite
+    noiseGain.gain.setValueAtTime(0.12, now + 0.22);
     noiseGain.gain.exponentialRampToValueAtTime(0.001, now + tearDuration);
 
     whiteNoise.connect(filter);
@@ -213,14 +245,14 @@ const playPaperTearSound = () => {
     whiteNoise.start(now);
     whiteNoise.stop(now + tearDuration);
 
-    // 2. Physical snap release (quick high-to-low oscillator chirp)
+    // 2. Physical snap release
     const snapOsc = ctx.createOscillator();
     const snapGain = ctx.createGain();
     snapOsc.type = 'sawtooth';
     snapOsc.frequency.setValueAtTime(950, now);
     snapOsc.frequency.exponentialRampToValueAtTime(120, now + 0.12);
 
-    snapGain.gain.setValueAtTime(0.06, now);
+    snapGain.gain.setValueAtTime(0.10, now);
     snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
 
     snapOsc.connect(snapGain);
@@ -236,9 +268,8 @@ const playPaperTearSound = () => {
 const playSuccessChime = () => {
   if (typeof window === 'undefined') return;
   try {
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    const ctx = getAudioContext();
+    if (!ctx) return;
     if (ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
     }
@@ -249,7 +280,7 @@ const playSuccessChime = () => {
     const gain1 = ctx.createGain();
     osc1.type = 'sine';
     osc1.frequency.setValueAtTime(659.25, now);
-    gain1.gain.setValueAtTime(0.08, now);
+    gain1.gain.setValueAtTime(0.12, now);
     gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
     osc1.connect(gain1);
     gain1.connect(ctx.destination);
@@ -262,7 +293,7 @@ const playSuccessChime = () => {
     const gain2 = ctx.createGain();
     osc2.type = 'sine';
     osc2.frequency.setValueAtTime(880, t2);
-    gain2.gain.setValueAtTime(0.09, t2);
+    gain2.gain.setValueAtTime(0.14, t2);
     gain2.gain.exponentialRampToValueAtTime(0.0001, t2 + 0.55);
     osc2.connect(gain2);
     gain2.connect(ctx.destination);
@@ -373,23 +404,8 @@ export const InvoicePayScreen: React.FC = () => {
       <div className="invoice-dispenser-wrapper baito-terminal-apparatus">
         {/* Yuqori dispenser terminal korpusi (oq, 3D zamonaviy Baito terminali) */}
         <div className="invoice-dispenser-housing baito-terminal-casing">
-          {/* 4 Inset Hardware Chassis Torx Screws in Corners */}
-          <div className="baito-chassis-bolt baito-bolt-tl" title="Chassis bolt" />
-          <div className="baito-chassis-bolt baito-bolt-tr" title="Chassis bolt" />
-
-          {/* Side ventilation cooling gills */}
-          <div className="baito-casing-vents baito-vents-left">
-            <span className="baito-casing-vent-slot" />
-            <span className="baito-casing-vent-slot" />
-            <span className="baito-casing-vent-slot" />
-            <span className="baito-casing-vent-slot" />
-          </div>
-          <div className="baito-casing-vents baito-vents-right">
-            <span className="baito-casing-vent-slot" />
-            <span className="baito-casing-vent-slot" />
-            <span className="baito-casing-vent-slot" />
-            <span className="baito-casing-vent-slot" />
-          </div>
+          {/* Subtle top glossy light-reflection bevel line */}
+          <div className="baito-casing-top-highlight" />
 
           {/* Terminal hardware visor boshqaruvi */}
           <div className="baito-terminal-visor">
@@ -432,17 +448,12 @@ export const InvoicePayScreen: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Mexanik qopqoqni ochish tutqichi */}
-              <div className="baito-cover-latch hidden sm:inline-flex" title="Termik boshcha qopqog'i">
-                <span>⏏</span>
-                <span>OPEN</span>
-              </div>
-
               {/* Qayta chiqarish hardware tugmasi */}
               <button
                 type="button"
                 onClick={() => {
                   if (!isPrinting && !isTearing) {
+                    getAudioContext();
                     setDispenseKey((k) => k + 1);
                   }
                 }}
@@ -465,12 +476,6 @@ export const InvoicePayScreen: React.FC = () => {
                 <span>{isTearing ? 'Yirtilmoqda...' : isPrinting ? 'Chop etilmoqda...' : 'Qayta chiqarish'}</span>
               </button>
             </div>
-          </div>
-
-          {/* Lazer bilan o'yilgan metall texnik pasport / brend plastinasi */}
-          <div className="baito-chassis-spec-badge">
-            <span>BAITO POS-T8000 // HEAVY-DUTY THERMAL TERMINAL // AUTO-CUTTER</span>
-            <span className="hidden sm:inline">INPUT: 24V ⎓ 2.5A · CE · RoHS</span>
           </div>
 
           {/* Yuqori texnologik qora shisha OLED diagnostika ekrani */}
