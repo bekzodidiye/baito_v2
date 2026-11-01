@@ -374,9 +374,32 @@ export const InvoicePayScreen: React.FC = () => {
     return () => clearTimeout(timer);
   }, [dispenseKey]);
 
+  const isDemo = token === 'demo';
+
+  const DEMO_INVOICE = {
+    invoiceNumber: 'INV-20261003-DEMO88',
+    amount: 520_000,
+    company: 'Korzinka.uz MChJ',
+    jobTitle: 'Senior Frontend Developer',
+    workDate: '2026-10-03',
+    workTime: '09:00 - 18:00',
+    location: 'Toshkent, Chilonzor',
+    requisites: [
+      { label: 'Qabul qiluvchi', value: 'Baito MChJ' },
+      { label: 'Hisob raqami', value: '20208000900000000001' },
+      { label: 'MFO', value: '00873' },
+      { label: 'INN / STIR', value: '123456789' },
+    ],
+    methods: [{ id: 'bank_transfer', label: "Bank o'tkazmasi", hint: "Rekvizitlar tayyor — bank ilovangizga nusxalang" }],
+    status: 'invoiced',
+    paidMethod: null,
+    paidReference: null,
+    declaredAt: null,
+  };
+
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['invoice', token],
-    queryFn: () => fetchInvoiceApi(token),
+    queryFn: () => (isDemo ? Promise.resolve(DEMO_INVOICE) : fetchInvoiceApi(token)),
     enabled: !!token,
     retry: false,
   });
@@ -389,7 +412,16 @@ export const InvoicePayScreen: React.FC = () => {
   const method = chosen || methods[0]?.id || '';
 
   const pay = useMutation({
-    mutationFn: () => declareInvoicePaymentApi(token, { method, reference: reference.trim() || undefined }),
+    mutationFn: () =>
+      isDemo
+        ? Promise.resolve({
+            ...DEMO_INVOICE,
+            status: 'payment_declared',
+            declaredAt: new Date().toISOString(),
+            paidMethod: method,
+            paidReference: reference.trim() || 'PO-4471',
+          })
+        : declareInvoicePaymentApi(token, { method, reference: reference.trim() || undefined }),
     onSuccess: (updated) => {
       queryClient.setQueryData(['invoice', token], updated);
       playSuccessChime();
