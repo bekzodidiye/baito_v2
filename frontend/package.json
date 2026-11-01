@@ -28,6 +28,9 @@
     "vite": "^6.2.3",
     "zustand": "^5.0.14"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-arm64-gnu": "4.62.2"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.63.0",

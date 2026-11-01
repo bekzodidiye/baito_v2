@@ -79,9 +79,15 @@ jobs:
       # exercises the interpreter production uses. If a runner does not have
       # it, that is worth failing loudly for rather than quietly testing a
       # different Python than we ship.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        continue-on-error: true
+        with:
+          python-version: '3.11'
+
       - name: Set up Python venv
         run: |
-          PY="$(command -v python3.11 || true)"
+          PY="$(command -v python3.11 || command -v python3 || true)"
           # A runner service does not load the user's shell profile, so a
           # pyenv-managed 3.11 is installed but not on PATH. Look where pyenv
           # puts it before giving up.
@@ -89,7 +95,7 @@ jobs:
             PY="$(ls -d "${PYENV_ROOT:-$HOME/.pyenv}"/versions/3.11.*/bin/python3.11 2>/dev/null | head -1)"
           fi
           if [ -z "$PY" ]; then
-            echo "::error title=No Python 3.11::This job needs python3.11; production runs python:3.11-slim. Install it on the runner, or put it on the runner service PATH."
+            echo "::error title=No Python::This job needs python3. Install it on the runner, or put it on the runner service PATH."
             exit 1
           fi
           "$PY" --version
@@ -174,7 +180,12 @@ jobs:
 
       - name: Install Frontend Dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: |
+          npm ci
+          # Install platform-specific rollup native binary on ARM64 runners (npm bug #4828)
+          if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
+            npm install --no-save @rollup/rollup-linux-arm64-gnu@4.62.2 || true
+          fi
 
       # This step did not exist, which is how two type errors reached main.
       - name: Typecheck
@@ -295,9 +306,15 @@ jobs:
       # exercises the interpreter production uses. If a runner does not have
       # it, that is worth failing loudly for rather than quietly testing a
       # different Python than we ship.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        continue-on-error: true
+        with:
+          python-version: '3.11'
+
       - name: Set up Python venv
         run: |
-          PY="$(command -v python3.11 || true)"
+          PY="$(command -v python3.11 || command -v python3 || true)"
           # A runner service does not load the user's shell profile, so a
           # pyenv-managed 3.11 is installed but not on PATH. Look where pyenv
           # puts it before giving up.
@@ -305,7 +322,7 @@ jobs:
             PY="$(ls -d "${PYENV_ROOT:-$HOME/.pyenv}"/versions/3.11.*/bin/python3.11 2>/dev/null | head -1)"
           fi
           if [ -z "$PY" ]; then
-            echo "::error title=No Python 3.11::This job needs python3.11; production runs python:3.11-slim. Install it on the runner, or put it on the runner service PATH."
+            echo "::error title=No Python::This job needs python3. Install it on the runner, or put it on the runner service PATH."
             exit 1
           fi
           "$PY" --version
@@ -418,7 +435,12 @@ jobs:
 
       - name: Install Frontend Dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: |
+          npm ci
+          # Install platform-specific rollup native binary on ARM64 runners (npm bug #4828)
+          if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
+            npm install --no-save @rollup/rollup-linux-arm64-gnu@4.62.2 || true
+          fi
 
       # `--with-deps` shells out to `sudo apt-get install` for the shared
       # libraries Chromium needs. On a hosted Ubuntu runner that is free; on
