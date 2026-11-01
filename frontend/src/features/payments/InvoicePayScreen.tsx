@@ -132,43 +132,45 @@ const playThermalPrinterSound = () => {
     const now = ctx.currentTime;
     const printDuration = 2.8;
 
-    // 1. Low internal DC motor purr (gears spinning inside plastic housing - NOT a buzzer)
+    // 1. Modern 24V POS printer stepper motor PWM whine (true micro-stepping whine, NOT low 84Hz hum)
     const motorOsc = ctx.createOscillator();
     const motorGain = ctx.createGain();
     motorOsc.type = 'triangle';
-    motorOsc.frequency.setValueAtTime(84, now);
-    motorGain.gain.setValueAtTime(0.022, now);
-    motorGain.gain.linearRampToValueAtTime(0.028, now + 0.1);
-    motorGain.gain.linearRampToValueAtTime(0.022, now + printDuration - 0.25);
+    motorOsc.frequency.setValueAtTime(520, now);
+    motorOsc.frequency.linearRampToValueAtTime(560, now + 0.15);
+    motorOsc.frequency.setValueAtTime(540, now + printDuration - 0.25);
+    motorGain.gain.setValueAtTime(0.012, now);
+    motorGain.gain.linearRampToValueAtTime(0.018, now + 0.1);
+    motorGain.gain.linearRampToValueAtTime(0.012, now + printDuration - 0.25);
     motorGain.gain.exponentialRampToValueAtTime(0.0001, now + printDuration);
     motorOsc.connect(motorGain);
     motorGain.connect(ctx.destination);
     motorOsc.start(now);
     motorOsc.stop(now + printDuration);
 
-    // 2. Stepper motor line advances (mechanical paper feed friction clicks)
-    const stepCount = 28;
-    const stepInterval = (printDuration - 0.3) / stepCount;
+    // 2. High-speed thermal paper feed line advances (rapid friction ticks: 32 lines)
+    const stepCount = 32;
+    const stepInterval = (printDuration - 0.35) / stepCount;
 
     for (let i = 0; i < stepCount; i++) {
       const t = now + (i * stepInterval);
-      const clickLen = 0.022;
+      const clickLen = 0.018;
       const bufSize = Math.floor(ctx.sampleRate * clickLen);
       const clickBuf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
       const data = clickBuf.getChannelData(0);
       for (let j = 0; j < bufSize; j++) {
-        data[j] = (Math.random() * 2 - 1) * Math.exp(-j / (bufSize * 0.32));
+        data[j] = (Math.random() * 2 - 1) * Math.exp(-j / (bufSize * 0.28));
       }
       const clickSrc = ctx.createBufferSource();
       clickSrc.buffer = clickBuf;
 
       const clickFilter = ctx.createBiquadFilter();
       clickFilter.type = 'bandpass';
-      clickFilter.frequency.setValueAtTime(2800 + (i % 3) * 160, t);
-      clickFilter.Q.value = 2.6;
+      clickFilter.frequency.setValueAtTime(3200 + (i % 4) * 140, t);
+      clickFilter.Q.value = 3.2;
 
       const clickGain = ctx.createGain();
-      clickGain.gain.setValueAtTime(0.12, t);
+      clickGain.gain.setValueAtTime(0.09, t);
       clickGain.gain.exponentialRampToValueAtTime(0.001, t + clickLen);
 
       clickSrc.connect(clickFilter);
@@ -177,42 +179,29 @@ const playThermalPrinterSound = () => {
 
       clickSrc.start(t);
       clickSrc.stop(t + clickLen);
-
-      // Subtle mechanical tooth tap
-      const tapOsc = ctx.createOscillator();
-      const tapGain = ctx.createGain();
-      tapOsc.type = 'triangle';
-      tapOsc.frequency.setValueAtTime(220, t);
-      tapOsc.frequency.exponentialRampToValueAtTime(60, t + 0.015);
-      tapGain.gain.setValueAtTime(0.04, t);
-      tapGain.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
-      tapOsc.connect(tapGain);
-      tapGain.connect(ctx.destination);
-      tapOsc.start(t);
-      tapOsc.stop(t + 0.016);
     }
 
-    // 3. Continuous thermal paper sliding hiss (paper sliding over ceramic print head)
+    // 3. Ceramic print head thermal friction hiss (paper dragging over heating element)
     const frictionLen = printDuration - 0.22;
     const frictionBufSize = Math.floor(ctx.sampleRate * frictionLen);
     const frictionBuf = ctx.createBuffer(1, frictionBufSize, ctx.sampleRate);
     const fData = frictionBuf.getChannelData(0);
     for (let j = 0; j < frictionBufSize; j++) {
-      const mod = 1 + 0.25 * Math.sin(j * 0.01);
-      fData[j] = (Math.random() * 2 - 1) * 0.045 * mod;
+      const mod = 1 + 0.3 * Math.sin(j * 0.02);
+      fData[j] = (Math.random() * 2 - 1) * 0.035 * mod;
     }
     const frictionSrc = ctx.createBufferSource();
     frictionSrc.buffer = frictionBuf;
 
     const frictionFilter = ctx.createBiquadFilter();
     frictionFilter.type = 'bandpass';
-    frictionFilter.frequency.setValueAtTime(3000, now);
-    frictionFilter.Q.value = 1.6;
+    frictionFilter.frequency.setValueAtTime(3400, now);
+    frictionFilter.Q.value = 1.8;
 
     const frictionGain = ctx.createGain();
-    frictionGain.gain.setValueAtTime(0.02, now);
-    frictionGain.gain.linearRampToValueAtTime(0.06, now + 0.12);
-    frictionGain.gain.setValueAtTime(0.06, now + frictionLen - 0.15);
+    frictionGain.gain.setValueAtTime(0.015, now);
+    frictionGain.gain.linearRampToValueAtTime(0.045, now + 0.12);
+    frictionGain.gain.setValueAtTime(0.045, now + frictionLen - 0.15);
     frictionGain.gain.exponentialRampToValueAtTime(0.001, now + frictionLen);
 
     frictionSrc.connect(frictionFilter);
@@ -225,20 +214,18 @@ const playThermalPrinterSound = () => {
     // 4. Auto-cutter guillotine blade chop ("ka-CHINK!") at end of print
     const cutStart = now + printDuration - 0.22;
 
-    // 4a. Blade slide / scrape
     const bladeOsc = ctx.createOscillator();
     const bladeGain = ctx.createGain();
     bladeOsc.type = 'triangle';
-    bladeOsc.frequency.setValueAtTime(1100, cutStart);
-    bladeOsc.frequency.exponentialRampToValueAtTime(320, cutStart + 0.06);
-    bladeGain.gain.setValueAtTime(0.12, cutStart);
+    bladeOsc.frequency.setValueAtTime(1200, cutStart);
+    bladeOsc.frequency.exponentialRampToValueAtTime(340, cutStart + 0.06);
+    bladeGain.gain.setValueAtTime(0.14, cutStart);
     bladeGain.gain.exponentialRampToValueAtTime(0.001, cutStart + 0.07);
     bladeOsc.connect(bladeGain);
     bladeGain.connect(ctx.destination);
     bladeOsc.start(cutStart);
     bladeOsc.stop(cutStart + 0.08);
 
-    // 4b. Anvil cut impact
     const impactLen = 0.055;
     const impactBufSize = Math.floor(ctx.sampleRate * impactLen);
     const impactBuf = ctx.createBuffer(1, impactBufSize, ctx.sampleRate);
@@ -251,10 +238,10 @@ const playThermalPrinterSound = () => {
 
     const impactFilter = ctx.createBiquadFilter();
     impactFilter.type = 'lowpass';
-    impactFilter.frequency.setValueAtTime(1500, cutStart + 0.05);
+    impactFilter.frequency.setValueAtTime(1600, cutStart + 0.05);
 
     const impactGain = ctx.createGain();
-    impactGain.gain.setValueAtTime(0.24, cutStart + 0.05);
+    impactGain.gain.setValueAtTime(0.26, cutStart + 0.05);
     impactGain.gain.exponentialRampToValueAtTime(0.001, cutStart + 0.05 + impactLen);
 
     impactSrc.connect(impactFilter);
@@ -268,7 +255,7 @@ const playThermalPrinterSound = () => {
   }
 };
 
-/** Synthesizes authentic crisp paper tear / rip sound */
+/** Synthesizes authentic crisp paper tear / rip sound with fiber snap & blade resonance */
 const playPaperTearSound = () => {
   if (typeof window === 'undefined') return;
   try {
@@ -279,35 +266,92 @@ const playPaperTearSound = () => {
     }
 
     const now = ctx.currentTime;
-    const tearDuration = 0.48;
 
-    // Authentic crisp fibrous paper tearing rip
-    const bufferSize = Math.floor(ctx.sampleRate * tearDuration);
-    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      const mod = Math.sin(i * 0.08) * 0.4 + 0.6;
-      output[i] = (Math.random() * 2 - 1) * mod * 0.14;
+    // 1. Initial tooth bite & perforation drag (0 - 45ms): high friction scrape
+    const biteLen = 0.055;
+    const biteBufSize = Math.floor(ctx.sampleRate * biteLen);
+    const biteBuf = ctx.createBuffer(1, biteBufSize, ctx.sampleRate);
+    const biteData = biteBuf.getChannelData(0);
+    for (let i = 0; i < biteBufSize; i++) {
+      biteData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (biteBufSize * 0.4));
     }
-    const whiteNoise = ctx.createBufferSource();
-    whiteNoise.buffer = noiseBuffer;
+    const biteSrc = ctx.createBufferSource();
+    biteSrc.buffer = biteBuf;
+    const biteFilter = ctx.createBiquadFilter();
+    biteFilter.type = 'bandpass';
+    biteFilter.frequency.setValueAtTime(3200, now);
+    biteFilter.Q.value = 2.8;
+    const biteGain = ctx.createGain();
+    biteGain.gain.setValueAtTime(0.14, now);
+    biteGain.gain.exponentialRampToValueAtTime(0.001, now + biteLen);
+    biteSrc.connect(biteFilter);
+    biteFilter.connect(biteGain);
+    biteGain.connect(ctx.destination);
+    biteSrc.start(now);
+    biteSrc.stop(now + biteLen);
 
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'highpass';
-    filter.frequency.setValueAtTime(1600, now);
-    filter.frequency.exponentialRampToValueAtTime(800, now + tearDuration);
+    // 2. Main fibrous tear rip: micro-fractures (rapid cellulose fiber crackles)
+    const ripDuration = 0.28;
+    const ripBufSize = Math.floor(ctx.sampleRate * ripDuration);
+    const ripBuf = ctx.createBuffer(1, ripBufSize, ctx.sampleRate);
+    const ripData = ripBuf.getChannelData(0);
+    for (let i = 0; i < ripBufSize; i++) {
+      const pulseMod = Math.pow(Math.sin(i * 0.12), 4) * 0.7 + 0.3;
+      ripData[i] = (Math.random() * 2 - 1) * pulseMod * 0.22;
+    }
+    const ripSrc = ctx.createBufferSource();
+    ripSrc.buffer = ripBuf;
+    const ripFilter = ctx.createBiquadFilter();
+    ripFilter.type = 'highpass';
+    ripFilter.frequency.setValueAtTime(1900, now + 0.03);
+    ripFilter.frequency.exponentialRampToValueAtTime(950, now + ripDuration);
+    const ripGain = ctx.createGain();
+    ripGain.gain.setValueAtTime(0.001, now);
+    ripGain.gain.linearRampToValueAtTime(0.28, now + 0.05); // sharp tactile rip bite
+    ripGain.gain.setValueAtTime(0.22, now + 0.15);
+    ripGain.gain.exponentialRampToValueAtTime(0.001, now + ripDuration);
+    ripSrc.connect(ripFilter);
+    ripFilter.connect(ripGain);
+    ripGain.connect(ctx.destination);
+    ripSrc.start(now + 0.02);
+    ripSrc.stop(now + ripDuration);
 
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.05, now);
-    noiseGain.gain.linearRampToValueAtTime(0.24, now + 0.06); // sharp tear rip bite
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + tearDuration);
+    // 3. Steel cutter blade recoil ping ("twang/thwip" of the spring blade releasing)
+    const bladeT = now + 0.13;
+    const pingOsc = ctx.createOscillator();
+    const pingGain = ctx.createGain();
+    pingOsc.type = 'sine';
+    pingOsc.frequency.setValueAtTime(560, bladeT);
+    pingOsc.frequency.exponentialRampToValueAtTime(420, bladeT + 0.07);
+    pingGain.gain.setValueAtTime(0.06, bladeT);
+    pingGain.gain.exponentialRampToValueAtTime(0.001, bladeT + 0.07);
+    pingOsc.connect(pingGain);
+    pingGain.connect(ctx.destination);
+    pingOsc.start(bladeT);
+    pingOsc.stop(bladeT + 0.08);
 
-    whiteNoise.connect(filter);
-    filter.connect(noiseGain);
-    noiseGain.connect(ctx.destination);
-
-    whiteNoise.start(now);
-    whiteNoise.stop(now + tearDuration);
+    // 4. Aerodynamic sheet whoosh (soft air displacement as paper falls)
+    const airT = now + 0.16;
+    const airLen = 0.32;
+    const airBufSize = Math.floor(ctx.sampleRate * airLen);
+    const airBuf = ctx.createBuffer(1, airBufSize, ctx.sampleRate);
+    const airData = airBuf.getChannelData(0);
+    for (let i = 0; i < airBufSize; i++) {
+      airData[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * (i / airBufSize));
+    }
+    const airSrc = ctx.createBufferSource();
+    airSrc.buffer = airBuf;
+    const airFilter = ctx.createBiquadFilter();
+    airFilter.type = 'lowpass';
+    airFilter.frequency.setValueAtTime(420, airT);
+    const airGain = ctx.createGain();
+    airGain.gain.setValueAtTime(0.04, airT);
+    airGain.gain.exponentialRampToValueAtTime(0.001, airT + airLen);
+    airSrc.connect(airFilter);
+    airFilter.connect(airGain);
+    airGain.connect(ctx.destination);
+    airSrc.start(airT);
+    airSrc.stop(airT + airLen);
   } catch {
     // Autoplay restrictions or test environment - safely ignore
   }
@@ -444,7 +488,7 @@ export const InvoicePayScreen: React.FC = () => {
     pay.mutate(undefined, {
       onSuccess: () => {
         const isJsdom = typeof window !== 'undefined' && window.navigator?.userAgent?.includes('jsdom');
-        const minTearDuration = isJsdom ? 150 : 1350;
+        const minTearDuration = isJsdom ? 150 : 1400;
         const elapsed = Date.now() - startTime;
         const remaining = Math.max(0, minTearDuration - elapsed);
         setTimeout(() => {

@@ -254,14 +254,16 @@
 
 /* Subtle physical blade vibration when paper is ripped across it */
 .baito-cutter-blade.is-cutting {
-  animation: baito-blade-snap 0.3s ease-out;
+  animation: baito-blade-snap 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
 }
 
 @keyframes baito-blade-snap {
-  0% { transform: translateY(0); }
-  30% { transform: translateY(1px); }
-  60% { transform: translateY(-0.5px); }
-  100% { transform: translateY(0); }
+  0% { transform: translateY(0) rotate(0deg); }
+  18% { transform: translateY(1.8px) rotate(0.4deg); }
+  38% { transform: translateY(-1.2px) rotate(-0.3deg); }
+  60% { transform: translateY(0.5px) rotate(0.1deg); }
+  80% { transform: translateY(-0.2px) rotate(0deg); }
+  100% { transform: translateY(0) rotate(0deg); }
 }
 
 /* Reveal Window - paper feeds downward strictly from inside the slot, perfectly matching slot width */
@@ -354,7 +356,7 @@
 /* Jagged ripped paper top edge when torn along the cutter bar */
 .baito-torn-top-edge {
   position: absolute;
-  top: 0;
+  top: -4px;
   left: 0;
   right: 0;
   height: 6px;
@@ -363,18 +365,48 @@
     linear-gradient(225deg, transparent 33.333%, #ffffff 33.333%);
   background-position: 0 0;
   background-size: 8px 6px;
+  filter: drop-shadow(0 -1px 0 rgba(203, 213, 225, 0.95));
   z-index: 50;
   pointer-events: none;
 }
 
 /* Falling torn receipt animation in authentic 3D physical space */
 .baito-paper-tearing-and-falling {
-  animation: baito-tear-and-drop-3d 1.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards !important;
+  animation: baito-tear-and-drop-3d 1.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards !important;
   transform-origin: 50% 0%;
   transform-style: preserve-3d;
   pointer-events: none !important;
   will-change: transform, opacity;
-  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.22) !important;
+  box-shadow: 
+    0 35px 70px -15px rgba(15, 23, 42, 0.24),
+    0 15px 35px -5px rgba(15, 23, 42, 0.12),
+    0 2px 6px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Dynamic 3D Paper Roll Cylindrical Curvature Shading */
+.baito-paper-tearing-and-falling::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(15, 23, 42, 0.02) 65%,
+    rgba(15, 23, 42, 0.07) 100%
+  );
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  animation: baito-paper-curl-shading 1.4s ease-out forwards;
+}
+
+@keyframes baito-paper-curl-shading {
+  0% { opacity: 0; }
+  12% { opacity: 0.95; }
+  55% { opacity: 0.75; }
+  85% { opacity: 0.4; }
+  100% { opacity: 0; }
 }
 
 @keyframes baito-tear-and-drop-3d {
@@ -382,34 +414,39 @@
     transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
     opacity: 1;
   }
-  /* Phase 1 (0 - 0.16s): Tactile manual rip along cutter blade - subtle initial detachment */
-  12% {
-    transform: translate3d(8px, 18px, 14px) rotateX(6deg) rotateY(-2deg) rotateZ(-2deg);
+  /* Phase 1 (0 - 0.10s): Tactile asymmetric pull - right corner pulls down and forward */
+  7% {
+    transform: translate3d(6px, 14px, 18px) rotateX(5deg) rotateY(-4deg) rotateZ(-3.5deg);
     opacity: 1;
   }
-  /* Phase 2 (0.16 - 0.38s): Full detachment, floating on air cushion */
-  28% {
-    transform: translate3d(16px, 65px, 28px) rotateX(14deg) rotateY(-3deg) rotateZ(-1deg);
+  /* Phase 2 (0.10 - 0.22s): Final corner snaps free! Elastic paper bounce / release of tension */
+  15% {
+    transform: translate3d(14px, 42px, 32px) rotateX(12deg) rotateY(-2deg) rotateZ(1deg);
     opacity: 0.99;
   }
-  /* Phase 3 (0.38 - 0.68s): Graceful aerodynamic glide towards camera */
-  50% {
-    transform: translate3d(24px, 190px, 38px) rotateX(18deg) rotateY(-1deg) rotateZ(2deg);
-    opacity: 0.96;
+  /* Phase 3 (0.22 - 0.45s): Aerodynamic air cushion lift, gliding forward-right */
+  32% {
+    transform: translate3d(26px, 120px, 46px) rotateX(17deg) rotateY(-3deg) rotateZ(3.5deg);
+    opacity: 0.98;
   }
-  /* Phase 4 (0.68 - 0.96s): Smooth gravity acceleration, gentle pitch without folding edge-on */
-  72% {
-    transform: translate3d(30px, 450px, 25px) rotateX(20deg) rotateY(1deg) rotateZ(5deg);
-    opacity: 0.85;
+  /* Phase 4 (0.45 - 0.72s): Peak buoyant drift, graceful bank toward camera */
+  52% {
+    transform: translate3d(32px, 240px, 50px) rotateX(21deg) rotateY(1deg) rotateZ(4.5deg);
+    opacity: 0.95;
   }
-  /* Phase 5 (0.96 - 1.22s): Falling through lower viewport, fading out smoothly */
-  90% {
-    transform: translate3d(34px, 820px, 10px) rotateX(22deg) rotateY(2deg) rotateZ(7deg);
-    opacity: 0.40;
+  /* Phase 5 (0.72 - 0.98s): Aerodynamic counter-wobble as air spills over the edge (S-curve sway) */
+  70% {
+    transform: translate3d(20px, 460px, 34px) rotateX(16deg) rotateY(4deg) rotateZ(-1.5deg);
+    opacity: 0.88;
   }
-  /* Phase 6 (1.22 - 1.35s): Seamless complete exit below view */
+  /* Phase 6 (0.98 - 1.22s): Gravity takes over, smooth parabolic descent */
+  86% {
+    transform: translate3d(28px, 800px, 14px) rotateX(22deg) rotateY(2deg) rotateZ(2deg);
+    opacity: 0.45;
+  }
+  /* Phase 7 (1.22 - 1.40s): Complete seamless exit into virtual floor plane */
   100% {
-    transform: translate3d(36px, 1200px, -10px) rotateX(24deg) rotateY(3deg) rotateZ(8deg);
+    transform: translate3d(34px, 1250px, -12px) rotateX(25deg) rotateY(3deg) rotateZ(5deg);
     opacity: 0;
     visibility: hidden;
   }
