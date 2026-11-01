@@ -1,28 +1,19 @@
-from .main import _get_participant_chat
-import asyncio
-import json
 import logging
-from typing import Any, List, Optional
+from typing import Any, List
 
-from fastapi import APIRouter, Depends, WebSocket
+from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from starlette.concurrency import run_in_threadpool
 from starlette.requests import Request
 
 from app import models, schemas
 from app.api import deps
 from app.core.limiter import limiter
-from app.redis_client import redis_client, redis_is_mock
+from .main import _get_participant_chat
+from .manager import manager
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-# Per-socket flood control: at most this many messages in the window.
-MSG_RATE_LIMIT = 20
-MSG_RATE_WINDOW_SECONDS = 10
-
-from .manager import manager, ConnectionManager
 
 
 

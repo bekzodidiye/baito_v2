@@ -1,23 +1,15 @@
-import asyncio
-import json
 import logging
-from typing import Any, List, Optional
+from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, WebSocket
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
-from starlette.concurrency import run_in_threadpool
 
 from app import models, schemas
 from app.api import deps
-from app.redis_client import redis_client, redis_is_mock
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-# Per-socket flood control: at most this many messages in the window.
-MSG_RATE_LIMIT = 20
-MSG_RATE_WINDOW_SECONDS = 10
 
 
 def _get_participant_chat(db: Session, chat_id: str, user: models.User) -> models.Chat:
@@ -30,9 +22,6 @@ def _get_participant_chat(db: Session, chat_id: str, user: models.User) -> model
     if not (set(user_ids) & {chat_worker_id, chat_employer_id}) and getattr(user, "role", None) != "admin":
         raise HTTPException(status_code=403, detail="Bu suhbatga kirish huquqingiz yo'q")
     return chat
-
-
-from .manager import manager, ConnectionManager
 
 
 @router.get("/", response_model=List[schemas.Chat])

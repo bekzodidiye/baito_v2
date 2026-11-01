@@ -2,7 +2,6 @@ from .user import User
 from .job import Job, JobStatus
 from .media_file import MediaFile, MediaVisibility
 from .application import Application
-JobApplication = Application
 from .transaction import Transaction
 from .chat import Chat, Message
 from .bookmark import Bookmark
@@ -20,3 +19,5 @@ from .job_day import JobDay, JobDayStatus
 from .job_payout import JobPayout, PayoutStatus
 from .idempotency import IdempotencyKey
 from .admin_audit_log import AdminAuditLog
+
+JobApplication = Application

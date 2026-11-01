@@ -1,4 +1,3 @@
-import asyncio
 import json
 import logging
 import time
@@ -11,8 +10,8 @@ from app import crud, models
 from app.api import deps
 from app.core.config import settings
 from app.db.session import SessionLocal
-from app.redis_client import redis_client, redis_is_mock
 from app.schemas.chat import MAX_MESSAGE_LENGTH
+from .manager import manager
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -20,8 +19,6 @@ router = APIRouter()
 # Per-socket flood control: at most this many messages in the window.
 MSG_RATE_LIMIT = 20
 MSG_RATE_WINDOW_SECONDS = 10
-
-from .manager import manager, ConnectionManager
 
 
 

@@ -14,7 +14,7 @@ import time
 import urllib.parse
 import urllib.request
 import uuid
-from typing import Optional, Dict, Any
+from typing import Optional
 
 logger = logging.getLogger("ai_translator.gemini_client")
 
