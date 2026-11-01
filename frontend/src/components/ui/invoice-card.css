@@ -370,9 +370,9 @@
   }
 }
 
-/* High-Speed Thermal Feed for newly paid receipt after tearing (1.35s snappy feed) */
+/* High-Speed Thermal Feed for newly paid receipt after tearing (1.25s snappy feed) */
 .baito-paid-fast-dispense {
-  animation: baito-paid-feed-anim 1.35s cubic-bezier(0.16, 0.9, 0.25, 1) forwards !important;
+  animation: baito-paid-feed-anim 1.25s cubic-bezier(0.16, 0.9, 0.25, 1) forwards !important;
   will-change: transform, opacity;
   position: relative;
   z-index: 20;
@@ -381,30 +381,29 @@
 @keyframes baito-paid-feed-anim {
   0% {
     transform: translateY(-98%);
-    opacity: 0.2;
+    opacity: 0.3;
   }
-  16% {
-    transform: translateY(-98%);
-    opacity: 0.8;
-  }
-  32% {
-    transform: translateY(-72%);
+  8% {
+    transform: translateY(-90%);
     opacity: 1;
   }
-  50% {
-    transform: translateY(-40%);
+  22% {
+    transform: translateY(-70%);
   }
-  70% {
-    transform: translateY(-14%);
+  42% {
+    transform: translateY(-44%);
   }
-  86% {
-    transform: translateY(-1.5%);
+  64% {
+    transform: translateY(-18%);
   }
-  93% {
+  82% {
+    transform: translateY(-3%);
+  }
+  92% {
     transform: translateY(2px); /* Mechanical feed overshoot */
   }
   97% {
-    transform: translateY(-0.5px);
+    transform: translateY(-0.5px); /* Cutter settle */
   }
   100% {
     transform: translateY(0);
@@ -413,7 +412,7 @@
 }
 
 .baito-paid-fast-dispense .baito-paid-rubber-stamp {
-  animation-delay: 1.15s;
+  animation-delay: 1.1s;
   animation-fill-mode: backwards;
 }
 
@@ -441,7 +440,7 @@
 
 /* Falling torn receipt animation in authentic 3D physical space */
 .baito-paper-tearing-and-falling {
-  animation: baito-tear-and-drop-3d 0.88s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important;
+  animation: baito-tear-and-drop-3d 0.92s cubic-bezier(0.2, 0.75, 0.25, 1) forwards !important;
   transform-origin: 10% 0%;
   transform-style: preserve-3d;
   pointer-events: none !important;
@@ -467,7 +466,7 @@
   pointer-events: none;
   border-radius: inherit;
   opacity: 0;
-  animation: baito-paper-curl-shading 0.88s ease-out forwards;
+  animation: baito-paper-curl-shading 0.92s ease-out forwards;
 }
 
 @keyframes baito-paper-curl-shading {
@@ -484,34 +483,39 @@
     transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
     opacity: 1;
   }
-  /* Frame 1 (120ms): Asymmetric diagonal pull - left corner pinned to blade, right corner pulled forward & down */
-  14% {
-    transform: translate3d(4px, 10px, 30px) rotateX(14deg) rotateY(-6deg) rotateZ(-4deg);
+  /* Frame 1 (120ms): Asymmetric diagonal pull - left corner pinned, right corner pulled forward & down */
+  13% {
+    transform: translate3d(6px, 12px, 32px) rotateX(15deg) rotateY(-8deg) rotateZ(-4deg);
     opacity: 1;
   }
-  /* Frame 2 (220ms): SNAP! Final fiber separation - paper detaches from blade and leaps forward in 3D */
-  25% {
-    transform: translate3d(10px, 32px, 68px) rotateX(24deg) rotateY(-8deg) rotateZ(-1.5deg);
+  /* Frame 2 (220ms): Fiber stretch & tear propagation along serrated teeth */
+  24% {
+    transform: translate3d(14px, 32px, 62px) rotateX(24deg) rotateY(-12deg) rotateZ(-6deg);
+    opacity: 1;
+  }
+  /* Frame 3 (280ms): SNAP! Final fiber rupture - paper detaches and leaps forward into 3D airspace */
+  30% {
+    transform: translate3d(18px, 58px, 82px) rotateX(28deg) rotateY(-6deg) rotateZ(-3deg);
     opacity: 0.99;
   }
-  /* Frame 3 (380ms): Aerodynamic cushion lift - rolled thermal paper curls forward and glides on air cushion */
-  44% {
-    transform: translate3d(18px, 95px, 95px) rotateX(20deg) rotateY(-2deg) rotateZ(2deg);
-    opacity: 0.97;
+  /* Frame 4 (440ms): Aerodynamic cushion float - thermal roll curls on air cushion */
+  48% {
+    transform: translate3d(24px, 150px, 92px) rotateX(36deg) rotateY(4deg) rotateZ(3deg);
+    opacity: 0.96;
   }
-  /* Frame 4 (560ms): S-curve aerodynamic counter-wobble as air spills over the curved leading edge */
-  64% {
-    transform: translate3d(14px, 240px, 85px) rotateX(18deg) rotateY(4deg) rotateZ(3.5deg);
-    opacity: 0.92;
+  /* Frame 5 (620ms): Fluid counter-sway as air spills around leading edge */
+  67% {
+    transform: translate3d(16px, 330px, 75px) rotateX(42deg) rotateY(8deg) rotateZ(5deg);
+    opacity: 0.90;
   }
-  /* Frame 5 (720ms): Smooth gravity acceleration, parabolic descent */
-  82% {
-    transform: translate3d(20px, 490px, 50px) rotateX(22deg) rotateY(2deg) rotateZ(1deg);
-    opacity: 0.70;
+  /* Frame 6 (780ms): Parabolic gravity descent */
+  84% {
+    transform: translate3d(8px, 600px, 45px) rotateX(48deg) rotateY(3deg) rotateZ(2deg);
+    opacity: 0.65;
   }
-  /* Frame 6 (880ms): Silky departure below horizon */
+  /* Frame 7 (920ms): Complete departure below the bottom horizon */
   100% {
-    transform: translate3d(24px, 850px, 10px) rotateX(26deg) rotateY(0deg) rotateZ(0deg);
+    transform: translate3d(0px, 960px, 10px) rotateX(54deg) rotateY(0deg) rotateZ(0deg);
     opacity: 0;
     visibility: hidden;
   }

@@ -469,7 +469,6 @@ export const InvoicePayScreen: React.FC = () => {
         : declareInvoicePaymentApi(token, { method, reference: reference.trim() || undefined }),
     onSuccess: (updated) => {
       queryClient.setQueryData(['invoice', token], updated);
-      playSuccessChime();
     },
   });
 
@@ -477,8 +476,9 @@ export const InvoicePayScreen: React.FC = () => {
     if (!method || pay.isPending) return;
     setIsTearing(true);
     setJustPaid(true);
+    setShowPaidReceipt(false);
     playPaperTearSound();
-    playThermalPrinterSound();
+
     const isJsdom = typeof window !== 'undefined' && window.navigator?.userAgent?.includes('jsdom');
     if (!isJsdom && typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
       try {
@@ -491,18 +491,27 @@ export const InvoicePayScreen: React.FC = () => {
     pay.mutate(undefined, {
       onSuccess: () => {
         const isJsdom = typeof window !== 'undefined' && window.navigator?.userAgent?.includes('jsdom');
-        const minTearDuration = isJsdom ? 150 : 880;
+        // Phase 1: Wait until old paper completely tears and falls out of view (920ms)
+        const tearDuration = isJsdom ? 80 : 920;
         const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, minTearDuration - elapsed);
+        const remainingToFall = Math.max(0, tearDuration - elapsed);
 
-        // Immediately feed new paid receipt from behind blade while old paper tears in foreground
-        setShowPaidReceipt(true);
-        setDispenseKey((k) => k + 1);
-
-        // Cleanly complete tearing phase when the old paper clears the lower plane
         setTimeout(() => {
+          // 1. Old paper has fully dropped below horizon
           setIsTearing(false);
-        }, remaining);
+
+          // Phase 2: Brief mechanical pause (140ms), then feed new receipt from slot
+          const slotPause = isJsdom ? 20 : 140;
+          setTimeout(() => {
+            setShowPaidReceipt(true);
+            setDispenseKey((k) => k + 1);
+
+            // Phase 3: When newly paid receipt settles and rubber stamp hits, play success chime
+            setTimeout(() => {
+              playSuccessChime();
+            }, isJsdom ? 40 : 1100);
+          }, slotPause);
+        }, remainingToFall);
       },
       onError: () => {
         setIsTearing(false);
@@ -540,7 +549,7 @@ export const InvoicePayScreen: React.FC = () => {
   }
 
   const declared = !!data.declaredAt;
-  const isPaidReceiptReady = showPaidReceipt || (!isTearing && (declared || data.status === 'paid'));
+  const isPaidReceiptReady = showPaidReceipt || (!isTearing && !justPaid && (declared || data.status === 'paid'));
   const requisites: { label: string; value: string }[] = data.requisites || [];
 
   const copyAllRequisites = async () => {
