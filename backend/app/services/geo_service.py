@@ -79,6 +79,49 @@ class GeoSpatialService:
     ] = []
 
     @classmethod
+    def _validate_and_normalize_ring(cls, ring: Any) -> Optional[List[Tuple[float, float]]]:
+        """
+        Validates linear ring strictly following RFC 7946 specifications and normalizes coordinates.
+        1. Ring must be a list/tuple of positions with length >= 4.
+        2. Every position must be a list/tuple with len >= 2 containing finite numbers (rejects str, bool, NaN, Inf).
+        3. 2D/3D supported; coordinates beyond index 1 are also checked for finite numeric type if present.
+        4. Ring closure: first and last coordinates must match (RFC 7946 linear ring requirement).
+        5. Returns normalized List[Tuple[float, float]] of exact floats.
+        """
+        if not isinstance(ring, (list, tuple)) or len(ring) < 4:
+            return None
+
+        normalized_ring: List[Tuple[float, float]] = []
+        for pt in ring:
+            if not isinstance(pt, (list, tuple)) or len(pt) < 2:
+                return None
+            x, y = pt[0], pt[1]
+            # Strict rejection of strings and bools (since bool is a subclass of int in Python)
+            if isinstance(x, (str, bool)) or isinstance(y, (str, bool)):
+                return None
+            if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+                return None
+            fx, fy = float(x), float(y)
+            if not math.isfinite(fx) or not math.isfinite(fy):
+                return None
+
+            # If 3D+ coordinate is present, validate remaining elements for finite numbers
+            if len(pt) >= 3:
+                for z in pt[2:]:
+                    if isinstance(z, (str, bool)) or not isinstance(z, (int, float)) or not math.isfinite(float(z)):
+                        return None
+
+            normalized_ring.append((fx, fy))
+
+        # RFC 7946 Section 3.1.6: A linear ring MUST be closed (first and last positions equivalent)
+        if normalized_ring[0] != normalized_ring[-1]:
+            if not (math.isclose(normalized_ring[0][0], normalized_ring[-1][0], abs_tol=1e-9) and
+                    math.isclose(normalized_ring[0][1], normalized_ring[-1][1], abs_tol=1e-9)):
+                return None
+
+        return normalized_ring
+
+    @classmethod
     def _prepare_polygon(
         cls, rings: List[List[Any]]
     ) -> Optional[
@@ -89,30 +132,91 @@ class GeoSpatialService:
         ]
     ]:
         """Prepares a polygon's exterior ring and any interior rings (holes) with bounding boxes for fast ray-casting."""
-        if not rings or not rings[0]:
+        if not rings or not isinstance(rings, list) or not rings[0]:
             return None
-        ext_ring = rings[0]
+        ext_ring = cls._validate_and_normalize_ring(rings[0])
+        if ext_ring is None:
+            return None
+
         ext_min_x = min(pt[0] for pt in ext_ring)
         ext_max_x = max(pt[0] for pt in ext_ring)
         ext_min_y = min(pt[1] for pt in ext_ring)
         ext_max_y = max(pt[1] for pt in ext_ring)
 
         prepared_holes = []
-        for h_ring in rings[1:]:
-            if h_ring:
-                h_min_x = min(pt[0] for pt in h_ring)
-                h_max_x = max(pt[0] for pt in h_ring)
-                h_min_y = min(pt[1] for pt in h_ring)
-                h_max_y = max(pt[1] for pt in h_ring)
-                prepared_holes.append((h_min_x, h_max_x, h_min_y, h_max_y, h_ring))
+        for h_raw in rings[1:]:
+            h_ring = cls._validate_and_normalize_ring(h_raw)
+            if h_ring is None:
+                return None
+            h_min_x = min(pt[0] for pt in h_ring)
+            h_max_x = max(pt[0] for pt in h_ring)
+            h_min_y = min(pt[1] for pt in h_ring)
+            h_max_y = max(pt[1] for pt in h_ring)
+            prepared_holes.append((h_min_x, h_max_x, h_min_y, h_max_y, h_ring))
 
         return (ext_min_x, ext_max_x, ext_min_y, ext_max_y, ext_ring, prepared_holes)
 
     @classmethod
-    def _init_polygons(cls) -> None:
-        if cls._POLYGONS_LOADED:
+    def _prepare_geojson_atomic(
+        cls, data: Dict[str, Any]
+    ) -> List[
+        Tuple[
+            float, float, float, float,
+            List[Tuple[float, float]],
+            List[Tuple[float, float, float, float, List[Tuple[float, float]]]],
+        ]
+    ]:
+        """
+        Atomically prepares all features in GeoJSON.
+        Validates every feature and polygon. If any feature is corrupted or invalid,
+        raises ValueError and returns nothing, ensuring zero partially-loaded state.
+        """
+        if not isinstance(data, dict):
+            raise ValueError("GeoJSON root must be a dictionary")
+        features = data.get("features")
+        if not isinstance(features, list) or len(features) == 0:
+            raise ValueError("GeoJSON must contain a non-empty 'features' list")
+
+        staging_polygons = []
+        for i, feat in enumerate(features):
+            if not isinstance(feat, dict):
+                raise ValueError(f"Feature at index {i} is not a valid dictionary")
+            geom = feat.get("geometry")
+            if not isinstance(geom, dict):
+                raise ValueError(f"Feature at index {i} is missing valid 'geometry'")
+            gtype = geom.get("type")
+            coords = geom.get("coordinates")
+            if not isinstance(coords, list) or len(coords) == 0:
+                raise ValueError(f"Feature at index {i} has invalid coordinates structure")
+
+            if gtype == "Polygon":
+                poly_prep = cls._prepare_polygon(coords)
+                if not poly_prep:
+                    raise ValueError(f"Feature at index {i} (Polygon) could not be prepared")
+                staging_polygons.append(poly_prep)
+            elif gtype == "MultiPolygon":
+                for p_idx, poly in enumerate(coords):
+                    if not isinstance(poly, list) or len(poly) == 0:
+                        raise ValueError(f"Feature at index {i} (MultiPolygon[{p_idx}]) has invalid structure")
+                    poly_prep = cls._prepare_polygon(poly)
+                    if not poly_prep:
+                        raise ValueError(f"Feature at index {i} (MultiPolygon[{p_idx}]) could not be prepared")
+                    staging_polygons.append(poly_prep)
+            else:
+                raise ValueError(f"Feature at index {i} has unsupported geometry type: {gtype}")
+
+        if not staging_polygons:
+            raise ValueError("No valid polygons prepared from features")
+
+        return staging_polygons
+
+    @classmethod
+    def _init_polygons(cls, override_data: Optional[Dict[str, Any]] = None, force_reload: bool = False) -> None:
+        if cls._POLYGONS_LOADED and override_data is None and not force_reload:
             return
-        cls._PREPARED_POLYGONS = []
+
+        cls._is_inside_polygon_cached.cache_clear()
+
         candidates = [
             Path(__file__).resolve().parent.parent / "data" / "uzbekistan_regions.json",
             Path(__file__).resolve().parents[3] / "frontend" / "src" / "data" / "geo" / "uzbekistan_regions.json",
@@ -124,46 +228,51 @@ class GeoSpatialService:
                 geojson_path = p
                 break
 
-        if not geojson_path:
+        staging = []
+        load_success = False
+
+        if override_data is not None:
+            try:
+                staging = cls._prepare_geojson_atomic(override_data)
+                load_success = True
+            except Exception as e:
+                logger.error(
+                    "CRITICAL: Failed to validate override GeoJSON: %s. "
+                    "Aborting initialization and failing closed to protect against foreign coordinate ingestion.",
+                    e,
+                )
+                staging = []
+                load_success = False
+        elif not geojson_path:
             logger.error(
                 "CRITICAL: Uzbekistan boundary GeoJSON file could not be found among candidates %s. "
                 "Point-in-polygon verification will fail-closed (reject coordinates) to protect against foreign coordinate ingestion.",
                 [str(c) for c in candidates],
             )
-            cls._POLYGONS_LOADED = True
-            return
-
-        try:
-            with open(geojson_path, encoding="utf-8") as f:
-                data = json.load(f)
-            for feat in data.get("features", []):
-                geom = feat.get("geometry", {})
-                gtype = geom.get("type")
-                coords = geom.get("coordinates", [])
-                if gtype == "Polygon" and coords:
-                    poly_prep = cls._prepare_polygon(coords)
-                    if poly_prep:
-                        cls._PREPARED_POLYGONS.append(poly_prep)
-                elif gtype == "MultiPolygon":
-                    for poly in coords:
-                        poly_prep = cls._prepare_polygon(poly)
-                        if poly_prep:
-                            cls._PREPARED_POLYGONS.append(poly_prep)
-            if not cls._PREPARED_POLYGONS:
+            staging = []
+            load_success = False
+        else:
+            try:
+                with open(geojson_path, encoding="utf-8") as f:
+                    data = json.load(f)
+                staging = cls._prepare_geojson_atomic(data)
+                load_success = True
+            except Exception as e:
                 logger.error(
-                    "CRITICAL: GeoJSON file at %s contained no valid Polygon or MultiPolygon features. "
-                    "Failing closed to prevent foreign coordinate ingestion.",
+                    "CRITICAL: Failed to load or validate uzbekistan_regions GeoJSON from %s: %s. "
+                    "Aborting initialization and failing closed to protect against foreign coordinate ingestion.",
                     geojson_path,
+                    e,
                 )
-        except Exception as e:
-            logger.error(
-                "CRITICAL: Failed to load uzbekistan_regions geojson from %s: %s. "
-                "Failing closed to prevent foreign coordinate ingestion.",
-                geojson_path,
-                e,
-            )
-        if cls._PREPARED_POLYGONS:
+                staging = []
+                load_success = False
+
+        # Atomic publication: Only publish to _PREPARED_POLYGONS if the entire dataset loaded and validated 100% cleanly
+        if load_success and staging:
+            cls._PREPARED_POLYGONS = staging
             cls._LOGGED_FAIL_CLOSED_WARNING = False
+        else:
+            cls._PREPARED_POLYGONS = []
         cls._POLYGONS_LOADED = True
 
     @staticmethod
@@ -442,12 +551,15 @@ class GeoSpatialService:
             buckets[key].append(pin)
 
         clustered_result = []
+        from app.core.map_cache import compute_cluster_signature
         for (g_lat, g_lng), group in buckets.items():
             if len(group) == 1:
                 single_pin = dict(group[0])
                 single_pin["isCluster"] = False
                 single_pin["count"] = 1
                 single_pin["pinIds"] = [single_pin["id"]]
+                single_pin["geo_verified"] = True
+                single_pin["geo_sig"] = compute_cluster_signature(single_pin)
                 clustered_result.append(single_pin)
             else:
                 avg_lat = round(
@@ -472,7 +584,7 @@ class GeoSpatialService:
                 avg_sal = int(sum(salaries) / len(salaries)) if salaries else 0
 
                 loc_company = group[0].get("location") or "O'zbekiston"
-                clustered_result.append({
+                c_dict = {
                     "isCluster": True,
                     "id": f"cluster_{g_lat}_{g_lng}",
                     "count": len(group),
@@ -499,5 +611,8 @@ class GeoSpatialService:
                     "applied": any(p.get("applied") for p in group),
                     "bookmarked": any(p.get("bookmarked") for p in group),
                     "pinIds": [p["id"] for p in group],
-                })
+                    "geo_verified": True,
+                }
+                c_dict["geo_sig"] = compute_cluster_signature(c_dict)
+                clustered_result.append(c_dict)
         return clustered_result

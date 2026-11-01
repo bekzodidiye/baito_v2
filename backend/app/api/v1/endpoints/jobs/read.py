@@ -16,6 +16,8 @@ from app.core.map_cache import (
     get_user_map_cache_version,
     build_map_pins_cache_key,
     CACHE_LOCATION_COUNTS_PREFIX,
+    compute_cluster_signature,
+    verify_cluster_signature,
 )
 from app.models.job import JobStatus
 from app.redis_client import redis_client
@@ -408,25 +410,129 @@ def get_map_jobs(
         cached_bytes = redis_client.get(effective_cache_key)
         if cached_bytes:
             cached_str = cached_bytes.decode("utf-8") if isinstance(cached_bytes, bytes) else str(cached_bytes)
-            etag = f'"{hashlib.md5(cached_str.encode("utf-8")).hexdigest()}"'
-            response.headers["Cache-Control"] = cache_control
-            response.headers["ETag"] = etag
-            if request.headers.get("if-none-match") == etag:
+            cached_pins = json.loads(cached_str)
+            valid_cached_pins = []
+            has_foreign = False
+            has_corrupt_cluster = False
+
+            for p in cached_pins:
+                p_lat = p.get("coordinateX") if p.get("coordinateX") is not None else p.get("latitude")
+                p_lng = p.get("coordinateY") if p.get("coordinateY") is not None else p.get("longitude")
+                is_inside = False
+                if p_lat is not None and p_lng is not None:
+                    try:
+                        pf_lat = float(p_lat)
+                        pf_lng = float(p_lng)
+                        if GeoSpatialService.is_inside_uzbekistan(pf_lat, pf_lng):
+                            is_inside = True
+                    except (ValueError, TypeError):
+                        pass
+
+                if not is_inside:
+                    if p.get("isCluster"):
+                        has_corrupt_cluster = True
+                    else:
+                        has_foreign = True
+                    continue
+                valid_cached_pins.append(p)
+
+            # Check whether any member in cluster pinIds has foreign coordinates or invalid structure
+            cluster_items = [p for p in valid_cached_pins if p.get("isCluster")]
+            unverified_clusters = []
+            has_reattested = False
+            for c in cluster_items:
+                pids = c.get("pinIds")
+                if not isinstance(pids, list) or len(pids) == 0:
+                    has_corrupt_cluster = True
+                    break
+                if not all(isinstance(pid, str) and pid.strip() for pid in pids):
+                    has_corrupt_cluster = True
+                    break
+                if len(set(pids)) != len(pids):
+                    has_corrupt_cluster = True
+                    break
+                if c.get("count") != len(pids):
+                    has_corrupt_cluster = True
+                    break
+                if not verify_cluster_signature(c):
+                    unverified_clusters.append(c)
+
+            if unverified_clusters and not has_corrupt_cluster:
+                cluster_pin_ids = [pid for p in unverified_clusters for pid in (p.get("pinIds") or [])]
+                if cluster_pin_ids:
+                    own_db = False
+                    active_db = db
+                    if active_db is None:
+                        active_db = SessionLocal()
+                        own_db = True
+                    try:
+                        pin_records = (
+                            active_db.query(models.Job.id, models.Job.coordinateX, models.Job.coordinateY, models.Job.status)
+                            .filter(models.Job.id.in_(cluster_pin_ids))
+                            .all()
+                        )
+                        found_ids = {r[0] for r in pin_records}
+                        # If any pinId in the cluster no longer exists in DB or is closed/cancelled/pending, cluster is corrupt
+                        if len(found_ids) < len(set(cluster_pin_ids)):
+                            has_corrupt_cluster = True
+                        else:
+                            for jid, cx, cy, c_st in pin_records:
+                                if cx is None or cy is None or c_st not in JobStatus.OPEN_STATUSES:
+                                    has_corrupt_cluster = True
+                                    break
+                                try:
+                                    fcx = float(cx)
+                                    fcy = float(cy)
+                                    if not GeoSpatialService.is_inside_uzbekistan(fcx, fcy):
+                                        has_corrupt_cluster = True
+                                        break
+                                except (ValueError, TypeError):
+                                    has_corrupt_cluster = True
+                                    break
+                        if not has_corrupt_cluster:
+                            for c in unverified_clusters:
+                                c["geo_verified"] = True
+                                c["geo_sig"] = compute_cluster_signature(c)
+                            has_reattested = True
+                    finally:
+                        if own_db and active_db:
+                            active_db.close()
+
+            if has_corrupt_cluster:
+                try:
+                    redis_client.delete(effective_cache_key)
+                    redis_client.delete(base_cache_key)
+                except Exception:
+                    pass
+                cached_bytes = None
+            else:
+                if has_foreign or has_reattested:
+                    cached_pins = valid_cached_pins
+                    cached_str = json.dumps(cached_pins)
+                    try:
+                        redis_client.set(effective_cache_key, cached_str, ex=120)
+                    except Exception:
+                        pass
+
+                etag = f'"{hashlib.md5(cached_str.encode("utf-8")).hexdigest()}"'
+                response.headers["Cache-Control"] = cache_control
+                response.headers["ETag"] = etag
+                if request.headers.get("if-none-match") == etag:
+                    return Response(
+                        status_code=304,
+                        headers={
+                            "ETag": etag,
+                            "Cache-Control": cache_control,
+                        },
+                    )
                 return Response(
-                    status_code=304,
+                    content=cached_str,
+                    media_type="application/json",
                     headers={
                         "ETag": etag,
                         "Cache-Control": cache_control,
                     },
                 )
-            return Response(
-                content=cached_str,
-                media_type="application/json",
-                headers={
-                    "ETag": etag,
-                    "Cache-Control": cache_control,
-                },
-            )
     except Exception as e:
         logger.warning("Redis lookup error in get_map_jobs: %s", e)
 
@@ -444,6 +550,27 @@ def get_map_jobs(
         try:
             base_str = cached_base.decode("utf-8") if isinstance(cached_base, bytes) else str(cached_base)
             base_pins = json.loads(base_str)
+            # Prune any foreign or invalid pins that might have been pre-cached in base_cache
+            valid_base_pins = []
+            has_corrupt_base_cluster = False
+            for p in base_pins:
+                p_lat = p.get("coordinateX") if p.get("coordinateX") is not None else p.get("latitude")
+                p_lng = p.get("coordinateY") if p.get("coordinateY") is not None else p.get("longitude")
+                is_inside = False
+                if p_lat is not None and p_lng is not None:
+                    try:
+                        pf_lat = float(p_lat)
+                        pf_lng = float(p_lng)
+                        if GeoSpatialService.is_inside_uzbekistan(pf_lat, pf_lng):
+                            is_inside = True
+                    except (ValueError, TypeError):
+                        pass
+                if not is_inside:
+                    if p.get("isCluster"):
+                        has_corrupt_base_cluster = True
+                    continue
+                valid_base_pins.append(p)
+            base_pins = valid_base_pins
             user_ids = [user_id]
             if current_user and getattr(current_user, 'uid', None):
                 user_ids.append(current_user.uid)
@@ -454,6 +581,68 @@ def get_map_jobs(
                 active_db = SessionLocal()
                 own_db = True
             try:
+                # Check whether any member in base cluster pinIds has foreign coordinates or invalid structure
+                base_cluster_items = [p for p in base_pins if p.get("isCluster")]
+                unverified_base_clusters = []
+                for c in base_cluster_items:
+                    pids = c.get("pinIds")
+                    if not isinstance(pids, list) or len(pids) == 0:
+                        has_corrupt_base_cluster = True
+                        break
+                    if not all(isinstance(pid, str) and pid.strip() for pid in pids):
+                        has_corrupt_base_cluster = True
+                        break
+                    if len(set(pids)) != len(pids):
+                        has_corrupt_base_cluster = True
+                        break
+                    if c.get("count") != len(pids):
+                        has_corrupt_base_cluster = True
+                        break
+                    if not verify_cluster_signature(c):
+                        unverified_base_clusters.append(c)
+
+                if unverified_base_clusters and not has_corrupt_base_cluster:
+                    base_cluster_pids = [pid for p in unverified_base_clusters for pid in (p.get("pinIds") or [])]
+                    if base_cluster_pids:
+                        pin_records = (
+                            active_db.query(models.Job.id, models.Job.coordinateX, models.Job.coordinateY, models.Job.status)
+                            .filter(models.Job.id.in_(base_cluster_pids))
+                            .all()
+                        )
+                        found_ids = {r[0] for r in pin_records}
+                        if len(found_ids) < len(set(base_cluster_pids)):
+                            has_corrupt_base_cluster = True
+                        else:
+                            for jid, cx, cy, c_st in pin_records:
+                                if cx is None or cy is None or c_st not in JobStatus.OPEN_STATUSES:
+                                    has_corrupt_base_cluster = True
+                                    break
+                                try:
+                                    fcx = float(cx)
+                                    fcy = float(cy)
+                                    if not GeoSpatialService.is_inside_uzbekistan(fcx, fcy):
+                                        has_corrupt_base_cluster = True
+                                        break
+                                except (ValueError, TypeError):
+                                    has_corrupt_base_cluster = True
+                                    break
+                        if not has_corrupt_base_cluster:
+                            for c in unverified_base_clusters:
+                                c["geo_verified"] = True
+                                c["geo_sig"] = compute_cluster_signature(c)
+                            try:
+                                redis_client.set(base_cache_key, json.dumps(base_pins), ex=180)
+                            except Exception:
+                                pass
+
+                if has_corrupt_base_cluster:
+                    try:
+                        redis_client.delete(base_cache_key)
+                        redis_client.delete(effective_cache_key)
+                    except Exception:
+                        pass
+                    raise ValueError("Stale base cluster cache contains foreign coordinates, rebuilding via Cold DB path")
+
                 worker_apps = (
                     active_db.query(models.Application.jobId, models.Application.status)
                     .filter(models.Application.workerId.in_(user_ids))
@@ -666,23 +855,8 @@ def get_map_jobs(
         if min_lng is not None and max_lng is not None:
             query = query.filter(models.Job.coordinateY.between(min_lng, max_lng))
 
-        if user_id:
-            user_ids = [user_id]
-            if current_user and getattr(current_user, 'uid', None):
-                user_ids.append(current_user.uid)
-            own_apps_subquery = (
-                active_db.query(models.Application.jobId)
-                .filter(models.Application.workerId.in_(user_ids))
-                .subquery()
-            )
-            own_active_jobs = and_(
-                models.Job.id.in_(select(own_apps_subquery.c.jobId)),
-                models.Job.status.in_(JobStatus.OPEN_STATUSES + (JobStatus.IN_PROGRESS, JobStatus.COMPLETED)),
-            )
-            visible = or_(models.Job.status.in_(JobStatus.OPEN_STATUSES), own_active_jobs)
-        else:
-            visible = models.Job.status.in_(JobStatus.OPEN_STATUSES)
-        query = query.filter(visible)
+        # Base public query MUST strictly query OPEN_STATUSES, isolating public cache from user-specific shifts.
+        query = query.filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
 
         if clustered:
             # Clustered nationwide view: include all matching active jobs with valid geographic coordinates inside Uzbekistan.
@@ -702,11 +876,61 @@ def get_map_jobs(
             )
             jobs = query.order_by(models.Job.createdAt.desc(), models.Job.id.desc()).all()
         else:
-            jobs = (
-                query.order_by(models.Job.createdAt.desc(), models.Job.id.desc())
-                .limit(limit)
-                .all()
-            )
+            if min_lat is None and min_lng is None:
+                query = query.filter(
+                    models.Job.coordinateX.isnot(None),
+                    models.Job.coordinateY.isnot(None),
+                    models.Job.coordinateX.between(
+                        GeoSpatialService.UZBEKISTAN_BBOX["min_lat"],
+                        GeoSpatialService.UZBEKISTAN_BBOX["max_lat"]
+                    ),
+                    models.Job.coordinateY.between(
+                        GeoSpatialService.UZBEKISTAN_BBOX["min_lng"],
+                        GeoSpatialService.UZBEKISTAN_BBOX["max_lng"]
+                    ),
+                    or_(models.Job.coordinateX != 0.0, models.Job.coordinateY != 0.0),
+                )
+
+            # Batched candidate extraction:
+            # Ensure foreign coordinates located inside the bounding box do not starve the requested limit.
+            # Scans in batches up to max_scan = min(max(limit * 5, 500), 5000), stopping as soon as
+            # limit valid Uzbekistan points are collected or matching candidates are exhausted.
+            target_limit = limit
+            jobs = []
+            batch_size = max(target_limit, 100)
+            max_scan = min(max(target_limit * 5, 500), 5000)
+            offset = 0
+
+            ordered_query = query.order_by(models.Job.createdAt.desc(), models.Job.id.desc())
+            while len(jobs) < target_limit and offset < max_scan:
+                batch = ordered_query.offset(offset).limit(batch_size).all()
+                if not batch:
+                    break
+                for candidate in batch:
+                    if candidate.coordinateX is None or candidate.coordinateY is None:
+                        continue
+                    try:
+                        c_lat = float(candidate.coordinateX)
+                        c_lng = float(candidate.coordinateY)
+                        if math.isnan(c_lat) or math.isnan(c_lng) or math.isinf(c_lat) or math.isinf(c_lng):
+                            continue
+                        if c_lat == 0.0 and c_lng == 0.0:
+                            continue
+                        if GeoSpatialService.is_inside_uzbekistan(c_lat, c_lng):
+                            jobs.append(candidate)
+                            if len(jobs) >= target_limit:
+                                break
+                    except (ValueError, TypeError):
+                        continue
+                offset += len(batch)
+                if len(batch) < batch_size:
+                    break
+
+            if len(jobs) < target_limit and offset >= max_scan:
+                logger.warning(
+                    "Bounded spatial scan cap reached (scanned=%d, cap=%d). Returning %d valid Uzbekistan jobs (requested target_limit=%d). Underfill is expected under heavy non-Uzbekistan coordinate clustering.",
+                    offset, max_scan, len(jobs), target_limit
+                )
 
         if not jobs:
             empty_str = "[]"
@@ -755,17 +979,32 @@ def get_map_jobs(
                 .filter(models.Application.workerId.in_(user_ids))
                 .all()
             )
-            worker_apps_map = {a[0]: a[1] for a in worker_apps if a[0] in job_ids_set}
+            worker_apps_map = {a[0]: a[1] for a in worker_apps}
             bookmarked_query = (
                 active_db.query(models.Bookmark.jobId)
                 .filter(models.Bookmark.userId.in_(user_ids))
                 .all()
             )
-            bookmarked_ids = {b[0] for b in bookmarked_query if b[0] in job_ids_set}
+            bookmarked_ids = {b[0] for b in bookmarked_query}
 
         base_pins = []
         user_pins = []
         for job in jobs:
+            # Foreign and invalid coordinates MUST NEVER enter base_pins or user_pins
+            if job.coordinateX is None or job.coordinateY is None:
+                continue
+            try:
+                f_lat = float(job.coordinateX)
+                f_lng = float(job.coordinateY)
+                if math.isnan(f_lat) or math.isnan(f_lng) or math.isinf(f_lat) or math.isinf(f_lng):
+                    continue
+                if f_lat == 0.0 and f_lng == 0.0:
+                    continue
+                if not GeoSpatialService.is_inside_uzbekistan(f_lat, f_lng):
+                    continue
+            except (ValueError, TypeError):
+                continue
+
             raw_needed = (job.neededWorkers or "1").strip()
             vacancies_num = int(raw_needed) if raw_needed.isdigit() and int(raw_needed) > 0 else 1
             hired_cnt = hired_counts.get(job.id, 0)
@@ -804,7 +1043,9 @@ def get_map_jobs(
                 "vacancies": vacancies_num,
                 "isCluster": False,
                 "count": 1,
+                "geo_verified": True,
             }
+            base_pin["geo_sig"] = compute_cluster_signature(base_pin)
 
             # Public base pins must NEVER include filled jobs or depend on user-specific applications.
             # Strictly restrict to OPEN_STATUSES and not filled.
@@ -812,13 +1053,7 @@ def get_map_jobs(
                 base_pins.append(base_pin)
 
             # User pins include open unfilled jobs, plus any active shift the user personally applied to
-            if user_id and (
-                (job.status in JobStatus.OPEN_STATUSES and not is_filled)
-                or (
-                    job.status in (JobStatus.OPEN_STATUSES + (JobStatus.IN_PROGRESS, JobStatus.COMPLETED))
-                    and worker_apps_map.get(job.id)
-                )
-            ):
+            if user_id and job.status in JobStatus.OPEN_STATUSES and not is_filled:
                 u_pin = dict(base_pin)
                 app_item_status = worker_apps_map.get(job.id)
                 if app_item_status:
@@ -827,7 +1062,101 @@ def get_map_jobs(
                         u_pin["status"] = app_item_status
                 if job.id in bookmarked_ids:
                     u_pin["bookmarked"] = True
+                u_pin["geo_sig"] = compute_cluster_signature(u_pin)
                 user_pins.append(u_pin)
+
+        # Personal user pins: Load any shifts the user applied to that were not in base_pins (e.g. IN_PROGRESS/COMPLETED)
+        if user_id:
+            base_job_ids = {p["id"] for p in base_pins}
+            missing_app_job_ids = [jid for jid in worker_apps_map if jid not in base_job_ids]
+            if missing_app_job_ids:
+                extra_query = active_db.query(
+                    models.Job.id,
+                    models.Job.title,
+                    models.Job.company,
+                    models.Job.salary,
+                    models.Job.salaryCurrency,
+                    models.Job.location,
+                    models.Job.rawLocation,
+                    models.Job.logoUrl,
+                    models.Job.imageUrl,
+                    models.Job.tags,
+                    models.Job.category,
+                    models.Job.workDate,
+                    models.Job.workTime,
+                    models.Job.neededWorkers,
+                    models.Job.coordinateX,
+                    models.Job.coordinateY,
+                    models.Job.urgent,
+                    models.Job.status,
+                    models.Job.hiredWorkerId,
+                    models.Job.createdAt,
+                ).filter(
+                    models.Job.id.in_(missing_app_job_ids),
+                    models.Job.status.in_(JobStatus.OPEN_STATUSES + (JobStatus.IN_PROGRESS, JobStatus.COMPLETED)),
+                    models.Job.coordinateX.isnot(None),
+                    models.Job.coordinateY.isnot(None),
+                    or_(models.Job.coordinateX != 0.0, models.Job.coordinateY != 0.0),
+                )
+                if search:
+                    term = f"%{search.strip()}%"
+                    extra_query = extra_query.filter(
+                        or_(
+                            models.Job.title.ilike(term),
+                            models.Job.company.ilike(term),
+                            models.Job.location.ilike(term),
+                        )
+                    )
+                if location:
+                    extra_query = extra_query.filter(models.Job.location.ilike(f"%{location.strip()}%"))
+                if category:
+                    extra_query = extra_query.filter(models.Job.category == category)
+                if min_lat is not None and max_lat is not None:
+                    extra_query = extra_query.filter(models.Job.coordinateX.between(min_lat, max_lat))
+                if min_lng is not None and max_lng is not None:
+                    extra_query = extra_query.filter(models.Job.coordinateY.between(min_lng, max_lng))
+
+                extra_jobs = extra_query.all()
+                for ej in extra_jobs:
+                    try:
+                        f_lat = float(ej.coordinateX)
+                        f_lng = float(ej.coordinateY)
+                        if not GeoSpatialService.is_inside_uzbekistan(f_lat, f_lng):
+                            continue
+                    except (ValueError, TypeError):
+                        continue
+                    app_st = worker_apps_map.get(ej.id)
+                    ej_pin = {
+                        "id": ej.id,
+                        "title": ej.title,
+                        "company": ej.company,
+                        "salary": ej.salary,
+                        "salaryCurrency": ej.salaryCurrency or "UZS",
+                        "location": ej.location,
+                        "rawLocation": ej.rawLocation,
+                        "logoUrl": ej.logoUrl,
+                        "imageUrl": ej.imageUrl,
+                        "tags": ej.tags or [],
+                        "category": ej.category,
+                        "workDate": ej.workDate,
+                        "workTime": ej.workTime,
+                        "neededWorkers": ej.neededWorkers or "1",
+                        "coordinateX": ej.coordinateX,
+                        "coordinateY": ej.coordinateY,
+                        "latitude": ej.coordinateX,
+                        "longitude": ej.coordinateY,
+                        "urgent": ej.urgent or False,
+                        "status": app_st if app_st in ('in_progress', 'completed', 'start_requested', 'hired', 'applied') else ej.status,
+                        "applied": True,
+                        "bookmarked": ej.id in bookmarked_ids,
+                        "hiredCount": 0,
+                        "vacancies": 1,
+                        "isCluster": False,
+                        "count": 1,
+                        "geo_verified": True,
+                    }
+                    ej_pin["geo_sig"] = compute_cluster_signature(ej_pin)
+                    user_pins.append(ej_pin)
 
         if clustered:
             base_pins = GeoSpatialService.cluster_pins(base_pins, grid_size=0.4)
