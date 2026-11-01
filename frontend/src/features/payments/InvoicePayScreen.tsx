@@ -408,6 +408,7 @@ export const InvoicePayScreen: React.FC = () => {
   const [isTearing, setIsTearing] = useState(false);
   const [showPaidReceipt, setShowPaidReceipt] = useState(false);
   const [allCopied, setAllCopied] = useState(false);
+  const [justPaid, setJustPaid] = useState(false);
 
   useEffect(() => {
     setIsPrinting(true);
@@ -475,7 +476,9 @@ export const InvoicePayScreen: React.FC = () => {
   const handleConfirmPayment = () => {
     if (!method || pay.isPending) return;
     setIsTearing(true);
+    setJustPaid(true);
     playPaperTearSound();
+    playThermalPrinterSound();
     const isJsdom = typeof window !== 'undefined' && window.navigator?.userAgent?.includes('jsdom');
     if (!isJsdom && typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
       try {
@@ -488,17 +491,23 @@ export const InvoicePayScreen: React.FC = () => {
     pay.mutate(undefined, {
       onSuccess: () => {
         const isJsdom = typeof window !== 'undefined' && window.navigator?.userAgent?.includes('jsdom');
-        const minTearDuration = isJsdom ? 150 : 1050;
+        const minTearDuration = isJsdom ? 150 : 880;
         const elapsed = Date.now() - startTime;
         const remaining = Math.max(0, minTearDuration - elapsed);
+
+        // Immediately feed new paid receipt from behind blade while old paper tears in foreground
+        setShowPaidReceipt(true);
+        setDispenseKey((k) => k + 1);
+
+        // Cleanly complete tearing phase when the old paper clears the lower plane
         setTimeout(() => {
           setIsTearing(false);
-          setShowPaidReceipt(true);
-          setDispenseKey((k) => k + 1);
         }, remaining);
       },
       onError: () => {
         setIsTearing(false);
+        setJustPaid(false);
+        setShowPaidReceipt(false);
       },
     });
   };
@@ -546,6 +555,443 @@ export const InvoicePayScreen: React.FC = () => {
       // Insecure context or permission denied
     }
   };
+
+  const renderPaidReceiptContent = () => (
+    <>
+      {/* Invoys Raqamli Pasport / Kvitansiya Header */}
+      <div className="invoice-pass-header relative pt-8 pb-6 px-6 sm:pt-10 sm:pb-8 sm:px-8 border-b border-slate-100 bg-gradient-to-br from-emerald-50/50 via-white to-slate-50/50">
+        <div className="invoice-reflex" />
+
+        {/* 3D Wireframe kubik bezak */}
+        <svg
+          className="invoice-icon-cube text-emerald-500/20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path style={{ ['--i' as any]: 1 }} className="path-center" d="M12 12.75L14.25 11.437M12 12.75L9.75 11.437M12 12.75V15" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+          <path style={{ ['--i' as any]: 2 }} className="path-t" d="M9.75 3.562L12 2.25L14.25 3.563" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+          <path style={{ ['--i' as any]: 3 }} className="path-tr" d="M21 7.5L18.75 6.187M21 7.5V9.75M21 7.5L18.75 8.813" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+          <path style={{ ['--i' as any]: 4 }} className="path-br" d="M21 14.25V16.5L18.75 17.813" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+          <path style={{ ['--i' as any]: 5 }} className="path-b" d="M12 21.75L14.25 20.437M12 21.75V19.5M12 21.75L9.75 20.437" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+          <path style={{ ['--i' as any]: 6 }} className="path-bl" d="M5.25 17.813L3 16.5V14.25" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+          <path style={{ ['--i' as any]: 7 }} className="path-tl" d="M3 7.5L5.25 6.187M3 7.5L5.25 8.813M3 7.5V9.75" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+
+        {/* Rasmiy Yashil Shtamp - TO'LANGAN / PAID */}
+        <div className="baito-paid-rubber-stamp" title="Rasmiy tasdiqlangan elektron to'lov muhr">
+          <div className="text-[13px] font-black tracking-widest text-emerald-800 leading-none">
+            TO'LANGAN
+          </div>
+          <div className="text-[9px] font-bold text-emerald-700 tracking-wider mt-0.5">
+            PAID · 200 OK
+          </div>
+          <div className="text-[8px] font-semibold text-emerald-600/80 tracking-widest mt-0.5">
+            BAITO ELEKTRON CHEK
+          </div>
+        </div>
+
+        <div className="relative z-10 flex items-center justify-between gap-4 mb-5">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-black tracking-widest text-slate-800 uppercase">
+              BAITO PASS
+            </span>
+            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-100/80 border border-emerald-200 px-2 py-0.5 rounded">
+              TO'LOV KVITANSIYASI
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="px-2.5 py-1 text-[11px] font-bold rounded-full flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              TO'LANGAN
+            </span>
+
+            {/* Shtrix-kod */}
+            <div className="h-6 flex items-center gap-[2px] opacity-75" title={`Shtrix-kod: ${data.invoiceNumber}`}>
+              <span className="w-[2px] h-full bg-slate-900" />
+              <span className="w-[1px] h-full bg-slate-900" />
+              <span className="w-[3px] h-full bg-slate-900" />
+              <span className="w-[1px] h-full bg-slate-900" />
+              <span className="w-[2px] h-full bg-slate-900" />
+              <span className="w-[1.5px] h-full bg-slate-900" />
+              <span className="w-[3px] h-full bg-slate-900" />
+              <span className="w-[1px] h-full bg-slate-900" />
+              <span className="w-[2px] h-full bg-slate-900" />
+            </div>
+          </div>
+        </div>
+
+        {/* Invoys raqami va Kompaniya */}
+        <div className="relative z-10 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+              Hisob-faktura
+            </p>
+            <p className="text-base sm:text-lg font-bold text-slate-900 mt-0.5 tabular-nums">
+              № {data.invoiceNumber}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 text-slate-700 bg-white/95 backdrop-blur-sm px-3.5 py-1.5 rounded-xl border border-slate-200/80 shadow-2xs">
+            <Building2 size={16} className="text-slate-400" />
+            <span className="text-xs font-semibold">{data.company}</span>
+          </div>
+        </div>
+
+        {/* To'lov summasi, xizmat nomi va QR-kod */}
+        <div className="relative z-10 mt-5 pt-5 border-t border-slate-200/60 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+              Tasdiqlangan summa
+            </p>
+            <p className="text-2xl sm:text-3xl font-black text-emerald-600 mt-0.5 tabular-nums tracking-tight">
+              {money(data.amount)} <span className="text-sm font-semibold text-slate-500">so'm</span>
+            </p>
+            {data.jobTitle && (
+              <div className="mt-2 text-xs text-slate-600 flex items-center gap-2">
+                <span className="font-semibold text-slate-800">{data.jobTitle}</span>
+                <span className="text-slate-300">·</span>
+                <span className="text-slate-500">
+                  {data.workDate ? `${data.workDate} · ` : ''}{data.location || ''}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* QR-kod vidjeti */}
+          <div
+            className="shrink-0 p-2 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex flex-col items-center"
+            title="QR-kod orqali tekshirish"
+          >
+            <svg className="w-11 h-11 text-slate-800" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm10-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm14-2h4v4h-4v-4zm-4 4h4v4h-4v-4zm4 4h4v4h-4v-4zm-4-8h4v4h-4v-4z" />
+            </svg>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">
+              Baito QR
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* PERFORATSIYA (Chek qirqim chizig'i) */}
+      <div className="relative flex items-center justify-between py-1 bg-white">
+        <div className="w-6 h-6 -ml-3 rounded-full bg-slate-100 border-r border-slate-200/90 shadow-inner" />
+        <div className="flex-1 border-b-2 border-dashed border-slate-200" />
+        <div className="w-6 h-6 -mr-3 rounded-full bg-slate-100 border-l border-slate-200/90 shadow-inner" />
+      </div>
+
+      {/* To'lov Tasdiqlanganligi Tafsilotlari */}
+      <div className="relative px-6 sm:px-8 py-8 text-center bg-white">
+        <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-xs">
+          <Check size={28} className="stroke-[2.5]" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900 mb-2">To'lov qayd etildi</h2>
+        <p className="text-slate-600 text-[15px] max-w-md mx-auto">
+          Rahmat. Ma'muriyatga xabar berildi — to'lov bank ko'chirmasi bilan
+          solishtirilgandan so'ng yakuniy tasdiqlanadi.
+        </p>
+        {data.paidReference && (
+          <p className="mt-4 text-sm text-slate-500">
+            To'lov topshirig'i: <span className="font-semibold text-slate-700">{data.paidReference}</span>
+          </p>
+        )}
+
+        {/* Kvitansiya ma'lumotlari jadvali */}
+        <div className="mt-6 max-w-md mx-auto rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 text-left space-y-2.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-500">Hisob-faktura:</span>
+            <span className="font-mono font-semibold text-slate-800">№ {data.invoiceNumber}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-500">To'lovchi korxona:</span>
+            <span className="font-semibold text-slate-800">{data.company}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-500">To'langan summa:</span>
+            <span className="font-bold text-emerald-600 tabular-nums">{money(data.amount)} so'm</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-500">Holat:</span>
+            <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded text-[11px]">
+              <Check size={12} className="stroke-[3]" /> Qayd etilgan
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.print) {
+                window.print();
+              }
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+          >
+            <Printer size={15} />
+            <span>Chekni chop etish</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Baito hisob-faktura xavfsizlik va muhr paneli */}
+      <div className="px-6 sm:px-8 py-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-400">
+        <ShieldCheck size={14} className="text-emerald-500" />
+        <span>Baito · rasmiy elektron to'lov kvitansiyasi tasdiqlandi</span>
+      </div>
+
+      {/* Termik chek tishli qirqim chekkasi */}
+      <div className="invoice-sawtooth-bottom" />
+    </>
+  );
+
+  const renderUnpaidInvoiceContent = (isTearLayer = false) => (
+    <>
+      {/* INVOYS RAQAMLI PASPORT / RECEIPT HEADER */}
+      <div className="invoice-pass-header relative pt-8 pb-6 px-6 sm:pt-10 sm:pb-8 sm:px-8 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/40">
+        <div className="invoice-reflex" />
+
+        {/* 3D Wireframe Kubik fon dekoratsiyasi */}
+        <svg
+          className="invoice-icon-cube"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path style={{ ['--i' as any]: 1 }} className="path-center" d="M12 12.75L14.25 11.437M12 12.75L9.75 11.437M12 12.75V15" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+          <path style={{ ['--i' as any]: 2 }} className="path-t" d="M9.75 3.562L12 2.25L14.25 3.563" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+          <path style={{ ['--i' as any]: 3 }} className="path-tr" d="M21 7.5L18.75 6.187M21 7.5V9.75M21 7.5L18.75 8.813" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+          <path style={{ ['--i' as any]: 4 }} className="path-br" d="M21 14.25V16.5L18.75 17.813" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+          <path style={{ ['--i' as any]: 5 }} className="path-b" d="M12 21.75L14.25 20.437M12 21.75V19.5M12 21.75L9.75 20.437" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+          <path style={{ ['--i' as any]: 6 }} className="path-bl" d="M5.25 17.813L3 16.5V14.25" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+          <path style={{ ['--i' as any]: 7 }} className="path-tl" d="M3 7.5L5.25 6.187M3 7.5L5.25 8.813M3 7.5V9.75" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+
+        {/* Pass logotipi, Shtrix-kod va Holat indikatori */}
+        <div className="relative z-10 flex items-center justify-between gap-4 mb-5">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-brand-primary animate-pulse" />
+            <span className="text-xs font-black tracking-widest text-slate-800 uppercase">
+              BAITO PASS
+            </span>
+            <span className="hidden sm:inline-block text-[10px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded">
+              Digital Invoice
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="px-2.5 py-1 text-[11px] font-bold rounded-full flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              KUTILMOQDA
+            </span>
+
+            {/* Shtrix-kod */}
+            <div className="h-6 flex items-center gap-[2px] opacity-75" title={`Shtrix-kod: ${data.invoiceNumber}`}>
+              <span className="w-[2px] h-full bg-slate-900" />
+              <span className="w-[1px] h-full bg-slate-900" />
+              <span className="w-[3px] h-full bg-slate-900" />
+              <span className="w-[1px] h-full bg-slate-900" />
+              <span className="w-[2px] h-full bg-slate-900" />
+              <span className="w-[1.5px] h-full bg-slate-900" />
+              <span className="w-[3px] h-full bg-slate-900" />
+              <span className="w-[1px] h-full bg-slate-900" />
+              <span className="w-[2px] h-full bg-slate-900" />
+            </div>
+          </div>
+        </div>
+
+        {/* Invoys raqami va Kompaniya */}
+        <div className="relative z-10 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+              Hisob-faktura
+            </p>
+            <p className="text-base sm:text-lg font-bold text-slate-900 mt-0.5 tabular-nums">
+              № {data.invoiceNumber}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 text-slate-700 bg-white/95 backdrop-blur-sm px-3.5 py-1.5 rounded-xl border border-slate-200/80 shadow-2xs">
+            <Building2 size={16} className="text-slate-400" />
+            <span className="text-xs font-semibold">{data.company}</span>
+          </div>
+        </div>
+
+        {/* To'lov summasi, xizmat nomi va QR-kod */}
+        <div className="relative z-10 mt-5 pt-5 border-t border-slate-200/60 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+              To'lov summasi
+            </p>
+            <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-0.5 tabular-nums tracking-tight">
+              {money(data.amount)} <span className="text-sm font-semibold text-slate-500">so'm</span>
+            </p>
+            {data.jobTitle && (
+              <div className="mt-2 text-xs text-slate-600 flex items-center gap-2">
+                <span className="font-semibold text-slate-800">{data.jobTitle}</span>
+                <span className="text-slate-300">·</span>
+                <span className="text-slate-500">
+                  {data.workDate ? `${data.workDate} · ` : ''}{data.location || ''}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* QR-kod vidjeti */}
+          <div
+            className="shrink-0 p-2 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex flex-col items-center"
+            title="QR-kod orqali tekshirish"
+          >
+            <svg className="w-11 h-11 text-slate-800" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm10-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm14-2h4v4h-4v-4zm-4 4h4v4h-4v-4zm4 4h4v4h-4v-4zm-4-8h4v4h-4v-4z" />
+            </svg>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">
+              Baito QR
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* PERFORATSIYA (Chek qirqim chizig'i) */}
+      <div className="relative flex items-center justify-between py-1 bg-white">
+        <div className="w-6 h-6 -ml-3 rounded-full bg-slate-100 border-r border-slate-200/90 shadow-inner" />
+        <div className="flex-1 border-b-2 border-dashed border-slate-200" />
+        <div className="w-6 h-6 -mr-3 rounded-full bg-slate-100 border-l border-slate-200/90 shadow-inner" />
+      </div>
+
+      {/* To'lov usuli tanlash */}
+      <div className="px-6 sm:px-8 py-6 bg-slate-50/50 border-b border-slate-100">
+        <label className="block text-sm font-semibold text-slate-800 mb-3">
+          To'lov usulini tanlang
+        </label>
+        <div className="grid grid-cols-1 gap-2.5">
+          {methods.map((m) => (
+            <label
+              key={m.id}
+              className={`flex items-start gap-3 p-3.5 rounded-xl border transition-all cursor-pointer ${
+                method === m.id
+                  ? 'border-brand-primary bg-brand-primary/5 shadow-2xs'
+                  : 'border-slate-200 hover:border-slate-300 bg-white'
+              }`}
+            >
+              <input
+                type="radio"
+                name={isTearLayer ? "pay-method-tear" : "pay-method"}
+                value={m.id}
+                checked={method === m.id}
+                onChange={() => !isTearLayer && setChosen(m.id)}
+                className="mt-1 accent-brand-primary cursor-pointer"
+                disabled={isTearLayer}
+              />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-slate-900">{m.label}</p>
+                {m.hint && <p className="text-xs text-slate-500 mt-0.5">{m.hint}</p>}
+              </div>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Rekvizitlar */}
+      {requisites.length > 0 && (
+        <div className="px-6 sm:px-8 py-6 border-b border-slate-100 bg-white">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              To'lov rekvizitlari
+            </h3>
+            <button
+              type="button"
+              onClick={copyAllRequisites}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer ${
+                allCopied
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-white text-slate-700 border-slate-200 hover:border-brand-primary/50 hover:text-brand-primary hover:bg-slate-50 shadow-2xs'
+              }`}
+            >
+              {allCopied ? (
+                <>
+                  <Check size={14} className="text-emerald-600 stroke-[2.5]" />
+                  <span>Barchasi nusxalandi!</span>
+                </>
+              ) : (
+                <>
+                  <Copy size={13} />
+                  <span>Barchasini nusxalash</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {requisites.map((r) => (
+              <CopyRow key={r.label} label={r.label} value={r.value} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* To'lovni tasdiqlash formasi */}
+      <div className="px-6 sm:px-8 py-6">
+        <label htmlFor={isTearLayer ? "reference-tear" : "reference"} className="block text-sm font-semibold text-slate-800 mb-2">
+          To'lov topshirig'i raqami <span className="font-normal text-slate-400">(ixtiyoriy)</span>
+        </label>
+        <div className="relative">
+          <input
+            id={isTearLayer ? "reference-tear" : "reference"}
+            type="text"
+            value={reference}
+            onChange={(e) => !isTearLayer && setReference(e.target.value)}
+            placeholder="Masalan: № 4471 yoki tranzaksiya ID"
+            disabled={pay.isPending || isTearing || isTearLayer}
+            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-brand-primary focus:border-transparent text-sm transition-all"
+          />
+        </div>
+        <p className="mt-1.5 text-xs text-slate-400">
+          Bank ilovangizdagi to'lov topshirig'i yoki kvitansiya raqamini kiritsangiz, to'lov tezroq tasdiqlanadi.
+        </p>
+
+        {pay.isError && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 flex items-center gap-2">
+            <AlertTriangle size={16} className="shrink-0" />
+            <span>{(pay.error as Error).message}</span>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleConfirmPayment}
+          disabled={!method || pay.isPending || isTearing || isTearLayer}
+          className="mt-6 w-full bg-brand-primary text-white font-semibold text-[16px] py-4 rounded-xl shadow-lg shadow-brand-primary/20 hover:opacity-95 active:scale-[0.99] transition-all flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:active:scale-100"
+        >
+          {pay.isPending || isTearing ? (
+            <>
+              <Loader2 className="animate-spin" size={18} />
+              {isTearing ? "Chek yirtilmoqda..." : "Yuborilmoqda..."}
+            </>
+          ) : (
+            <>
+              <ShieldCheck size={18} />
+              To'lovni tasdiqlash
+            </>
+          )}
+        </button>
+        <p className="mt-3 text-xs text-slate-500 text-center">
+          Tugmani bosish to'lovni amalga oshirganingizni bildiradi.
+        </p>
+      </div>
+
+      {/* Baito hisob-faktura xavfsizlik va muhr paneli */}
+      <div className="px-6 sm:px-8 py-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-400">
+        <ShieldCheck size={14} className="text-slate-400" />
+        <span>Baito · xavfsiz to'lov va rasmiy elektron hisob-faktura</span>
+      </div>
+
+      {/* Termik chek tishli qirqim chekkasi */}
+      <div className="invoice-sawtooth-bottom" />
+    </>
+  );
 
   return (
     <Shell>
@@ -624,449 +1070,44 @@ export const InvoicePayScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Slot ichidan chiqib keluvchi chek/kvitansiya kartasi */}
-        <div className={`invoice-dispense-mask baito-paper-window ${isTearing ? 'is-tearing' : ''}`}>
-          {isPaidReceiptReady ? (
-            /* ==========================================================
-               YANGI CHOP ETILGAN TO'LOV KVITANSIYASI (PAID RECEIPT)
-               To'lov tasdiqlangach aparat tirqishidan yangi chiqib keluvchi chek
-               ========================================================== */
-            <div
-              key={dispenseKey}
-              className="invoice-dispensed-card baito-dispensed-paper bg-white rounded-b-2xl rounded-t-none border-x border-b border-t-0 border-slate-200/90 shadow-xl overflow-hidden"
-            >
-              {/* Invoys Raqamli Pasport / Kvitansiya Header */}
-              <div className="invoice-pass-header relative pt-8 pb-6 px-6 sm:pt-10 sm:pb-8 sm:px-8 border-b border-slate-100 bg-gradient-to-br from-emerald-50/50 via-white to-slate-50/50">
-                <div className="invoice-reflex" />
-
-                {/* 3D Wireframe kubik bezak */}
-                <svg
-                  className="invoice-icon-cube text-emerald-500/20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path style={{ ['--i' as any]: 1 }} className="path-center" d="M12 12.75L14.25 11.437M12 12.75L9.75 11.437M12 12.75V15" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                  <path style={{ ['--i' as any]: 2 }} className="path-t" d="M9.75 3.562L12 2.25L14.25 3.563" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                  <path style={{ ['--i' as any]: 3 }} className="path-tr" d="M21 7.5L18.75 6.187M21 7.5V9.75M21 7.5L18.75 8.813" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                  <path style={{ ['--i' as any]: 4 }} className="path-br" d="M21 14.25V16.5L18.75 17.813" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                  <path style={{ ['--i' as any]: 5 }} className="path-b" d="M12 21.75L14.25 20.437M12 21.75V19.5M12 21.75L9.75 20.437" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                  <path style={{ ['--i' as any]: 6 }} className="path-bl" d="M5.25 17.813L3 16.5V14.25" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                  <path style={{ ['--i' as any]: 7 }} className="path-tl" d="M3 7.5L5.25 6.187M3 7.5L5.25 8.813M3 7.5V9.75" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-
-                {/* Rasmiy Yashil Shtamp - TO'LANGAN / PAID */}
-                <div className="baito-paid-rubber-stamp" title="Rasmiy tasdiqlangan elektron to'lov muhr">
-                  <div className="text-[13px] font-black tracking-widest text-emerald-800 leading-none">
-                    TO'LANGAN
-                  </div>
-                  <div className="text-[9px] font-bold text-emerald-700 tracking-wider mt-0.5">
-                    PAID · 200 OK
-                  </div>
-                  <div className="text-[8px] font-semibold text-emerald-600/80 tracking-widest mt-0.5">
-                    BAITO ELEKTRON CHEK
-                  </div>
-                </div>
-
-                <div className="relative z-10 flex items-center justify-between gap-4 mb-5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-xs font-black tracking-widest text-slate-800 uppercase">
-                      BAITO PASS
-                    </span>
-                    <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-100/80 border border-emerald-200 px-2 py-0.5 rounded">
-                      TO'LOV KVITANSIYASI
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="px-2.5 py-1 text-[11px] font-bold rounded-full flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      TO'LANGAN
-                    </span>
-
-                    {/* Shtrix-kod */}
-                    <div className="h-6 flex items-center gap-[2px] opacity-75" title={`Shtrix-kod: ${data.invoiceNumber}`}>
-                      <span className="w-[2px] h-full bg-slate-900" />
-                      <span className="w-[1px] h-full bg-slate-900" />
-                      <span className="w-[3px] h-full bg-slate-900" />
-                      <span className="w-[1px] h-full bg-slate-900" />
-                      <span className="w-[2px] h-full bg-slate-900" />
-                      <span className="w-[1.5px] h-full bg-slate-900" />
-                      <span className="w-[3px] h-full bg-slate-900" />
-                      <span className="w-[1px] h-full bg-slate-900" />
-                      <span className="w-[2px] h-full bg-slate-900" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Invoys raqami va Kompaniya */}
-                <div className="relative z-10 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                      Hisob-faktura
-                    </p>
-                    <p className="text-base sm:text-lg font-bold text-slate-900 mt-0.5 tabular-nums">
-                      № {data.invoiceNumber}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-slate-700 bg-white/95 backdrop-blur-sm px-3.5 py-1.5 rounded-xl border border-slate-200/80 shadow-2xs">
-                    <Building2 size={16} className="text-slate-400" />
-                    <span className="text-xs font-semibold">{data.company}</span>
-                  </div>
-                </div>
-
-                {/* To'lov summasi, xizmat nomi va QR-kod */}
-                <div className="relative z-10 mt-5 pt-5 border-t border-slate-200/60 flex items-end justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                      Tasdiqlangan summa
-                    </p>
-                    <p className="text-2xl sm:text-3xl font-black text-emerald-600 mt-0.5 tabular-nums tracking-tight">
-                      {money(data.amount)} <span className="text-sm font-semibold text-slate-500">so'm</span>
-                    </p>
-                    {data.jobTitle && (
-                      <div className="mt-2 text-xs text-slate-600 flex items-center gap-2">
-                        <span className="font-semibold text-slate-800">{data.jobTitle}</span>
-                        <span className="text-slate-300">·</span>
-                        <span className="text-slate-500">
-                          {data.workDate ? `${data.workDate} · ` : ''}{data.location || ''}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* QR-kod vidjeti */}
-                  <div
-                    className="shrink-0 p-2 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex flex-col items-center"
-                    title="QR-kod orqali tekshirish"
-                  >
-                    <svg className="w-11 h-11 text-slate-800" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm10-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm14-2h4v4h-4v-4zm-4 4h4v4h-4v-4zm4 4h4v4h-4v-4zm-4-8h4v4h-4v-4z" />
-                    </svg>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">
-                      Baito QR
-                    </span>
-                  </div>
-                </div>
+        {/* Dispenser pastki qismi: Qog'oz chiqarish kanali va 3D yirtilish sahnasi */}
+        <div className="invoice-dispenser-body">
+          {/* 1. 3D Yirtilib erkin fazoda uchib tushuvchi qatlam (Unclipped 3D Tearing Stage) */}
+          {isTearing && (
+            <div className="invoice-dispense-tearing-stage" aria-hidden="true">
+              <div className="invoice-dispensed-card baito-dispensed-paper baito-paper-tearing-and-falling bg-white rounded-b-2xl rounded-t-none border-x border-b border-t-0 border-slate-200/90 shadow-xl overflow-hidden">
+                <div className="baito-torn-top-edge" />
+                {renderUnpaidInvoiceContent(true)}
               </div>
-
-              {/* PERFORATSIYA (Chek qirqim chizig'i) */}
-              <div className="relative flex items-center justify-between py-1 bg-white">
-                <div className="w-6 h-6 -ml-3 rounded-full bg-slate-100 border-r border-slate-200/90 shadow-inner" />
-                <div className="flex-1 border-b-2 border-dashed border-slate-200" />
-                <div className="w-6 h-6 -mr-3 rounded-full bg-slate-100 border-l border-slate-200/90 shadow-inner" />
-              </div>
-
-              {/* To'lov Tasdiqlanganligi Tafsilotlari */}
-              <div className="relative px-6 sm:px-8 py-8 text-center bg-white">
-                <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-xs">
-                  <Check size={28} className="stroke-[2.5]" />
-                </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-2">To'lov qayd etildi</h2>
-                <p className="text-slate-600 text-[15px] max-w-md mx-auto">
-                  Rahmat. Ma'muriyatga xabar berildi — to'lov bank ko'chirmasi bilan
-                  solishtirilgandan so'ng yakuniy tasdiqlanadi.
-                </p>
-                {data.paidReference && (
-                  <p className="mt-4 text-sm text-slate-500">
-                    To'lov topshirig'i: <span className="font-semibold text-slate-700">{data.paidReference}</span>
-                  </p>
-                )}
-
-                {/* Kvitansiya ma'lumotlari jadvali */}
-                <div className="mt-6 max-w-md mx-auto rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 text-left space-y-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500">Hisob-faktura:</span>
-                    <span className="font-mono font-semibold text-slate-800">№ {data.invoiceNumber}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500">To'lovchi korxona:</span>
-                    <span className="font-semibold text-slate-800">{data.company}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500">To'langan summa:</span>
-                    <span className="font-bold text-emerald-600 tabular-nums">{money(data.amount)} so'm</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500">Holat:</span>
-                    <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded text-[11px]">
-                      <Check size={12} className="stroke-[3]" /> Qayd etilgan
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (typeof window !== 'undefined' && window.print) {
-                        window.print();
-                      }
-                    }}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95"
-                  >
-                    <Printer size={15} />
-                    <span>Chekni chop etish</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Baito hisob-faktura xavfsizlik va muhr paneli */}
-              <div className="px-6 sm:px-8 py-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-400">
-                <ShieldCheck size={14} className="text-emerald-500" />
-                <span>Baito · rasmiy elektron to'lov kvitansiyasi tasdiqlandi</span>
-              </div>
-
-              {/* Termik chek tishli qirqim chekkasi */}
-              <div className="invoice-sawtooth-bottom" />
-            </div>
-          ) : (
-            /* ==========================================================
-               TO'LOV KUTILAYOTGAN INVOYS KARTASI (UNPAID INVOICE)
-               Agar to'lov tasdiqlansa, to'liq yirtilib pastga tushib ketadi
-               ========================================================== */
-            <div
-              key={isTearing ? 'tearing-card' : dispenseKey}
-              className={`invoice-dispensed-card baito-dispensed-paper ${
-                isTearing ? 'baito-paper-tearing-and-falling' : ''
-              } bg-white rounded-b-2xl rounded-t-none border-x border-b border-t-0 border-slate-200/90 shadow-xl overflow-hidden`}
-            >
-              {isTearing && <div className="baito-torn-top-edge" />}
-
-              {/* INVOYS RAQAMLI PASPORT / RECEIPT HEADER */}
-              <div className="invoice-pass-header relative pt-8 pb-6 px-6 sm:pt-10 sm:pb-8 sm:px-8 border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-sky-50/40">
-                <div className="invoice-reflex" />
-
-                {/* 3D Wireframe Kubik fon dekoratsiyasi */}
-                <svg
-                  className="invoice-icon-cube"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path style={{ ['--i' as any]: 1 }} className="path-center" d="M12 12.75L14.25 11.437M12 12.75L9.75 11.437M12 12.75V15" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                  <path style={{ ['--i' as any]: 2 }} className="path-t" d="M9.75 3.562L12 2.25L14.25 3.563" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                  <path style={{ ['--i' as any]: 3 }} className="path-tr" d="M21 7.5L18.75 6.187M21 7.5V9.75M21 7.5L18.75 8.813" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                  <path style={{ ['--i' as any]: 4 }} className="path-br" d="M21 14.25V16.5L18.75 17.813" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                  <path style={{ ['--i' as any]: 5 }} className="path-b" d="M12 21.75L14.25 20.437M12 21.75V19.5M12 21.75L9.75 20.437" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                  <path style={{ ['--i' as any]: 6 }} className="path-bl" d="M5.25 17.813L3 16.5V14.25" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                  <path style={{ ['--i' as any]: 7 }} className="path-tl" d="M3 7.5L5.25 6.187M3 7.5L5.25 8.813M3 7.5V9.75" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-
-                {/* Pass logotipi, Shtrix-kod va Holat indikatori */}
-                <div className="relative z-10 flex items-center justify-between gap-4 mb-5">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-brand-primary animate-pulse" />
-                    <span className="text-xs font-black tracking-widest text-slate-800 uppercase">
-                      BAITO PASS
-                    </span>
-                    <span className="hidden sm:inline-block text-[10px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded">
-                      Digital Invoice
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="px-2.5 py-1 text-[11px] font-bold rounded-full flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                      KUTILMOQDA
-                    </span>
-
-                    {/* Shtrix-kod */}
-                    <div className="h-6 flex items-center gap-[2px] opacity-75" title={`Shtrix-kod: ${data.invoiceNumber}`}>
-                      <span className="w-[2px] h-full bg-slate-900" />
-                      <span className="w-[1px] h-full bg-slate-900" />
-                      <span className="w-[3px] h-full bg-slate-900" />
-                      <span className="w-[1px] h-full bg-slate-900" />
-                      <span className="w-[2px] h-full bg-slate-900" />
-                      <span className="w-[1.5px] h-full bg-slate-900" />
-                      <span className="w-[3px] h-full bg-slate-900" />
-                      <span className="w-[1px] h-full bg-slate-900" />
-                      <span className="w-[2px] h-full bg-slate-900" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Invoys raqami va Kompaniya */}
-                <div className="relative z-10 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                      Hisob-faktura
-                    </p>
-                    <p className="text-base sm:text-lg font-bold text-slate-900 mt-0.5 tabular-nums">
-                      № {data.invoiceNumber}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-slate-700 bg-white/95 backdrop-blur-sm px-3.5 py-1.5 rounded-xl border border-slate-200/80 shadow-2xs">
-                    <Building2 size={16} className="text-slate-400" />
-                    <span className="text-xs font-semibold">{data.company}</span>
-                  </div>
-                </div>
-
-                {/* To'lov summasi, xizmat nomi va QR-kod */}
-                <div className="relative z-10 mt-5 pt-5 border-t border-slate-200/60 flex items-end justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                      To'lov summasi
-                    </p>
-                    <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-0.5 tabular-nums tracking-tight">
-                      {money(data.amount)} <span className="text-sm font-semibold text-slate-500">so'm</span>
-                    </p>
-                    {data.jobTitle && (
-                      <div className="mt-2 text-xs text-slate-600 flex items-center gap-2">
-                        <span className="font-semibold text-slate-800">{data.jobTitle}</span>
-                        <span className="text-slate-300">·</span>
-                        <span className="text-slate-500">
-                          {data.workDate ? `${data.workDate} · ` : ''}{data.location || ''}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* QR-kod vidjeti */}
-                  <div
-                    className="shrink-0 p-2 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex flex-col items-center"
-                    title="QR-kod orqali tekshirish"
-                  >
-                    <svg className="w-11 h-11 text-slate-800" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm10-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm14-2h4v4h-4v-4zm-4 4h4v4h-4v-4zm4 4h4v4h-4v-4zm-4-8h4v4h-4v-4z" />
-                    </svg>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-1">
-                      Baito QR
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* PERFORATSIYA (Chek qirqim chizig'i) */}
-              <div className="relative flex items-center justify-between py-1 bg-white">
-                <div className="w-6 h-6 -ml-3 rounded-full bg-slate-100 border-r border-slate-200/90 shadow-inner" />
-                <div className="flex-1 border-b-2 border-dashed border-slate-200" />
-                <div className="w-6 h-6 -mr-3 rounded-full bg-slate-100 border-l border-slate-200/90 shadow-inner" />
-              </div>
-
-              {/* To'lov usuli (accessibility) */}
-              <fieldset className="sr-only" aria-hidden="true">
-                <legend>To'lov usuli</legend>
-                {methods.map((m) => (
-                  <input
-                    key={m.id}
-                    type="radio"
-                    name="method"
-                    value={m.id}
-                    checked={method === m.id}
-                    onChange={() => setChosen(m.id)}
-                    className="sr-only"
-                  />
-                ))}
-              </fieldset>
-
-              {/* To'lov rekvizitlari */}
-              {requisites.length > 0 && (
-                <div className="px-6 sm:px-8 py-5 border-b border-slate-100 bg-slate-50/30">
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <div>
-                      <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                        To'lov rekvizitlari
-                      </h2>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Bank ilovangizga nusxalang
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={copyAllRequisites}
-                      className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer ${
-                        allCopied
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : 'bg-white text-slate-700 border-slate-200 hover:border-brand-primary/50 hover:text-brand-primary hover:bg-slate-50 shadow-2xs'
-                      }`}
-                    >
-                      {allCopied ? (
-                        <>
-                          <Check size={14} className="text-emerald-600 stroke-[2.5]" />
-                          <span>Barchasi nusxalandi!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={13} />
-                          <span>Barchasini nusxalash</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="space-y-2">
-                    {requisites.map((r) => (
-                      <CopyRow key={r.label} label={r.label} value={r.value} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* To'lovni tasdiqlash formasi */}
-              <div className="px-6 sm:px-8 py-6">
-                <label htmlFor="reference" className="block text-sm font-semibold text-slate-800 mb-2">
-                  To'lov topshirig'i raqami <span className="font-normal text-slate-400">(ixtiyoriy)</span>
-                </label>
-                <div className="relative">
-                  <input
-                    id="reference"
-                    type="text"
-                    value={reference}
-                    onChange={(e) => setReference(e.target.value)}
-                    maxLength={120}
-                    placeholder="Masalan: 4471"
-                    disabled={isTearing}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-[15px] text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 transition-all outline-none disabled:opacity-60"
-                  />
-                </div>
-                <p className="mt-2 text-xs text-slate-500">
-                  Ko'rsatsangiz, to'lovingiz bank ko'chirmasidan tezroq topiladi va tasdiqlanadi.
-                </p>
-
-                {pay.isError && (
-                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 flex items-center gap-2">
-                    <AlertTriangle size={16} className="shrink-0" />
-                    <span>{(pay.error as Error).message}</span>
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleConfirmPayment}
-                  disabled={!method || pay.isPending || isTearing}
-                  className="mt-6 w-full bg-brand-primary text-white font-semibold text-[16px] py-4 rounded-xl shadow-lg shadow-brand-primary/20 hover:opacity-95 active:scale-[0.99] transition-all flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:active:scale-100"
-                >
-                  {pay.isPending || isTearing ? (
-                    <>
-                      <Loader2 className="animate-spin" size={18} />
-                      {isTearing ? "Chek yirtilmoqda..." : "Yuborilmoqda..."}
-                    </>
-                  ) : (
-                    <>
-                      <ShieldCheck size={18} />
-                      To'lovni tasdiqlash
-                    </>
-                  )}
-                </button>
-                <p className="mt-3 text-xs text-slate-500 text-center">
-                  Tugmani bosish to'lovni amalga oshirganingizni bildiradi.
-                </p>
-              </div>
-
-              {/* Baito hisob-faktura xavfsizlik va muhr paneli */}
-              <div className="px-6 sm:px-8 py-3.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-400">
-                <ShieldCheck size={14} className="text-slate-400" />
-                <span>Baito · xavfsiz to'lov va rasmiy elektron hisob-faktura</span>
-              </div>
-
-              {/* Termik chek tishli qirqim chekkasi */}
-              <div className="invoice-sawtooth-bottom" />
             </div>
           )}
+
+          {/* 2. Slot ichidan qirqilib chiquvchi qog'oz kanali (Har doim pichoq chizig'ida qat'iy qirqilgan) */}
+          <div className="invoice-dispense-mask baito-paper-window">
+            {/* Yangi chop etilgan to'lov kvitansiyasi (Paid Receipt) */}
+            {isPaidReceiptReady && (
+              <div
+                key={`paid-${dispenseKey}`}
+                className={`invoice-dispensed-card baito-dispensed-paper ${
+                  justPaid ? 'baito-paid-fast-dispense' : ''
+                } bg-white rounded-b-2xl rounded-t-none border-x border-b border-t-0 border-slate-200/90 shadow-xl overflow-hidden`}
+                style={{ position: 'relative', zIndex: 20 }}
+              >
+                {renderPaidReceiptContent()}
+              </div>
+            )}
+
+            {/* Boshlang'ich to'lov kutilayotgan invoys kartasi */}
+            {!isPaidReceiptReady && !isTearing && (
+              <div
+                key={`unpaid-${dispenseKey}`}
+                className="invoice-dispensed-card baito-dispensed-paper bg-white rounded-b-2xl rounded-t-none border-x border-b border-t-0 border-slate-200/90 shadow-xl overflow-hidden"
+                style={{ position: 'relative', zIndex: 20 }}
+              >
+                {renderUnpaidInvoiceContent(false)}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
