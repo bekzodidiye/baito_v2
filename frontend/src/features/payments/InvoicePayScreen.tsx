@@ -432,11 +432,19 @@ export const InvoicePayScreen: React.FC = () => {
     if (!method || pay.isPending) return;
     setIsTearing(true);
     playPaperTearSound();
+    const isJsdom = typeof window !== 'undefined' && window.navigator?.userAgent?.includes('jsdom');
+    if (!isJsdom && typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+      try {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch {
+        // Safe fallback for environments without smooth scroll
+      }
+    }
     const startTime = Date.now();
     pay.mutate(undefined, {
       onSuccess: () => {
         const isJsdom = typeof window !== 'undefined' && window.navigator?.userAgent?.includes('jsdom');
-        const minTearDuration = isJsdom ? 150 : 850;
+        const minTearDuration = isJsdom ? 150 : 1350;
         const elapsed = Date.now() - startTime;
         const remaining = Math.max(0, minTearDuration - elapsed);
         setTimeout(() => {
@@ -565,7 +573,7 @@ export const InvoicePayScreen: React.FC = () => {
 
           {/* Slot og'zi, po'lat pichoq va chuqurlashtirilgan chiqarish tirqishi */}
           <div className="invoice-dispenser-mouth baito-printer-throat">
-            <div className="invoice-dispenser-front-lip baito-cutter-blade" />
+            <div className={`invoice-dispenser-front-lip baito-cutter-blade ${isTearing ? 'is-cutting' : ''}`} />
             <div className="invoice-slit-recess baito-slot-cavity" title="Chiqish sloti">
               <div className="baito-roller-bar" />
             </div>
@@ -573,7 +581,7 @@ export const InvoicePayScreen: React.FC = () => {
         </div>
 
         {/* Slot ichidan chiqib keluvchi chek/kvitansiya kartasi */}
-        <div className="invoice-dispense-mask baito-paper-window">
+        <div className={`invoice-dispense-mask baito-paper-window ${isTearing ? 'is-tearing' : ''}`}>
           {isPaidReceiptReady ? (
             /* ==========================================================
                YANGI CHOP ETILGAN TO'LOV KVITANSIYASI (PAID RECEIPT)
