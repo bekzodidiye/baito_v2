@@ -488,7 +488,7 @@ export const InvoicePayScreen: React.FC = () => {
     pay.mutate(undefined, {
       onSuccess: () => {
         const isJsdom = typeof window !== 'undefined' && window.navigator?.userAgent?.includes('jsdom');
-        const minTearDuration = isJsdom ? 150 : 1400;
+        const minTearDuration = isJsdom ? 150 : 1050;
         const elapsed = Date.now() - startTime;
         const remaining = Math.max(0, minTearDuration - elapsed);
         setTimeout(() => {
