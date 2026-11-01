@@ -400,15 +400,18 @@ export const InvoicePayScreen: React.FC = () => {
     if (!method || pay.isPending) return;
     setIsTearing(true);
     playPaperTearSound();
+    const startTime = Date.now();
     pay.mutate(undefined, {
       onSuccess: () => {
         const isJsdom = typeof window !== 'undefined' && window.navigator?.userAgent?.includes('jsdom');
-        const delay = isJsdom ? 150 : 750;
+        const minTearDuration = isJsdom ? 150 : 850;
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, minTearDuration - elapsed);
         setTimeout(() => {
           setIsTearing(false);
           setShowPaidReceipt(true);
           setDispenseKey((k) => k + 1);
-        }, delay);
+        }, remaining);
       },
       onError: () => {
         setIsTearing(false);
@@ -468,116 +471,64 @@ export const InvoicePayScreen: React.FC = () => {
           {/* Subtle top glossy light-reflection bevel line */}
           <div className="baito-casing-top-highlight" />
 
-          {/* Terminal hardware visor boshqaruvi */}
+          {/* Minimalist 3D POS Hardware Faceplate */}
           <div className="baito-terminal-visor">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-xs shadow-xs">
-                B
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-800">
-                    Baito Pay Terminal
-                  </span>
-                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/60">
-                    T-8000 POS
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 mt-0.5">
-                  {isTearing ? (
-                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-amber-600">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-                      Chek yirtilmoqda...
-                    </span>
-                  ) : isPrinting ? (
-                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-amber-600">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-                      Chop etilmoqda...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-600">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      {isPaidReceiptReady ? "Online · Tasdiqlangan" : "Online · Tayyor"}
-                    </span>
-                  )}
-                  <span className="text-slate-300">·</span>
-                  <span className="text-[10px] text-slate-400 font-medium">
-                    Termik dispenser
-                  </span>
-                </div>
-              </div>
+            {/* Tactile debossed brand mark */}
+            <div className="baito-hardware-brand" title="Baito POS Terminal">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+              <span className="text-[11px] font-black tracking-widest text-slate-100 uppercase">
+                BAITO POS
+              </span>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Qayta chiqarish hardware tugmasi */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (!isPrinting && !isTearing) {
-                    getAudioContext();
-                    setDispenseKey((k) => k + 1);
-                  }
-                }}
-                disabled={isPrinting || isTearing}
-                className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
-                  isPrinting || isTearing
-                    ? 'border-amber-200 bg-amber-50 text-amber-700 cursor-not-allowed opacity-90'
-                    : 'border-slate-200 bg-slate-50 hover:bg-white hover:border-brand-primary/50 text-slate-700 hover:text-brand-primary shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer'
-                }`}
-                title="Invoysni qayta chiqarish (Feed)"
-              >
-                <RefreshCw
-                  size={13}
-                  className={
-                    isPrinting || isTearing
-                      ? 'animate-spin text-amber-600'
-                      : 'text-slate-500 group-hover:text-brand-primary transition-transform group-hover:rotate-180 duration-500'
-                  }
-                />
-                <span>{isTearing ? 'Yirtilmoqda...' : isPrinting ? 'Chop etilmoqda...' : 'Qayta chiqarish'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Yuqori texnologik qora shisha OLED diagnostika ekrani */}
-          <div className="baito-terminal-oled">
-            <div className="flex items-center justify-between text-[11px] leading-tight font-mono mb-1.5">
-              <span className={`font-bold flex items-center gap-1.5 ${
-                isTearing ? 'text-amber-400' : isPaidReceiptReady ? 'text-emerald-400' : isPrinting ? 'text-amber-400' : 'text-emerald-400'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${
-                  isTearing ? 'bg-amber-400 animate-ping' : isPrinting ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'
-                }`} />
-                {isTearing
-                  ? 'BAITO-SYS · [CHEK YIRTILMOQDA]'
+            {/* Center: High-Precision Physical Optical Jewel Status LED */}
+            <div
+              className={`baito-hardware-led ${
+                isTearing
+                  ? 'baito-led-tearing'
                   : isPaidReceiptReady
-                  ? 'BAITO-SYS · [TO\'LOV TASDIQLANDI]'
+                  ? 'baito-led-confirmed'
                   : isPrinting
-                  ? 'BAITO-SYS · [CHOP ETILMOQDA]'
-                  : 'BAITO-SYS v4.2 · POS'}
-              </span>
-              <span className={`font-semibold tracking-wider ${
-                isTearing ? 'text-amber-300 font-bold animate-pulse' : isPaidReceiptReady ? 'text-emerald-400 font-bold' : isPrinting ? 'text-amber-300 animate-pulse' : 'text-sky-400'
-              }`}>
-                {isTearing ? 'PICHOQ: KESILDI' : isPaidReceiptReady ? 'KVITANSIYA: TAYYOR' : isPrinting ? 'FEED: 85 mm/s' : 'BULUT: ULANGAN'}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-[11px] font-mono text-slate-300">
-              <span>
-                {isTearing ? (
-                  <>HOLAT: <strong className="text-amber-300">CHEK YIRTILIB TUSHYAPTI</strong></>
-                ) : isPaidReceiptReady ? (
-                  <>HOLAT: <strong className="text-emerald-400">TASDIQLANDI</strong></>
-                ) : isPrinting ? (
-                  <>TERMIK BOSMA: <strong className="text-amber-300">STEPPER MOTOR</strong></>
-                ) : (
-                  <>HOLAT: <strong className="text-amber-300">KUTILMOQDA</strong></>
-                )}
-              </span>
-              <span className={isTearing ? 'text-amber-400 font-bold' : isPaidReceiptReady ? 'text-emerald-400 font-bold' : isPrinting ? 'text-amber-400 font-bold' : 'text-slate-400'}>
-                {isTearing ? 'YIRTILISH...' : isPaidReceiptReady ? '200 OK (TASDIQ)' : isPrinting ? 'UZATILMOQDA...' : 'STANDBY (OK)'}
+                  ? 'baito-led-feeding'
+                  : 'baito-led-ready'
+              }`}
+              title="Terminal holati datchigi"
+            >
+              <span className="baito-led-jewel" />
+              <span className="text-[10px] font-bold tracking-wider uppercase text-slate-600">
+                {isTearing
+                  ? "Kesilmoqda"
+                  : isPaidReceiptReady
+                  ? "Tasdiqlandi"
+                  : isPrinting
+                  ? "Chop etilmoqda"
+                  : "Tayyor"}
               </span>
             </div>
+
+            {/* Right: Tactile 3D Physical Feed Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (!isPrinting && !isTearing) {
+                  getAudioContext();
+                  setDispenseKey((k) => k + 1);
+                }
+              }}
+              disabled={isPrinting || isTearing}
+              className="baito-hardware-feed-btn"
+              title="Qog'ozni qayta uzatish (Feed)"
+            >
+              <RefreshCw
+                size={12}
+                className={
+                  isPrinting || isTearing
+                    ? 'animate-spin text-amber-500'
+                    : 'text-slate-500'
+                }
+              />
+              <span>{isTearing ? 'Kesilmoqda...' : isPrinting ? 'Uzatilmoqda...' : 'Qayta chiqarish'}</span>
+            </button>
           </div>
 
           {/* Slot og'zi, po'lat pichoq va chuqurlashtirilgan chiqarish tirqishi */}
@@ -585,7 +536,6 @@ export const InvoicePayScreen: React.FC = () => {
             <div className="invoice-dispenser-front-lip baito-cutter-blade" />
             <div className="invoice-slit-recess baito-slot-cavity" title="Chiqish sloti">
               <div className="baito-roller-bar" />
-              <div className="baito-optical-sensor" title="Optik qog'oz datchigi" />
             </div>
           </div>
         </div>

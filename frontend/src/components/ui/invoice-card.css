@@ -26,6 +26,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  perspective: 1200px;
+  perspective-origin: 50% 25%;
 }
 
 /* 3D Physical POS Terminal Housing Casing - Pure Minimalist Sculpture */
@@ -33,17 +35,17 @@
 .baito-terminal-casing {
   width: 100%;
   background: #ffffff;
-  border-radius: 28px 28px 12px 12px;
+  border-radius: 28px 28px 10px 10px;
   border: 1px solid rgba(226, 232, 240, 0.95);
   box-shadow: 
-    0 30px 65px -15px rgba(15, 23, 42, 0.16),
-    0 10px 24px -5px rgba(15, 23, 42, 0.05),
-    inset 0 2px 0 rgba(255, 255, 255, 1),
-    inset 0 -2px 5px rgba(0, 0, 0, 0.03);
+    0 25px 60px -15px rgba(15, 23, 42, 0.18),
+    0 10px 24px -5px rgba(15, 23, 42, 0.06),
+    inset 0 2px 1px rgba(255, 255, 255, 1),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.04);
   position: relative;
   z-index: 40; /* High z-index, completely covers anything behind it */
-  padding: 18px 0 0 0;
-  background-image: linear-gradient(180deg, #ffffff 0%, #f8fafc 70%, #edf2f7 100%);
+  padding: 16px 0 0 0;
+  background-image: linear-gradient(180deg, #ffffff 0%, #f8fafc 65%, #edf2f7 100%);
   overflow: hidden;
   transform: translateZ(0);
 }
@@ -55,54 +57,144 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent 5%, rgba(255, 255, 255, 0.9) 50%, transparent 95%);
+  background: linear-gradient(90deg, transparent 5%, rgba(255, 255, 255, 0.95) 50%, transparent 95%);
   pointer-events: none;
 }
 
-/* Terminal Hardware Visor Header */
+/* Minimalist 3D Terminal Faceplate Visor Header */
 .baito-terminal-visor {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 0 24px 12px 24px;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+  gap: 16px;
+  padding: 0 24px 14px 24px;
 }
 
-/* Embedded High-Tech OLED Terminal Screen */
-.baito-terminal-oled {
-  margin: 12px 22px 0 22px;
-  background: #040711;
-  border: 1px solid #1e293b;
+/* Tactile 3D Debossed Hardware Brand Pill */
+.baito-hardware-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
   border-radius: 12px;
-  padding: 10px 14px;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 
-    inset 0 3px 10px rgba(0, 0, 0, 0.98),
-    0 1px 1px rgba(255, 255, 255, 0.9);
-  position: relative;
-  overflow: hidden;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    0 2px 5px rgba(15, 23, 42, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.6);
+  user-select: none;
 }
 
-.baito-terminal-oled::before {
+/* High-Precision Optical Jewel Status LED */
+.baito-hardware-led {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border-radius: 9999px;
+  background: rgba(241, 245, 249, 0.85);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.baito-led-jewel {
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.baito-led-jewel::after {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
-  pointer-events: none;
+  top: 1.5px;
+  left: 2px;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.baito-led-ready .baito-led-jewel {
+  background: radial-gradient(circle at 35% 35%, #34d399 0%, #10b981 60%, #047857 100%);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6), inset 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.baito-led-feeding .baito-led-jewel {
+  background: radial-gradient(circle at 35% 35%, #fbbf24 0%, #f59e0b 60%, #b45309 100%);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.7), inset 0 0 2px rgba(0, 0, 0, 0.3);
+  animation: baito-led-pulse 0.7s infinite alternate ease-in-out;
+}
+
+.baito-led-tearing .baito-led-jewel {
+  background: radial-gradient(circle at 35% 35%, #f87171 0%, #ef4444 60%, #b91c1c 100%);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.8), inset 0 0 2px rgba(0, 0, 0, 0.3);
+  animation: baito-led-pulse 0.25s infinite alternate ease-in-out;
+}
+
+.baito-led-confirmed .baito-led-jewel {
+  background: radial-gradient(circle at 35% 35%, #34d399 0%, #059669 60%, #064e3b 100%);
+  box-shadow: 0 0 12px rgba(5, 150, 105, 0.8), inset 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes baito-led-pulse {
+  from { opacity: 0.6; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1.08); }
+}
+
+/* 3D Tactile Physical Push Button */
+.baito-hardware-feed-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  border: 1px solid rgba(203, 213, 225, 0.95);
+  box-shadow: 
+    0 2px 4px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.baito-hardware-feed-btn:hover:not(:disabled) {
+  color: #0f172a;
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%);
+  box-shadow: 
+    0 3px 6px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.baito-hardware-feed-btn:active:not(:disabled) {
+  transform: translateY(1.5px);
+  background: #f1f5f9;
+  box-shadow: 
+    0 1px 1px rgba(15, 23, 42, 0.05),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.baito-hardware-feed-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  border-color: rgba(226, 232, 240, 0.8);
 }
 
 /* Recessed Thermal Printer Throat & Slot */
 .invoice-dispenser-mouth,
 .baito-printer-throat {
   position: relative;
-  margin-top: 14px;
-  padding: 8px 22px 0 22px;
+  margin-top: 4px;
+  padding: 6px 22px 0 22px;
   background: linear-gradient(180deg, #edf2f7 0%, #e2e8f0 100%);
-  border-top: 1px solid rgba(226, 232, 240, 0.9);
+  border-top: 1px solid rgba(226, 232, 240, 0.95);
 }
 
 /* Black Inner Feed Cavity - Deep chamber inside the apparatus */
@@ -143,7 +235,7 @@
 .invoice-dispenser-front-lip,
 .baito-cutter-blade {
   position: absolute;
-  top: 7px;
+  top: 5px;
   left: 22px;
   right: 22px;
   height: 9px;
@@ -166,6 +258,8 @@
   margin: 0 auto;
   margin-top: -12px; /* Tucks top 12px of paper right under the cutter blade */
   z-index: 25;
+  perspective: 1400px;
+  transform-style: preserve-3d;
   /* CRITICAL: Strictly clips anything above Y = 0 (the cutter line), ensuring the paper is NEVER visible above the slot! */
   clip-path: polygon(-1000px 0px, 2000px 0px, 2000px 10000px, -1000px 10000px);
   overflow: visible; /* Allows downward travel and gravity falling without side cutoffs */
@@ -232,8 +326,8 @@
 }
 
 /* ==========================================================================
-   PAPER TEAR & PLUNGE DOWN ANIMATION
-   Chek yirtilib pastga tushib ketish fizikasi
+   AUTHENTIC 3D PAPER TEAR & AERODYNAMIC GROUND DROP KINEMATICS
+   Chek uzilib yerga 3D fizikasi bilan tushib ketishi
    ========================================================================== */
 
 /* Jagged ripped paper top edge when torn along the cutter bar */
@@ -252,42 +346,55 @@
   pointer-events: none;
 }
 
-/* Falling torn receipt animation */
+/* Falling torn receipt animation in authentic 3D physical space */
 .baito-paper-tearing-and-falling {
-  animation: baito-tear-and-drop 0.85s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important;
-  transform-origin: 10% 0%;
+  animation: baito-tear-and-drop-3d 0.85s cubic-bezier(0.22, 0.75, 0.25, 1) forwards !important;
+  transform-origin: 15% 0%;
+  transform-style: preserve-3d;
   pointer-events: none !important;
-  will-change: transform, opacity;
+  will-change: transform, opacity, filter;
 }
 
-@keyframes baito-tear-and-drop {
+@keyframes baito-tear-and-drop-3d {
   0% {
-    transform: translateY(0) rotate(0deg);
+    transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
     opacity: 1;
-    filter: drop-shadow(0 25px 45px rgba(15, 23, 42, 0.16));
+    filter: drop-shadow(0 20px 35px rgba(15, 23, 42, 0.16));
   }
-  /* Initial rip: paper is pulled down and to the right against cutter teeth */
-  10% {
-    transform: translate(6px, 18px) rotate(-3.5deg);
+  /* Phase 1: Mechanical rip along serrated cutter bar (pulled right and forward) */
+  8% {
+    transform: translate3d(10px, 16px, 24px) rotateX(16deg) rotateY(-8deg) rotateZ(-3.5deg);
     clip-path: polygon(0 0, 100% 4px, 100% 100%, 0 100%);
     opacity: 1;
+    filter: drop-shadow(0 24px 40px rgba(15, 23, 42, 0.2));
   }
-  20% {
-    transform: translate(14px, 45px) rotate(-5.5deg);
+  /* Phase 2: Fully severed! Sheet releases and springs into 3D airspace */
+  18% {
+    transform: translate3d(20px, 48px, 50px) rotateX(28deg) rotateY(-12deg) rotateZ(-6.5deg);
     opacity: 1;
+    filter: drop-shadow(0 32px 50px rgba(15, 23, 42, 0.24));
   }
-  /* Completely detached! Gravity pulls paper downwards with aerodynamic tilt */
-  42% {
-    transform: translate(22px, 200px) rotate(4deg) scale(0.99);
+  /* Phase 3: Updraft pushes paper backward, rocking sideways like a falling leaf */
+  38% {
+    transform: translate3d(28px, 190px, 85px) rotateX(52deg) rotateY(10deg) rotateZ(7deg) scale(0.98);
     opacity: 0.96;
-    filter: drop-shadow(0 35px 55px rgba(15, 23, 42, 0.24));
+    filter: drop-shadow(0 42px 65px rgba(15, 23, 42, 0.26));
   }
-  68% {
-    transform: translate(-10px, 520px) rotate(14deg) scale(0.95);
-    opacity: 0.85;
+  /* Phase 4: Aerodynamic flutter, yawing and banking against air resistance */
+  62% {
+    transform: translate3d(-14px, 460px, 95px) rotateX(68deg) rotateY(-15deg) rotateZ(18deg) scale(0.94);
+    opacity: 0.86;
+    filter: drop-shadow(0 52px 75px rgba(15, 23, 42, 0.22));
   }
+  /* Phase 5: Accelerated parabolic gravity plunge towards ground plane */
+  85% {
+    transform: translate3d(20px, 920px, 45px) rotateX(82deg) rotateY(8deg) rotateZ(30deg) scale(0.90);
+    opacity: 0.50;
+    filter: drop-shadow(0 65px 85px rgba(15, 23, 42, 0.15));
+  }
+  /* Phase 6: Lands flat on virtual 3D floor far below and settles */
   100% {
-    transform: translate(26px, 1150px) rotate(22deg) scale(0.88);
+    transform: translate3d(36px, 1420px, -50px) rotateX(88deg) rotateY(0deg) rotateZ(36deg) scale(0.85);
     opacity: 0;
     visibility: hidden;
   }
