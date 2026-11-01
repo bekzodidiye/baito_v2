@@ -5,7 +5,7 @@ import math
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from sqlalchemy import or_, select, func
+from sqlalchemy import or_, and_, select, func
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -502,7 +502,7 @@ def get_map_jobs(
                         models.Job.createdAt,
                     ).filter(
                         models.Job.id.in_(missing_app_job_ids),
-                        models.Job.status != JobStatus.CANCELLED,
+                        models.Job.status.in_(JobStatus.OPEN_STATUSES + (JobStatus.IN_PROGRESS, JobStatus.COMPLETED)),
                         models.Job.coordinateX.isnot(None),
                         models.Job.coordinateY.isnot(None),
                         or_(models.Job.coordinateX != 0.0, models.Job.coordinateY != 0.0),
@@ -666,7 +666,6 @@ def get_map_jobs(
         if min_lng is not None and max_lng is not None:
             query = query.filter(models.Job.coordinateY.between(min_lng, max_lng))
 
-        visible = models.Job.status.in_(JobStatus.OPEN_STATUSES)
         if user_id:
             user_ids = [user_id]
             if current_user and getattr(current_user, 'uid', None):
@@ -676,7 +675,13 @@ def get_map_jobs(
                 .filter(models.Application.workerId.in_(user_ids))
                 .subquery()
             )
-            visible = or_(visible, models.Job.id.in_(select(own_apps_subquery.c.jobId)))
+            own_active_jobs = and_(
+                models.Job.id.in_(select(own_apps_subquery.c.jobId)),
+                models.Job.status.in_(JobStatus.OPEN_STATUSES + (JobStatus.IN_PROGRESS, JobStatus.COMPLETED)),
+            )
+            visible = or_(models.Job.status.in_(JobStatus.OPEN_STATUSES), own_active_jobs)
+        else:
+            visible = models.Job.status.in_(JobStatus.OPEN_STATUSES)
         query = query.filter(visible)
 
         if clustered:
@@ -686,12 +691,12 @@ def get_map_jobs(
                 models.Job.coordinateX.isnot(None),
                 models.Job.coordinateY.isnot(None),
                 models.Job.coordinateX.between(
-                    GeoSpatialService.UZBEKISTAN_BOUNDS["min_lat"],
-                    GeoSpatialService.UZBEKISTAN_BOUNDS["max_lat"]
+                    GeoSpatialService.UZBEKISTAN_BBOX["min_lat"],
+                    GeoSpatialService.UZBEKISTAN_BBOX["max_lat"]
                 ),
                 models.Job.coordinateY.between(
-                    GeoSpatialService.UZBEKISTAN_BOUNDS["min_lng"],
-                    GeoSpatialService.UZBEKISTAN_BOUNDS["max_lng"]
+                    GeoSpatialService.UZBEKISTAN_BBOX["min_lng"],
+                    GeoSpatialService.UZBEKISTAN_BBOX["max_lng"]
                 ),
                 or_(models.Job.coordinateX != 0.0, models.Job.coordinateY != 0.0),
             )
@@ -801,12 +806,19 @@ def get_map_jobs(
                 "count": 1,
             }
 
-            # Public base pins must NEVER include filled jobs or depend on user-specific applications
-            if not is_filled:
+            # Public base pins must NEVER include filled jobs or depend on user-specific applications.
+            # Strictly restrict to OPEN_STATUSES and not filled.
+            if job.status in JobStatus.OPEN_STATUSES and not is_filled:
                 base_pins.append(base_pin)
 
-            # User pins include open jobs, plus any filled job the user personally applied to
-            if user_id and (not is_filled or worker_apps_map.get(job.id)):
+            # User pins include open unfilled jobs, plus any active shift the user personally applied to
+            if user_id and (
+                (job.status in JobStatus.OPEN_STATUSES and not is_filled)
+                or (
+                    job.status in (JobStatus.OPEN_STATUSES + (JobStatus.IN_PROGRESS, JobStatus.COMPLETED))
+                    and worker_apps_map.get(job.id)
+                )
+            ):
                 u_pin = dict(base_pin)
                 app_item_status = worker_apps_map.get(job.id)
                 if app_item_status:

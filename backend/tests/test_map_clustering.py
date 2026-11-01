@@ -681,3 +681,324 @@ def test_user_sees_applied_filled_job_even_when_public_cache_prefilled(client):
     applied_job_pin = next(p for p in applied_pins if p["id"] == "job-prefill-filled")
     assert applied_job_pin["applied"] is True
     assert applied_job_pin["status"] == "in_progress"
+
+
+def test_cancelled_pending_rejected_jobs_never_leak_to_public_cache_even_with_applications(client):
+    """
+    Test that jobs with CANCELLED, PENDING, or REJECTED status NEVER leak into public cache (base_pins),
+    nor are returned to anonymous visitors or other users, even if a user has applied to them.
+    Tests both Cold DB path and Fast Assembly Path.
+    """
+    from tests.conftest import make_user, login
+    from app.core.map_cache import build_map_pins_cache_key, get_map_cache_version
+    import json
+
+    worker_applied = make_user(role="worker", phone="+998901119988")
+    worker_other = make_user(role="worker", phone="+998902229988")
+
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = db_session.query(models.User).filter_by(id="emp-status-leak-test").first()
+        if not emp:
+            emp = models.User(id="emp-status-leak-test", phone="+998903339988", role="employer", name="Status Leak Emp")
+            db_session.add(emp)
+            db_session.flush()
+
+        open_job = models.Job(
+            id="job-status-open",
+            title="Valid Open Status Job",
+            company="Status Leak Corp",
+            location="Toshkent, Mirzo Ulugbek",
+            description="Tavsif",
+            coordinateX=41.32,
+            coordinateY=69.28,
+            salary=200000,
+            status=JobStatus.OPEN,
+            employerId="emp-status-leak-test",
+            neededWorkers="1",
+        )
+        cancelled_job = models.Job(
+            id="job-status-cancelled",
+            title="Cancelled Status Job",
+            company="Status Leak Corp",
+            location="Toshkent, Mirzo Ulugbek",
+            description="Tavsif",
+            coordinateX=41.321,
+            coordinateY=69.281,
+            salary=200000,
+            status=JobStatus.CANCELLED,
+            employerId="emp-status-leak-test",
+            neededWorkers="1",
+        )
+        pending_job = models.Job(
+            id="job-status-pending",
+            title="Pending Status Job",
+            company="Status Leak Corp",
+            location="Toshkent, Mirzo Ulugbek",
+            description="Tavsif",
+            coordinateX=41.322,
+            coordinateY=69.282,
+            salary=200000,
+            status=JobStatus.PENDING,
+            employerId="emp-status-leak-test",
+            neededWorkers="1",
+        )
+        rejected_job = models.Job(
+            id="job-status-rejected",
+            title="Rejected Status Job",
+            company="Status Leak Corp",
+            location="Toshkent, Mirzo Ulugbek",
+            description="Tavsif",
+            coordinateX=41.323,
+            coordinateY=69.283,
+            salary=200000,
+            status=JobStatus.REJECTED,
+            employerId="emp-status-leak-test",
+            neededWorkers="1",
+        )
+        db_session.add_all([open_job, cancelled_job, pending_job, rejected_job])
+        db_session.commit()
+
+        # worker_applied has applications to all three non-open jobs
+        db_session.add_all([
+            models.Application(id="app-st-1", jobId="job-status-cancelled", workerId=worker_applied.id, status="applied"),
+            models.Application(id="app-st-2", jobId="job-status-pending", workerId=worker_applied.id, status="applied"),
+            models.Application(id="app-st-3", jobId="job-status-rejected", workerId=worker_applied.id, status="applied"),
+        ])
+        db_session.commit()
+
+    # 1. worker_applied visits Cold DB path first
+    login(client, worker_applied)
+    res_worker = client.get("/api/v1/jobs/map?clustered=false&search=Status%20Leak")
+    assert res_worker.status_code == 200
+    worker_pins = res_worker.json()
+    worker_pin_ids = {p["id"] for p in worker_pins}
+    assert "job-status-open" in worker_pin_ids
+    assert "job-status-cancelled" not in worker_pin_ids, "Cancelled job must never be returned on map"
+    assert "job-status-pending" not in worker_pin_ids, "Pending job must never be returned on map"
+    assert "job-status-rejected" not in worker_pin_ids, "Rejected job must never be returned on map"
+
+    # 2. Inspect Redis public base cache directly
+    version = get_map_cache_version()
+    base_key = build_map_pins_cache_key(
+        version=version,
+        min_lat=None,
+        max_lat=None,
+        min_lng=None,
+        max_lng=None,
+        location=None,
+        category=None,
+        search="status leak",
+        limit=500,
+    )
+    raw_cached = redis_client.get(base_key)
+    assert raw_cached is not None, "Base cache must be primed"
+    base_pins_cached = json.loads(raw_cached.decode("utf-8") if isinstance(raw_cached, bytes) else str(raw_cached))
+    cached_ids = {p["id"] for p in base_pins_cached}
+    assert "job-status-open" in cached_ids
+    assert "job-status-cancelled" not in cached_ids, "Cancelled job leaked into base cache!"
+    assert "job-status-pending" not in cached_ids, "Pending job leaked into base cache!"
+    assert "job-status-rejected" not in cached_ids, "Rejected job leaked into base cache!"
+
+    # 3. Anonymous visitor hits map
+    client.cookies.clear()
+    client.headers.pop("Authorization", None)
+    res_anon = client.get("/api/v1/jobs/map?clustered=false&search=Status%20Leak")
+    assert res_anon.status_code == 200
+    anon_pins = res_anon.json()
+    anon_ids = {p["id"] for p in anon_pins}
+    assert "job-status-open" in anon_ids
+    assert "job-status-cancelled" not in anon_ids
+    assert "job-status-pending" not in anon_ids
+    assert "job-status-rejected" not in anon_ids
+
+    # 4. Another user visits map
+    login(client, worker_other)
+    res_other = client.get("/api/v1/jobs/map?clustered=false&search=Status%20Leak")
+    assert res_other.status_code == 200
+    other_pins = res_other.json()
+    other_ids = {p["id"] for p in other_pins}
+    assert "job-status-open" in other_ids
+    assert "job-status-cancelled" not in other_ids
+    assert "job-status-pending" not in other_ids
+    assert "job-status-rejected" not in other_ids
+
+    # 5. Fast Assembly Path test: Invalidate only user cache, keeping base cache primed
+    invalidate_user_map_cache(worker_applied.id)
+    login(client, worker_applied)
+    res_fast = client.get("/api/v1/jobs/map?clustered=false&search=Status%20Leak")
+    assert res_fast.status_code == 200
+    fast_pins = res_fast.json()
+    fast_ids = {p["id"] for p in fast_pins}
+    assert "job-status-open" in fast_ids
+    assert "job-status-cancelled" not in fast_ids, "Cancelled job leaked through Fast Assembly Path!"
+    assert "job-status-pending" not in fast_ids, "Pending job leaked through Fast Assembly Path!"
+    assert "job-status-rejected" not in fast_ids, "Rejected job leaked through Fast Assembly Path!"
+
+
+def test_coordinates_inside_bbox_but_outside_polygon_are_rejected(client):
+    """
+    Test that coordinates within the coarse rectangular bounding box (UZBEKISTAN_BBOX)
+    but outside the real territorial GeoJSON polygon boundary of Uzbekistan (e.g. Shymkent, Dashoguz)
+    are rejected by GeoSpatialService and excluded from clustered map pin aggregations.
+    """
+    from app.services.geo_service import GeoSpatialService
+
+    # 1. Direct unit verification:
+    # Coarse BBox is min_lat=37.0, max_lat=45.8, min_lng=55.9, max_lng=73.5
+    # Shymkent, Kazakhstan: (42.3417, 69.5901) -> inside BBox, but OUTSIDE polygon
+    assert GeoSpatialService.UZBEKISTAN_BBOX["min_lat"] <= 42.3417 <= GeoSpatialService.UZBEKISTAN_BBOX["max_lat"]
+    assert GeoSpatialService.UZBEKISTAN_BBOX["min_lng"] <= 69.5901 <= GeoSpatialService.UZBEKISTAN_BBOX["max_lng"]
+    assert GeoSpatialService.is_inside_uzbekistan(42.3417, 69.5901) is False, "Shymkent must be rejected by polygon check"
+
+    # Dashoguz, Turkmenistan: (41.8333, 59.9667) -> inside BBox, but OUTSIDE polygon
+    assert GeoSpatialService.UZBEKISTAN_BBOX["min_lat"] <= 41.8333 <= GeoSpatialService.UZBEKISTAN_BBOX["max_lat"]
+    assert GeoSpatialService.UZBEKISTAN_BBOX["min_lng"] <= 59.9667 <= GeoSpatialService.UZBEKISTAN_BBOX["max_lng"]
+    assert GeoSpatialService.is_inside_uzbekistan(41.8333, 59.9667) is False, "Dashoguz must be rejected by polygon check"
+
+    # Tashkent: (41.31, 69.24) -> inside BBox AND INSIDE polygon
+    assert GeoSpatialService.is_inside_uzbekistan(41.31, 69.24) is True, "Tashkent must be inside Uzbekistan polygon"
+
+    # 2. Integration verification via clustered map endpoint:
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = db_session.query(models.User).filter_by(id="emp-geo-poly-test").first()
+        if not emp:
+            emp = models.User(id="emp-geo-poly-test", phone="+998904449988", role="employer", name="Geo Poly Emp")
+            db_session.add(emp)
+            db_session.flush()
+
+        tashkent_job = models.Job(
+            id="job-geo-tashkent",
+            title="Tashkent Valid Job",
+            company="GeoPoly Corp",
+            location="Toshkent",
+            description="Tavsif",
+            coordinateX=41.31,
+            coordinateY=69.24,
+            salary=300000,
+            status=JobStatus.OPEN,
+            employerId="emp-geo-poly-test",
+            neededWorkers="1",
+        )
+        shymkent_job = models.Job(
+            id="job-geo-shymkent",
+            title="Shymkent Foreign Job",
+            company="GeoPoly Corp",
+            location="Shymkent",
+            description="Tavsif",
+            coordinateX=42.3417,
+            coordinateY=69.5901,
+            salary=300000,
+            status=JobStatus.OPEN,
+            employerId="emp-geo-poly-test",
+            neededWorkers="1",
+        )
+        dashoguz_job = models.Job(
+            id="job-geo-dashoguz",
+            title="Dashoguz Foreign Job",
+            company="GeoPoly Corp",
+            location="Dashoguz",
+            description="Tavsif",
+            coordinateX=41.8333,
+            coordinateY=59.9667,
+            salary=300000,
+            status=JobStatus.OPEN,
+            employerId="emp-geo-poly-test",
+            neededWorkers="1",
+        )
+        db_session.add_all([tashkent_job, shymkent_job, dashoguz_job])
+        db_session.commit()
+
+    res = client.get("/api/v1/jobs/map?clustered=true&search=GeoPoly")
+    assert res.status_code == 200
+    clusters = res.json()
+
+    # The cluster must only contain the Tashkent job, Shymkent and Dashoguz must be filtered out
+    total_count = sum(c.get("count", 1) for c in clusters)
+    assert total_count == 1, f"Expected exactly 1 job inside Uzbekistan, got {total_count}"
+    all_pin_ids = []
+    for c in clusters:
+        all_pin_ids.extend(c.get("pinIds") or [c["id"]])
+    assert "job-geo-tashkent" in all_pin_ids
+    assert "job-geo-shymkent" not in all_pin_ids
+    assert "job-geo-dashoguz" not in all_pin_ids
+
+
+def test_ray_casting_handles_polygons_multipolygons_and_interior_holes(client):
+    """
+    Test that GeoSpatialService ray-casting accurately handles:
+    1. Polygons (e.g. Samarqand, Buxoro)
+    2. MultiPolygons (e.g. Toshkent City, Farg'ona)
+    3. Interior holes / enclaves (e.g. Sarvan enclave hole inside Namangan region is rejected)
+    Points are taken directly from the official uzbekistan_regions GeoJSON features.
+    """
+    from app.services.geo_service import GeoSpatialService
+
+    GeoSpatialService._is_inside_polygon_cached.cache_clear()
+    GeoSpatialService._POLYGONS_LOADED = False
+    GeoSpatialService._init_polygons()
+
+    # 1. Standard Polygons:
+    assert GeoSpatialService.is_inside_uzbekistan(39.654, 66.960) is True, "Samarqand must be inside"
+    assert GeoSpatialService.is_inside_uzbekistan(39.775, 64.428) is True, "Buxoro must be inside"
+
+    # 2. MultiPolygons:
+    assert GeoSpatialService.is_inside_uzbekistan(41.311, 69.279) is True, "Toshkent City MultiPolygon must be inside"
+    assert GeoSpatialService.is_inside_uzbekistan(40.380, 71.780) is True, "Farg'ona MultiPolygon must be inside"
+
+    # 3. Interior holes: Namangan region has 1 hole (Sarvan foreign enclave, Tajikistan)
+    # A point in Namangan city (exterior ring, outside hole) must be True:
+    assert GeoSpatialService.is_inside_uzbekistan(41.000, 71.670) is True, "Namangan city must be inside"
+    # A point inside the Sarvan enclave hole (lat 40.9909, lng 70.5500) must be REJECTED (False):
+    assert GeoSpatialService.is_inside_uzbekistan(40.9909362, 70.5499591) is False, (
+        "Point inside the Sarvan interior hole must be rejected as outside Uzbekistan territory"
+    )
+
+    # 4. Toshkent region exterior around the capital:
+    assert GeoSpatialService.is_inside_uzbekistan(41.470, 69.580) is True, "Chirchiq in Toshkent Region must be inside"
+
+
+def test_geo_service_fails_closed_when_geojson_unavailable(client, caplog):
+    """
+    Test that if the GeoJSON boundary file is missing or fails to load,
+    the system DOES NOT silently fall back to bounding box and accept foreign coordinates.
+    Instead, it fails closed (rejects coordinates) and logs a prominent error without flooding logs.
+    """
+    import logging
+    from app.services.geo_service import GeoSpatialService
+
+    try:
+        # Simulate uninitialized / empty polygons state
+        GeoSpatialService._is_inside_polygon_cached.cache_clear()
+        GeoSpatialService._PREPARED_POLYGONS = []
+        GeoSpatialService._POLYGONS_LOADED = True
+        GeoSpatialService._LOGGED_FAIL_CLOSED_WARNING = False
+
+        with caplog.at_level(logging.ERROR):
+            # Query multiple coordinates
+            for _ in range(10):
+                shymkent_result = GeoSpatialService.is_inside_uzbekistan(42.3417, 69.5901)
+                assert shymkent_result is False, "Must NOT accept foreign point when polygons are missing"
+
+                tashkent_result = GeoSpatialService.is_inside_uzbekistan(41.311, 69.279)
+                assert tashkent_result is False, "Fail-closed safety mode must reject points rather than fallback to BBox"
+
+            # Verify that log flooding is avoided: fail-closed error is logged only once
+            fail_closed_logs = [r for r in caplog.records if "fail-closed" in r.message]
+            assert len(fail_closed_logs) == 1, f"Expected exactly 1 fail-closed error log, got {len(fail_closed_logs)}"
+    finally:
+        # Restore normal loaded state
+        GeoSpatialService._is_inside_polygon_cached.cache_clear()
+        GeoSpatialService._POLYGONS_LOADED = False
+        GeoSpatialService._init_polygons()
