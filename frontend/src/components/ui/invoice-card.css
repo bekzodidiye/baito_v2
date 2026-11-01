@@ -254,9 +254,10 @@
 
 /* Falling torn receipt animation */
 .baito-paper-tearing-and-falling {
-  animation: baito-tear-and-drop 1.15s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
-  transform-origin: 15% 0%;
+  animation: baito-tear-and-drop 0.85s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important;
+  transform-origin: 10% 0%;
   pointer-events: none !important;
+  will-change: transform, opacity;
 }
 
 @keyframes baito-tear-and-drop {
@@ -266,31 +267,27 @@
     filter: drop-shadow(0 25px 45px rgba(15, 23, 42, 0.16));
   }
   /* Initial rip: paper is pulled down and to the right against cutter teeth */
-  8% {
-    transform: translate(5px, 14px) rotate(-3.5deg);
+  10% {
+    transform: translate(6px, 18px) rotate(-3.5deg);
     clip-path: polygon(0 0, 100% 4px, 100% 100%, 0 100%);
     opacity: 1;
   }
-  16% {
-    transform: translate(12px, 36px) rotate(-5.5deg);
+  20% {
+    transform: translate(14px, 45px) rotate(-5.5deg);
     opacity: 1;
   }
   /* Completely detached! Gravity pulls paper downwards with aerodynamic tilt */
-  36% {
-    transform: translate(18px, 160px) rotate(3deg) scale(0.99);
+  42% {
+    transform: translate(22px, 200px) rotate(4deg) scale(0.99);
     opacity: 0.96;
     filter: drop-shadow(0 35px 55px rgba(15, 23, 42, 0.24));
   }
-  58% {
-    transform: translate(-10px, 380px) rotate(12deg) scale(0.96);
-    opacity: 0.88;
-  }
-  80% {
-    transform: translate(14px, 680px) rotate(20deg) scale(0.92);
-    opacity: 0.5;
+  68% {
+    transform: translate(-10px, 520px) rotate(14deg) scale(0.95);
+    opacity: 0.85;
   }
   100% {
-    transform: translate(25px, 1050px) rotate(26deg) scale(0.86);
+    transform: translate(26px, 1150px) rotate(22deg) scale(0.88);
     opacity: 0;
     visibility: hidden;
   }
