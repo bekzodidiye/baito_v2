@@ -178,13 +178,19 @@ jobs:
 
 
 
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: |
           npm ci
-          # Install platform-specific rollup native binary on ARM64 runners (npm bug #4828)
+          # Install platform-specific rollup & lightningcss native binaries on ARM64 runners (npm bug #4828)
           if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
-            npm install --no-save @rollup/rollup-linux-arm64-gnu@4.62.2 || true
+            npm install --no-save @rollup/rollup-linux-arm64-gnu@4.62.2 lightningcss-linux-arm64-gnu@1.32.0 || true
+            npm install --no-save --prefix .. @rollup/rollup-linux-arm64-gnu@4.62.2 lightningcss-linux-arm64-gnu@1.32.0 || true
           fi
 
       # This step did not exist, which is how two type errors reached main.
@@ -422,7 +428,7 @@ jobs:
           exit 1
 
       - name: Set up Node.js 20
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           # No cache: input. On a hosted runner the VM is thrown away, so
@@ -437,9 +443,10 @@ jobs:
         working-directory: ./frontend
         run: |
           npm ci
-          # Install platform-specific rollup native binary on ARM64 runners (npm bug #4828)
+          # Install platform-specific rollup & lightningcss native binaries on ARM64 runners (npm bug #4828)
           if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
-            npm install --no-save @rollup/rollup-linux-arm64-gnu@4.62.2 || true
+            npm install --no-save @rollup/rollup-linux-arm64-gnu@4.62.2 lightningcss-linux-arm64-gnu@1.32.0 || true
+            npm install --no-save --prefix .. @rollup/rollup-linux-arm64-gnu@4.62.2 lightningcss-linux-arm64-gnu@1.32.0 || true
           fi
 
       # `--with-deps` shells out to `sudo apt-get install` for the shared
