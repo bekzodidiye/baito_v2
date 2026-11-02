@@ -31,7 +31,8 @@ import {
   Copy,
   Check,
   Phone,
-  Sparkles
+  Sparkles,
+  ChevronDown
 } from 'lucide-react';
 import { AdminJob, AdminJobDetailResponse, AdminJobApplication, AdminJobTransaction, AdminTimelineEvent, AdminJobStep } from './types';
 
@@ -138,7 +139,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) 
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 40, scale: 0.98 }}
           transition={{ type: "spring", damping: 28, stiffness: 350 }}
-          className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-2xl sm:max-w-3xl max-h-[94vh] sm:max-h-[90vh] flex flex-col overflow-hidden border border-slate-200/90 z-10"
+          className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-lg sm:max-w-xl max-h-[92vh] sm:max-h-[88vh] flex flex-col overflow-hidden border border-slate-200/90 z-10"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-5 sm:px-6 py-4 bg-white border-b border-slate-100 shrink-0 z-10">
@@ -227,10 +228,20 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) 
           </div>
 
           {/* Footer */}
-          <div className="px-5 py-3 border-t border-slate-100 bg-white shrink-0 flex items-center justify-end">
+          <div className="px-5 py-3 border-t border-slate-100 bg-white shrink-0 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-slate-400">
+              <span className="text-[11px] font-mono font-medium">ID: #{j.id.slice(0, 8)}</span>
+              <button
+                type="button"
+                onClick={handleCopyId}
+                className="text-[11px] text-brand-primary font-bold hover:opacity-80 transition-opacity cursor-pointer"
+              >
+                {copiedId ? "Nusxalandi!" : "Nusxalash"}
+              </button>
+            </div>
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer active:scale-[0.98]"
+              className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all cursor-pointer active:scale-[0.98]"
             >
               Yopish
             </button>
@@ -259,82 +270,118 @@ const stepStyles: Record<AdminJobStep['state'], { ring: string; fill: string; la
 };
 
 const JobSteps: React.FC<{ steps: AdminJobStep[] }> = ({ steps }) => {
+  const [expanded, setExpanded] = useState(false);
   if (steps.length === 0) return null;
   const done = steps.filter(s => s.state === 'done').length;
   const total = steps.filter(s => s.state !== 'cancelled').length;
   const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+  const currentStep = steps.find(s => s.state === 'current') || steps.filter(s => s.state === 'done').slice(-1)[0] || steps[0];
 
   return (
-    <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xs font-black text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+    <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs">
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center">
-            <ListChecks size={14} />
+            <ListChecks size={13} />
           </div>
-          <span>Ish Jarayoni Bosqichlari</span>
-        </h3>
-        <span className="text-[11px] font-black text-brand-primary bg-brand-primary/10 px-2.5 py-0.5 rounded-full border border-brand-primary/20">
-          {done} / {total} bajarildi ({percent}%)
+          <span className="text-[11px] font-black uppercase tracking-wider text-slate-800">Ish Jarayoni</span>
+        </div>
+        <span className="text-[10px] font-black text-brand-primary bg-brand-primary/10 px-2.5 py-0.5 rounded-full border border-brand-primary/20">
+          {done} / {total} ({percent}%)
         </span>
       </div>
 
       {/* Progress Track */}
-      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-4">
+      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-3">
         <div 
           className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
           style={{ width: `${percent}%` }} 
         />
       </div>
 
-      <ol className="relative pl-1 space-y-3">
-        {steps.map((step, idx) => {
-          const st = stepStyles[step.state] || stepStyles.pending;
-          const last = idx === steps.length - 1;
-          return (
-            <li key={step.key} className="flex gap-3 pb-3 last:pb-0 relative">
-              {!last && (
+      {/* Current Step Spotlight */}
+      {currentStep && (
+        <div className="bg-slate-50/80 p-2.5 px-3 rounded-2xl border border-slate-200/60 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <div className="min-w-0">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block">Joriy bosqich</span>
+              <span className="text-xs font-black text-slate-800 truncate block">{currentStep.label}</span>
+            </div>
+          </div>
+          {currentStep.date && (
+            <span className="text-[10px] text-slate-400 font-mono font-medium shrink-0">
+              {formatDate(currentStep.date)}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Expand / Collapse Full Stepper */}
+      <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="text-[11px] font-bold text-brand-primary hover:text-brand-primary/80 flex items-center gap-1 cursor-pointer transition-colors"
+        >
+          <span>{expanded ? "Bosqichlarni yashirish" : `Barcha bosqichlar (${steps.length} ta)`}</span>
+          <ChevronDown size={13} className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
+        </button>
+        <span className="text-[10px] text-slate-400 font-medium">Batafsil xronologiya</span>
+      </div>
+
+      {/* Expanded full steps */}
+      {expanded && (
+        <ol className="relative pl-1 space-y-2.5 mt-3 pt-3 border-t border-slate-100 animate-in fade-in duration-200">
+          {steps.map((step, idx) => {
+            const st = stepStyles[step.state] || stepStyles.pending;
+            const last = idx === steps.length - 1;
+            return (
+              <li key={step.key} className="flex gap-2.5 pb-2.5 last:pb-0 relative">
+                {!last && (
+                  <span
+                    aria-hidden="true"
+                    className={`absolute left-[10px] top-5 bottom-0 w-0.5 ${
+                      step.state === 'done' ? 'bg-emerald-400' : 'bg-slate-200'
+                    }`}
+                  />
+                )}
                 <span
-                  aria-hidden="true"
-                  className={`absolute left-[11px] top-6 bottom-0 w-0.5 ${
-                    step.state === 'done' ? 'bg-emerald-400' : 'bg-slate-200'
+                  className={`w-[20px] h-[20px] rounded-full flex items-center justify-center shrink-0 z-10 transition-all ${
+                    step.state === 'done'
+                      ? 'bg-emerald-500 text-white shadow-2xs ring-2 ring-emerald-100'
+                      : step.state === 'current'
+                      ? 'bg-brand-primary text-white shadow-2xs ring-4 ring-brand-primary/15 animate-pulse'
+                      : step.state === 'cancelled'
+                      ? 'bg-rose-500 text-white ring-2 ring-rose-100'
+                      : 'bg-white border-2 border-slate-300 text-slate-300'
                   }`}
-                />
-              )}
-              <span
-                className={`w-[24px] h-[24px] rounded-full flex items-center justify-center shrink-0 z-10 transition-all ${
-                  step.state === 'done'
-                    ? 'bg-emerald-500 text-white shadow-xs shadow-emerald-500/25 ring-2 ring-emerald-100'
-                    : step.state === 'current'
-                    ? 'bg-brand-primary text-white shadow-xs shadow-brand-primary/25 ring-4 ring-brand-primary/15 animate-pulse'
-                    : step.state === 'cancelled'
-                    ? 'bg-rose-500 text-white ring-2 ring-rose-100'
-                    : 'bg-white border-2 border-slate-300 text-slate-300'
-                }`}
-              >
-                {step.state === 'done' ? (
-                  <CheckCircle2 size={13} className="text-white" strokeWidth={2.5} />
-                ) : step.state === 'current' ? (
-                  <span className="w-2 h-2 rounded-full bg-white" />
-                ) : step.state === 'cancelled' ? (
-                  <XCircle size={13} className="text-white" strokeWidth={2.5} />
-                ) : (
-                  <Circle size={6} className="text-slate-300" fill="currentColor" />
-                )}
-              </span>
-              <div className="min-w-0 flex-1 -mt-0.5">
-                <p className={`text-xs font-extrabold leading-snug ${st.label}`}>{step.label}</p>
-                {(step.date || step.detail) && (
-                  <p className={`text-[11px] font-medium mt-0.5 ${st.date}`}>
-                    {step.detail && <span>{step.detail}</span>}
-                    {step.detail && step.date && <span className="mx-1">·</span>}
-                    {step.date && <span>{formatDate(step.date)}</span>}
-                  </p>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+                >
+                  {step.state === 'done' ? (
+                    <CheckCircle2 size={11} className="text-white" strokeWidth={2.5} />
+                  ) : step.state === 'current' ? (
+                    <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                  ) : step.state === 'cancelled' ? (
+                    <XCircle size={11} className="text-white" strokeWidth={2.5} />
+                  ) : (
+                    <Circle size={5} className="text-slate-300" fill="currentColor" />
+                  )}
+                </span>
+                <div className="min-w-0 flex-1 -mt-0.5">
+                  <p className={`text-xs font-bold leading-snug ${st.label}`}>{step.label}</p>
+                  {(step.date || step.detail) && (
+                    <p className={`text-[10px] font-medium mt-0.5 ${st.date}`}>
+                      {step.detail && <span>{step.detail}</span>}
+                      {step.detail && step.date && <span className="mx-1">·</span>}
+                      {step.date && <span>{formatDate(step.date)}</span>}
+                    </p>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </div>
   );
 };
@@ -345,8 +392,8 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
 
   return (
     <div className="pb-8">
-      {/* Banner */}
-      <div className="mx-4 sm:mx-6 mt-4 rounded-3xl overflow-hidden relative bg-slate-200 border border-slate-200/80 shadow-xs h-48 sm:h-56">
+      {/* Sleek Compact Hero Cover */}
+      <div className="mx-4 sm:mx-5 mt-4 rounded-3xl overflow-hidden relative bg-slate-100 border border-slate-200/80 shadow-2xs h-32 sm:h-36">
         <img
           src={bannerUrl}
           alt={j.title}
@@ -358,39 +405,39 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
             if (target.src !== fallback) target.src = fallback;
           }}
         />
-        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-950/85 via-slate-950/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/25 to-transparent" />
         
         {/* Banner Overlays Top */}
-        <div className="absolute top-3.5 left-3.5 flex items-center gap-1.5 flex-wrap">
-          <span className="bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-xl text-[11px] font-extrabold flex items-center gap-1.5 border border-white/10 shadow-xs">
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
+          <span className="bg-black/60 backdrop-blur-md text-white px-2.5 py-1 rounded-xl text-[10px] font-extrabold flex items-center gap-1.5 border border-white/10 shadow-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             {j.category || adminText().jobTypeFallback || 'Kategoriya'}
           </span>
           {j.urgent && (
-            <span className="bg-rose-600/90 backdrop-blur-md text-white px-3 py-1 rounded-xl text-[11px] font-extrabold flex items-center gap-1 border border-rose-400/20 shadow-xs animate-pulse">
-              <Sparkles size={11} />
+            <span className="bg-rose-600/90 backdrop-blur-md text-white px-2.5 py-1 rounded-xl text-[10px] font-extrabold flex items-center gap-1 border border-rose-400/20 shadow-xs animate-pulse">
+              <Sparkles size={10} />
               Zudlik
             </span>
           )}
         </div>
 
         {j.views !== undefined && (
-          <div className="absolute top-3.5 right-3.5 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-xl text-[11px] font-extrabold flex items-center gap-1.5 border border-white/10 shadow-xs">
-            <Eye size={12} /> {j.views} ko'rildi
+          <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white px-2.5 py-1 rounded-xl text-[10px] font-extrabold flex items-center gap-1.5 border border-white/10 shadow-xs">
+            <Eye size={11} /> {j.views} ko'rildi
           </div>
         )}
 
-        <div className="absolute bottom-3.5 left-4 right-4 text-white">
+        <div className="absolute bottom-3 left-3.5 right-3.5 text-white">
           <div className="text-xs font-bold text-slate-200 flex items-center gap-1.5 drop-shadow-sm">
-            <Building2 size={13} className="text-slate-300" /> {j.company || j.employerName || '—'}
+            <Building2 size={13} className="text-slate-300 shrink-0" />
+            <span className="truncate">{j.company || j.employerName || '—'}</span>
           </div>
-          <h1 className="text-base sm:text-xl font-black leading-tight drop-shadow-md mt-1 truncate">{j.title}</h1>
         </div>
       </div>
 
-      <div className="px-4 sm:px-6 mt-4 space-y-4">
-        {/* 4 Primary Stat Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+      <div className="px-4 sm:px-5 mt-3.5 space-y-3.5">
+        {/* 2x2 Bento Stat Cards Grid */}
+        <div className="grid grid-cols-2 gap-2.5">
           <StatCard
             icon={<DollarSign size={15} className="text-emerald-600" />}
             bg="bg-emerald-50"
@@ -403,7 +450,7 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
             bg="bg-amber-50"
             label="Soatlik stavka"
             value={j.hourlyRate ? `${j.hourlyRate} / soat` : "Yo'q"}
-            color="text-amber-700"
+            color="text-amber-700 font-bold"
           />
           <StatCard
             icon={<Calendar size={15} className="text-brand-primary" />}
@@ -423,61 +470,61 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
         <JobSteps steps={detail?.steps || []} />
 
         {/* Employer & Hired Worker Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {/* Employer Card */}
-          <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-11 h-11 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 border border-brand-primary/20 shadow-2xs">
-                <Building2 size={20} />
+          <div className="bg-white rounded-3xl p-3.5 sm:p-4 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 border border-brand-primary/20 shadow-2xs">
+                <Building2 size={18} />
               </div>
               <div className="min-w-0">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">{adminText().roleEmployer}</span>
-                <span className="text-sm font-black text-slate-900 block truncate mt-0.5">{j.employerName || j.company || '—'}</span>
+                <span className="text-xs font-black text-slate-900 block truncate mt-0.5">{j.employerName || j.company || '—'}</span>
                 {(j as any).employerPhone && (
-                  <span className="text-xs text-slate-500 font-mono mt-0.5 block truncate">{(j as any).employerPhone}</span>
+                  <span className="text-[11px] text-slate-500 font-mono mt-0.5 block truncate">{(j as any).employerPhone}</span>
                 )}
               </div>
             </div>
             {(j as any).employerPhone && (
               <a
                 href={`tel:${(j as any).employerPhone}`}
-                className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-brand-primary hover:text-white text-slate-500 flex items-center justify-center shrink-0 transition-all shadow-2xs hover:shadow-brand-primary/20 cursor-pointer"
+                className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-brand-primary hover:text-white text-slate-500 flex items-center justify-center shrink-0 transition-all shadow-2xs hover:shadow-brand-primary/20 cursor-pointer"
                 title="Qo'ng'iroq qilish"
               >
-                <Phone size={15} />
+                <Phone size={14} />
               </a>
             )}
           </div>
 
           {/* Hired Worker Card */}
           {detail?.hiredWorker ? (
-            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100 shadow-2xs">
-                  <UserCheck size={20} />
+            <div className="bg-white rounded-3xl p-3.5 sm:p-4 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100 shadow-2xs">
+                  <UserCheck size={18} />
                 </div>
                 <div className="min-w-0">
                   <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 block">{adminText().assignedWorker}</span>
-                  <span className="text-sm font-black text-slate-900 block truncate mt-0.5">{detail.hiredWorker.workerName}</span>
+                  <span className="text-xs font-black text-slate-900 block truncate mt-0.5">{detail.hiredWorker.workerName}</span>
                   {detail.hiredWorker.workerPhone && (
-                    <span className="text-xs text-slate-500 font-mono mt-0.5 block truncate">{detail.hiredWorker.workerPhone}</span>
+                    <span className="text-[11px] text-slate-500 font-mono mt-0.5 block truncate">{detail.hiredWorker.workerPhone}</span>
                   )}
                 </div>
               </div>
               {detail.hiredWorker.workerPhone && (
                 <a
                   href={`tel:${detail.hiredWorker.workerPhone}`}
-                  className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-emerald-600 hover:text-white text-slate-500 flex items-center justify-center shrink-0 transition-all shadow-2xs hover:shadow-emerald-600/20 cursor-pointer"
+                  className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-emerald-600 hover:text-white text-slate-500 flex items-center justify-center shrink-0 transition-all shadow-2xs hover:shadow-emerald-600/20 cursor-pointer"
                   title="Qo'ng'iroq qilish"
                 >
-                  <Phone size={15} />
+                  <Phone size={14} />
                 </a>
               )}
             </div>
           ) : (
-            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-dashed border-slate-200 flex items-center gap-3.5 text-slate-400">
-              <div className="w-11 h-11 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center shrink-0">
-                <User size={20} />
+            <div className="bg-white rounded-3xl p-3.5 sm:p-4 border border-dashed border-slate-200 flex items-center gap-3 text-slate-400">
+              <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center shrink-0">
+                <User size={18} />
               </div>
               <div>
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">{adminText().assignedWorker}</span>
