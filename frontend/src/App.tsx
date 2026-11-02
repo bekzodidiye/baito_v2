@@ -165,8 +165,8 @@ function AppContent() {
       {/* Menu item modal views */}
       <MenuModals isOpen={activeModal !== null} onClose={() => setActiveModal(null)} type={activeModal} />
 
-      {/* Onboarding Tour for new users (only for workers on job search) */}
-      {isLoggedIn && !isEmployer && currentScreen === 'jobs' && <OnboardingTour />}
+      {/* Onboarding Tour for new users */}
+      {!isEmployer && (currentScreen === 'jobs' || currentScreen === 'landing') && <OnboardingTour />}
     </div>
   );
 }
