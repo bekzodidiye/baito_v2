@@ -23,6 +23,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
@@ -108,7 +109,7 @@ def list_payouts(
     rows = (
         db.query(JobPayout, models.Job, User)
         .outerjoin(models.Job, models.Job.id == JobPayout.jobId)
-        .outerjoin(User, User.id == JobPayout.workerId)
+        .outerjoin(User, or_(User.id == JobPayout.workerId, User.uid == JobPayout.workerId))
         .order_by(JobPayout.paidAt.desc())
         .limit(limit)
         .all()
@@ -144,9 +145,9 @@ def get_job_payout(
         )
         worker_id = app.workerId if app else None
     if worker_id:
-        worker = db.query(User).filter(User.id == worker_id).first()
+        worker = db.query(User).filter(or_(User.id == worker_id, User.uid == worker_id)).first()
 
-    employer = db.query(User).filter(User.id == job.employerId).first()
+    employer = db.query(User).filter(or_(User.id == job.employerId, User.uid == job.employerId)).first()
     settings_row = db.query(models.SystemSetting).first()
 
     return {
@@ -228,7 +229,7 @@ def confirm_payout(
     # Locked for the same reason release_funds locks: two concurrent writes to
     # a balance otherwise lose one of them.
     worker = (
-        db.query(User).filter(User.id == worker_id).populate_existing().with_for_update().first()
+        db.query(User).filter(or_(User.id == worker_id, User.uid == worker_id)).populate_existing().with_for_update().first()
     )
     if not worker:
         raise HTTPException(status_code=404, detail="Ishchi topilmadi")
@@ -283,6 +284,15 @@ def confirm_payout(
         platformFee=0,
         type="payout",
         status="paid",
+    ))
+
+    amount_str = f"{payload.amount:,}".replace(",", " ")
+    db.add(models.Notification(
+        userId=worker.id,
+        title="To'lov amalga oshirildi",
+        message=f"'{job.title}' ishi bo'yicha {amount_str} so'm to'lovingiz bank hisobingizga o'tkazildi.",
+        type="payout",
+        relatedJobId=job.id,
     ))
 
     record_admin_action(
@@ -495,7 +505,7 @@ def send_payout_invoice(
         raise HTTPException(status_code=409, detail="Hisob-faktura allaqachon yuborilgan")
 
     job = db.query(models.Job).filter(models.Job.id == job_id).first()
-    employer = db.query(User).filter(User.id == payout.employerId).first()
+    employer = db.query(User).filter(or_(User.id == payout.employerId, User.uid == payout.employerId)).first()
 
     recipient = (payload.email or (employer.email if employer else "") or "").strip()
     if not recipient:

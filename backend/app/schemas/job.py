@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 
@@ -84,6 +84,21 @@ class JobBase(BaseModel):
     views: Optional[int] = 0
     coordinateX: Optional[float] = None
     coordinateY: Optional[float] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    translations: Optional[Dict[str, Any]] = None
+
+    @model_validator(mode="after")
+    def sync_coordinates(self):
+        if self.latitude is not None and self.coordinateX is None:
+            self.coordinateX = self.latitude
+        elif self.coordinateX is not None and self.latitude is None:
+            self.latitude = self.coordinateX
+        if self.longitude is not None and self.coordinateY is None:
+            self.coordinateY = self.longitude
+        elif self.coordinateY is not None and self.longitude is None:
+            self.longitude = self.coordinateY
+        return self
 
 class JobCreate(JobBase):
     """What a client may send.

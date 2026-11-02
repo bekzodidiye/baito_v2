@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { money } from '../../../utils/money';
-import { X, Star, MessageSquare, PlusCircle, CalendarCheck, Check, Loader2 } from 'lucide-react';
+import { X, Star, MessageCircle, PlusCircle, CalendarCheck, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchJobDaysApi, completeJobDayApi } from '../../../api/queries';
@@ -230,7 +230,7 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
               {/* Review Text */}
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-bold text-slate-700 flex items-center gap-1.5">
-                  <MessageSquare size={16} className="text-brand-primary" />
+                  <MessageCircle size={16} className="text-brand-primary" />
                   {language === 'uz' ? 'Sharh yozish (Ixtiyoriy)' : language === 'ru' ? 'Оставить отзыв (Необязательно)' : 'Write a review (Optional)'}
                 </label>
                 <textarea

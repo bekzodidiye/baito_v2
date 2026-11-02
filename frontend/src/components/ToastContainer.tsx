@@ -6,17 +6,22 @@ export const ToastContainer = () => {
   const [toastState, setToastState] = useState<{message: string, type: 'success' | 'error' | 'info'} | null>(null);
 
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const handleGlobalToast = (e: any) => {
+      if (timer) clearTimeout(timer);
       // Handle both old string format and new object format
       if (typeof e.detail === 'string') {
         setToastState({ message: e.detail, type: 'info' });
       } else {
         setToastState(e.detail);
       }
-      setTimeout(() => setToastState(null), 3000);
+      timer = setTimeout(() => setToastState(null), 3500);
     };
     window.addEventListener('global-toast', handleGlobalToast);
-    return () => window.removeEventListener('global-toast', handleGlobalToast);
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener('global-toast', handleGlobalToast);
+    };
   }, []);
 
   return (

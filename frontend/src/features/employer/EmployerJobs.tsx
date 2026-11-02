@@ -1,13 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useEmployer } from '../../hooks/useEmployer';
-import { Briefcase, History, Clock, Wallet, Hourglass } from 'lucide-react';
+import { Briefcase, History, Clock, Wallet, Hourglass, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EmployerPageHeader } from './EmployerPageHeader';
 import { EmployerJobDetailModal } from './EmployerJobDetailModal';
 import { EmployerJobCard } from './EmployerJobCard';
 import { EmployerPayInvoiceModal } from './EmployerPayInvoiceModal';
 import { FinishJobModal } from './components/FinishJobModal';
+import { Orb } from "@/components/ui/thinking-orbs";
 import { Job } from '../../types';
 
 interface EmployerJobsProps {
@@ -76,13 +77,33 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
     : activeTab === 'awaiting_confirmation' ? awaitingConfirmationJobs
     : historyJobs;
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const searchedJobs = useMemo(() => {
+    if (!searchQuery.trim()) return displayJobs;
+    const q = searchQuery.toLowerCase().trim();
+    return displayJobs.filter(j => {
+      const trans = j.translations?.[language] || {};
+      const allTransText = Object.values(j.translations || {}).flatMap(t => [t.title, t.description, t.location]).filter(Boolean).join(' ').toLowerCase();
+      return (
+        (j.title && j.title.toLowerCase().includes(q)) ||
+        (trans.title && trans.title.toLowerCase().includes(q)) ||
+        (j.category && j.category.toLowerCase().includes(q)) ||
+        (j.location && j.location.toLowerCase().includes(q)) ||
+        (trans.location && trans.location.toLowerCase().includes(q)) ||
+        (j.description && j.description.toLowerCase().includes(q)) ||
+        allTransText.includes(q)
+      );
+    });
+  }, [displayJobs, searchQuery]);
+
   useEffect(() => {
     setVisibleCount(12);
-  }, [activeTab, displayJobs.length]);
+  }, [activeTab, searchedJobs.length]);
 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && visibleCount < displayJobs.length) {
+      if (entries[0].isIntersecting && visibleCount < searchedJobs.length) {
         setVisibleCount(prev => prev + 12);
       }
     }, { threshold: 0.1 });
@@ -92,7 +113,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
     }
 
     return () => observer.disconnect();
-  }, [visibleCount, displayJobs.length]);
+  }, [visibleCount, searchedJobs.length]);
 
   return (
     <div className="w-full max-w-6xl mx-auto py-4 px-4 md:px-6 flex flex-col gap-6 pb-6">
@@ -146,6 +167,30 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
         })}
       </motion.div>
 
+      {displayJobs.length > 0 && (
+        <div className="relative w-full">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+            <Search size={16} />
+          </span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={language === 'uz' ? "E'lon nomi, kasb yoki manzil bo'yicha qidirish..." : language === 'ru' ? "Поиск по названию, профессии или адресу..." : "Search by title, profession or address..."}
+            className="w-full bg-white border border-slate-200/80 hover:border-slate-300 focus:border-brand-primary/50 focus:ring-2 focus:ring-brand-primary/20 rounded-xl py-2.5 pl-11 pr-10 text-xs font-semibold placeholder:text-slate-400 text-slate-800 transition-all outline-none shadow-xs"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Job Grid */}
       <AnimatePresence mode="wait">
         <motion.div 
@@ -155,7 +200,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
         >
-        {displayJobs.length === 0 ? (
+        {searchedJobs.length === 0 ? (
           <div className="bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200/60 py-16 px-6 flex flex-col items-center justify-center text-center mt-4">
             {activeTab === 'open' ? (
               <Clock size={40} className="text-slate-300 stroke-[1.5] mb-4" />
@@ -165,7 +210,9 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
               <History size={40} className="text-slate-300 stroke-[1.5] mb-4" />
             )}
             <p className="text-sm font-extrabold text-slate-600">
-              {activeTab === 'open' 
+              {searchQuery.trim()
+                ? (language === 'uz' ? "Qidiruv bo'yicha mos e'lon topilmadi" : language === 'ru' ? "По вашему запросу объявлений не найдено" : "No matching jobs found")
+                : activeTab === 'open' 
                 ? (language === 'uz' ? "Ishchilar kutilayotgan ishlar yo'q" : language === 'ru' ? "Нет работ, ожидающих работников" : "No pending jobs")
                 : activeTab === 'active'
                 ? (language === 'uz' ? "Jarayondagi ishlar yo'q" : language === 'ru' ? "Нет работ в процессе" : "No active jobs")
@@ -173,14 +220,16 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
               }
             </p>
             <p className="text-[11px] text-slate-400 font-medium max-w-[260px] mt-2 leading-relaxed">
-              {activeTab === 'open'
+              {searchQuery.trim()
+                ? (language === 'uz' ? "Boshqa so'z bilan qidirib ko'ring yoki filtrlarni tozalang." : language === 'ru' ? "Попробуйте изменить поисковый запрос." : "Try a different search query.")
+                : activeTab === 'open'
                 ? (language === 'uz' ? "Siz yaratgan e'lonlaringiz shu yerda ko'rinadi." : language === 'ru' ? "Ваши новые объявления будут отображаться здесь." : "Your open jobs will appear here.")
                 : activeTab === 'active'
                 ? (language === 'uz' ? "Siz ishchilar bilan kelishgan ishlar shu yerda bo'ladi." : language === 'ru' ? "Работы, на которые вы наняли людей, будут здесь." : "Jobs with hired workers will appear here.")
                 : (language === 'uz' ? "Yakunlangan ishlaringiz shu yerda ko'rinadi." : language === 'ru' ? "Завершенные работы будут отображаться здесь." : "Completed jobs will appear here.")
               }
             </p>
-            {activeTab === 'open' && (
+            {activeTab === 'open' && !searchQuery && (
               <button
                 onClick={onPostJobClick}
                 className="mt-5 px-5 py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-bold text-xs rounded-xl shadow-[0_4px_14px_rgba(0,6,102,0.18)] transition-all cursor-pointer"
@@ -191,14 +240,8 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
           </div>
         ) : (
           <div className="flex flex-col gap-4 mt-2">
-            {/* The number of columns follows the width of a card, not the width of
-                the window. Breakpoints gave four columns from 1280px, which on a
-                1663px screen — the sidebar takes 256px of it — left every card at
-                330px, where the title, the address and the status label all had
-                to be cut. A card is never narrower than 340px now, and the
-                browser fits as many as that allows. */}
             <div className="grid grid-cols-[repeat(auto-fill,minmax(min(340px,100%),1fr))] gap-5 items-stretch">
-              {displayJobs.slice(0, visibleCount).map(job => (
+              {searchedJobs.slice(0, visibleCount).map(job => (
                 <EmployerJobCard
                   key={job.id}
                   job={job}
@@ -212,9 +255,9 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
               ))}
             </div>
             {/* Intersection Observer target */}
-            {visibleCount < displayJobs.length && (
+            {visibleCount < searchedJobs.length && (
               <div ref={loadMoreRef} className="w-full h-20 flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                <Orb state="working" size={24} className="text-brand-primary" />
               </div>
             )}
           </div>

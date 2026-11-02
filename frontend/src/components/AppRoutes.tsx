@@ -31,10 +31,12 @@ const LoginPromptScreen = React.lazy(() => import('./login/LoginPromptScreen').t
 const EmployerPanel = React.lazy(() => import('../features/employer/EmployerPanel').then(m => ({ default: m.EmployerPanel })));
 const NotFoundScreen = React.lazy(() => import('./NotFoundScreen').then(m => ({ default: m.NotFoundScreen })));
 const AdminPanel = React.lazy(() => import('../features/admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
+const Demo = React.lazy(() => import('@/components/ui/demo'));
+import { LoadingOrb } from "@/components/ui/loading-orb";
 
 const SuspenseFallback = () => (
-  <div className="flex-1 flex items-center justify-center p-8">
-    <div className="animate-pulse w-8 h-8 rounded-full bg-slate-300"></div>
+  <div className="flex-1 w-full flex flex-col items-center justify-start pt-12 pb-8">
+    <LoadingOrb size={32} variant="working" />
   </div>
 );
 import { useAuthStore } from "../store/useAuthStore";
@@ -47,8 +49,8 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   
   if (isLoggedIn && !userProfile) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8 min-h-screen bg-slate-50 dark:bg-slate-900">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex-1 min-h-screen bg-slate-50 dark:bg-slate-900 w-full flex flex-col items-center justify-start pt-12 pb-8">
+        <LoadingOrb size={32} variant="working" />
       </div>
     );
   }
@@ -135,6 +137,7 @@ export const AppRoutes = () => {
         <Route path="/terms" element={<SettingsLayout><ShartlarScreen /></SettingsLayout>} />
         <Route path="/privacy" element={<SettingsLayout><PrivacyScreen /></SettingsLayout>} />
         <Route path="/support-chat" element={<ProtectedRoute><SettingsLayout><SupportChatScreen /></SettingsLayout></ProtectedRoute>} />
+        <Route path="/support" element={<Navigate to="/support-chat" replace />} />
         
         {/* Employer routes grouped */}
         <Route path="/employer-dashboard" element={<ProtectedRoute allowedRoles={['employer']}><EmployerPanel /></ProtectedRoute>} />
@@ -153,6 +156,7 @@ export const AppRoutes = () => {
             Bare /admin keeps working and lands on the overview. */}
         <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />
         <Route path="/admin/:tab" element={<ProtectedRoute allowedRoles={['admin']}><AdminPanel /></ProtectedRoute>} />
+        <Route path="/ui-demo" element={<Demo />} />
         <Route path="*" element={<NotFoundScreen />} />
       </Routes>
     </Suspense>

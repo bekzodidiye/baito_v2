@@ -12,6 +12,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
@@ -56,21 +57,28 @@ def list_withdrawals(
     if not rows:
         return {"total": total, "items": []}
 
-    user_map = {
-        u.id: u
-        for u in db.query(User).filter(User.id.in_({r.employerId for r in rows})).all()
-    }
+    user_ids = {r.workerId or r.employerId for r in rows if (r.workerId or r.employerId)}
+    user_objs = (
+        db.query(User)
+        .filter(or_(User.id.in_(user_ids), User.uid.in_(user_ids)))
+        .all()
+    ) if user_ids else []
+    user_map = {}
+    for u in user_objs:
+        user_map[u.id] = u
+        if u.uid:
+            user_map[u.uid] = u
 
     return {
         "total": total,
         "items": [
             {
                 "id": r.id,
-                "userId": r.employerId,
-                "userName": getattr(user_map.get(r.employerId), "name", ""),
-                "userPhone": getattr(user_map.get(r.employerId), "phone", ""),
-                "bankCardMask": getattr(user_map.get(r.employerId), "bankCardMask", None),
-                "amountUzs": r.amount // 100,
+                "userId": r.workerId or r.employerId,
+                "userName": getattr(user_map.get(r.workerId or r.employerId), "name", ""),
+                "userPhone": getattr(user_map.get(r.workerId or r.employerId), "phone", ""),
+                "bankCardMask": getattr(user_map.get(r.workerId or r.employerId), "bankCardMask", None),
+                "amountUzs": (r.amount or 0) // 100,
                 "status": r.status,
                 "reference": r.providerTransactionId,
                 "createdAt": r.createdAt.isoformat() if r.createdAt else None,
@@ -108,7 +116,11 @@ def decide_withdrawal(
             detail=f"Bu so'rov allaqachon ko'rib chiqilgan (holat: {tx.status})",
         )
 
-    amount_uzs = tx.amount // 100
+    target_user_id = tx.workerId or tx.employerId
+    if not target_user_id:
+        raise HTTPException(status_code=400, detail="Tranzaksiya egasi topilmadi")
+
+    amount_uzs = (tx.amount or 0) // 100
 
     if payload.action == "approve":
         tx.status = "paid"
@@ -121,14 +133,14 @@ def decide_withdrawal(
             request=request, note=payload.reason,
         )
         db.add(models.Notification(
-            userId=tx.employerId,
+            userId=target_user_id,
             title="Mablag' yechildi",
             message=f"{amount_uzs} so'm kartangizga o'tkazildi.",
             type="system",
         ))
     else:
         user = (
-            db.query(User).filter(User.id == tx.employerId).populate_existing().with_for_update().first()
+            db.query(User).filter(or_(User.id == target_user_id, User.uid == target_user_id)).populate_existing().with_for_update().first()
         )
         if not user:
             raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")

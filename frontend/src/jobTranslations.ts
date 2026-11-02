@@ -25,11 +25,36 @@ Object.keys(combinedRu).forEach(id => {
   };
 });
 
+import { translateJobLocation } from './utils/jobTranslationUtils';
+
 export const getTranslatedJob = (job: Job, lang: Language): Job => {
+  if (!job) return job;
+
+  // 1. Check for dynamic AI translations saved with the job
+  if (job.translations && job.translations[lang]) {
+    const t = job.translations[lang];
+    return {
+      ...job,
+      title: t.title || job.title,
+      description: t.description || job.description,
+      responsibilities: t.responsibilities || job.responsibilities,
+      requirements: t.requirements || job.requirements,
+      importantNote: t.importantNote || job.importantNote,
+      location: t.location || translateJobLocation(job.location, lang),
+      rawLocation: job.rawLocation || job.location,
+    };
+  }
+
   if (lang === 'uz') return job;
 
   const trans = jobTransData[job.id];
-  if (!trans || !trans[lang]) return job;
+  if (!trans || !trans[lang]) {
+    return {
+      ...job,
+      location: translateJobLocation(job.location, lang),
+      rawLocation: job.rawLocation || job.location,
+    };
+  }
 
   const t = trans[lang];
   return {
@@ -38,11 +63,12 @@ export const getTranslatedJob = (job: Job, lang: Language): Job => {
     company: t.company || job.company,
     salary: t.salary || job.salary,
     tags: t.tags || job.tags,
-    location: t.location || job.location,
-    rawLocation: job.location,
+    location: t.location || translateJobLocation(job.location, lang),
+    rawLocation: job.rawLocation || job.location,
     description: t.description || job.description,
     hourlyRate: t.hourlyRate || job.hourlyRate,
     transportRate: t.transportRate || job.transportRate,
     durationLabel: t.durationLabel || job.durationLabel,
   };
 };
+

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, MapPin, CheckCheck, MoreVertical, Copy, Trash2 } from 'lucide-react';
+import { MessageCircle, MapPin, CheckCheck, MoreVertical, Copy, Trash2 } from 'lucide-react';
 import { ChatHeader } from './ChatHeader';
 import { ChatInputBar } from './ChatInputBar';
 import { ImageModal } from './ImageModal';
@@ -61,7 +61,7 @@ export const ChatDetailPanel: React.FC<ChatDetailPanelProps> = ({
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-white text-slate-400 p-6 select-none">
         <div className="w-20 h-20 rounded-full bg-slate-50 shadow-xs flex items-center justify-center mb-4 text-slate-300">
-          <MessageSquare size={36} />
+          <MessageCircle size={36} />
         </div>
         <p className="text-sm font-semibold text-slate-600">
           Suhbatni boshlash uchun muloqotni tanlang

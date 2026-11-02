@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app import models
@@ -95,9 +95,16 @@ def get_transactions(
 
     # One lookup for every participant instead of two queries per row.
     user_ids = {t.employerId for t in txs} | {t.workerId for t in txs if t.workerId}
-    user_map = {
-        u.id: u for u in db.query(models.User).filter(models.User.id.in_(user_ids)).all()
-    }
+    user_objs = (
+        db.query(models.User)
+        .filter(or_(models.User.id.in_(user_ids), models.User.uid.in_(user_ids)))
+        .all()
+    ) if user_ids else []
+    user_map = {}
+    for u in user_objs:
+        user_map[u.id] = u
+        if u.uid:
+            user_map[u.uid] = u
 
     total = db.query(func.count(models.Transaction.id)).scalar() or 0
     return {
@@ -110,8 +117,8 @@ def get_transactions(
                 "employerName": getattr(user_map.get(t.employerId), "name", ""),
                 "workerId": t.workerId,
                 "workerName": getattr(user_map.get(t.workerId), "name", "") if t.workerId else "",
-                "amount": t.amount // 100,  # tiyin -> UZS
-                "platformFee": t.platformFee // 100,  # tiyin -> UZS
+                "amount": (t.amount or 0) // 100,  # tiyin -> UZS
+                "platformFee": (t.platformFee or 0) // 100,  # tiyin -> UZS
                 "type": t.type,
                 "status": t.status,
                 "createdAt": str(t.createdAt) if t.createdAt else None,
@@ -139,9 +146,16 @@ def get_support_tickets(
         return {"total": 0, "items": []}
 
     user_ids = {t.userId for t in tickets}
-    user_map = {
-        u.id: u for u in db.query(models.User).filter(models.User.id.in_(user_ids)).all()
-    }
+    user_objs = (
+        db.query(models.User)
+        .filter(or_(models.User.id.in_(user_ids), models.User.uid.in_(user_ids)))
+        .all()
+    ) if user_ids else []
+    user_map = {}
+    for u in user_objs:
+        user_map[u.id] = u
+        if u.uid:
+            user_map[u.uid] = u
 
     total = db.query(func.count(models.SupportTicket.id)).scalar() or 0
     return {

@@ -37,7 +37,9 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@/components': path.resolve(__dirname, 'src/components'),
+        '@/lib': path.resolve(__dirname, 'src/lib'),
+        '@': path.resolve(__dirname, 'src'),
       },
     },
     server: {
@@ -50,6 +52,7 @@ export default defineConfig(() => {
         '/api': {
           target: 'http://127.0.0.1:8000',
           changeOrigin: true,
+          autoRewrite: true,
           ws: true,
         },
       },

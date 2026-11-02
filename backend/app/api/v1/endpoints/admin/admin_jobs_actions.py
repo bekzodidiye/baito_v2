@@ -2,6 +2,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
@@ -147,13 +148,18 @@ def change_job_worker(
     if not job:
         raise HTTPException(status_code=404, detail="Ish topilmadi")
 
-    new_worker_id = payload.workerId
-    if new_worker_id:
-        worker = db.query(models.User).filter(models.User.id == new_worker_id).first()
+    worker = None
+    worker_ids = []
+    if payload.workerId:
+        worker = db.query(models.User).filter(or_(models.User.id == payload.workerId, models.User.uid == payload.workerId)).first()
         if not worker:
             raise HTTPException(status_code=404, detail="Ishchi topilmadi")
         if worker.role != "worker":
             raise HTTPException(status_code=400, detail="Bu foydalanuvchi ishchi emas")
+        worker_ids = [uid for uid in [worker.id, getattr(worker, 'uid', None)] if uid]
+        new_worker_id = worker.id
+    else:
+        new_worker_id = None
 
     current_apps = (
         db.query(models.Application)
@@ -164,7 +170,7 @@ def change_job_worker(
         .all()
     )
     for app in current_apps:
-        if app.workerId != new_worker_id:
+        if app.workerId not in worker_ids:
             app.status = "rejected"
             db.add(models.Notification(
                 userId=app.workerId,
@@ -179,7 +185,7 @@ def change_job_worker(
             db.query(models.Application)
             .filter(
                 models.Application.jobId == job_id,
-                models.Application.workerId == new_worker_id,
+                models.Application.workerId.in_(worker_ids),
             )
             .first()
         )

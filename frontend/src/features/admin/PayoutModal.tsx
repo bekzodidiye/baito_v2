@@ -165,7 +165,7 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
   const alreadyInvoiced = !!ctx?.payout?.invoiceSentAt;
 
   return (
-    <div className="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[70] bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col">
 
         <div className="flex items-start justify-between p-5 border-b border-slate-100 shrink-0">
@@ -379,9 +379,10 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
 
                   {/* What the company will receive, before it is sent. */}
                   {Number(invoiceAmount) > 0 && (
-                    <div className="border border-slate-200 rounded-2xl overflow-hidden">
-                      <div className="bg-slate-900 text-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider">
-                        Hisob-faktura (oldindan ko'rish)
+                    <div className="border border-slate-200/90 rounded-2xl overflow-hidden shadow-2xs">
+                      <div className="bg-slate-50 border-b border-slate-200/80 text-slate-800 px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                        <FileText size={14} className="text-blue-600" />
+                        <span>Hisob-faktura (oldindan ko'rish)</span>
                       </div>
                       <div className="p-4 space-y-1.5 text-sm">
                         <div className="flex justify-between"><span className="text-slate-500">{a.companyColumn}</span>
@@ -447,7 +448,7 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
               </button>
               <button onClick={sendInvoice}
                 disabled={sending || !ctx?.smtpConfigured || !invoiceEmail || Number(invoiceAmount) <= 0}
-                className="flex-[2] h-12 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                className="flex-[2] h-12 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xs active:scale-95">
                 {sending ? <Loader2 size={17} className="animate-spin" /> : <Send size={17} />}
                 Korxonaga yuborish
               </button>

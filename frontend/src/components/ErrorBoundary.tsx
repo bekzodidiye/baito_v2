@@ -7,6 +7,9 @@ interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onReset?: () => void;
+  title?: string;
+  message?: string;
+  context?: 'chat' | 'default';
 }
 
 interface State {
@@ -43,6 +46,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     // after something has already thrown, and the language is the last thing
     // the user chose, so a snapshot at render time is exactly right.
     const t = translations[useAuthStore.getState().language];
+    const defaultMessage = this.props.context === 'chat' ? t.chatLoadFailed : t.screenLoadFailed;
 
     if (this.state.hasError) {
       if (this.props.fallback) {
@@ -55,10 +59,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
             <AlertTriangle size={32} />
           </div>
           <h2 className="font-display font-bold text-base text-brand-primary mb-2">
-            {t.somethingWentWrong}
+            {this.props.title || t.somethingWentWrong}
           </h2>
           <p className="text-xs text-brand-text-variant max-w-xs mb-6 leading-relaxed">
-            {t.chatLoadFailed}
+            {this.props.message || defaultMessage}
           </p>
           <button
             onClick={this.handleReset}

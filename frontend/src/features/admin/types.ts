@@ -264,6 +264,7 @@ export interface AdminLog {
 
 export interface CategoryItem {
   id: string;
+  slug?: string;
   name: string;
   icon: string;
   description: string;

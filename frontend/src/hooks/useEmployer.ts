@@ -129,8 +129,8 @@ export const useEmployer = () => {
           requirements: newJobData.requirements || '',
           importantNote: newJobData.importantNote || '',
           tags: newJobData.tags || [],
-          coordinateX: newJobData.coordinates?.x ?? 50,
-          coordinateY: newJobData.coordinates?.y ?? 50,
+          coordinateX: (newJobData.coordinates?.x && newJobData.coordinates.x !== 50) ? newJobData.coordinates.x : 41.3111,
+          coordinateY: (newJobData.coordinates?.y && newJobData.coordinates.y !== 50) ? newJobData.coordinates.y : 69.2406,
         })
       });
     },
@@ -201,7 +201,7 @@ export const useEmployer = () => {
   });
 
   const reviewJobMutation = useMutation({
-    mutationFn: async ({ jobId, data }: { jobId: string; data: { rating: number; review: string; bonus?: number } }) => {
+    mutationFn: async ({ jobId, data }: { jobId: string; data: { rating: number; review: string; bonus?: number; applicationId?: string } }) => {
       return apiClient(`/jobs/${jobId}/review`, {
         method: 'POST',
         body: JSON.stringify(data),
@@ -234,7 +234,7 @@ export const useEmployer = () => {
     updateApplicationStatus: async (appId: string, status: 'hired' | 'rejected') => updateApplicationMutation.mutate({ appId, status }),
     confirmStartJob: async (jobId: string) => confirmStartJobMutation.mutate(jobId),
     completeJob: async (jobId: string, data?: { rating?: number; review?: string; bonus?: number }) => completeJobMutation.mutate({ jobId, data }),
-    reviewJob: async (jobId: string, data: { rating: number; review: string; bonus?: number }) => reviewJobMutation.mutateAsync({ jobId, data }),
+    reviewJob: async (jobId: string, data: { rating: number; review: string; bonus?: number; applicationId?: string }) => reviewJobMutation.mutateAsync({ jobId, data }),
     deleteJob: async (jobId: string) => deleteJobMutation.mutate(jobId),
     language,
     companyName,

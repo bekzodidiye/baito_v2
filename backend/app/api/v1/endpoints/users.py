@@ -38,20 +38,32 @@ def read_user_me(
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """Get current user."""
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
     if current_user.role == 'employer':
-        total_spent = db.query(func.sum(Transaction.amount)).filter(
-            Transaction.employerId == current_user.id,
+        spent_from_payouts = db.query(func.sum(func.coalesce(models.JobPayout.invoiceAmount, models.JobPayout.amount))).filter(
+            models.JobPayout.employerId.in_(user_ids),
+            models.JobPayout.status.in_(["payment_confirmed", "paid"]),
+        ).scalar() or 0
+        spent_from_tx = db.query(func.sum(Transaction.amount)).filter(
+            Transaction.employerId.in_(user_ids),
             Transaction.type == 'payout',
             Transaction.status == 'paid'
         ).scalar() or 0
-        setattr(current_user, 'totalSpent', total_spent // 100 if total_spent else 0)
+        total_spent = max(spent_from_payouts, (spent_from_tx // 100) if spent_from_tx else 0)
+        setattr(current_user, 'totalSpent', total_spent)
     elif current_user.role == 'worker':
-        total_earned = db.query(func.sum(Transaction.amount)).filter(
-            Transaction.workerId == current_user.id,
-            Transaction.type == 'payout',
-            Transaction.status == 'paid'
+        earnings_sum = db.query(func.sum(Transaction.amount)).filter(
+            Transaction.workerId.in_(user_ids),
+            Transaction.type.in_(['worker_earning', 'completion_bonus']),
+            Transaction.status == 'credited'
         ).scalar() or 0
-        setattr(current_user, 'totalEarned', total_earned // 100 if total_earned else 0)
+        if not earnings_sum:
+            earnings_sum = db.query(func.sum(Transaction.amount)).filter(
+                Transaction.workerId.in_(user_ids),
+                Transaction.type == 'payout',
+                Transaction.status == 'paid'
+            ).scalar() or 0
+        setattr(current_user, 'totalEarned', earnings_sum // 100 if earnings_sum else 0)
     return current_user
 
 
@@ -92,11 +104,14 @@ def create_user(
     # 'worker' or 'employer'.
     assigned_role = user_in.role if user_in.role in ("worker", "employer") else "worker"
 
+    user_id = str(uuid.uuid4())
+    user_uid = user_in.uid if user_in.uid else user_id
     db_obj = models.User(
+        id=user_id,
+        uid=user_uid,
         email=user_in.email,
         hashed_password=get_password_hash(user_in.password),
         name=user_in.name,
-        uid=user_in.uid if user_in.uid else str(uuid.uuid4()),
         phone=phone,
         role=assigned_role,
         companyName=user_in.companyName,

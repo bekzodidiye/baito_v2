@@ -4,6 +4,7 @@ import { MapPin, CheckCircle2, Trash2, Users, Calendar, Wallet, Hourglass, XCirc
 import { Job } from '../../types';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { workDateSummary } from '../../utils/workDates';
+import { getJobTitle, getJobLocation } from '../../utils/jobTranslationUtils';
 
 interface EmployerJobCardProps {
   job: Job;
@@ -48,6 +49,8 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
   const bannerUrl = getJobBannerImage(job);
   const dates = workDateSummary(job.workDate, language);
 
+  const localizedTitle = getJobTitle(job, language);
+
   return (
     <motion.div
       layout
@@ -62,7 +65,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
         <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-slate-100 shrink-0">
           <img
             src={bannerUrl}
-            alt={job.title}
+            alt={localizedTitle}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
            onError={(e) => {
         const target = e.currentTarget;
@@ -77,10 +80,10 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
         <div className="flex-1 min-w-0 pt-0.5">
           <div className="flex items-start justify-between gap-2 mb-1">
             <h3
-              title={job.title}
+              title={localizedTitle}
               className="font-black text-base text-slate-800 line-clamp-2 leading-snug break-words min-w-0"
             >
-              {job.title}
+              {localizedTitle}
             </h3>
             {/* Delete Button */}
             {job.status === 'open' && (
@@ -104,10 +107,10 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
             <div className="flex items-center gap-1.5 text-slate-500 min-w-0">
               <MapPin size={15} className="shrink-0" strokeWidth={2.5} />
               <span
-                title={job.rawLocation || job.location}
+                title={getJobLocation(job, language)}
                 className="text-[13px] font-semibold truncate"
               >
-                {job.rawLocation || job.location}
+                {getJobLocation(job, language)}
               </span>
             </div>
             {dates && (
@@ -163,14 +166,16 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
                 {language === 'uz' ? "To'lov tasdiqlandi" : language === 'ru' ? "Оплата подтверждена" : "Payment confirmed"}
               </span>
             </span>
-          ) : job.status === 'cancelled' ? (
+          ) : (job.status === 'cancelled' || job.status === 'dispute') ? (
             /* There was no branch for this, so a cancelled posting fell through
                to "Kutilyapti" and claimed on the dashboard to be waiting for a
                worker while the jobs screen counted it, correctly, as history. */
             <span className="w-full min-w-0 h-11 rounded-lg bg-rose-50 text-rose-600 border border-rose-100 text-[12px] font-bold flex items-center justify-center gap-1.5">
               <XCircle size={14} />
               <span className="truncate">
-                {language === 'uz' ? "Bekor qilindi" : language === 'ru' ? "Отменено" : "Cancelled"}
+                {job.status === 'dispute'
+                  ? (language === 'uz' ? "Nizo holatida" : language === 'ru' ? "В споре" : "In dispute")
+                  : (language === 'uz' ? "Bekor qilindi" : language === 'ru' ? "Отменено" : "Cancelled")}
               </span>
             </span>
           ) : job.status === 'completed' ? (

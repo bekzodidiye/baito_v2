@@ -64,14 +64,20 @@ def list_categories(db: Session = Depends(deps.get_db)) -> Any:
         # Rows added through the admin panel before slugs existed have none; the
         # id keeps them selectable rather than dropping them off the form.
         slug = c.slug or c.id
-        amounts = wages.get(slug, [])
+        amounts = wages.get(slug, []) or wages.get(c.id, []) or wages.get(c.name, [])
+        cat_count = counts.get(slug, 0)
+        if c.id and c.id != slug:
+            cat_count += counts.get(c.id, 0)
+        if c.name and c.name != slug and c.name != c.id:
+            cat_count += counts.get(c.name, 0)
+
         result.append({
             "id": c.id,
             "slug": slug,
             "name": c.name,
             "icon": c.icon,
             "description": c.description,
-            "activeJobsCount": counts.get(slug, 0),
+            "activeJobsCount": cat_count,
             # Null rather than zero when nothing is posted — the card has to be
             # able to tell "no work here" from "work that pays nothing".
             "salaryFrom": min(amounts) if amounts else None,

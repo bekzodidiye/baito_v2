@@ -14,11 +14,11 @@ export const EmployerAnalytics: React.FC = () => {
   const totalViews = postedJobs.reduce((acc, job) => acc + (job.views || 0), 0);
   
   const filledPositions = applications.filter(a => a.status === 'hired').length;
-  const totalNeeded = postedJobs.reduce((acc, job) => acc + parseInt(job.neededWorkers || '1', 10), 0);
+  const totalNeeded = postedJobs.reduce((acc, job) => acc + parseInt(String(job.neededWorkers || '1'), 10), 0);
   const fillRate = totalNeeded > 0 ? Math.round((filledPositions / totalNeeded) * 100) : 0;
   
   const totalCost = postedJobs.reduce((acc, job) => {
-      const salary = parseInt((job.salary || '0').replace(/\D/g, ''), 10);
+      const salary = parseInt(String(job.salary ?? '0').replace(/\D/g, ''), 10);
       return acc + (isNaN(salary) ? 0 : salary);
   }, 0);
   const avgCost = postedJobs.length > 0 ? Math.round(totalCost / postedJobs.length) : 0;

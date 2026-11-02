@@ -7,7 +7,7 @@ import { EmployerChats } from './EmployerChats';
 import { EmployerProfile } from './EmployerProfile';
 import { JobPostForm } from './JobPostForm';
 import { EmployerAnalytics } from './EmployerAnalytics';
-import { Briefcase, FileText, MessageSquare, LayoutDashboard, User } from 'lucide-react';
+import { Briefcase, FileText, MessageCircle, LayoutDashboard, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { MandatoryReviewModal } from './components/MandatoryReviewModal';
@@ -16,6 +16,7 @@ import { useUIStore } from "../../store/useUIStore";
 import { useAuthStore } from "../../store/useAuthStore";
 import { isProfileComplete } from '../../utils/profileCompleteness';
 import { showToast } from '../../utils/toast';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 
 export const EmployerPanel: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
@@ -102,13 +103,15 @@ export const EmployerPanel: React.FC = () => {
   if (isFormScreen) {
     return (
       <div className="w-full min-h-screen bg-slate-50 overflow-y-auto">
-        {renderContent()}
+        <ErrorBoundary key={currentScreen}>
+          {renderContent()}
+        </ErrorBoundary>
         <MandatoryReviewModal
           isOpen={!!pendingReviewApp}
           application={pendingReviewApp || null}
           onConfirm={async (data) => {
             if (pendingReviewApp) {
-              await reviewJob(pendingReviewApp.jobId, data);
+              await reviewJob(pendingReviewApp.jobId, { ...data, applicationId: pendingReviewApp.id });
             }
           }}
           language={language}
@@ -121,7 +124,7 @@ export const EmployerPanel: React.FC = () => {
     { id: 'employer-dashboard', label: language === 'uz' ? "Asosiy" : language === 'ru' ? "Главная" : "Dashboard", icon: LayoutDashboard },
     { id: 'employer-jobs', label: language === 'uz' ? "E'lonlar" : language === 'ru' ? "Объявления" : "Jobs", icon: Briefcase },
     { id: 'employer-applicants', label: language === 'uz' ? "Arizalar" : language === 'ru' ? "Заявки" : "Applicants", icon: FileText },
-    { id: 'employer-chats', label: language === 'uz' ? "Xabarlar" : language === 'ru' ? "Сообщения" : "Messages", icon: MessageSquare },
+    { id: 'employer-chats', label: language === 'uz' ? "Xabarlar" : language === 'ru' ? "Сообщения" : "Messages", icon: MessageCircle },
     { id: 'employer-profile', label: language === 'uz' ? "Profil" : language === 'ru' ? "Профиль" : "Profile", icon: User },
   ];
 
@@ -145,7 +148,9 @@ export const EmployerPanel: React.FC = () => {
 
       {/* ===== MAIN CONTENT AREA ===== */}
       <div className={`flex-1 ${isChatScreen ? 'h-full overflow-hidden' : 'overflow-y-auto'} ${isChatOpenOnMobile ? 'pb-0' : 'pb-24 md:pb-0'}`}>
-        {renderContent()}
+        <ErrorBoundary key={currentScreen}>
+          {renderContent()}
+        </ErrorBoundary>
       </div>
 
       {/* ===== MOBILE BOTTOM NAV (< md) ===== */}
@@ -201,7 +206,7 @@ export const EmployerPanel: React.FC = () => {
         application={pendingReviewApp || null}
         onConfirm={async (data) => {
           if (pendingReviewApp) {
-            await reviewJob(pendingReviewApp.jobId, data);
+            await reviewJob(pendingReviewApp.jobId, { ...data, applicationId: pendingReviewApp.id });
           }
         }}
         language={language}

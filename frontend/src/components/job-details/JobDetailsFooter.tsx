@@ -5,6 +5,8 @@ import { translations } from '../../translations';
 import { showToast } from '../../utils/toast';
 import { requestStartJobApi, completeJobApi } from '../../api/queries';
 import { ConfirmModal } from '../common/ConfirmModal';
+import { formatSalary } from '../../utils/money';
+import { getJobTitle } from '../../utils/jobTranslationUtils';
 import { QueryClientContext } from '@tanstack/react-query';
 import { useAuthStore } from "../../store/useAuthStore";
 
@@ -118,11 +120,13 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
   // Say which shift, when, and for how much — the three things a worker needs
   // to recognise they are about to commit to the right job.
   const shiftWhen = [selectedJob.workDate, selectedJob.workTime].filter(Boolean).join(', ');
+  const formattedSalary = formatSalary(selectedJob.salary, language);
+  const localizedTitle = getJobTitle(selectedJob, language);
   const applyQuestion = {
-    ru: `«${selectedJob.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${selectedJob.salary ? `Оплата: ${selectedJob.salary}.` : ''} Работодатель увидит вашу заявку.`,
-    en: `"${selectedJob.title}"${shiftWhen ? ` — ${shiftWhen}` : ''}. ${selectedJob.salary ? `Pay: ${selectedJob.salary}.` : ''} The employer will see your application.`,
-    uz: `«${selectedJob.title}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${selectedJob.salary ? `To'lov: ${selectedJob.salary}.` : ''} Ish beruvchi arizangizni ko'radi.`,
-  }[language as 'uz' | 'ru' | 'en'] ?? `«${selectedJob.title}» uchun ariza topshirasizmi?`;
+    ru: `«${localizedTitle}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Оплата: ${formattedSalary}.` : ''} Работодатель увидит вашу заявку.`,
+    en: `"${localizedTitle}"${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Pay: ${formattedSalary}.` : ''} The employer will see your application.`,
+    uz: `«${localizedTitle}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `To'lov: ${formattedSalary}.` : ''} Ish beruvchi arizangizni ko'radi.`,
+  }[language as 'uz' | 'ru' | 'en'] ?? `«${localizedTitle}» uchun ariza topshirasizmi?`;
 
   const isHiredOrConfirmed = ['hired', 'confirmed', 'todo', 'approved'].includes(selectedJob.status) || (selectedJob as any).hired;
 
@@ -177,6 +181,24 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
             >
               <Send size={18} />
               {t.appliedLabel || "Ariza topshirildi"}
+            </button>
+          );
+        } else if (selectedJob.status === 'cancelled') {
+          return (
+            <button
+              disabled
+              className="flex-1 text-slate-500 bg-slate-100 h-13 sm:h-14 rounded-xl text-sm font-extrabold cursor-not-allowed flex items-center justify-center gap-2 border border-slate-200"
+            >
+              {language === 'uz' ? "Ish bekor qilingan" : language === 'ru' ? "Работа отменена" : "Job cancelled"}
+            </button>
+          );
+        } else if (selectedJob.status === 'dispute') {
+          return (
+            <button
+              disabled
+              className="flex-1 text-amber-700 bg-amber-100 h-13 sm:h-14 rounded-xl text-sm font-extrabold cursor-not-allowed flex items-center justify-center gap-2 border border-amber-300"
+            >
+              {language === 'uz' ? "Nizo holatida (Moderatsiyada)" : language === 'ru' ? "В споре (На модерации)" : "In dispute (Under review)"}
             </button>
           );
         } else {
@@ -238,10 +260,10 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
         title={language === 'uz' ? "Ishni yakunlash" : language === 'ru' ? "Завершить работу?" : "Complete Job?"}
         message={
           language === 'uz'
-            ? `«${selectedJob.title}» ishini haqiqatan ham yakunladingizmi? Ish beruvchiga xabar yuboriladi.`
+            ? `«${localizedTitle}» ishini haqiqatan ham yakunladingizmi? Ish beruvchiga xabar yuboriladi.`
             : language === 'ru'
-            ? `Вы уверены, что завершили работу «${selectedJob.title}»? Работодатель получит уведомление.`
-            : `Are you sure you completed "${selectedJob.title}"? Employer will be notified.`
+            ? `Вы уверены, что завершили работу «${localizedTitle}»? Работодатель получит уведомление.`
+            : `Are you sure you completed "${localizedTitle}"? Employer will be notified.`
         }
         confirmText={language === 'uz' ? "Ha, yakunladim" : language === 'ru' ? "Да, завершил" : "Yes, complete"}
         cancelText={language === 'uz' ? "Bekor qilish" : language === 'ru' ? "Отмена" : "Cancel"}

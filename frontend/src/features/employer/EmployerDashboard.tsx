@@ -45,6 +45,8 @@ export const EmployerDashboard: React.FC<EmployerDashboardProps> = ({
     return {
       dayStr: language === 'uz' 
         ? ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan'][d.getDay()]
+        : language === 'en'
+        ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()]
         : ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'][d.getDay()],
       dateNum: d.getDate(),
       index: i,

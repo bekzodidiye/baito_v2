@@ -4,6 +4,7 @@ import { Briefcase } from 'lucide-react';
 import { Job } from '../../../types';
 import { translations } from '../../../translations';
 import { getJobDetails } from '../../../utils/jobDetailHelpers';
+import { getJobLocalizedFields } from '../../../utils/jobTranslationUtils';
 import { JobDetailsHero } from '../../../components/job-details/JobDetailsHero';
 import { JobDetailsCard } from '../../../components/job-details/JobDetailsCard';
 import { JobDetailsLocation } from '../../../components/job-details/JobDetailsLocation';
@@ -48,7 +49,18 @@ const DesktopJobDetailsPanelComponent: React.FC<DesktopJobDetailsPanelProps> = (
     );
   }
 
-  const jobDetails = getJobDetails(activeJob.title, language);
+  const localized = getJobLocalizedFields(activeJob, language);
+  const fallbackDetails = getJobDetails(localized.title, language);
+
+  const tasks = localized.responsibilities
+    ? localized.responsibilities.split('\n').filter(Boolean)
+    : fallbackDetails.tasks;
+
+  const requirements = localized.requirements
+    ? localized.requirements.split('\n').filter(Boolean)
+    : fallbackDetails.requirements;
+
+  const warning = localized.importantNote || fallbackDetails.warning;
 
   return (
     <AnimatePresence mode="wait">
@@ -66,10 +78,10 @@ const DesktopJobDetailsPanelComponent: React.FC<DesktopJobDetailsPanelProps> = (
           <div className="px-4 -mt-6 relative z-10 pb-4">
             <JobDetailsCard selectedJob={activeJob} />
             <JobDetailsLocation selectedJob={activeJob} />
-            <JobDetailsTasks tasks={jobDetails.tasks} />
+            <JobDetailsTasks tasks={tasks} />
             <JobDetailsRequirements 
-              requirements={jobDetails.requirements} 
-              warning={jobDetails.warning} 
+              requirements={requirements} 
+              warning={warning} 
             />
           </div>
         </div>
@@ -78,9 +90,7 @@ const DesktopJobDetailsPanelComponent: React.FC<DesktopJobDetailsPanelProps> = (
           selectedJob={activeJob} 
           applyToJob={applyToJob}
           onApplied={() => {
-            if (selectedJob && selectedJob.id === activeJob.id) {
-              setSelectedJob({ ...selectedJob, applied: true, status: 'applied' });
-            }
+            setSelectedJob({ ...activeJob, applied: true, status: 'applied' });
           }}
         />
       </motion.div>

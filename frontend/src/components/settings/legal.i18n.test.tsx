@@ -143,3 +143,27 @@ describe('Privacy policy — locked consent state', () => {
   });
 });
 
+describe('Terms of service — parity, search and active status', () => {
+  it('leaves no Cyrillic in the English terms', () => {
+    const text = JSON.stringify(TERMS.en);
+    expect(/[Ѐ-ӿ]/.test(text)).toBe(false);
+  });
+
+  it('displays the active accepted terms banner in Uzbek', () => {
+    language.current = 'uz';
+    render(<ShartlarScreen />);
+    expect(screen.getByText("Foydalanish shartlari qabul qilingan va amalda")).toBeTruthy();
+    expect(screen.getByText("Amalda • 2026-yil")).toBeTruthy();
+  });
+
+  it('filters terms clauses when typing in search input', () => {
+    language.current = 'uz';
+    render(<ShartlarScreen />);
+    const searchInput = screen.getByPlaceholderText(/Shartlar bo'yicha qidirish/i);
+    fireEvent.change(searchInput, { target: { value: 'Hisob-kitob' } });
+
+    expect(screen.getByText(/5\. To'lovlar va moliyaviy hisob-kitoblar tartibi/i)).toBeTruthy();
+    expect(screen.queryByText(/2\. Ro'yxatdan o'tish/i)).toBeNull();
+  });
+});
+

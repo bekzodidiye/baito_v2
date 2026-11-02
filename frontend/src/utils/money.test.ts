@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { money, amount, CURRENCY } from './money';
+import { money, amount, CURRENCY, formatSalary } from './money';
 
 describe('a sum of money', () => {
   it('names the currency in the reader’s language', () => {
@@ -35,5 +35,13 @@ describe('a sum of money', () => {
 
   it('says something different in each language', () => {
     expect(new Set(Object.values(CURRENCY)).size).toBe(3);
+  });
+
+  it('formats raw or messy salary strings in the reader language', () => {
+    expect(formatSalary('240000', 'uz')).toContain("so'm");
+    expect(formatSalary('240000 UZS', 'ru')).toContain('сум');
+    expect(formatSalary('240 000 so\'m', 'en')).toContain('UZS');
+    expect(formatSalary('', 'uz')).toBe('');
+    expect(formatSalary(null, 'uz')).toBe('');
   });
 });

@@ -1,116 +1,27 @@
-import asyncio
-import json
 import logging
-from typing import Any, List, Optional
+from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, WebSocket
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
-from starlette.concurrency import run_in_threadpool
 
 from app import models, schemas
 from app.api import deps
-from app.redis_client import redis_client, redis_is_mock
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-# Per-socket flood control: at most this many messages in the window.
-MSG_RATE_LIMIT = 20
-MSG_RATE_WINDOW_SECONDS = 10
 
 
 def _get_participant_chat(db: Session, chat_id: str, user: models.User) -> models.Chat:
     chat = db.query(models.Chat).filter(models.Chat.id == chat_id).first()
     if not chat:
         raise HTTPException(status_code=404, detail="Suhbat topilmadi")
-    if user.id not in (chat.workerId, chat.employerId):
+    user_ids = [str(uid) for uid in [user.id, getattr(user, "uid", None)] if uid]
+    chat_worker_id = str(chat.workerId) if chat.workerId else None
+    chat_employer_id = str(chat.employerId) if chat.employerId else None
+    if not (set(user_ids) & {chat_worker_id, chat_employer_id}) and getattr(user, "role", None) != "admin":
         raise HTTPException(status_code=403, detail="Bu suhbatga kirish huquqingiz yo'q")
     return chat
-
-
-class ConnectionManager:
-    """Fan-out for chat sockets.
-
-    Messages are published to Redis so that sockets served by a *different*
-    uvicorn worker also receive them; each process subscribes once and
-    re-broadcasts to its own local connections. Previously the publish existed
-    but nothing ever subscribed, so cross-worker delivery silently did nothing.
-    """
-
-    def __init__(self):
-        self.active_connections: dict[str, list[WebSocket]] = {}
-        self._pubsub_task: Optional[asyncio.Task] = None
-
-    async def connect(self, websocket: WebSocket, chat_id: str):
-        await websocket.accept()
-        self.active_connections.setdefault(chat_id, []).append(websocket)
-        self._ensure_pubsub()
-
-    def disconnect(self, websocket: WebSocket, chat_id: str):
-        conns = self.active_connections.get(chat_id)
-        if not conns:
-            return
-        if websocket in conns:
-            conns.remove(websocket)
-        if not conns:
-            self.active_connections.pop(chat_id, None)
-
-    def _ensure_pubsub(self):
-        if redis_is_mock():
-            return  # single process anyway
-        if self._pubsub_task and not self._pubsub_task.done():
-            return
-        self._pubsub_task = asyncio.create_task(self._consume_pubsub())
-
-    async def _consume_pubsub(self):
-        try:
-            pubsub = await run_in_threadpool(redis_client.pubsub)
-            await run_in_threadpool(pubsub.psubscribe, "chat:*")
-            while True:
-                message = await run_in_threadpool(
-                    pubsub.get_message, ignore_subscribe_messages=True, timeout=1.0
-                )
-                if not message:
-                    await asyncio.sleep(0.05)
-                    continue
-                try:
-                    channel = message["channel"]
-                    chat_id = channel.split(":", 1)[1]
-                    payload = json.loads(message["data"])
-                except Exception:
-                    continue
-                await self._send_local(payload, chat_id)
-        except asyncio.CancelledError:
-            raise
-        except Exception as e:
-            logger.warning("Chat pub/sub consumer stopped: %s", e)
-
-    async def _send_local(self, message: dict, chat_id: str):
-        dead = []
-        for connection in list(self.active_connections.get(chat_id, [])):
-            try:
-                await connection.send_json(message)
-            except Exception:
-                dead.append(connection)
-        for connection in dead:
-            self.disconnect(connection, chat_id)
-
-    async def broadcast_to_chat(self, message: dict, chat_id: str):
-        await self._send_local(message, chat_id)
-        if redis_is_mock():
-            return
-        try:
-            # Other workers pick this up in _consume_pubsub and deliver it to
-            # their own sockets. They skip their local copy via "origin".
-            await run_in_threadpool(
-                redis_client.publish, f"chat:{chat_id}", json.dumps(message)
-            )
-        except Exception as e:
-            logger.debug("Chat publish failed: %s", e)
-
-
-manager = ConnectionManager()
 
 
 @router.get("/", response_model=List[schemas.Chat])
@@ -118,12 +29,13 @@ def get_chats(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
+    user_ids = [str(uid) for uid in [current_user.id, getattr(current_user, "uid", None)] if uid]
     chats = (
         db.query(models.Chat)
         .filter(
             or_(
-                models.Chat.workerId == current_user.id,
-                models.Chat.employerId == current_user.id,
+                models.Chat.workerId.in_(user_ids),
+                models.Chat.employerId.in_(user_ids),
             )
         )
         .all()
@@ -133,13 +45,22 @@ def get_chats(
 
     chat_ids = [c.id for c in chats]
     other_user_ids = [
-        c.employerId if current_user.id == c.workerId else c.workerId for c in chats
+        c.employerId if str(c.workerId) in user_ids else c.workerId for c in chats
     ]
 
     other_users = (
-        db.query(models.User).filter(models.User.id.in_(set(other_user_ids))).all()
+        db.query(models.User).filter(
+            or_(
+                models.User.id.in_(set(other_user_ids)),
+                models.User.uid.in_(set(other_user_ids)),
+            )
+        ).all()
     )
-    user_map = {u.id: u for u in other_users}
+    user_map = {}
+    for u in other_users:
+        user_map[str(u.id)] = u
+        if u.uid:
+            user_map[str(u.uid)] = u
 
     # Fetch only the newest message per chat. The previous implementation
     # loaded EVERY message of EVERY chat into memory just to pick the last one.
@@ -167,7 +88,7 @@ def get_chats(
         db.query(models.Message.chatId, func.count(models.Message.id))
         .filter(
             models.Message.chatId.in_(chat_ids),
-            models.Message.senderId != current_user.id,
+            models.Message.senderId.notin_(user_ids),
             models.Message.readAt.is_(None),
         )
         .group_by(models.Message.chatId)
@@ -177,7 +98,7 @@ def get_chats(
 
     enriched = []
     for c in chats:
-        other_user_id = c.employerId if current_user.id == c.workerId else c.workerId
+        other_user_id = str(c.employerId) if str(c.workerId) in user_ids else str(c.workerId)
         other_user = user_map.get(other_user_id)
         last_message = last_messages.get(c.id)
 
@@ -209,13 +130,14 @@ def create_chat(
     Whichever side the caller is on is taken from the session, so the client
     only has to name the other participant.
     """
+    user_id_str = str(current_user.id)
     worker_id = chat_in.workerId
     employer_id = chat_in.employerId
 
     if current_user.role == "employer":
-        employer_id = employer_id or current_user.id
+        employer_id = employer_id or user_id_str
     else:
-        worker_id = worker_id or current_user.id
+        worker_id = worker_id or user_id_str
 
     # Fall back to deriving the counterpart from the job when only one side
     # was supplied.
@@ -229,35 +151,70 @@ def create_chat(
     if not worker_id or not employer_id:
         raise HTTPException(status_code=400, detail="Suhbat ishtirokchisi aniqlanmadi")
 
-    # The caller must be one side of the chat they are creating, otherwise
-    # anyone could open a conversation between two unrelated users.
-    if current_user.id not in (worker_id, employer_id):
+    user_ids = [str(uid) for uid in [current_user.id, getattr(current_user, "uid", None)] if uid]
+    if not (set(user_ids) & {str(worker_id), str(employer_id)}):
         raise HTTPException(status_code=403, detail="Faqat o'z suhbatingizni ocha olasiz")
 
-    if worker_id == employer_id:
+    if str(worker_id) == str(employer_id):
         raise HTTPException(status_code=400, detail="O'zingiz bilan suhbat ochib bo'lmaydi")
 
-    counterpart_id = employer_id if current_user.id == worker_id else worker_id
-    if not db.query(models.User.id).filter(models.User.id == counterpart_id).first():
+    counterpart_id = employer_id if set(user_ids) & {str(worker_id)} else worker_id
+    counterpart = db.query(models.User).filter(or_(models.User.id == counterpart_id, models.User.uid == counterpart_id)).first()
+    if not counterpart:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+
+    worker_user = db.query(models.User).filter(or_(models.User.id == worker_id, models.User.uid == worker_id)).first()
+    employer_user = db.query(models.User).filter(or_(models.User.id == employer_id, models.User.uid == employer_id)).first()
+    w_ids = [str(uid) for uid in ([worker_user.id, getattr(worker_user, 'uid', None)] if worker_user else [worker_id]) if uid]
+    e_ids = [str(uid) for uid in ([employer_user.id, getattr(employer_user, 'uid', None)] if employer_user else [employer_id]) if uid]
 
     existing = (
         db.query(models.Chat)
         .filter(
             models.Chat.jobId == chat_in.jobId,
-            models.Chat.workerId == worker_id,
-            models.Chat.employerId == employer_id,
+            models.Chat.workerId.in_(w_ids),
+            models.Chat.employerId.in_(e_ids),
         )
         .first()
     )
     if existing:
-        return existing
+        last_msg = (
+            db.query(models.Message)
+            .filter(models.Message.chatId == existing.id)
+            .order_by(models.Message.createdAt.desc())
+            .first()
+        )
+        return {
+            "id": existing.id,
+            "workerId": existing.workerId,
+            "employerId": existing.employerId,
+            "jobId": existing.jobId,
+            "isContactRevealed": existing.isContactRevealed,
+            "createdAt": existing.createdAt,
+            "otherUserName": counterpart.name or counterpart.companyName or "Foydalanuvchi",
+            "otherUserAvatar": counterpart.avatarUrl,
+            "lastMessage": last_msg.text if last_msg else "",
+            "lastMessageTime": last_msg.createdAt if last_msg else existing.createdAt,
+            "unreadCount": 0,
+        }
 
     db_chat = models.Chat(workerId=worker_id, employerId=employer_id, jobId=chat_in.jobId)
     db.add(db_chat)
     db.commit()
     db.refresh(db_chat)
-    return db_chat
+    return {
+        "id": db_chat.id,
+        "workerId": db_chat.workerId,
+        "employerId": db_chat.employerId,
+        "jobId": db_chat.jobId,
+        "isContactRevealed": db_chat.isContactRevealed,
+        "createdAt": db_chat.createdAt,
+        "otherUserName": counterpart.name or counterpart.companyName or "Foydalanuvchi",
+        "otherUserAvatar": counterpart.avatarUrl,
+        "lastMessage": "",
+        "lastMessageTime": db_chat.createdAt,
+        "unreadCount": 0,
+    }
 
 
 

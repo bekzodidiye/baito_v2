@@ -209,10 +209,16 @@ def login(
     # let go idle are closed here rather than left reading "active" forever.
     expire_idle(db, user.uid)
 
+    client_ip = (
+        request.headers.get("cf-connecting-ip")
+        or request.headers.get("x-real-ip")
+        or (request.headers.get("x-forwarded-for", "").split(",")[0].strip() if request.headers.get("x-forwarded-for") else None)
+        or (request.client.host if request.client else None)
+    )
     session_record = ActiveSession(
         user_uid=user.uid,
         device_name=_device_name(request.headers.get("user-agent", "")),
-        ip_address=request.client.host if request.client else None,
+        ip_address=client_ip,
         location="Unknown Location",
     )
     db.add(session_record)

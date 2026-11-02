@@ -1,6 +1,6 @@
 import React from 'react';
 import { WorkerApplication } from '../../../types';
-import { MapPin, Calendar, Clock, ChevronRight, Building2, CheckCircle2, XCircle, Clock3 } from 'lucide-react';
+import { MapPin, Calendar, Clock, ChevronRight, Building2, CheckCircle2, XCircle, Clock3, MessageCircle } from 'lucide-react';
 import { Language } from '../../../translations';
 import { formatShortDate } from '../../../utils/dateFormat';
 
@@ -8,9 +8,11 @@ interface ApplicationCardProps {
   application: WorkerApplication;
   language: Language;
   onClick: () => void;
+  onOpenChat?: () => void;
+  onWithdraw?: (id: string) => void;
 }
 
-export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, language, onClick }) => {
+export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, language, onClick, onOpenChat, onWithdraw }) => {
   const getStatusConfig = (status: string, lang: Language) => {
     switch (status) {
       case 'applied':
@@ -80,6 +82,15 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
           gradient: 'from-slate-400 to-slate-500',
           icon: <CheckCircle2 size={12} className="mr-1" />
         };
+      case 'withdrawn':
+        return {
+          text: lang === 'uz' ? 'Qaytarib olingan' : lang === 'ru' ? 'Отозвана' : 'Withdrawn',
+          bg: 'bg-slate-100',
+          textCol: 'text-slate-500',
+          borderCol: 'border-slate-300',
+          gradient: 'from-slate-300 to-slate-400',
+          icon: <XCircle size={12} className="mr-1" />
+        };
       default:
         // A status we do not know is not something to spell out at the reader.
         return {
@@ -105,6 +116,8 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
     return name.substring(0, 2).toUpperCase();
   };
 
+  const displayTitle = (application as any).jobTranslations?.[language]?.title || application.jobTitle;
+
   return (
     <div 
       onClick={onClick}
@@ -121,7 +134,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
           </div>
           <div>
             <h3 className="font-display font-bold text-slate-800 text-base leading-tight mb-0.5 group-hover:text-brand-primary transition-colors line-clamp-1">
-              {application.jobTitle}
+              {displayTitle}
             </h3>
             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               <Building2 size={11} className="shrink-0" />
@@ -153,8 +166,35 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
           <Clock size={12} />
           <span>{language === 'uz' ? 'Topshirildi: ' : language === 'ru' ? 'Подано: ' : 'Applied: '} {formatDate(application.appliedDate)}</span>
         </div>
-        <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-brand-primary group-hover:border-brand-primary transition-all duration-300 shadow-sm">
-          <ChevronRight size={16} className="text-slate-400 group-hover:text-white transition-colors" />
+        <div className="flex items-center gap-2">
+          {application.status === 'applied' && onWithdraw && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onWithdraw(application.id);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 border border-rose-200/60 text-xs font-bold hover:bg-rose-100 transition-colors cursor-pointer"
+            >
+              <span>{language === 'uz' ? 'Bekor qilish' : language === 'ru' ? 'Отозвать' : 'Withdraw'}</span>
+            </button>
+          )}
+          {['hired', 'confirmed', 'in_progress'].includes(application.status) && onOpenChat && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenChat();
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#000666] border border-blue-200/60 text-xs font-bold hover:bg-blue-100 transition-colors cursor-pointer"
+            >
+              <MessageCircle size={13} className="text-[#000666]" />
+              <span>{language === 'uz' ? 'Xabar' : language === 'ru' ? 'Чат' : 'Chat'}</span>
+            </button>
+          )}
+          <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-brand-primary group-hover:border-brand-primary transition-all duration-300 shadow-sm">
+            <ChevronRight size={16} className="text-slate-400 group-hover:text-white transition-colors" />
+          </div>
         </div>
       </div>
     </div>

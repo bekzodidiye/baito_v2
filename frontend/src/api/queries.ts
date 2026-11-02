@@ -135,6 +135,19 @@ export const fetchWorkerApplicationsApi = async () => {
   return await apiClient('/applications/worker');
 };
 
+export const withdrawApplicationApi = async (appId: string) => {
+  return await apiClient(`/applications/${appId}/withdraw`, {
+    method: 'POST',
+  });
+};
+
+export const createDisputeApi = async (jobId: string, reason: string) => {
+  return await apiClient(`/jobs/${jobId}/dispute`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+};
+
 export type UploadPurpose = 'avatar' | 'job' | 'logo' | 'document' | 'chat';
 
 export const uploadFileApi = async (

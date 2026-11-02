@@ -3,6 +3,7 @@ import { money } from '../../utils/money';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { motion, AnimatePresence } from 'motion/react';
+import { Orb } from "@/components/ui/thinking-orbs";
 import { apiClient } from '../../api/client';
 import { 
   ArrowLeft, 
@@ -175,7 +176,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) 
           <div className="flex-1 overflow-y-auto no-scrollbar bg-slate-50">
             {loading ? (
               <div className="flex items-center justify-center py-20">
-                <Loader2 size={28} className="animate-spin text-brand-primary" />
+                <Orb state="working" size={28} className="text-brand-primary" />
               </div>
             ) : (
               <>

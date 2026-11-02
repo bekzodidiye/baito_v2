@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { X, User, ClipboardList, Settings, HelpCircle, LogOut, LayoutDashboard, Briefcase, Users, MessageSquare, ShieldCheck } from 'lucide-react';
+import { X, User, ClipboardList, Settings, HelpCircle, LogOut, LayoutDashboard, Briefcase, Users, MessageCircle, ShieldCheck } from 'lucide-react';
 import { Logo } from './Logo';
 import { motion, AnimatePresence } from 'motion/react';
 import { translations } from '../translations';
@@ -110,7 +110,7 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
         {
           id: 'chats',
           label: language === 'uz' ? 'Xabarlar' : language === 'ru' ? 'Сообщения' : 'Messages',
-          icon: MessageSquare,
+          icon: MessageCircle,
           badge: unreadMessages,
           action: () => { setDrawerOpen(false); setCurrentScreen('employer-chats'); },
           active: currentScreen === 'employer-chats',

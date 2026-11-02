@@ -1,4 +1,5 @@
 import { translateApiError } from '../utils/apiErrorTranslator';
+import { STORAGE_KEYS, getStorageItem } from '../constants/storage';
 
 type Lang = 'uz' | 'ru' | 'en';
 const LANGS: readonly Lang[] = ['uz', 'ru', 'en'];
@@ -9,7 +10,7 @@ const LANGS: readonly Lang[] = ['uz', 'ru', 'en'];
  *  the store is what screens subscribe to, and the client is below them. */
 const readLanguage = (): Lang => {
   try {
-    const stored = localStorage.getItem('baito_language');
+    const stored = getStorageItem(STORAGE_KEYS.LANGUAGE);
     return LANGS.includes(stored as Lang) ? (stored as Lang) : 'uz';
   } catch {
     return 'uz';
@@ -75,7 +76,12 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}, isR
         ? error.detail.map((e: any) => e.msg).join(', ')
         : '';
 
-    if (!isRetry && response.status === 401) {
+    if (
+      !isRetry &&
+      response.status === 401 &&
+      !endpoint.includes('/auth/refresh') &&
+      !endpoint.includes('/auth/logout')
+    ) {
       if (await refreshSession()) {
         return apiClient(endpoint, options, true);
       }
@@ -85,7 +91,7 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}, isR
       // the login screen in the middle of registering.
       let wasLoggedIn = false;
       try {
-        wasLoggedIn = localStorage.getItem('baito_is_logged_in') === 'true';
+        wasLoggedIn = getStorageItem(STORAGE_KEYS.IS_LOGGED_IN) === 'true';
       } catch {
         wasLoggedIn = true; // storage blocked: fall back to the old behaviour
       }

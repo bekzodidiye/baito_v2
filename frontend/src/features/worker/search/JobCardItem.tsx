@@ -6,6 +6,8 @@ import { translations } from '../../../translations';
 import { getJobShiftTime, getJobDuration } from '../../../utils/jobTimeUtils';
 import { getJobCategory } from '../../../utils/jobCategoryUtils';
 import { shareJob } from '../../../utils/shareJob';
+import { formatSalary } from '../../../utils/money';
+import { getJobTitle, getJobLocation } from '../../../utils/jobTranslationUtils';
 import { useAuthStore } from "../../../store/useAuthStore";
 
 interface JobCardItemProps {
@@ -100,7 +102,7 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
             </span>
           </div>
           <h2 className="font-sans font-bold text-sm md:text-[14px] text-slate-800 leading-snug truncate group-hover:text-brand-primary transition-colors">
-            {job.title}
+            {getJobTitle(job, language)}
           </h2>
           <div className="flex items-center gap-2 mt-0.5">
             <p className="text-[11px] text-slate-400 font-bold truncate">
@@ -116,7 +118,7 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
 
       <div className="flex flex-col">
         <p className="font-sans font-extrabold text-brand-primary text-base leading-none">
-          {job.salary}
+          {formatSalary(job.salary, language)}
         </p>
       </div>
 
@@ -130,7 +132,7 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium truncate">
             <MapPin size={11} className="text-slate-300 shrink-0" />
-            <span className="truncate">{job.location}</span>
+            <span className="truncate">{getJobLocation(job, language)}</span>
             {job.distanceKm !== undefined && (
               <>
                 <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0" />

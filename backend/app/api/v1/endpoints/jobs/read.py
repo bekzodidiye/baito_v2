@@ -64,33 +64,24 @@ def read_jobs(
     is_admin = bool(current_user and current_user.role == 'admin')
     is_employer = bool(current_user and current_user.role == 'employer')
 
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid] if current_user else []
+
     if employer_id:
         # Browsing another employer's full posting history — including their
         # closed and cancelled jobs — is not public information.
-        if not (is_admin or (current_user and employer_id == current_user.id)):
+        if not (is_admin or (current_user and employer_id in user_ids)):
             raise HTTPException(status_code=403, detail="Bu ma'lumotni ko'rish huquqingiz yo'q")
         query = query.filter(models.Job.employerId == employer_id)
     elif is_employer:
-        query = query.filter(models.Job.employerId == current_user.id)
+        query = query.filter(models.Job.employerId.in_(user_ids))
     elif not is_admin:
         # Job seekers see live postings — plus the jobs they are personally
         # committed to, whatever state those have reached.
-        #
-        # Without the second half a worker's calendar was empty: the moment
-        # they were hired the posting left OPEN_STATUSES, so their own shift
-        # vanished from the only feed the calendar reads. A worker could not
-        # see the work they had been hired for, were in the middle of, or had
-        # finished.
-        #
-        # This widens visibility only to rows the caller already has an
-        # application on; nobody gains sight of anyone else's closed postings.
         visible = models.Job.status.in_(JobStatus.OPEN_STATUSES)
         if current_user:
             own = (
                 db.query(models.Application.jobId)
-                .filter(models.Application.workerId.in_(
-                    [current_user.id]
-                ))
+                .filter(models.Application.workerId.in_(user_ids))
                 .subquery()
             )
             visible = or_(visible, models.Job.id.in_(select(own.c.jobId)))
@@ -115,7 +106,7 @@ def read_jobs(
         worker_apps = (
             db.query(models.Application)
             .filter(
-                models.Application.workerId == current_user.id,
+                models.Application.workerId.in_(user_ids),
                 models.Application.jobId.in_(job_ids),
             )
             .all()
@@ -129,7 +120,7 @@ def read_jobs(
             b.jobId
             for b in db.query(models.Bookmark.jobId)
             .filter(
-                models.Bookmark.userId == current_user.id,
+                models.Bookmark.userId.in_(user_ids),
                 models.Bookmark.jobId.in_(job_ids),
             )
             .all()
@@ -158,8 +149,7 @@ def read_jobs(
 
         from app.schemas.job import HiredWorkerInfo
 
-        employer_job_ids = {j.id for j in jobs if j.employerId in
-                            ((current_user.id,) if current_user else ())}
+        employer_job_ids = {j.id for j in jobs if j.employerId in user_ids}
 
         for app in hired_apps:
             user = user_map.get(app.workerId)
@@ -200,7 +190,7 @@ def read_jobs(
                 job_status = 'hired'
             elif app_item.status == 'applied':
                 job_status = 'applied'
-        elif current_user and job.employerId == current_user.id:
+        elif current_user and job.employerId in user_ids:
             job_apps = job_hired_apps_map.get(job.id, [])
             if job.status not in (JobStatus.IN_PROGRESS, JobStatus.COMPLETED, JobStatus.CANCELLED):
                 if any(a.status == 'in_progress' for a in job_apps):
@@ -241,23 +231,58 @@ def read_jobs(
 
 
 
-@router.get("/{job_id}", response_model=schemas.Job)
+@router.get("/{job_id}", response_model=schemas.JobWithApplicationStatus)
 def read_job(
     job_id: str,
     db: Session = Depends(deps.get_db),
     current_user: Optional[models.User] = Depends(deps.get_current_user_optional),
 ) -> Any:
-    """Fetch a single job."""
+    """Fetch a single job with application status for the caller."""
     job = crud.job.get(db=db, id=job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
 
-    is_owner = bool(current_user and job.employerId == current_user.id)
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid] if current_user else []
+    is_owner = bool(current_user and job.employerId in user_ids)
     is_admin = bool(current_user and current_user.role == 'admin')
-    if job.status in JobStatus.CLOSED_STATUSES and not (is_owner or is_admin):
+
+    app_item = None
+    if current_user:
+        app_item = (
+            db.query(models.Application)
+            .filter(
+                models.Application.jobId == job_id,
+                models.Application.workerId.in_(user_ids),
+            )
+            .first()
+        )
+
+    if job.status in JobStatus.CLOSED_STATUSES and not (is_owner or is_admin or app_item):
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
 
-    return job
+    job_dict = schemas.JobWithApplicationStatus.model_validate(job)
+    job_status = job.status
+    if app_item:
+        job_dict.applied = True
+        job_dict.appliedDate = app_item.appliedDate
+        if app_item.status in ('hired', 'confirmed', 'in_progress', 'completed', 'start_requested'):
+            job_status = app_item.status
+        elif app_item.status == 'applied':
+            job_status = 'applied'
+    job_dict.status = job_status
+
+    if current_user:
+        job_dict.bookmarked = (
+            db.query(models.Bookmark.id)
+            .filter(
+                models.Bookmark.userId.in_(user_ids),
+                models.Bookmark.jobId == job_id,
+            )
+            .first()
+            is not None
+        )
+
+    return job_dict
 
 
 

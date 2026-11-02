@@ -95,6 +95,49 @@ def create_category(
         "activeJobsCount": cat.activeJobsCount,
     }
 
+
+@router.put("/categories/{cat_id}")
+@router.patch("/categories/{cat_id}")
+def update_category(
+    cat_id: str,
+    payload: dict,
+    db: Session = Depends(deps.get_db),
+    _: models.User = Depends(get_admin_user),
+) -> Any:
+    cat = db.query(models.Category).filter(models.Category.id == cat_id).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Kategoriya topilmadi")
+
+    if "name" in payload and payload["name"]:
+        cat.name = str(payload["name"]).strip()
+    if "icon" in payload:
+        cat.icon = payload["icon"]
+    if "description" in payload:
+        cat.description = payload["description"]
+    if "commissionPercent" in payload:
+        try:
+            cat.commissionPercent = max(0, min(100, int(payload["commissionPercent"])))
+        except (ValueError, TypeError):
+            pass
+    if "skills" in payload and isinstance(payload["skills"], list):
+        cat.skills = payload["skills"]
+
+    db.add(cat)
+    db.commit()
+    db.refresh(cat)
+    return {
+        "id": cat.id,
+        "slug": cat.slug,
+        "name": cat.name,
+        "icon": cat.icon,
+        "description": cat.description,
+        "commissionPercent": cat.commissionPercent,
+        "skills": cat.skills or [],
+        "activeWorkersCount": cat.activeWorkersCount,
+        "activeJobsCount": cat.activeJobsCount,
+    }
+
+
 @router.delete("/categories/{cat_id}")
 def delete_category(
     cat_id: str,
@@ -104,6 +147,18 @@ def delete_category(
     cat = db.query(models.Category).filter(models.Category.id == cat_id).first()
     if not cat:
         raise HTTPException(status_code=404, detail="Kategoriya topilmadi")
+
+    from app.models.job import JobStatus
+    active_jobs = db.query(models.Job).filter(
+        models.Job.category.in_([c for c in (cat.slug, cat.id, cat.name) if c]),
+        models.Job.status.in_(JobStatus.OPEN_STATUSES),
+    ).count()
+    if active_jobs > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Ushbu kategoriyada {active_jobs} ta faol ish e'loni mavjud, uni o'chirib bo'lmaydi",
+        )
+
     db.delete(cat)
     db.commit()
     return {"success": True}

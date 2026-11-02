@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Star, MessageSquare, PlusCircle, Award, Loader2 } from 'lucide-react';
+import { Star, MessageCircle, PlusCircle, Award, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Application } from '../../../types';
 
@@ -154,7 +154,7 @@ export const MandatoryReviewModal: React.FC<MandatoryReviewModalProps> = ({
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-slate-700 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <MessageSquare size={16} className="text-brand-primary" />
+                  <MessageCircle size={16} className="text-brand-primary" />
                   {language === 'uz' ? 'Sharh matni' : language === 'ru' ? 'Текст отзыва' : 'Review text'}
                   <span className="text-rose-500 font-black">*</span>
                 </span>

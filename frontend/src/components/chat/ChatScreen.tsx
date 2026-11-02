@@ -4,7 +4,7 @@ import { ErrorBoundary } from '../ErrorBoundary';
 
 export const ChatScreen: React.FC = () => {
   return (
-    <ErrorBoundary>
+    <ErrorBoundary context="chat">
       <MessagesScreen />
     </ErrorBoundary>
   );

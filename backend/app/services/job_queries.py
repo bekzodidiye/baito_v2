@@ -66,12 +66,13 @@ class JobQueryService:
 
         job_ids = [j.id for j in jobs]
 
+        user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid] if current_user else []
         worker_apps = []
         if current_user:
             worker_apps = (
                 db.query(models.Application)
                 .filter(
-                    models.Application.workerId == current_user.id,
+                    models.Application.workerId.in_(user_ids),
                     models.Application.jobId.in_(job_ids),
                 )
                 .all()
@@ -83,7 +84,7 @@ class JobQueryService:
                 b.jobId
                 for b in db.query(models.Bookmark.jobId)
                 .filter(
-                    models.Bookmark.userId == current_user.id,
+                    models.Bookmark.userId.in_(user_ids),
                     models.Bookmark.jobId.in_(job_ids),
                 )
                 .all()
@@ -107,13 +108,18 @@ class JobQueryService:
 
             hired_worker_ids = list({app.workerId for app in hired_apps})
             hired_users = (
-                db.query(models.User).filter(models.User.id.in_(hired_worker_ids)).all()
-            )
-            user_map = {user.id: user for user in hired_users}
+                db.query(models.User)
+                .filter(or_(models.User.id.in_(hired_worker_ids), models.User.uid.in_(hired_worker_ids)))
+                .all()
+            ) if hired_worker_ids else []
+            user_map = {}
+            for user in hired_users:
+                user_map[user.id] = user
+                if user.uid:
+                    user_map[user.uid] = user
 
             from app.schemas.job import HiredWorkerInfo
-            employer_job_ids = {j.id for j in jobs if j.employerId in
-                                ((current_user.id,) if current_user else ())}
+            employer_job_ids = {j.id for j in jobs if j.employerId in user_ids}
 
             for app in hired_apps:
                 user = user_map.get(app.workerId)
@@ -122,7 +128,7 @@ class JobQueryService:
                 may_see_phone = bool(
                     is_admin
                     or app.jobId in employer_job_ids
-                    or (current_user and current_user.id == user.id)
+                    or (current_user and user.id in user_ids)
                 )
                 job_hired_workers.setdefault(app.jobId, []).append(HiredWorkerInfo(
                     id=user.id,

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { safeGetItem, safeSetItem } from '../context/utils';
 import { UserProfile } from '../context/types';
+import { STORAGE_KEYS, clearAuthStorage, removeStorageItem } from '../constants/storage';
 
 interface AuthState {
   language: 'uz' | 'ru' | 'en';
@@ -40,7 +41,7 @@ const LANGUAGES: readonly Language[] = ['uz', 'ru', 'en'];
  *  screen that reads a key off it throws on render — a blank app from one
  *  stale key, with no way for the reader to get back. */
 const readLanguage = (): Language => {
-  const stored = safeGetItem('baito_language');
+  const stored = safeGetItem(STORAGE_KEYS.LANGUAGE);
   return LANGUAGES.includes(stored as Language) ? (stored as Language) : 'uz';
 };
 
@@ -50,19 +51,19 @@ applyDocumentLanguage(initialLanguage);
 export const useAuthStore = create<AuthState>((set) => ({
   language: initialLanguage,
   setLanguage: (lang) => {
-    safeSetItem('baito_language', lang);
+    safeSetItem(STORAGE_KEYS.LANGUAGE, lang);
     applyDocumentLanguage(lang);
     set({ language: lang });
   },
 
-  isLoggedIn: safeGetItem('baito_is_logged_in') === 'true',
+  isLoggedIn: safeGetItem(STORAGE_KEYS.IS_LOGGED_IN) === 'true',
   setIsLoggedIn: (loggedIn) => {
-    safeSetItem('baito_is_logged_in', String(loggedIn));
+    safeSetItem(STORAGE_KEYS.IS_LOGGED_IN, String(loggedIn));
     set({ isLoggedIn: loggedIn });
   },
 
   userProfile: (() => {
-    const cached = safeGetItem('baito_user_profile');
+    const cached = safeGetItem(STORAGE_KEYS.USER_PROFILE);
     if (cached) {
       try { return JSON.parse(cached); } catch (e) {}
     }
@@ -71,18 +72,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   
   setUserProfile: (profile) => {
     if (profile) {
-      safeSetItem('baito_user_profile', JSON.stringify(profile));
+      safeSetItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(profile));
     } else {
-      try { localStorage.removeItem('baito_user_profile'); } catch (e) {}
+      removeStorageItem(STORAGE_KEYS.USER_PROFILE);
     }
     set({ userProfile: profile });
   },
 
   clearSession: () => {
-    try {
-      localStorage.removeItem('baito_user_profile');
-      localStorage.removeItem('baito_is_logged_in');
-    } catch (e) {}
+    clearAuthStorage();
     set({ userProfile: null, isLoggedIn: false });
   }
 }));

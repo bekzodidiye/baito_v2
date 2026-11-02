@@ -34,10 +34,11 @@ class SupportMessageIn(BaseModel):
 
 
 def _open_ticket(db: Session, user: models.User) -> models.SupportTicket | None:
+    user_ids = [uid for uid in [user.id, getattr(user, 'uid', None)] if uid]
     return (
         db.query(models.SupportTicket)
         .filter(
-            models.SupportTicket.userId == user.id,
+            models.SupportTicket.userId.in_(user_ids),
             models.SupportTicket.status.in_(OPEN_STATUSES),
         )
         .order_by(models.SupportTicket.createdAt.desc())
@@ -103,6 +104,7 @@ def send_support_message(
 ) -> Any:
     """Write to support, opening a ticket if there is not one already."""
     ticket = _open_ticket(db, current_user)
+    is_new = False
     if ticket is None:
         ticket = models.SupportTicket(
             userId=current_user.id,
@@ -113,6 +115,7 @@ def send_support_message(
         )
         db.add(ticket)
         db.flush()
+        is_new = True
 
     message = models.TicketMessage(
         ticketId=ticket.id,
@@ -121,10 +124,24 @@ def send_support_message(
     )
     db.add(message)
 
-    # A resolved ticket that the user writes into again is open once more.
-    if ticket.status == "resolved":
+    # If ticket was waiting in pending/answered status, mark it open again
+    if ticket.status in ("pending", "answered"):
         ticket.status = "open"
         db.add(ticket)
+
+    # Notify administrators of incoming user message or ticket
+    admins = db.query(models.User).filter(models.User.role == "admin").all()
+    user_label = current_user.name or current_user.phone or "Foydalanuvchi"
+    summary_text = payload.text.strip()
+    if len(summary_text) > 80:
+        summary_text = summary_text[:77] + "..."
+    for admin in admins:
+        db.add(models.Notification(
+            userId=admin.id,
+            title="Yangi yordam so'rovi" if is_new else "Yordam markaziga xabar",
+            message=f"Foydalanuvchi {user_label} yordam so'radi: {summary_text}",
+            type="support",
+        ))
 
     db.commit()
     db.refresh(ticket)
@@ -141,7 +158,8 @@ def delete_support_message(
     msg = db.query(models.TicketMessage).filter(models.TicketMessage.id == message_id).first()
     if not msg:
         raise HTTPException(status_code=404, detail="Xabar topilmadi")
-    if msg.senderId != current_user.id and current_user.role != "admin":
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+    if msg.senderId not in user_ids and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Bu xabarni o'chirish huquqingiz yo'q")
     db.delete(msg)
     db.commit()

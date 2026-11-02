@@ -118,9 +118,9 @@ describe('Guide — all three steps follow the chosen language', () => {
     language.current = 'uz';
     render(<QollanmaScreen />);
     const searchInput = screen.getByPlaceholderText("Qo'llanma bo'yicha qidirish (masalan: ariza, to'lov, smena, karta)...");
-    fireEvent.change(searchInput, { target: { value: 'Eskrou' } });
+    fireEvent.change(searchInput, { target: { value: 'hisob-kitob' } });
 
-    expect(screen.getByText("Xavfsiz to'lov va Eskrou kafolati")).toBeTruthy();
+    expect(screen.getByText("Xavfsiz to'lov va hisob-kitob kafolati")).toBeTruthy();
     expect(screen.queryByText("1. Profilingizni to'ldiring")).toBeNull();
   });
 });

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { money } from '../../../utils/money';
-import { Star, MessageSquare, TrendingUp, Award, Gift } from 'lucide-react';
+import { Star, MessageCircle, TrendingUp, Award, Gift } from 'lucide-react';
 import { Application } from '../../../types';
 import { motion } from 'motion/react';
 
@@ -22,7 +22,9 @@ interface SummaryCardProps {
 
 export const SummaryCard: React.FC<SummaryCardProps> = ({
   avgRating, reviewsCount, totalEarned, distribution, t
-}) => (
+}) => {
+  const language = useAuthStore(s => s.language);
+  return (
   <motion.section
     initial={{ opacity: 0, y: 16 }}
     animate={{ opacity: 1, y: 0 }}
@@ -88,14 +90,15 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase">{t.totalEarned}</p>
             <p className="font-display font-black text-sm text-emerald-600">
-              {money(totalEarned, useAuthStore.getState().language)}
+              {money(totalEarned, language)}
             </p>
           </div>
         </div>
       )}
     </div>
   </motion.section>
-);
+  );
+};
 
 /* ── Single Review Card ── */
 interface ReviewCardProps {
@@ -123,7 +126,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, index }) => (
 
     {review.review && (
       <div className="mt-3 flex items-start gap-2 bg-slate-50 rounded-lg p-2.5 border border-slate-100/80">
-        <MessageSquare size={13} className="text-slate-400 mt-0.5 shrink-0" />
+        <MessageCircle size={13} className="text-slate-400 mt-0.5 shrink-0" />
         <p className="text-xs text-slate-600 font-medium leading-relaxed">"{review.review}"</p>
       </div>
     )}

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ScreenType } from '../../../context/types';
-import { Briefcase, ChevronRight, History, MessageSquare, FileText, ClipboardList, Coins } from 'lucide-react';
+import { Briefcase, ChevronRight, History, MessageCircle, FileText, ClipboardList, Coins } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ProfileAccordionProps {
@@ -76,7 +76,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
                   className="flex items-center justify-between p-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
-                    <MessageSquare size={14} className="text-slate-400" />
+                    <MessageCircle size={14} className="text-slate-400" />
                     <span className="text-xs font-semibold text-slate-700">{t.reviews}</span>
                   </div>
                   <ChevronRight size={14} className="text-slate-350" />

@@ -69,7 +69,7 @@ export const AdminBroadcast: React.FC<AdminBroadcastProps> = ({ onSendBroadcast 
                   onClick={() => setTargetRole(t.id)}
                   className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                     targetRole === t.id
-                      ? 'bg-slate-900 text-white border-slate-900'
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                       : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                   }`}
                 >

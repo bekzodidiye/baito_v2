@@ -95,12 +95,12 @@ export const FAQ_CONTENT: Record<'uz' | 'ru' | 'en', FaqContentSection> = {
       },
       {
         q: 'Xodim smenaga kelmasa nima bo\'ladi?',
-        a: "Agar xodim kelmasa, platforma sizga zudlik bilan boshqa bo'sh xodimlarni topish imkonini beradi yoki zaxiralangan mablag'ingiz hisobingizga to'liq qaytariladi. Kelmagan xodimga nisbatan tizim intizomiy choralar ko'radi.",
+        a: "Agar xodim kelmasa, platforma sizga zudlik bilan boshqa bo'sh xodimlarni topish imkonini beradi. Kelmagan xodimga nisbatan tizim intizomiy choralar ko'radi va uning reytingi pasaytiriladi.",
         category: 'employers'
       },
       {
         q: 'Ish haqi qachon va qanday to\'lanadi?',
-        a: "Smena yakunlangach, ish beruvchi Baito tizimida 'Ishni yakunlash'ni tasdiqlaydi. Shundan so'ng mablag' darhol xodimning platformadagi hisobiga o'tkaziladi.",
+        a: "Smena yakunlangach, ish beruvchi Baito tizimida 'Ishni yakunlash'ni tasdiqlaydi. Shundan so'ng to'lov kelishilgan tartibda rasmiylashtiriladi va xodimning hisobiga o'tkaziladi.",
         category: 'payments'
       },
       {
@@ -109,8 +109,8 @@ export const FAQ_CONTENT: Record<'uz' | 'ru' | 'en', FaqContentSection> = {
         category: 'payments'
       },
       {
-        q: 'To\'lovlar xavfsizligi qanday ta\'minlanadi (Eskrou)?',
-        a: "Ish beruvchi e'lon berganda smena to'lovi Baito tomonidan kafolatlanadi (eskrou). Ish muvaffaqiyatli bajarilmaguncha pul ushlab turiladi va ish yakunida xodimga to'liq to'lab beriladi.",
+        q: 'To\'lovlar xavfsizligi qanday ta\'minlanadi?',
+        a: "Ish beruvchi e'lon berganda smena to'lovi miqdori qat'iy belgilanadi. Smena yakunida ish beruvchi ishni tasdiqlaydi va to'lov to'liq amalga oshiriladi. Nizoli holatlarda Baito arbitraj xizmati xolis yordam beradi.",
         category: 'payments'
       },
       {
@@ -206,12 +206,12 @@ export const FAQ_CONTENT: Record<'uz' | 'ru' | 'en', FaqContentSection> = {
       },
       {
         q: 'Что происходит, если работник не вышел на смену?',
-        a: "Если сотрудник не пришел, система предложит быструю замену из числа свободных работников или вернет зарезервированные средства в полном объеме на ваш счет.",
+        a: "Если сотрудник не пришел, система поможет быстро найти другого свободного работника. К нарушителю применяются дисциплинарные меры и снижение рейтинга доверия.",
         category: 'employers'
       },
       {
         q: 'Когда и как выплачивается заработная плата?',
-        a: "После окончания смены работодатель подтверждает выполнение работы кнопкой «Завершить работу». Деньги сразу поступают на баланс исполнителя в системе.",
+        a: "После окончания смены работодатель подтверждает выполнение работы кнопкой «Завершить работу». Средства начисляются исполнителю в установленном порядке.",
         category: 'payments'
       },
       {
@@ -220,8 +220,8 @@ export const FAQ_CONTENT: Record<'uz' | 'ru' | 'en', FaqContentSection> = {
         category: 'payments'
       },
       {
-        q: 'Как обеспечивается безопасность расчетов (Эскроу)?',
-        a: "При публикации смены оплата резервируется на защищенном эскроу-счете Baito. Средства выплачиваются работнику только после подтверждения выполнения смены работодателем.",
+        q: 'Как обеспечивается безопасность расчетов?',
+        a: "При публикации вакансии сумма оплаты фиксируется в системе. После завершения смены работодатель подтверждает работу и производит оплату. В спорных ситуациях арбитраж Baito обеспечивает честный расчет.",
         category: 'payments'
       },
       {
@@ -317,12 +317,12 @@ export const FAQ_CONTENT: Record<'uz' | 'ru' | 'en', FaqContentSection> = {
       },
       {
         q: 'What happens if a worker fails to show up for a shift?',
-        a: "If a worker misses a shift, the system promptly helps you find an available replacement or provides a full refund of your escrow deposit.",
+        a: "If a worker misses a shift, the system promptly helps you find an available replacement. Disciplinary actions and rating penalties are applied to the no-show worker.",
         category: 'employers'
       },
       {
         q: 'When and how are wages paid?',
-        a: "Upon shift completion, the employer confirms the work with 'Finish Job'. Payout is released immediately to the worker's platform balance.",
+        a: "Upon shift completion, the employer confirms the work with 'Finish Job'. Payment is processed and disbursed to the worker according to platform procedures.",
         category: 'payments'
       },
       {
@@ -331,8 +331,8 @@ export const FAQ_CONTENT: Record<'uz' | 'ru' | 'en', FaqContentSection> = {
         category: 'payments'
       },
       {
-        q: 'How is payment security guaranteed (Escrow)?',
-        a: "When a shift is posted, payment is securely reserved in Baito escrow. Funds are held until completion is verified, guaranteeing full payout for honest work.",
+        q: 'How is payment security guaranteed?',
+        a: "When a shift is posted, the wage amount is officially recorded. Upon completion, the employer approves the work and payment is disbursed. In case of disputes, Baito arbitration ensures a fair outcome.",
         category: 'payments'
       },
       {

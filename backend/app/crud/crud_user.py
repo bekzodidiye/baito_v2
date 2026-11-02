@@ -29,13 +29,16 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return db.query(User).filter(User.phone == phone).first()
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
+        import uuid
         # Never let a request body pick 'admin'.
         role = obj_in.role if obj_in.role in ("worker", "employer") else "worker"
+        user_id = str(uuid.uuid4())
         db_obj = User(
+            id=user_id,
             email=obj_in.email,
             hashed_password=get_password_hash(obj_in.password),
             name=obj_in.name,
-            uid=obj_in.uid or str(__import__('uuid').uuid4()),
+            uid=obj_in.uid or user_id,
             role=role,
             phone=obj_in.phone,
             companyName=obj_in.companyName,

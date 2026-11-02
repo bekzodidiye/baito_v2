@@ -18,8 +18,9 @@ def read_notifications(
     limit: int = Query(50, ge=1, le=200),
 ) -> Any:
     """Retrieve notifications for the current user."""
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
     return crud.notification.get_multi_by_user(
-        db=db, user_id=current_user.id, skip=skip, limit=limit
+        db=db, user_id=user_ids, skip=skip, limit=limit
     )
 
 
@@ -29,10 +30,11 @@ def unread_count(
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """How many notifications are still unread."""
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
     count = (
         db.query(func.count(models.Notification.id))
         .filter(
-            models.Notification.userId == current_user.id,
+            models.Notification.userId.in_(user_ids),
             models.Notification.isRead == False,  # noqa: E712
         )
         .scalar()
@@ -46,7 +48,8 @@ def mark_all_read(
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """Mark all notifications as read."""
-    crud.notification.mark_all_as_read(db=db, user_id=current_user.id)
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+    crud.notification.mark_all_as_read(db=db, user_id=user_ids)
     return {"success": True}
 
 
@@ -61,11 +64,12 @@ def mark_one_read(
     Only ``read-all`` existed, so opening one notification meant clearing the
     badge for every other one too.
     """
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
     notification = (
         db.query(models.Notification)
         .filter(
             models.Notification.id == notification_id,
-            models.Notification.userId == current_user.id,
+            models.Notification.userId.in_(user_ids),
         )
         .first()
     )

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useUzbekistanGeoJson, getDistrictMetaList } from '../components/map/useUzbekistanGeoJson';
+import { defaultDistrictsMeta } from '../data/geo/districtsMeta';
 import {  Language } from '../translations';
 import { 
   REGIONS_LIST, 
@@ -14,7 +14,6 @@ export const useRegionSelector = () => {
     const setFilterLocation = useUIStore(s => s.setFilterLocation);
     const language = useAuthStore(s => s.language);
 
-  const { districtsGeoJsonData } = useUzbekistanGeoJson();
   const [searchText, setSearchText] = useState('');
   const [selectedRegion, setSelectedRegion] = useState<RegionListItem | null>(null);
 
@@ -24,9 +23,7 @@ export const useRegionSelector = () => {
     return lang === 'ru' ? `${num}+ вакансий` : `${num}+ job openings`;
   };
 
-  const districtMetaList = useMemo(() => {
-    return getDistrictMetaList(districtsGeoJsonData);
-  }, [districtsGeoJsonData]);
+  const districtMetaList = defaultDistrictsMeta;
 
   const filteredRegions = useMemo(() => {
     const term = searchText.toLowerCase().trim();

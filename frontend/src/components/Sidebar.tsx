@@ -2,9 +2,9 @@ import React from 'react';
 import { clickable } from '../utils/clickable';
 import { useApp, ScreenType } from '../context/AppContext';
 import { 
-  Map, Calendar, Mail, Bell, User, Settings, HelpCircle, 
-  ShieldCheck, LogOut, Briefcase, FileText, MessageSquare, 
-  LayoutDashboard, PlusCircle, ChevronRight 
+  Map, Calendar, MessageCircle, Bell, User, Settings, HelpCircle, 
+  ShieldCheck, LogOut, Briefcase, FileText, 
+  LayoutDashboard, PlusCircle, ChevronRight, ClipboardList 
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { translations } from '../translations';
@@ -51,7 +51,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
   const workerNav: NavItem[] = [
     { id: 'jobs', label: t.jobSearch, icon: Map, screen: 'jobs' as ScreenType, active: currentScreen === 'jobs' },
     { id: 'calendar', label: t.calendar, icon: Calendar, screen: 'calendar' as ScreenType, active: currentScreen === 'calendar' },
-    { id: 'messages', label: t.messages, icon: Mail, screen: 'messages' as ScreenType, active: currentScreen === 'messages' || currentScreen === 'chat', badge: unreadMessages },
+    { id: 'applications', label: t.myApplications, icon: ClipboardList, screen: 'applications' as ScreenType, active: currentScreen === 'applications' },
+    { id: 'messages', label: t.messages, icon: MessageCircle, screen: 'messages' as ScreenType, active: currentScreen === 'messages' || currentScreen === 'chat', badge: unreadMessages },
     { id: 'notifications', label: language === 'uz' ? "Bildirishnomalar" : language === 'ru' ? "Уведомления" : "Notifications", icon: Bell, screen: 'notifications' as ScreenType, active: currentScreen === 'notifications', badge: unreadNotificationsCount },
   ];
 
@@ -60,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
     { id: 'employer-jobs', label: language === 'uz' ? "E'lonlarim" : language === 'ru' ? "Мои объявления" : "My Jobs", icon: Briefcase, screen: 'employer-jobs' as ScreenType, active: currentScreen === 'employer-jobs' },
     { id: 'employer-post', label: language === 'uz' ? "E'lon joylash" : language === 'ru' ? "Новое объявление" : "Post Job", icon: PlusCircle, screen: 'employer-post' as ScreenType, active: currentScreen === 'employer-post' },
     { id: 'employer-applicants', label: language === 'uz' ? "Arizalar" : language === 'ru' ? "Заявки" : "Applicants", icon: FileText, screen: 'employer-applicants' as ScreenType, active: currentScreen === 'employer-applicants', badge: pendingApplications },
-    { id: 'employer-chats', label: language === 'uz' ? "Xabarlar" : language === 'ru' ? "Сообщения" : "Messages", icon: MessageSquare, screen: 'employer-chats' as ScreenType, active: currentScreen === 'employer-chats', badge: unreadMessages },
+    { id: 'employer-chats', label: language === 'uz' ? "Xabarlar" : language === 'ru' ? "Сообщения" : "Messages", icon: MessageCircle, screen: 'employer-chats' as ScreenType, active: currentScreen === 'employer-chats', badge: unreadMessages },
     // An employer gets notified about the same things a worker does - someone
     // applied, a shift was confirmed, an invoice was issued - and the screen
     // and its unread count were already built and already reachable at

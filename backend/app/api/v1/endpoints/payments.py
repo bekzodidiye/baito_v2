@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel, Field
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.api import deps
@@ -31,7 +32,8 @@ def get_payment_cards(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ):
-    return db.query(PaymentCard).filter(PaymentCard.userId == current_user.id).all()
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+    return db.query(PaymentCard).filter(PaymentCard.userId.in_(user_ids)).all()
 
 
 @router.post("/cards", response_model=PaymentCardOut)
@@ -40,7 +42,8 @@ def add_payment_card(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ):
-    existing = db.query(PaymentCard).filter(PaymentCard.userId == current_user.id).count()
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+    existing = db.query(PaymentCard).filter(PaymentCard.userId.in_(user_ids)).count()
     if existing >= MAX_CARDS_PER_USER:
         raise HTTPException(
             status_code=400,
@@ -69,9 +72,10 @@ def delete_payment_card(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ):
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
     card = (
         db.query(PaymentCard)
-        .filter(PaymentCard.id == card_id, PaymentCard.userId == current_user.id)
+        .filter(PaymentCard.id == card_id, PaymentCard.userId.in_(user_ids))
         .first()
     )
     if not card:
@@ -88,9 +92,10 @@ def update_payment_card(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ):
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
     card = (
         db.query(PaymentCard)
-        .filter(PaymentCard.id == card_id, PaymentCard.userId == current_user.id)
+        .filter(PaymentCard.id == card_id, PaymentCard.userId.in_(user_ids))
         .first()
     )
     if not card:
@@ -112,19 +117,22 @@ def get_transactions(
     limit: int = 100,
 ):
     q = db.query(Transaction)
+    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
 
     # Employers should only see admin-confirmed payouts, not every
-    # pending or cancelled transaction.  Workers see everything.
+    # pending or cancelled transaction. Workers see everything.
     if current_user.role == 'employer':
         q = q.filter(
-            Transaction.employerId == current_user.id,
-            Transaction.type == 'payout',
-            Transaction.status == 'paid',
+            Transaction.employerId.in_(user_ids),
+            or_(
+                and_(Transaction.type == 'payout', Transaction.status == 'paid'),
+                Transaction.type.in_(['withdraw', 'deposit', 'payment']),
+            )
         )
     elif current_user.role == 'worker':
         q = q.filter(
-            Transaction.workerId == current_user.id,
-            Transaction.type.in_(['payout', 'withdraw'])
+            Transaction.workerId.in_(user_ids),
+            Transaction.type.in_(['payout', 'withdraw', 'worker_earning', 'completion_bonus'])
         )
 
     rows = (
@@ -187,6 +195,7 @@ def request_withdrawal(
 
     tx = Transaction(
         employerId=user.id,
+        workerId=user.id if user.role == 'worker' else None,
         amount=Money.to_tiyin(req.amount),
         type="withdraw",
         status="pending",

@@ -2,20 +2,23 @@ import React, { useState } from 'react';
 import { ArrowLeft, Inbox, BriefcaseBusiness, CheckCircle2, XCircle, Clock3 } from 'lucide-react';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
 import { translations } from '../../../translations';
-import { fetchWorkerApplicationsApi } from '../../../api/queries';
+import { fetchWorkerApplicationsApi, withdrawApplicationApi } from '../../../api/queries';
 import { ApplicationCard } from './ApplicationCard';
 import { WorkerApplication } from '../../../types';
 
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from "../../../store/useAuthStore";
 
 export const ApplicationsScreen: React.FC = () => {
   const { setCurrentScreen } = useCurrentScreen();
+  const navigate = useNavigate();
   const language = useAuthStore(s => s.language);
   const t = translations[language];
   
   // Tab state
   const [activeTab, setActiveTab] = useState<'all' | 'applied' | 'hired' | 'rejected'>('all');
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
 
   const { data: applications = [], isLoading: loading, error: queryError, refetch } = useQuery({
     queryKey: ['workerApplications'],
@@ -24,12 +27,46 @@ export const ApplicationsScreen: React.FC = () => {
 
   const error = queryError ? (language === 'uz' ? 'Arizalarni yuklashda xatolik yuz berdi' : language === 'ru' ? 'Ошибка загрузки заявок' : 'Failed to load applications') : null;
 
+  const handleWithdraw = async (id: string) => {
+    const confirmMsg = language === 'uz'
+      ? "Haqiqatan ham ushbu arizani bekor qilmoqchimisiz?"
+      : language === 'ru'
+      ? "Вы действительно хотите отозвать эту заявку?"
+      : "Are you sure you want to withdraw this application?";
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      setWithdrawingId(id);
+      await withdrawApplicationApi(id);
+      await refetch();
+    } catch (err: any) {
+      alert(err.message || (language === 'uz' ? 'Arizani bekor qilishda xatolik yuz berdi' : language === 'ru' ? 'Не удалось отозвать заявку' : 'Failed to withdraw application'));
+    } finally {
+      setWithdrawingId(null);
+    }
+  };
+
   const handleCardClick = (jobId: string) => {
-    // Navigate to job details screen if you have one, or handle click
+    if (jobId) {
+      setCurrentScreen('jobs');
+      navigate(`/jobs/${jobId}`);
+    }
+  };
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      setCurrentScreen('jobs');
+      navigate('/jobs');
+    }
   };
 
   const filteredApplications = applications.filter((app: WorkerApplication) => {
     if (activeTab === 'all') return true;
+    if (activeTab === 'hired') {
+      return ['hired', 'confirmed', 'start_requested', 'in_progress', 'completed'].includes(app.status);
+    }
     return app.status === activeTab;
   });
 
@@ -71,7 +108,8 @@ export const ApplicationsScreen: React.FC = () => {
       <header className="w-full sticky top-0 bg-slate-50/80 backdrop-blur-xl z-20 pt-5 pb-3 px-4 md:px-6 shadow-sm border-b border-slate-200/50">
         <div className="flex items-center gap-3 mb-4">
           <button 
-            onClick={() => setCurrentScreen('profile')}
+            onClick={handleBack}
+            aria-label={t.goBack}
             className="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 hover:bg-slate-50 transition-colors rounded-full text-slate-700 cursor-pointer shadow-sm active:scale-95"
           >
             <ArrowLeft size={20} className="stroke-[2.5]" />
@@ -165,6 +203,11 @@ export const ApplicationsScreen: React.FC = () => {
                 application={app} 
                 language={language}
                 onClick={() => handleCardClick(app.jobId)}
+                onWithdraw={handleWithdraw}
+                onOpenChat={() => {
+                  setCurrentScreen('messages');
+                  navigate('/messages');
+                }}
               />
             ))}
           </div>

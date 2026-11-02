@@ -72,7 +72,7 @@ function AppContent() {
   };
 
   const isSettingsOrHelp = ['settings', 'security', 'help', 'faq', 'guide', 'terms', 'privacy', 'support-chat'].includes(currentScreen);
-  const showNavigation = currentScreen !== 'admin' && currentScreen !== 'verification' && currentScreen !== 'login' && currentScreen !== 'register' && currentScreen !== 'landing' && !currentScreen.startsWith('employer-') && !isSettingsOrHelp;
+  const showNavigation = currentScreen !== 'admin' && currentScreen !== 'verification' && currentScreen !== 'login' && currentScreen !== 'register' && currentScreen !== 'landing' && currentScreen !== 'invoice-pay' && !currentScreen.startsWith('employer-') && !isSettingsOrHelp;
 
   // The settings screens kept the app's own rail hidden and offered a "back to
   // main menu" button in its place, which is why they read as a separate site
@@ -85,10 +85,14 @@ function AppContent() {
   const showSidebar = showNavigation || isSettingsOrHelp;
 
   // Screens nobody may reach while logged out; they bounce back to the landing.
-  const isAuthGatedScreen = !isLoggedIn && !['landing', 'login', 'register', 'faq', 'terms', 'help', 'guide'].includes(currentScreen);
+  const isAuthGatedScreen = !isLoggedIn && !['landing', 'login', 'register', 'faq', 'terms', 'help', 'guide', 'invoice-pay'].includes(currentScreen);
 
   // The map is only reachable while logged in, and unmounts on other screens to save memory on low-end devices.
   const shouldMountMap = isLoggedIn && !isEmployer && currentScreen === 'jobs' && (hasOpenedMap || jobsView === 'map');
+
+  // Screens that require a centered max-w-7xl container shell (payments/cards/invoices).
+  // All other screens manage their own responsive edge-to-edge layouts.
+  const isCenteredContainer = ['payments', 'my-cards', 'add-card', 'taxes', 'top-up', 'invoice-pay'].includes(currentScreen);
 
   return (
     <div className={`flex flex-col md:flex-row bg-brand-background text-brand-text antialiased font-sans selection:bg-brand-primary-container selection:text-white ${
@@ -118,7 +122,7 @@ function AppContent() {
         {showNavigation && <Drawer onOpenModal={handleOpenModal} />}
 
         {/* Main Content Layout */}
-        <main id="main-content" tabIndex={-1} className={`flex-1 w-full min-w-0 ${['landing', 'admin', 'jobs', 'messages', 'chat', 'verification', 'login', 'settings', 'security', 'help', 'faq', 'guide', 'terms', 'privacy', 'support-chat', 'profile', 'reviews', 'applications', 'employer-dashboard', 'employer-jobs', 'employer-applicants', 'employer-chats', 'employer-profile', 'employer-analytics', 'employer-post', 'jobs'].includes(currentScreen) ? 'max-w-none px-0 md:px-0' : 'max-w-7xl mx-auto px-4 md:px-6'} ${isSettingsOrHelp || currentScreen === 'messages' || currentScreen === 'chat' || currentScreen === 'support-chat' ? 'h-full flex flex-col' : ''}`}>
+        <main id="main-content" tabIndex={-1} className={`flex-1 w-full min-w-0 ${!isCenteredContainer ? 'max-w-none px-0 md:px-0' : 'max-w-7xl mx-auto px-4 md:px-6'} ${isSettingsOrHelp || currentScreen === 'messages' || currentScreen === 'chat' || currentScreen === 'support-chat' ? 'h-full flex flex-col' : ''}`}>
           {/* Keyed on the screen so a crashed screen's fallback clears as soon as
               the user navigates away. Only route content belongs in here. */}
           <ErrorBoundary key={currentScreen}>
@@ -156,13 +160,13 @@ function AppContent() {
       </div>
 
       {/* Region selector fallback overlay for non-map screens */}
-      {currentScreen !== 'jobs' && currentScreen !== 'landing' && <RegionSelector />}
+      {currentScreen !== 'jobs' && currentScreen !== 'landing' && currentScreen !== 'admin' && currentScreen !== 'invoice-pay' && <RegionSelector />}
 
       {/* Menu item modal views */}
       <MenuModals isOpen={activeModal !== null} onClose={() => setActiveModal(null)} type={activeModal} />
 
       {/* Onboarding Tour for new users */}
-      <OnboardingTour />
+      {!isEmployer && (currentScreen === 'jobs' || currentScreen === 'landing') && <OnboardingTour />}
     </div>
   );
 }

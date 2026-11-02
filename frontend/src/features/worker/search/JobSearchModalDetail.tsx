@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Job } from '../../../types';
 import { getJobDetails } from '../../../utils/jobDetailHelpers';
+import { getJobLocalizedFields } from '../../../utils/jobTranslationUtils';
 import { JobDetailsHeader } from '../../../components/job-details/JobDetailsHeader';
 import { JobDetailsHero } from '../../../components/job-details/JobDetailsHero';
 import { JobDetailsCard } from '../../../components/job-details/JobDetailsCard';
@@ -32,17 +33,18 @@ export const JobSearchModalDetail: React.FC<JobSearchModalDetailProps> = ({
     }
   }, [selectedJob?.id]);
 
-  const fallbackDetails = getJobDetails(selectedJob.title, language);
+  const localized = getJobLocalizedFields(selectedJob, language);
+  const fallbackDetails = getJobDetails(localized.title, language);
 
-  const tasks = selectedJob.responsibilities
-    ? selectedJob.responsibilities.split('\n').filter(Boolean)
+  const tasks = localized.responsibilities
+    ? localized.responsibilities.split('\n').filter(Boolean)
     : fallbackDetails.tasks;
 
-  const requirements = selectedJob.requirements
-    ? selectedJob.requirements.split('\n').filter(Boolean)
+  const requirements = localized.requirements
+    ? localized.requirements.split('\n').filter(Boolean)
     : fallbackDetails.requirements;
 
-  const warning = selectedJob.importantNote || fallbackDetails.warning;
+  const warning = localized.importantNote || fallbackDetails.warning;
 
   return (
     <div className="fixed inset-0 z-100 flex items-end justify-center p-0">

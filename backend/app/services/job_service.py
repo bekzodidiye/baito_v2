@@ -1,9 +1,9 @@
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from app import models, crud
 from app.models.job import JobStatus
@@ -25,7 +25,7 @@ ACTIVE_APP_STATUSES = ['applied', 'hired', 'confirmed', 'in_progress', 'start_re
 COMMITTED_APP_STATUSES = ['hired', 'confirmed', 'in_progress', 'start_requested']
 
 # Uzbekistan is UTC+5
-TASHKENT = timezone(datetime.now().astimezone().utcoffset() or timezone.utc)
+TASHKENT = timezone(timedelta(hours=5))
 
 
 def _wage_for_day(job: models.Job, day: Optional[JobDay]) -> int:
@@ -102,16 +102,17 @@ class JobService:
         if _hired_count(db, job.id) >= job.vacancies:
             raise InvalidJobStateError("Bu ish bo'yicha o'rinlar to'lgan")
 
+        worker_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
         existing_app = (
             db.query(models.Application)
             .filter(
                 models.Application.jobId == job_id,
-                models.Application.workerId == current_user.id,
+                models.Application.workerId.in_(worker_ids),
             )
             .first()
         )
 
-        if existing_app:
+        if existing_app and existing_app.status != "withdrawn":
             return {
                 "success": True,
                 "id": existing_app.id,
@@ -123,7 +124,7 @@ class JobService:
         worker_apps = (
             db.query(models.Application)
             .filter(
-                models.Application.workerId == current_user.id,
+                models.Application.workerId.in_(worker_ids),
                 models.Application.status.in_(ACTIVE_APP_STATUSES),
             )
             .all()
@@ -150,9 +151,14 @@ class JobService:
                     raise ApplicationError("Bir kunda ko'pi bilan 2 ta ishga ariza topshirishingiz mumkin!")
 
         with db.begin_nested():
-            db_app = models.Application(
-                id=str(uuid.uuid4()), jobId=job_id, workerId=current_user.id, status="applied"
-            )
+            if existing_app and existing_app.status == "withdrawn":
+                db_app = existing_app
+                db_app.status = "applied"
+                db_app.appliedDate = func.now()
+            else:
+                db_app = models.Application(
+                    id=str(uuid.uuid4()), jobId=job_id, workerId=current_user.id, status="applied"
+                )
             db.add(db_app)
             db.add(models.Notification(
                 id=str(uuid.uuid4()), userId=job.employerId, title="Yangi ariza keldi",
@@ -168,11 +174,12 @@ class JobService:
     def request_start_job(db: Session, job_id: str, current_user: models.User) -> dict:
         job = JobService.get_job_or_fail(db, job_id)
 
+        worker_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
         app = (
             db.query(models.Application)
             .filter(
                 models.Application.jobId == job_id,
-                models.Application.workerId == current_user.id,
+                models.Application.workerId.in_(worker_ids),
                 models.Application.status.in_(COMMITTED_APP_STATUSES),
             )
             .first()
@@ -239,7 +246,8 @@ class JobService:
     def confirm_start_job(db: Session, job_id: str, current_user: models.User) -> dict:
         job = JobService.get_job_or_fail(db, job_id)
 
-        is_employer = job.employerId == current_user.id
+        employer_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+        is_employer = job.employerId in employer_ids
         if not (is_employer or current_user.role == 'admin'):
             raise ActionForbiddenError("Faqat ish beruvchi ishni tasdiqlay oladi")
 
@@ -321,7 +329,8 @@ class JobService:
         # Lock the job row to serialize completions and safely evaluate is_last_day
         job = db.query(models.Job).filter(models.Job.id == job.id).populate_existing().with_for_update().first()
 
-        if job.employerId != current_user.id and current_user.role != 'admin':
+        employer_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+        if job.employerId not in employer_ids and current_user.role != 'admin':
             raise ActionForbiddenError("Faqat ish beruvchi ishni yakunlay oladi")
 
         if job.status == JobStatus.CANCELLED:
@@ -465,7 +474,7 @@ class JobService:
 
         bonus_each = (bonus or 0) if is_employer else 0
         if bonus_each > 0:
-            employer = db.query(models.User).filter(models.User.id == job.employerId).first()
+            employer = db.query(models.User).filter(or_(models.User.id == job.employerId, models.User.uid == job.employerId)).first()
             if not employer:
                 raise JobNotFoundError("Ish beruvchi topilmadi")
 
@@ -535,9 +544,11 @@ class JobService:
                 )
                 avg_ratings_map = {w_id: avg for w_id, avg in avg_ratings_query}
                 
-                workers = db.query(models.User).filter(models.User.id.in_(worker_ids)).all()
+                workers = db.query(models.User).filter(
+                    or_(models.User.id.in_(worker_ids), models.User.uid.in_(worker_ids))
+                ).all()
                 for worker in workers:
-                    avg = avg_ratings_map.get(worker.id)
+                    avg = avg_ratings_map.get(worker.id) or (avg_ratings_map.get(worker.uid) if worker.uid else None)
                     if avg is not None:
                         worker.rating = round(avg, 2)
                         db.add(worker)

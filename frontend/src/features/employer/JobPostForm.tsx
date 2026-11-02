@@ -10,6 +10,7 @@ import { JobPostStepThree } from './components/JobPostStepThree';
 import { CATEGORIES_LIST } from '../../constants/categories';
 import { showToast } from '../../utils/toast';
 import { useAuthStore } from "../../store/useAuthStore";
+import { useJobPostFormState } from './useJobPostForm';
 
 interface JobPostFormProps {
   onBack: () => void;
@@ -24,35 +25,21 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
   const isVerified = !!userProfile?.isVerified;
   const [step, setStep] = useState(1);
   
-  // Step 1 State
-  const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('retail');
-  const [company, setCompany] = useState(companyName || '');
-  const [imageUrl, setImageUrl] = useState('');
-  const [responsibilities, setResponsibilities] = useState('');
-  const [description, setDescription] = useState('');
-  const [tags, setTags] = useState<string[]>(['#Tezkor', "#KunlikTo'lov"]);
+  const {
+    formData,
+    setTitle, setCategory, setCompany, setImageUrl, setResponsibilities, setDescription, setTags,
+    setNeededWorkers, setWorkDate, setStartTime, setEndTime, setDurationLabel, setHourlyRate,
+    setTransportRate, setRequirements, setImportantNote,
+    setCity, setAddressLine, setCoordinateX, setCoordinateY
+  } = useJobPostFormState(companyName);
 
-  // Step 2 State
-  const [neededWorkers, setNeededWorkers] = useState('1');
-  const [workDate, setWorkDate] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  });
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime, setEndTime] = useState('18:00');
-  const [durationLabel, setDurationLabel] = useState('1 kunlik');
-  const [hourlyRate, setHourlyRate] = useState('');
-  const [transportRate, setTransportRate] = useState('');
-  const [requirements, setRequirements] = useState('');
-  const [importantNote, setImportantNote] = useState('');
+  const {
+    title, category, company, imageUrl, responsibilities, description, tags,
+    neededWorkers, workDate, startTime, endTime, durationLabel, hourlyRate,
+    transportRate, requirements, importantNote,
+    city, addressLine, coordinateX, coordinateY
+  } = formData;
 
-  // Step 3 State
-  const [city, setCity] = useState('Toshkent');
-  const [addressLine, setAddressLine] = useState('');
-  const [coordinateX, setCoordinateX] = useState(50);
-  const [coordinateY, setCoordinateY] = useState(50);
-  
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // The categories an administrator maintains. The form used to carry its own

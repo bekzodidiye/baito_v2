@@ -1,6 +1,6 @@
 import React, {} from 'react';
 import { money } from '../../../utils/money';
-import { Star, MessageSquare } from 'lucide-react';
+import { Star, MessageCircle } from 'lucide-react';
 import { Language } from '../../../translations';
 import { motion } from 'motion/react';
 import { useCurrentScreen } from '../../../hooks/useCurrentScreen';
@@ -97,7 +97,7 @@ export const ProfileReviewsWidget: React.FC<ProfileReviewsWidgetProps> = ({ lang
             
             {review.review && (
               <div className="text-xs text-slate-600 mt-2 font-medium flex items-start gap-1.5">
-                <MessageSquare size={12} className="text-slate-400 mt-0.5 shrink-0" />
+                <MessageCircle size={12} className="text-slate-400 mt-0.5 shrink-0" />
                 <p className="leading-relaxed">"{review.review}"</p>
               </div>
             )}

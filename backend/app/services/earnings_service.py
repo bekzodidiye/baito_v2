@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from app import models
@@ -131,7 +132,7 @@ class WorkerEarnings:
 
         worker = (
             db.query(models.User)
-            .filter(models.User.id == worker_id)
+            .filter(or_(models.User.id == worker_id, models.User.uid == worker_id))
             .populate_existing()
             .with_for_update()
             .first()
@@ -200,7 +201,7 @@ class WorkerEarnings:
 
         worker = (
             db.query(models.User)
-            .filter(models.User.id == worker_id)
+            .filter(or_(models.User.id == worker_id, models.User.uid == worker_id))
             .populate_existing()
             .with_for_update()
             .first()

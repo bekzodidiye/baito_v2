@@ -158,7 +158,7 @@ def expire_stale_jobs() -> int:
     scheduled to act on them.
     """
     from app.db.session import SessionLocal
-    from app.models import Job, SystemSetting
+    from app.models import Application, Job, Notification, SystemSetting
     from app.models.job import JobStatus
 
     with SessionLocal() as db:
@@ -175,6 +175,24 @@ def expire_stale_jobs() -> int:
         )
         for job in stale:
             job.status = JobStatus.CANCELLED
+            # Also withdraw pending applications on this job so they don't remain orphaned
+            pending_apps = (
+                db.query(Application)
+                .filter(
+                    Application.jobId == job.id,
+                    Application.status.in_(["applied", "pending"]),
+                )
+                .all()
+            )
+            for app in pending_apps:
+                app.status = "rejected"
+                db.add(Notification(
+                    userId=app.workerId,
+                    title="E'lon muddati tugadi",
+                    message=f"'{job.title}' e'loni muddati tugaganligi sababli bekor qilindi.",
+                    type="job",
+                ))
+
         db.commit()
         if stale:
             logger.info("Expired %d stale job postings", len(stale))
@@ -259,6 +277,30 @@ def send_telegram_digest() -> bool:
         logger.error("Telegram digest could not be sent: %s", e)
         return False
     return True
+
+
+@celery_app.task(
+    name="app.tasks.translate_job_task",
+    bind=True,
+    max_retries=2,
+    default_retry_delay=5,
+)
+def translate_job_task(self, job_id: str) -> bool:
+    """Translate a job posting into Uzbek, Russian, and English using Gemini."""
+    logger.info("Executing translate_job_task for job_id=%s", job_id)
+    from app.db.session import SessionLocal
+    from app.services.ai_translator import translate_and_save_job
+
+    db = SessionLocal()
+    try:
+        res = translate_and_save_job(db, job_id)
+        return bool(res)
+    except Exception as exc:
+        logger.error("translate_job_task failed for job_id=%s: %s", job_id, exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
 
 
 

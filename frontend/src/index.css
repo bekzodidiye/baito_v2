@@ -22,6 +22,10 @@
   --color-brand-danger: #ba1a1a;
   --color-brand-warning-container: #ffdf9e;
   --color-brand-on-warning-container: #261a00;
+
+  --color-foreground: #09090b;
+  --color-muted-foreground: #71717a;
+  --color-muted: #f4f4f5;
 }
 
 body {
@@ -93,6 +97,7 @@ body {
 .animate-pulse-slow {
   animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
 
 /* Leaflet DivIcon Custom Reset */
 .leaflet-div-icon {

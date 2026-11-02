@@ -72,13 +72,15 @@ def hire_applicant(
             detail=f"Bu ish bo'yicha barcha {vacancies} ta o'rin to'lgan",
         )
 
+    worker = db.query(models.User).filter((models.User.id == app.workerId) | (models.User.uid == app.workerId)).first()
+    worker_ids = [uid for uid in ([worker.id, getattr(worker, 'uid', None)] if worker else [app.workerId]) if uid]
     job_dates = get_job_dates_set(job)
     if job_dates:
         committed_jobs = (
             db.query(models.Job)
             .join(models.Application, models.Application.jobId == models.Job.id)
             .filter(
-                models.Application.workerId == app.workerId,
+                models.Application.workerId.in_(worker_ids),
                 models.Application.id != app.id,
                 models.Application.status.in_(COMMITTED_APP_STATUSES),
             )
@@ -146,7 +148,7 @@ def hire_applicant(
         other_apps = (
             db.query(models.Application)
             .filter(
-                models.Application.workerId == app.workerId,
+                models.Application.workerId.in_(worker_ids),
                 models.Application.id != app.id,
                 models.Application.status == "applied",
             )
@@ -212,3 +214,47 @@ def reject_applicant(
     db.refresh(app)
 
     return {"success": True, "application_status": "rejected"}
+
+
+@limiter.limit('10/minute')
+@router.post("/{id}/withdraw")
+def withdraw_application(
+    *,
+    request: Request,
+    db: Session = Depends(deps.get_db),
+    id: str,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """A worker withdraws their own pending application."""
+    app = db.query(models.Application).filter(models.Application.id == id).first()
+    if not app:
+        raise HTTPException(status_code=404, detail="Ariza topilmadi")
+
+    worker_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
+    if app.workerId not in worker_ids and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Bu arizani qaytarib olish huquqingiz yo'q")
+
+    if app.status != "applied":
+        raise HTTPException(
+            status_code=400,
+            detail="Faqat ko'rib chiqilayotgan (kutilayotgan) arizani qaytarib olish mumkin",
+        )
+
+    job = db.query(models.Job).filter(models.Job.id == app.jobId).first()
+    app.status = "withdrawn"
+    db.add(app)
+
+    if job:
+        db.add(models.Notification(
+            id=str(uuid.uuid4()),
+            userId=job.employerId,
+            title="Ariza qaytarib olindi",
+            message=f"Ishchi '{job.title}' ishiga topshirgan arizasini qaytarib oldi.",
+            type="system",
+            relatedJobId=job.id,
+        ))
+
+    db.commit()
+    db.refresh(app)
+
+    return {"success": True, "application_status": "withdrawn"}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { SupportTicket, SupportTicketDetail } from './types';
-import { Headphones, User } from 'lucide-react';
+import { Headphones, User, MessageCircle, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { SupportTicketChat } from './SupportTicketChat';
 import { fetchAdminTicketApi, replyToTicketApi, updateTicketStatusApi } from '../../api/queries';
 import { showToast } from '../../utils/toast';
@@ -24,9 +24,6 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [activeTab, setActiveTab] = useState<'all' | 'new' | 'open' | 'resolved'>('all');
-  // The list carries no messages, so selecting a ticket has to fetch it.
-  // Handing a list row straight to the chat view is what crashed the screen:
-  // it read `ticket.messages.map(...)` on a value that had no messages.
   const [selectedTicket, setSelectedTicket] = useState<SupportTicketDetail | null>(null);
   const [loadingTicket, setLoadingTicket] = useState(false);
   const [replyText, setReplyText] = useState('');
@@ -56,8 +53,10 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
 
   const filteredTickets = tickets.filter((t) => activeTab === 'all' || t.status === activeTab);
 
-  /** Reply, and move the ticket along. This only ever changed local state
-   *  before, so nothing an administrator wrote was sent anywhere. */
+  const countNew = tickets.filter(t => t.status === 'new').length;
+  const countOpen = tickets.filter(t => t.status === 'open').length;
+  const countResolved = tickets.filter(t => t.status === 'resolved').length;
+
   const handleSendReply = async (text: string) => {
     if (!selectedTicket || !text.trim()) return;
     const id = selectedTicket.id;
@@ -78,6 +77,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
       await updateTicketStatusApi(id, 'resolved');
       setTickets((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'resolved' } : t)));
       if (selectedTicket?.id === id) setSelectedTicket(null);
+      showToast("Ticket hal etildi");
     } catch (e) {
       console.error('Could not resolve the ticket', e);
       showToast("Holatni o'zgartirib bo'lmadi.");
@@ -85,24 +85,65 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
   };
 
   return (
-    <div className="space-y-4">
-      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-5 pb-8">
+      {/* Metric Summary Ribbon */}
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Jami murojaatlar</span>
+            <Headphones size={16} className="text-blue-600" />
+          </div>
+          <div className="text-xl font-black text-slate-900">{tickets.length}</div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Yangi</span>
+            <span className="w-2 h-2 rounded-full bg-blue-500" />
+          </div>
+          <div className="text-xl font-black text-blue-600">{countNew}</div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Jarayonda</span>
+            <Clock size={16} className="text-amber-500" />
+          </div>
+          <div className="text-xl font-black text-amber-600">{countOpen}</div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
+          <div className="flex items-center justify-between text-slate-500 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Hal etilgan</span>
+            <CheckCircle2 size={16} className="text-emerald-600" />
+          </div>
+          <div className="text-xl font-black text-emerald-600">{countResolved}</div>
+        </div>
+      </div>
+
+      {/* Header and Filter */}
+      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-            <Headphones size={20} className="text-blue-600" />
+          <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+              <Headphones size={18} />
+            </div>
             <span>{a.supportTitle}</span>
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 mt-1 font-medium">
             Foydalanuvchilardan kelgan murojaatlar va nizoli holatlarga tezkor javob bering
           </p>
         </div>
-        <div className="flex items-center gap-1.5">
+
+        <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/80">
           {(['all', 'new', 'open', 'resolved'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize cursor-pointer ${
-                activeTab === tab ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize cursor-pointer transition-all ${
+                activeTab === tab
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
               }`}
             >
               {tab === 'all' ? a.statusAll : tab === 'new' ? a.ticketNew : tab === 'open' ? a.chipInProgress : a.ticketResolved}
@@ -111,43 +152,57 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
         </div>
       </div>
 
+      {/* Main Grid: List + Chat Viewer */}
       <div className="grid lg:grid-cols-3 gap-4">
+        {/* Ticket List Column */}
         <div className="lg:col-span-1 space-y-2.5">
-          {filteredTickets.length === 0 && (
-            <div className="text-center text-slate-500 text-xs py-12 bg-white border border-slate-200 rounded-2xl">
-              {tickets.length === 0
-                ? 'Hozircha murojaatlar yo\'q'
-                : 'Ushbu holatda murojaat topilmadi'}
+          {filteredTickets.length === 0 ? (
+            <div className="text-center text-slate-500 text-xs py-16 bg-white border border-slate-200/90 rounded-3xl shadow-xs">
+              <MessageCircle size={32} className="text-slate-300 mx-auto mb-2" />
+              <p className="font-bold text-slate-700">
+                {tickets.length === 0 ? "Hozircha murojaatlar yo'q" : "Ushbu holatda murojaat topilmadi"}
+              </p>
             </div>
+          ) : (
+            filteredTickets.map((t) => (
+              <div
+                key={t.id}
+                onClick={() => openTicket(t.id)}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer group shadow-2xs ${
+                  selectedTicket?.id === t.id
+                    ? 'bg-blue-50/90 border-blue-400 shadow-sm'
+                    : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/60'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-mono text-[11px] font-bold text-slate-400">ID: {t.id.slice(0, 8)}</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                      t.priority === 'urgent'
+                        ? 'bg-red-50 text-red-700 border-red-200'
+                        : 'bg-blue-50 text-blue-700 border-blue-200'
+                    }`}
+                  >
+                    {t.priority.toUpperCase()}
+                  </span>
+                </div>
+                <h3 className="font-bold text-slate-900 text-xs line-clamp-1 group-hover:text-blue-600 transition-colors">
+                  {t.subject}
+                </h3>
+                <div className="flex items-center gap-2 mt-2 text-[11px] text-slate-500">
+                  <span className="flex items-center gap-1 font-bold text-slate-700">
+                    <User size={12} className="text-slate-400" />
+                    <span>{t.userName}</span>
+                  </span>
+                  <span>•</span>
+                  <span>{formatTicketTime(t.createdAt)}</span>
+                </div>
+              </div>
+            ))
           )}
-          {filteredTickets.map((t) => (
-            <div
-              key={t.id}
-              onClick={() => openTicket(t.id)}
-              className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-                selectedTicket?.id === t.id
-                  ? 'bg-blue-50/80 border-blue-300 shadow-sm'
-                  : 'bg-white border-slate-200/80 hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="font-mono text-[11px] font-bold text-slate-400">{t.id}</span>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                  t.priority === 'urgent' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                }`}>
-                  {t.priority.toUpperCase()}
-                </span>
-              </div>
-              <h3 className="font-bold text-slate-900 text-xs line-clamp-1">{t.subject}</h3>
-              <div className="flex items-center gap-2 mt-2 text-[11px] text-slate-500">
-                <span className="flex items-center gap-1 font-semibold text-slate-700"><User size={12} /> {t.userName}</span>
-                <span>•</span>
-                <span>{formatTicketTime(t.createdAt)}</span>
-              </div>
-            </div>
-          ))}
         </div>
 
+        {/* Chat / Detail View Column */}
         <div className="lg:col-span-2">
           <SupportTicketChat
             ticket={selectedTicket}
