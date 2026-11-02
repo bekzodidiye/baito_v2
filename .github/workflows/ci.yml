@@ -187,10 +187,31 @@ jobs:
         working-directory: ./frontend
         run: |
           npm ci
-          # Install platform-specific rollup & lightningcss native binaries on ARM64 runners (npm bug #4828)
+          # Install platform-specific native binaries on ARM64 runners (npm bug #4828 / architecture mismatch in lockfile)
           if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
-            npm install --no-save @rollup/rollup-linux-arm64-gnu@4.62.2 lightningcss-linux-arm64-gnu@1.32.0 || true
-            npm install --no-save --prefix .. @rollup/rollup-linux-arm64-gnu@4.62.2 lightningcss-linux-arm64-gnu@1.32.0 || true
+            npm install --no-save \
+              @rollup/rollup-linux-arm64-gnu@4.62.2 \
+              @tailwindcss/oxide-linux-arm64-gnu@4.3.2 \
+              lightningcss-linux-arm64-gnu@1.32.0 \
+              @esbuild/linux-arm64@0.25.12 || true
+            npm install --no-save --prefix .. \
+              @rollup/rollup-linux-arm64-gnu@4.62.2 \
+              @tailwindcss/oxide-linux-arm64-gnu@4.3.2 \
+              lightningcss-linux-arm64-gnu@1.32.0 \
+              @esbuild/linux-arm64@0.25.12 || true
+            node -e "
+              const fs = require('fs');
+              const path = require('path');
+              for (const base of ['..', '.']) {
+                const oxide = path.join(base, 'node_modules/@tailwindcss/oxide');
+                const binPkg = path.join(base, 'node_modules/@tailwindcss/oxide-linux-arm64-gnu');
+                if (fs.existsSync(oxide) && fs.existsSync(binPkg)) {
+                  for (const f of fs.readdirSync(binPkg).filter(f => f.endsWith('.node'))) {
+                    fs.copyFileSync(path.join(binPkg, f), path.join(oxide, f));
+                  }
+                }
+              }
+            " || true
           fi
 
       # This step did not exist, which is how two type errors reached main.
@@ -443,10 +464,31 @@ jobs:
         working-directory: ./frontend
         run: |
           npm ci
-          # Install platform-specific rollup & lightningcss native binaries on ARM64 runners (npm bug #4828)
+          # Install platform-specific native binaries on ARM64 runners (npm bug #4828 / architecture mismatch in lockfile)
           if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
-            npm install --no-save @rollup/rollup-linux-arm64-gnu@4.62.2 lightningcss-linux-arm64-gnu@1.32.0 || true
-            npm install --no-save --prefix .. @rollup/rollup-linux-arm64-gnu@4.62.2 lightningcss-linux-arm64-gnu@1.32.0 || true
+            npm install --no-save \
+              @rollup/rollup-linux-arm64-gnu@4.62.2 \
+              @tailwindcss/oxide-linux-arm64-gnu@4.3.2 \
+              lightningcss-linux-arm64-gnu@1.32.0 \
+              @esbuild/linux-arm64@0.25.12 || true
+            npm install --no-save --prefix .. \
+              @rollup/rollup-linux-arm64-gnu@4.62.2 \
+              @tailwindcss/oxide-linux-arm64-gnu@4.3.2 \
+              lightningcss-linux-arm64-gnu@1.32.0 \
+              @esbuild/linux-arm64@0.25.12 || true
+            node -e "
+              const fs = require('fs');
+              const path = require('path');
+              for (const base of ['..', '.']) {
+                const oxide = path.join(base, 'node_modules/@tailwindcss/oxide');
+                const binPkg = path.join(base, 'node_modules/@tailwindcss/oxide-linux-arm64-gnu');
+                if (fs.existsSync(oxide) && fs.existsSync(binPkg)) {
+                  for (const f of fs.readdirSync(binPkg).filter(f => f.endsWith('.node'))) {
+                    fs.copyFileSync(path.join(binPkg, f), path.join(oxide, f));
+                  }
+                }
+              }
+            " || true
           fi
 
       # `--with-deps` shells out to `sudo apt-get install` for the shared
