@@ -104,6 +104,8 @@ export interface AdminJob {
   requirements?: string;
   importantNote?: string;
   neededWorkers?: string;
+  vacancies?: number | string;
+  hiredCount?: number;
   hourlyRate?: string;
   transportRate?: string;
   tags?: any;

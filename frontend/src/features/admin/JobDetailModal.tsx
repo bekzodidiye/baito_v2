@@ -141,68 +141,72 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) 
           className="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-2xl sm:max-w-3xl max-h-[94vh] sm:max-h-[90vh] flex flex-col overflow-hidden border border-slate-200/90 z-10"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-3.5 bg-white border-b border-slate-100 shrink-0 z-10">
+          <div className="flex items-center justify-between px-5 sm:px-6 py-4 bg-white border-b border-slate-100 shrink-0 z-10">
             <div className="flex items-center gap-3 min-w-0">
               <button 
                 onClick={onClose} 
-                className="text-slate-500 hover:text-slate-800 transition-colors cursor-pointer w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 shrink-0"
+                className="text-slate-400 hover:text-slate-800 transition-colors cursor-pointer w-9 h-9 flex items-center justify-center rounded-2xl hover:bg-slate-100 shrink-0 border border-transparent hover:border-slate-200"
                 aria-label="Yopish"
               >
                 <X size={18} />
               </button>
               <div className="min-w-0">
-                <h2 className="text-sm sm:text-base font-extrabold text-slate-900 leading-tight truncate">{j.title}</h2>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[11px] text-slate-400 font-mono font-medium">#{j.id.slice(0, 10)}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Ish Tafsilotlari</span>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-[11px] text-slate-400 font-mono font-medium">#{j.id.slice(0, 8)}</span>
                   <button
                     onClick={handleCopyId}
-                    className="text-[10px] text-brand-primary hover:opacity-80 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                    className="text-[11px] text-brand-primary hover:opacity-80 font-bold flex items-center gap-1 cursor-pointer transition-colors"
                     title="ID nusxalash"
                   >
                     {copiedId ? (
                       <span className="text-emerald-600 flex items-center gap-0.5">
-                        <Check size={10} /> Nusxalandi
+                        <Check size={11} /> Nusxalandi
                       </span>
                     ) : (
                       <span className="flex items-center gap-0.5">
-                        <Copy size={10} /> Nusxalash
+                        <Copy size={11} /> Nusxalash
                       </span>
                     )}
                   </button>
                 </div>
+                <h2 className="text-sm sm:text-base font-black text-slate-900 leading-tight truncate mt-0.5">{j.title}</h2>
               </div>
             </div>
 
             {/* Status Pill Badge */}
-            <div className={`px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 border shrink-0 ${status.bg} ${status.text}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${status.dot} ${j.status === 'in_progress' ? 'animate-pulse' : ''}`} />
+            <div className={`px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 border shadow-2xs shrink-0 ${status.bg} ${status.text}`}>
+              <span className={`w-2 h-2 rounded-full ${status.dot} ${j.status === 'in_progress' ? 'animate-pulse' : ''}`} />
               <span>{status.label}</span>
             </div>
           </div>
 
           {/* Segmented Tab Navigation */}
-          <div className="flex border-b border-slate-100 bg-white shrink-0 px-3 overflow-x-auto no-scrollbar">
-            {tabs.map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 px-4 py-3 text-xs font-bold transition-all cursor-pointer border-b-2 whitespace-nowrap ${
-                  activeTab === tab.key
-                    ? 'text-brand-primary border-brand-primary'
-                    : 'text-slate-500 border-transparent hover:text-slate-800'
-                }`}
-              >
-                {tab.icon}
-                <span>{tab.label}</span>
-                {typeof tab.count === 'number' && tab.count > 0 && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
-                    activeTab === tab.key ? 'bg-brand-primary/10 text-brand-primary' : 'bg-slate-100 text-slate-600'
-                  }`}>
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
+          <div className="px-4 sm:px-6 pt-3 pb-2.5 bg-white border-b border-slate-100 shrink-0">
+            <div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl overflow-x-auto no-scrollbar border border-slate-200/60">
+              {tabs.map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                    activeTab === tab.key
+                      ? 'bg-white text-brand-primary shadow-xs font-black'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  }`}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                  {typeof tab.count === 'number' && tab.count > 0 && (
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      activeTab === tab.key ? 'bg-brand-primary/10 text-brand-primary' : 'bg-slate-200 text-slate-600'
+                    }`}>
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Tab Content Area */}
@@ -258,44 +262,67 @@ const JobSteps: React.FC<{ steps: AdminJobStep[] }> = ({ steps }) => {
   if (steps.length === 0) return null;
   const done = steps.filter(s => s.state === 'done').length;
   const total = steps.filter(s => s.state !== 'cancelled').length;
+  const percent = total > 0 ? Math.round((done / total) * 100) : 0;
 
   return (
-    <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs mb-4">
-      <div className="flex items-center justify-between mb-3.5">
-        <h3 className="text-xs font-extrabold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
-          <ListChecks size={15} className="text-brand-primary" />
+    <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-xs font-black text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+          <div className="w-6 h-6 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center">
+            <ListChecks size={14} />
+          </div>
           <span>Ish Jarayoni Bosqichlari</span>
         </h3>
-        <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">{done} / {total} bajarildi</span>
+        <span className="text-[11px] font-black text-brand-primary bg-brand-primary/10 px-2.5 py-0.5 rounded-full border border-brand-primary/20">
+          {done} / {total} bajarildi ({percent}%)
+        </span>
       </div>
 
-      <ol className="relative pl-1">
+      {/* Progress Track */}
+      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-4">
+        <div 
+          className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
+          style={{ width: `${percent}%` }} 
+        />
+      </div>
+
+      <ol className="relative pl-1 space-y-3">
         {steps.map((step, idx) => {
           const st = stepStyles[step.state] || stepStyles.pending;
           const last = idx === steps.length - 1;
           return (
-            <li key={step.key} className="flex gap-3 pb-3.5 last:pb-0 relative">
+            <li key={step.key} className="flex gap-3 pb-3 last:pb-0 relative">
               {!last && (
                 <span
                   aria-hidden="true"
-                  className={`absolute left-[9px] top-5 bottom-0 w-0.5 ${
-                    step.state === 'done' ? 'bg-emerald-300' : 'bg-slate-200'
+                  className={`absolute left-[11px] top-6 bottom-0 w-0.5 ${
+                    step.state === 'done' ? 'bg-emerald-400' : 'bg-slate-200'
                   }`}
                 />
               )}
               <span
-                className={`w-[20px] h-[20px] rounded-full border-2 flex items-center justify-center shrink-0 z-10 transition-all ${st.ring}`}
+                className={`w-[24px] h-[24px] rounded-full flex items-center justify-center shrink-0 z-10 transition-all ${
+                  step.state === 'done'
+                    ? 'bg-emerald-500 text-white shadow-xs shadow-emerald-500/25 ring-2 ring-emerald-100'
+                    : step.state === 'current'
+                    ? 'bg-brand-primary text-white shadow-xs shadow-brand-primary/25 ring-4 ring-brand-primary/15 animate-pulse'
+                    : step.state === 'cancelled'
+                    ? 'bg-rose-500 text-white ring-2 ring-rose-100'
+                    : 'bg-white border-2 border-slate-300 text-slate-300'
+                }`}
               >
                 {step.state === 'done' ? (
-                  <CheckCircle2 size={11} className={st.fill} strokeWidth={3} />
+                  <CheckCircle2 size={13} className="text-white" strokeWidth={2.5} />
+                ) : step.state === 'current' ? (
+                  <span className="w-2 h-2 rounded-full bg-white" />
                 ) : step.state === 'cancelled' ? (
-                  <XCircle size={11} className={st.fill} strokeWidth={3} />
+                  <XCircle size={13} className="text-white" strokeWidth={2.5} />
                 ) : (
-                  <Circle size={6} className={st.fill} fill="currentColor" />
+                  <Circle size={6} className="text-slate-300" fill="currentColor" />
                 )}
               </span>
               <div className="min-w-0 flex-1 -mt-0.5">
-                <p className={`text-xs font-bold leading-snug ${st.label}`}>{step.label}</p>
+                <p className={`text-xs font-extrabold leading-snug ${st.label}`}>{step.label}</p>
                 {(step.date || step.detail) && (
                   <p className={`text-[11px] font-medium mt-0.5 ${st.date}`}>
                     {step.detail && <span>{step.detail}</span>}
@@ -319,7 +346,7 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
   return (
     <div className="pb-8">
       {/* Banner */}
-      <div className="w-full h-44 sm:h-52 relative bg-slate-200 overflow-hidden">
+      <div className="mx-4 sm:mx-6 mt-4 rounded-3xl overflow-hidden relative bg-slate-200 border border-slate-200/80 shadow-xs h-48 sm:h-56">
         <img
           src={bannerUrl}
           alt={j.title}
@@ -331,16 +358,16 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
             if (target.src !== fallback) target.src = fallback;
           }}
         />
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-950/85 via-slate-950/40 to-transparent" />
         
-        {/* Banner Overlays */}
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
-          <span className="bg-black/60 backdrop-blur-md text-white px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5">
+        {/* Banner Overlays Top */}
+        <div className="absolute top-3.5 left-3.5 flex items-center gap-1.5 flex-wrap">
+          <span className="bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-xl text-[11px] font-extrabold flex items-center gap-1.5 border border-white/10 shadow-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             {j.category || adminText().jobTypeFallback || 'Kategoriya'}
           </span>
           {j.urgent && (
-            <span className="bg-rose-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+            <span className="bg-rose-600/90 backdrop-blur-md text-white px-3 py-1 rounded-xl text-[11px] font-extrabold flex items-center gap-1 border border-rose-400/20 shadow-xs animate-pulse">
               <Sparkles size={11} />
               Zudlik
             </span>
@@ -348,33 +375,35 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
         </div>
 
         {j.views !== undefined && (
-          <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5">
+          <div className="absolute top-3.5 right-3.5 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-xl text-[11px] font-extrabold flex items-center gap-1.5 border border-white/10 shadow-xs">
             <Eye size={12} /> {j.views} ko'rildi
           </div>
         )}
 
-        <div className="absolute bottom-3 left-4 right-4 text-white">
-          <div className="text-[11px] font-medium text-slate-200 flex items-center gap-1.5">
-            <Building2 size={12} /> {j.company || j.employerName || '—'}
+        <div className="absolute bottom-3.5 left-4 right-4 text-white">
+          <div className="text-xs font-bold text-slate-200 flex items-center gap-1.5 drop-shadow-sm">
+            <Building2 size={13} className="text-slate-300" /> {j.company || j.employerName || '—'}
           </div>
-          <h1 className="text-base sm:text-lg font-black leading-tight drop-shadow-sm mt-0.5 truncate">{j.title}</h1>
+          <h1 className="text-base sm:text-xl font-black leading-tight drop-shadow-md mt-1 truncate">{j.title}</h1>
         </div>
       </div>
 
       <div className="px-4 sm:px-6 mt-4 space-y-4">
         {/* 4 Primary Stat Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
           <StatCard
             icon={<DollarSign size={15} className="text-emerald-600" />}
             bg="bg-emerald-50"
             label={adminText().salaryLabel}
             value={salaryFormatted}
+            color="text-emerald-700 font-extrabold"
           />
           <StatCard
             icon={<Zap size={15} className="text-amber-600" />}
             bg="bg-amber-50"
             label="Soatlik stavka"
             value={j.hourlyRate ? `${j.hourlyRate} / soat` : "Yo'q"}
+            color="text-amber-700"
           />
           <StatCard
             icon={<Calendar size={15} className="text-brand-primary" />}
@@ -396,101 +425,104 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
         {/* Employer & Hired Worker Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Employer Card */}
-          <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 border border-brand-primary/20">
-                <Building2 size={18} />
+          <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="w-11 h-11 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 border border-brand-primary/20 shadow-2xs">
+                <Building2 size={20} />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">{adminText().roleEmployer}</span>
-                <span className="text-xs font-black text-slate-800 block truncate">{j.employerName || j.company || '—'}</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">{adminText().roleEmployer}</span>
+                <span className="text-sm font-black text-slate-900 block truncate mt-0.5">{j.employerName || j.company || '—'}</span>
                 {(j as any).employerPhone && (
-                  <span className="text-[11px] text-slate-500 font-mono mt-0.5 block truncate">{(j as any).employerPhone}</span>
+                  <span className="text-xs text-slate-500 font-mono mt-0.5 block truncate">{(j as any).employerPhone}</span>
                 )}
               </div>
             </div>
             {(j as any).employerPhone && (
               <a
                 href={`tel:${(j as any).employerPhone}`}
-                className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-brand-primary/10 text-slate-500 hover:text-brand-primary flex items-center justify-center shrink-0 transition-colors"
+                className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-brand-primary hover:text-white text-slate-500 flex items-center justify-center shrink-0 transition-all shadow-2xs hover:shadow-brand-primary/20 cursor-pointer"
                 title="Qo'ng'iroq qilish"
               >
-                <Phone size={14} />
+                <Phone size={15} />
               </a>
             )}
           </div>
 
           {/* Hired Worker Card */}
           {detail?.hiredWorker ? (
-            <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
-                  <UserCheck size={18} />
+            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100 shadow-2xs">
+                  <UserCheck size={20} />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">{adminText().assignedWorker}</span>
-                  <span className="text-xs font-black text-slate-800 block truncate">{detail.hiredWorker.workerName}</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 block">{adminText().assignedWorker}</span>
+                  <span className="text-sm font-black text-slate-900 block truncate mt-0.5">{detail.hiredWorker.workerName}</span>
                   {detail.hiredWorker.workerPhone && (
-                    <span className="text-[11px] text-slate-500 font-mono mt-0.5 block truncate">{detail.hiredWorker.workerPhone}</span>
+                    <span className="text-xs text-slate-500 font-mono mt-0.5 block truncate">{detail.hiredWorker.workerPhone}</span>
                   )}
                 </div>
               </div>
               {detail.hiredWorker.workerPhone && (
                 <a
                   href={`tel:${detail.hiredWorker.workerPhone}`}
-                  className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-500 hover:text-emerald-600 flex items-center justify-center shrink-0 transition-colors"
+                  className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-emerald-600 hover:text-white text-slate-500 flex items-center justify-center shrink-0 transition-all shadow-2xs hover:shadow-emerald-600/20 cursor-pointer"
                   title="Qo'ng'iroq qilish"
                 >
-                  <Phone size={14} />
+                  <Phone size={15} />
                 </a>
               )}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex items-center gap-3 text-slate-400">
-              <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center shrink-0">
-                <User size={18} />
+            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-dashed border-slate-200 flex items-center gap-3.5 text-slate-400">
+              <div className="w-11 h-11 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center shrink-0">
+                <User size={20} />
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">{adminText().assignedWorker}</span>
-                <span className="text-xs font-bold text-slate-500">Hozircha biriktirilmagan</span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">{adminText().assignedWorker}</span>
+                <span className="text-xs font-bold text-slate-500 mt-0.5 block">Hozircha biriktirilmagan</span>
               </div>
             </div>
           )}
         </div>
 
         {/* Location Card */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 border border-orange-100">
-            <MapPin size={18} />
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 border border-orange-100">
+            <MapPin size={20} />
           </div>
           <div className="min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Joylashuv va Manzil</span>
-            <span className="text-xs font-black text-slate-800 truncate block mt-0.5">{j.rawLocation || j.location || '—'}</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Joylashuv va Manzil</span>
+            <span className="text-xs sm:text-sm font-black text-slate-800 truncate block mt-0.5">{j.rawLocation || j.location || '—'}</span>
           </div>
         </div>
 
         {/* Description */}
         {j.description && (
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-2">{adminText().extraInfo}</h3>
-            <p className="text-xs text-slate-600 font-medium leading-relaxed whitespace-pre-line">{j.description}</p>
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 mb-2.5 flex items-center gap-2">
+              <FileText size={15} className="text-brand-primary" />
+              <span>{adminText().extraInfo}</span>
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed whitespace-pre-line">{j.description}</p>
           </div>
         )}
 
         {/* Tasks */}
         {tasks.length > 0 && (
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-3 flex items-center gap-2">
-              <Briefcase size={14} className="text-brand-primary" />
-              <span>Ish vazifalari</span>
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 mb-3.5 flex items-center gap-2">
+              <Briefcase size={15} className="text-brand-primary" />
+              <span>Ish vazifalari ({tasks.length})</span>
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {tasks.map((task, idx) => (
-                <div key={idx} className="flex items-start gap-3 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
-                  <div className="w-5 h-5 rounded-full bg-brand-primary text-white shadow-xs shadow-brand-primary/20 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
+                <div key={idx} className="flex items-start gap-3 bg-slate-50/90 p-3 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">
+                  <div className="w-6 h-6 rounded-xl bg-brand-primary text-white shadow-xs shadow-brand-primary/20 flex items-center justify-center text-[11px] font-mono font-black shrink-0 mt-0.5">
                     {idx + 1}
                   </div>
-                  <p className="text-xs text-slate-700 font-medium leading-snug">{task.replace(/^-/, '').trim()}</p>
+                  <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">{task.replace(/^-/, '').trim()}</p>
                 </div>
               ))}
             </div>
@@ -499,27 +531,27 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
 
         {/* Requirements */}
         {requirements.length > 0 && (
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-3 flex items-center gap-2">
-              <CheckCircle2 size={14} className="text-emerald-600" />
-              <span>Talablar</span>
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 mb-3.5 flex items-center gap-2">
+              <CheckCircle2 size={15} className="text-emerald-600" />
+              <span>Nomzodga qo'yiladigan talablar ({requirements.length})</span>
             </h3>
-            <ul className="space-y-2">
+            <div className="space-y-2">
               {requirements.map((req, idx) => (
-                <li key={idx} className="flex items-start gap-2.5">
-                  <CheckCircle2 size={14} className="text-emerald-500 mt-0.5 shrink-0" />
-                  <p className="text-xs text-slate-600 font-medium leading-relaxed">{req.replace(/^-/, '').trim()}</p>
-                </li>
+                <div key={idx} className="flex items-start gap-3 bg-emerald-50/40 p-2.5 rounded-xl border border-emerald-100/60">
+                  <CheckCircle2 size={15} className="text-emerald-500 mt-0.5 shrink-0" />
+                  <p className="text-xs text-slate-700 font-medium leading-relaxed">{req.replace(/^-/, '').trim()}</p>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
         {/* Tags */}
         {j.tags && Array.isArray(j.tags) && j.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pt-1">
+          <div className="flex flex-wrap gap-2 pt-1">
             {j.tags.map((tag: string, i: number) => (
-              <span key={i} className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-slate-200/60">
+              <span key={i} className="bg-white text-slate-700 px-3 py-1 rounded-xl text-[11px] font-bold border border-slate-200/80 shadow-2xs hover:border-brand-primary/40 transition-colors">
                 #{tag}
               </span>
             ))}
@@ -530,15 +562,21 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
   );
 };
 
-const StatCard: React.FC<{ icon: React.ReactNode; bg: string; label: string; value: string }> = ({ icon, bg, label, value }) => (
-  <div className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs">
-    <div className="flex items-center gap-1.5 mb-1.5">
-      <div className={`w-6 h-6 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
+const StatCard: React.FC<{ icon: React.ReactNode; bg: string; label: string; value: string; color?: string }> = ({ 
+  icon, 
+  bg, 
+  label, 
+  value,
+  color = "text-slate-900"
+}) => (
+  <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow">
+    <div className="flex items-center gap-2 mb-2">
+      <div className={`w-7 h-7 rounded-xl ${bg} flex items-center justify-center shrink-0 border border-slate-100`}>
         {icon}
       </div>
-      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 truncate">{label}</span>
+      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 truncate">{label}</span>
     </div>
-    <p className="text-xs sm:text-sm font-black text-slate-900 truncate font-mono">{value}</p>
+    <p className={`text-xs sm:text-sm font-black truncate font-mono ${color}`}>{value}</p>
   </div>
 );
 
@@ -554,14 +592,27 @@ const timelineIcons: Record<string, { icon: React.ReactNode; color: string }> = 
 
 const TimelineTab: React.FC<{ timeline: AdminTimelineEvent[] }> = ({ timeline }) => (
   <div className="p-5 sm:p-6 max-w-xl mx-auto">
-    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-4 flex items-center gap-2">
-      <History size={15} className="text-brand-primary" />
-      <span>Voqealar Xronologiyasi</span>
-    </h3>
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+        <div className="w-6 h-6 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center">
+          <History size={14} />
+        </div>
+        <span>Voqealar Xronologiyasi</span>
+      </h3>
+      {timeline.length > 0 && (
+        <span className="text-[11px] font-black text-brand-primary bg-brand-primary/10 px-2.5 py-0.5 rounded-full border border-brand-primary/20">
+          {timeline.length} ta yozuv
+        </span>
+      )}
+    </div>
+
     {timeline.length === 0 ? (
       <div className="text-center py-16 text-slate-400 bg-white rounded-3xl border border-slate-200/80 p-8 shadow-2xs">
-        <History size={36} className="mx-auto mb-2 opacity-40 text-slate-300" />
-        <p className="text-xs font-bold text-slate-600">{adminText().noEventsYet}</p>
+        <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+          <History size={22} />
+        </div>
+        <p className="text-xs font-bold text-slate-700">{adminText().noEventsYet}</p>
+        <p className="text-[11px] text-slate-400 mt-0.5">Ushbu e'lon bo'yicha hech qanday voqea qayd etilmagan</p>
       </div>
     ) : (
       <div className="relative pl-2">
@@ -571,13 +622,13 @@ const TimelineTab: React.FC<{ timeline: AdminTimelineEvent[] }> = ({ timeline })
           {timeline.map((event, idx) => {
             const ic = timelineIcons[event.icon] || timelineIcons['plus'];
             return (
-              <div key={idx} className="flex items-start gap-3 relative">
-                <div className={`w-8 h-8 rounded-full ${ic.color} flex items-center justify-center shrink-0 z-10 border-2 border-white shadow-xs`}>
+              <div key={idx} className="flex items-start gap-3.5 relative">
+                <div className={`w-9 h-9 rounded-2xl ${ic.color} flex items-center justify-center shrink-0 z-10 border-2 border-white shadow-2xs`}>
                   {ic.icon}
                 </div>
-                <div className="flex-1 min-w-0 bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-2xs">
-                  <p className="text-xs font-extrabold text-slate-800 leading-snug">{event.label}</p>
-                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">{formatDate(event.date)}</p>
+                <div className="flex-1 min-w-0 bg-white rounded-3xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow">
+                  <p className="text-xs font-black text-slate-900 leading-snug">{event.label}</p>
+                  <p className="text-[11px] text-slate-400 font-medium mt-1 font-mono">{formatDate(event.date)}</p>
                 </div>
               </div>
             );
@@ -592,26 +643,34 @@ const TimelineTab: React.FC<{ timeline: AdminTimelineEvent[] }> = ({ timeline })
 const ApplicationsTab: React.FC<{ applications: AdminJobApplication[] }> = ({ applications }) => (
   <div className="p-5 sm:p-6 max-w-2xl mx-auto">
     <div className="flex items-center justify-between mb-4">
-      <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-2">
-        <Users size={15} className="text-brand-primary" />
-        <span>Kelib Tushgan Arizalar ({applications.length})</span>
+      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+        <div className="w-6 h-6 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center">
+          <Users size={14} />
+        </div>
+        <span>Kelib Tushgan Arizalar</span>
       </h3>
+      <span className="text-[11px] font-black text-brand-primary bg-brand-primary/10 px-2.5 py-0.5 rounded-full border border-brand-primary/20">
+        {applications.length} ta nomzod
+      </span>
     </div>
 
     {applications.length === 0 ? (
       <div className="text-center py-16 text-slate-400 bg-white rounded-3xl border border-slate-200/80 p-8 shadow-2xs">
-        <Users size={36} className="mx-auto mb-2 opacity-40 text-slate-300" />
-        <p className="text-xs font-bold text-slate-600">{adminText().noApplicationsYet}</p>
+        <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+          <Users size={22} />
+        </div>
+        <p className="text-xs font-bold text-slate-700">{adminText().noApplicationsYet}</p>
+        <p className="text-[11px] text-slate-400 mt-0.5">Hali hech kim ariza topshirmagan</p>
       </div>
     ) : (
-      <div className="space-y-3">
+      <div className="space-y-3.5">
         {applications.map(app => {
           const st = appStatusLabels[app.status] || { label: app.status, color: 'text-slate-600 bg-slate-50 border-slate-200' };
           return (
-            <div key={app.id} className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow">
-              <div className="flex items-start justify-between gap-3 mb-2.5">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center shrink-0 overflow-hidden border border-slate-200">
+            <div key={app.id} className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow">
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center shrink-0 overflow-hidden border border-slate-200/80 shadow-2xs">
                     {app.workerAvatar ? (
                       <img
                         src={app.workerAvatar}
@@ -624,39 +683,39 @@ const ApplicationsTab: React.FC<{ applications: AdminJobApplication[] }> = ({ ap
                         }}
                       />
                     ) : (
-                      <User size={18} className="text-slate-400" />
+                      <User size={20} className="text-slate-400" />
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-black text-slate-900 truncate">{app.workerName}</p>
+                    <p className="text-sm font-black text-slate-900 truncate">{app.workerName}</p>
                     {app.workerPhone && (
-                      <p className="text-[11px] text-slate-500 font-mono mt-0.5">{app.workerPhone}</p>
+                      <p className="text-xs text-slate-500 font-mono mt-0.5">{app.workerPhone}</p>
                     )}
                   </div>
                 </div>
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${st.color}`}>
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-2xs ${st.color}`}>
                   {st.label}
                 </span>
               </div>
               
-              <div className="flex items-center gap-4 text-[11px] text-slate-500 font-medium pt-2 border-t border-slate-100">
+              <div className="flex items-center gap-4 text-[11px] text-slate-500 font-medium pt-3 border-t border-slate-100 flex-wrap">
                 <span className="flex items-center gap-1">
-                  <Calendar size={12} className="text-slate-400" /> {formatDate(app.appliedDate)}
+                  <Calendar size={13} className="text-slate-400" /> {formatDate(app.appliedDate)}
                 </span>
                 {app.rating !== undefined && (
-                  <span className="flex items-center gap-1">
-                    <Star size={12} className="text-amber-500 fill-amber-500" /> {app.rating}/5
+                  <span className="flex items-center gap-1 font-bold text-slate-700">
+                    <Star size={13} className="text-amber-500 fill-amber-500" /> {app.rating}/5
                   </span>
                 )}
                 {app.bonus && app.bonus > 0 ? (
-                  <span className="flex items-center gap-1 text-emerald-600 font-bold">
-                    <DollarSign size={12} /> Bonus: {app.bonus}
+                  <span className="flex items-center gap-1 text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200/60">
+                    <DollarSign size={13} /> Bonus: {app.bonus}
                   </span>
                 ) : null}
               </div>
 
               {app.review && (
-                <p className="mt-2.5 text-xs text-slate-600 bg-slate-50/80 p-3 rounded-xl border border-slate-100 font-medium italic">
+                <p className="mt-3 text-xs text-slate-700 bg-slate-50/90 p-3.5 rounded-2xl border border-slate-100 font-medium italic">
                   "{app.review}"
                 </p>
               )}
@@ -674,63 +733,75 @@ const PaymentsTab: React.FC<{ transactions: AdminJobTransaction[] }> = ({ transa
 
   return (
     <div className="p-5 sm:p-6 max-w-2xl mx-auto">
-      <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-4 flex items-center gap-2">
-        <CreditCard size={15} className="text-brand-primary" />
-        <span>Moliyaviy To'lovlar ({transactions.length})</span>
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center">
+            <CreditCard size={14} />
+          </div>
+          <span>Moliyaviy To'lovlar</span>
+        </h3>
+        <span className="text-[11px] font-black text-brand-primary bg-brand-primary/10 px-2.5 py-0.5 rounded-full border border-brand-primary/20">
+          {transactions.length} ta operatsiya
+        </span>
+      </div>
 
       {transactions.length === 0 ? (
         <div className="text-center py-16 text-slate-400 bg-white rounded-3xl border border-slate-200/80 p-8 shadow-2xs">
-          <CreditCard size={36} className="mx-auto mb-2 opacity-40 text-slate-300" />
-          <p className="text-xs font-bold text-slate-600">{adminText().noPaymentsFound}</p>
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+            <CreditCard size={22} />
+          </div>
+          <p className="text-xs font-bold text-slate-700">{adminText().noPaymentsFound}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">Ushbu e'lon bo'yicha tranzaksiyalar mavjud emas</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3.5">
           {transactions.map(tx => {
             const st = txnStatusLabels[tx.status] || { label: tx.status, color: 'text-slate-600 bg-slate-50 border-slate-200' };
             return (
-              <div key={tx.id} className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 border border-brand-primary/20">
-                      {tx.type === 'deposit' ? <Banknote size={16} /> : <CreditCard size={16} />}
+              <div key={tx.id} className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs">
+                <div className="flex items-center justify-between mb-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 border border-brand-primary/20 shadow-2xs">
+                      {tx.type === 'deposit' ? <Banknote size={17} /> : <CreditCard size={17} />}
                     </div>
                     <div>
-                      <p className="text-xs font-extrabold text-slate-900">{txnTypeLabels[tx.type] || tx.type}</p>
-                      <p className="text-[10px] text-slate-400 font-medium">{formatDate(tx.createdAt)}</p>
+                      <p className="text-xs font-black text-slate-900">{txnTypeLabels[tx.type] || tx.type}</p>
+                      <p className="text-[10px] text-slate-400 font-medium font-mono">{formatDate(tx.createdAt)}</p>
                     </div>
                   </div>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${st.color}`}>
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-2xs ${st.color}`}>
                     {st.label}
                   </span>
                 </div>
                 
-                <div className="bg-slate-50/80 rounded-xl p-3 grid grid-cols-2 gap-2 text-xs border border-slate-100">
+                <div className="bg-slate-50/90 rounded-2xl p-4 grid grid-cols-2 gap-3 text-xs border border-slate-100">
                   <div>
-                    <span className="text-slate-400 font-medium text-[10px] block uppercase tracking-wider">Summa</span>
-                    <span className="text-slate-900 font-extrabold font-mono">{money(tx.amount, language)}</span>
+                    <span className="text-slate-400 font-bold text-[10px] block uppercase tracking-wider">Summa</span>
+                    <span className="text-emerald-700 font-black font-mono text-sm">{money(tx.amount, language)}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 font-medium text-[10px] block uppercase tracking-wider">Platforma komissiyasi</span>
-                    <span className="text-slate-900 font-extrabold font-mono">{money(tx.platformFee, language)}</span>
+                    <span className="text-slate-400 font-bold text-[10px] block uppercase tracking-wider">Platforma komissiyasi</span>
+                    <span className="text-slate-900 font-black font-mono text-sm">{money(tx.platformFee, language)}</span>
                   </div>
                   {tx.employerName && (
                     <div>
-                      <span className="text-slate-400 font-medium text-[10px] block uppercase tracking-wider">{adminText().roleEmployer}</span>
+                      <span className="text-slate-400 font-bold text-[10px] block uppercase tracking-wider">{adminText().roleEmployer}</span>
                       <span className="text-slate-800 font-bold truncate block">{tx.employerName}</span>
                     </div>
                   )}
                   {tx.workerName && (
                     <div>
-                      <span className="text-slate-400 font-medium text-[10px] block uppercase tracking-wider">{adminText().roleWorker}</span>
+                      <span className="text-slate-400 font-bold text-[10px] block uppercase tracking-wider">{adminText().roleWorker}</span>
                       <span className="text-slate-800 font-bold truncate block">{tx.workerName}</span>
                     </div>
                   )}
                 </div>
 
                 {tx.providerTransactionId && (
-                  <div className="mt-2.5 text-[10px] text-slate-400 flex items-center gap-1 font-mono">
-                    <FileText size={10} /> Tranzaksiya ID: {tx.providerTransactionId}
+                  <div className="mt-3 text-[10px] text-slate-400 flex items-center gap-1.5 font-mono bg-slate-100 px-3 py-1.5 rounded-xl">
+                    <FileText size={11} className="text-slate-500" /> 
+                    <span>Tranzaksiya ID:</span>
+                    <span className="text-slate-700 font-bold">{tx.providerTransactionId}</span>
                   </div>
                 )}
               </div>

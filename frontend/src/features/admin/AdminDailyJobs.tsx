@@ -3,7 +3,8 @@ import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { parseWorkDates, toIsoDate } from '../../utils/workDates';
 import { AdminJob, AdminUser } from './types';
-import { Search, Trash2, Building2, Briefcase, XCircle, Eye, Wallet, X, Clock, Calendar, AlertCircle } from 'lucide-react';
+import { money } from '../../utils/money';
+import { Search, Trash2, Building2, Briefcase, XCircle, Eye, Wallet, X, Clock, Calendar, AlertCircle, MapPin, DollarSign, Sparkles } from 'lucide-react';
 import { RejectJobModal } from './RejectJobModal';
 import { UserDetailModal } from './UserDetailModal';
 import { workTimingOf, humanMinutes, LATE_THRESHOLD_MIN } from './workTiming';
@@ -301,139 +302,188 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
             <p className="text-xs text-slate-400 mt-1">Boshqa sanani tanlab ko'ring</p>
           </div>
         ) : (
-          filteredJobs.map((j) => (
-            <div
-              key={j.id}
-              className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-2xs hover:shadow-xs transition-shadow flex flex-col lg:flex-row lg:items-center justify-between gap-4"
-            >
-              {/* Job Info Block */}
-              <div className="flex-1 min-w-0 lg:max-w-xs">
-                <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">{a.jobNameLabel}</div>
-                <div 
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setSelectedJobDetails(j)}
-                  className="font-black text-sm text-slate-900 flex items-center gap-2.5 cursor-pointer hover:text-brand-primary transition-colors group"
-                >
-                  <div className="w-9 h-9 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 border border-brand-primary/20 group-hover:bg-brand-primary group-hover:text-white transition-colors">
-                    <Briefcase size={16} />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="truncate block">{j.title}</span>
-                    <span className="text-[10px] text-slate-400 font-mono font-medium block">#{j.id.slice(0, 8)}</span>
-                  </div>
-                </div>
-              </div>
+          filteredJobs.map((j) => {
+            const salaryFormatted = money(j.salary, language);
+            const vacancies = Number(j.vacancies || (j.neededWorkers ? parseInt(j.neededWorkers) : 1));
+            const hired = Number(j.hiredCount || (j.workerId ? 1 : 0));
 
-              {/* Employer Info Block */}
-              <div className="flex-1 min-w-0 lg:max-w-xs">
-                <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">{a.companyColumn}</div>
-                <div 
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => handleUserClick(j.employerId)} 
-                  className="font-bold text-xs text-slate-800 cursor-pointer hover:text-brand-primary transition-colors flex items-center gap-2.5"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 border border-slate-200/80">
-                    <Building2 size={15} />
-                  </div>
-                  <span className="truncate">{j.company || j.employerName || '—'}</span>
-                </div>
-              </div>
+            return (
+              <div
+                key={j.id}
+                className="bg-white rounded-3xl border border-slate-200/90 hover:border-brand-primary/40 p-5 shadow-2xs hover:shadow-xs transition-all space-y-4"
+              >
+                {/* Top Quick Meta Ribbon */}
+                <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 border-b border-slate-100">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Category */}
+                    <span className="inline-flex items-center gap-1.5 bg-brand-primary/10 text-brand-primary px-3 py-1 rounded-full text-[11px] font-black border border-brand-primary/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-brand-primary" />
+                      <span>{j.category || a.jobTypeFallback || 'Kunlik ish'}</span>
+                    </span>
 
-              {/* Worker Assignment Block */}
-              <div className="flex-1 min-w-0 lg:max-w-xs">
-                <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">{a.roleWorker}</div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 min-w-0">
-                    <CustomSelect
-                      value={j.workerId || ''}
-                      onChange={(val) => {
-                        if (val === '') {
-                          onChangeJobWorker?.(j.id, null);
-                        } else {
-                          const selectedW = users.find(u => u.id === val);
-                          if (selectedW) {
-                            setSelectedUser(selectedW);
-                            setPendingWorkerJobId(j.id);
-                          }
-                        }
-                      }}
-                      options={[
-                        { value: '', label: a.unassigned },
-                        ...users.filter(u => u.role === 'worker').map(w => ({
-                          value: w.id,
-                          label: w.name || 'Ismsiz ishchi'
-                        }))
-                      ]}
-                      placeholder={a.pickAWorker}
+                    {/* Salary Highlight */}
+                    <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-mono font-black border border-emerald-200/70 shadow-2xs">
+                      <DollarSign size={13} className="text-emerald-600" />
+                      <span>{salaryFormatted}</span>
+                      {j.durationLabel && <span className="text-[10px] text-emerald-600 font-sans uppercase">({j.durationLabel})</span>}
+                    </span>
+
+                    {/* Fulfillment pill */}
+                    <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full text-[11px] font-extrabold border border-slate-200/70" title="Ishchilar taqsimoti">
+                      <span className="text-slate-400 font-normal">Kvota:</span>
+                      <span>{hired}/{vacancies}</span>
+                    </span>
+
+                    {j.urgent && (
+                      <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-600 px-2.5 py-1 rounded-full text-[10px] font-black border border-rose-200/60 animate-pulse">
+                        <Sparkles size={11} />
+                        Zudlik
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Right Status Pill & Fast Actions */}
+                  <div className="flex items-center gap-2">
+                    <StatusSelect
+                      value={j.status}
+                      onChange={(val) => onChangeJobStatus(j.id, val)}
                     />
+
+                    <div className="flex items-center gap-1 pl-2 border-l border-slate-200">
+                      <button
+                        onClick={() => setPayoutJobId(j.id)}
+                        disabled={j.status !== 'completed'}
+                        aria-label={a.confirmPayment}
+                        className="p-2 rounded-xl transition-colors flex items-center justify-center text-emerald-600 hover:bg-emerald-50 cursor-pointer disabled:text-slate-300 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                        title={
+                          j.status === 'completed'
+                            ? a.confirmPayment
+                            : a.onlyCompletedJobs
+                        }
+                      >
+                        <Wallet size={16} />
+                      </button>
+                      <button
+                        onClick={() => setRejectingJob(j)}
+                        className="p-2 text-amber-600 hover:bg-amber-50 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
+                        title={a.rejectWithReason}
+                      >
+                        <XCircle size={16} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`"${j.title}" e'lonini to'liq o'chirib tashlaysizmi?`)) {
+                            onDeleteJob(j.id);
+                          }
+                        }}
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
+                        title={a.deleteLabel}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
-                  {j.workerId && (
-                    <button
-                      onClick={() => handleUserClick(j.workerId)}
-                      className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:text-brand-primary hover:bg-brand-primary/10 transition-colors shrink-0 cursor-pointer"
-                      title={a.viewWorkerDetails}
+                </div>
+
+                {/* 4-Column Bento Content Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Column 1: Job Info */}
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1.5">{a.jobNameLabel}</span>
+                    <div 
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedJobDetails(j)}
+                      className="flex items-start gap-3 cursor-pointer group"
                     >
-                      <Eye size={15} />
-                    </button>
-                  )}
+                      <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 border border-brand-primary/20 group-hover:bg-brand-primary group-hover:text-white transition-all shadow-2xs mt-0.5">
+                        <Briefcase size={18} />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-black text-sm text-slate-900 group-hover:text-brand-primary transition-colors leading-snug line-clamp-2">
+                          {j.title}
+                        </h4>
+                        <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 font-medium">
+                          <MapPin size={12} className="text-slate-400 shrink-0" />
+                          <span className="truncate">{j.rawLocation || j.location || '—'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column 2: Employer */}
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1.5">{a.companyColumn}</span>
+                    <div 
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => handleUserClick(j.employerId)} 
+                      className="flex items-center gap-3 cursor-pointer group bg-slate-50/80 p-2.5 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors"
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-white text-slate-700 flex items-center justify-center shrink-0 border border-slate-200/80 shadow-2xs group-hover:text-brand-primary transition-colors">
+                        <Building2 size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-extrabold text-xs text-slate-800 group-hover:text-brand-primary truncate">{j.company || j.employerName || '—'}</p>
+                        <span className="text-[10px] text-slate-400 font-mono block">ID: #{j.employerId.slice(0, 6)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column 3: Worker Assignment */}
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1.5">{a.roleWorker}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <CustomSelect
+                          value={j.workerId || ''}
+                          onChange={(val) => {
+                            if (val === '') {
+                              onChangeJobWorker?.(j.id, null);
+                            } else {
+                              const selectedW = users.find(u => u.id === val);
+                              if (selectedW) {
+                                setSelectedUser(selectedW);
+                                setPendingWorkerJobId(j.id);
+                              }
+                            }
+                          }}
+                          options={[
+                            { value: '', label: a.unassigned },
+                            ...users.filter(u => u.role === 'worker').map(w => ({
+                              value: w.id,
+                              label: w.name || 'Ismsiz ishchi'
+                            }))
+                          ]}
+                          placeholder={a.pickAWorker}
+                        />
+                      </div>
+                      {j.workerId && (
+                        <button
+                          onClick={() => handleUserClick(j.workerId)}
+                          className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:text-brand-primary hover:bg-brand-primary/10 transition-colors shrink-0 cursor-pointer border border-slate-200/80"
+                          title={a.viewWorkerDetails}
+                        >
+                          <Eye size={15} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Column 4: Timing & Schedule */}
+                  <div className="min-w-0 bg-slate-50/80 p-2.5 px-3 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">
+                      <span>{a.timeColumn}</span>
+                      <Clock size={11} />
+                    </div>
+                    <span className="font-black text-xs text-slate-900 font-mono">{j.workTime || '09:00 - 18:00'}</span>
+                    <ActualTiming job={j} />
+                    {renderTimeWarning(j)}
+                  </div>
                 </div>
               </div>
-
-              {/* Shift Schedule & Actual Timing */}
-              <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">{a.timeColumn}</div>
-                <div className="flex flex-col">
-                  <span className="font-extrabold text-xs text-slate-800">{j.workTime || '09:00 - 18:00'}</span>
-                  <ActualTiming job={j} />
-                  {renderTimeWarning(j)}
-                </div>
-              </div>
-
-              {/* Status & Quick Actions */}
-              <div className="flex items-center justify-between lg:justify-end gap-3 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
-                <StatusSelect
-                  value={j.status}
-                  onChange={(val) => onChangeJobStatus(j.id, val)}
-                />
-
-                <div className="flex items-center gap-1 border-l border-slate-200 pl-3">
-                  <button
-                    onClick={() => setPayoutJobId(j.id)}
-                    disabled={j.status !== 'completed'}
-                    aria-label={a.confirmPayment}
-                    className="p-2 rounded-xl transition-colors flex items-center justify-center text-emerald-600 hover:bg-emerald-50 cursor-pointer disabled:text-slate-300 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-                    title={
-                      j.status === 'completed'
-                        ? a.confirmPayment
-                        : a.onlyCompletedJobs
-                    }
-                  >
-                    <Wallet size={16} />
-                  </button>
-                  <button
-                    onClick={() => setRejectingJob(j)}
-                    className="p-2 text-amber-600 hover:bg-amber-50 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
-                    title={a.rejectWithReason}
-                  >
-                    <XCircle size={16} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm(`"${j.title}" e'lonini to'liq o'chirib tashlaysizmi?`)) {
-                        onDeleteJob(j.id);
-                      }
-                    }}
-                    className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
-                    title={a.deleteLabel}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

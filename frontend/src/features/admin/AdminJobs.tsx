@@ -7,7 +7,7 @@ import { getJobBannerImage } from '../employer/EmployerJobCard';
 import {
   Search, Trash2, MapPin, Building2, DollarSign, XCircle, Briefcase,
   CheckCircle, Clock, AlertTriangle, LayoutGrid, Table, Eye, X,
-  ArrowUpRight, Calendar, Copy, Check, Sparkles
+  ArrowUpRight, Calendar, Copy, Check, Sparkles, Users
 } from 'lucide-react';
 import { RejectJobModal } from './RejectJobModal';
 import { AdminJobsAutoDeleteBanner } from './AdminJobsAutoDeleteBanner';
@@ -230,6 +230,8 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
             filteredJobs.map((j) => {
               const bannerUrl = getJobBannerImage(j as any);
               const salaryFormatted = money(j.salary, language);
+              const vacancies = Number(j.vacancies || (j.neededWorkers ? parseInt(j.neededWorkers) : 1));
+              const hired = Number(j.hiredCount || 0);
 
               return (
                 <div
@@ -244,20 +246,26 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                       setOpenJob(j);
                     }
                   }}
-                  className="bg-white p-5 rounded-3xl border border-slate-200/90 hover:border-brand-primary/40 hover:shadow-md transition-all duration-200 shadow-2xs flex flex-col justify-between gap-4 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                  className="bg-white p-5 rounded-3xl border border-slate-200/90 hover:border-brand-primary/40 hover:shadow-lg hover:shadow-brand-primary/5 transition-all duration-300 shadow-2xs flex flex-col justify-between gap-4 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-brand-primary/20 relative"
                 >
-                  <div className="space-y-3">
-                    {/* Top action row */}
+                  <div className="space-y-3.5">
+                    {/* Top badges & moderation actions row */}
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {/* Category Tag */}
-                        <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-emerald-200/60">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span className="inline-flex items-center gap-1.5 bg-brand-primary/5 text-brand-primary px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-brand-primary/15">
+                          <span className="w-1.5 h-1.5 rounded-full bg-brand-primary" />
                           <span className="truncate max-w-[120px]">{j.category || a.jobTypeFallback || 'Umumiy'}</span>
                         </span>
 
+                        {/* Workers fulfillment pill */}
+                        <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-[10px] font-extrabold border border-slate-200/70" title="Biriktirilgan ishchilar">
+                          <Users size={11} className="text-slate-500" />
+                          <span>{hired}/{vacancies}</span>
+                        </span>
+
                         {j.urgent && (
-                          <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full text-[10px] font-black border border-rose-200/60">
+                          <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full text-[10px] font-black border border-rose-200/60 animate-pulse">
                             <Sparkles size={10} />
                             Zudlik
                           </span>
@@ -293,11 +301,11 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
 
                     {/* Job Image & Title Block */}
                     <div className="flex items-start gap-3.5">
-                      <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-100 shadow-2xs">
+                      <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80 shadow-2xs group-hover:scale-105 transition-transform duration-300">
                         <img
                           src={bannerUrl}
                           alt={j.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover"
                           onError={(e) => {
                             const target = e.currentTarget;
                             const fallback = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(j.company || 'B') + '&background=F1F5F9&color=64748B&size=120';
@@ -317,45 +325,46 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                       </div>
                     </div>
 
-                    {/* Location & Schedule */}
-                    <div className="space-y-1.5 pt-1 text-xs text-slate-600 font-medium">
-                      <div className="flex items-center gap-2 text-slate-500">
-                        <MapPin size={13} className="text-slate-400 shrink-0" />
-                        <span className="truncate">{j.rawLocation || j.location || '—'}</span>
+                    {/* Bento Metadata Box (Location & Date) */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2 min-w-0">
+                        <MapPin size={13} className="text-brand-primary shrink-0" />
+                        <span className="text-[11px] font-semibold text-slate-600 truncate">{j.rawLocation || j.location || '—'}</span>
                       </div>
-                      {j.workDate && (
-                        <div className="flex items-center gap-2 text-slate-500">
-                          <Calendar size={13} className="text-slate-400 shrink-0" />
-                          <span className="truncate">{j.workDate} {j.workTime ? `(${j.workTime})` : ''}</span>
-                        </div>
-                      )}
+                      <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2 min-w-0">
+                        <Calendar size={13} className="text-brand-primary shrink-0" />
+                        <span className="text-[11px] font-semibold text-slate-600 truncate">{j.workDate ? `${j.workDate} ${j.workTime ? `(${j.workTime})` : ''}` : 'Sana belgilanmagan'}</span>
+                      </div>
                     </div>
 
-                    {/* Salary Highlight */}
-                    <div className="flex items-baseline gap-2 pt-1">
-                      <div className="text-[17px] font-black text-emerald-600 font-mono tracking-tight">
-                        {salaryFormatted}
+                    {/* Salary Highlight Banner */}
+                    <div className="bg-emerald-50/60 p-2.5 px-3 rounded-2xl border border-emerald-100/90 flex items-center justify-between">
+                      <div>
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-800/70 block">Ish haqi</span>
+                        <div className="text-[16px] font-black text-emerald-700 font-mono tracking-tight leading-none mt-0.5">
+                          {salaryFormatted}
+                        </div>
                       </div>
                       {j.durationLabel && (
-                        <span className="text-slate-400 font-semibold text-[11px]">
-                          ({j.durationLabel})
+                        <span className="px-2 py-0.5 bg-emerald-100/80 text-emerald-800 text-[10px] font-bold rounded-lg uppercase tracking-wide">
+                          {j.durationLabel}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* Card Bottom: Status Pill + Details Link */}
+                  {/* Card Bottom: Status Pill + Copy ID + Details Link */}
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
                     <StatusSelect
                       value={j.status}
                       onChange={(val) => onChangeJobStatus(j.id, val)}
                     />
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={(e) => handleCopyId(e, j.id)}
-                        className="text-[11px] text-slate-400 hover:text-slate-700 font-mono flex items-center gap-1 transition-colors cursor-pointer"
+                        className="text-[11px] text-slate-400 hover:text-slate-700 font-mono flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
                         title="ID nusxalash"
                       >
                         {copiedId === j.id ? (
@@ -372,7 +381,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                       <button
                         type="button"
                         onClick={() => setOpenJob(j)}
-                        className="font-bold text-xs text-slate-600 hover:text-brand-primary font-sans flex items-center gap-0.5 transition-colors cursor-pointer ml-1"
+                        className="px-3 py-1.5 bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-2xs hover:shadow-brand-primary/20 active:scale-95 cursor-pointer"
                       >
                         <span>Batafsil</span>
                         <ArrowUpRight size={13} />
