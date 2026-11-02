@@ -322,7 +322,24 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <button
+            onClick={() => handleNavigate('daily_jobs')}
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 hover:bg-amber-50/50 border border-slate-200/80 text-left transition-all hover:border-amber-300 cursor-pointer group shadow-2xs"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-100 text-amber-600">
+                <Clock size={16} />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-900 group-hover:text-amber-700 transition-colors">
+                  {language === 'ru' ? 'Ежедневные смены' : language === 'en' ? 'Daily Shifts' : 'Kunlik Ishlar'}
+                </div>
+                <div className="text-[10px] text-slate-500">Smenalar & Davomat</div>
+              </div>
+            </div>
+            <ArrowRight size={14} className="text-slate-400 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all" />
+          </button>
           <button
             onClick={() => handleNavigate('users')}
             className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 hover:bg-blue-50/50 border border-slate-200/80 text-left transition-all hover:border-blue-300 cursor-pointer group shadow-2xs"

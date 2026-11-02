@@ -1,7 +1,7 @@
-import  { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
-import { ChevronDown, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
 export const CustomSelect = ({ 
   value, 
@@ -13,7 +13,7 @@ export const CustomSelect = ({
 }: { 
   value: string; 
   onChange: (val: string) => void; 
-  options: {value: string; label: string}[]; 
+  options: { value: string; label: string }[]; 
   placeholder?: string;
   className?: string;
   containerClassName?: string;
@@ -41,30 +41,35 @@ export const CustomSelect = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all ${className}`}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-white border border-slate-200/90 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer shadow-2xs ${className}`}
       >
         <span className="truncate">{selectedOption ? selectedOption.label : <span className="text-slate-400 italic">{placeholderText}</span>}</span>
-        <ChevronDown size={16} className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-blue-600' : ''}`} />
       </button>
       
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-[220px] max-h-60 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-100 py-1 no-scrollbar animate-in fade-in zoom-in-95 duration-100">
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => {
-                onChange(opt.value);
-                setIsOpen(false);
-              }}
-              className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                value === opt.value 
-                  ? 'bg-blue-50 text-blue-700 font-bold' 
-                  : 'text-slate-700 hover:bg-slate-50 font-medium'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
+        <div className="absolute z-50 mt-1.5 w-[240px] max-h-64 overflow-y-auto bg-white rounded-2xl shadow-xl border border-slate-200/90 py-1.5 no-scrollbar animate-in fade-in zoom-in-95 duration-100">
+          {options.map((opt) => {
+            const isSelected = value === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3.5 py-2 text-xs transition-colors flex items-center justify-between cursor-pointer ${
+                  isSelected 
+                    ? 'bg-blue-50/80 text-blue-700 font-bold' 
+                    : 'text-slate-700 hover:bg-slate-50 font-medium'
+                }`}
+              >
+                <span className="truncate">{opt.label}</span>
+                {isSelected && <Check size={14} className="text-blue-600 shrink-0" />}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -121,19 +126,27 @@ export const CustomDatePicker = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all w-[160px] justify-between"
+        className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200/90 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all w-[165px] justify-between cursor-pointer shadow-2xs"
       >
-        <span className="flex items-center gap-2"><CalendarIcon size={16} className="text-slate-400"/> {value || "Sana tanlang"}</span>
+        <span className="flex items-center gap-2 truncate">
+          <CalendarIcon size={14} className="text-blue-600 shrink-0" />
+          <span className="truncate">{value || "Sana tanlang"}</span>
+        </span>
+        <ChevronDown size={13} className={`text-slate-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-blue-600' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 p-4 bg-white rounded-2xl shadow-xl border border-slate-100 w-[280px] animate-in fade-in zoom-in-95 duration-100">
-          <div className="flex items-center justify-between mb-4">
-            <button onClick={prevMonth} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500"><ChevronLeft size={18} /></button>
-            <div className="font-bold text-slate-800 text-sm">
+        <div className="absolute z-50 mt-1.5 p-3.5 bg-white rounded-2xl shadow-xl border border-slate-200/90 w-[280px] animate-in fade-in zoom-in-95 duration-100">
+          <div className="flex items-center justify-between mb-3">
+            <button onClick={prevMonth} className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors cursor-pointer" type="button">
+              <ChevronLeft size={16} />
+            </button>
+            <div className="font-extrabold text-slate-900 text-xs">
               {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
             </div>
-            <button onClick={nextMonth} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500"><ChevronRight size={18} /></button>
+            <button onClick={nextMonth} className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors cursor-pointer" type="button">
+              <ChevronRight size={16} />
+            </button>
           </div>
           <div className="grid grid-cols-7 gap-1 text-center mb-2">
             {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map(d => (
@@ -149,12 +162,13 @@ export const CustomDatePicker = ({
               return (
                 <button
                   key={d}
+                  type="button"
                   onClick={() => handleDateSelect(d)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs transition-all cursor-pointer ${
                     isSelected 
-                      ? 'bg-brand-primary text-white font-bold shadow-md shadow-brand-primary/30' 
+                      ? 'bg-blue-600 text-white font-extrabold shadow-sm shadow-blue-500/30' 
                       : isToday
-                      ? 'bg-blue-50 text-brand-primary font-bold hover:bg-blue-100'
+                      ? 'bg-blue-50 text-blue-700 font-bold hover:bg-blue-100'
                       : 'text-slate-700 hover:bg-slate-100 font-medium'
                   }`}
                 >
@@ -172,9 +186,11 @@ export const CustomDatePicker = ({
 export const StatusSelect = ({
   value,
   onChange,
+  className = "",
 }: {
   value: string;
   onChange: (val: string) => void;
+  className?: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -189,30 +205,34 @@ export const StatusSelect = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const t = ADMIN_TEXTS[useAuthStore.getState().language] || ADMIN_TEXTS.uz;
+  const language = useAuthStore(st => st.language);
+  const t = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
+
   const options = [
-    { value: 'open', label: t.statusOpen, color: 'bg-slate-50 text-slate-700 border-slate-200' },
-    { value: 'confirmed', label: t.statusHired, color: 'bg-blue-50 text-blue-700 border-blue-200' },
-    { value: 'in_progress', label: t.statusStarted, color: 'bg-amber-50 text-amber-700 border-amber-200' },
-    { value: 'completed', label: t.statusFinished, color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    { value: 'cancelled', label: t.statusCancelledJob, color: 'bg-red-50 text-red-700 border-red-200' },
+    { value: 'open', label: t.statusOpen || 'Ochiq', color: 'bg-emerald-50 text-emerald-700 border-emerald-200/80', dot: 'bg-emerald-500' },
+    { value: 'confirmed', label: t.statusHired || 'Ishchi olindi', color: 'bg-blue-50 text-blue-700 border-blue-200/80', dot: 'bg-blue-500' },
+    { value: 'in_progress', label: t.statusStarted || 'Ish boshlandi', color: 'bg-amber-50 text-amber-700 border-amber-200/80', dot: 'bg-amber-500' },
+    { value: 'completed', label: t.statusFinished || 'Ish tugatildi', color: 'bg-indigo-50 text-indigo-700 border-indigo-200/80', dot: 'bg-indigo-500' },
+    { value: 'dispute', label: t.chipDispute || 'Nizo', color: 'bg-orange-50 text-orange-700 border-orange-200/80', dot: 'bg-orange-500' },
+    { value: 'cancelled', label: t.statusCancelledJob || 'Bekor qilindi', color: 'bg-rose-50 text-rose-700 border-rose-200/80', dot: 'bg-rose-500' },
   ];
 
   const currentOption = options.find(o => o.value === value) || options[0];
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative inline-block" ref={containerRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wide border focus:outline-none focus:ring-2 focus:ring-slate-400/20 transition-all ${currentOption.color}`}
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider border cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-2xs ${currentOption.color} ${className}`}
       >
+        <span className={`w-1.5 h-1.5 rounded-full ${currentOption.dot}`} />
         <span>{currentOption.label}</span>
-        <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={12} className={`transition-transform duration-200 ml-0.5 opacity-60 ${isOpen ? 'rotate-180 opacity-100' : ''}`} />
       </button>
       
       {isOpen && (
-        <div className="absolute top-full right-0 mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-lg shadow-slate-200/50 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute top-full right-0 mt-1 w-44 bg-white border border-slate-200/90 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100 py-1">
           {options.map((opt) => (
             <button
               key={opt.value}
@@ -221,10 +241,15 @@ export const StatusSelect = ({
                 onChange(opt.value);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-slate-50 flex items-center justify-between ${value === opt.value ? 'bg-slate-50/80 font-semibold text-slate-900' : 'text-slate-600'}`}
+              className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-50 flex items-center justify-between cursor-pointer ${
+                value === opt.value ? 'bg-slate-50/90 font-bold text-slate-900' : 'text-slate-600 font-medium'
+              }`}
             >
-              <span>{opt.label}</span>
-              {value === opt.value && <div className={`w-1.5 h-1.5 rounded-full ${opt.color.split(' ')[0].replace('bg-', 'bg-').replace('50', '500')}`} />}
+              <div className="flex items-center gap-2">
+                <span className={`w-1.5 h-1.5 rounded-full ${opt.dot}`} />
+                <span>{opt.label}</span>
+              </div>
+              {value === opt.value && <Check size={13} className="text-blue-600" />}
             </button>
           ))}
         </div>
