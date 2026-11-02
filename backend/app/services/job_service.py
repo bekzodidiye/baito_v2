@@ -1,6 +1,6 @@
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
@@ -25,7 +25,7 @@ ACTIVE_APP_STATUSES = ['applied', 'hired', 'confirmed', 'in_progress', 'start_re
 COMMITTED_APP_STATUSES = ['hired', 'confirmed', 'in_progress', 'start_requested']
 
 # Uzbekistan is UTC+5
-TASHKENT = timezone(datetime.now().astimezone().utcoffset() or timezone.utc)
+TASHKENT = timezone(timedelta(hours=5))
 
 
 def _wage_for_day(job: models.Job, day: Optional[JobDay]) -> int:
