@@ -49,9 +49,9 @@ export const AdminDisputes: React.FC = () => {
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">Hakamlik holati</span>
-            <Scale size={16} className="text-blue-600" />
+            <Scale size={16} className="text-brand-primary" />
           </div>
-          <div className="text-xl font-black text-blue-600">Arbitraj faol</div>
+          <div className="text-xl font-black text-brand-primary">Arbitraj faol</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">

@@ -71,7 +71,7 @@ export const AdminPromotions: React.FC = () => {
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1">
             <span className="text-[10px] font-extrabold uppercase tracking-wider">Jami Promokodlar</span>
-            <Ticket size={16} className="text-blue-600" />
+            <Ticket size={16} className="text-brand-primary" />
           </div>
           <div className="text-xl font-black text-slate-900">{promos.length} ta</div>
           <div className="text-[11px] font-bold text-slate-500 mt-1">Marketing kampaniyalari</div>
@@ -129,7 +129,7 @@ export const AdminPromotions: React.FC = () => {
                 key={tab.id}
                 onClick={() => setFilter(tab.id as any)}
                 className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-                  filter === tab.id ? 'bg-white text-blue-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                  filter === tab.id ? 'bg-white text-brand-primary font-black shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {tab.label}
@@ -140,7 +140,7 @@ export const AdminPromotions: React.FC = () => {
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white font-extrabold text-xs rounded-xl hover:bg-blue-700 transition cursor-pointer shadow-xs shrink-0"
+          className="flex items-center gap-1.5 px-4 py-2 bg-brand-primary hover:bg-brand-primary/95 text-white font-extrabold text-xs rounded-xl transition cursor-pointer shadow-xs shadow-brand-primary/20 active:scale-95 shrink-0"
         >
           <Plus size={15} />
           Yangi Promokod
@@ -161,12 +161,12 @@ export const AdminPromotions: React.FC = () => {
               <div key={p.id} className="bg-white border border-slate-200/80 rounded-2xl p-5 relative shadow-2xs hover:shadow-xs transition-shadow">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-black text-slate-900 text-base bg-blue-50/80 text-blue-700 px-3 py-1 rounded-xl border border-blue-100">
+                    <span className="font-mono font-black text-slate-900 text-base bg-brand-primary/10 text-brand-primary px-3 py-1 rounded-xl border border-brand-primary/20">
                       {p.code}
                     </span>
                     <button
                       onClick={() => handleCopyCode(p.code)}
-                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                      className="p-1.5 text-slate-400 hover:text-brand-primary hover:bg-brand-primary/10 rounded-lg transition cursor-pointer"
                       title="Nusxalash"
                     >
                       {copiedCode === p.code ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
@@ -208,7 +208,7 @@ export const AdminPromotions: React.FC = () => {
                     <Calendar size={13} className="text-slate-400" /> {p.expiresAt || 'Cheklovlarsiz'}
                   </span>
                   {p.forNewUsersOnly && (
-                    <span className="text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60 text-[10px]">
+                    <span className="text-brand-primary font-bold bg-brand-primary/10 px-2 py-0.5 rounded-md border border-brand-primary/20 text-[10px]">
                       Faqat Yangilar
                     </span>
                   )}

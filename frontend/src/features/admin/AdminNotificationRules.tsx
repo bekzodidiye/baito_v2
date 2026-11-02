@@ -66,7 +66,7 @@ export const AdminNotificationRules: React.FC<AdminNotificationRulesProps> = ({
     <div className="space-y-5 text-xs">
       <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
         <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-          <BellRing size={20} className="text-blue-600" />
+          <BellRing size={20} className="text-brand-primary" />
           <span>Avtomatik Xabarnoma Matnlari</span>
         </h2>
         <p className="text-xs text-slate-500 mt-1 font-medium">
@@ -112,7 +112,7 @@ export const AdminNotificationRules: React.FC<AdminNotificationRulesProps> = ({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl cursor-pointer shrink-0 shadow-xs transition active:scale-95"
+            className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary/95 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl cursor-pointer shrink-0 shadow-xs shadow-brand-primary/20 transition active:scale-95"
           >
             {saving ? 'Saqlanmoqda...' : 'Saqlash'}
           </button>

@@ -90,7 +90,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
           <div className="flex items-center justify-between text-slate-500 mb-1.5">
             <span className="text-[11px] font-extrabold uppercase tracking-wider">{a.totalPostings}</span>
-            <div className="w-7 h-7 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
               <Briefcase size={14} />
             </div>
           </div>
@@ -123,12 +123,12 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
           <div className="flex items-center justify-between text-slate-500 mb-1.5">
             <span className="text-[11px] font-extrabold uppercase tracking-wider">Bajarilgan</span>
-            <div className="w-7 h-7 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
               <CheckCircle size={14} />
             </div>
           </div>
-          <div className="text-2xl font-black text-blue-600 tracking-tight">{countCompleted}</div>
-          <div className="text-[11px] text-blue-600/80 font-medium mt-0.5">Muvaffaqiyatli yakun</div>
+          <div className="text-2xl font-black text-brand-primary tracking-tight">{countCompleted}</div>
+          <div className="text-[11px] text-brand-primary/80 font-medium mt-0.5">Muvaffaqiyatli yakun</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow col-span-2 sm:col-span-1">
@@ -154,7 +154,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
             placeholder={a.searchJobsPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-9 py-2 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 text-slate-800"
+            className="w-full pl-9 pr-9 py-2 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all placeholder:text-slate-400 text-slate-800"
           />
           {search && (
             <button
@@ -182,7 +182,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                 onClick={() => setStatusFilter(st.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                   statusFilter === st.id
-                    ? 'bg-blue-600 text-white shadow-xs'
+                    ? 'bg-brand-primary text-white shadow-sm shadow-brand-primary/20'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
                 }`}
               >
@@ -196,7 +196,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === 'grid' ? 'bg-white text-blue-600 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'
+                viewMode === 'grid' ? 'bg-white text-brand-primary shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Karta ko'rinishi"
             >
@@ -205,7 +205,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
             <button
               onClick={() => setViewMode('table')}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === 'table' ? 'bg-white text-blue-600 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'
+                viewMode === 'table' ? 'bg-white text-brand-primary shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Jadval ko'rinishi"
             >
@@ -244,7 +244,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                       setOpenJob(j);
                     }
                   }}
-                  className="bg-white p-5 rounded-3xl border border-slate-200/90 hover:border-blue-400 hover:shadow-md transition-all duration-200 shadow-2xs flex flex-col justify-between gap-4 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="bg-white p-5 rounded-3xl border border-slate-200/90 hover:border-brand-primary/40 hover:shadow-md transition-all duration-200 shadow-2xs flex flex-col justify-between gap-4 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
                 >
                   <div className="space-y-3">
                     {/* Top action row */}
@@ -307,7 +307,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-black text-slate-900 text-sm leading-snug group-hover:text-blue-600 transition-colors line-clamp-2">
+                        <h3 className="font-black text-slate-900 text-sm leading-snug group-hover:text-brand-primary transition-colors line-clamp-2">
                           {j.title}
                         </h3>
                         <div className="flex items-center gap-1.5 mt-1 text-slate-600 text-xs font-semibold">
@@ -372,7 +372,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                       <button
                         type="button"
                         onClick={() => setOpenJob(j)}
-                        className="font-bold text-xs text-slate-600 hover:text-blue-600 font-sans flex items-center gap-0.5 transition-colors cursor-pointer ml-1"
+                        className="font-bold text-xs text-slate-600 hover:text-brand-primary font-sans flex items-center gap-0.5 transition-colors cursor-pointer ml-1"
                       >
                         <span>Batafsil</span>
                         <ArrowUpRight size={13} />
@@ -409,7 +409,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                 ) : (
                   filteredJobs.map((j) => (
                     <tr key={j.id} className="hover:bg-slate-50/90 transition-colors group">
-                      <td className="p-4 pl-5 font-bold text-slate-900 group-hover:text-blue-600 cursor-pointer" onClick={() => setOpenJob(j)}>
+                      <td className="p-4 pl-5 font-bold text-slate-900 group-hover:text-brand-primary cursor-pointer" onClick={() => setOpenJob(j)}>
                         <div className="flex items-center gap-3">
                           <img
                             src={getJobBannerImage(j as any)}
@@ -442,7 +442,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => setOpenJob(j)}
-                            className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-slate-100 rounded-xl cursor-pointer transition-colors"
+                            className="p-1.5 text-slate-600 hover:text-brand-primary hover:bg-slate-100 rounded-xl cursor-pointer transition-colors"
                             title="Batafsil ko'rish"
                           >
                             <Eye size={15} />

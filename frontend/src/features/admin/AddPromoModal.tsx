@@ -53,7 +53,7 @@ export const AddPromoModal: React.FC<AddPromoModalProps> = ({ isOpen, onClose, o
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="Masalan: YAZ2026"
-            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs uppercase font-mono font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs uppercase font-mono font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -120,7 +120,7 @@ export const AddPromoModal: React.FC<AddPromoModalProps> = ({ isOpen, onClose, o
           </button>
           <button
             type="submit"
-            className="px-5 py-2.5 text-xs font-extrabold bg-blue-600 text-white rounded-xl hover:bg-blue-700 cursor-pointer shadow-xs active:scale-95"
+            className="px-5 py-2.5 text-xs font-extrabold bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl cursor-pointer shadow-xs shadow-brand-primary/20 active:scale-95"
           >
             Yaratish
           </button>

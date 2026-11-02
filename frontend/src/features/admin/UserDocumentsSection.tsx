@@ -23,7 +23,7 @@ export const UserDocumentsSection: React.FC<UserDocumentsSectionProps> = ({ user
     <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50 overflow-hidden">
       <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <span className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-blue-100 text-blue-600 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-md bg-brand-primary/10 text-brand-primary border border-brand-primary/20 flex items-center justify-center">
             <FileBadge size={14} />
           </div>
           {a.passportAndIdDocs}

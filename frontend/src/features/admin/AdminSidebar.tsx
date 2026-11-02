@@ -110,14 +110,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
           {/* Top Brand Header */}
           <div className="p-4 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-brand-primary text-white flex items-center justify-center font-extrabold text-sm shadow-sm shadow-brand-primary/20 font-display">
                 B
               </div>
               <div>
                 <h2 className="text-sm font-black text-slate-900 leading-tight tracking-tight">Baito Admin</h2>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[10px] font-black text-blue-600 tracking-wider uppercase">
+                  <span className="text-[10px] font-black text-brand-primary tracking-wider uppercase">
                     SUPER ADMIN
                   </span>
                 </div>
@@ -152,21 +152,21 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
                       }}
                       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer group ${
                         isActive
-                          ? 'bg-blue-50 text-blue-700 shadow-2xs border border-blue-200/60'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                          ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/15'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
                       }`}
                     >
                       <Icon
                         size={15}
                         className={`shrink-0 transition-transform group-hover:scale-105 ${
-                          isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'
+                          isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'
                         }`}
                       />
                       <span className="flex-1 text-left truncate">{getItemLabel(item)}</span>
                       {item.badge && (
                         <span
                           className={`px-1.5 py-0.5 rounded-full text-[9px] font-black tracking-tight ${
-                            isActive ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200/80'
+                            isActive ? 'bg-white text-brand-primary' : 'bg-slate-100 text-slate-700 border border-slate-200/80'
                           }`}
                         >
                           {item.badge}
@@ -187,9 +187,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActive
             <div className="grid grid-cols-2 gap-1.5">
               <button
                 onClick={() => handleSwitchRole('worker')}
-                className="flex items-center justify-center gap-1.5 py-2 bg-white hover:bg-slate-100 text-slate-700 text-[11px] font-bold rounded-xl border border-slate-200 shadow-2xs cursor-pointer transition-all hover:border-blue-400/50"
+                className="flex items-center justify-center gap-1.5 py-2 bg-white hover:bg-slate-100 text-slate-700 text-[11px] font-bold rounded-xl border border-slate-200 shadow-2xs cursor-pointer transition-all hover:border-brand-primary/40"
               >
-                <User size={12} className="text-blue-600" />
+                <User size={12} className="text-brand-primary" />
                 <span>{language === 'ru' ? 'Работник' : language === 'en' ? 'Worker' : 'Ishchi'}</span>
               </button>
               <button

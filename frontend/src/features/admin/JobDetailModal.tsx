@@ -51,7 +51,7 @@ const formatDate = (d?: string | null) => {
 
 const statusLabels: Record<string, { label: string; bg: string; text: string; dot: string }> = {
   open: { label: 'Ariza ochiq', bg: 'bg-emerald-50 border-emerald-200/80', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-  confirmed: { label: 'Ishchi olindi', bg: 'bg-blue-50 border-blue-200/80', text: 'text-blue-700', dot: 'bg-blue-500' },
+  confirmed: { label: 'Ishchi olindi', bg: 'bg-brand-primary/10 border-brand-primary/20', text: 'text-brand-primary', dot: 'bg-brand-primary' },
   in_progress: { label: 'Ish boshlandi', bg: 'bg-amber-50 border-amber-200/80', text: 'text-amber-700', dot: 'bg-amber-500' },
   completed: { label: 'Ish tugatildi', bg: 'bg-indigo-50 border-indigo-200/80', text: 'text-indigo-700', dot: 'bg-indigo-500' },
   cancelled: { label: 'Ish bekor qilindi', bg: 'bg-rose-50 border-rose-200/80', text: 'text-rose-700', dot: 'bg-rose-500' },
@@ -59,7 +59,7 @@ const statusLabels: Record<string, { label: string; bg: string; text: string; do
 };
 
 const appStatusLabels: Record<string, { label: string; color: string }> = {
-  applied: { label: 'Ariza yubordi', color: 'text-blue-700 bg-blue-50 border-blue-200/60' },
+  applied: { label: 'Ariza yubordi', color: 'text-brand-primary bg-brand-primary/10 border-brand-primary/20' },
   hired: { label: 'Qabul qilindi', color: 'text-emerald-700 bg-emerald-50 border-emerald-200/60' },
   completed: { label: 'Yakunlandi', color: 'text-slate-700 bg-slate-100 border-slate-200/60' },
   rejected: { label: 'Rad etildi', color: 'text-rose-700 bg-rose-50 border-rose-200/60' },
@@ -156,7 +156,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) 
                   <span className="text-[11px] text-slate-400 font-mono font-medium">#{j.id.slice(0, 10)}</span>
                   <button
                     onClick={handleCopyId}
-                    className="text-[10px] text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                    className="text-[10px] text-brand-primary hover:opacity-80 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
                     title="ID nusxalash"
                   >
                     {copiedId ? (
@@ -188,7 +188,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) 
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-2 px-4 py-3 text-xs font-bold transition-all cursor-pointer border-b-2 whitespace-nowrap ${
                   activeTab === tab.key
-                    ? 'text-blue-600 border-blue-600'
+                    ? 'text-brand-primary border-brand-primary'
                     : 'text-slate-500 border-transparent hover:text-slate-800'
                 }`}
               >
@@ -196,7 +196,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) 
                 <span>{tab.label}</span>
                 {typeof tab.count === 'number' && tab.count > 0 && (
                   <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
-                    activeTab === tab.key ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+                    activeTab === tab.key ? 'bg-brand-primary/10 text-brand-primary' : 'bg-slate-100 text-slate-600'
                   }`}>
                     {tab.count}
                   </span>
@@ -209,7 +209,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({ job, onClose }) 
           <div className="flex-1 overflow-y-auto no-scrollbar bg-slate-50/70">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-24 gap-3">
-                <Orb state="working" size={32} className="text-blue-600" />
+                <Orb state="working" size={32} className="text-brand-primary" />
                 <p className="text-xs font-bold text-slate-400 animate-pulse">Ma'lumotlar yuklanmoqda...</p>
               </div>
             ) : (
@@ -248,7 +248,7 @@ interface InfoTabProps {
 
 const stepStyles: Record<AdminJobStep['state'], { ring: string; fill: string; label: string; date: string }> = {
   done:      { ring: 'border-emerald-500 bg-emerald-500', fill: 'text-white', label: 'text-slate-800', date: 'text-slate-400' },
-  current:   { ring: 'border-blue-600 bg-white ring-4 ring-blue-500/10', fill: 'text-blue-600', label: 'text-blue-600 font-extrabold', date: 'text-blue-600/70' },
+  current:   { ring: 'border-brand-primary bg-white ring-4 ring-brand-primary/10', fill: 'text-brand-primary', label: 'text-brand-primary font-extrabold', date: 'text-brand-primary/70' },
   pending:   { ring: 'border-slate-300 bg-white', fill: 'text-slate-300', label: 'text-slate-500', date: 'text-slate-300' },
   skipped:   { ring: 'border-slate-200 bg-slate-100', fill: 'text-slate-400', label: 'text-slate-400', date: 'text-slate-300' },
   cancelled: { ring: 'border-rose-400 bg-rose-50', fill: 'text-rose-500', label: 'text-rose-600', date: 'text-rose-400' },
@@ -263,7 +263,7 @@ const JobSteps: React.FC<{ steps: AdminJobStep[] }> = ({ steps }) => {
     <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs mb-4">
       <div className="flex items-center justify-between mb-3.5">
         <h3 className="text-xs font-extrabold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
-          <ListChecks size={15} className="text-blue-600" />
+          <ListChecks size={15} className="text-brand-primary" />
           <span>Ish Jarayoni Bosqichlari</span>
         </h3>
         <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">{done} / {total} bajarildi</span>
@@ -377,8 +377,8 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
             value={j.hourlyRate ? `${j.hourlyRate} / soat` : "Yo'q"}
           />
           <StatCard
-            icon={<Calendar size={15} className="text-blue-600" />}
-            bg="bg-blue-50"
+            icon={<Calendar size={15} className="text-brand-primary" />}
+            bg="bg-brand-primary/10"
             label={adminText().dateLabel}
             value={j.workDate || '—'}
           />
@@ -398,7 +398,7 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
           {/* Employer Card */}
           <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+              <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 border border-brand-primary/20">
                 <Building2 size={18} />
               </div>
               <div className="min-w-0">
@@ -412,7 +412,7 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
             {(j as any).employerPhone && (
               <a
                 href={`tel:${(j as any).employerPhone}`}
-                className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-500 hover:text-blue-600 flex items-center justify-center shrink-0 transition-colors"
+                className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-brand-primary/10 text-slate-500 hover:text-brand-primary flex items-center justify-center shrink-0 transition-colors"
                 title="Qo'ng'iroq qilish"
               >
                 <Phone size={14} />
@@ -481,13 +481,13 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
         {tasks.length > 0 && (
           <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs">
             <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-3 flex items-center gap-2">
-              <Briefcase size={14} className="text-blue-600" />
+              <Briefcase size={14} className="text-brand-primary" />
               <span>Ish vazifalari</span>
             </h3>
             <div className="space-y-2">
               {tasks.map((task, idx) => (
                 <div key={idx} className="flex items-start gap-3 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
-                  <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
+                  <div className="w-5 h-5 rounded-full bg-brand-primary text-white shadow-xs shadow-brand-primary/20 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
                     {idx + 1}
                   </div>
                   <p className="text-xs text-slate-700 font-medium leading-snug">{task.replace(/^-/, '').trim()}</p>
@@ -544,7 +544,7 @@ const StatCard: React.FC<{ icon: React.ReactNode; bg: string; label: string; val
 
 /* ========================= TIMELINE TAB ========================= */
 const timelineIcons: Record<string, { icon: React.ReactNode; color: string }> = {
-  'plus': { icon: <Plus size={14} />, color: 'bg-blue-100 text-blue-600 border-blue-200' },
+  'plus': { icon: <Plus size={14} />, color: 'bg-brand-primary/10 text-brand-primary border-brand-primary/20' },
   'user': { icon: <User size={14} />, color: 'bg-indigo-100 text-indigo-600 border-indigo-200' },
   'check': { icon: <UserCheck size={14} />, color: 'bg-emerald-100 text-emerald-600 border-emerald-200' },
   'dollar': { icon: <Banknote size={14} />, color: 'bg-amber-100 text-amber-600 border-amber-200' },
@@ -555,7 +555,7 @@ const timelineIcons: Record<string, { icon: React.ReactNode; color: string }> = 
 const TimelineTab: React.FC<{ timeline: AdminTimelineEvent[] }> = ({ timeline }) => (
   <div className="p-5 sm:p-6 max-w-xl mx-auto">
     <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-4 flex items-center gap-2">
-      <History size={15} className="text-blue-600" />
+      <History size={15} className="text-brand-primary" />
       <span>Voqealar Xronologiyasi</span>
     </h3>
     {timeline.length === 0 ? (
@@ -593,7 +593,7 @@ const ApplicationsTab: React.FC<{ applications: AdminJobApplication[] }> = ({ ap
   <div className="p-5 sm:p-6 max-w-2xl mx-auto">
     <div className="flex items-center justify-between mb-4">
       <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-2">
-        <Users size={15} className="text-blue-600" />
+        <Users size={15} className="text-brand-primary" />
         <span>Kelib Tushgan Arizalar ({applications.length})</span>
       </h3>
     </div>
@@ -675,7 +675,7 @@ const PaymentsTab: React.FC<{ transactions: AdminJobTransaction[] }> = ({ transa
   return (
     <div className="p-5 sm:p-6 max-w-2xl mx-auto">
       <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800 mb-4 flex items-center gap-2">
-        <CreditCard size={15} className="text-blue-600" />
+        <CreditCard size={15} className="text-brand-primary" />
         <span>Moliyaviy To'lovlar ({transactions.length})</span>
       </h3>
 
@@ -692,7 +692,7 @@ const PaymentsTab: React.FC<{ transactions: AdminJobTransaction[] }> = ({ transa
               <div key={tx.id} className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                    <div className="w-8 h-8 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 border border-brand-primary/20">
                       {tx.type === 'deposit' ? <Banknote size={16} /> : <CreditCard size={16} />}
                     </div>
                     <div>

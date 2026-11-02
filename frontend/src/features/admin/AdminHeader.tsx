@@ -191,7 +191,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-2xs hover:border-slate-300"
             title="Ma'lumotlarni yangilash"
           >
-            <RefreshCw size={13} className={loading ? 'animate-spin text-blue-600' : 'text-slate-500'} />
+            <RefreshCw size={13} className={loading ? 'animate-spin text-brand-primary' : 'text-slate-500'} />
             <span className="hidden sm:inline font-bold">
               {language === 'ru' ? 'Обновить' : language === 'en' ? 'Refresh' : 'Yangilash'}
             </span>
@@ -199,14 +199,14 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
           {/* Admin Profile Chip */}
           <div className="hidden sm:flex items-center gap-2.5 pl-2 sm:border-l sm:border-slate-200">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-brand-primary text-white flex items-center justify-center font-black text-xs shadow-xs shadow-brand-primary/20">
               {userProfile?.firstName ? userProfile.firstName.charAt(0).toUpperCase() : 'A'}
             </div>
             <div className="hidden xl:block text-left">
               <div className="text-xs font-bold text-slate-900 leading-tight">
                 {userProfile?.firstName ? `${userProfile.firstName} ${userProfile.lastName || ''}`.trim() : 'Administrator'}
               </div>
-              <div className="text-[10px] font-black text-blue-600 tracking-wider uppercase">
+              <div className="text-[10px] font-black text-brand-primary tracking-wider uppercase">
                 SUPER ADMIN
               </div>
             </div>

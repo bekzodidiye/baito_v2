@@ -131,12 +131,12 @@ export const AdminAuditLogs: React.FC = () => {
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1">
             <span className="text-[10px] font-extrabold uppercase tracking-wider">So'nggi Harakat</span>
-            <Clock size={16} className="text-blue-500" />
+            <Clock size={16} className="text-brand-primary" />
           </div>
           <div className="text-xs font-bold text-slate-800 truncate mt-1">
             {logs[0]?.timestamp || "Qayd etilmagan"}
           </div>
-          <div className="text-[11px] font-bold text-blue-600 mt-0.5 truncate">
+          <div className="text-[11px] font-bold text-brand-primary mt-0.5 truncate">
             {logs[0]?.adminName || 'Tizim'}
           </div>
         </div>
@@ -169,7 +169,7 @@ export const AdminAuditLogs: React.FC = () => {
 
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 text-white font-bold text-xs rounded-xl hover:bg-blue-700 transition cursor-pointer shadow-xs active:scale-95"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-brand-primary hover:bg-brand-primary/95 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-xs shadow-brand-primary/20 active:scale-95"
           >
             <Download size={14} />
             CSV yuklab olish
@@ -217,7 +217,7 @@ export const AdminAuditLogs: React.FC = () => {
                     <td className="px-4 py-3.5 whitespace-nowrap">
                       <span className="font-bold text-slate-900 block text-xs">{log.adminName}</span>
                       <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full font-extrabold mt-0.5 ${
-                        log.role === 'Super Admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                        log.role === 'Super Admin' ? 'bg-brand-primary text-white shadow-xs shadow-brand-primary/15' : 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20'
                       }`}>
                         {log.role || 'Admin'}
                       </span>

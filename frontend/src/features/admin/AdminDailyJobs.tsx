@@ -178,12 +178,12 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
         <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
           <div className="flex items-center justify-between text-slate-500 mb-1.5">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Ochiq E'lonlar</span>
-            <div className="w-7 h-7 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+            <div className="w-7 h-7 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center">
+              <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse" />
             </div>
           </div>
-          <div className="text-2xl font-black text-blue-600 tracking-tight">{openCount} ta</div>
-          <div className="text-[11px] font-semibold text-blue-600/80 mt-0.5">Ishchi qidirilmoqda</div>
+          <div className="text-2xl font-black text-brand-primary tracking-tight">{openCount} ta</div>
+          <div className="text-[11px] font-semibold text-brand-primary/80 mt-0.5">Ishchi qidirilmoqda</div>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
@@ -229,7 +229,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
               type="button"
               onClick={() => setQuickDate(0)}
               className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
-                selectedDate === todayStr ? 'bg-blue-600 text-white shadow-2xs' : 'hover:bg-white text-slate-600'
+                selectedDate === todayStr ? 'bg-brand-primary text-white shadow-sm shadow-brand-primary/20' : 'hover:bg-white text-slate-600'
               }`}
             >
               Bugun
@@ -251,7 +251,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
               placeholder={a.searchShort}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800"
+              className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-slate-800"
             />
             {search && (
               <button
@@ -280,7 +280,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
               onClick={() => setStatusFilter(tab.id)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                 statusFilter === tab.id
-                  ? 'bg-blue-600 text-white shadow-xs'
+                  ? 'bg-brand-primary text-white shadow-sm shadow-brand-primary/20'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70 hover:text-slate-900'
               }`}
             >
@@ -313,9 +313,9 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                   role="button"
                   tabIndex={0}
                   onClick={() => setSelectedJobDetails(j)}
-                  className="font-black text-sm text-slate-900 flex items-center gap-2.5 cursor-pointer hover:text-blue-600 transition-colors group"
+                  className="font-black text-sm text-slate-900 flex items-center gap-2.5 cursor-pointer hover:text-brand-primary transition-colors group"
                 >
-                  <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  <div className="w-9 h-9 rounded-2xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0 border border-brand-primary/20 group-hover:bg-brand-primary group-hover:text-white transition-colors">
                     <Briefcase size={16} />
                   </div>
                   <div className="min-w-0">
@@ -332,7 +332,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                   role="button"
                   tabIndex={0}
                   onClick={() => handleUserClick(j.employerId)} 
-                  className="font-bold text-xs text-slate-800 cursor-pointer hover:text-blue-600 transition-colors flex items-center gap-2.5"
+                  className="font-bold text-xs text-slate-800 cursor-pointer hover:text-brand-primary transition-colors flex items-center gap-2.5"
                 >
                   <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 border border-slate-200/80">
                     <Building2 size={15} />
@@ -372,7 +372,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                   {j.workerId && (
                     <button
                       onClick={() => handleUserClick(j.workerId)}
-                      className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors shrink-0 cursor-pointer"
+                      className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:text-brand-primary hover:bg-brand-primary/10 transition-colors shrink-0 cursor-pointer"
                       title={a.viewWorkerDetails}
                     >
                       <Eye size={15} />

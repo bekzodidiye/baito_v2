@@ -45,7 +45,7 @@ export const AdminBroadcast: React.FC<AdminBroadcastProps> = ({ onSendBroadcast 
     <div className="max-w-2xl mx-auto space-y-4">
       <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
         <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-          <Send size={20} className="text-blue-600" />
+          <Send size={20} className="text-brand-primary" />
           <span>{a.broadcastTitle}</span>
         </h2>
         <p className="text-xs text-slate-500 mt-1 font-medium">
@@ -69,7 +69,7 @@ export const AdminBroadcast: React.FC<AdminBroadcastProps> = ({ onSendBroadcast 
                   onClick={() => setTargetRole(t.id)}
                   className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                     targetRole === t.id
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                      ? 'bg-brand-primary text-white border-brand-primary shadow-xs shadow-brand-primary/20'
                       : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                   }`}
                 >

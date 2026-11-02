@@ -46,7 +46,7 @@ export const AdminAnalytics: React.FC = () => {
     .slice(0, 5);
 
   const maxCatCount = sortedCategories.length > 0 ? sortedCategories[0][1] : 1;
-  const colors = ['bg-blue-600', 'bg-emerald-600', 'bg-indigo-600', 'bg-amber-500', 'bg-purple-600'];
+  const colors = ['bg-brand-primary', 'bg-emerald-600', 'bg-indigo-600', 'bg-amber-500', 'bg-purple-600'];
 
   const displayCategories = sortedCategories.length > 0 ? sortedCategories.map(([name, count], i) => ({
     name,
@@ -126,7 +126,7 @@ export const AdminAnalytics: React.FC = () => {
         <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">Faol Foydalanuvchilar</span>
           <div className="text-lg font-black text-slate-900">{totalUsersCount} ta</div>
-          <span className="text-[11px] font-bold text-blue-600 flex items-center gap-0.5 mt-1">
+          <span className="text-[11px] font-bold text-brand-primary flex items-center gap-0.5 mt-1">
             <Users size={12} /> {workersCount} ishchi, {employersCount} ish beruvchi
           </span>
         </div>
@@ -170,7 +170,7 @@ export const AdminAnalytics: React.FC = () => {
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
-              <PieChart size={16} className="text-blue-600" />
+              <PieChart size={16} className="text-brand-primary" />
               <span>{a.activityByRegion || 'Hududlar bo\'yicha faollik'}</span>
             </h3>
             <span className="text-[11px] font-bold text-slate-400">{a.uzbekistan || 'O\'zbekiston'}</span>
@@ -180,7 +180,7 @@ export const AdminAnalytics: React.FC = () => {
             {displayRegions.map((r, idx) => (
               <div key={idx} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100 font-bold text-slate-800">
                 <span>{r.region}</span>
-                <span className="text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200/60 text-[11px]">{r.share}</span>
+                <span className="text-brand-primary bg-brand-primary/10 px-2.5 py-1 rounded-lg border border-brand-primary/20 text-[11px] font-mono">{r.share}</span>
               </div>
             ))}
           </div>

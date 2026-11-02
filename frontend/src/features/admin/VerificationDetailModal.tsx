@@ -45,7 +45,7 @@ export const VerificationDetailModal: React.FC<VerificationDetailModalProps> = (
           </button>
 
           <div className="flex items-center gap-3.5">
-            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 font-black text-xl flex items-center justify-center border border-blue-100 overflow-hidden shrink-0">
+            <div className="w-14 h-14 rounded-2xl bg-brand-primary/10 text-brand-primary font-black text-xl flex items-center justify-center border border-brand-primary/20 overflow-hidden shrink-0">
               {user.avatarUrl ? (
                 <img src={user.avatarUrl} alt="" className="w-full h-full object-cover"  onError={(e) => {
         const target = e.currentTarget;
@@ -61,8 +61,8 @@ export const VerificationDetailModal: React.FC<VerificationDetailModalProps> = (
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-lg sm:text-xl font-black text-slate-900">{user.name}</h2>
-                <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <ShieldCheck size={12} className="text-blue-600" /> Verifikatsiya So'rovi
+                <span className="bg-brand-primary/10 text-brand-primary border border-brand-primary/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <ShieldCheck size={12} className="text-brand-primary" /> Verifikatsiya So'rovi
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-1 font-medium">
@@ -77,7 +77,7 @@ export const VerificationDetailModal: React.FC<VerificationDetailModalProps> = (
           {/* User Profile & Registration */}
           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
             <div className="text-xs font-black text-slate-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-              <User size={14} className="text-blue-600" /> Shaxsiy va Ro'yxatdan O'tish Ma'lumotlari
+              <User size={14} className="text-brand-primary" /> Shaxsiy va Ro'yxatdan O'tish Ma'lumotlari
             </div>
 
             <div className="grid sm:grid-cols-2 gap-2.5 text-slate-700">

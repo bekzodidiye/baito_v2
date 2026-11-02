@@ -76,7 +76,7 @@ export const AdminPanel: React.FC = () => {
   } = useAdminData();
 
   return (
-    <div className="h-screen bg-slate-100/70 text-slate-900 flex overflow-hidden w-full antialiased">
+    <div className="h-screen bg-brand-background text-slate-900 flex overflow-hidden w-full antialiased">
       {/* Sidebar Navigation */}
       <AdminSidebar
         activeTab={activeTab}

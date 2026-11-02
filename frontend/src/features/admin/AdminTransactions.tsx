@@ -125,7 +125,7 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">Jami aylanma</span>
-            <DollarSign size={16} className="text-blue-600" />
+            <DollarSign size={16} className="text-brand-primary" />
           </div>
           <div className="text-xl font-black font-mono text-slate-900">{formatSum(settledAmount)}</div>
         </div>
@@ -184,14 +184,14 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-xs'
+                    ? 'bg-brand-primary text-white shadow-sm shadow-brand-primary/20'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
                 }`}
               >
                 <Icon size={14} />
                 <span>{tab.label}</span>
                 {tab.badge && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${isActive ? 'bg-white text-blue-700' : 'bg-amber-500 text-white'}`}>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${isActive ? 'bg-white text-brand-primary' : 'bg-amber-500 text-white'}`}>
                     {tab.badge}
                   </span>
                 )}
@@ -213,7 +213,7 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
                 placeholder="ID, ism yoki summa bo'yicha qidirish..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
               />
             </div>
             <div className="text-xs font-bold text-slate-400">
@@ -250,7 +250,7 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
                         <div className="flex items-center gap-2.5">
                           <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
                             tx.type === 'deposit'
-                              ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                              ? 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20'
                               : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                           }`}>
                             {tx.type === 'deposit' ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}

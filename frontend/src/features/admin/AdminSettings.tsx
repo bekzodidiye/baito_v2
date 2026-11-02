@@ -239,7 +239,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
             <div className="pt-2 flex justify-end">
               <button
                 type="submit"
-                className="h-11 px-6 bg-blue-600 text-white font-extrabold text-xs rounded-xl hover:bg-blue-700 transition cursor-pointer flex items-center justify-center gap-2 shadow-xs active:scale-95"
+                className="h-11 px-6 bg-brand-primary text-white font-extrabold text-xs rounded-xl hover:bg-brand-primary/95 transition cursor-pointer flex items-center justify-center gap-2 shadow-xs shadow-brand-primary/20 active:scale-95"
               >
                 {saved ? <CheckCircle2 size={16} className="text-white" /> : <Save size={16} />}
                 <span>{saved ? 'Saqlandi!' : 'Sozlamalarni Saqlash'}</span>

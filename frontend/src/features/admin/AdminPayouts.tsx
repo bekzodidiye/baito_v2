@@ -192,9 +192,9 @@ export const AdminPayouts: React.FC = () => {
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1">
             <span className="text-[10px] font-extrabold uppercase tracking-wider">Tasdiqlangan Fakturalar</span>
-            <ShieldCheck size={16} className="text-blue-500" />
+            <ShieldCheck size={16} className="text-brand-primary" />
           </div>
-          <div className="text-lg font-black text-blue-600 tabular-nums">
+          <div className="text-lg font-black text-brand-primary tabular-nums">
             {confirmedCount} ta
           </div>
           <div className="text-[11px] font-bold text-slate-500 flex items-center gap-1 mt-1">
@@ -225,7 +225,7 @@ export const AdminPayouts: React.FC = () => {
             onClick={() => setTab('withdrawals')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               tab === 'withdrawals'
-                ? 'bg-blue-600 text-white shadow-xs'
+                ? 'bg-brand-primary text-white shadow-sm shadow-brand-primary/20'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -242,7 +242,7 @@ export const AdminPayouts: React.FC = () => {
             onClick={() => setTab('payouts')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               tab === 'payouts'
-                ? 'bg-blue-600 text-white shadow-xs'
+                ? 'bg-brand-primary text-white shadow-sm shadow-brand-primary/20'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -259,7 +259,7 @@ export const AdminPayouts: React.FC = () => {
             onClick={() => setTab('bank')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               tab === 'bank'
-                ? 'bg-blue-600 text-white shadow-xs'
+                ? 'bg-brand-primary text-white shadow-sm shadow-brand-primary/20'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
@@ -674,7 +674,7 @@ const BankDetailsForm: React.FC<{ data?: BankDetails; onSaved: () => void }> = (
         <button
           onClick={save}
           disabled={saving}
-          className="h-11 px-6 rounded-xl bg-blue-600 text-white font-extrabold text-xs hover:bg-blue-700 transition-colors disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer shadow-xs active:scale-95"
+          className="h-11 px-6 rounded-xl bg-brand-primary text-white font-extrabold text-xs hover:bg-brand-primary/95 transition-colors disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer shadow-sm shadow-brand-primary/20 active:scale-95"
         >
           {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
           Bank rekvizitlarini saqlash

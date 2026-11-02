@@ -67,7 +67,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">{a.usersLabel}</span>
-            <Users size={16} className="text-blue-600" />
+            <Users size={16} className="text-brand-primary" />
           </div>
           <div className="text-xl font-black text-slate-900">{users.length}</div>
         </div>
@@ -75,9 +75,9 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">Ishchilar</span>
-            <UserIcon size={16} className="text-blue-500" />
+            <UserIcon size={16} className="text-brand-primary" />
           </div>
-          <div className="text-xl font-black text-blue-600">{totalWorkers}</div>
+          <div className="text-xl font-black text-brand-primary">{totalWorkers}</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
@@ -116,7 +116,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
             placeholder={a.searchUsersPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-9 py-2 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            className="w-full pl-10 pr-9 py-2 bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
           />
           {search && (
             <button
@@ -138,7 +138,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
                 onClick={() => setRoleFilter(rf)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer capitalize transition-all ${
                   roleFilter === rf
-                    ? 'bg-blue-600 text-white shadow-xs'
+                    ? 'bg-brand-primary text-white shadow-sm shadow-brand-primary/20'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
                 }`}
               >
@@ -240,7 +240,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
                         </div>
 
                         <div>
-                          <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                          <div className="font-bold text-slate-900 group-hover:text-brand-primary transition-colors flex items-center gap-2">
                             <span>{u.name}</span>
                             {u.isBanned && (
                               <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[9px] font-black rounded-md border border-red-200 uppercase">
@@ -265,12 +265,12 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
                         <select
                           value={u.role}
                           onChange={(e) => setRoleChange({ user: u, role: e.target.value })}
-                          className={`font-bold text-xs px-3 py-1.5 rounded-xl border appearance-none pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${
+                          className={`font-bold text-xs px-3 py-1.5 rounded-xl border appearance-none pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all ${
                             u.role === 'admin'
                               ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
                               : u.role === 'employer'
                               ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
-                              : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                              : 'bg-brand-primary/10 text-brand-primary border-brand-primary/20 hover:bg-brand-primary/15'
                           }`}
                         >
                           <option value="worker">{a.roleWorker}</option>
@@ -286,10 +286,10 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
                       {u.phone ? (
                         <button
                           onClick={() => handleCopy(u.phone!, u.id)}
-                          className="flex items-center gap-1.5 group/phone hover:text-blue-600 transition-colors cursor-pointer text-xs"
+                          className="flex items-center gap-1.5 group/phone hover:text-brand-primary transition-colors cursor-pointer text-xs"
                           title="Raqamdan nusxa olish"
                         >
-                          <Phone size={13} className="text-slate-400 group-hover/phone:text-blue-500" />
+                          <Phone size={13} className="text-slate-400 group-hover/phone:text-brand-primary" />
                           <span>{u.phone}</span>
                           {copiedId === u.id ? (
                             <Check size={12} className="text-emerald-500 ml-0.5" />

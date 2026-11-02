@@ -21,7 +21,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
         {/* Personal Info Grid */}
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="flex items-center gap-3 bg-white p-4 rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50">
-            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+            <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary border border-brand-primary/20 shrink-0">
               <Phone size={18} />
             </div>
             <div>
@@ -145,8 +145,8 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
               return (
                 <div className="flex flex-wrap gap-2">
                   {skillsList.map((s, i) => (
-                    <span key={i} className="px-3 py-1.5 bg-blue-50/50 text-blue-700 border border-blue-100 rounded-xl text-xs font-bold flex items-center gap-1.5">
-                      <Target size={12} className="text-blue-500" />
+                    <span key={i} className="px-3 py-1.5 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                      <Target size={12} className="text-brand-primary" />
                       {String(s)}
                     </span>
                   ))}

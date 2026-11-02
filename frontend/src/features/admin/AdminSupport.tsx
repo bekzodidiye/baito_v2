@@ -91,7 +91,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">Jami murojaatlar</span>
-            <Headphones size={16} className="text-blue-600" />
+            <Headphones size={16} className="text-brand-primary" />
           </div>
           <div className="text-xl font-black text-slate-900">{tickets.length}</div>
         </div>
@@ -99,9 +99,9 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">Yangi</span>
-            <span className="w-2 h-2 rounded-full bg-blue-500" />
+            <span className="w-2 h-2 rounded-full bg-brand-primary" />
           </div>
-          <div className="text-xl font-black text-blue-600">{countNew}</div>
+          <div className="text-xl font-black text-brand-primary">{countNew}</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
@@ -125,7 +125,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
       <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+            <div className="p-2 rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
               <Headphones size={18} />
             </div>
             <span>{a.supportTitle}</span>
@@ -142,7 +142,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
               onClick={() => setActiveTab(tab)}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize cursor-pointer transition-all ${
                 activeTab === tab
-                  ? 'bg-blue-600 text-white shadow-xs'
+                  ? 'bg-brand-primary text-white shadow-sm shadow-brand-primary/20'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
               }`}
             >
@@ -170,7 +170,7 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
                 onClick={() => openTicket(t.id)}
                 className={`p-4 rounded-2xl border transition-all cursor-pointer group shadow-2xs ${
                   selectedTicket?.id === t.id
-                    ? 'bg-blue-50/90 border-blue-400 shadow-sm'
+                    ? 'bg-brand-primary/10 border-brand-primary/40 shadow-sm'
                     : 'bg-white border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/60'
                 }`}
               >
@@ -180,13 +180,13 @@ export const AdminSupport: React.FC<AdminSupportProps> = ({ supportTickets }) =>
                     className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
                       t.priority === 'urgent'
                         ? 'bg-red-50 text-red-700 border-red-200'
-                        : 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-brand-primary/10 text-brand-primary border-brand-primary/20'
                     }`}
                   >
                     {t.priority.toUpperCase()}
                   </span>
                 </div>
-                <h3 className="font-bold text-slate-900 text-xs line-clamp-1 group-hover:text-blue-600 transition-colors">
+                <h3 className="font-bold text-slate-900 text-xs line-clamp-1 group-hover:text-brand-primary transition-colors">
                   {t.subject}
                 </h3>
                 <div className="flex items-center gap-2 mt-2 text-[11px] text-slate-500">

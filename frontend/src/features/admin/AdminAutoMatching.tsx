@@ -68,7 +68,7 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1">
             <span className="text-[10px] font-extrabold uppercase tracking-wider">Minimal Moslik</span>
-            <Target size={16} className="text-blue-600" />
+            <Target size={16} className="text-brand-primary" />
           </div>
           <div className="text-xl font-black text-slate-900">{minMatchScore}%</div>
           <div className="text-[11px] font-bold text-slate-500 mt-1">Algoritm saralash darajasi</div>
@@ -116,7 +116,7 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
 
         <button
           onClick={handleRunSimulator}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-primary hover:bg-brand-primary/95 text-white font-extrabold text-xs rounded-xl shadow-xs shadow-brand-primary/20 transition cursor-pointer active:scale-95 shrink-0"
         >
           <Zap size={14} />
           <span>Algoritmni Sinash (Test Push)</span>
@@ -126,14 +126,14 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4 lg:col-span-1">
           <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
-            <SlidersHorizontal size={16} className="text-blue-600" /> Moslashtirish Mezonlari
+            <SlidersHorizontal size={16} className="text-brand-primary" /> Moslashtirish Mezonlari
           </h3>
 
           <div className="space-y-4">
             <div>
               <div className="flex justify-between items-center mb-1">
                 <label className="font-bold text-slate-700">Minimal Moslik Chegarasi:</label>
-                <span className="font-black text-blue-600 font-mono text-sm">{minMatchScore}%</span>
+                <span className="font-black text-brand-primary font-mono text-sm">{minMatchScore}%</span>
               </div>
               <input
                 aria-label="Minimal moslik chegarasi (%)"
@@ -143,7 +143,7 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
                 step="5"
                 value={minMatchScore}
                 onChange={(e) => setMinMatchScore(Number(e.target.value))}
-                className="w-full accent-blue-600 cursor-pointer"
+                className="w-full accent-brand-primary cursor-pointer"
               />
             </div>
 
@@ -187,7 +187,7 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
                   type="checkbox"
                   checked={autoNotifyTelegram}
                   onChange={(e) => setAutoNotifyTelegram(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500"
+                  className="rounded text-brand-primary focus:ring-brand-primary"
                 />
                 Telegram Bot orqali Avto-Xabarnoma
               </label>
@@ -197,7 +197,7 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
                   type="checkbox"
                   checked={autoNotifySms}
                   onChange={(e) => setAutoNotifySms(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500"
+                  className="rounded text-brand-primary focus:ring-brand-primary"
                 />
                 Push va SMS Bildirishnoma
               </label>
@@ -207,7 +207,7 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 bg-brand-primary hover:bg-brand-primary/95 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl cursor-pointer shadow-xs shadow-brand-primary/20 flex items-center justify-center gap-1.5 active:scale-95"
               >
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                 <span>{saving ? 'Saqlanmoqda...' : 'Mezonlarni Saqlash'}</span>
@@ -239,13 +239,13 @@ export const AdminAutoMatching: React.FC<AdminAutoMatchingProps> = ({ settings, 
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 border border-blue-100 font-extrabold flex items-center justify-center text-xs">
+                    <div className="w-9 h-9 rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/20 font-extrabold flex items-center justify-center text-xs">
                       {c.name.charAt(0)}
                     </div>
                     <div>
                       <span className="font-bold text-slate-900 block text-xs">{c.name}</span>
                       <span className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                        <span className="font-semibold text-blue-700">{c.category}</span> • 
+                        <span className="font-semibold text-brand-primary">{c.category}</span> • 
                         <span className="font-mono">{c.distance}</span> • 
                         <span>{c.region}</span>
                       </span>

@@ -70,16 +70,16 @@ export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, o
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">Himoya darajasi</span>
-            <ShieldCheck size={16} className="text-blue-600" />
+            <ShieldCheck size={16} className="text-brand-primary" />
           </div>
-          <div className="text-xl font-black text-blue-600">KYC 2-bosqich</div>
+          <div className="text-xl font-black text-brand-primary">KYC 2-bosqich</div>
         </div>
       </div>
 
       {/* Main Header Container */}
       <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs">
         <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+          <div className="p-2 rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
             <ShieldCheck size={18} />
           </div>
           <span>{a.verificationTitle}</span>
@@ -103,7 +103,7 @@ export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, o
           pendingVerificationUsers.map((u) => (
             <div
               key={u.id}
-              className="bg-white p-5 rounded-3xl border border-slate-200/90 hover:border-blue-400 transition-all shadow-xs flex flex-col justify-between gap-4 group"
+              className="bg-white p-5 rounded-3xl border border-slate-200/90 hover:border-brand-primary/40 transition-all shadow-xs flex flex-col justify-between gap-4 group"
             >
               <div>
                 <div className="flex items-start justify-between gap-3">
@@ -111,11 +111,11 @@ export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, o
                     className="flex items-center gap-3 cursor-pointer"
                     onClick={() => setSelectedUser(u)}
                   >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-slate-100 to-slate-200 text-brand-primary font-black flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden shadow-2xs group-hover:border-blue-500 transition-colors">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-slate-100 to-slate-200 text-brand-primary font-black flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden shadow-2xs group-hover:border-brand-primary/40 transition-colors">
                       {u.avatarUrl ? (
                         <img
-                          src={u.avatarUrl}
                           alt=""
+                          src={u.avatarUrl}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             const target = e.currentTarget;
@@ -130,7 +130,7 @@ export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, o
                       )}
                     </div>
                     <div>
-                      <h3 className="font-black text-slate-900 text-sm group-hover:text-blue-600 transition-colors">
+                      <h3 className="font-black text-slate-900 text-sm group-hover:text-brand-primary transition-colors">
                         {u.name}
                       </h3>
                       <p className="text-xs text-slate-500 font-medium">{u.phone || 'Telefon kiritilmagan'}</p>
@@ -153,10 +153,10 @@ export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, o
                 {/* Document preview row */}
                 <div
                   onClick={() => setSelectedUser(u)}
-                  className="bg-slate-50 hover:bg-blue-50/70 p-3.5 rounded-2xl border border-slate-200/80 flex items-center justify-between text-xs font-semibold text-slate-700 cursor-pointer transition-colors mt-4"
+                  className="bg-slate-50 hover:bg-brand-primary/5 p-3.5 rounded-2xl border border-slate-200/80 flex items-center justify-between text-xs font-semibold text-slate-700 cursor-pointer transition-colors mt-4"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="p-1.5 rounded-lg bg-blue-100 text-blue-700">
+                    <div className="p-1.5 rounded-lg bg-brand-primary/10 text-brand-primary">
                       <FileText size={16} />
                     </div>
                     <div>
@@ -166,7 +166,7 @@ export const AdminVerifications: React.FC<AdminVerificationsProps> = ({ users, o
                       </div>
                     </div>
                   </div>
-                  <span className="text-blue-600 font-black flex items-center gap-1 text-xs">
+                  <span className="text-brand-primary font-black flex items-center gap-1 text-xs">
                     <Eye size={14} /> Ko'rish
                   </span>
                 </div>

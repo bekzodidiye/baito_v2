@@ -108,7 +108,7 @@ export const AdminAutoModeration: React.FC<AdminAutoModerationProps> = ({
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1">
             <span className="text-[10px] font-extrabold uppercase tracking-wider">Bloklash Muddati</span>
-            <Clock size={16} className="text-blue-500" />
+            <Clock size={16} className="text-brand-primary" />
           </div>
           <div className="text-xl font-black text-slate-900">{autoBanHours} soat</div>
           <div className="text-[11px] font-bold text-slate-500 mt-1">Avtomatik cheklov</div>
@@ -152,7 +152,7 @@ export const AdminAutoModeration: React.FC<AdminAutoModerationProps> = ({
         {/* Settings Panel */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4 lg:col-span-1">
           <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
-            <ShieldAlert size={16} className="text-blue-600" /> Bot Parametrlari
+            <ShieldAlert size={16} className="text-brand-primary" /> Bot Parametrlari
           </h3>
 
           <div className="space-y-3.5">
@@ -212,7 +212,7 @@ export const AdminAutoModeration: React.FC<AdminAutoModerationProps> = ({
             />
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/95 text-white font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs shadow-brand-primary/20 active:scale-95"
             >
               <Plus size={14} /> Qo'shish
             </button>
@@ -243,7 +243,7 @@ export const AdminAutoModeration: React.FC<AdminAutoModerationProps> = ({
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+              className="px-5 py-2 bg-brand-primary hover:bg-brand-primary/95 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl cursor-pointer shadow-xs shadow-brand-primary/20 flex items-center justify-center gap-1.5 active:scale-95"
             >
               {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
               <span>{saving ? 'Saqlanmoqda...' : 'Saqlash'}</span>

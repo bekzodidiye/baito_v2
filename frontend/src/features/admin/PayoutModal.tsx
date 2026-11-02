@@ -381,7 +381,7 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
                   {Number(invoiceAmount) > 0 && (
                     <div className="border border-slate-200/90 rounded-2xl overflow-hidden shadow-2xs">
                       <div className="bg-slate-50 border-b border-slate-200/80 text-slate-800 px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                        <FileText size={14} className="text-blue-600" />
+                        <FileText size={14} className="text-brand-primary" />
                         <span>Hisob-faktura (oldindan ko'rish)</span>
                       </div>
                       <div className="p-4 space-y-1.5 text-sm">
@@ -448,7 +448,7 @@ export const PayoutModal: React.FC<Props> = ({ jobId, onClose, onDone }) => {
               </button>
               <button onClick={sendInvoice}
                 disabled={sending || !ctx?.smtpConfigured || !invoiceEmail || Number(invoiceAmount) <= 0}
-                className="flex-[2] h-12 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xs active:scale-95">
+                className="flex-[2] h-12 rounded-2xl bg-brand-primary text-white font-bold hover:bg-brand-primary/95 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xs shadow-brand-primary/20 active:scale-95">
                 {sending ? <Loader2 size={17} className="animate-spin" /> : <Send size={17} />}
                 Korxonaga yuborish
               </button>

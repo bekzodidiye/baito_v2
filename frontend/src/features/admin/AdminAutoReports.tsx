@@ -113,7 +113,7 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
           </button>
           <button
             onClick={handleSendTelegramDigest}
-            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-xs transition cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand-primary hover:bg-brand-primary/95 text-white font-extrabold rounded-xl shadow-xs shadow-brand-primary/20 transition cursor-pointer active:scale-95"
           >
             {sentSuccess ? <CheckCircle2 size={16} /> : <Send size={15} />}
             <span>{sentSuccess ? 'Yuborilmoqda...' : 'Telegramga Yuborish'}</span>
@@ -145,7 +145,7 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
                   type="checkbox"
                   checked={dailyDigest}
                   onChange={(e) => setDailyDigest(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500"
+                  className="rounded text-brand-primary focus:ring-brand-primary"
                 />
                 Kunlik Telegram Digest (Har kuni 09:00 da)
               </label>
@@ -155,7 +155,7 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
                   type="checkbox"
                   checked={weeklyReport}
                   onChange={(e) => setWeeklyReport(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500"
+                  className="rounded text-brand-primary focus:ring-brand-primary"
                 />
                 Haftalik Yakuniy Hisobot (Dushanba 08:00)
               </label>
@@ -166,11 +166,11 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
         {/* Live Telegram Markdown Preview */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3 lg:col-span-2">
           <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
-            <MessageCircle size={16} className="text-blue-500" /> Live Telegram Post Preview
+            <MessageCircle size={16} className="text-brand-primary" /> Live Telegram Post Preview
           </h3>
 
-          <div className="p-4 bg-slate-50 text-slate-800 rounded-2xl font-mono text-xs leading-relaxed border border-blue-200/70 shadow-2xs space-y-2">
-            <div className="text-blue-700 font-bold flex items-center gap-1.5">
+          <div className="p-4 bg-slate-50 text-slate-800 rounded-2xl font-mono text-xs leading-relaxed border border-brand-primary/20 shadow-2xs space-y-2">
+            <div className="text-brand-primary font-bold flex items-center gap-1.5">
               <FileText size={14} /> 📊 BAITO PLATFORMA KUNLIK DIGEST ({reportData.date})
             </div>
             <div className="text-slate-700">
@@ -195,7 +195,7 @@ export const AdminAutoReports: React.FC<AdminAutoReportsProps> = ({ stats, setti
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl cursor-pointer shrink-0 shadow-xs transition active:scale-95"
+                className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary/95 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl cursor-pointer shrink-0 shadow-xs shadow-brand-primary/20 transition active:scale-95"
               >
                 {saving ? 'Saqlanmoqda...' : 'Saqlash'}
               </button>

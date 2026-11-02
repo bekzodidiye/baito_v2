@@ -41,10 +41,10 @@ export const CustomSelect = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-white border border-slate-200/90 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer shadow-2xs ${className}`}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-2 bg-white border border-slate-200/90 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all cursor-pointer shadow-2xs ${className}`}
       >
         <span className="truncate">{selectedOption ? selectedOption.label : <span className="text-slate-400 italic">{placeholderText}</span>}</span>
-        <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-blue-600' : ''}`} />
+        <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-brand-primary' : ''}`} />
       </button>
       
       {isOpen && (
@@ -61,12 +61,12 @@ export const CustomSelect = ({
                 }}
                 className={`w-full text-left px-3.5 py-2 text-xs transition-colors flex items-center justify-between cursor-pointer ${
                   isSelected 
-                    ? 'bg-blue-50/80 text-blue-700 font-bold' 
+                    ? 'bg-brand-primary/10 text-brand-primary font-bold' 
                     : 'text-slate-700 hover:bg-slate-50 font-medium'
                 }`}
               >
                 <span className="truncate">{opt.label}</span>
-                {isSelected && <Check size={14} className="text-blue-600 shrink-0" />}
+                {isSelected && <Check size={14} className="text-brand-primary shrink-0" />}
               </button>
             );
           })}
@@ -126,13 +126,13 @@ export const CustomDatePicker = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200/90 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all w-[165px] justify-between cursor-pointer shadow-2xs"
+        className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200/90 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-800 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all w-[165px] justify-between cursor-pointer shadow-2xs"
       >
         <span className="flex items-center gap-2 truncate">
-          <CalendarIcon size={14} className="text-blue-600 shrink-0" />
+          <CalendarIcon size={14} className="text-brand-primary shrink-0" />
           <span className="truncate">{value || "Sana tanlang"}</span>
         </span>
-        <ChevronDown size={13} className={`text-slate-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-blue-600' : ''}`} />
+        <ChevronDown size={13} className={`text-slate-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-brand-primary' : ''}`} />
       </button>
 
       {isOpen && (
@@ -166,9 +166,9 @@ export const CustomDatePicker = ({
                   onClick={() => handleDateSelect(d)}
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-xs transition-all cursor-pointer ${
                     isSelected 
-                      ? 'bg-blue-600 text-white font-extrabold shadow-sm shadow-blue-500/30' 
+                      ? 'bg-brand-primary text-white font-extrabold shadow-sm shadow-brand-primary/30' 
                       : isToday
-                      ? 'bg-blue-50 text-blue-700 font-bold hover:bg-blue-100'
+                      ? 'bg-brand-primary/10 text-brand-primary font-bold hover:bg-brand-primary/20'
                       : 'text-slate-700 hover:bg-slate-100 font-medium'
                   }`}
                 >
@@ -210,7 +210,7 @@ export const StatusSelect = ({
 
   const options = [
     { value: 'open', label: t.statusOpen || 'Ochiq', color: 'bg-emerald-50 text-emerald-700 border-emerald-200/80', dot: 'bg-emerald-500' },
-    { value: 'confirmed', label: t.statusHired || 'Ishchi olindi', color: 'bg-blue-50 text-blue-700 border-blue-200/80', dot: 'bg-blue-500' },
+    { value: 'confirmed', label: t.statusHired || 'Ishchi olindi', color: 'bg-brand-primary/10 text-brand-primary border-brand-primary/20', dot: 'bg-brand-primary' },
     { value: 'in_progress', label: t.statusStarted || 'Ish boshlandi', color: 'bg-amber-50 text-amber-700 border-amber-200/80', dot: 'bg-amber-500' },
     { value: 'completed', label: t.statusFinished || 'Ish tugatildi', color: 'bg-indigo-50 text-indigo-700 border-indigo-200/80', dot: 'bg-indigo-500' },
     { value: 'dispute', label: t.chipDispute || 'Nizo', color: 'bg-orange-50 text-orange-700 border-orange-200/80', dot: 'bg-orange-500' },
@@ -224,7 +224,7 @@ export const StatusSelect = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider border cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-2xs ${currentOption.color} ${className}`}
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider border cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all shadow-2xs ${currentOption.color} ${className}`}
       >
         <span className={`w-1.5 h-1.5 rounded-full ${currentOption.dot}`} />
         <span>{currentOption.label}</span>
@@ -249,7 +249,7 @@ export const StatusSelect = ({
                 <span className={`w-1.5 h-1.5 rounded-full ${opt.dot}`} />
                 <span>{opt.label}</span>
               </div>
-              {value === opt.value && <Check size={13} className="text-blue-600" />}
+              {value === opt.value && <Check size={13} className="text-brand-primary" />}
             </button>
           ))}
         </div>

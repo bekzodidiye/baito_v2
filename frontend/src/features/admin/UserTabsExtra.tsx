@@ -73,7 +73,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed': return <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded flex items-center gap-1"><CheckCircle size={10} /> Yakunlangan</span>;
-      case 'active': return <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded flex items-center gap-1"><Clock size={10} /> Faol</span>;
+      case 'active': return <span className="px-2 py-0.5 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 text-[10px] font-bold rounded flex items-center gap-1"><Clock size={10} /> Faol</span>;
       case 'cancelled': return <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded flex items-center gap-1"><XCircle size={10} /> {a.cancelledLabel}</span>;
       default: return <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-bold rounded flex items-center gap-1"><Clock size={10} /> Kutilmoqda</span>;
     }
@@ -185,7 +185,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
             <div className="text-2xl font-black text-slate-900">{parseFloat(String(user.balance || '0')).toLocaleString('uz-UZ')} <span className="text-sm font-bold text-slate-500">UZS</span></div>
           </div>
           <div className="p-5 bg-white rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 opacity-50 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/5 rounded-bl-full -mr-4 -mt-4 opacity-50 pointer-events-none" />
             <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">Platformada Ishlangan</span>
             <div className="text-2xl font-black text-slate-900">{formatCurrency(transactions.filter(t => t.type === 'income' && t.status === 'success').reduce((sum, t) => sum + parseFloat(t.amount as any || '0'), 0))} <span className="text-sm font-bold text-slate-500">UZS</span></div>
           </div>
@@ -344,7 +344,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
                 required 
                 disabled={isSubmitting}
               />
-              <button disabled={isSubmitting} type="submit" className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl cursor-pointer transition-colors flex items-center gap-2 disabled:opacity-50 shadow-xs active:scale-95">
+              <button disabled={isSubmitting} type="submit" className="px-4 py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-bold rounded-xl cursor-pointer transition-colors flex items-center gap-2 disabled:opacity-50 shadow-xs shadow-brand-primary/20 active:scale-95">
                 Qo'shish <Send size={14} />
               </button>
             </form>

@@ -54,7 +54,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Masalan: Buxoro viloyati"
-            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus:border-brand-primary"
           />
         </div>
 
@@ -103,7 +103,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
             type="checkbox"
             checked={isActive}
             onChange={(e) => setIsActive(e.target.checked)}
-            className="rounded border-slate-300 text-red-600 focus:ring-red-500"
+            className="rounded border-slate-300 text-brand-primary focus:ring-brand-primary"
           />
           Darhol faollashtirish (Aktiv qilish)
         </label>
@@ -118,7 +118,7 @@ export const AddRegionModal: React.FC<AddRegionModalProps> = ({ isOpen, onClose,
           </button>
           <button
             type="submit"
-            className="px-5 py-2.5 text-xs font-extrabold bg-blue-600 hover:bg-blue-700 text-white rounded-xl cursor-pointer shadow-xs active:scale-95"
+            className="px-5 py-2.5 text-xs font-extrabold bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl cursor-pointer shadow-xs shadow-brand-primary/20 active:scale-95"
           >
             Qo'shish
           </button>

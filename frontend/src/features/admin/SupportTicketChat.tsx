@@ -82,10 +82,10 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
         {(ticket.messages ?? []).map((m) => (
           <div key={m.id} className={`flex ${m.isAdmin ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[80%] p-3 rounded-2xl ${
-              m.isAdmin ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-xs'
+              m.isAdmin ? 'bg-brand-primary text-white shadow-xs shadow-brand-primary/20 rounded-tr-none' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-xs'
             }`}>
               <p className="font-medium leading-relaxed">{m.text}</p>
-              <span className={`text-[10px] block text-right mt-1 font-bold ${m.isAdmin ? 'text-blue-200' : 'text-slate-400'}`}>
+              <span className={`text-[10px] block text-right mt-1 font-bold ${m.isAdmin ? 'text-white/80' : 'text-slate-400'}`}>
                 {m.timestamp
                   ? new Date(m.timestamp).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
                   : ''}
@@ -112,7 +112,7 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
             placeholder="Javobingizni yozing..."
             className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           />
-          <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer">
+          <button type="submit" className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/95 text-white font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer shadow-xs shadow-brand-primary/20">
             <Send size={14} /> Yuborish
           </button>
         </form>

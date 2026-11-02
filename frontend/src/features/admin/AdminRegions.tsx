@@ -72,7 +72,7 @@ export const AdminRegions: React.FC = () => {
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1">
             <span className="text-[10px] font-extrabold uppercase tracking-wider">Viloyatlar</span>
-            <MapPin size={16} className="text-blue-600" />
+            <MapPin size={16} className="text-brand-primary" />
           </div>
           <div className="text-xl font-black text-slate-900">{regions.length} ta</div>
           <div className="text-[11px] font-bold text-slate-500 mt-1">Geofencing qamrovi</div>
@@ -122,7 +122,7 @@ export const AdminRegions: React.FC = () => {
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white font-extrabold text-xs rounded-xl hover:bg-blue-700 transition cursor-pointer shadow-xs shrink-0"
+          className="flex items-center gap-1.5 px-4 py-2 bg-brand-primary hover:bg-brand-primary/95 text-white font-extrabold text-xs rounded-xl transition cursor-pointer shadow-xs shadow-brand-primary/20 active:scale-95 shrink-0"
         >
           <Plus size={15} />
           Yangi Hudud Qo'shish
@@ -141,7 +141,7 @@ export const AdminRegions: React.FC = () => {
             <div key={region.id} className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs hover:shadow-xs transition-shadow">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-bold">
+                  <div className="w-9 h-9 rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/20 flex items-center justify-center font-bold">
                     <MapPin size={18} />
                   </div>
                   <div>
@@ -173,7 +173,7 @@ export const AdminRegions: React.FC = () => {
                 <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/70">
                   <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Ishchilar</span>
                   <span className="text-xs font-black text-slate-900 flex items-center gap-1 mt-0.5">
-                    <Users size={12} className="text-blue-500" /> {region.activeWorkersCount}
+                    <Users size={12} className="text-brand-primary" /> {region.activeWorkersCount}
                   </span>
                 </div>
                 <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/70">
@@ -190,7 +190,7 @@ export const AdminRegions: React.FC = () => {
                 </div>
                 <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/70">
                   <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider">Komissiya</span>
-                  <span className="text-xs font-black text-blue-600 flex items-center gap-0.5 mt-0.5">
+                  <span className="text-xs font-black text-brand-primary flex items-center gap-0.5 mt-0.5">
                     <Percent size={11} /> {region.commissionPercent ?? 0}%
                   </span>
                 </div>

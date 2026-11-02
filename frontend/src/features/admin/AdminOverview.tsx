@@ -64,7 +64,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-xs">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-wider border border-blue-200/60">
+            <span className="px-2.5 py-0.5 rounded-full bg-brand-primary/10 text-brand-primary text-[10px] font-black uppercase tracking-wider border border-brand-primary/20">
               {language === 'ru' ? 'Сводка системы' : language === 'en' ? 'System Summary' : 'Tizim Xulosasi'}
             </span>
             <span className="text-slate-400 text-xs font-semibold hidden md:inline">
@@ -96,7 +96,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
               onClick={() => setTimeRange(p.id as any)}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 timeRange === p.id
-                  ? 'bg-white text-blue-700 shadow-2xs font-extrabold'
+                  ? 'bg-white text-brand-primary shadow-2xs font-extrabold'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
             >
@@ -113,7 +113,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{a.commissionRevenue}</span>
-              <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 shadow-2xs">
+              <div className="p-2.5 rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/20 shadow-2xs">
                 <DollarSign size={18} />
               </div>
             </div>
@@ -170,13 +170,13 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
 
             {/* Visual Ratio Bar */}
             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-3 flex">
-              <div style={{ width: `${workerPercent}%` }} className="bg-blue-600 h-full rounded-l-full" title="Ishchilar" />
+              <div style={{ width: `${workerPercent}%` }} className="bg-brand-primary h-full rounded-l-full" title="Ishchilar" />
               <div style={{ width: `${100 - workerPercent}%` }} className="bg-indigo-500 h-full rounded-r-full" title="Ish beruvchilar" />
             </div>
           </div>
 
           <div className="flex items-center justify-between mt-3 text-xs font-bold pt-2 border-t border-slate-100">
-            <span className="text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
+            <span className="text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-lg border border-brand-primary/20">
               {counted(stats?.workersCount || 0, a.workersShort, language)}
             </span>
             <span className="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">
@@ -208,8 +208,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
               <span className="w-2 h-2 rounded-full bg-amber-500" />
               <span>{activeJobs} {a.inProgressShort}</span>
             </span>
-            <span className="flex items-center gap-1 text-blue-600">
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
+            <span className="flex items-center gap-1 text-brand-primary">
+              <span className="w-2 h-2 rounded-full bg-brand-primary" />
               <span>{completedJobs} {a.postingsShort}</span>
             </span>
           </div>
@@ -292,7 +292,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500">AI Matching</span>
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="w-2 h-2 rounded-full bg-brand-primary" />
             </div>
             <div className="text-sm font-black text-slate-800 mt-1">98.6% Aniqlik</div>
             <div className="text-[10px] text-slate-400 font-medium">Avtomatik saralash</div>
@@ -342,20 +342,20 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
           </button>
           <button
             onClick={() => handleNavigate('users')}
-            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 hover:bg-blue-50/50 border border-slate-200/80 text-left transition-all hover:border-blue-300 cursor-pointer group shadow-2xs"
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/80 hover:bg-brand-primary/5 border border-slate-200/80 text-left transition-all hover:border-brand-primary/30 cursor-pointer group shadow-2xs"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-blue-100 text-blue-600">
+              <div className="p-2.5 rounded-xl bg-brand-primary/10 text-brand-primary">
                 <Users size={16} />
               </div>
               <div>
-                <div className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                <div className="text-xs font-bold text-slate-900 group-hover:text-brand-primary transition-colors">
                   {language === 'ru' ? 'Пользователи' : language === 'en' ? 'Users' : 'Foydalanuvchilar'}
                 </div>
                 <div className="text-[10px] text-slate-500">Rollar & Balanslar</div>
               </div>
             </div>
-            <ArrowRight size={14} className="text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+            <ArrowRight size={14} className="text-slate-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all" />
           </button>
 
           <button
