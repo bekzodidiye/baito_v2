@@ -77,6 +77,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
       case 'success':
       case 'paid':
       case 'payment_confirmed':
+      case 'credited':
         return (
           <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-bold rounded-lg flex items-center gap-1">
             <CheckCircle size={10} /> {status === 'payment_confirmed' ? 'Tasdiqlangan' : 'Muvaffaqiyatli'}
@@ -287,16 +288,18 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
 
     // Combined financial records for the ledger
     const combinedRecords = [
-      ...invoices.map((inv) => ({
-        kind: 'invoice' as const,
-        id: inv.id,
-        ref: inv.invoiceNumber || `INV-${inv.id.substring(0, 8)}`,
-        amount: inv.amount,
-        status: inv.status,
-        date: inv.sentAt || inv.paidAt || '',
-        note: inv.sentTo ? `Yuborildi: ${inv.sentTo}` : "Hisob-faktura (Invois)",
-        isIncome: true,
-      })),
+      ...(isEmployer
+        ? invoices.map((inv) => ({
+            kind: 'invoice' as const,
+            id: inv.id,
+            ref: inv.invoiceNumber || `INV-${inv.id.substring(0, 8)}`,
+            amount: inv.amount,
+            status: inv.status,
+            date: inv.sentAt || inv.paidAt || '',
+            note: inv.sentTo ? `Yuborildi: ${inv.sentTo}` : "Hisob-faktura (Invois)",
+            isIncome: true,
+          }))
+        : []),
       ...transactions.map((tx) => {
         const isIncome =
           tx.type === 'income' ||
@@ -326,6 +329,20 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
           isIncome,
         };
       }),
+      // For workers: if there are completed jobs that don't have an explicit worker_earning transaction row in transactions table,
+      // include them as completed job earnings (Ish haqi) so worker's completed work is reflected as income
+      ...(!isEmployer && workerEarnedTxs === 0
+        ? completedOrders.map((o) => ({
+            kind: 'transaction' as const,
+            id: `order-${o.id}`,
+            ref: o.title || `ISH-${o.id.substring(0, 8)}`,
+            amount: parseFloat(o.amount as any) || 0,
+            status: 'completed',
+            date: o.date || '',
+            note: `Ish haqi (${o.title || "Bajarilgan ish"})`,
+            isIncome: true,
+          }))
+        : []),
     ].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
     const incomeRecords = combinedRecords.filter((rec) => rec.isIncome);

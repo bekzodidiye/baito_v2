@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app import models
 from app.api import deps
 from app.models.audit_ledger import AuditLedger
+from app.models.job import JobStatus
 
 from .audit import record_admin_action
 
@@ -309,18 +310,25 @@ def get_user_detail(
         for s in sessions
     ]
 
-    txs = (
-        db.query(models.Transaction)
-        .filter(
-            or_(
+    if user.role == 'employer':
+        txs = (
+            db.query(models.Transaction)
+            .filter(
                 models.Transaction.employerId.in_(user_ids),
-                models.Transaction.workerId.in_(user_ids),
+                models.Transaction.workerId.is_(None),
             )
+            .order_by(models.Transaction.createdAt.desc())
+            .limit(200)
+            .all()
         )
-        .order_by(models.Transaction.createdAt.desc())
-        .limit(200)
-        .all()
-    )
+    else:
+        txs = (
+            db.query(models.Transaction)
+            .filter(models.Transaction.workerId.in_(user_ids))
+            .order_by(models.Transaction.createdAt.desc())
+            .limit(200)
+            .all()
+        )
     txs_list = [
         {
             "id": t.id,
@@ -364,12 +372,21 @@ def get_user_detail(
                 continue
             employer = employer_map.get(job.employerId)
             author = job.company or (employer.name if employer else "Noma'lum")
+            order_status = (
+                "completed"
+                if (job.status == JobStatus.COMPLETED or a.status == "completed")
+                else (
+                    "cancelled"
+                    if (job.status == JobStatus.CANCELLED or a.status in ("rejected", "cancelled"))
+                    else a.status
+                )
+            )
             orders_list.append({
                 "id": job.id,
                 "title": job.title,
                 "date": a.appliedDate.isoformat() if a.appliedDate else None,
                 "amount": job.salary,
-                "status": a.status,
+                "status": order_status,
                 "employerName": author,
             })
             if a.rating and a.review:
@@ -400,46 +417,43 @@ def get_user_detail(
     user_data["createdAt"] = user.createdAt.isoformat() if user.createdAt else None
     user_data["adminNotes"] = user.adminNotes or []
 
-    payout_rows = (
-        db.query(models.JobPayout)
-        .filter(
-            or_(
-                models.JobPayout.employerId.in_(user_ids),
-                models.JobPayout.workerId.in_(user_ids),
+    invoices_list = []
+    if user.role == 'employer':
+        payout_rows = (
+            db.query(models.JobPayout)
+            .filter(models.JobPayout.employerId.in_(user_ids))
+            .order_by(models.JobPayout.paidAt.desc())
+            .limit(100)
+            .all()
+        )
+        invoices_list = [
+            {
+                "id": p.id,
+                "jobId": p.jobId,
+                "invoiceNumber": p.invoiceNumber,
+                "amount": p.invoiceAmount if p.invoiceAmount is not None else p.amount,
+                "status": p.status,
+                "sentAt": p.invoiceSentAt.isoformat() if p.invoiceSentAt else None,
+                "sentTo": p.invoiceSentTo,
+                "paidAt": (
+                    p.invoiceConfirmedAt.isoformat()
+                    if p.invoiceConfirmedAt
+                    else (p.paidAt.isoformat() if p.paidAt else None)
+                ),
+                "declaredAt": (
+                    p.invoicePaidDeclaredAt.isoformat()
+                    if p.invoicePaidDeclaredAt
+                    else None
+                ),
+                "paidMethod": p.invoicePaidMethod,
+            }
+            for p in payout_rows
+            if p.invoiceNumber or p.status in (
+                models.PayoutStatus.INVOICED,
+                models.PayoutStatus.DECLARED,
+                models.PayoutStatus.CONFIRMED,
             )
-        )
-        .order_by(models.JobPayout.paidAt.desc())
-        .limit(100)
-        .all()
-    )
-    invoices_list = [
-        {
-            "id": p.id,
-            "jobId": p.jobId,
-            "invoiceNumber": p.invoiceNumber,
-            "amount": p.invoiceAmount if p.invoiceAmount is not None else p.amount,
-            "status": p.status,
-            "sentAt": p.invoiceSentAt.isoformat() if p.invoiceSentAt else None,
-            "sentTo": p.invoiceSentTo,
-            "paidAt": (
-                p.invoiceConfirmedAt.isoformat()
-                if p.invoiceConfirmedAt
-                else (p.paidAt.isoformat() if p.paidAt else None)
-            ),
-            "declaredAt": (
-                p.invoicePaidDeclaredAt.isoformat()
-                if p.invoicePaidDeclaredAt
-                else None
-            ),
-            "paidMethod": p.invoicePaidMethod,
-        }
-        for p in payout_rows
-        if p.invoiceNumber or p.status in (
-            models.PayoutStatus.INVOICED,
-            models.PayoutStatus.DECLARED,
-            models.PayoutStatus.CONFIRMED,
-        )
-    ]
+        ]
 
     return {
         "user": user_data,

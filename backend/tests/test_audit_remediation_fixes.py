@@ -186,3 +186,73 @@ def test_worker_withdrawal_isolated_from_employer_transactions(client):
     transactions = res.json()
     # The transaction should NOT appear in employer view because workerId is not None
     assert len(transactions) == 0
+
+
+def test_worker_detail_never_has_invoices_and_orders_reflect_completion(client):
+    admin = make_user(role="admin", phone=_phone())
+    employer = make_user(role="employer", phone=_phone())
+    worker = make_user(role="worker", phone=_phone(), balance=0)
+
+    job = make_job(employer.id, status=JobStatus.COMPLETED, salary=220_000)
+
+    with SessionLocal() as db:
+        # Worker applied, job completed
+        app = Application(jobId=job.id, workerId=worker.id, status="hired")
+        db.add(app)
+
+        # Invoice sent to employer for this job
+        payout = JobPayout(
+            jobId=job.id,
+            workerId=worker.id,
+            employerId=employer.id,
+            amount=150_000,
+            status="payment_declared",
+            invoiceNumber="INV-2026-TEST",
+            invoiceAmount=310_000,
+            receiptUrl=RECEIPT,
+            paidByAdminId=admin.id,
+        )
+        db.add(payout)
+
+        # Payout transaction made to worker
+        tx = Transaction(
+            jobId=job.id,
+            employerId=employer.id,
+            workerId=worker.id,
+            amount=150_000 * 100,
+            type="payout",
+            status="paid",
+        )
+        db.add(tx)
+        db.commit()
+
+    login(client, admin)
+
+    # 1. Worker detail
+    res_worker = client.get(f"/api/v1/admin/users/{worker.id}/detail")
+    assert res_worker.status_code == 200
+    worker_data = res_worker.json()
+
+    # Invoices must NEVER be returned for workers
+    assert worker_data["invoices"] == []
+
+    # Completed job must be reflected as completed order
+    assert len(worker_data["orders"]) == 1
+    assert worker_data["orders"][0]["status"] == "completed"
+    assert worker_data["orders"][0]["amount"] == 220_000
+
+    # Worker transaction must only have the payout
+    assert len(worker_data["transactions"]) == 1
+    assert worker_data["transactions"][0]["type"] == "payout"
+    assert worker_data["transactions"][0]["amount"] == 150_000
+
+    # 2. Employer detail
+    res_employer = client.get(f"/api/v1/admin/users/{employer.id}/detail")
+    assert res_employer.status_code == 200
+    employer_data = res_employer.json()
+
+    # Employer gets the invoice
+    assert len(employer_data["invoices"]) == 1
+    assert employer_data["invoices"][0]["invoiceNumber"] == "INV-2026-TEST"
+    assert employer_data["invoices"][0]["amount"] == 310_000
+
