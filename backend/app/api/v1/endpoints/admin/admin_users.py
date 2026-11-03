@@ -400,12 +400,54 @@ def get_user_detail(
     user_data["createdAt"] = user.createdAt.isoformat() if user.createdAt else None
     user_data["adminNotes"] = user.adminNotes or []
 
+    payout_rows = (
+        db.query(models.JobPayout)
+        .filter(
+            or_(
+                models.JobPayout.employerId.in_(user_ids),
+                models.JobPayout.workerId.in_(user_ids),
+            )
+        )
+        .order_by(models.JobPayout.paidAt.desc())
+        .limit(100)
+        .all()
+    )
+    invoices_list = [
+        {
+            "id": p.id,
+            "jobId": p.jobId,
+            "invoiceNumber": p.invoiceNumber,
+            "amount": p.invoiceAmount if p.invoiceAmount is not None else p.amount,
+            "status": p.status,
+            "sentAt": p.invoiceSentAt.isoformat() if p.invoiceSentAt else None,
+            "sentTo": p.invoiceSentTo,
+            "paidAt": (
+                p.invoiceConfirmedAt.isoformat()
+                if p.invoiceConfirmedAt
+                else (p.paidAt.isoformat() if p.paidAt else None)
+            ),
+            "declaredAt": (
+                p.invoicePaidDeclaredAt.isoformat()
+                if p.invoicePaidDeclaredAt
+                else None
+            ),
+            "paidMethod": p.invoicePaidMethod,
+        }
+        for p in payout_rows
+        if p.invoiceNumber or p.status in (
+            models.PayoutStatus.INVOICED,
+            models.PayoutStatus.DECLARED,
+            models.PayoutStatus.CONFIRMED,
+        )
+    ]
+
     return {
         "user": user_data,
         "sessions": sessions_list,
         "transactions": txs_list,
         "orders": orders_list,
         "reviews": reviews_list,
+        "invoices": invoices_list,
     }
 
 

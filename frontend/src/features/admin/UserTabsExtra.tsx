@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { apiClient } from '../../api/client';
-import { AdminUserDetailResponse } from './types';
+import { AdminUserDetailResponse, AdminUserInvoice, AdminUserTransaction } from './types';
 import {
   PlusCircle,
   Wallet,
@@ -17,6 +17,8 @@ import {
   ArrowDownLeft,
   DollarSign,
   TrendingUp,
+  Receipt,
+  CheckCheck,
 } from 'lucide-react';
 
 interface UserTabsExtraProps {
@@ -30,9 +32,10 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const user = detail?.user || { id: '', name: 'Foydalanuvchi', role: 'worker', balance: 0, adminNotes: [] };
   const sessions = detail?.sessions || [];
-  const transactions = detail?.transactions || [];
+  const transactions: AdminUserTransaction[] = detail?.transactions || [];
   const orders = detail?.orders || [];
   const reviews = detail?.reviews || [];
+  const invoices: AdminUserInvoice[] = detail?.invoices || [];
 
   const [showTopUp, setShowTopUp] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState('');
@@ -40,6 +43,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
   const [notes, setNotes] = useState<{ text: string; date: string }[]>(user?.adminNotes || []);
   const [newNote, setNewNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [financeFilter, setFinanceFilter] = useState<'all' | 'invoices' | 'transactions'>('all');
 
   // Sync notes when detail changes
   React.useEffect(() => {
@@ -83,9 +87,18 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
+      case 'success':
+      case 'paid':
+      case 'payment_confirmed':
         return (
           <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-bold rounded-lg flex items-center gap-1">
-            <CheckCircle size={10} /> Yakunlangan
+            <CheckCircle size={10} /> {status === 'payment_confirmed' ? 'Tasdiqlangan' : 'Muvaffaqiyatli'}
+          </span>
+        );
+      case 'payment_declared':
+        return (
+          <span className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200/80 text-[10px] font-bold rounded-lg flex items-center gap-1">
+            <Clock size={10} /> To'lov bildirildi
           </span>
         );
       case 'active':
@@ -95,15 +108,19 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
           </span>
         );
       case 'cancelled':
+      case 'canceled':
+      case 'failed':
         return (
           <span className="px-2 py-0.5 bg-red-50 text-red-700 border border-red-200/80 text-[10px] font-bold rounded-lg flex items-center gap-1">
             <XCircle size={10} /> {a.cancelledLabel}
           </span>
         );
+      case 'invoiced':
+      case 'pending':
       default:
         return (
-          <span className="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold rounded-lg flex items-center gap-1">
-            <Clock size={10} /> Kutilmoqda
+          <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200/80 text-[10px] font-bold rounded-lg flex items-center gap-1">
+            <Clock size={10} /> {status === 'invoiced' ? 'Invois yuborilgan' : 'Kutilmoqda'}
           </span>
         );
     }
@@ -186,40 +203,118 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
     );
   }
 
-  // Tab 4: Finance (Bento Cards + Top-up Form + Transactions History)
+  // Tab 4: Finance (3 Bento Cards: Joriy Balans, Qilingan to'lovlar, To'lov kutilmoqda)
   if (activeTab === 4) {
-    const totalIncome = transactions
+    const isEmployer = user.role === 'employer';
+
+    // 1. Qilingan to'lovlar (Bizga qilingan to'lovlar yoki ishchiga to'langan)
+    const confirmedInvoicesSum = invoices
+      .filter((i) => i.status === 'payment_confirmed' || i.status === 'paid')
+      .reduce((sum, i) => sum + (parseFloat(i.amount as any) || 0), 0);
+
+    const successfulTxsSum = transactions
+      .filter(
+        (t) =>
+          (t.type === 'deposit' || t.type === 'income' || t.type === 'payment') &&
+          (t.status === 'success' || t.status === 'paid' || t.status === 'completed')
+      )
+      .reduce((sum, t) => sum + (parseFloat(t.amount as any) || 0), 0);
+
+    const totalPaidToUs = confirmedInvoicesSum + successfulTxsSum;
+
+    // 2. To'lov kutilmoqda (Bizga qilinishi kerak bo'lgan to'lov yoki kutilayotgan)
+    const pendingInvoicesSum = invoices
+      .filter((i) => i.status === 'invoiced' || i.status === 'payment_declared')
+      .reduce((sum, i) => sum + (parseFloat(i.amount as any) || 0), 0);
+
+    const pendingTxsSum = transactions
+      .filter((t) => t.status === 'pending' || t.status === 'kutilmoqda')
+      .reduce((sum, t) => sum + Math.abs(parseFloat(t.amount as any) || 0), 0);
+
+    const totalPendingOwed = pendingInvoicesSum + pendingTxsSum;
+
+    // Worker earnings fallback
+    const workerEarned = transactions
       .filter((t) => t.type === 'income' && t.status === 'success')
-      .reduce((sum, t) => sum + parseFloat((t.amount as any) || '0'), 0);
+      .reduce((sum, t) => sum + parseFloat((t.amount as any) || 0), 0);
+
+    // Combined financial records for the ledger
+    const combinedRecords = [
+      ...invoices.map((inv) => ({
+        kind: 'invoice' as const,
+        id: inv.id,
+        ref: inv.invoiceNumber || `INV-${inv.id.substring(0, 8)}`,
+        amount: inv.amount,
+        status: inv.status,
+        date: inv.sentAt || inv.paidAt || '',
+        note: inv.sentTo ? `Yuborildi: ${inv.sentTo}` : "Hisob-faktura (Invois)",
+        isIncome: true,
+      })),
+      ...transactions.map((tx) => ({
+        kind: 'transaction' as const,
+        id: tx.id,
+        ref: `ID: ${tx.id.substring(0, 8)}`,
+        amount: tx.amount,
+        status: tx.status,
+        date: tx.createdAt || '',
+        note: tx.type === 'income' ? 'Kirim (To\'lov)' : 'Chiqim (Yechib olish/Qaytarish)',
+        isIncome: tx.type === 'income' || tx.type === 'deposit',
+      })),
+    ].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    const filteredRecords = combinedRecords.filter((rec) => {
+      if (financeFilter === 'invoices') return rec.kind === 'invoice';
+      if (financeFilter === 'transactions') return rec.kind === 'transaction';
+      return true;
+    });
 
     return (
       <div className="space-y-3.5">
-        {/* Bento Stat Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div className="p-4 bg-white rounded-3xl border border-slate-200/80 shadow-2xs relative overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
+        {/* Top 3 Bento Stat Cards: Joriy Balans, Qilingan To'lovlar, To'lov Kutilmoqda */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          {/* 1. Joriy Balans */}
+          <div className="p-3.5 sm:p-4 bg-white rounded-3xl border border-slate-200/80 shadow-2xs relative overflow-hidden">
+            <div className="flex items-center justify-between mb-1.5">
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Joriy Balans</span>
-              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
-                <Wallet size={16} />
+              <div className="w-7 h-7 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center border border-slate-200/80">
+                <Wallet size={14} />
               </div>
             </div>
-            <div className="text-xl sm:text-2xl font-black text-slate-900 font-mono tracking-tight">
+            <div className="text-lg sm:text-xl font-black text-slate-900 font-mono tracking-tight">
               {parseFloat(String(user.balance || '0')).toLocaleString('uz-UZ')}{' '}
-              <span className="text-xs font-bold text-slate-400">UZS</span>
+              <span className="text-[11px] font-bold text-slate-400">UZS</span>
             </div>
           </div>
 
-          <div className="p-4 bg-white rounded-3xl border border-slate-200/80 shadow-2xs relative overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                Platformada Ishlangan
+          {/* 2. Qilingan To'lovlar (Bizga to'langan summa) */}
+          <div className="p-3.5 sm:p-4 bg-white rounded-3xl border border-slate-200/80 shadow-2xs relative overflow-hidden">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
+                {isEmployer ? "Qilingan To'lovlar" : 'Ishlangan Mablag\''}
               </span>
-              <div className="w-8 h-8 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center border border-brand-primary/20">
-                <TrendingUp size={16} />
+              <div className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+                <CheckCheck size={14} />
               </div>
             </div>
-            <div className="text-xl sm:text-2xl font-black text-slate-900 font-mono tracking-tight">
-              {formatCurrency(totalIncome)} <span className="text-xs font-bold text-slate-400">UZS</span>
+            <div className="text-lg sm:text-xl font-black text-emerald-700 font-mono tracking-tight">
+              {formatCurrency(isEmployer ? totalPaidToUs : workerEarned)}{' '}
+              <span className="text-[11px] font-bold text-emerald-500">UZS</span>
+            </div>
+          </div>
+
+          {/* 3. To'lov Kutilmoqda (Bizga qilinishi kerak bo'lgan / kutilayotgan) */}
+          <div className="p-3.5 sm:p-4 bg-white rounded-3xl border border-slate-200/80 shadow-2xs relative overflow-hidden">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-600">
+                To'lov Kutilmoqda
+              </span>
+              <div className="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
+                <Clock size={14} />
+              </div>
+            </div>
+            <div className="text-lg sm:text-xl font-black text-amber-700 font-mono tracking-tight">
+              {formatCurrency(totalPendingOwed)}{' '}
+              <span className="text-[11px] font-bold text-amber-500">UZS</span>
             </div>
           </div>
         </div>
@@ -275,68 +370,128 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
           )}
         </div>
 
-        {/* Transactions History */}
+        {/* Tranzaksiyalar va Invoislar Tarixi */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden">
-          <div className="p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
-            <span className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+          <div className="p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
                 <History size={13} />
               </div>
-              Tranzaksiyalar Tarixi
-            </span>
-            <span className="text-[11px] font-bold text-slate-500 bg-white px-2.5 py-0.5 rounded-full border border-slate-200/80">
-              {transactions.length} ta
-            </span>
+              <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                Tranzaksiyalar va Invoislar Tarixi
+              </span>
+            </div>
+
+            {/* Quick summary chips: Bizga to'langan / To'lashi kerak */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200/80 flex items-center gap-1">
+                <span className="text-slate-400 font-semibold">To'langan:</span>
+                <strong className="font-mono">{formatCurrency(totalPaidToUs)} UZS</strong>
+              </span>
+
+              {totalPendingOwed > 0 && (
+                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200/80 flex items-center gap-1">
+                  <span className="text-slate-400 font-semibold">Qarzdorlik / Kutilmoqda:</span>
+                  <strong className="font-mono">{formatCurrency(totalPendingOwed)} UZS</strong>
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="divide-y divide-slate-100 max-h-[280px] overflow-y-auto no-scrollbar">
-            {transactions.length === 0 ? (
-              <div className="text-center text-slate-400 py-8 text-xs font-medium">{a.noTransactions}</div>
+          {/* Sub-filter tabs */}
+          <div className="px-3.5 pt-2 pb-1 border-b border-slate-100 bg-white flex gap-1">
+            <button
+              type="button"
+              onClick={() => setFinanceFilter('all')}
+              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                financeFilter === 'all'
+                  ? 'bg-slate-900 text-white shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              Barchasi ({combinedRecords.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFinanceFilter('invoices')}
+              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                financeFilter === 'invoices'
+                  ? 'bg-blue-600 text-white shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              Invoislar ({invoices.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFinanceFilter('transactions')}
+              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                financeFilter === 'transactions'
+                  ? 'bg-indigo-600 text-white shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              Tranzaksiyalar ({transactions.length})
+            </button>
+          </div>
+
+          {/* List of Invoices & Transactions */}
+          <div className="divide-y divide-slate-100 max-h-[300px] overflow-y-auto no-scrollbar">
+            {filteredRecords.length === 0 ? (
+              <div className="text-center text-slate-400 py-10 text-xs font-medium">
+                Moliyaviy ma'lumotlar topilmadi
+              </div>
             ) : (
-              transactions.map((t) => (
+              filteredRecords.map((item) => (
                 <div
-                  key={t.id}
-                  className="flex items-center justify-between p-3 sm:p-3.5 hover:bg-slate-50/60 transition-colors"
+                  key={`${item.kind}-${item.id}`}
+                  className="flex items-center justify-between p-3 sm:p-3.5 hover:bg-slate-50/60 transition-colors gap-3"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div
                       className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
-                        t.type === 'income'
+                        item.kind === 'invoice'
+                          ? 'bg-blue-50 text-blue-600 border-blue-100'
+                          : item.isIncome
                           ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                           : 'bg-red-50 text-red-600 border-red-100'
                       }`}
                     >
-                      {t.type === 'income' ? <ArrowDownLeft size={15} /> : <ArrowUpRight size={15} />}
+                      {item.kind === 'invoice' ? (
+                        <FileText size={15} />
+                      ) : item.isIncome ? (
+                        <ArrowDownLeft size={15} />
+                      ) : (
+                        <ArrowUpRight size={15} />
+                      )}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xs font-black text-slate-900 truncate">
-                        {t.type === 'income' ? 'Kirim' : 'Chiqim'}
+                      <div className="text-xs font-black text-slate-900 truncate flex items-center gap-1.5">
+                        <span>{item.kind === 'invoice' ? 'Invois' : item.isIncome ? 'Kirim' : 'Chiqim'}</span>
+                        <span className="text-[10px] font-mono text-slate-400 font-bold">
+                          {item.ref}
+                        </span>
                       </div>
-                      <div className="text-[10px] font-semibold text-slate-400 truncate">
-                        {t.createdAt ? formatDate(t.createdAt) : ''} • ID: {t.id.substring(0, 8)}
+                      <div className="text-[10px] font-semibold text-slate-400 truncate mt-0.5">
+                        {item.date ? formatDate(item.date) : ''} • {item.note}
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0 ml-3">
+
+                  <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
                     <span
                       className={`text-xs font-mono font-black ${
-                        t.type === 'income' ? 'text-emerald-600' : 'text-slate-900'
+                        item.kind === 'invoice'
+                          ? 'text-blue-700'
+                          : item.isIncome
+                          ? 'text-emerald-600'
+                          : 'text-slate-900'
                       }`}
                     >
-                      {t.type === 'income' ? '+' : '-'}
-                      {formatCurrency(t.amount)} UZS
+                      {item.kind === 'invoice' ? '' : item.isIncome ? '+' : '-'}
+                      {formatCurrency(item.amount)} UZS
                     </span>
-                    <span
-                      className={`px-1.5 py-0.5 text-[9px] font-extrabold uppercase rounded-md border ${
-                        t.status === 'success'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : t.status === 'failed'
-                          ? 'bg-red-50 text-red-700 border-red-200'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}
-                    >
-                      {t.status === 'success' ? 'Muvaffaqiyatli' : t.status === 'failed' ? 'Xato' : 'Kutilmoqda'}
-                    </span>
+                    {getStatusBadge(item.status)}
                   </div>
                 </div>
               ))

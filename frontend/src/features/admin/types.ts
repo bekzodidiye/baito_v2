@@ -71,12 +71,26 @@ export interface AdminUserReview {
   author: string;
 }
 
+export interface AdminUserInvoice {
+  id: string;
+  jobId?: string;
+  invoiceNumber?: string | null;
+  amount: number;
+  status: string;
+  sentAt?: string | null;
+  sentTo?: string | null;
+  paidAt?: string | null;
+  declaredAt?: string | null;
+  paidMethod?: string | null;
+}
+
 export interface AdminUserDetailResponse {
   user: AdminUser;
   sessions: AdminUserSession[];
   transactions: AdminUserTransaction[];
   orders: AdminUserOrder[];
   reviews: AdminUserReview[];
+  invoices?: AdminUserInvoice[];
 }
 
 export interface AdminJob {
