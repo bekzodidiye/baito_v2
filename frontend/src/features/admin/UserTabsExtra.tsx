@@ -38,9 +38,6 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
   const reviews = detail?.reviews || [];
   const invoices: AdminUserInvoice[] = detail?.invoices || [];
 
-  const [showTopUp, setShowTopUp] = useState(false);
-  const [topUpAmount, setTopUpAmount] = useState('');
-  const [topUpReason, setTopUpReason] = useState('');
   const [notes, setNotes] = useState<{ text: string; date: string }[]>(user?.adminNotes || []);
   const [newNote, setNewNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,17 +49,6 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
       setNotes(user.adminNotes);
     }
   }, [user?.adminNotes]);
-
-  const handleTopUpSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const num = parseFloat(topUpAmount);
-    if (!isNaN(num) && num > 0 && topUpReason.trim().length >= 3 && user?.id) {
-      onAddBalance(user.id, num, topUpReason.trim());
-      setShowTopUp(false);
-      setTopUpAmount('');
-      setTopUpReason('');
-    }
-  };
 
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,6 +223,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
     const activeJobs = orders.filter(
       (o) =>
         o.status !== 'completed' &&
+        o.status !== 'finished' &&
         o.status !== 'cancelled' &&
         o.status !== 'canceled' &&
         o.status !== 'rejected'
@@ -262,7 +249,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
       .reduce((sum, t) => sum + (parseFloat(t.amount as any) || 0), 0);
 
     const completedOrders = orders.filter(
-      (o) => o.status === 'completed' || o.status === 'finished' || o.status === 'hired'
+      (o) => o.status === 'completed' || o.status === 'finished'
     );
     const completedOrdersTotal = completedOrders.reduce(
       (sum, o) => sum + (parseFloat(o.amount as any) || 0),
@@ -356,26 +343,24 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
       <div className="space-y-3.5">
         {/* Top 3 Bento Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          {/* 1. Faol E'lonlar Byudjeti (Ish beruvchi) yoki Joriy Balans (Ishchi) */}
+          {/* 1. Faol E'lonlar Byudjeti (Ish beruvchi) yoki Faol Ishlar Byudjeti (Ishchi) */}
           <div className="p-3.5 sm:p-4 bg-white rounded-3xl border border-slate-200/80 shadow-2xs relative overflow-hidden">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[10px] font-black uppercase tracking-wider text-blue-600">
-                {isEmployer ? "Faol E'lonlar Byudjeti" : 'Joriy Balans'}
+                {isEmployer ? "Faol E'lonlar Byudjeti" : "Faol Ishlar Byudjeti"}
               </span>
               <div className="w-7 h-7 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
-                {isEmployer ? <Briefcase size={14} /> : <Wallet size={14} />}
+                <Briefcase size={14} />
               </div>
             </div>
             <div className="text-lg sm:text-xl font-black text-slate-900 font-mono tracking-tight">
-              {formatCurrency(isEmployer ? activeJobsTotal : user.balance)}{' '}
+              {formatCurrency(activeJobsTotal)}{' '}
               <span className="text-[11px] font-bold text-slate-400">UZS</span>
             </div>
             <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
-              {isEmployer
-                ? `${activeJobs.length} ta faol e'lon`
-                : Number(user.balance || 0) > 0
-                ? "Yechib olish uchun mavjud"
-                : "Hamyonda mablag' yo'q"}
+              {activeJobs.length > 0
+                ? `${activeJobs.length} ta faol ${isEmployer ? "e'lon" : "ish"}`
+                : `Faol ${isEmployer ? "e'lonlar" : "ishlar"} yo'q`}
             </span>
           </div>
 
@@ -453,59 +438,6 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
             </span>
           </div>
         </div>
-
-        {/* Balance Top-up (Admin Action) - Only for workers */}
-        {!isEmployer && (
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden">
-            <div className="p-3.5 sm:p-4 bg-slate-50/60 border-b border-slate-100 flex items-center justify-between">
-              <span className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center">
-                  <DollarSign size={13} />
-                </div>
-                Balans To'ldirish (Admin)
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowTopUp(!showTopUp)}
-                className="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer border border-slate-200/80 transition-colors shadow-2xs"
-              >
-                <PlusCircle size={13} /> Qo'shish
-              </button>
-            </div>
-
-            {showTopUp && (
-              <div className="p-4 bg-slate-50/30 border-b border-slate-100">
-                <form onSubmit={handleTopUpSubmit} className="flex flex-col gap-2.5 max-w-sm">
-                  <input
-                    aria-label={a.topUpAmount}
-                    type="number"
-                    value={topUpAmount}
-                    onChange={(e) => setTopUpAmount(e.target.value)}
-                    className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-xs text-slate-900 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 transition-all shadow-2xs"
-                    placeholder="Summa UZS"
-                    required
-                  />
-                  <input
-                    aria-label={a.topUpReason}
-                    type="text"
-                    value={topUpReason}
-                    onChange={(e) => setTopUpReason(e.target.value)}
-                    className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-semibold text-xs text-slate-900 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 transition-all shadow-2xs"
-                    placeholder={a.reasonForAudit}
-                    minLength={3}
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className="px-4 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white text-xs font-black rounded-xl cursor-pointer shadow-xs shadow-brand-primary/20 transition-all"
-                  >
-                    Tasdiqlash
-                  </button>
-                </form>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Tranzaksiyalar va Invoislar / Chiqimlar Tarixi */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden">

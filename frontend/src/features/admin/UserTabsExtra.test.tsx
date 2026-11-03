@@ -21,40 +21,29 @@ const detail = {
 
 const renderFinanceTab = () => {
   const onAddBalance = vi.fn();
-  // Tab 4 is "Moliya", where the top-up lives.
+  // Tab 4 is "Moliya"
   render(<UserTabsExtra detail={detail} activeTab={4} onAddBalance={onAddBalance} />);
   return { onAddBalance };
 };
 
-const openTopUp = () =>
-  fireEvent.click(screen.getByRole('button', { name: /^Qo'shish$/i }));
-
-describe("UserTabsExtra — an admin top-up cannot happen by accident", () => {
-  it('keeps the form closed until it is asked for', () => {
+describe("UserTabsExtra — Worker financial dashboard", () => {
+  it('does not render retired manual balance top-up controls', () => {
     renderFinanceTab();
+    expect(screen.queryByRole('button', { name: /^Qo'shish$/i })).toBeNull();
     expect(screen.queryByPlaceholderText(/Summa UZS/i)).toBeNull();
   });
 
-  it('will not credit an account without a reason for the audit log', () => {
-    const { onAddBalance } = renderFinanceTab();
-    openTopUp();
-    fireEvent.change(screen.getByPlaceholderText(/Summa UZS/i), {
-      target: { value: '100000' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /^Tasdiqlash$/i }));
-    expect(onAddBalance).not.toHaveBeenCalled();
+  it('renders the 3 tailored financial cards for worker', () => {
+    renderFinanceTab();
+    expect(screen.getByText(/Faol Ishlar Byudjeti/i)).toBeDefined();
+    expect(screen.getByText(/Jami Ishlangan/i)).toBeDefined();
+    expect(screen.getByText(/Yechib Olingan/i)).toBeDefined();
   });
 
-  it('credits the account once the amount and the reason are both given', () => {
-    const { onAddBalance } = renderFinanceTab();
-    openTopUp();
-    fireEvent.change(screen.getByPlaceholderText(/Summa UZS/i), {
-      target: { value: '100000' },
-    });
-    fireEvent.change(screen.getByPlaceholderText(/Sabab/i), {
-      target: { value: 'Kompensatsiya' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /^Tasdiqlash$/i }));
-    expect(onAddBalance).toHaveBeenCalledWith('u-1', 100000, 'Kompensatsiya');
+  it('renders worker history section with smart ledger filters', () => {
+    renderFinanceTab();
+    expect(screen.getByText(/Tranzaksiyalar va Chiqimlar Tarixi/i)).toBeDefined();
+    expect(screen.getByRole('button', { name: /Kirimlar/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Chiqimlar/i })).toBeDefined();
   });
 });
