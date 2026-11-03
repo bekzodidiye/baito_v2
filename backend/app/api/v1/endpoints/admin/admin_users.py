@@ -324,7 +324,7 @@ def get_user_detail(
     txs_list = [
         {
             "id": t.id,
-            "amount": t.amount,
+            "amount": (t.amount or 0) // 100,  # tiyin -> UZS
             "type": t.type,
             "status": t.status,
             "createdAt": t.createdAt.isoformat() if t.createdAt else None,

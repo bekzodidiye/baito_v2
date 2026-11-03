@@ -44,7 +44,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
   const [notes, setNotes] = useState<{ text: string; date: string }[]>(user?.adminNotes || []);
   const [newNote, setNewNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [financeFilter, setFinanceFilter] = useState<'all' | 'invoices' | 'transactions'>('all');
+  const [financeFilter, setFinanceFilter] = useState<'all' | 'invoices' | 'transactions' | 'income' | 'payout'>('all');
 
   // Sync notes when detail changes
   React.useEffect(() => {
@@ -205,10 +205,11 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
   }
 
   // Tab 4: Finance (3 Bento Cards: Joriy Balans, Qilingan to'lovlar, To'lov kutilmoqda)
+  // Tab 4: Finance (3 Bento Cards: Joriy Balans / Faol E'lonlar, Jami Ishlangan / Qilingan To'lovlar, Yechib Olingan / To'lov Kutilmoqda)
   if (activeTab === 4) {
     const isEmployer = user.role === 'employer';
 
-    // 1. Qilingan to'lovlar (Bizga qilingan to'lovlar yoki ishchiga to'langan)
+    // --- Employer financial metrics ---
     const confirmedInvoicesSum = invoices
       .filter((i) => i.status === 'payment_confirmed' || i.status === 'paid')
       .reduce((sum, i) => sum + (parseFloat(i.amount as any) || 0), 0);
@@ -223,7 +224,6 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
 
     const totalPaidToUs = confirmedInvoicesSum + successfulTxsSum;
 
-    // 2. To'lov kutilmoqda (Bizga qilinishi kerak bo'lgan to'lov yoki kutilayotgan)
     const pendingInvoicesSum = invoices
       .filter((i) => i.status === 'invoiced' || i.status === 'payment_declared')
       .reduce((sum, i) => sum + (parseFloat(i.amount as any) || 0), 0);
@@ -234,10 +234,69 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
 
     const totalPendingOwed = pendingInvoicesSum + pendingTxsSum;
 
-    // Worker earnings fallback
-    const workerEarned = transactions
-      .filter((t) => t.type === 'income' && t.status === 'success')
-      .reduce((sum, t) => sum + parseFloat((t.amount as any) || 0), 0);
+    const activeJobs = orders.filter(
+      (o) =>
+        o.status !== 'completed' &&
+        o.status !== 'cancelled' &&
+        o.status !== 'canceled' &&
+        o.status !== 'rejected'
+    );
+    const activeJobsTotal = activeJobs.reduce(
+      (sum, o) => sum + (parseFloat(o.amount as any) || 0),
+      0
+    );
+
+    // --- Worker financial metrics ---
+    // 1) Jami Ishlangan (Total worker earnings from completed jobs & bonuses)
+    const workerEarnedTxs = transactions
+      .filter(
+        (t) =>
+          (t.type === 'worker_earning' ||
+            t.type === 'completion_bonus' ||
+            t.type === 'income') &&
+          (t.status === 'credited' ||
+            t.status === 'paid' ||
+            t.status === 'success' ||
+            t.status === 'completed')
+      )
+      .reduce((sum, t) => sum + (parseFloat(t.amount as any) || 0), 0);
+
+    const completedOrders = orders.filter(
+      (o) => o.status === 'completed' || o.status === 'finished' || o.status === 'hired'
+    );
+    const completedOrdersTotal = completedOrders.reduce(
+      (sum, o) => sum + (parseFloat(o.amount as any) || 0),
+      0
+    );
+
+    const workerTotalEarned = Math.max(workerEarnedTxs, completedOrdersTotal);
+
+    // 2) Yechib Olingan (Total paid out / withdrawn by worker)
+    const workerPaidOut = transactions
+      .filter(
+        (t) =>
+          (t.type === 'payout' || t.type === 'withdraw') &&
+          (t.status === 'paid' ||
+            t.status === 'success' ||
+            t.status === 'completed' ||
+            t.status === 'approved')
+      )
+      .reduce((sum, t) => {
+        const raw = Math.abs(parseFloat(t.amount as any) || 0);
+        return sum + (raw >= 10000000 && raw % 100 === 0 ? raw / 100 : raw);
+      }, 0);
+
+    // 3) Kutilayotgan Chiqim (Pending withdrawals waiting for admin decision)
+    const workerPendingPayout = transactions
+      .filter(
+        (t) =>
+          (t.type === 'payout' || t.type === 'withdraw') &&
+          (t.status === 'pending' || t.status === 'kutilmoqda')
+      )
+      .reduce((sum, t) => {
+        const raw = Math.abs(parseFloat(t.amount as any) || 0);
+        return sum + (raw >= 10000000 && raw % 100 === 0 ? raw / 100 : raw);
+      }, 0);
 
     // Combined financial records for the ledger
     const combinedRecords = [
@@ -251,40 +310,51 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
         note: inv.sentTo ? `Yuborildi: ${inv.sentTo}` : "Hisob-faktura (Invois)",
         isIncome: true,
       })),
-      ...transactions.map((tx) => ({
-        kind: 'transaction' as const,
-        id: tx.id,
-        ref: `ID: ${tx.id.substring(0, 8)}`,
-        amount: tx.amount,
-        status: tx.status,
-        date: tx.createdAt || '',
-        note: tx.type === 'income' ? 'Kirim (To\'lov)' : 'Chiqim (Yechib olish/Qaytarish)',
-        isIncome: tx.type === 'income' || tx.type === 'deposit',
-      })),
+      ...transactions.map((tx) => {
+        const isIncome =
+          tx.type === 'income' ||
+          tx.type === 'deposit' ||
+          tx.type === 'worker_earning' ||
+          tx.type === 'completion_bonus';
+
+        let note = tx.type === 'income' ? "Kirim (To'lov)" : 'Chiqim (Yechib olish/Qaytarish)';
+        if (tx.type === 'worker_earning') note = "Ish haqi (Ish yakunlandi)";
+        else if (tx.type === 'completion_bonus') note = "Bonus mukofoti";
+        else if (tx.type === 'payout') note = "Kartaga to'lov (Chiqim)";
+        else if (tx.type === 'withdraw') note = "Yechib olish so'rovi";
+        else if (tx.type === 'deposit') note = "Depozit to'ldirish";
+
+        const rawAmount = parseFloat(tx.amount as any) || 0;
+        const normalizedAmount =
+          rawAmount >= 10000000 && rawAmount % 100 === 0 ? rawAmount / 100 : rawAmount;
+
+        return {
+          kind: 'transaction' as const,
+          id: tx.id,
+          ref: `ID: ${tx.id.substring(0, 8)}`,
+          amount: normalizedAmount,
+          status: tx.status,
+          date: tx.createdAt || '',
+          note,
+          isIncome,
+        };
+      }),
     ].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    const incomeRecords = combinedRecords.filter((rec) => rec.isIncome);
+    const payoutRecords = combinedRecords.filter((rec) => !rec.isIncome);
 
     const filteredRecords = combinedRecords.filter((rec) => {
       if (financeFilter === 'invoices') return rec.kind === 'invoice';
       if (financeFilter === 'transactions') return rec.kind === 'transaction';
+      if (financeFilter === 'income') return rec.isIncome;
+      if (financeFilter === 'payout') return !rec.isIncome;
       return true;
     });
 
-    // Active / unfinished jobs budget for employer
-    const activeJobs = orders.filter(
-      (o) =>
-        o.status !== 'completed' &&
-        o.status !== 'cancelled' &&
-        o.status !== 'canceled' &&
-        o.status !== 'rejected'
-    );
-    const activeJobsTotal = activeJobs.reduce(
-      (sum, o) => sum + (parseFloat(o.amount as any) || 0),
-      0
-    );
-
     return (
       <div className="space-y-3.5">
-        {/* Top 3 Bento Stat Cards: Faol E'lonlar Byudjeti, Qilingan To'lovlar, To'lov Kutilmoqda */}
+        {/* Top 3 Bento Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           {/* 1. Faol E'lonlar Byudjeti (Ish beruvchi) yoki Joriy Balans (Ishchi) */}
           <div className="p-3.5 sm:p-4 bg-white rounded-3xl border border-slate-200/80 shadow-2xs relative overflow-hidden">
@@ -300,53 +370,91 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
               {formatCurrency(isEmployer ? activeJobsTotal : user.balance)}{' '}
               <span className="text-[11px] font-bold text-slate-400">UZS</span>
             </div>
-            {isEmployer && (
-              <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
-                {activeJobs.length} ta faol e'lon
-              </span>
-            )}
-          </div>
-
-          {/* 2. Qilingan To'lovlar (Bizga to'langan summa) */}
-          <div className="p-3.5 sm:p-4 bg-white rounded-3xl border border-slate-200/80 shadow-2xs relative overflow-hidden">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
-                {isEmployer ? "Qilingan To'lovlar" : 'Ishlangan Mablag\''}
-              </span>
-              <div className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
-                <CheckCheck size={14} />
-              </div>
-            </div>
-            <div className="text-lg sm:text-xl font-black text-emerald-700 font-mono tracking-tight">
-              {formatCurrency(isEmployer ? totalPaidToUs : workerEarned)}{' '}
-              <span className="text-[11px] font-bold text-emerald-500">UZS</span>
-            </div>
-            <span className="text-[10px] font-semibold text-emerald-600/80 block mt-0.5">
-              Bizga to'langan summa
+            <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
+              {isEmployer
+                ? `${activeJobs.length} ta faol e'lon`
+                : Number(user.balance || 0) > 0
+                ? "Yechib olish uchun mavjud"
+                : "Hamyonda mablag' yo'q"}
             </span>
           </div>
 
-          {/* 3. To'lov Kutilmoqda (Bizga qilinishi kerak bo'lgan / kutilayotgan) */}
+          {/* 2. Qilingan To'lovlar (Ish beruvchi) yoki Jami Ishlangan (Ishchi) */}
           <div className="p-3.5 sm:p-4 bg-white rounded-3xl border border-slate-200/80 shadow-2xs relative overflow-hidden">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-amber-600">
-                To'lov Kutilmoqda
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
+                {isEmployer ? "Qilingan To'lovlar" : 'Jami Ishlangan'}
               </span>
-              <div className="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
-                <Clock size={14} />
+              <div className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+                {isEmployer ? <CheckCheck size={14} /> : <TrendingUp size={14} />}
               </div>
             </div>
-            <div className="text-lg sm:text-xl font-black text-amber-700 font-mono tracking-tight">
-              {formatCurrency(totalPendingOwed)}{' '}
-              <span className="text-[11px] font-bold text-amber-500">UZS</span>
+            <div className="text-lg sm:text-xl font-black text-emerald-700 font-mono tracking-tight">
+              {formatCurrency(isEmployer ? totalPaidToUs : workerTotalEarned)}{' '}
+              <span className="text-[11px] font-bold text-emerald-500">UZS</span>
             </div>
-            <span className="text-[10px] font-semibold text-amber-600/80 block mt-0.5">
-              Kutilayotgan qarzdorlik
+            <span className="text-[10px] font-semibold text-emerald-600/80 block mt-0.5">
+              {isEmployer
+                ? "Bizga to'langan summa"
+                : completedOrders.length > 0
+                ? `${completedOrders.length} ta bajarilgan ish`
+                : "Yakunlangan ishlar daromadi"}
+            </span>
+          </div>
+
+          {/* 3. To'lov Kutilmoqda (Ish beruvchi) yoki Yechib Olingan (Ishchi) */}
+          <div className="p-3.5 sm:p-4 bg-white rounded-3xl border border-slate-200/80 shadow-2xs relative overflow-hidden">
+            <div className="flex items-center justify-between mb-1.5">
+              <span
+                className={`text-[10px] font-black uppercase tracking-wider ${
+                  isEmployer ? 'text-amber-600' : 'text-indigo-600'
+                }`}
+              >
+                {isEmployer ? "To'lov Kutilmoqda" : 'Yechib Olingan'}
+              </span>
+              <div
+                className={`w-7 h-7 rounded-xl flex items-center justify-center border ${
+                  isEmployer
+                    ? 'bg-amber-50 text-amber-600 border-amber-100'
+                    : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                }`}
+              >
+                {isEmployer ? <Clock size={14} /> : <ArrowUpRight size={14} />}
+              </div>
+            </div>
+            <div
+              className={`text-lg sm:text-xl font-black font-mono tracking-tight ${
+                isEmployer ? 'text-amber-700' : 'text-indigo-700'
+              }`}
+            >
+              {formatCurrency(isEmployer ? totalPendingOwed : workerPaidOut)}{' '}
+              <span
+                className={`text-[11px] font-bold ${
+                  isEmployer ? 'text-amber-500' : 'text-indigo-500'
+                }`}
+              >
+                UZS
+              </span>
+            </div>
+            <span
+              className={`text-[10px] font-semibold block mt-0.5 ${
+                isEmployer
+                  ? 'text-amber-600/80'
+                  : workerPendingPayout > 0
+                  ? 'text-amber-600 font-bold'
+                  : 'text-indigo-600/80'
+              }`}
+            >
+              {isEmployer
+                ? 'Kutilayotgan qarzdorlik'
+                : workerPendingPayout > 0
+                ? `Kutilmoqda: ${formatCurrency(workerPendingPayout)} UZS`
+                : "Kartaga to'lab berilgan"}
             </span>
           </div>
         </div>
 
-        {/* Balance Top-up (Admin Action) - Only for workers, removed for employers */}
+        {/* Balance Top-up (Admin Action) - Only for workers */}
         {!isEmployer && (
           <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden">
             <div className="p-3.5 sm:p-4 bg-slate-50/60 border-b border-slate-100 flex items-center justify-between">
@@ -399,7 +507,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
           </div>
         )}
 
-        {/* Tranzaksiyalar va Invoislar Tarixi */}
+        {/* Tranzaksiyalar va Invoislar / Chiqimlar Tarixi */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden">
           <div className="p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div className="flex items-center gap-2">
@@ -407,61 +515,117 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
                 <History size={13} />
               </div>
               <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                Tranzaksiyalar va Invoislar Tarixi
+                {isEmployer ? "Tranzaksiyalar va Invoislar Tarixi" : "Tranzaksiyalar va Chiqimlar Tarixi"}
               </span>
             </div>
 
-            {/* Quick summary chips: Bizga to'langan / To'lashi kerak */}
+            {/* Quick summary chips */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200/80 flex items-center gap-1">
-                <span className="text-slate-400 font-semibold">To'langan:</span>
-                <strong className="font-mono">{formatCurrency(totalPaidToUs)} UZS</strong>
-              </span>
-
-              {totalPendingOwed > 0 && (
-                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200/80 flex items-center gap-1">
-                  <span className="text-slate-400 font-semibold">Qarzdorlik / Kutilmoqda:</span>
-                  <strong className="font-mono">{formatCurrency(totalPendingOwed)} UZS</strong>
-                </span>
+              {isEmployer ? (
+                <>
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200/80 flex items-center gap-1">
+                    <span className="text-slate-400 font-semibold">To'langan:</span>
+                    <strong className="font-mono">{formatCurrency(totalPaidToUs)} UZS</strong>
+                  </span>
+                  {totalPendingOwed > 0 && (
+                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200/80 flex items-center gap-1">
+                      <span className="text-slate-400 font-semibold">Qarzdorlik / Kutilmoqda:</span>
+                      <strong className="font-mono">{formatCurrency(totalPendingOwed)} UZS</strong>
+                    </span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl border border-indigo-200/80 flex items-center gap-1">
+                    <span className="text-slate-400 font-semibold">Chiqim (To'langan):</span>
+                    <strong className="font-mono">{formatCurrency(workerPaidOut)} UZS</strong>
+                  </span>
+                  {workerPendingPayout > 0 && (
+                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200/80 flex items-center gap-1">
+                      <span className="text-slate-400 font-semibold">Kutilmoqda:</span>
+                      <strong className="font-mono">{formatCurrency(workerPendingPayout)} UZS</strong>
+                    </span>
+                  )}
+                </>
               )}
             </div>
           </div>
 
           {/* Sub-filter tabs */}
           <div className="px-3.5 pt-2 pb-1 border-b border-slate-100 bg-white flex gap-1">
-            <button
-              type="button"
-              onClick={() => setFinanceFilter('all')}
-              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                financeFilter === 'all'
-                  ? 'bg-slate-900 text-white shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              Barchasi ({combinedRecords.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFinanceFilter('invoices')}
-              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                financeFilter === 'invoices'
-                  ? 'bg-blue-600 text-white shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              Invoislar ({invoices.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFinanceFilter('transactions')}
-              className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                financeFilter === 'transactions'
-                  ? 'bg-indigo-600 text-white shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              Tranzaksiyalar ({transactions.length})
-            </button>
+            {isEmployer ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setFinanceFilter('all')}
+                  className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                    financeFilter === 'all'
+                      ? 'bg-slate-900 text-white shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  Barchasi ({combinedRecords.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFinanceFilter('invoices')}
+                  className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                    financeFilter === 'invoices'
+                      ? 'bg-blue-600 text-white shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  Invoislar ({invoices.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFinanceFilter('transactions')}
+                  className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                    financeFilter === 'transactions'
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  Tranzaksiyalar ({transactions.length})
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setFinanceFilter('all')}
+                  className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                    financeFilter === 'all'
+                      ? 'bg-slate-900 text-white shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  Barchasi ({combinedRecords.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFinanceFilter('income')}
+                  className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                    financeFilter === 'income'
+                      ? 'bg-emerald-600 text-white shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  Kirimlar ({incomeRecords.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFinanceFilter('payout')}
+                  className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                    financeFilter === 'payout'
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  Chiqimlar ({payoutRecords.length})
+                </button>
+              </>
+            )}
           </div>
 
           {/* List of Invoices & Transactions */}
