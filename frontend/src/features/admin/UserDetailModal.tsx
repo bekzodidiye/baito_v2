@@ -13,7 +13,8 @@ import {
   FileText,
   Ban,
   CheckCircle,
-  Loader2,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { apiClient } from '../../api/client';
 import { Orb } from "@/components/ui/thinking-orbs";
@@ -38,16 +39,15 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   onToggleBan,
   onConfirmAssignment,
 }) => {
-  const language = useAuthStore(st => st.language);
+  const language = useAuthStore((st) => st.language);
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [activeTab, setActiveTab] = useState<number>(1);
   const [showBanModal, setShowBanModal] = useState(false);
-  
+  const [copiedId, setCopiedId] = useState(false);
+
   const [detail, setDetail] = useState<AdminUserDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Auth travels in the httpOnly session cookie; the old Bearer token was
-  // read from a localStorage key that is never written, so this always 401'd.
   const loadDetail = async (): Promise<AdminUserDetailResponse | null> => {
     try {
       const data = await apiClient(`/admin/users/${initialUser.id}/detail`);
@@ -76,11 +76,6 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
   const user = detail?.user || initialUser;
 
-  // addBalance/changeRole/toggleBan write through and refresh the plain user
-  // list they came from, but this modal keeps its own copy of the user
-  // fetched separately — without this, the balance/role/ban shown here stayed
-  // frozen at whatever it was when the modal opened, even after a successful
-  // top-up.
   const refreshDetail = async () => {
     const data = await loadDetail();
     if (data) setDetail(data);
@@ -101,67 +96,128 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
     refreshDetail();
   };
 
+  const copyId = () => {
+    if (!user.id) return;
+    navigator.clipboard?.writeText(user.id);
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 1800);
+  };
 
   const tabs = [
-    { id: 1, label: 'Shaxsiy', icon: <User size={14} /> },
-    ...(user.role === 'worker' ? [{ id: 2, label: 'Malakali', icon: <Briefcase size={14} /> }] : []),
-    { id: 3, label: 'Buyurtmalar', icon: <History size={14} /> },
-    { id: 4, label: 'Moliya', icon: <Wallet size={14} /> },
-    { id: 5, label: 'Sharhlar', icon: <Star size={14} /> },
-    { id: 6, label: 'Xavfsizlik', icon: <ShieldCheck size={14} /> },
-    { id: 7, label: 'Admin Izohlari', icon: <FileText size={14} /> },
+    { id: 1, label: 'Shaxsiy', icon: <User size={13} /> },
+    ...(user.role === 'worker' ? [{ id: 2, label: 'Malakali', icon: <Briefcase size={13} /> }] : []),
+    { id: 3, label: 'Buyurtmalar', icon: <History size={13} /> },
+    { id: 4, label: 'Moliya', icon: <Wallet size={13} /> },
+    { id: 5, label: 'Sharhlar', icon: <Star size={13} /> },
+    { id: 6, label: 'Xavfsizlik', icon: <ShieldCheck size={13} /> },
+    { id: 7, label: 'Admin Izohlari', icon: <FileText size={13} /> },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white rounded-[24px] max-w-4xl w-full shadow-2xl overflow-hidden my-6 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-xl sm:max-w-2xl w-full shadow-2xl border border-slate-200/80 overflow-hidden my-4 sm:my-6 animate-in fade-in zoom-in-95 duration-200 max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="p-5 bg-white relative shrink-0">
-          <button onClick={onClose} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-full bg-slate-100 hover:bg-slate-200 cursor-pointer transition-colors">
-            <X size={18} />
+        <div className="p-4 sm:p-5 bg-white relative shrink-0 border-b border-slate-100">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center cursor-pointer transition-colors"
+            title="Yopish"
+          >
+            <X size={16} />
           </button>
-          
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 font-black text-2xl flex items-center justify-center border border-slate-200 overflow-hidden shrink-0">
-              {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover"  onError={(e) => {
-        const target = e.currentTarget;
-        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
-        if (target.src !== fallback) {
-          target.src = fallback;
-        }
-      }} /> : (user.name || 'Foydalanuvchi').charAt(0).toUpperCase()}
+
+          <div className="flex items-center gap-3.5 pr-8">
+            <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-brand-primary to-indigo-800 text-white font-black text-xl flex items-center justify-center border border-brand-primary/20 overflow-hidden shrink-0 shadow-xs">
+              {user.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+                    if (target.src !== fallback) {
+                      target.src = fallback;
+                    }
+                  }}
+                />
+              ) : (
+                (user.name || 'F').charAt(0).toUpperCase()
+              )}
             </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h2 className="text-xl font-black text-slate-900">{user.name}</h2>
-                {user.isVerified && <span className="bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full">{a.verifiedLabel}</span>}
-                {user.isBanned && <span className="bg-red-50 text-red-600 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Bloklangan</span>}
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h2 className="text-base sm:text-lg font-black text-slate-900 truncate">{user.name}</h2>
+
+                {user.isVerified && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    {a.verifiedLabel}
+                  </span>
+                )}
+
+                {user.isBanned && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-50 text-red-700 border border-red-200/80">
+                    <Ban size={10} /> Bloklangan
+                  </span>
+                )}
               </div>
-              <p className="text-slate-500 text-[12px] font-medium">{user.phone || a.noPhone} • <span className="font-bold text-slate-700">{user.role === 'worker' ? a.roleWorker : a.roleEmployer}</span></p>
+
+              <div className="flex items-center gap-2 mt-1 flex-wrap text-slate-500 text-xs">
+                <span className="font-semibold text-slate-600">{user.phone || a.noPhone}</span>
+                <span className="text-slate-300">•</span>
+                <span
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
+                    user.role === 'employer'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200/80'
+                      : user.role === 'worker'
+                      ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/80'
+                      : 'bg-purple-50 text-purple-700 border border-purple-200/80'
+                  }`}
+                >
+                  {user.role === 'worker' ? a.roleWorker : user.role === 'employer' ? a.roleEmployer : 'Admin'}
+                </span>
+                <span className="text-slate-300">•</span>
+                <button
+                  type="button"
+                  onClick={copyId}
+                  className="font-mono text-[11px] text-slate-400 hover:text-brand-primary flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Foydalanuvchi ID nusxalash"
+                >
+                  <span>#{user.id ? user.id.substring(0, 8) : ''}</span>
+                  {copiedId ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex overflow-x-auto no-scrollbar border-b border-slate-100 bg-white shrink-0 px-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-max px-4 flex items-center justify-center gap-1.5 py-3 text-[12px] font-bold transition-all cursor-pointer border-b-2 ${
-                activeTab === tab.id
-                  ? 'text-brand-primary border-brand-primary'
-                  : 'text-slate-400 border-transparent hover:text-slate-600'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
+        {/* Modern Segmented Navigation Tabs */}
+        <div className="px-3 sm:px-4 py-2 bg-white border-b border-slate-100 shrink-0">
+          <div className="bg-slate-100/80 p-1 rounded-2xl flex gap-1 overflow-x-auto no-scrollbar border border-slate-200/60">
+            {tabs.map((tab) => {
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 min-w-max px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    active
+                      ? 'bg-white text-slate-900 shadow-2xs border border-slate-200/80 font-black'
+                      : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'
+                  }`}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Tab Body */}
-        <div className="p-5 overflow-y-auto flex-1 bg-slate-50/50 no-scrollbar">
+        <div className="p-3.5 sm:p-5 overflow-y-auto flex-1 bg-slate-50/50 no-scrollbar">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Orb state="working" size={28} className="text-brand-primary" />
@@ -177,10 +233,14 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-white border-t border-slate-100 flex items-center justify-between shrink-0 text-xs">
+        <div className="p-3.5 sm:p-4 bg-white border-t border-slate-100 flex items-center justify-between shrink-0 text-xs gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-500">Rol:</span>
-            <select value={user.role} onChange={(e) => handleChangeRole(user.id, e.target.value)} className="bg-slate-50 font-bold text-slate-700 px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">Rol:</span>
+            <select
+              value={user.role}
+              onChange={(e) => handleChangeRole(user.id, e.target.value)}
+              className="bg-slate-50 font-bold text-xs text-slate-700 px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/10 transition-all cursor-pointer shadow-2xs"
+            >
               <option value="worker">{a.roleWorker}</option>
               <option value="employer">{a.roleEmployer}</option>
               <option value="admin">Admin</option>
@@ -196,23 +256,32 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   setShowBanModal(true);
                 }
               }}
-              className={`px-4 py-2.5 rounded-xl font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
-                user.isBanned ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
+              className={`px-3.5 py-2 rounded-xl font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs text-xs ${
+                user.isBanned
+                  ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                  : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
               }`}
             >
-              <Ban size={15} />
+              <Ban size={14} />
               <span>{user.isBanned ? 'Blokdan Chiqarish' : 'Bloklash'}</span>
             </button>
-            
+
             {onConfirmAssignment && (
               <button
                 onClick={onConfirmAssignment}
-                className="px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 cursor-pointer bg-brand-primary hover:bg-brand-primary/90 text-white transition-colors shadow-sm shadow-brand-primary/20"
+                className="px-5 py-2 rounded-xl font-bold flex items-center gap-1.5 cursor-pointer bg-brand-primary hover:bg-brand-primary/90 text-white transition-colors shadow-xs shadow-brand-primary/20 text-xs"
               >
-                <CheckCircle size={16} />
+                <CheckCircle size={15} />
                 <span>Tayinlash</span>
               </button>
             )}
+
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer transition-colors text-xs"
+            >
+              Yopish
+            </button>
           </div>
         </div>
       </div>
