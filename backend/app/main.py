@@ -160,9 +160,8 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type", "X-Refresh-Token", "Idempotency-Key"],
 )
 
-# Include router for both /api/v1 and /api for full frontend compatibility
+# Canonical API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
-app.include_router(api_router, prefix="/api")
 
 
 @app.get("/api/health")

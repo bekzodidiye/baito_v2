@@ -217,6 +217,8 @@ services:
       - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
       - TEXTUP_EMAIL=${TEXTUP_EMAIL:-}
       - TEXTUP_PASSWORD=${TEXTUP_PASSWORD:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
     healthcheck:
       test: ["CMD-SHELL", "celery -A app.celery_app inspect ping -d celery@$$HOSTNAME || exit 1"]
@@ -248,6 +250,8 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
       - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
     logging: *default-logging
 

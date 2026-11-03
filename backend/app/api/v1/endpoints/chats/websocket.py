@@ -11,6 +11,7 @@ from app.api import deps
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.schemas.chat import MAX_MESSAGE_LENGTH
+from app.services.session_window import is_live
 from .manager import manager
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ def _authenticate_socket(token: Optional[str]) -> Optional[dict]:
                 .filter(models.ActiveSession.id == token_data.sid)
                 .first()
             )
-            if not session or not session.is_active:
+            if not is_live(session):
                 return None
         return {"id": user.id, "uid": getattr(user, "uid", None), "role": user.role}
 

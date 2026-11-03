@@ -126,7 +126,7 @@ def get_transactions(
             Transaction.employerId.in_(user_ids),
             or_(
                 and_(Transaction.type == 'payout', Transaction.status == 'paid'),
-                Transaction.type.in_(['withdraw', 'deposit', 'payment']),
+                and_(Transaction.type.in_(['withdraw', 'deposit', 'payment']), Transaction.workerId.is_(None)),
             )
         )
     elif current_user.role == 'worker':

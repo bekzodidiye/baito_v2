@@ -56,6 +56,7 @@ class UserUpdate(BaseModel):
     name: Optional[str] = Field(default=None, max_length=120)
     email: Optional[str] = Field(default=None, max_length=254)
     phone: Optional[str] = Field(default=None, max_length=20)
+    verification_token: Optional[str] = None
     companyName: Optional[str] = Field(default=None, max_length=200)
     avatarUrl: Optional[str] = Field(default=None, max_length=500)
     password: Optional[str] = None

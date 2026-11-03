@@ -52,6 +52,7 @@ class PayoutCreate(BaseModel):
     # whole point of recording the payment is being able to show it later.
     receiptUrl: str = Field(min_length=1, max_length=500)
     note: Optional[str] = Field(default=None, max_length=500)
+    workerId: Optional[str] = None
 
 
 class InvoiceSend(BaseModel):
@@ -120,6 +121,7 @@ def list_payouts(
 @router.get("/jobs/{job_id}/payout")
 def get_job_payout(
     job_id: str,
+    worker_id: Optional[str] = Query(default=None),
     db: Session = Depends(deps.get_db),
     admin: models.User = Depends(get_admin_user),
 ) -> Any:
@@ -129,23 +131,57 @@ def get_job_payout(
     if not job:
         raise HTTPException(status_code=404, detail="Ish topilmadi")
 
-    existing = db.query(JobPayout).filter(JobPayout.jobId == job_id).first()
+    hired_apps = (
+        db.query(models.Application)
+        .filter(
+            models.Application.jobId == job_id,
+            models.Application.status.in_(("hired", "completed")),
+        )
+        .all()
+    )
+    hired_worker_ids = [a.workerId for a in hired_apps if a.workerId]
+    if job.hiredWorkerId and job.hiredWorkerId not in hired_worker_ids:
+        hired_worker_ids.insert(0, job.hiredWorkerId)
+
+    hired_users_map = {
+        u.id: u for u in db.query(User).filter(
+            or_(User.id.in_(hired_worker_ids), User.uid.in_(hired_worker_ids))
+        ).all()
+    } if hired_worker_ids else {}
+
+    target_worker_id = worker_id or (hired_worker_ids[0] if hired_worker_ids else None)
     worker = None
-    worker_id = job.hiredWorkerId
-    if not worker_id:
-        # hiredWorkerId only ever holds the first hire on a multi-vacancy job,
-        # so the application table is the honest source for "who worked this".
-        app = (
-            db.query(models.Application)
+    if target_worker_id:
+        worker = hired_users_map.get(target_worker_id) or db.query(User).filter(
+            or_(User.id == target_worker_id, User.uid == target_worker_id)
+        ).first()
+
+    existing = None
+    if worker:
+        existing = (
+            db.query(JobPayout)
             .filter(
-                models.Application.jobId == job_id,
-                models.Application.status.in_(("hired", "completed")),
+                JobPayout.jobId == job_id,
+                or_(JobPayout.workerId == worker.id, JobPayout.workerId == getattr(worker, 'uid', None)),
             )
             .first()
         )
-        worker_id = app.workerId if app else None
-    if worker_id:
-        worker = db.query(User).filter(or_(User.id == worker_id, User.uid == worker_id)).first()
+    if not existing and not worker_id:
+        existing = db.query(JobPayout).filter(JobPayout.jobId == job_id).first()
+
+    paid_worker_ids = {
+        p.workerId for p in db.query(JobPayout.workerId).filter(JobPayout.jobId == job_id).all()
+    }
+    workers_list = [
+        {
+            "id": u.id,
+            "name": u.name,
+            "phone": u.phone,
+            "balance": u.balance or 0,
+            "isPaid": u.id in paid_worker_ids or (getattr(u, "uid", None) in paid_worker_ids),
+        }
+        for u in hired_users_map.values()
+    ]
 
     employer = db.query(User).filter(or_(User.id == job.employerId, User.uid == job.employerId)).first()
     settings_row = db.query(models.SystemSetting).first()
@@ -166,6 +202,7 @@ def get_job_payout(
             {"id": worker.id, "name": worker.name, "phone": worker.phone, "balance": worker.balance or 0}
             if worker else None
         ),
+        "workers": workers_list,
         "employer": (
             {"id": employer.id, "name": employer.name, "email": employer.email,
              "companyName": employer.companyName}
@@ -207,12 +244,7 @@ def confirm_payout(
             detail="To'lovni faqat yakunlangan ish uchun tasdiqlash mumkin",
         )
 
-    # One payout per job. Without this, a double-submit — or two administrators
-    # working the same list — debits the worker twice for one shift.
-    if db.query(JobPayout).filter(JobPayout.jobId == job_id).first():
-        raise HTTPException(status_code=409, detail="Bu ish uchun to'lov allaqachon tasdiqlangan")
-
-    worker_id = job.hiredWorkerId
+    worker_id = payload.workerId or job.hiredWorkerId
     if not worker_id:
         app = (
             db.query(models.Application)
@@ -233,6 +265,20 @@ def confirm_payout(
     )
     if not worker:
         raise HTTPException(status_code=404, detail="Ishchi topilmadi")
+
+    # One payout per worker per job. Without this, a double-submit — or two administrators
+    # working the same list — debits the worker twice for one shift.
+    worker_identifiers = [w for w in [worker.id, getattr(worker, 'uid', None)] if w]
+    existing = (
+        db.query(JobPayout)
+        .filter(
+            JobPayout.jobId == job_id,
+            JobPayout.workerId.in_(worker_identifiers)
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=409, detail="Bu ish uchun to'lov allaqachon tasdiqlangan")
 
     balance = worker.balance or 0
     if payload.amount > balance:

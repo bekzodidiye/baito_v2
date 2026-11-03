@@ -142,9 +142,15 @@ def update_user_me(
         update_data["phone"] = new_phone
 
         if new_phone != current_user.phone:
+            if not user_in.verification_token or not consume_verification_grant(new_phone, user_in.verification_token):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Telefon raqam tasdiqlanmagan. Iltimos, SMS kodni qaytadan kiriting.",
+                )
             clash = crud.user.get_by_phone(db, phone=new_phone)
             if clash and clash.id != current_user.id:
                 raise HTTPException(status_code=400, detail="Bu raqam allaqachon ro'yxatdan o'tgan")
+    update_data.pop("verification_token", None)
 
     new_email = update_data.get("email")
     if new_email and new_email != current_user.email:
