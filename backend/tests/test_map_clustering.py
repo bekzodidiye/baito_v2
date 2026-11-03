@@ -1,18 +1,37 @@
 import json
+from contextlib import contextmanager
 import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
+from sqlalchemy import event
 from app.main import app
 from app import models
-from app.db.session import SessionLocal
+from app.db.session import SessionLocal, engine
 from app.models.job import JobStatus
 from app.redis_client import redis_client
 from app.core.map_cache import (
     invalidate_map_cache,
     invalidate_user_map_cache,
     build_map_pins_cache_key,
+    get_map_cache_key_for_request,
     get_map_cache_version,
 )
 from tests.conftest import make_user, login
+
+
+@contextmanager
+def capture_sql_queries():
+    """Captures all SQL statements executed on the SQLAlchemy engine across any session."""
+    queries = []
+
+    def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+        queries.append(statement)
+
+    event.listen(engine, "before_cursor_execute", before_cursor_execute)
+    try:
+        yield queries
+    finally:
+        event.remove(engine, "before_cursor_execute", before_cursor_execute)
 
 
 @pytest.fixture
@@ -582,7 +601,8 @@ def test_filled_job_applied_by_user_does_not_leak_into_public_cache(client):
     raw_cached = redis_client.get(base_key)
     assert raw_cached is not None, "Base cache must be populated"
     base_pins_cached = json.loads(raw_cached.decode("utf-8") if isinstance(raw_cached, bytes) else str(raw_cached))
-    cached_ids = {p["id"] for p in base_pins_cached}
+    cached_payload = base_pins_cached["payload"] if isinstance(base_pins_cached, dict) and "payload" in base_pins_cached else base_pins_cached
+    cached_ids = {p["id"] for p in cached_payload}
     assert "job-public-open" in cached_ids
     assert "job-user-filled" not in cached_ids, "Filled job MUST NOT leak into public base cache!"
 
@@ -806,7 +826,8 @@ def test_cancelled_pending_rejected_jobs_never_leak_to_public_cache_even_with_ap
     raw_cached = redis_client.get(base_key)
     assert raw_cached is not None, "Base cache must be primed"
     base_pins_cached = json.loads(raw_cached.decode("utf-8") if isinstance(raw_cached, bytes) else str(raw_cached))
-    cached_ids = {p["id"] for p in base_pins_cached}
+    cached_payload = base_pins_cached["payload"] if isinstance(base_pins_cached, dict) and "payload" in base_pins_cached else base_pins_cached
+    cached_ids = {p["id"] for p in cached_payload}
     assert "job-status-open" in cached_ids
     assert "job-status-cancelled" not in cached_ids, "Cancelled job leaked into base cache!"
     assert "job-status-pending" not in cached_ids, "Pending job leaked into base cache!"
@@ -1116,7 +1137,8 @@ def test_unclustered_map_pins_exclude_foreign_coordinates_for_anon_and_auth_user
     raw_cached = redis_client.get(base_key)
     assert raw_cached is not None, "Base cache must be created"
     base_pins = json.loads(raw_cached.decode("utf-8") if isinstance(raw_cached, bytes) else str(raw_cached))
-    cached_ids = {p["id"] for p in base_pins}
+    cached_payload = base_pins["payload"] if isinstance(base_pins, dict) and "payload" in base_pins else base_pins
+    cached_ids = {p["id"] for p in cached_payload}
     assert "job-unclustered-tashkent" in cached_ids
     assert "job-unclustered-shymkent" not in cached_ids, "Shymkent leaked into Redis base cache!"
     assert "job-unclustered-dashoguz" not in cached_ids, "Dashoguz leaked into Redis base cache!"
@@ -2238,3 +2260,2304 @@ def test_limit_batching_first_batch_foreign_second_batch_valid(client):
     assert len(data5) == 5, f"Expected 5 valid jobs, got {len(data5)}"
     for item in data5:
         assert "job-batch-valid-" in item["id"]
+
+
+# =====================================================================
+# REMEDIATION REGRESSION TESTS: ALL 15 TAMPER & CACHE SECURITY SCENARIOS
+# =====================================================================
+
+def _ensure_cluster_emp(db_session):
+    emp = db_session.query(models.User).filter_by(id="emp-cluster-test").first()
+    if not emp:
+        emp = models.User(
+            id="emp-cluster-test",
+            phone="+998901234567",
+            role="employer",
+            name="Cluster Employer",
+        )
+        db_session.add(emp)
+        db_session.commit()
+        db_session.refresh(emp)
+    return emp
+
+
+def test_tamper_scenario_1_ordinary_pin_id(client):
+    """Scenario 1: Tampered ordinary-pin ID in cached payload must fail verification, evict cache, and rebuild from DB."""
+    from app.core.map_cache import compute_pin_signature
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-sec-1", "job-sec-forged"])).delete()
+        j1 = models.Job(
+            id="job-sec-1",
+            employerId=emp.id,
+            title="Sec Job 1",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        db_session.add(j1)
+        db_session.commit()
+
+    # Pre-populate cache with tampered ID (signature signed for job-sec-1, but ID altered to job-sec-forged)
+    pin = {
+        "id": "job-sec-1",
+        "title": "Sec Job 1",
+        "company": "Baito Co",
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "status": "open",
+        "applied": False,
+        "bookmarked": False,
+        "isCluster": False,
+        "count": 1,
+        "pinIds": ["job-sec-1"],
+        "geo_verified": True,
+    }
+    valid_sig = compute_pin_signature(pin)
+    tampered_pin = dict(pin)
+    tampered_pin["id"] = "job-sec-forged"
+    tampered_pin["geo_sig"] = valid_sig  # signature does NOT match job-sec-forged!
+
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Sec Job 1", limit=500, clustered=False)
+    redis_client.set(base_key, json.dumps([tampered_pin]), ex=120)
+
+    res = client.get("/api/v1/jobs/map?clustered=false&search=Sec%20Job%201")
+    assert res.status_code == 200
+    pins = res.json()
+    assert len(pins) == 1
+    assert pins[0]["id"] == "job-sec-1"
+    assert pins[0]["id"] != "job-sec-forged"
+
+
+def test_tamper_scenario_2_ordinary_pin_status_applied_bookmarked(client):
+    """Scenario 2: Tampered status/applied/bookmarked on ordinary pin invalidates signature and forces DB rebuild."""
+    from app.core.map_cache import compute_pin_signature
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-sec-2").delete()
+        j2 = models.Job(
+            id="job-sec-2",
+            employerId=emp.id,
+            title="Sec Job 2",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        db_session.add(j2)
+        db_session.commit()
+
+    pin = {
+        "id": "job-sec-2",
+        "title": "Sec Job 2",
+        "company": "Baito Co",
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "status": "open",
+        "applied": False,
+        "bookmarked": False,
+        "isCluster": False,
+        "count": 1,
+        "pinIds": ["job-sec-2"],
+        "geo_verified": True,
+    }
+    sig = compute_pin_signature(pin)
+    # Tamper status to 'closed' without re-signing
+    tampered_pin = dict(pin)
+    tampered_pin["status"] = "closed"
+    tampered_pin["geo_sig"] = sig
+
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Sec Job 2", limit=500, clustered=False)
+    redis_client.set(base_key, json.dumps([tampered_pin]), ex=120)
+
+    res = client.get("/api/v1/jobs/map?clustered=false&search=Sec%20Job%202")
+    assert res.status_code == 200
+    pins = res.json()
+    assert len(pins) == 1
+    assert pins[0]["status"] == "open"  # restored authentically from DB
+
+
+def test_tamper_scenario_3_ordinary_pin_coordinates(client):
+    """Scenario 3: Tampered coordinates on ordinary pin rejected and restored from DB."""
+    from app.core.map_cache import compute_pin_signature
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-sec-3").delete()
+        j3 = models.Job(
+            id="job-sec-3",
+            employerId=emp.id,
+            title="Sec Job 3",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        db_session.add(j3)
+        db_session.commit()
+
+    pin = {
+        "id": "job-sec-3",
+        "title": "Sec Job 3",
+        "company": "Baito Co",
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "latitude": 41.31,
+        "longitude": 69.24,
+        "status": "open",
+        "applied": False,
+        "bookmarked": False,
+        "isCluster": False,
+        "count": 1,
+        "pinIds": ["job-sec-3"],
+        "geo_verified": True,
+    }
+    sig = compute_pin_signature(pin)
+    tampered_pin = dict(pin)
+    tampered_pin["coordinateX"] = 41.38
+    tampered_pin["latitude"] = 41.38
+    tampered_pin["geo_sig"] = sig
+
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Sec Job 3", limit=500, clustered=False)
+    redis_client.set(base_key, json.dumps([tampered_pin]), ex=120)
+
+    res = client.get("/api/v1/jobs/map?clustered=false&search=Sec%20Job%203")
+    assert res.status_code == 200
+    pins = res.json()
+    assert len(pins) == 1
+    assert abs(pins[0]["coordinateX"] - 41.31) < 1e-3
+
+
+def test_tamper_scenario_4_missing_or_invalid_ordinary_pin_signature(client):
+    """Scenario 4: Missing or invalid signature on ordinary pin is safely evicted and restored from DB."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-sec-4").delete()
+        j4 = models.Job(
+            id="job-sec-4",
+            employerId=emp.id,
+            title="Sec Job 4",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        db_session.add(j4)
+        db_session.commit()
+
+    pin = {
+        "id": "job-sec-4",
+        "title": "Sec Job 4",
+        "company": "Baito Co",
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "latitude": 41.31,
+        "longitude": 69.24,
+        "status": "open",
+        "applied": False,
+        "bookmarked": False,
+        "isCluster": False,
+        "count": 1,
+        "pinIds": ["job-sec-4"],
+        "geo_verified": False,
+        "geo_sig": None,
+    }
+
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Sec Job 4", limit=500, clustered=False)
+    redis_client.set(base_key, json.dumps([pin]), ex=120)
+
+    res = client.get("/api/v1/jobs/map?clustered=false&search=Sec%20Job%204")
+    assert res.status_code == 200
+    pins = res.json()
+    assert len(pins) == 1
+    assert pins[0]["geo_verified"] is True
+    assert len(pins[0]["geo_sig"]) == 64
+
+
+def test_tamper_scenario_5_cluster_centroid_mismatch(client):
+    """Scenario 5: Cluster centroid mismatch against actual DB members forces cache invalidation."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-sec-5a", "job-sec-5b"])).delete()
+        j5a = models.Job(
+            id="job-sec-5a",
+            employerId=emp.id,
+            title="Sec Job 5a",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        j5b = models.Job(
+            id="job-sec-5b",
+            employerId=emp.id,
+            title="Sec Job 5b",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.33,
+            coordinateY=69.26,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        db_session.add_all([j5a, j5b])
+        db_session.commit()
+
+    # Actual DB centroid average is (41.32, 69.25). Put fake centroid (41.39, 69.35) in cache without valid signature
+    bad_cluster = {
+        "isCluster": True,
+        "id": "c-tamper-centroid",
+        "count": 2,
+        "coordinateX": 41.39,
+        "coordinateY": 69.35,
+        "latitude": 41.39,
+        "longitude": 69.35,
+        "pinIds": ["job-sec-5a", "job-sec-5b"],
+        "geo_verified": False,
+        "geo_sig": None,
+    }
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Sec Job 5", clustered=True)
+    redis_client.set(base_key, json.dumps([bad_cluster]), ex=120)
+    assert redis_client.get(base_key) is not None, "Injected cache must be present"
+
+    with patch.object(redis_client, "get", wraps=redis_client.get) as spy_get:
+        res = client.get("/api/v1/jobs/map?clustered=true&search=Sec%20Job%205")
+        assert res.status_code == 200
+        assert any(call.args and call.args[0] == base_key for call in spy_get.call_args_list), "Fast path must read injected key"
+
+    clusters = res.json()
+    assert len(clusters) == 1
+    # Real average must be close to 41.32, NOT 41.39!
+    assert abs(clusters[0]["coordinateX"] - 41.32) < 1e-2
+    assert clusters[0]["geo_verified"] is True
+    assert len(clusters[0]["geo_sig"]) == 64
+
+
+def test_tamper_scenario_6_incorrect_cluster_count(client):
+    """Scenario 6: Cluster count != len(pinIds) caught structurally and rejected."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-sec-6a", "job-sec-6b"])).delete()
+        j6a = models.Job(
+            id="job-sec-6a",
+            employerId=emp.id,
+            title="Sec Job 6a",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        j6b = models.Job(
+            id="job-sec-6b",
+            employerId=emp.id,
+            title="Sec Job 6b",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        db_session.add_all([j6a, j6b])
+        db_session.commit()
+
+    bad_cluster = {
+        "isCluster": True,
+        "id": "c-bad-count",
+        "count": 5,  # claimed 5, but pinIds has 2!
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-sec-6a", "job-sec-6b"],
+    }
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Sec Job 6", clustered=True)
+    redis_client.set(base_key, json.dumps([bad_cluster]), ex=120)
+    assert redis_client.get(base_key) is not None, "Injected cache must be present"
+
+    with patch.object(redis_client, "get", wraps=redis_client.get) as spy_get:
+        res = client.get("/api/v1/jobs/map?clustered=true&search=Sec%20Job%206")
+        assert res.status_code == 200
+        assert any(call.args and call.args[0] == base_key for call in spy_get.call_args_list), "Fast path must read injected key"
+
+    clusters = res.json()
+    assert len(clusters) == 1
+    assert clusters[0]["count"] == 2  # restored accurately from DB
+    assert clusters[0]["geo_verified"] is True
+    assert len(clusters[0]["geo_sig"]) == 64
+
+
+def test_tamper_scenario_7_duplicate_pin_ids_within_cluster(client):
+    """Scenario 7: Duplicate pinIds within single cluster caught structurally and rejected."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-sec-7").delete()
+        j7 = models.Job(
+            id="job-sec-7",
+            employerId=emp.id,
+            title="Sec Job 7",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        db_session.add(j7)
+        db_session.commit()
+
+    bad_cluster = {
+        "isCluster": True,
+        "id": "c-dup-internal",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-sec-7", "job-sec-7"],  # duplicate ID!
+    }
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Sec Job 7", clustered=True)
+    redis_client.set(base_key, json.dumps([bad_cluster]), ex=120)
+    assert redis_client.get(base_key) is not None, "Injected cache must be present"
+
+    with patch.object(redis_client, "get", wraps=redis_client.get) as spy_get:
+        res = client.get("/api/v1/jobs/map?clustered=true&search=Sec%20Job%207")
+        assert res.status_code == 200
+        assert any(call.args and call.args[0] == base_key for call in spy_get.call_args_list), "Fast path must read injected key"
+
+    clusters = res.json()
+    assert len(clusters) == 1
+    assert clusters[0]["pinIds"] == ["job-sec-7"]
+    assert clusters[0]["count"] == 1
+    assert clusters[0]["geo_verified"] is True
+    assert len(clusters[0]["geo_sig"]) == 64
+
+
+def test_tamper_scenario_8_cross_cluster_member_duplication(client):
+    """Scenario 8: Member repeated across multiple clusters in payload caught and rejected."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-sec-8a", "job-sec-8b", "job-sec-8c"])).delete()
+        for jid, lat, lng in [("job-sec-8a", 41.31, 69.24), ("job-sec-8b", 41.31, 69.24), ("job-sec-8c", 39.65, 66.96)]:
+            db_session.add(models.Job(
+                id=jid,
+                employerId=emp.id,
+                title="Sec Job 8",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=lat,
+                coordinateY=lng,
+                location="Uzbekistan",
+                neededWorkers="1",
+            ))
+        db_session.commit()
+
+    bad_c1 = {
+        "isCluster": True,
+        "id": "c8-1",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-sec-8a", "job-sec-8b"],
+    }
+    bad_c2 = {
+        "isCluster": True,
+        "id": "c8-2",
+        "count": 2,
+        "coordinateX": 39.65,
+        "coordinateY": 66.96,
+        "pinIds": ["job-sec-8b", "job-sec-8c"],  # job-sec-8b duplicated in cluster 2!
+    }
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Sec Job 8", clustered=True)
+    redis_client.set(base_key, json.dumps([bad_c1, bad_c2]), ex=120)
+    assert redis_client.get(base_key) is not None, "Injected cache must be present"
+
+    with patch.object(redis_client, "get", wraps=redis_client.get) as spy_get:
+        res = client.get("/api/v1/jobs/map?clustered=true&search=Sec%20Job%208")
+        assert res.status_code == 200
+        assert any(call.args and call.args[0] == base_key for call in spy_get.call_args_list), "Fast path must read injected key"
+
+    clusters = res.json()
+    all_pids = [pid for c in clusters for pid in (c.get("pinIds") or [c.get("id")])]
+    assert len(all_pids) == len(set(all_pids)), "No member ID may appear in multiple clusters"
+
+
+def test_tamper_scenario_9_deleted_member_in_db(client):
+    """Scenario 9: Unverified cluster with member missing in DB is evicted."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-sec-9-valid", "job-sec-9-ghost"])).delete()
+        db_session.add(models.Job(
+            id="job-sec-9-valid",
+            employerId=emp.id,
+            title="Sec Job 9",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+    bad_cluster = {
+        "isCluster": True,
+        "id": "c-ghost",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-sec-9-valid", "job-sec-9-ghost"],  # job-sec-9-ghost does not exist in DB
+    }
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Sec Job 9", clustered=True)
+    redis_client.set(base_key, json.dumps([bad_cluster]), ex=120)
+    assert redis_client.get(base_key) is not None, "Injected cache must be present"
+
+    with patch.object(redis_client, "get", wraps=redis_client.get) as spy_get:
+        res = client.get("/api/v1/jobs/map?clustered=true&search=Sec%20Job%209")
+        assert res.status_code == 200
+        assert any(call.args and call.args[0] == base_key for call in spy_get.call_args_list), "Fast path must read injected key"
+
+    data = res.json()
+    for item in data:
+        assert "job-sec-9-ghost" not in (item.get("pinIds") or [item.get("id")])
+
+
+def test_tamper_scenario_10_foreign_coordinate_member_in_db(client):
+    """Scenario 10: Unverified cluster containing member located in Shymkent is evicted."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-sec-10-valid", "job-sec-10-shymkent"])).delete()
+        db_session.add_all([
+            models.Job(
+                id="job-sec-10-valid",
+                employerId=emp.id,
+                title="Sec Job 10",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.31,
+                coordinateY=69.24,
+                location="Toshkent",
+                neededWorkers="1",
+            ),
+            models.Job(
+                id="job-sec-10-shymkent",
+                employerId=emp.id,
+                title="Sec Job 10 Shymkent",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=42.3417,
+                coordinateY=69.5901,
+                location="Shymkent",
+                neededWorkers="1",
+            )
+        ])
+        db_session.commit()
+
+    bad_cluster = {
+        "isCluster": True,
+        "id": "c-foreign-member",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-sec-10-valid", "job-sec-10-shymkent"],
+    }
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Sec Job 10", clustered=True)
+    redis_client.set(base_key, json.dumps([bad_cluster]), ex=120)
+    assert redis_client.get(base_key) is not None, "Injected cache must be present"
+
+    with patch.object(redis_client, "get", wraps=redis_client.get) as spy_get:
+        res = client.get("/api/v1/jobs/map?clustered=true&search=Sec%20Job%2010")
+        assert res.status_code == 200
+        assert any(call.args and call.args[0] == base_key for call in spy_get.call_args_list), "Fast path must read injected key"
+
+    data = res.json()
+    for item in data:
+        assert "job-sec-10-shymkent" not in (item.get("pinIds") or [item.get("id")])
+
+
+def test_tamper_scenario_11_ineligible_status_member_in_db(client):
+    """Scenario 11: Unverified cluster containing cancelled/closed job member is evicted."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-sec-11-valid", "job-sec-11-cancelled"])).delete()
+        db_session.add_all([
+            models.Job(
+                id="job-sec-11-valid",
+                employerId=emp.id,
+                title="Sec Job 11",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.31,
+                coordinateY=69.24,
+                location="Toshkent",
+                neededWorkers="1",
+            ),
+            models.Job(
+                id="job-sec-11-cancelled",
+                employerId=emp.id,
+                title="Sec Job 11 Cancelled",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.CANCELLED,
+                coordinateX=41.31,
+                coordinateY=69.24,
+                location="Toshkent",
+                neededWorkers="1",
+            )
+        ])
+        db_session.commit()
+
+    bad_cluster = {
+        "isCluster": True,
+        "id": "c-cancelled-member",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-sec-11-valid", "job-sec-11-cancelled"],
+    }
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Sec Job 11", clustered=True)
+    redis_client.set(base_key, json.dumps([bad_cluster]), ex=120)
+    assert redis_client.get(base_key) is not None, "Injected cache must be present"
+
+    with patch.object(redis_client, "get", wraps=redis_client.get) as spy_get:
+        res = client.get("/api/v1/jobs/map?clustered=true&search=Sec%20Job%2011")
+        assert res.status_code == 200
+        assert any(call.args and call.args[0] == base_key for call in spy_get.call_args_list), "Fast path must read injected key"
+
+    data = res.json()
+    for item in data:
+        assert "job-sec-11-cancelled" not in (item.get("pinIds") or [item.get("id")])
+    assert res.status_code == 200
+    data = res.json()
+    for item in data:
+        assert "job-sec-11-cancelled" not in (item.get("pinIds") or [item.get("id")])
+
+
+def test_tamper_scenario_12_malformed_cached_json_or_invalid_shapes(client):
+    """Scenario 12: Corrupted non-JSON string, non-list, or non-dict shapes handled safely without 500 error."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-sec-12").delete()
+        db_session.add(models.Job(
+            id="job-sec-12",
+            employerId=emp.id,
+            title="Sec Job 12",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+    ver = get_map_cache_version()
+    base_key = build_map_pins_cache_key(version=ver, search="Sec Job 12", limit=500)
+
+    # 1. Non-JSON corrupt string
+    redis_client.set(base_key, "MALFORMED_GARBAGE_NOT_JSON", ex=120)
+    res1 = client.get("/api/v1/jobs/map?clustered=false&search=Sec%20Job%2012")
+    assert res1.status_code == 200
+    assert len(res1.json()) == 1
+
+    # 2. JSON dict instead of list
+    redis_client.set(base_key, json.dumps({"not": "a list"}), ex=120)
+    res2 = client.get("/api/v1/jobs/map?clustered=false&search=Sec%20Job%2012")
+    assert res2.status_code == 200
+    assert len(res2.json()) == 1
+
+    # 3. List of non-dict items
+    redis_client.set(base_key, json.dumps([123, "not_dict", None]), ex=120)
+    res3 = client.get("/api/v1/jobs/map?clustered=false&search=Sec%20Job%2012")
+    assert res3.status_code == 200
+    assert len(res3.json()) == 1
+
+
+def test_personal_active_shifts_partitioned_from_open_clusters(client):
+    """Scenario 13: Personal active shifts (in_progress, completed) remain distinct pins preserving true title and status."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    worker = make_user(role="worker", phone="+998905554433", name="Shift Worker")
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-active-shift", "job-open-v1", "job-open-v2"])).delete()
+        j_shift = models.Job(
+            id="job-active-shift",
+            employerId=emp.id,
+            title="Partition Active Shift",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.IN_PROGRESS,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        j_open1 = models.Job(
+            id="job-open-v1",
+            employerId=emp.id,
+            title="Partition Open Vacancy 1",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.311,
+            coordinateY=69.241,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        j_open2 = models.Job(
+            id="job-open-v2",
+            employerId=emp.id,
+            title="Partition Open Vacancy 2",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.312,
+            coordinateY=69.242,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        db_session.add_all([j_shift, j_open1, j_open2])
+        db_session.commit()
+
+        # Worker applied to j_shift
+        db_session.query(models.Application).filter_by(jobId="job-active-shift", workerId=worker.id).delete()
+        db_session.add(models.Application(
+            id="app-shift-1",
+            jobId="job-active-shift",
+            workerId=worker.id,
+            status="in_progress",
+        ))
+        db_session.commit()
+
+    login(client, worker)
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Partition")
+    assert res.status_code == 200
+    pins = res.json()
+
+    # Find the active shift pin
+    active_shift_pins = [p for p in pins if p["id"] == "job-active-shift"]
+    assert len(active_shift_pins) == 1, "Personal active shift must be present"
+    active_pin = active_shift_pins[0]
+    assert active_pin["isCluster"] is False, "Active shift must remain a distinct unclustered pin"
+    assert active_pin["status"] == "in_progress", "Active shift status must be preserved"
+    assert active_pin["title"] == "Partition Active Shift", "Active shift title must NOT be overwritten by cluster title"
+    assert active_pin["applied"] is True
+
+    # Find the open vacancy cluster
+    open_clusters = [p for p in pins if p.get("isCluster")]
+    assert len(open_clusters) == 1
+    assert open_clusters[0]["count"] == 2
+    assert "job-active-shift" not in open_clusters[0]["pinIds"]
+
+
+def test_worker_a_private_shifts_never_visible_to_worker_b_or_public(client):
+    """Scenario 14: Worker A's active shift is never leaked to public visitors or Worker B."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    worker_a = make_user(role="worker", phone="+998906667788", name="Worker A")
+    worker_b = make_user(role="worker", phone="+998907778899", name="Worker B")
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-private-a", "job-public-iso"])).delete()
+        j_priv = models.Job(
+            id="job-private-a",
+            employerId=emp.id,
+            title="Iso Test Private Shift",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.IN_PROGRESS,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        j_pub = models.Job(
+            id="job-public-iso",
+            employerId=emp.id,
+            title="Iso Test Public Job",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        db_session.add_all([j_priv, j_pub])
+        db_session.commit()
+
+        # Worker A applied
+        db_session.query(models.Application).filter_by(jobId="job-private-a").delete()
+        db_session.add(models.Application(
+            id="app-priv-a",
+            jobId="job-private-a",
+            workerId=worker_a.id,
+            status="in_progress",
+        ))
+        db_session.commit()
+
+    # 1. Anonymous visitor hits map
+    anon_client = TestClient(app)
+    res_anon = anon_client.get("/api/v1/jobs/map?clustered=false&search=Iso%20Test")
+    assert res_anon.status_code == 200
+    anon_ids = {p["id"] for p in res_anon.json()}
+    assert "job-private-a" not in anon_ids
+    assert "job-public-iso" in anon_ids
+
+    # 2. Worker B logs in and hits map
+    client_b = TestClient(app)
+    login(client_b, worker_b)
+    res_b = client_b.get("/api/v1/jobs/map?clustered=false&search=Iso%20Test")
+    assert res_b.status_code == 200
+    b_ids = {p["id"] for p in res_b.json()}
+    assert "job-private-a" not in b_ids
+    assert "job-public-iso" in b_ids
+
+    # 3. Worker A logs in and hits map
+    client_a = TestClient(app)
+    login(client_a, worker_a)
+    res_a = client_a.get("/api/v1/jobs/map?clustered=false&search=Iso%20Test")
+    assert res_a.status_code == 200
+    a_ids = {p["id"] for p in res_a.json()}
+    assert "job-private-a" in a_ids
+    assert "job-public-iso" in a_ids
+
+
+def test_clean_cache_hit_preserves_zero_db_queries_on_non_empty_dataset(client):
+    """Scenario 15: Clean cache hit executes 0 database queries on non-empty dataset."""
+    from unittest.mock import patch
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-sec-15").delete()
+        db_session.add(models.Job(
+            id="job-sec-15",
+            employerId=emp.id,
+            title="Clean Cache Hit Job",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+    # Request 1: Cold DB Path populates Redis with signed authentic payload
+    res1 = client.get("/api/v1/jobs/map?clustered=true&search=Clean%20Cache%20Hit%20Job")
+    assert res1.status_code == 200
+    assert len(res1.json()) == 1
+
+    # Request 2: Clean Fast Path hit. Intercept engine cursor execution to prove 0 SQL statements are executed
+    with capture_sql_queries() as sql_queries:
+        res2 = client.get("/api/v1/jobs/map?clustered=true&search=Clean%20Cache%20Hit%20Job")
+        assert res2.status_code == 200
+        assert len(res2.json()) == 1
+        assert len(sql_queries) == 0, f"Clean cache hit must execute 0 SQL queries, executed: {sql_queries}"
+
+
+def test_tamper_display_fields_with_valid_original_signature(client):
+    """Tampered display fields with an otherwise valid original signature must fail verification, evict cache, and rebuild from DB."""
+    from app.core.map_cache import compute_pin_signature
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-disp-tamper").delete()
+        db_session.add(models.Job(
+            id="job-disp-tamper",
+            employerId=emp.id,
+            title="Halol Oshpaz",
+            company="Chayxona N1",
+            salary=3500000,
+            location="Toshkent",
+            tags=["oshxona", "milliy"],
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+    # Create authentic pin and sign it
+    original_pin = {
+        "id": "job-disp-tamper",
+        "title": "Halol Oshpaz",
+        "company": "Chayxona N1",
+        "salary": 3500000,
+        "salaryCurrency": "UZS",
+        "location": "Toshkent",
+        "rawLocation": "Toshkent",
+        "logoUrl": None,
+        "imageUrl": None,
+        "tags": ["oshxona", "milliy"],
+        "category": "Barchasi",
+        "workDate": "",
+        "workTime": "",
+        "neededWorkers": "1",
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "latitude": 41.31,
+        "longitude": 69.24,
+        "urgent": False,
+        "status": "open",
+        "applied": False,
+        "bookmarked": False,
+        "hiredCount": 0,
+        "vacancies": 1,
+        "isCluster": False,
+        "count": 1,
+        "pinIds": ["job-disp-tamper"],
+        "geo_verified": True,
+    }
+    valid_sig = compute_pin_signature(original_pin)
+
+    # Attacker tampers title and salary while leaving valid_sig unchanged
+    tampered_pin = dict(original_pin)
+    tampered_pin["title"] = "Scam Hacker Title"
+    tampered_pin["salary"] = 999999999
+    tampered_pin["geo_sig"] = valid_sig
+
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Oshpaz", clustered=False)
+    redis_client.set(base_key, json.dumps([tampered_pin]), ex=120)
+
+    res = client.get("/api/v1/jobs/map?clustered=false&search=Oshpaz")
+    assert res.status_code == 200
+    pins = res.json()
+    assert len(pins) == 1
+    assert pins[0]["title"] == "Halol Oshpaz", "Must restore authentic title from DB"
+    assert pins[0]["salary"] == 3500000, "Must restore authentic salary from DB"
+    assert pins[0]["title"] != "Scam Hacker Title"
+    assert pins[0]["geo_verified"] is True
+    assert len(pins[0]["geo_sig"]) == 64
+
+
+def test_tamper_cluster_status_applied_bookmarked_invalid_sig(client):
+    """An invalid-signature cluster whose status, applied, or bookmarked values were changed must be rejected and rebuilt."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-cstat-1", "job-cstat-2"])).delete()
+        for jid in ["job-cstat-1", "job-cstat-2"]:
+            db_session.add(models.Job(
+                id=jid,
+                employerId=emp.id,
+                title="Cluster Status Vacancy",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.31,
+                coordinateY=69.24,
+                location="Toshkent",
+                neededWorkers="1",
+            ))
+        db_session.commit()
+
+    tampered_cluster = {
+        "isCluster": True,
+        "id": "c-status-tamper",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "latitude": 41.31,
+        "longitude": 69.24,
+        "pinIds": ["job-cstat-1", "job-cstat-2"],
+        "status": "in_progress",  # tampered status
+        "applied": True,          # tampered applied flag
+        "bookmarked": True,       # tampered bookmark flag
+        "geo_verified": True,
+        "geo_sig": "invalid_sig_00000000000000000000000000000000000000000000000000000000",
+    }
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Cluster Status", clustered=True)
+    redis_client.set(base_key, json.dumps([tampered_cluster]), ex=120)
+
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Cluster%20Status")
+    assert res.status_code == 200
+    clusters = res.json()
+    assert len(clusters) == 1
+    assert clusters[0]["status"] == "open", "Must restore open status from DB"
+    assert clusters[0]["applied"] is False, "Anonymous visitor must have applied=False"
+    assert clusters[0]["bookmarked"] is False
+    assert clusters[0]["geo_verified"] is True
+    assert len(clusters[0]["geo_sig"]) == 64
+
+
+def test_ordinary_pins_duplicated_by_membership_in_cluster(client):
+    """Ordinary pin duplicated by membership in a cluster must be caught structurally and rejected."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-dup-pin-1", "job-dup-pin-2"])).delete()
+        for jid in ["job-dup-pin-1", "job-dup-pin-2"]:
+            db_session.add(models.Job(
+                id=jid,
+                employerId=emp.id,
+                title="Dup Test Job",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.31,
+                coordinateY=69.24,
+                location="Toshkent",
+                neededWorkers="1",
+            ))
+        db_session.commit()
+
+    cluster_item = {
+        "isCluster": True,
+        "id": "c-dup-mem",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "latitude": 41.31,
+        "longitude": 69.24,
+        "pinIds": ["job-dup-pin-1", "job-dup-pin-2"],
+        "geo_verified": False,
+        "geo_sig": None,
+    }
+    ordinary_item = {
+        "isCluster": False,
+        "id": "job-dup-pin-1",  # duplicate of cluster member!
+        "title": "Dup Test Job",
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "latitude": 41.31,
+        "longitude": 69.24,
+        "status": "open",
+        "geo_verified": False,
+        "geo_sig": None,
+    }
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Dup Test", clustered=True)
+    redis_client.set(base_key, json.dumps([cluster_item, ordinary_item]), ex=120)
+
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Dup%20Test")
+    assert res.status_code == 200
+    pins = res.json()
+    all_pids = [pid for p in pins for pid in (p.get("pinIds") or [p.get("id")])]
+    assert len(all_pids) == len(set(all_pids)), "No member ID may be duplicated between cluster and ordinary pin"
+
+
+def test_cluster_members_fail_endpoint_query_filters_excluded_on_rebuild(client):
+    """Cluster members that are valid open jobs but fail query filters are excluded upon cold DB rebuild."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-match-barista", "job-unmatch-dev"])).delete()
+        db_session.add_all([
+            models.Job(
+                id="job-match-barista",
+                employerId=emp.id,
+                title="Barista Coffee Master",
+                company="Coffee Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.31,
+                coordinateY=69.24,
+                location="Toshkent",
+                neededWorkers="1",
+            ),
+            models.Job(
+                id="job-unmatch-dev",
+                employerId=emp.id,
+                title="Python Developer",
+                company="Tech Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.31,
+                coordinateY=69.24,
+                location="Toshkent",
+                neededWorkers="1",
+            )
+        ])
+        db_session.commit()
+
+    # Unverified cluster claims to contain both
+    bad_cluster = {
+        "isCluster": True,
+        "id": "c-unmatched-filter",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-match-barista", "job-unmatch-dev"],
+        "geo_verified": False,
+        "geo_sig": None,
+    }
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Barista", clustered=True)
+    redis_client.set(base_key, json.dumps([bad_cluster]), ex=120)
+
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Barista")
+    assert res.status_code == 200
+    clusters = res.json()
+    assert len(clusters) == 1
+    returned_pids = [pid for c in clusters for pid in (c.get("pinIds") or [c.get("id")])]
+    assert "job-match-barista" in returned_pids
+    assert "job-unmatch-dev" not in returned_pids, "Unmatched query member must be excluded on DB rebuild"
+
+
+def test_invalid_signature_valid_id_tampered_descriptive_fields(client):
+    """Invalid signature plus valid ID with tampered descriptive fields must be evicted and restored from DB."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-desc-tamper-1").delete()
+        db_session.add(models.Job(
+            id="job-desc-tamper-1",
+            employerId=emp.id,
+            title="Real DB Job Title",
+            company="Real Company",
+            salary=2000000,
+            location="Toshkent",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+    tampered_pin = {
+        "id": "job-desc-tamper-1",
+        "title": "Hacked Title With Valid ID",
+        "company": "Fake Company",
+        "salary": 999999999,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "latitude": 41.31,
+        "longitude": 69.24,
+        "status": "open",
+        "applied": False,
+        "bookmarked": False,
+        "isCluster": False,
+        "count": 1,
+        "pinIds": ["job-desc-tamper-1"],
+        "geo_verified": True,
+        "geo_sig": "invalid_signature_hex_00000000000000000000000000000000000000000000000",
+    }
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Real DB Job", clustered=False)
+    redis_client.set(base_key, json.dumps([tampered_pin]), ex=120)
+
+    res = client.get("/api/v1/jobs/map?clustered=false&search=Real%20DB%20Job")
+    assert res.status_code == 200
+    pins = res.json()
+    assert len(pins) == 1
+    assert pins[0]["title"] == "Real DB Job Title"
+    assert pins[0]["company"] == "Real Company"
+    assert pins[0]["salary"] == 2000000
+    assert pins[0]["geo_verified"] is True
+    assert len(pins[0]["geo_sig"]) == 64
+
+
+def test_no_id_or_blank_id_or_null_id_ordinary_pin_anonymous_and_authenticated(client):
+    """In-boundary ordinary pin with missing, null, blank ID or wrong type fails closed in both anon and auth paths."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-noid-legit").delete()
+        db_session.add(models.Job(
+            id="job-noid-legit",
+            employerId=emp.id,
+            title="Legit No-ID Test Job",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+    ver = get_map_cache_version()
+
+    # 1. Anonymous path: Missing / blank / null / int IDs
+    bad_pins_anon = [
+        {"coordinateX": 41.31, "coordinateY": 69.24, "latitude": 41.31, "longitude": 69.24, "status": "open", "geo_verified": True},  # missing ID
+        {"id": None, "coordinateX": 41.31, "coordinateY": 69.24, "status": "open", "geo_verified": True},  # null ID
+        {"id": "   ", "coordinateX": 41.31, "coordinateY": 69.24, "status": "open", "geo_verified": True},  # blank whitespace ID
+        {"id": 12345, "coordinateX": 41.31, "coordinateY": 69.24, "status": "open", "geo_verified": True},  # wrong object type (int)
+    ]
+    for bad_pin in bad_pins_anon:
+        base_key = get_map_cache_key_for_request(version=ver, search="Legit No-ID", clustered=False)
+        redis_client.set(base_key, json.dumps([bad_pin]), ex=120)
+
+        res = client.get("/api/v1/jobs/map?clustered=false&search=Legit%20No-ID")
+        assert res.status_code == 200
+        pins = res.json()
+        assert len(pins) == 1
+        assert pins[0]["id"] == "job-noid-legit"
+
+    # 2. Authenticated path: Base cache with missing ID
+    user = make_user(role="worker", phone="+998901112244", name="Auth NoID User")
+    login(client, user)
+    base_key = get_map_cache_key_for_request(version=ver, search="Legit No-ID", clustered=False)
+    redis_client.set(base_key, json.dumps([{"id": "", "coordinateX": 41.31, "coordinateY": 69.24, "status": "open", "geo_verified": True}]), ex=120)
+
+    res_auth = client.get("/api/v1/jobs/map?clustered=false&search=Legit%20No-ID")
+    assert res_auth.status_code == 200
+    pins_auth = res_auth.json()
+    assert len(pins_auth) == 1
+    assert pins_auth[0]["id"] == "job-noid-legit"
+
+
+def test_malformed_cached_structures_effective_and_base_cache(client):
+    """Malformed cached structures in both effective and base caches must rebuild cleanly without 500 errors."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-malform-1").delete()
+        db_session.add(models.Job(
+            id="job-malform-1",
+            employerId=emp.id,
+            title="Malformed Cache Job",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Malformed Cache", clustered=False)
+
+    # Effective cache: non-JSON corrupt string
+    redis_client.set(base_key, "NOT_VALID_JSON_AT_ALL!!!", ex=120)
+    res1 = client.get("/api/v1/jobs/map?clustered=false&search=Malformed%20Cache")
+    assert res1.status_code == 200
+    assert len(res1.json()) == 1
+
+    # Effective cache: dict instead of list
+    redis_client.set(base_key, json.dumps({"error": "some object"}), ex=120)
+    res2 = client.get("/api/v1/jobs/map?clustered=false&search=Malformed%20Cache")
+    assert res2.status_code == 200
+    assert len(res2.json()) == 1
+
+    # Base cache for authenticated user: corrupt JSON
+    user = make_user(role="worker", phone="+998902223355", name="Auth Malform User")
+    login(client, user)
+    redis_client.set(base_key, "MALFORMED_BASE_JSON", ex=120)
+    res3 = client.get("/api/v1/jobs/map?clustered=false&search=Malformed%20Cache")
+    assert res3.status_code == 200
+    assert len(res3.json()) == 1
+
+
+def test_clean_authenticated_and_anonymous_cache_hits_zero_db_queries(client):
+    """Clean valid signed cache hits retain 0 DB queries for both anonymous and authenticated visitors."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-zero-db").delete()
+        db_session.add(models.Job(
+            id="job-zero-db",
+            employerId=emp.id,
+            title="Zero DB Hit Job",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+    # 1. Anonymous: Prime cache on Request 1
+    anon_client = TestClient(app)
+    res1 = anon_client.get("/api/v1/jobs/map?clustered=false&search=Zero%20DB")
+    assert res1.status_code == 200
+    assert len(res1.json()) == 1
+
+    # Request 2 (Anonymous): Fast Path clean hit -> 0 SQL statements
+    with capture_sql_queries() as anon_queries:
+        res2 = anon_client.get("/api/v1/jobs/map?clustered=false&search=Zero%20DB")
+        assert res2.status_code == 200
+        assert len(res2.json()) == 1
+        assert len(anon_queries) == 0, f"Anonymous clean cache hit must execute 0 SQL queries, executed: {anon_queries}"
+
+    # 2. Authenticated: Prime effective cache on Request 1
+    user = make_user(role="worker", phone="+998903334466", name="Zero DB Worker")
+    auth_client = TestClient(app)
+    login(auth_client, user)
+
+    res3 = auth_client.get("/api/v1/jobs/map?clustered=false&search=Zero%20DB")
+    assert res3.status_code == 200
+    assert len(res3.json()) == 1
+
+    # Request 2 (Authenticated): Fast Path clean hit -> exactly 2 auth queries (active_sessions & user check via deps.get_current_user_optional), 0 map/job queries
+    with capture_sql_queries() as auth_queries:
+        res4 = auth_client.get("/api/v1/jobs/map?clustered=false&search=Zero%20DB")
+        assert res4.status_code == 200
+        assert len(res4.json()) == 1
+        assert len(auth_queries) == 2, f"Authenticated clean cache hit must execute exactly 2 auth queries, executed: {auth_queries}"
+        assert not any("from jobs" in q.lower() or "from applications" in q.lower() or "from bookmarks" in q.lower() for q in auth_queries), "Must not execute any map domain queries"
+
+
+def test_route_tamper_replace_populated_cache_with_raw_empty_list(client):
+    """Replacing populated cache in Redis with raw [] must fail envelope verification, evict cache, and rebuild from DB."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-rep-empty").delete()
+        db_session.add(models.Job(
+            id="job-rep-empty",
+            employerId=emp.id,
+            title="Replace With Empty Job",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+    # 1. Prime cache legitimately via Cold DB Path
+    res1 = client.get("/api/v1/jobs/map?clustered=false&search=Replace%20With%20Empty")
+    assert res1.status_code == 200
+    assert len(res1.json()) == 1
+
+    # 2. Attacker replaces cached key in Redis with raw empty list '[]' (missing envelope & signature)
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Replace With Empty", clustered=False)
+    assert redis_client.get(base_key) is not None
+    redis_client.set(base_key, "[]", ex=120)
+
+    # 3. Client request must fail envelope verification, evict corrupt entry, and rebuild from DB
+    res2 = client.get("/api/v1/jobs/map?clustered=false&search=Replace%20With%20Empty")
+    assert res2.status_code == 200
+    pins = res2.json()
+    assert len(pins) == 1
+    assert pins[0]["id"] == "job-rep-empty"
+    # Prove that Redis cache was evicted and rebuilt with a proper envelope
+    new_cached = json.loads(redis_client.get(base_key))
+    assert isinstance(new_cached, dict) and "resp_sig" in new_cached
+
+
+def test_route_tamper_dropping_one_pin_from_envelope(client):
+    """Dropping 1 pin from a valid response envelope invalidates resp_sig, causing eviction and full DB rebuild."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-drop-1", "job-drop-2"])).delete()
+        db_session.add_all([
+            models.Job(
+                id="job-drop-1",
+                employerId=emp.id,
+                title="Drop Test Job 1",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.31,
+                coordinateY=69.24,
+                location="Toshkent",
+                neededWorkers="1",
+            ),
+            models.Job(
+                id="job-drop-2",
+                employerId=emp.id,
+                title="Drop Test Job 2",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.32,
+                coordinateY=69.25,
+                location="Toshkent",
+                neededWorkers="1",
+            ),
+        ])
+        db_session.commit()
+
+    # 1. Prime cache legitimately via Cold DB Path
+    res1 = client.get("/api/v1/jobs/map?clustered=false&search=Drop%20Test%20Job")
+    assert res1.status_code == 200
+    assert len(res1.json()) == 2
+
+    # 2. Attacker inspects envelope in Redis and drops 1 pin from payload while keeping original resp_sig
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Drop Test Job", clustered=False)
+    env = json.loads(redis_client.get(base_key))
+    assert len(env["payload"]) == 2
+    env["payload"] = [env["payload"][0]]  # Tamper by dropping pin 2
+    redis_client.set(base_key, json.dumps(env), ex=120)
+
+    # 3. Client request must detect resp_sig mismatch, evict corrupt key, and restore both pins from DB
+    res2 = client.get("/api/v1/jobs/map?clustered=false&search=Drop%20Test%20Job")
+    assert res2.status_code == 200
+    pins = res2.json()
+    assert len(pins) == 2
+    assert {p["id"] for p in pins} == {"job-drop-1", "job-drop-2"}
+
+
+def test_route_tamper_copy_envelope_across_search_keys(client):
+    """Copying a valid envelope from search key A into search key B fails cache_key binding, evicting and rebuilding."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-search-oshpaz", "job-search-duradgor"])).delete()
+        db_session.add_all([
+            models.Job(
+                id="job-search-oshpaz",
+                employerId=emp.id,
+                title="Oshpaz Oshxona",
+                company="Chayxona",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.31,
+                coordinateY=69.24,
+                location="Toshkent",
+                neededWorkers="1",
+            ),
+            models.Job(
+                id="job-search-duradgor",
+                employerId=emp.id,
+                title="Duradgor Usta",
+                company="Mebel Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.32,
+                coordinateY=69.25,
+                location="Toshkent",
+                neededWorkers="1",
+            ),
+        ])
+        db_session.commit()
+
+    ver = get_map_cache_version()
+    # 1. Prime cache for search=Oshpaz
+    res_oshpaz = client.get("/api/v1/jobs/map?clustered=false&search=Oshpaz")
+    assert res_oshpaz.status_code == 200
+    assert len(res_oshpaz.json()) == 1
+    assert res_oshpaz.json()[0]["id"] == "job-search-oshpaz"
+
+    key_oshpaz = get_map_cache_key_for_request(version=ver, search="Oshpaz", clustered=False)
+    key_duradgor = get_map_cache_key_for_request(version=ver, search="Duradgor", clustered=False)
+    env_oshpaz_raw = redis_client.get(key_oshpaz)
+    assert env_oshpaz_raw is not None
+
+    # 2. Attacker copies valid Oshpaz envelope into Duradgor's cache key
+    redis_client.set(key_duradgor, env_oshpaz_raw, ex=120)
+
+    # 3. Client requests search=Duradgor. Fast Path must detect cache_key mismatch, evict key_duradgor, and return Duradgor from DB
+    res_duradgor = client.get("/api/v1/jobs/map?clustered=false&search=Duradgor")
+    assert res_duradgor.status_code == 200
+    pins_duradgor = res_duradgor.json()
+    assert len(pins_duradgor) == 1
+    assert pins_duradgor[0]["id"] == "job-search-duradgor"
+    assert pins_duradgor[0]["title"] == "Duradgor Usta"
+
+
+def test_route_tamper_copy_envelope_across_viewports(client):
+    """Copying a valid envelope from Viewport A into Viewport B fails cache_key binding, evicting and rebuilding."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter(models.Job.id.in_(["job-vp-tashkent", "job-vp-samarkand"])).delete()
+        db_session.add_all([
+            models.Job(
+                id="job-vp-tashkent",
+                employerId=emp.id,
+                title="Tashkent Center Job",
+                company="Tashkent Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.31,
+                coordinateY=69.24,
+                location="Toshkent",
+                neededWorkers="1",
+            ),
+            models.Job(
+                id="job-vp-samarkand",
+                employerId=emp.id,
+                title="Samarkand Center Job",
+                company="Samarkand Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=39.65,
+                coordinateY=66.97,
+                location="Samarqand",
+                neededWorkers="1",
+            ),
+        ])
+        db_session.commit()
+
+    ver = get_map_cache_version()
+    # 1. Prime cache for Tashkent viewport (min_lat=41.2, max_lat=41.4, min_lng=69.2, max_lng=69.3)
+    res_tashkent = client.get("/api/v1/jobs/map?clustered=false&min_lat=41.2&max_lat=41.4&min_lng=69.2&max_lng=69.3")
+    assert res_tashkent.status_code == 200
+    assert any(p["id"] == "job-vp-tashkent" for p in res_tashkent.json())
+
+    key_tashkent = get_map_cache_key_for_request(
+        version=ver, min_lat=41.2, max_lat=41.4, min_lng=69.2, max_lng=69.3, clustered=False
+    )
+    key_samarkand = get_map_cache_key_for_request(
+        version=ver, min_lat=39.5, max_lat=39.8, min_lng=66.8, max_lng=67.1, clustered=False
+    )
+    env_tashkent_raw = redis_client.get(key_tashkent)
+    assert env_tashkent_raw is not None
+
+    # 2. Attacker copies Tashkent envelope into Samarkand's cache key
+    redis_client.set(key_samarkand, env_tashkent_raw, ex=120)
+
+    # 3. Client requests Samarkand viewport. Fast Path detects context mismatch, evicts, and queries DB for Samarkand bounds
+    res_samarkand = client.get("/api/v1/jobs/map?clustered=false&min_lat=39.5&max_lat=39.8&min_lng=66.8&max_lng=67.1")
+    assert res_samarkand.status_code == 200
+    pins_samarkand = res_samarkand.json()
+    assert any(p["id"] == "job-vp-samarkand" for p in pins_samarkand)
+    assert not any(p["id"] == "job-vp-tashkent" for p in pins_samarkand)
+
+
+def test_route_tamper_copy_worker_a_envelope_into_worker_b(client):
+    """Copying Worker A's personalized envelope into Worker B's key fails user_id binding, preventing state leakage."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    worker_a = make_user(role="worker", phone="+998901110022", name="Worker A")
+    worker_b = make_user(role="worker", phone="+998901110033", name="Worker B")
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-replay-user").delete()
+        db_session.add(models.Job(
+            id="job-replay-user",
+            employerId=emp.id,
+            title="User Replay Job",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+        # Worker A applied; Worker B did NOT apply
+        db_session.query(models.Application).filter_by(jobId="job-replay-user").delete()
+        db_session.add(models.Application(
+            id="app-replay-1",
+            jobId="job-replay-user",
+            workerId=worker_a.id,
+            status="applied",
+        ))
+        db_session.commit()
+
+    ver = get_map_cache_version()
+    # 1. Worker A hits map -> primes personalized cache where applied=True
+    client_a = TestClient(app)
+    login(client_a, worker_a)
+    res_a = client_a.get("/api/v1/jobs/map?clustered=false&search=User%20Replay")
+    assert res_a.status_code == 200
+    pins_a = res_a.json()
+    assert len(pins_a) == 1
+    assert pins_a[0]["applied"] is True
+
+    key_a = get_map_cache_key_for_request(version=ver, search="User Replay", clustered=False, user_id=worker_a.id)
+    key_b = get_map_cache_key_for_request(version=ver, search="User Replay", clustered=False, user_id=worker_b.id)
+    env_a_raw = redis_client.get(key_a)
+    assert env_a_raw is not None
+
+    # 2. Attacker copies Worker A's envelope into Worker B's cache key
+    redis_client.set(key_b, env_a_raw, ex=120)
+
+    # 3. Worker B hits map. Fast Path detects user_id mismatch (Worker A != Worker B), evicts key_b, and rebuilds for Worker B
+    client_b = TestClient(app)
+    login(client_b, worker_b)
+    res_b = client_b.get("/api/v1/jobs/map?clustered=false&search=User%20Replay")
+    assert res_b.status_code == 200
+    pins_b = res_b.json()
+    assert len(pins_b) == 1
+    assert pins_b[0]["applied"] is False, "Worker B must NOT see applied=True from Worker A's replayed cache!"
+
+
+def test_route_tamper_copy_personalized_envelope_into_public_cache(client):
+    """Copying a personalized envelope into the public base cache key fails user_id binding (None != user_id)."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    worker_a = make_user(role="worker", phone="+998901110044", name="Worker A Pub")
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-replay-pub").delete()
+        db_session.add(models.Job(
+            id="job-replay-pub",
+            employerId=emp.id,
+            title="Public Replay Job",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+        db_session.query(models.Application).filter_by(jobId="job-replay-pub").delete()
+        db_session.add(models.Application(
+            id="app-replay-pub-1",
+            jobId="job-replay-pub",
+            workerId=worker_a.id,
+            status="applied",
+        ))
+        db_session.commit()
+
+    ver = get_map_cache_version()
+    client_a = TestClient(app)
+    login(client_a, worker_a)
+    res_a = client_a.get("/api/v1/jobs/map?clustered=false&search=Public%20Replay")
+    assert res_a.status_code == 200
+
+    key_a = get_map_cache_key_for_request(version=ver, search="Public Replay", clustered=False, user_id=worker_a.id)
+    key_pub = get_map_cache_key_for_request(version=ver, search="Public Replay", clustered=False)
+    env_a_raw = redis_client.get(key_a)
+    assert env_a_raw is not None
+
+    # Attacker copies Worker A's personalized envelope into public cache key
+    redis_client.set(key_pub, env_a_raw, ex=120)
+
+    # Anonymous visitor visits map. Fast Path checks expected_user_id=None != worker_a.id, evicts key_pub, rebuilds clean public pins
+    anon_client = TestClient(app)
+    res_anon = anon_client.get("/api/v1/jobs/map?clustered=false&search=Public%20Replay")
+    assert res_anon.status_code == 200
+    pins_anon = res_anon.json()
+    assert len(pins_anon) == 1
+    assert pins_anon[0]["applied"] is False, "Public visitor must NOT see applied=True from replayed personal envelope!"
+
+
+def test_route_tamper_type_collisions_rejected_and_rebuilt(client):
+    """Route-level tests proving type collisions in cached envelopes fail closed, are evicted, and rebuilt from DB:
+    - salary: 3500000.9 (float in integer field)
+    - applied: "false" (string in boolean field)
+    - geo_verified: 1 (int in boolean field)
+    - coordinateX: "41.31" (numeric string in coordinate field)
+    """
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-type-col").delete()
+        db_session.add(models.Job(
+            id="job-type-col",
+            employerId=emp.id,
+            title="Type Collision Job",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.0,
+            coordinateY=69.24,
+            salary=3500000,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+    from app.core.map_cache import (
+        compute_pin_signature,
+        make_response_envelope,
+        verify_pin_signature,
+        verify_response_envelope,
+    )
+
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Type Collision", clustered=False)
+
+    valid_pin = {
+        "id": "job-type-col",
+        "title": "Type Collision Job",
+        "company": "Baito Co",
+        "salary": 3500000,
+        "salaryCurrency": "UZS",
+        "location": "Toshkent",
+        "rawLocation": "Toshkent",
+        "logoUrl": None,
+        "imageUrl": None,
+        "tags": [],
+        "category": "Barchasi",
+        "workDate": "",
+        "workTime": "",
+        "neededWorkers": "1",
+        "coordinateX": 41.0,
+        "coordinateY": 69.24,
+        "latitude": 41.0,
+        "longitude": 69.24,
+        "urgent": False,
+        "status": "open",
+        "applied": False,
+        "bookmarked": False,
+        "hiredCount": 0,
+        "vacancies": 1,
+        "isCluster": False,
+        "count": 1,
+        "pinIds": ["job-type-col"],
+        "geo_verified": True,
+    }
+    # 1. Authentic HMAC signature over valid pin
+    valid_pin["geo_sig"] = compute_pin_signature(valid_pin)
+    assert verify_pin_signature(valid_pin) is True, "Authentic valid pin must pass verification"
+
+    # 2. Authentic HMAC response envelope over authentic payload
+    authentic_env = make_response_envelope(
+        cache_key=base_key,
+        payload=[valid_pin],
+        clustered=False,
+        user_id=None,
+    )
+    assert verify_response_envelope(authentic_env, expected_key=base_key, expected_clustered=False, expected_user_id=None) is not None
+
+    test_variations = [
+        ("applied false -> null", {"applied": None}),
+        ("bookmarked false -> null", {"bookmarked": None}),
+        ("tags [] -> null", {"tags": None}),
+        ("pinIds [] -> null", {"pinIds": None}),
+        ("coordinateX 41.0 -> 41 int", {"coordinateX": 41}),
+        ("salary float", {"salary": 3500000.9}),
+        ("applied string", {"applied": "false"}),
+        ("geo_verified int", {"geo_verified": 1}),
+        ("coordinateX string", {"coordinateX": "41.0"}),
+    ]
+
+    for desc, overrides in test_variations:
+        tampered_pin = dict(valid_pin)
+        tampered_pin.update(overrides)
+
+        # A. Verify HMAC verification rejects altered payload directly with preserved real signature
+        assert verify_pin_signature(tampered_pin) is False, f"HMAC verification must reject {desc}"
+
+        tampered_env = {
+            "cache_key": base_key,
+            "clustered": False,
+            "user_id": None,
+            "payload": [tampered_pin],
+            "resp_sig": authentic_env["resp_sig"],  # Preserving original real envelope signature
+        }
+        assert verify_response_envelope(tampered_env, expected_key=base_key, expected_clustered=False, expected_user_id=None) is None, f"Envelope verification must reject {desc}"
+
+        # B. Verify actual route invalidates affected cache and rebuilds trusted DB results
+        redis_client.set(base_key, json.dumps(tampered_env), ex=120)
+
+        res = client.get("/api/v1/jobs/map?clustered=false&search=Type%20Collision")
+        assert res.status_code == 200, f"Variation {desc} must return 200 after rebuild"
+        pins = res.json()
+        assert len(pins) == 1, f"Variation {desc} must return 1 authentic pin"
+        assert pins[0]["id"] == "job-type-col"
+        assert pins[0]["salary"] == 3500000, f"Variation {desc} must restore authentic int salary"
+        assert type(pins[0]["salary"]) is int
+        assert pins[0]["applied"] is False
+        assert type(pins[0]["applied"]) is bool
+        assert pins[0]["bookmarked"] is False
+        assert type(pins[0]["bookmarked"]) is bool
+        assert pins[0]["tags"] == []
+        assert isinstance(pins[0]["tags"], list)
+        assert pins[0]["pinIds"] == ["job-type-col"]
+        assert isinstance(pins[0]["pinIds"], list)
+        assert pins[0]["coordinateX"] == 41.0
+        assert type(pins[0]["coordinateX"]) is float
+
+
+# =====================================================================
+# REMEDIATION REGRESSION TESTS: FIX A & FIX B
+# =====================================================================
+
+def test_fix_a_redis_uid_tamper_fails_to_impersonate(client):
+    """FIX A: Tampering Redis keys cannot allow Worker A to impersonate Worker B or get B's personalized cache.
+    Identity is strictly derived from verified DB user identity via deps.get_current_user_optional.
+    """
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    worker_a = make_user(role="worker", phone="+998901111111", name="Worker A Real")
+    worker_b = make_user(role="worker", phone="+998902222222", name="Worker B Real")
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Application).filter_by(jobId="job-impersonate-test").delete()
+        db_session.query(models.Job).filter_by(id="job-impersonate-test").delete()
+        job = models.Job(
+            id="job-impersonate-test",
+            employerId=emp.id,
+            title="Impersonate Test Job",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        db_session.add(job)
+        db_session.commit()
+
+        # Worker B applied to the job, Worker A did NOT
+        db_session.add(models.Application(
+            id="app-worker-b-test",
+            jobId=job.id,
+            workerId=worker_b.id,
+            status="applied",
+        ))
+        db_session.commit()
+
+    # Attacker sets a rogue Redis mapping attempting to map Worker A's UID to Worker B's ID
+    rogue_key = f"cache:user:uid_to_id:{worker_a.uid}"
+    redis_client.set(rogue_key, worker_b.id, ex=3600)
+
+    # Worker A makes request with their token
+    client_a = TestClient(app)
+    login(client_a, worker_a)
+
+    res = client_a.get("/api/v1/jobs/map?clustered=false&search=Impersonate%20Test")
+    assert res.status_code == 200
+    pins = res.json()
+    assert len(pins) == 1
+    # Worker A must see applied=False because Worker A did not apply, ignoring rogue Redis key
+    assert pins[0]["applied"] is False, "Worker A must NOT get Worker B's applied status via Redis tampering!"
+
+
+def test_fix_a_deleted_user_treated_as_guest(client):
+    """FIX A: A user whose record is deleted in DB is rejected by deps.get_current_user_optional and treated as guest."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    worker = make_user(role="worker", phone="+998903333333", name="Worker To Delete")
+    worker_client = TestClient(app)
+    login(worker_client, worker)
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-deleted-user-test").delete()
+        db_session.add(models.Job(
+            id="job-deleted-user-test",
+            employerId=emp.id,
+            title="Deleted User Test Job",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+        # Delete user from DB
+        db_session.query(models.User).filter_by(id=worker.id).delete()
+        db_session.commit()
+
+    res = worker_client.get("/api/v1/jobs/map?clustered=false&search=Deleted%20User%20Test")
+    assert res.status_code == 200
+    pins = res.json()
+    assert len(pins) == 1
+    assert pins[0]["applied"] is False
+
+
+def test_fix_a_banned_user_treated_as_guest(client):
+    """FIX A: A user marked isBanned=True is rejected by deps.get_current_user_optional and treated as guest."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    worker = make_user(role="worker", phone="+998904444444", name="Worker To Ban")
+    worker_client = TestClient(app)
+    login(worker_client, worker)
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-banned-user-test").delete()
+        db_session.add(models.Job(
+            id="job-banned-user-test",
+            employerId=emp.id,
+            title="Banned User Test Job",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+        # Ban user in DB
+        u = db_session.query(models.User).filter_by(id=worker.id).first()
+        u.isBanned = True
+        db_session.commit()
+
+    res = worker_client.get("/api/v1/jobs/map?clustered=false&search=Banned%20User%20Test")
+    assert res.status_code == 200
+    pins = res.json()
+    assert len(pins) == 1
+    assert pins[0]["applied"] is False
+
+
+def test_fix_a_revoked_session_treated_as_guest(client):
+    """FIX A: A user whose active session is revoked is rejected by deps.get_current_user_optional and treated as guest."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    worker = make_user(role="worker", phone="+998905555555", name="Worker Revoked Session")
+    worker_client = TestClient(app)
+    login(worker_client, worker)
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Job).filter_by(id="job-revoked-session-test").delete()
+        db_session.add(models.Job(
+            id="job-revoked-session-test",
+            employerId=emp.id,
+            title="Revoked Session Test Job",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        # Deactivate all sessions for this user
+        db_session.query(models.ActiveSession).filter_by(user_uid=worker.uid).update({"is_active": False})
+        db_session.commit()
+
+    res = worker_client.get("/api/v1/jobs/map?clustered=false&search=Revoked%20Session%20Test")
+    assert res.status_code == 200
+    pins = res.json()
+    assert len(pins) == 1
+    assert pins[0]["applied"] is False
+
+
+def test_fix_b_personal_only_dataset_unclustered(client):
+    """FIX B: When 0 open jobs match, an authenticated user's IN_PROGRESS job is returned to them,
+    while the public base cache strictly receives and serves payload=[], not leaking or starving.
+    Both Cold DB Path and Fast Assembly Path are verified.
+    """
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    worker = make_user(role="worker", phone="+998906666666", name="Worker Personal Only")
+    worker_client = TestClient(app)
+    login(worker_client, worker)
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Application).filter_by(jobId="job-personal-only-in-progress").delete()
+        db_session.query(models.Job).filter_by(id="job-personal-only-in-progress").delete()
+        job = models.Job(
+            id="job-personal-only-in-progress",
+            employerId=emp.id,
+            title="Personal Shift In Progress",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.IN_PROGRESS,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        db_session.add(job)
+        db_session.commit()
+
+        db_session.add(models.Application(
+            id="app-personal-only-test",
+            jobId=job.id,
+            workerId=worker.id,
+            status="in_progress",
+        ))
+        db_session.commit()
+
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Personal Shift In Progress", clustered=False)
+    eff_key = get_map_cache_key_for_request(version=ver, search="Personal Shift In Progress", clustered=False, user_id=worker.id)
+
+    # 1. Cold DB Path (Worker request)
+    res_worker = worker_client.get("/api/v1/jobs/map?clustered=false&search=Personal%20Shift%20In%20Progress")
+    assert res_worker.status_code == 200
+    worker_pins = res_worker.json()
+    assert len(worker_pins) == 1, "Worker must see their active in_progress personal shift!"
+    assert worker_pins[0]["id"] == "job-personal-only-in-progress"
+    assert worker_pins[0]["applied"] is True
+    assert worker_pins[0]["status"] == "in_progress"
+
+    # 2. Verify base cache strictly received payload=[]
+    raw_base = redis_client.get(base_key)
+    assert raw_base is not None, "Base cache must be primed with empty payload"
+    base_env = json.loads(raw_base.decode("utf-8") if isinstance(raw_base, bytes) else str(raw_base))
+    assert base_env["payload"] == [], "Public base cache must strictly have payload=[]"
+
+    # 3. Anonymous visitor receives [] from base cache
+    anon_client = TestClient(app)
+    res_anon = anon_client.get("/api/v1/jobs/map?clustered=false&search=Personal%20Shift%20In%20Progress")
+    assert res_anon.status_code == 200
+    assert res_anon.json() == [], "Anonymous visitor must receive empty list"
+
+    # 4. Fast Assembly / warm cache hit (Worker request 2)
+    res_worker_warm = worker_client.get("/api/v1/jobs/map?clustered=false&search=Personal%20Shift%20In%20Progress")
+    assert res_worker_warm.status_code == 200
+    worker_warm_pins = res_worker_warm.json()
+    assert len(worker_warm_pins) == 1
+    assert worker_warm_pins[0]["id"] == "job-personal-only-in-progress"
+
+
+def test_fix_b_personal_only_dataset_clustered(client):
+    """FIX B: In clustered mode with 0 open jobs, user's active personal shift is returned as singleton pin.
+    Public base cache receives [], anonymous gets [], and warm path succeeds.
+    """
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    worker = make_user(role="worker", phone="+998907777777", name="Worker Personal Clustered")
+    worker_client = TestClient(app)
+    login(worker_client, worker)
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        db_session.query(models.Application).filter_by(jobId="job-personal-clustered-shift").delete()
+        db_session.query(models.Job).filter_by(id="job-personal-clustered-shift").delete()
+        job = models.Job(
+            id="job-personal-clustered-shift",
+            employerId=emp.id,
+            title="Personal Clustered Shift",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.IN_PROGRESS,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        db_session.add(job)
+        db_session.commit()
+
+        db_session.add(models.Application(
+            id="app-personal-clustered-test",
+            jobId=job.id,
+            workerId=worker.id,
+            status="in_progress",
+        ))
+        db_session.commit()
+
+    ver = get_map_cache_version()
+    base_key = get_map_cache_key_for_request(version=ver, search="Personal Clustered Shift", clustered=True)
+
+    # 1. Cold DB Path
+    res_worker = worker_client.get("/api/v1/jobs/map?clustered=true&search=Personal%20Clustered%20Shift")
+    assert res_worker.status_code == 200
+    worker_pins = res_worker.json()
+    assert len(worker_pins) == 1
+    assert worker_pins[0]["id"] == "job-personal-clustered-shift"
+    assert worker_pins[0]["isCluster"] is False
+    assert worker_pins[0]["count"] == 1
+    assert worker_pins[0]["pinIds"] == ["job-personal-clustered-shift"]
+    assert worker_pins[0]["applied"] is True
+
+    # 2. Base cache strictly has payload=[]
+    raw_base = redis_client.get(base_key)
+    assert raw_base is not None
+    base_env = json.loads(raw_base.decode("utf-8") if isinstance(raw_base, bytes) else str(raw_base))
+    assert base_env["payload"] == []
+
+    # 3. Anonymous visitor receives []
+    anon_client = TestClient(app)
+    res_anon = anon_client.get("/api/v1/jobs/map?clustered=true&search=Personal%20Clustered%20Shift")
+    assert res_anon.status_code == 200
+    assert res_anon.json() == []
+
+    # 4. Fast Assembly Path / warm request
+    res_warm = worker_client.get("/api/v1/jobs/map?clustered=true&search=Personal%20Clustered%20Shift")
+    assert res_warm.status_code == 200
+    assert len(res_warm.json()) == 1
+    assert res_warm.json()[0]["id"] == "job-personal-clustered-shift"
+
+
+def test_fix_b_fast_assembly_clustered_with_extra_user_pins(client):
+    """FIX B: Fast Assembly Path correctly clusters extra personal pins when base pins are already cached."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    worker = make_user(role="worker", phone="+998908888888", name="Worker Extra Clustered")
+    worker_client = TestClient(app)
+    login(worker_client, worker)
+
+    with SessionLocal() as db_session:
+        emp = _ensure_cluster_emp(db_session)
+        # 2 open jobs nearby each other (will cluster in base)
+        for i in (1, 2):
+            jid = f"job-cluster-base-{i}"
+            db_session.query(models.Application).filter_by(jobId=jid).delete()
+            db_session.query(models.Job).filter_by(id=jid).delete()
+            db_session.add(models.Job(
+                id=jid,
+                employerId=emp.id,
+                title=f"Base Clustered Job {i}",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.31 + (i * 0.001),
+                coordinateY=69.24 + (i * 0.001),
+                location="Toshkent",
+                neededWorkers="1",
+            ))
+        # 1 in_progress job for worker matching search
+        db_session.query(models.Application).filter_by(jobId="job-extra-personal").delete()
+        db_session.query(models.Job).filter_by(id="job-extra-personal").delete()
+        db_session.add(models.Job(
+            id="job-extra-personal",
+            employerId=emp.id,
+            title="Base Clustered Extra Personal",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.IN_PROGRESS,
+            coordinateX=41.35,
+            coordinateY=69.28,
+            location="Toshkent",
+            neededWorkers="1",
+        ))
+        db_session.commit()
+
+        db_session.add(models.Application(
+            id="app-extra-personal-test",
+            jobId="job-extra-personal",
+            workerId=worker.id,
+            status="in_progress",
+        ))
+        db_session.commit()
+
+    # 1. Prime public base cache via anonymous request
+    anon_client = TestClient(app)
+    res_base = anon_client.get("/api/v1/jobs/map?clustered=true&search=Base%20Clustered")
+    assert res_base.status_code == 200
+    assert len(res_base.json()) == 1, "2 nearby open jobs must form 1 cluster"
+    assert res_base.json()[0]["isCluster"] is True
+    assert res_base.json()[0]["count"] == 2
+
+    # 2. Worker requests with same filters. Hits Fast Assembly Path.
+    res_worker = worker_client.get("/api/v1/jobs/map?clustered=true&search=Base%20Clustered")
+    assert res_worker.status_code == 200
+    worker_pins = res_worker.json()
+    # Worker sees the public cluster of 2 open jobs + 1 personal singleton pin
+    assert len(worker_pins) == 2, f"Expected 2 pins (1 cluster + 1 personal singleton), got {len(worker_pins)}"
+    cluster_pins = [p for p in worker_pins if p.get("isCluster")]
+    single_pins = [p for p in worker_pins if not p.get("isCluster")]
+    assert len(cluster_pins) == 1
+    assert cluster_pins[0]["count"] == 2
+    assert len(single_pins) == 1
+    assert single_pins[0]["id"] == "job-extra-personal"
+    assert single_pins[0]["applied"] is True

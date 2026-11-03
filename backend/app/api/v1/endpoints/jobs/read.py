@@ -15,9 +15,14 @@ from app.core.map_cache import (
     get_map_cache_version,
     get_user_map_cache_version,
     build_map_pins_cache_key,
+    get_map_cache_key_for_request,
     CACHE_LOCATION_COUNTS_PREFIX,
     compute_cluster_signature,
     verify_cluster_signature,
+    compute_pin_signature,
+    verify_pin_signature,
+    make_response_envelope,
+    verify_response_envelope,
 )
 from app.models.job import JobStatus
 from app.redis_client import redis_client
@@ -372,8 +377,7 @@ def get_map_jobs(
     clustered = clustered.default if hasattr(clustered, "default") else bool(clustered)
 
     version = get_map_cache_version()
-    effective_limit = 0 if clustered else limit
-    base_cache_key = build_map_pins_cache_key(
+    base_cache_key = get_map_cache_key_for_request(
         version=version,
         min_lat=min_lat,
         max_lat=max_lat,
@@ -382,20 +386,12 @@ def get_map_jobs(
         location=location,
         category=category,
         search=search,
-        limit=effective_limit,
+        limit=limit,
+        clustered=clustered,
     )
-    if clustered:
-        base_cache_key += ":clustered"
 
-    user_id = None
-    if current_user:
-        user_id = current_user.id
-    else:
-        token = deps.get_access_token(request)
-        if token:
-            t_data = deps._decode(token, "access")
-            if t_data and t_data.sub:
-                user_id = t_data.sub
+    # Derived strictly from verified identity via canonical deps.get_current_user_optional (FIX A)
+    user_id = current_user.id if current_user else None
 
     if user_id:
         user_ver = get_user_map_cache_version(user_id)
@@ -410,95 +406,19 @@ def get_map_jobs(
         cached_bytes = redis_client.get(effective_cache_key)
         if cached_bytes:
             cached_str = cached_bytes.decode("utf-8") if isinstance(cached_bytes, bytes) else str(cached_bytes)
-            cached_pins = json.loads(cached_str)
-            valid_cached_pins = []
-            has_foreign = False
-            has_corrupt_cluster = False
+            try:
+                cached_obj = json.loads(cached_str)
+            except Exception:
+                cached_obj = None
 
-            for p in cached_pins:
-                p_lat = p.get("coordinateX") if p.get("coordinateX") is not None else p.get("latitude")
-                p_lng = p.get("coordinateY") if p.get("coordinateY") is not None else p.get("longitude")
-                is_inside = False
-                if p_lat is not None and p_lng is not None:
-                    try:
-                        pf_lat = float(p_lat)
-                        pf_lng = float(p_lng)
-                        if GeoSpatialService.is_inside_uzbekistan(pf_lat, pf_lng):
-                            is_inside = True
-                    except (ValueError, TypeError):
-                        pass
+            cached_pins = verify_response_envelope(
+                envelope=cached_obj,
+                expected_key=effective_cache_key,
+                expected_clustered=clustered,
+                expected_user_id=user_id,
+            )
 
-                if not is_inside:
-                    if p.get("isCluster"):
-                        has_corrupt_cluster = True
-                    else:
-                        has_foreign = True
-                    continue
-                valid_cached_pins.append(p)
-
-            # Check whether any member in cluster pinIds has foreign coordinates or invalid structure
-            cluster_items = [p for p in valid_cached_pins if p.get("isCluster")]
-            unverified_clusters = []
-            has_reattested = False
-            for c in cluster_items:
-                pids = c.get("pinIds")
-                if not isinstance(pids, list) or len(pids) == 0:
-                    has_corrupt_cluster = True
-                    break
-                if not all(isinstance(pid, str) and pid.strip() for pid in pids):
-                    has_corrupt_cluster = True
-                    break
-                if len(set(pids)) != len(pids):
-                    has_corrupt_cluster = True
-                    break
-                if c.get("count") != len(pids):
-                    has_corrupt_cluster = True
-                    break
-                if not verify_cluster_signature(c):
-                    unverified_clusters.append(c)
-
-            if unverified_clusters and not has_corrupt_cluster:
-                cluster_pin_ids = [pid for p in unverified_clusters for pid in (p.get("pinIds") or [])]
-                if cluster_pin_ids:
-                    own_db = False
-                    active_db = db
-                    if active_db is None:
-                        active_db = SessionLocal()
-                        own_db = True
-                    try:
-                        pin_records = (
-                            active_db.query(models.Job.id, models.Job.coordinateX, models.Job.coordinateY, models.Job.status)
-                            .filter(models.Job.id.in_(cluster_pin_ids))
-                            .all()
-                        )
-                        found_ids = {r[0] for r in pin_records}
-                        # If any pinId in the cluster no longer exists in DB or is closed/cancelled/pending, cluster is corrupt
-                        if len(found_ids) < len(set(cluster_pin_ids)):
-                            has_corrupt_cluster = True
-                        else:
-                            for jid, cx, cy, c_st in pin_records:
-                                if cx is None or cy is None or c_st not in JobStatus.OPEN_STATUSES:
-                                    has_corrupt_cluster = True
-                                    break
-                                try:
-                                    fcx = float(cx)
-                                    fcy = float(cy)
-                                    if not GeoSpatialService.is_inside_uzbekistan(fcx, fcy):
-                                        has_corrupt_cluster = True
-                                        break
-                                except (ValueError, TypeError):
-                                    has_corrupt_cluster = True
-                                    break
-                        if not has_corrupt_cluster:
-                            for c in unverified_clusters:
-                                c["geo_verified"] = True
-                                c["geo_sig"] = compute_cluster_signature(c)
-                            has_reattested = True
-                    finally:
-                        if own_db and active_db:
-                            active_db.close()
-
-            if has_corrupt_cluster:
+            if cached_pins is None:
                 try:
                     redis_client.delete(effective_cache_key)
                     redis_client.delete(base_cache_key)
@@ -506,33 +426,100 @@ def get_map_jobs(
                     pass
                 cached_bytes = None
             else:
-                if has_foreign or has_reattested:
-                    cached_pins = valid_cached_pins
-                    cached_str = json.dumps(cached_pins)
+                has_corrupt_cache = False
+                seen_cluster_pids = set()
+                seen_ordinary_pids = set()
+
+                for p in cached_pins:
+                    if not isinstance(p, dict):
+                        has_corrupt_cache = True
+                        break
+
+                    # Fail closed on missing, blank, null, or non-string ID
+                    p_id = p.get("id")
+                    if not p_id or not isinstance(p_id, str) or not p_id.strip():
+                        has_corrupt_cache = True
+                        break
+
+                    p_lat = p.get("coordinateX") if p.get("coordinateX") is not None else p.get("latitude")
+                    p_lng = p.get("coordinateY") if p.get("coordinateY") is not None else p.get("longitude")
+                    is_inside = False
+                    if p_lat is not None and p_lng is not None:
+                        try:
+                            pf_lat = float(p_lat)
+                            pf_lng = float(p_lng)
+                            if not (math.isnan(pf_lat) or math.isnan(pf_lng) or math.isinf(pf_lat) or math.isinf(pf_lng)):
+                                if not (pf_lat == 0.0 and pf_lng == 0.0):
+                                    if GeoSpatialService.is_inside_uzbekistan(pf_lat, pf_lng):
+                                        is_inside = True
+                        except (ValueError, TypeError):
+                            pass
+
+                    if not is_inside:
+                        has_corrupt_cache = True
+                        break
+
+                    if p.get("isCluster"):
+                        pids = p.get("pinIds")
+                        if not isinstance(pids, list) or len(pids) == 0:
+                            has_corrupt_cache = True
+                            break
+                        if not all(isinstance(pid, str) and pid.strip() for pid in pids):
+                            has_corrupt_cache = True
+                            break
+                        if len(set(pids)) != len(pids):
+                            has_corrupt_cache = True
+                            break
+                        if p.get("count") != len(pids):
+                            has_corrupt_cache = True
+                            break
+                        # Cross-cluster duplicate detection: Reject IDs repeated across multiple clusters
+                        if any(pid in seen_cluster_pids for pid in pids):
+                            has_corrupt_cache = True
+                            break
+                        if any(pid in seen_ordinary_pids for pid in pids):
+                            has_corrupt_cache = True
+                            break
+                        seen_cluster_pids.update(pids)
+                    else:
+                        if p_id in seen_cluster_pids or p_id in seen_ordinary_pids:
+                            has_corrupt_cache = True
+                            break
+                        seen_ordinary_pids.add(p_id)
+
+                    # Authenticate every cached pin object (clusters and ordinary pins)
+                    if not verify_pin_signature(p):
+                        has_corrupt_cache = True
+                        break
+
+                if has_corrupt_cache:
                     try:
-                        redis_client.set(effective_cache_key, cached_str, ex=120)
+                        redis_client.delete(effective_cache_key)
+                        redis_client.delete(base_cache_key)
                     except Exception:
                         pass
-
-                etag = f'"{hashlib.md5(cached_str.encode("utf-8")).hexdigest()}"'
-                response.headers["Cache-Control"] = cache_control
-                response.headers["ETag"] = etag
-                if request.headers.get("if-none-match") == etag:
+                    cached_bytes = None
+                else:
+                    payload_json = json.dumps(cached_pins)
+                    etag = f'"{hashlib.md5(payload_json.encode("utf-8")).hexdigest()}"'
+                    response.headers["Cache-Control"] = cache_control
+                    response.headers["ETag"] = etag
+                    if request.headers.get("if-none-match") == etag:
+                        return Response(
+                            status_code=304,
+                            headers={
+                                "ETag": etag,
+                                "Cache-Control": cache_control,
+                            },
+                        )
                     return Response(
-                        status_code=304,
+                        content=payload_json,
+                        media_type="application/json",
                         headers={
                             "ETag": etag,
                             "Cache-Control": cache_control,
                         },
                     )
-                return Response(
-                    content=cached_str,
-                    media_type="application/json",
-                    headers={
-                        "ETag": etag,
-                        "Cache-Control": cache_control,
-                    },
-                )
     except Exception as e:
         logger.warning("Redis lookup error in get_map_jobs: %s", e)
 
@@ -549,11 +536,40 @@ def get_map_jobs(
     if user_id and cached_base:
         try:
             base_str = cached_base.decode("utf-8") if isinstance(cached_base, bytes) else str(cached_base)
-            base_pins = json.loads(base_str)
-            # Prune any foreign or invalid pins that might have been pre-cached in base_cache
-            valid_base_pins = []
-            has_corrupt_base_cluster = False
-            for p in base_pins:
+            try:
+                base_obj = json.loads(base_str)
+            except Exception:
+                base_obj = None
+
+            raw_base_pins = verify_response_envelope(
+                envelope=base_obj,
+                expected_key=base_cache_key,
+                expected_clustered=clustered,
+                expected_user_id=None,
+            )
+
+            if raw_base_pins is None:
+                try:
+                    redis_client.delete(base_cache_key)
+                    redis_client.delete(effective_cache_key)
+                except Exception:
+                    pass
+                raise ValueError("base_pins cache missing or unverified envelope, falling back to Cold DB path")
+
+            has_corrupt_base = False
+            seen_base_cluster_pids = set()
+            seen_base_ordinary_pids = set()
+
+            for p in raw_base_pins:
+                if not isinstance(p, dict):
+                    has_corrupt_base = True
+                    break
+
+                p_id = p.get("id")
+                if not p_id or not isinstance(p_id, str) or not p_id.strip():
+                    has_corrupt_base = True
+                    break
+
                 p_lat = p.get("coordinateX") if p.get("coordinateX") is not None else p.get("latitude")
                 p_lng = p.get("coordinateY") if p.get("coordinateY") is not None else p.get("longitude")
                 is_inside = False
@@ -561,88 +577,68 @@ def get_map_jobs(
                     try:
                         pf_lat = float(p_lat)
                         pf_lng = float(p_lng)
-                        if GeoSpatialService.is_inside_uzbekistan(pf_lat, pf_lng):
-                            is_inside = True
+                        if not (math.isnan(pf_lat) or math.isnan(pf_lng) or math.isinf(pf_lat) or math.isinf(pf_lng)):
+                            if not (pf_lat == 0.0 and pf_lng == 0.0):
+                                if GeoSpatialService.is_inside_uzbekistan(pf_lat, pf_lng):
+                                    is_inside = True
                     except (ValueError, TypeError):
                         pass
-                if not is_inside:
-                    if p.get("isCluster"):
-                        has_corrupt_base_cluster = True
-                    continue
-                valid_base_pins.append(p)
-            base_pins = valid_base_pins
-            user_ids = [user_id]
-            if current_user and getattr(current_user, 'uid', None):
-                user_ids.append(current_user.uid)
 
+                if not is_inside:
+                    has_corrupt_base = True
+                    break
+
+                if p.get("isCluster"):
+                    pids = p.get("pinIds")
+                    if not isinstance(pids, list) or len(pids) == 0:
+                        has_corrupt_base = True
+                        break
+                    if not all(isinstance(pid, str) and pid.strip() for pid in pids):
+                        has_corrupt_base = True
+                        break
+                    if len(set(pids)) != len(pids):
+                        has_corrupt_base = True
+                        break
+                    if p.get("count") != len(pids):
+                        has_corrupt_base = True
+                        break
+                    if any(pid in seen_base_cluster_pids for pid in pids):
+                        has_corrupt_base = True
+                        break
+                    if any(pid in seen_base_ordinary_pids for pid in pids):
+                        has_corrupt_base = True
+                        break
+                    seen_base_cluster_pids.update(pids)
+                else:
+                    if p_id in seen_base_cluster_pids or p_id in seen_base_ordinary_pids:
+                        has_corrupt_base = True
+                        break
+                    seen_base_ordinary_pids.add(p_id)
+
+                if not verify_pin_signature(p):
+                    has_corrupt_base = True
+                    break
+
+            if has_corrupt_base:
+                try:
+                    redis_client.delete(base_cache_key)
+                    redis_client.delete(effective_cache_key)
+                except Exception:
+                    pass
+                raise ValueError("Stale or unverified base cluster cache detected, rebuilding via Cold DB path")
+
+            base_pins = raw_base_pins
             own_db = False
             active_db = db
             if active_db is None:
                 active_db = SessionLocal()
                 own_db = True
+            if user_id and not current_user:
+                current_user = deps.get_current_user_optional(request, db=active_db)
+            user_ids = [user_id]
+            if current_user and getattr(current_user, 'uid', None):
+                user_ids.append(current_user.uid)
             try:
-                # Check whether any member in base cluster pinIds has foreign coordinates or invalid structure
-                base_cluster_items = [p for p in base_pins if p.get("isCluster")]
-                unverified_base_clusters = []
-                for c in base_cluster_items:
-                    pids = c.get("pinIds")
-                    if not isinstance(pids, list) or len(pids) == 0:
-                        has_corrupt_base_cluster = True
-                        break
-                    if not all(isinstance(pid, str) and pid.strip() for pid in pids):
-                        has_corrupt_base_cluster = True
-                        break
-                    if len(set(pids)) != len(pids):
-                        has_corrupt_base_cluster = True
-                        break
-                    if c.get("count") != len(pids):
-                        has_corrupt_base_cluster = True
-                        break
-                    if not verify_cluster_signature(c):
-                        unverified_base_clusters.append(c)
-
-                if unverified_base_clusters and not has_corrupt_base_cluster:
-                    base_cluster_pids = [pid for p in unverified_base_clusters for pid in (p.get("pinIds") or [])]
-                    if base_cluster_pids:
-                        pin_records = (
-                            active_db.query(models.Job.id, models.Job.coordinateX, models.Job.coordinateY, models.Job.status)
-                            .filter(models.Job.id.in_(base_cluster_pids))
-                            .all()
-                        )
-                        found_ids = {r[0] for r in pin_records}
-                        if len(found_ids) < len(set(base_cluster_pids)):
-                            has_corrupt_base_cluster = True
-                        else:
-                            for jid, cx, cy, c_st in pin_records:
-                                if cx is None or cy is None or c_st not in JobStatus.OPEN_STATUSES:
-                                    has_corrupt_base_cluster = True
-                                    break
-                                try:
-                                    fcx = float(cx)
-                                    fcy = float(cy)
-                                    if not GeoSpatialService.is_inside_uzbekistan(fcx, fcy):
-                                        has_corrupt_base_cluster = True
-                                        break
-                                except (ValueError, TypeError):
-                                    has_corrupt_base_cluster = True
-                                    break
-                        if not has_corrupt_base_cluster:
-                            for c in unverified_base_clusters:
-                                c["geo_verified"] = True
-                                c["geo_sig"] = compute_cluster_signature(c)
-                            try:
-                                redis_client.set(base_cache_key, json.dumps(base_pins), ex=180)
-                            except Exception:
-                                pass
-
-                if has_corrupt_base_cluster:
-                    try:
-                        redis_client.delete(base_cache_key)
-                        redis_client.delete(effective_cache_key)
-                    except Exception:
-                        pass
-                    raise ValueError("Stale base cluster cache contains foreign coordinates, rebuilding via Cold DB path")
-
                 worker_apps = (
                     active_db.query(models.Application.jobId, models.Application.status)
                     .filter(models.Application.workerId.in_(user_ids))
@@ -721,7 +717,7 @@ def get_map_jobs(
                         if not GeoSpatialService.is_inside_uzbekistan(f_lat, f_lng):
                             continue
                         app_st = worker_apps_map.get(ej.id)
-                        extra_user_pins.append({
+                        ej_pin = {
                             "id": ej.id,
                             "title": ej.title,
                             "company": ej.company,
@@ -748,16 +744,19 @@ def get_map_jobs(
                             "vacancies": 1,
                             "isCluster": False,
                             "count": 1,
-                            "pinIds": [ej.id],
-                        })
+                            "pinIds": [str(ej.id)],
+                            "geo_verified": True,
+                        }
+                        ej_pin["geo_sig"] = compute_pin_signature(ej_pin)
+                        extra_user_pins.append(ej_pin)
             finally:
                 if own_db and active_db:
                     active_db.close()
 
+            user_pins = []
             if not worker_apps_map and not bookmarked_ids and not extra_user_pins:
-                user_payload_str = base_str
+                user_pins = list(base_pins)
             else:
-                user_pins = []
                 for p in base_pins:
                     up = dict(p)
                     if up.get("isCluster"):
@@ -769,20 +768,31 @@ def get_map_jobs(
                         app_status = worker_apps_map.get(jid)
                         if app_status:
                             up["applied"] = True
-                            if app_status in ('in_progress', 'completed', 'start_requested', 'hired', 'applied'):
+                            if app_status in ('in_progress', 'completed', 'start_requested', 'hired'):
                                 up["status"] = app_status
                         if jid in bookmarked_ids:
                             up["bookmarked"] = True
+                    up["geo_verified"] = True
+                    up["geo_sig"] = compute_pin_signature(up)
                     user_pins.append(up)
 
                 if extra_user_pins:
                     user_pins.extend(extra_user_pins)
-                user_payload_str = json.dumps(user_pins)
+                    if clustered:
+                        user_pins = GeoSpatialService.cluster_pins(user_pins, grid_size=0.4)
 
+            user_envelope = make_response_envelope(
+                cache_key=effective_cache_key,
+                payload=user_pins,
+                clustered=clustered,
+                user_id=user_id,
+            )
             try:
-                redis_client.set(effective_cache_key, user_payload_str, ex=120)
+                redis_client.set(effective_cache_key, json.dumps(user_envelope), ex=120)
             except Exception:
                 pass
+
+            user_payload_str = json.dumps(user_pins)
 
             etag = f'"{hashlib.md5(user_payload_str.encode("utf-8")).hexdigest()}"'
             response.headers["Cache-Control"] = cache_control
@@ -933,19 +943,25 @@ def get_map_jobs(
                 )
 
         if not jobs:
-            empty_str = "[]"
+            base_empty_envelope = make_response_envelope(
+                cache_key=base_cache_key,
+                payload=[],
+                clustered=clustered,
+                user_id=None,
+            )
             try:
-                redis_client.set(base_cache_key, empty_str, ex=60)
-                if user_id:
-                    redis_client.set(effective_cache_key, empty_str, ex=60)
+                redis_client.set(base_cache_key, json.dumps(base_empty_envelope), ex=60)
             except Exception:
                 pass
-            empty_etag = f'"{hashlib.md5(empty_str.encode("utf-8")).hexdigest()}"'
-            return Response(
-                content=empty_str,
-                media_type="application/json",
-                headers={"Cache-Control": cache_control, "ETag": empty_etag},
-            )
+
+            if not user_id:
+                empty_str = "[]"
+                empty_etag = f'"{hashlib.md5(empty_str.encode("utf-8")).hexdigest()}"'
+                return Response(
+                    content=empty_str,
+                    media_type="application/json",
+                    headers={"Cache-Control": cache_control, "ETag": empty_etag},
+                )
 
         job_ids = [j.id for j in jobs]
         job_ids_set = set(job_ids)
@@ -971,6 +987,8 @@ def get_map_jobs(
         worker_apps_map = {}
         bookmarked_ids: set[str] = set()
         if user_id:
+            if not current_user:
+                current_user = deps.get_current_user_optional(request, db=active_db)
             user_ids = [user_id]
             if current_user and getattr(current_user, 'uid', None):
                 user_ids.append(current_user.uid)
@@ -1043,9 +1061,10 @@ def get_map_jobs(
                 "vacancies": vacancies_num,
                 "isCluster": False,
                 "count": 1,
+                "pinIds": [str(job.id)],
                 "geo_verified": True,
             }
-            base_pin["geo_sig"] = compute_cluster_signature(base_pin)
+            base_pin["geo_sig"] = compute_pin_signature(base_pin)
 
             # Public base pins must NEVER include filled jobs or depend on user-specific applications.
             # Strictly restrict to OPEN_STATUSES and not filled.
@@ -1058,11 +1077,12 @@ def get_map_jobs(
                 app_item_status = worker_apps_map.get(job.id)
                 if app_item_status:
                     u_pin["applied"] = True
-                    if app_item_status in ('in_progress', 'completed', 'start_requested', 'hired', 'applied'):
+                    if app_item_status in ('in_progress', 'completed', 'start_requested', 'hired'):
                         u_pin["status"] = app_item_status
                 if job.id in bookmarked_ids:
                     u_pin["bookmarked"] = True
-                u_pin["geo_sig"] = compute_cluster_signature(u_pin)
+                u_pin["geo_verified"] = True
+                u_pin["geo_sig"] = compute_pin_signature(u_pin)
                 user_pins.append(u_pin)
 
         # Personal user pins: Load any shifts the user applied to that were not in base_pins (e.g. IN_PROGRESS/COMPLETED)
@@ -1153,9 +1173,10 @@ def get_map_jobs(
                         "vacancies": 1,
                         "isCluster": False,
                         "count": 1,
+                        "pinIds": [str(ej.id)],
                         "geo_verified": True,
                     }
-                    ej_pin["geo_sig"] = compute_cluster_signature(ej_pin)
+                    ej_pin["geo_sig"] = compute_pin_signature(ej_pin)
                     user_pins.append(ej_pin)
 
         if clustered:
@@ -1163,17 +1184,27 @@ def get_map_jobs(
             if user_id:
                 user_pins = GeoSpatialService.cluster_pins(user_pins, grid_size=0.4)
 
-        base_str = json.dumps(base_pins)
-        user_str = json.dumps(user_pins) if user_id else base_str
-
+        base_envelope = make_response_envelope(
+            cache_key=base_cache_key,
+            payload=base_pins,
+            clustered=clustered,
+            user_id=None,
+        )
         try:
-            redis_client.set(base_cache_key, base_str, ex=180)
+            redis_client.set(base_cache_key, json.dumps(base_envelope), ex=180)
             if user_id:
-                redis_client.set(effective_cache_key, user_str, ex=120)
+                user_envelope = make_response_envelope(
+                    cache_key=effective_cache_key,
+                    payload=user_pins,
+                    clustered=clustered,
+                    user_id=user_id,
+                )
+                redis_client.set(effective_cache_key, json.dumps(user_envelope), ex=120)
         except Exception as e:
             logger.warning("Redis store failed in get_map_jobs: %s", e)
 
-        payload_str = user_str
+        payload_pins = user_pins if user_id else base_pins
+        payload_str = json.dumps(payload_pins)
     finally:
         if own_db and active_db:
             active_db.close()

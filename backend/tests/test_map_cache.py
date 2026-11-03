@@ -360,3 +360,580 @@ def test_sub_6_decimal_endpoint_isolation_no_cache_poisoning(client):
     pins2 = res2.json()
     assert any(p["title"] == "Sub-6-Decimal Precision Job" for p in pins2)
 
+
+def test_compute_pin_signature_deterministic_and_canonical():
+    """Unit test that compute_pin_signature produces deterministic 64-hex SHA-256 HMAC."""
+    from app.core.map_cache import compute_pin_signature, verify_pin_signature
+
+    pin1 = {
+        "id": "job-test-1",
+        "title": "Test Title",
+        "coordinateX": 41.3100004,
+        "coordinateY": 69.2400001,
+        "status": "open",
+        "applied": False,
+        "bookmarked": False,
+        "count": 1,
+        "pinIds": ["job-test-1"],
+        "geo_verified": True,
+    }
+    sig1 = compute_pin_signature(pin1)
+    assert isinstance(sig1, str)
+    assert len(sig1) == 64
+
+    # Identical content with different key order produces the EXACT same signature
+    pin2 = {
+        "count": 1,
+        "pinIds": ["job-test-1"],
+        "status": "open",
+        "coordinateY": 69.2400001,
+        "coordinateX": 41.3100004,
+        "title": "Test Title",
+        "id": "job-test-1",
+        "applied": False,
+        "bookmarked": False,
+        "geo_verified": True,
+    }
+    sig2 = compute_pin_signature(pin2)
+    assert sig1 == sig2
+
+    # Verification passes
+    pin1["geo_sig"] = sig1
+    assert verify_pin_signature(pin1) is True
+
+
+def test_pin_signature_tamper_detection():
+    """Unit test that modifying any security/correctness field invalidates signature."""
+    from app.core.map_cache import compute_pin_signature, verify_pin_signature
+
+    base_pin = {
+        "id": "job-tamper-1",
+        "title": "Bosh Oshpaz",
+        "company": "Milliy Taomlar",
+        "salary": 5000000,
+        "location": "Toshkent, Chilonzor",
+        "tags": ["oshxona", "ovqat"],
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "latitude": 41.31,
+        "longitude": 69.24,
+        "status": "open",
+        "applied": False,
+        "bookmarked": False,
+        "isCluster": False,
+        "count": 1,
+        "pinIds": ["job-tamper-1"],
+        "geo_verified": True,
+    }
+    base_sig = compute_pin_signature(base_pin)
+    base_pin["geo_sig"] = base_sig
+    assert verify_pin_signature(base_pin) is True
+
+    # 1. title
+    t = dict(base_pin); t["title"] = "Eskort"; assert verify_pin_signature(t) is False
+    # 2. company
+    t = dict(base_pin); t["company"] = "Scam Corp"; assert verify_pin_signature(t) is False
+    # 3. salary
+    t = dict(base_pin); t["salary"] = 99999999; assert verify_pin_signature(t) is False
+    # 4. location
+    t = dict(base_pin); t["location"] = "Buxoro"; assert verify_pin_signature(t) is False
+    # 5. tags
+    t = dict(base_pin); t["tags"] = ["hacked"]; assert verify_pin_signature(t) is False
+    # 6. coordinateX
+    t = dict(base_pin); t["coordinateX"] = 41.35; assert verify_pin_signature(t) is False
+    # 7. coordinateY
+    t = dict(base_pin); t["coordinateY"] = 69.30; assert verify_pin_signature(t) is False
+    # 8. latitude (independent of coordinateX)
+    t = dict(base_pin); t["latitude"] = 42.00; assert verify_pin_signature(t) is False
+    # 9. longitude (independent of coordinateY)
+    t = dict(base_pin); t["longitude"] = 70.00; assert verify_pin_signature(t) is False
+    # 10. status
+    t = dict(base_pin); t["status"] = "closed"; assert verify_pin_signature(t) is False
+    # 11. applied
+    t = dict(base_pin); t["applied"] = True; assert verify_pin_signature(t) is False
+    # 12. bookmarked
+    t = dict(base_pin); t["bookmarked"] = True; assert verify_pin_signature(t) is False
+    # 13. pinIds
+    t = dict(base_pin); t["pinIds"] = ["job-tamper-1", "job-tamper-extra"]; assert verify_pin_signature(t) is False
+    # 14. count
+    t = dict(base_pin); t["count"] = 5; assert verify_pin_signature(t) is False
+    # 15. isCluster
+    t = dict(base_pin); t["isCluster"] = True; assert verify_pin_signature(t) is False
+    # 16. id
+    t = dict(base_pin); t["id"] = "job-tamper-2"; assert verify_pin_signature(t) is False
+    # 17. truncated or altered signature
+    t = dict(base_pin); t["geo_sig"] = base_sig[:16]; assert verify_pin_signature(t) is False
+    # 18. trust flag geo_verified modified/false
+    t = dict(base_pin); t["geo_verified"] = False; assert verify_pin_signature(t) is False
+
+
+def test_independent_latitude_longitude_cannot_alias():
+    """Prove that changing latitude independently of coordinateX (or vice versa) invalidates signature."""
+    from app.core.map_cache import compute_pin_signature, verify_pin_signature
+
+    pin = {
+        "id": "job-alias-test",
+        "coordinateX": 41.300000,
+        "coordinateY": 69.200000,
+        "latitude": 41.300000,
+        "longitude": 69.200000,
+        "status": "open",
+        "geo_verified": True,
+    }
+    sig = compute_pin_signature(pin)
+    pin["geo_sig"] = sig
+    assert verify_pin_signature(pin) is True
+
+    # Mutate latitude only: coordinateX is untouched
+    tampered_lat = dict(pin)
+    tampered_lat["latitude"] = 41.399999
+    assert verify_pin_signature(tampered_lat) is False
+    assert compute_pin_signature(tampered_lat) != sig
+
+    # Mutate coordinateX only: latitude is untouched
+    tampered_cx = dict(pin)
+    tampered_cx["coordinateX"] = 41.399999
+    assert verify_pin_signature(tampered_cx) is False
+    assert compute_pin_signature(tampered_cx) != sig
+
+
+def test_get_map_cache_key_for_request_mirrors_production():
+    """Unit test get_map_cache_key_for_request helper for clustered and authenticated routes."""
+    from app.core.map_cache import get_map_cache_key_for_request
+
+    ver = 42
+    # Unclustered key
+    k_unclustered = get_map_cache_key_for_request(version=ver, search="cook", limit=500, clustered=False)
+    assert ":500" in k_unclustered
+    assert ":clustered" not in k_unclustered
+
+    # Clustered key must use limit=0 and append :clustered
+    k_clustered = get_map_cache_key_for_request(version=ver, search="cook", limit=500, clustered=True)
+    assert ":0" in k_clustered
+    assert k_clustered.endswith(":clustered")
+
+    # Authenticated user key
+    k_auth = get_map_cache_key_for_request(version=ver, search="cook", clustered=True, user_id="u123", user_ver=5)
+    assert ":clustered:u:u123:uv5" in k_auth
+
+
+def test_hmac_secret_strict_validation(monkeypatch):
+    """Unit test that empty or missing SECRET_KEY fails closed with RuntimeError."""
+    from app.core.config import settings
+    from app.core.map_cache import compute_pin_signature
+
+    monkeypatch.setattr(settings, "SECRET_KEY", "")
+    with pytest.raises(RuntimeError, match="SECRET_KEY must be configured"):
+        compute_pin_signature({"id": "fail-key"})
+
+    monkeypatch.setattr(settings, "SECRET_KEY", "   ")
+    with pytest.raises(RuntimeError, match="SECRET_KEY must be configured"):
+        compute_pin_signature({"id": "fail-key"})
+
+
+def test_strict_type_validation_no_lossy_conversion():
+    """Unit tests proving FIX 2 strict type checking: distinct JSON types are never silently converted.
+    - int(3500000.9) must not equal 3500000
+    - bool("false") must not equal true
+    - Numeric strings ("41.31") must not equal numeric coordinates (41.31)
+    - Numeric 1 must not equal True
+    """
+    from app.core.map_cache import compute_pin_signature, verify_pin_signature, _canonical_pin_data
+
+    valid_base = {
+        "id": "job-type-test",
+        "title": "Oshpaz",
+        "salary": 3500000,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "latitude": 41.31,
+        "longitude": 69.24,
+        "applied": False,
+        "bookmarked": False,
+        "urgent": False,
+        "isCluster": False,
+        "geo_verified": True,
+        "count": 1,
+        "pinIds": ["job-type-test"],
+        "tags": ["oshxona"],
+    }
+    sig = compute_pin_signature(valid_base)
+    valid_base["geo_sig"] = sig
+    assert verify_pin_signature(valid_base) is True
+
+    # 1. Float salary (3500000.9) must raise TypeError, NOT truncate to 3500000
+    with pytest.raises(TypeError, match="must be an integer"):
+        _canonical_pin_data({"id": "j1", "salary": 3500000.9})
+    t_salary = dict(valid_base)
+    t_salary["salary"] = 3500000.9
+    assert verify_pin_signature(t_salary) is False
+
+    # 2. String boolean ("false") must raise TypeError, NOT evaluate to True
+    with pytest.raises(TypeError, match="must be a boolean"):
+        _canonical_pin_data({"id": "j1", "applied": "false"})
+    t_applied = dict(valid_base)
+    t_applied["applied"] = "false"
+    assert verify_pin_signature(t_applied) is False
+
+    # 3. Numeric string coordinates ("41.31") must raise TypeError, NOT parse as 41.31
+    with pytest.raises(TypeError, match="must be a numeric float or int"):
+        _canonical_pin_data({"id": "j1", "coordinateX": "41.31"})
+    t_coord = dict(valid_base)
+    t_coord["coordinateX"] = "41.31"
+    assert verify_pin_signature(t_coord) is False
+
+    # 4. Numeric 1 in boolean field (geo_verified=1) must raise TypeError, NOT evaluate to True
+    with pytest.raises(TypeError, match="must be a boolean"):
+        _canonical_pin_data({"id": "j1", "geo_verified": 1})
+    t_geo = dict(valid_base)
+    t_geo["geo_verified"] = 1
+    assert verify_pin_signature(t_geo) is False
+
+    # 5. Boolean in integer field (count=True) must raise TypeError, NOT evaluate to 1
+    with pytest.raises(TypeError, match="must be an integer"):
+        _canonical_pin_data({"id": "j1", "count": True})
+
+    # 6. Boolean in coordinate field (coordinateX=True) must raise TypeError
+    with pytest.raises(TypeError, match="must be a numeric float or int"):
+        _canonical_pin_data({"id": "j1", "coordinateX": True})
+
+    # 7. Non-finite coordinates (NaN, Inf) must raise ValueError
+    with pytest.raises(ValueError, match="finite number"):
+        _canonical_pin_data({"id": "j1", "coordinateX": float("nan")})
+    with pytest.raises(ValueError, match="finite number"):
+        _canonical_pin_data({"id": "j1", "coordinateY": float("inf")})
+
+    # 8. Non-string elements in list fields must raise TypeError
+    with pytest.raises(TypeError, match="pinIds element must be str"):
+        _canonical_pin_data({"id": "j1", "pinIds": ["valid", 12345]})
+    with pytest.raises(TypeError, match="tags element must be str"):
+        _canonical_pin_data({"id": "j1", "tags": ["valid", None]})
+
+
+def test_response_signature_empty_and_populated_payloads():
+    """Unit tests for whole-response HMAC signing over empty lists and populated payloads."""
+    from app.core.map_cache import compute_response_signature, verify_response_signature
+
+    key = "cache:jobs:map_pins:v1:_:_:_:_:_:_:_:500"
+
+    # Empty payload [] must compute deterministic 64-hex SHA-256 HMAC signature
+    empty_sig = compute_response_signature(cache_key=key, payload=[], clustered=False, user_id=None)
+    assert isinstance(empty_sig, str)
+    assert len(empty_sig) == 64
+    assert verify_response_signature(cache_key=key, payload=[], resp_sig=empty_sig, clustered=False, user_id=None) is True
+
+    # Populated payload
+    pin1 = {"id": "pin-1", "title": "Job 1", "salary": 2000000, "coordinateX": 41.31, "coordinateY": 69.24, "geo_verified": True}
+    pin2 = {"id": "pin-2", "title": "Job 2", "salary": 3000000, "coordinateX": 41.32, "coordinateY": 69.25, "geo_verified": True}
+    pop_sig = compute_response_signature(cache_key=key, payload=[pin1, pin2], clustered=False, user_id=None)
+    assert len(pop_sig) == 64
+    assert pop_sig != empty_sig
+    assert verify_response_signature(cache_key=key, payload=[pin1, pin2], resp_sig=pop_sig, clustered=False, user_id=None) is True
+
+
+def test_response_signature_context_binding():
+    """Whole-response signature must be cryptographically bound to its exact cache context."""
+    from app.core.map_cache import compute_response_signature, verify_response_signature
+
+    key_a = "cache:jobs:map_pins:v1:_:_:_:_:_:_:tashkent:500"
+    key_b = "cache:jobs:map_pins:v1:_:_:_:_:_:_:samarkand:500"
+    payload = [{"id": "pin-1", "coordinateX": 41.31, "coordinateY": 69.24, "geo_verified": True}]
+
+    sig_a = compute_response_signature(cache_key=key_a, payload=payload, clustered=False, user_id=None)
+
+    # 1. Replay to different cache_key fails
+    assert verify_response_signature(cache_key=key_b, payload=payload, resp_sig=sig_a, clustered=False, user_id=None) is False
+
+    # 2. Replay across clustered=True vs False fails
+    assert verify_response_signature(cache_key=key_a, payload=payload, resp_sig=sig_a, clustered=True, user_id=None) is False
+
+    # 3. Replay across user_id (Worker A to Worker B) fails
+    sig_user_a = compute_response_signature(cache_key=key_a, payload=payload, clustered=False, user_id="worker-a")
+    assert verify_response_signature(cache_key=key_a, payload=payload, resp_sig=sig_user_a, clustered=False, user_id="worker-b") is False
+
+    # 4. Replay from personalized into public (user_id=None) fails
+    assert verify_response_signature(cache_key=key_a, payload=payload, resp_sig=sig_user_a, clustered=False, user_id=None) is False
+
+
+def test_response_signature_payload_tampering():
+    """Modifying, dropping, adding, or reordering pins invalidates response signature."""
+    from app.core.map_cache import compute_response_signature, verify_response_signature
+
+    key = "cache:jobs:map_pins:v1:_:_:_:_:_:_:_:500"
+    pin1 = {"id": "pin-1", "title": "Job 1", "salary": 2000000, "coordinateX": 41.31, "coordinateY": 69.24, "geo_verified": True}
+    pin2 = {"id": "pin-2", "title": "Job 2", "salary": 3000000, "coordinateX": 41.32, "coordinateY": 69.25, "geo_verified": True}
+    original_payload = [pin1, pin2]
+    sig = compute_response_signature(cache_key=key, payload=original_payload, clustered=False, user_id=None)
+
+    # 1. Dropping 1 pin from the list invalidates signature
+    assert verify_response_signature(cache_key=key, payload=[pin1], resp_sig=sig, clustered=False, user_id=None) is False
+
+    # 2. Replacing list with [] invalidates signature
+    assert verify_response_signature(cache_key=key, payload=[], resp_sig=sig, clustered=False, user_id=None) is False
+
+    # 3. Adding a pin invalidates signature
+    pin3 = {"id": "pin-3", "title": "Job 3", "salary": 4000000, "coordinateX": 41.33, "coordinateY": 69.26, "geo_verified": True}
+    assert verify_response_signature(cache_key=key, payload=[pin1, pin2, pin3], resp_sig=sig, clustered=False, user_id=None) is False
+
+    # 4. Modifying a field in one pin invalidates response signature
+    tampered_pin2 = dict(pin2)
+    tampered_pin2["salary"] = 9999999
+    assert verify_response_signature(cache_key=key, payload=[pin1, tampered_pin2], resp_sig=sig, clustered=False, user_id=None) is False
+
+    # 5. Reordering the pins invalidates signature (ordered payload list)
+    assert verify_response_signature(cache_key=key, payload=[pin2, pin1], resp_sig=sig, clustered=False, user_id=None) is False
+
+
+def test_make_and_verify_response_envelope():
+    """Unit tests for make_response_envelope and verify_response_envelope helper functions."""
+    from app.core.map_cache import make_response_envelope, verify_response_envelope
+
+    key = "cache:jobs:map_pins:v1:_:_:_:_:_:_:_:500"
+    payload = [{"id": "pin-1", "coordinateX": 41.31, "coordinateY": 69.24, "geo_verified": True}]
+
+    env = make_response_envelope(cache_key=key, payload=payload, clustered=False, user_id=None)
+    assert env["cache_key"] == key
+    assert env["clustered"] is False
+    assert env["user_id"] is None
+    assert env["payload"] == payload
+    assert len(env["resp_sig"]) == 64
+
+    # Valid envelope returns payload
+    verified = verify_response_envelope(envelope=env, expected_key=key, expected_clustered=False, expected_user_id=None)
+    assert verified == payload
+
+    # Context mismatches return None
+    assert verify_response_envelope(envelope=env, expected_key="other-key", expected_clustered=False, expected_user_id=None) is None
+    assert verify_response_envelope(envelope=env, expected_key=key, expected_clustered=True, expected_user_id=None) is None
+    assert verify_response_envelope(envelope=env, expected_key=key, expected_clustered=False, expected_user_id="user-1") is None
+
+    # Tampered payload inside envelope returns None
+    tampered_env = dict(env)
+    tampered_env["payload"] = []
+    assert verify_response_envelope(envelope=tampered_env, expected_key=key, expected_clustered=False, expected_user_id=None) is None
+
+    # Non-dict envelope returns None
+    assert verify_response_envelope(envelope=[], expected_key=key, expected_clustered=False, expected_user_id=None) is None
+    assert verify_response_envelope(envelope="bad string", expected_key=key, expected_clustered=False, expected_user_id=None) is None
+
+
+def test_verify_response_envelope_strict_types():
+    """Unit tests for FIX C: strict type enforcement in verify_response_envelope:
+    - clustered must be actual bool (rejecting 1, 0, 'true', 'false')
+    - cache_key must be non-empty str matching expected_key
+    - user_id must match expected context
+    - payload must be list of dicts
+    - resp_sig must be 64-hex string
+    """
+    from app.core.map_cache import make_response_envelope, verify_response_envelope
+
+    key = "cache:jobs:map_pins:v1:_:_:_:_:_:_:_:500"
+    payload = [{"id": "pin-1", "coordinateX": 41.31, "coordinateY": 69.24, "geo_verified": True}]
+    valid_env = make_response_envelope(cache_key=key, payload=payload, clustered=False, user_id=None)
+
+    # 1. clustered: reject int 1 (even though 1 == True in python)
+    bad_env = dict(valid_env)
+    bad_env["clustered"] = 1
+    assert verify_response_envelope(bad_env, expected_key=key, expected_clustered=False, expected_user_id=None) is None
+
+    # 2. clustered: reject int 0
+    bad_env = dict(valid_env)
+    bad_env["clustered"] = 0
+    assert verify_response_envelope(bad_env, expected_key=key, expected_clustered=False, expected_user_id=None) is None
+
+    # 3. clustered: reject string "false"
+    bad_env = dict(valid_env)
+    bad_env["clustered"] = "false"
+    assert verify_response_envelope(bad_env, expected_key=key, expected_clustered=False, expected_user_id=None) is None
+
+    # 4. cache_key: reject empty string or whitespace
+    bad_env = dict(valid_env)
+    bad_env["cache_key"] = "   "
+    assert verify_response_envelope(bad_env, expected_key="   ", expected_clustered=False, expected_user_id=None) is None
+
+    # 5. cache_key: reject non-string
+    bad_env = dict(valid_env)
+    bad_env["cache_key"] = 12345
+    assert verify_response_envelope(bad_env, expected_key=key, expected_clustered=False, expected_user_id=None) is None
+
+    # 6. payload: reject non-dict elements (e.g. [1, 2, 3] or ["item"])
+    bad_env = dict(valid_env)
+    bad_env["payload"] = [1, 2, 3]
+    assert verify_response_envelope(bad_env, expected_key=key, expected_clustered=False, expected_user_id=None) is None
+
+    bad_env["payload"] = [{"id": "pin-1"}, "non-dict"]
+    assert verify_response_envelope(bad_env, expected_key=key, expected_clustered=False, expected_user_id=None) is None
+
+    # 7. resp_sig: reject non-hex characters (e.g. contains 'z' or 'g')
+    bad_env = dict(valid_env)
+    bad_env["resp_sig"] = "g" * 64
+    assert verify_response_envelope(bad_env, expected_key=key, expected_clustered=False, expected_user_id=None) is None
+
+    # 8. resp_sig: reject invalid lengths
+    bad_env = dict(valid_env)
+    bad_env["resp_sig"] = "a" * 63
+    assert verify_response_envelope(bad_env, expected_key=key, expected_clustered=False, expected_user_id=None) is None
+    bad_env["resp_sig"] = "a" * 65
+    assert verify_response_envelope(bad_env, expected_key=key, expected_clustered=False, expected_user_id=None) is None
+
+    # 9. user_id: reject empty string
+    env_user = make_response_envelope(cache_key=key, payload=payload, clustered=False, user_id="user-1")
+    bad_env = dict(env_user)
+    bad_env["user_id"] = ""
+    assert verify_response_envelope(bad_env, expected_key=key, expected_clustered=False, expected_user_id="user-1") is None
+
+
+def test_pin_ids_order_preserved_and_authenticated():
+    """Unit tests for FIX D: pinIds ordering preservation and tamper detection:
+    - _canonical_pin_data preserves exact list order of pinIds
+    - Permuting pinIds produces different HMAC signatures
+    - Reordering pinIds invalidates verify_pin_signature
+    - Reordering pinIds inside envelope invalidates verify_response_envelope
+    """
+    from app.core.map_cache import (
+        _canonical_pin_data,
+        compute_pin_signature,
+        verify_pin_signature,
+        make_response_envelope,
+        verify_response_envelope,
+    )
+
+    pin_order_a = {
+        "id": "cluster-1",
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "isCluster": True,
+        "count": 3,
+        "pinIds": ["job-alpha", "job-beta", "job-gamma"],
+        "geo_verified": True,
+    }
+    pin_order_b = {
+        "id": "cluster-1",
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "isCluster": True,
+        "count": 3,
+        "pinIds": ["job-gamma", "job-beta", "job-alpha"],
+        "geo_verified": True,
+    }
+
+    # 1. Canonical data preserves list order, not sorted
+    canon_a = _canonical_pin_data(pin_order_a)
+    canon_b = _canonical_pin_data(pin_order_b)
+    assert canon_a["pinIds"] == ["job-alpha", "job-beta", "job-gamma"]
+    assert canon_b["pinIds"] == ["job-gamma", "job-beta", "job-alpha"]
+
+    # 2. Different order produces distinct HMAC signatures
+    sig_a = compute_pin_signature(pin_order_a)
+    sig_b = compute_pin_signature(pin_order_b)
+    assert sig_a != sig_b
+
+    # 3. Modifying order in-place fails verify_pin_signature
+    pin_tested = dict(pin_order_a)
+    pin_tested["geo_sig"] = sig_a
+    assert verify_pin_signature(pin_tested) is True
+
+    # Tamper order: swap first two elements
+    pin_tested["pinIds"] = ["job-beta", "job-alpha", "job-gamma"]
+    assert verify_pin_signature(pin_tested) is False
+
+    # 4. Modifying order in envelope fails verify_response_envelope
+    key = "cache:jobs:map_pins:v1:_:_:_:_:_:_:_:0:clustered"
+    signed_pin = dict(pin_order_a)
+    signed_pin["geo_sig"] = sig_a
+    env = make_response_envelope(cache_key=key, payload=[signed_pin], clustered=True, user_id=None)
+    assert verify_response_envelope(env, expected_key=key, expected_clustered=True, expected_user_id=None) is not None
+
+    # Tamper pinIds in envelope payload
+    tampered_env = dict(env)
+    tampered_pin = dict(signed_pin)
+    tampered_pin["pinIds"] = ["job-gamma", "job-alpha", "job-beta"]
+    tampered_env["payload"] = [tampered_pin]
+    assert verify_response_envelope(tampered_env, expected_key=key, expected_clustered=True, expected_user_id=None) is None
+
+
+def test_real_signature_exact_type_tamper_rejection():
+    """Unit test for Issue 2: Real-signature tampering detection without dummy signatures.
+    Builds authentic signed pins and response envelopes with real HMAC signatures,
+    then alters exact values (false -> null, [] -> null, 41.0 -> 41) while preserving
+    original signatures. Proves both verify_pin_signature and verify_response_envelope fail closed.
+    """
+    from app.core.map_cache import (
+        compute_pin_signature,
+        verify_pin_signature,
+        make_response_envelope,
+        verify_response_envelope,
+    )
+
+    base_pin = {
+        "id": "job-exact-type-1",
+        "title": "Exact Type Job",
+        "company": "Baito Co",
+        "salary": 5000000,
+        "salaryCurrency": "UZS",
+        "location": "Toshkent",
+        "rawLocation": "Toshkent",
+        "logoUrl": None,
+        "imageUrl": None,
+        "tags": [],
+        "category": "Barchasi",
+        "workDate": "",
+        "workTime": "",
+        "neededWorkers": "1",
+        "coordinateX": 41.0,
+        "coordinateY": 69.24,
+        "latitude": 41.0,
+        "longitude": 69.24,
+        "urgent": False,
+        "status": "open",
+        "applied": False,
+        "bookmarked": False,
+        "hiredCount": 0,
+        "vacancies": 1,
+        "isCluster": False,
+        "count": 1,
+        "pinIds": ["job-exact-type-1"],
+        "geo_verified": True,
+    }
+    # 1. Compute REAL HMAC signature for valid pin
+    real_pin_sig = compute_pin_signature(base_pin)
+    base_pin["geo_sig"] = real_pin_sig
+    assert verify_pin_signature(base_pin) is True
+
+    # 2. Compute REAL HMAC signature for response envelope
+    key = "cache:jobs:map_pins:v1:_:_:_:_:_:_:_:500"
+    authentic_env = make_response_envelope(
+        cache_key=key,
+        payload=[base_pin],
+        clustered=False,
+        user_id=None,
+    )
+    assert verify_response_envelope(authentic_env, expected_key=key, expected_clustered=False, expected_user_id=None) is not None
+
+    tamper_cases = [
+        ("applied false -> null", {"applied": None}),
+        ("bookmarked false -> null", {"bookmarked": None}),
+        ("tags [] -> null", {"tags": None}),
+        ("pinIds [] -> null", {"pinIds": None}),
+        ("coordinateX 41.0 -> 41 int", {"coordinateX": 41}),
+        ("latitude 41.0 -> 41 int", {"latitude": 41}),
+        ("urgent false -> null", {"urgent": None}),
+        ("isCluster false -> null", {"isCluster": None}),
+    ]
+
+    for name, patch in tamper_cases:
+        tampered_pin = dict(base_pin)
+        tampered_pin.update(patch)
+        # Verify pin-level HMAC rejection with real preserved signature
+        assert verify_pin_signature(tampered_pin) is False, f"Expected {name} to fail verify_pin_signature"
+
+        # Verify envelope-level HMAC rejection with real preserved signature
+        tampered_env = {
+            "cache_key": key,
+            "clustered": False,
+            "user_id": None,
+            "payload": [tampered_pin],
+            "resp_sig": authentic_env["resp_sig"],
+        }
+        assert verify_response_envelope(tampered_env, expected_key=key, expected_clustered=False, expected_user_id=None) is None, f"Expected {name} to fail verify_response_envelope"
+

@@ -522,14 +522,62 @@ class GeoSpatialService:
     def cluster_pins(cls, pins: List[Dict[str, Any]], grid_size: float = 0.4) -> List[Dict[str, Any]]:
         """
         Server-side dynamic spatial clustering for high-zoom-out views.
-        Groups nearby pins into clusters to eliminate DOM overload and browser freezes.
+        Groups nearby public open vacancy pins into clusters to eliminate DOM overload and browser freezes.
         Pins are aggregated by geographic grid snapping (O(N) single-pass bucket aggregation).
+
+        CRITICAL BUSINESS & SEMANTIC SAFETY:
+        A user's personal active shifts (e.g. IN_PROGRESS, COMPLETED, HIRED) must NEVER be merged into
+        open vacancy clusters with title 'N ta bo'sh ish o'rni' and status 'open'.
+        Only public open vacancies (status in OPEN_STATUSES) are clustered. Personal active shifts remain
+        distinct individual pins preserving their true status, title, and applied state.
         """
         if not pins:
             return []
 
-        buckets: Dict[Tuple[int, int], List[Dict[str, Any]]] = {}
+        from app.models.job import JobStatus
+        from app.core.map_cache import compute_pin_signature
+
+        open_pins: List[Dict[str, Any]] = []
+        personal_pins: List[Dict[str, Any]] = []
+
         for pin in pins:
+            st = pin.get("status")
+            if st in JobStatus.OPEN_STATUSES:
+                open_pins.append(pin)
+            else:
+                personal_pins.append(pin)
+
+        clustered_result: List[Dict[str, Any]] = []
+
+        # 1. Personal active shifts remain distinct individual pins
+        for pin in personal_pins:
+            lat = pin.get("coordinateX") if pin.get("coordinateX") is not None else pin.get("latitude")
+            lng = pin.get("coordinateY") if pin.get("coordinateY") is not None else pin.get("longitude")
+            if lat is None or lng is None:
+                continue
+            try:
+                f_lat = float(lat)
+                f_lng = float(lng)
+            except (ValueError, TypeError):
+                continue
+            if math.isnan(f_lat) or math.isnan(f_lng) or math.isinf(f_lat) or math.isinf(f_lng):
+                continue
+            if f_lat == 0.0 and f_lng == 0.0:
+                continue
+            if not cls.is_inside_uzbekistan(f_lat, f_lng):
+                continue
+
+            single_pin = dict(pin)
+            single_pin["isCluster"] = False
+            single_pin["count"] = 1
+            single_pin["pinIds"] = [str(single_pin.get("id"))]
+            single_pin["geo_verified"] = True
+            single_pin["geo_sig"] = compute_pin_signature(single_pin)
+            clustered_result.append(single_pin)
+
+        # 2. Public open vacancies: cluster via grid bucket aggregation
+        buckets: Dict[Tuple[int, int], List[Dict[str, Any]]] = {}
+        for pin in open_pins:
             lat = pin.get("coordinateX") if pin.get("coordinateX") is not None else pin.get("latitude")
             lng = pin.get("coordinateY") if pin.get("coordinateY") is not None else pin.get("longitude")
             if lat is None or lng is None:
@@ -550,18 +598,30 @@ class GeoSpatialService:
                 buckets[key] = []
             buckets[key].append(pin)
 
-        clustered_result = []
-        from app.core.map_cache import compute_cluster_signature
         for (g_lat, g_lng), group in buckets.items():
             if len(group) == 1:
-                single_pin = dict(group[0])
-                single_pin["isCluster"] = False
-                single_pin["count"] = 1
-                single_pin["pinIds"] = [single_pin["id"]]
-                single_pin["geo_verified"] = True
-                single_pin["geo_sig"] = compute_cluster_signature(single_pin)
-                clustered_result.append(single_pin)
+                if group[0].get("isCluster") and (group[0].get("count") or 1) > 1:
+                    c_dict = dict(group[0])
+                    c_dict["geo_verified"] = True
+                    c_dict["geo_sig"] = compute_pin_signature(c_dict)
+                    clustered_result.append(c_dict)
+                else:
+                    single_pin = dict(group[0])
+                    single_pin["isCluster"] = False
+                    single_pin["count"] = 1
+                    single_pin["pinIds"] = [str(single_pin.get("id"))]
+                    single_pin["geo_verified"] = True
+                    single_pin["geo_sig"] = compute_pin_signature(single_pin)
+                    clustered_result.append(single_pin)
             else:
+                total_count = sum(p.get("count", 1) for p in group)
+                all_pin_ids = []
+                for p in group:
+                    if p.get("pinIds"):
+                        all_pin_ids.extend([str(pid) for pid in p["pinIds"]])
+                    elif p.get("id"):
+                        all_pin_ids.append(str(p["id"]))
+
                 avg_lat = round(
                     sum(
                         float(p.get("coordinateX") if p.get("coordinateX") is not None else p.get("latitude"))
@@ -587,12 +647,12 @@ class GeoSpatialService:
                 c_dict = {
                     "isCluster": True,
                     "id": f"cluster_{g_lat}_{g_lng}",
-                    "count": len(group),
+                    "count": total_count,
                     "coordinateX": avg_lat,
                     "coordinateY": avg_lng,
                     "latitude": avg_lat,
                     "longitude": avg_lng,
-                    "title": f"{len(group)} ta bo'sh ish o'rni",
+                    "title": f"{total_count} ta bo'sh ish o'rni",
                     "company": loc_company,
                     "location": group[0].get("location") or "",
                     "rawLocation": group[0].get("rawLocation") or "",
@@ -610,9 +670,9 @@ class GeoSpatialService:
                     "hiredCount": sum(p.get("hiredCount", 0) for p in group),
                     "applied": any(p.get("applied") for p in group),
                     "bookmarked": any(p.get("bookmarked") for p in group),
-                    "pinIds": [p["id"] for p in group],
+                    "pinIds": all_pin_ids,
                     "geo_verified": True,
                 }
-                c_dict["geo_sig"] = compute_cluster_signature(c_dict)
+                c_dict["geo_sig"] = compute_pin_signature(c_dict)
                 clustered_result.append(c_dict)
         return clustered_result
