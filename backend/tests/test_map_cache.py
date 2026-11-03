@@ -10,6 +10,7 @@ from app.core.map_cache import (
     build_map_pins_cache_key,
     get_map_cache_version,
     invalidate_map_cache,
+    encode_canonical_filters,
     _format_coord,
     CACHE_MAP_PINS_PREFIX,
 )
@@ -119,7 +120,7 @@ def test_cache_key_identical_for_equivalent_bounds():
 
 
 def test_cache_key_preserves_none_as_underscore():
-    """Prove that None bounds preserve current '_' representation."""
+    """Prove that None bounds preserve current '_' representation and unconstrained filters produce 'none'."""
     version = 1
     key_nationwide = build_map_pins_cache_key(
         version=version,
@@ -128,7 +129,7 @@ def test_cache_key_preserves_none_as_underscore():
         min_lng=None,
         max_lng=None,
     )
-    expected_segment = f"{CACHE_MAP_PINS_PREFIX}:v1:_:_:_:_::::500"
+    expected_segment = f"{CACHE_MAP_PINS_PREFIX}:v1:_:_:_:_:none:500"
     assert key_nationwide == expected_segment
 
     # Partial bounds
@@ -139,7 +140,7 @@ def test_cache_key_preserves_none_as_underscore():
         min_lng=None,
         max_lng=69.25,
     )
-    assert f"{CACHE_MAP_PINS_PREFIX}:v1:41.28:_:_:69.25::::500" == key_partial
+    assert f"{CACHE_MAP_PINS_PREFIX}:v1:41.28:_:_:69.25:none:500" == key_partial
 
 
 def test_cache_key_preserves_filters_and_limits():
@@ -153,7 +154,8 @@ def test_cache_key_preserves_filters_and_limits():
         search="courier",
         limit=200,
     )
-    assert ":tashkent:delivery:courier:200" in key_filtered
+    filter_token = encode_canonical_filters(location="Tashkent", category="delivery", search="courier")
+    assert f":{filter_token}:200" in key_filtered
     assert key_default != key_filtered
 
 

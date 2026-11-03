@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 CACHE_VERSION_KEY = "cache:jobs:version"
 CACHE_LOCATION_COUNTS_PREFIX = "cache:jobs:location_counts"
 CACHE_MAP_PINS_PREFIX = "cache:jobs:map_pins"
+CACHE_MAP_GEOJSON_PREFIX = "cache:jobs:geojson"
 CACHE_NEARBY_PREFIX = "cache:jobs:nearby"
 
 
@@ -91,6 +92,52 @@ def _format_coord(val: Optional[float]) -> str:
         return "_"
 
 
+def encode_canonical_filters(
+    location: Optional[str] = None,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+) -> str:
+    """Encodes query filters into a collision-free canonical token strictly aligned with SQL query semantics:
+    - location: stripped and lowercased (mirrors SQL `location.ilike(f'%{location.strip()}%')`)
+    - search: stripped and lowercased (mirrors SQL `ilike(f'%{search.strip()}%')`)
+    - category: exact casing and whitespace preserved (mirrors SQL `models.Job.category == category`)
+
+    Uses canonical JSON serialized with sorted keys and SHA-256 digest to prevent any
+    delimiter injection (e.g. location='a:b' vs category='b:c') or whitespace confusion.
+    """
+    loc_val = None
+    if location is not None and not hasattr(location, "default"):
+        s = location if isinstance(location, str) else str(location)
+        s_strip = s.strip()
+        if s_strip:
+            loc_val = s_strip.lower()
+
+    search_val = None
+    if search is not None and not hasattr(search, "default"):
+        s = search if isinstance(search, str) else str(search)
+        s_strip = s.strip()
+        if s_strip:
+            search_val = s_strip.lower()
+
+    cat_val = None
+    if category is not None and not hasattr(category, "default"):
+        s = category if isinstance(category, str) else str(category)
+        if len(s) > 0:
+            cat_val = s
+
+    if loc_val is None and cat_val is None and search_val is None:
+        return "none"
+
+    payload = json.dumps(
+        {"cat": cat_val, "loc": loc_val, "q": search_val},
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    )
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+    return f"cf_{digest}"
+
+
 def build_map_pins_cache_key(
     version: int,
     min_lat: Optional[float] = None,
@@ -105,26 +152,47 @@ def build_map_pins_cache_key(
     """Constructs a cache key for map pins with canonical float coordinates.
     Exact float coordinates are normalized to prevent cache collisions across
     different viewport bounding boxes while preserving high cache stability.
+    Query filters use collision-free canonical encoding matching SQL query semantics.
     """
     q_min_lat = _format_coord(min_lat)
     q_max_lat = _format_coord(max_lat)
     q_min_lng = _format_coord(min_lng)
     q_max_lng = _format_coord(max_lng)
-    def _clean_str(val: Optional[str]) -> str:
-        if val is None or hasattr(val, "default"):
-            return ""
-        if isinstance(val, str):
-            return val.strip().lower()
-        return str(val).strip().lower()
-
-    loc_clean = _clean_str(location)
-    cat_clean = _clean_str(category)
-    search_clean = _clean_str(search)
+    filter_token = encode_canonical_filters(location=location, category=category, search=search)
 
     return (
         f"{CACHE_MAP_PINS_PREFIX}:v{version}:"
         f"{q_min_lat}:{q_max_lat}:{q_min_lng}:{q_max_lng}:"
-        f"{loc_clean}:{cat_clean}:{search_clean}:{limit}"
+        f"{filter_token}:{limit}"
+    )
+
+
+def build_map_geojson_cache_key(
+    version: int,
+    min_lat: Optional[float] = None,
+    max_lat: Optional[float] = None,
+    min_lng: Optional[float] = None,
+    max_lng: Optional[float] = None,
+    location: Optional[str] = None,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 500,
+) -> str:
+    """Constructs a cache key for map geojson projection with canonical float coordinates.
+    Exact float coordinates are normalized to prevent cache collisions across
+    different viewport bounding boxes while preserving high cache stability.
+    Query filters use collision-free canonical encoding matching SQL query semantics.
+    """
+    q_min_lat = _format_coord(min_lat)
+    q_max_lat = _format_coord(max_lat)
+    q_min_lng = _format_coord(min_lng)
+    q_max_lng = _format_coord(max_lng)
+    filter_token = encode_canonical_filters(location=location, category=category, search=search)
+
+    return (
+        f"{CACHE_MAP_GEOJSON_PREFIX}:v{version}:"
+        f"{q_min_lat}:{q_max_lat}:{q_min_lng}:{q_max_lng}:"
+        f"{filter_token}:{limit}"
     )
 
 

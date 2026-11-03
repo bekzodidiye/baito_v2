@@ -1,4 +1,6 @@
+import json
 import logging
+import secrets
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -8,6 +10,7 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.api import deps
 from app.core.limiter import limiter
+from app.redis_client import redis_client
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -220,11 +223,31 @@ def create_chat(
     }
 
 
-
-
-
-
-
-
-
-
+@router.post("/{chat_id}/ws-ticket")
+@limiter.limit("30/minute")
+def create_chat_ws_ticket(
+    request: Request,
+    chat_id: str,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """Issue a single-use, 60-second connection ticket for WebSocket authentication.
+    Prevents placing reusable JWT tokens in WebSocket URL query strings.
+    """
+    chat = _get_participant_chat(db, chat_id, current_user)
+    ticket = secrets.token_urlsafe(32)
+    ticket_key = f"chat:ws_ticket:{ticket}"
+    session_id = getattr(current_user, "current_session_id", None)
+    ticket_data = {
+        "user_id": current_user.id,
+        "user_uid": current_user.uid,
+        "chat_id": chat.id,
+        "role": current_user.role,
+        "session_id": session_id,
+    }
+    try:
+        redis_client.set(ticket_key, json.dumps(ticket_data), ex=60)
+    except Exception as e:
+        logger.error("Failed to store ws ticket in Redis: %s", type(e).__name__)
+        raise HTTPException(status_code=500, detail="Chipta yaratishda xatolik yuz berdi")
+    return {"ticket": ticket, "expires_in": 60}
