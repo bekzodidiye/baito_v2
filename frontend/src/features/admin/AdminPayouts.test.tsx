@@ -95,8 +95,25 @@ describe('AdminPayouts — Modern Payouts & Invoices UI', () => {
       expect(screen.getByText('Baito Logistics MChJ')).toBeTruthy();
       expect(screen.getByText('Ozodbek Salimov')).toBeTruthy();
       expect(screen.getByText('INV-20261004-ABC12345')).toBeTruthy();
-      expect(screen.getByText(/To'ladim dedi/i)).toBeTruthy();
+      expect(screen.getByText(/To'lov e'lon qilingan/i)).toBeTruthy();
       expect(screen.getByText(/To'lovni tasdiqlash/i)).toBeTruthy();
+    });
+  });
+
+  it('opens bank reconciliation modal when clicking to confirm payment', async () => {
+    renderWithClient();
+
+    await waitFor(() => {
+      expect(screen.getByText('INV-20261004-ABC12345')).toBeTruthy();
+    });
+
+    const confirmBtn = screen.getByRole('button', { name: /To'lovni tasdiqlash/i });
+    fireEvent.click(confirmBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Bank to'lovini solishtirish va tasdiqlash/i)).toBeTruthy();
+      expect(screen.getByText(/Men Baito bank hisobiga/i)).toBeTruthy();
+      expect(screen.getByText(/Baito Rasmiy Bank Rekvizitlari/i)).toBeTruthy();
     });
   });
 

@@ -81,6 +81,12 @@ export const AdminPayouts: React.FC = () => {
   // Receipt viewer modal state
   const [viewingReceipt, setViewingReceipt] = useState<{ url: string; title: string } | null>(null);
 
+  // Bank reconciliation modal state (employer payment verification)
+  const [reconcileModal, setReconcileModal] = useState<JobPayout | null>(null);
+
+  // Payout audit detail modal state
+  const [auditDetailModal, setAuditDetailModal] = useState<JobPayout | null>(null);
+
   // Decision Modal State for Withdrawals
   const [decisionModal, setDecisionModal] = useState<{
     withdrawal: Withdrawal;
@@ -114,6 +120,7 @@ export const AdminPayouts: React.FC = () => {
       apiClient(`/admin/jobs/${jobId}/payout/confirm-payment`, { method: 'POST' }),
     onSuccess: () => {
       showToast("To'lov muvaffaqiyatli tasdiqlandi", 'success');
+      setReconcileModal(null);
       queryClient.invalidateQueries({ queryKey: ['adminJobPayouts'] });
     },
     onError: (e: any) => showToast(e?.message || 'Xatolik yuz berdi', 'error'),
@@ -584,11 +591,11 @@ export const AdminPayouts: React.FC = () => {
                 <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-200/80 font-bold uppercase tracking-wider text-[11px]">
                   <tr>
                     <th className="px-4 py-3.5 min-w-[220px]">{a.jobLabel} va Korxona</th>
-                    <th className="px-4 py-3.5 min-w-[150px]">{a.roleWorker}</th>
-                    <th className="px-4 py-3.5 min-w-[130px]">{a.paidLabel}</th>
-                    <th className="px-4 py-3.5 min-w-[120px]">Ishchi Cheki</th>
-                    <th className="px-4 py-3.5 min-w-[200px]">Hisob-faktura</th>
-                    <th className="px-4 py-3.5 min-w-[230px]">Tushum va Tasdiqlash</th>
+                    <th className="px-4 py-3.5 min-w-[180px]">Ishchi va Ish haqi</th>
+                    <th className="px-4 py-3.5 min-w-[180px]">Hisob-faktura</th>
+                    <th className="px-4 py-3.5 min-w-[180px]">Korxona To'lov Cheki</th>
+                    <th className="px-4 py-3.5 min-w-[170px]">To'lov Holati</th>
+                    <th className="px-4 py-3.5 min-w-[170px]">Admin Amallari</th>
                     <th className="px-4 py-3.5 text-right min-w-[110px]">{a.dateLabel}</th>
                   </tr>
                 </thead>
@@ -637,59 +644,48 @@ export const AdminPayouts: React.FC = () => {
                             </div>
                           </td>
 
-                          {/* 2. Worker */}
+                          {/* 2. Worker & Wage Settled */}
                           <td className="px-4 py-3.5 align-top">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-linear-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
-                                {(p.workerName ? p.workerName.charAt(0) : 'I').toUpperCase()}
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 rounded-full bg-linear-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                  {(p.workerName ? p.workerName.charAt(0) : 'I').toUpperCase()}
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="font-bold text-slate-900 block text-xs truncate">
+                                    {p.workerName ? p.workerName : '—'}
+                                  </span>
+                                  <span className="font-black text-slate-900 tabular-nums text-xs block">
+                                    {money(p.amount)}
+                                  </span>
+                                </div>
                               </div>
-                              <div className="min-w-0">
-                                <span className="font-bold text-slate-900 block text-xs truncate">
-                                  {p.workerName ? p.workerName : '—'}
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60">
+                                  <Check size={10} className="stroke-[3]" /> Ishchiga to'langan
                                 </span>
-                                <span className="text-[10px] font-mono text-slate-400 block mt-0.5">
-                                  ID: {p.id.slice(0, 8)}
-                                </span>
+                                {p.receiptUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setViewingReceipt({
+                                      url: p.receiptUrl,
+                                      title: p.workerName ? `${p.workerName}ga to'lov cheki` : "Ish haqi cheki"
+                                    })}
+                                    className="inline-flex items-center gap-0.5 text-[10px] font-bold text-brand-primary hover:text-brand-primary/80 hover:underline cursor-pointer"
+                                    title="Ishchi to'lov kvitansiyasini ko'rish"
+                                  >
+                                    <FileText size={10} /> Chek
+                                  </button>
+                                )}
                               </div>
                             </div>
                           </td>
 
-                          {/* 3. Wage Settled */}
-                          <td className="px-4 py-3.5 align-top">
-                            <div className="space-y-1">
-                              <span className="font-extrabold text-slate-900 tabular-nums text-sm block tracking-tight">
-                                {money(p.amount)}
-                              </span>
-                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60">
-                                <Check size={10} className="stroke-[3]" /> Ishchiga to'langan
-                              </span>
-                            </div>
-                          </td>
-
-                          {/* 4. Worker Receipt */}
-                          <td className="px-4 py-3.5 align-top">
-                            {p.receiptUrl ? (
-                              <button
-                                type="button"
-                                onClick={() => setViewingReceipt({
-                                  url: p.receiptUrl,
-                                  title: p.workerName ? `${p.workerName}ga to'lov cheki` : "Ish haqi cheki"
-                                })}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 hover:text-slate-900 font-semibold text-xs transition-all shadow-2xs cursor-pointer group"
-                              >
-                                <FileText size={12} className="text-brand-primary group-hover:scale-110 transition-transform" />
-                                <span>Chekni ko'rish</span>
-                              </button>
-                            ) : (
-                              <span className="text-xs text-slate-400 font-medium italic">—</span>
-                            )}
-                          </td>
-
-                          {/* 5. Invoice Details */}
+                          {/* 3. Invoice Details */}
                           <td className="px-4 py-3.5 align-top">
                             {p.invoiceSentAt ? (
                               <div className="space-y-1">
-                                <div className="flex items-center gap-2 flex-wrap">
+                                <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className="font-mono text-[11px] font-extrabold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/80">
                                     {p.invoiceNumber}
                                   </span>
@@ -721,10 +717,46 @@ export const AdminPayouts: React.FC = () => {
                             )}
                           </td>
 
-                          {/* 6. Reconciliation & Admin Decision */}
+                          {/* 4. Employer Bank Payment Receipt */}
+                          <td className="px-4 py-3.5 align-top">
+                            {p.invoicePaidReceiptUrl ? (
+                              <div className="space-y-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setViewingReceipt({
+                                    url: p.invoicePaidReceiptUrl!,
+                                    title: `Korxona to'lov kvitansiyasi (${p.invoiceNumber || 'INV'})`
+                                  })}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-xs transition shadow-2xs cursor-pointer group"
+                                >
+                                  <Receipt size={13} className="text-indigo-600 group-hover:scale-110 transition-transform" />
+                                  <span>Korxona cheki</span>
+                                </button>
+                                {p.invoicePaidReference && (
+                                  <span className="block text-[10px] font-mono text-slate-500 truncate">
+                                    Ref: #{p.invoicePaidReference}
+                                  </span>
+                                )}
+                              </div>
+                            ) : p.invoicePaidDeclaredAt ? (
+                              <div className="space-y-0.5">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 font-semibold text-[10px]">
+                                  <AlertTriangle size={11} className="text-amber-600 shrink-0" />
+                                  Chek ilova qilinmagan
+                                </span>
+                                <span className="block text-[10px] text-amber-700/80 font-medium">
+                                  Bankdan tekshiring
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-slate-400 font-medium italic">—</span>
+                            )}
+                          </td>
+
+                          {/* 5. Payment Status */}
                           <td className="px-4 py-3.5 align-top">
                             {isConfirmed ? (
-                              <div className="space-y-1.5">
+                              <div className="space-y-1">
                                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200/80 shadow-2xs">
                                   <ShieldCheck size={13} className="text-emerald-600 shrink-0" />
                                   <span>Tasdiqlangan</span>
@@ -732,66 +764,19 @@ export const AdminPayouts: React.FC = () => {
                                 <div className="text-[10px] text-slate-400 font-medium">
                                   {when(p.invoiceConfirmedAt)}
                                 </div>
-                                {p.invoicePaidReceiptUrl && (
-                                  <div>
-                                    <button
-                                      type="button"
-                                      onClick={() => setViewingReceipt({
-                                        url: p.invoicePaidReceiptUrl!,
-                                        title: `Bank to'lov cheki (${p.invoiceNumber})`
-                                      })}
-                                      className="inline-flex items-center gap-1 text-brand-primary hover:text-brand-primary/80 font-bold text-[11px] underline underline-offset-2 cursor-pointer transition-colors"
-                                    >
-                                      <Receipt size={12} /> Bank chekini tekshirish
-                                    </button>
-                                  </div>
-                                )}
                               </div>
                             ) : isDeclaredPending ? (
-                              <div className="space-y-2 bg-amber-50/90 border border-amber-200/90 rounded-xl p-2.5 shadow-2xs max-w-xs">
-                                <div className="flex items-center justify-between gap-1.5">
-                                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-900">
-                                    <span className="relative flex h-2 w-2">
-                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                                    </span>
-                                    <span>To'ladim dedi</span>
+                              <div className="space-y-1">
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 font-bold text-[11px] border border-amber-200/80 shadow-2xs">
+                                  <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                                   </span>
-                                  <span className="text-[10px] text-amber-700 font-mono font-medium">
-                                    {when(p.invoicePaidDeclaredAt)}
-                                  </span>
+                                  <span>To'lov e'lon qilingan</span>
                                 </div>
-
-                                {p.invoicePaidReference && (
-                                  <div className="text-[10px] text-amber-800 font-mono bg-amber-100/70 px-2 py-0.5 rounded border border-amber-200/60 truncate">
-                                    Ref: #{p.invoicePaidReference}
-                                  </div>
-                                )}
-
-                                {p.invoicePaidReceiptUrl && (
-                                  <div>
-                                    <button
-                                      type="button"
-                                      onClick={() => setViewingReceipt({
-                                        url: p.invoicePaidReceiptUrl!,
-                                        title: `Bank kvitansiyasi (${p.invoiceNumber})`
-                                      })}
-                                      className="inline-flex items-center gap-1 text-amber-900 hover:text-amber-950 font-bold text-[11px] underline underline-offset-2 cursor-pointer transition-colors"
-                                    >
-                                      <Receipt size={12} /> Korxona bank chekini ko'rish
-                                    </button>
-                                  </div>
-                                )}
-
-                                <button
-                                  type="button"
-                                  onClick={() => confirmPayment.mutate(p.jobId)}
-                                  disabled={confirmPayment.isPending}
-                                  className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
-                                >
-                                  {confirmPayment.isPending ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle size={13} />}
-                                  <span>To'lovni tasdiqlash</span>
-                                </button>
+                                <div className="text-[10px] text-amber-700 font-medium">
+                                  Tasdiqlash kutilmoqda ({when(p.invoicePaidDeclaredAt)})
+                                </div>
                               </div>
                             ) : isInvoiced ? (
                               <div className="space-y-1">
@@ -800,12 +785,37 @@ export const AdminPayouts: React.FC = () => {
                                   <span>To'lov kutilmoqda</span>
                                 </div>
                                 <div className="text-[10px] text-slate-400 font-medium">
-                                  Faktura bo'yicha to'lov
+                                  Faktura yuborilgan
                                 </div>
                               </div>
                             ) : (
-                              <span className="text-xs text-slate-400 font-medium italic">—</span>
+                              <span className="text-xs text-slate-400 font-medium italic">— Fakturasiz</span>
                             )}
+                          </td>
+
+                          {/* 6. Admin Actions */}
+                          <td className="px-4 py-3.5 align-top">
+                            <div className="flex flex-col gap-1.5 max-w-[150px]">
+                              {isDeclaredPending && (
+                                <button
+                                  type="button"
+                                  onClick={() => setReconcileModal(p)}
+                                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer"
+                                  title="Bank ko'chirmasi bilan solishtirish va tasdiqlash"
+                                >
+                                  <CheckCircle size={13} />
+                                  <span>To'lovni tasdiqlash</span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => setAuditDetailModal(p)}
+                                className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-[11px] transition shadow-2xs cursor-pointer"
+                              >
+                                <Eye size={12} className="text-slate-500" />
+                                <span>Audit ko'rish</span>
+                              </button>
+                            </div>
                           </td>
 
                           {/* 7. Date */}
@@ -830,17 +840,17 @@ export const AdminPayouts: React.FC = () => {
                       <td className="px-4 py-3">
                         Jami ({filteredPayouts.length} ta operatsiya)
                       </td>
-                      <td className="px-4 py-3">—</td>
-                      <td className="px-4 py-3 text-slate-900 font-black tabular-nums text-sm">
+                      <td className="px-4 py-3 text-slate-900 font-black tabular-nums text-xs">
                         {money(totalWageSum)}
                       </td>
-                      <td className="px-4 py-3">—</td>
-                      <td className="px-4 py-3 text-slate-900 font-black tabular-nums text-sm">
+                      <td className="px-4 py-3 text-slate-900 font-black tabular-nums text-xs">
                         {money(totalInvoiceSum)}
                       </td>
+                      <td className="px-4 py-3">—</td>
                       <td className="px-4 py-3 text-amber-700 font-bold text-[11px]">
                         {pendingConfirmCount > 0 ? `⚡ ${pendingConfirmCount} ta tasdiqlash kutilmoqda` : 'Barchasi tekshirilgan'}
                       </td>
+                      <td className="px-4 py-3">—</td>
                       <td className="px-4 py-3 text-right text-slate-400 font-medium">—</td>
                     </tr>
                   </tfoot>
@@ -1280,6 +1290,386 @@ export const AdminPayouts: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Bank Reconciliation Modal */}
+      {reconcileModal && (
+        <ReconciliationModal
+          payout={reconcileModal}
+          bank={bank.data}
+          onClose={() => setReconcileModal(null)}
+          onConfirm={(jobId) => confirmPayment.mutate(jobId)}
+          isConfirming={confirmPayment.isPending}
+          onViewReceipt={(url, title) => setViewingReceipt({ url, title })}
+        />
+      )}
+
+      {/* Payout Audit Detail Modal */}
+      {auditDetailModal && (
+        <AuditDetailModal
+          payout={auditDetailModal}
+          onClose={() => setAuditDetailModal(null)}
+          onViewReceipt={(url, title) => setViewingReceipt({ url, title })}
+        />
+      )}
+    </div>
+  );
+};
+
+const ReconciliationModal: React.FC<{
+  payout: JobPayout;
+  bank?: BankDetails;
+  onClose: () => void;
+  onConfirm: (jobId: string) => void;
+  isConfirming: boolean;
+  onViewReceipt: (url: string, title: string) => void;
+}> = ({ payout, bank, onClose, onConfirm, isConfirming, onViewReceipt }) => {
+  const [statementChecked, setStatementChecked] = useState(false);
+  const companyName = payout.company ? payout.company : 'Baito hamkori';
+  const jobTitle = payout.jobTitle ? payout.jobTitle : 'Buyurtma';
+  const expectedAmount = payout.invoiceAmount ?? payout.amount;
+  const hasReceipt = Boolean(payout.invoicePaidReceiptUrl);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+      <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+        {/* Header */}
+        <div className="px-6 py-4.5 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-400 shrink-0">
+              <ShieldCheck size={20} />
+            </div>
+            <div>
+              <h3 className="font-black text-sm text-white">Bank to'lovini solishtirish va tasdiqlash</h3>
+              <p className="text-[11px] text-slate-300 font-medium">
+                Hisob-faktura: <span className="font-mono font-bold text-amber-300">{payout.invoiceNumber || '—'}</span>
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Content body */}
+        <div className="p-6 overflow-y-auto space-y-4 text-xs">
+          {/* Summary Banner */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 grid grid-cols-2 gap-3">
+            <div>
+              <span className="text-[11px] text-slate-400 font-semibold block">Buyurtmachi korxona</span>
+              <span className="font-extrabold text-slate-900 text-xs flex items-center gap-1.5 mt-0.5">
+                <Building2 size={13} className="text-slate-500" />
+                {companyName}
+              </span>
+              <span className="text-[10px] text-slate-500 block mt-0.5 truncate">{jobTitle}</span>
+            </div>
+            <div>
+              <span className="text-[11px] text-slate-400 font-semibold block">Kutilayotgan summa</span>
+              <span className="font-black text-slate-900 text-base tabular-nums mt-0.5 block text-indigo-950">
+                {money(expectedAmount)}
+              </span>
+              <span className="text-[10px] text-slate-500 block mt-0.5">
+                E'lon vaqti: {when(payout.invoicePaidDeclaredAt)}
+              </span>
+            </div>
+          </div>
+
+          {/* Payment Reference & Method */}
+          <div className="p-3.5 rounded-xl bg-slate-100/70 border border-slate-200/70 flex items-center justify-between text-xs">
+            <div>
+              <span className="text-slate-500 font-semibold block text-[11px]">To'lov usuli / Bank ma'lumotnomasi</span>
+              <span className="font-mono font-bold text-slate-800 mt-0.5 block">
+                {payout.invoicePaidReference ? `Ref #${payout.invoicePaidReference}` : "Bank o'tkazmasi (kvitansiyasiz)"}
+              </span>
+            </div>
+            <div className="text-right">
+              <span className="text-slate-500 font-semibold block text-[11px]">Hisob-faktura yuborilgan</span>
+              <span className="text-slate-700 font-medium text-[11px]">
+                {payout.invoiceSentTo ? payout.invoiceSentTo : 'Email ko\'rsatilmagan'}
+              </span>
+            </div>
+          </div>
+
+          {/* Baito Bank Account Info */}
+          <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-2">
+            <div className="flex items-center justify-between text-indigo-950 font-bold text-xs">
+              <span className="flex items-center gap-1.5">
+                <Landmark size={14} className="text-indigo-600" />
+                Baito Rasmiy Bank Rekvizitlari (Qabul qiluvchi)
+              </span>
+              <span className="text-[10px] font-mono bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md font-extrabold">
+                {bank?.payoutBankMfo ? `MFO: ${bank.payoutBankMfo}` : 'MFO: 00873'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+              <div>
+                <span className="text-slate-400 block text-[10px]">Bank nomi:</span>
+                <span className="font-semibold text-slate-800">{bank?.payoutBankName ? bank.payoutBankName : 'Ipoteka Bank ATIB'}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px]">Hisob-kitob raqami (H/R):</span>
+                <span className="font-mono font-bold text-slate-900">{bank?.payoutBankAccount ? bank.payoutBankAccount : '20208000900000000001'}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px]">Tashkilot STIR / INN:</span>
+                <span className="font-mono font-semibold text-slate-800">{bank?.payoutCompanyInn ? bank.payoutCompanyInn : '123456789'}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px]">Korxona:</span>
+                <span className="font-semibold text-slate-800">{bank?.payoutCompanyName ? bank.payoutCompanyName : 'Baito MChJ'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Employer Payment Receipt Inspection */}
+          <div className="space-y-2">
+            <label className="font-bold text-slate-800 text-xs block">
+              Korxona taqdim etgan to'lov hujjati (Chek):
+            </label>
+            {hasReceipt ? (
+              <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white border border-emerald-200 overflow-hidden flex items-center justify-center shrink-0 shadow-2xs">
+                    <img
+                      src={payout.invoicePaidReceiptUrl!}
+                      alt="Bank cheki"
+                      className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform"
+                      onClick={() => onViewReceipt(payout.invoicePaidReceiptUrl!, `Bank kvitansiyasi (${payout.invoiceNumber || 'INV'})`)}
+                    />
+                  </div>
+                  <div>
+                    <span className="font-bold text-emerald-950 text-xs flex items-center gap-1">
+                      <CheckCircle2 size={13} className="text-emerald-600" />
+                      To'lov kvitansiyasi biriktirilgan
+                    </span>
+                    <span className="text-[11px] text-emerald-800 block mt-0.5">
+                      Faylni ko'rib, bank shtampi, summa va sana to'g'riligini tekshiring.
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => onViewReceipt(payout.invoicePaidReceiptUrl!, `Bank kvitansiyasi (${payout.invoiceNumber || 'INV'})`)}
+                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-bold text-xs transition shadow-2xs cursor-pointer flex items-center gap-1"
+                  >
+                    <Eye size={12} />
+                    <span>Ko'rish</span>
+                  </button>
+                  <a
+                    href={payout.invoicePaidReceiptUrl!}
+                    download
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-1.5 rounded-xl bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-900 transition shadow-2xs"
+                    title="Yuklab olish"
+                  >
+                    <Download size={13} />
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/90 space-y-1.5">
+                <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
+                  <AlertTriangle size={15} className="text-amber-600 shrink-0" />
+                  <span>Korxona tomonidan to'lov cheki yuklanmagan!</span>
+                </div>
+                <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
+                  Ish beruvchi faktura to'langanligini e'lon qilgan, ammo bank kvitansiyasi yuklanmagan.
+                  Admin sifatida bank ko'chirmangizni (Bank-Mijoz / Vyipiska) ochib, ushbu summa (<strong className="font-black text-amber-950">{money(expectedAmount)}</strong>)
+                  Baito hisobiga kelib tushganini shaxsan tekshirishingiz zarur.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Admin Statement Verification Checkbox */}
+          <div className="pt-2">
+            <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 border-2 border-slate-200 hover:border-brand-primary/50 transition-colors cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={statementChecked}
+                onChange={(e) => setStatementChecked(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded text-brand-primary border-slate-300 focus:ring-brand-primary/20 cursor-pointer"
+              />
+              <span className="text-xs font-bold text-slate-800 leading-snug">
+                Men Baito bank hisobiga (Bank-Mijoz / vyipiska orqali) ushbu to'lov (<span className="text-emerald-700 font-black">{money(expectedAmount)}</span>)
+                to'liq kelib tushganini tekshirdim va to'lovni tasdiqlayman.
+              </span>
+            </label>
+          </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="p-4 border-t border-slate-200/80 bg-slate-50/80 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer"
+          >
+            Bekor qilish
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onConfirm(payout.jobId)}
+            disabled={!statementChecked || isConfirming}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold text-xs shadow-sm transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {isConfirming ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+            <span>To'lovni tasdiqlash</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AuditDetailModal: React.FC<{
+  payout: JobPayout;
+  onClose: () => void;
+  onViewReceipt: (url: string, title: string) => void;
+}> = ({ payout, onClose, onViewReceipt }) => {
+  const companyName = payout.company ? payout.company : 'Baito hamkori';
+  const workerName = payout.workerName ? payout.workerName : 'Ishchi';
+  const jobTitle = payout.jobTitle ? payout.jobTitle : 'Buyurtma';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+      <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center font-bold">
+              <FileCheck size={16} />
+            </div>
+            <div>
+              <h4 className="font-black text-slate-900 text-sm">To'lov va Faktura Auditi</h4>
+              <p className="text-[10px] text-slate-500 font-mono">Job #{payout.jobId}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition cursor-pointer"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-5 overflow-y-auto space-y-4 text-xs">
+          {/* Section 1: Buyurtma */}
+          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">Buyurtma va Taraflar</span>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Ish nomi:</span>
+              <span className="font-bold text-slate-900">{jobTitle}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Korxona:</span>
+              <span className="font-bold text-slate-900">{companyName}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Ishchi:</span>
+              <span className="font-bold text-slate-900">{workerName}</span>
+            </div>
+          </div>
+
+          {/* Section 2: Ishchi To'lovi */}
+          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">1. Ishchiga To'langan Ish Haqi</span>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Summa:</span>
+              <span className="font-black text-slate-900 tabular-nums">{money(payout.amount)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">To'langan vaqt:</span>
+              <span className="text-slate-700 font-medium">{when(payout.paidAt)}</span>
+            </div>
+            <div className="flex justify-between items-center pt-1 border-t border-slate-200">
+              <span className="text-slate-500">Ishchi kvitansiyasi:</span>
+              {payout.receiptUrl ? (
+                <button
+                  type="button"
+                  onClick={() => onViewReceipt(payout.receiptUrl, `${workerName}ga to'lov cheki`)}
+                  className="inline-flex items-center gap-1 font-bold text-brand-primary hover:underline cursor-pointer"
+                >
+                  <Eye size={12} /> Chekni ko'rish
+                </button>
+              ) : (
+                <span className="text-slate-400 italic">Mavjud emas</span>
+              )}
+            </div>
+          </div>
+
+          {/* Section 3: Korxona Hisob-Fakturasi */}
+          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">2. Korxonaga Hisob-Faktura</span>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Faktura raqami:</span>
+              <span className="font-mono font-bold text-slate-800">{payout.invoiceNumber || '—'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Faktura summasi:</span>
+              <span className="font-black text-slate-900 tabular-nums">{money(payout.invoiceAmount ?? 0)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Yuborilgan email:</span>
+              <span className="text-slate-700">{payout.invoiceSentTo || '—'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Yuborilgan sana:</span>
+              <span className="text-slate-700">{when(payout.invoiceSentAt)}</span>
+            </div>
+          </div>
+
+          {/* Section 4: Korxona Tushumi va Cheki */}
+          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">3. Korxona Bank To'lovi va Cheki</span>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">To'lov e'lon qilingan vaqt:</span>
+              <span className="text-slate-700">{when(payout.invoicePaidDeclaredAt)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Bank tranzaksiya referensi:</span>
+              <span className="font-mono text-slate-800 font-semibold">{payout.invoicePaidReference || '—'}</span>
+            </div>
+            <div className="flex justify-between items-center pt-1 border-t border-slate-200">
+              <span className="text-slate-500">Korxona bank cheki:</span>
+              {payout.invoicePaidReceiptUrl ? (
+                <button
+                  type="button"
+                  onClick={() => onViewReceipt(payout.invoicePaidReceiptUrl!, `Bank kvitansiyasi (${payout.invoiceNumber || 'INV'})`)}
+                  className="inline-flex items-center gap-1 font-bold text-indigo-700 hover:underline cursor-pointer"
+                >
+                  <Eye size={12} /> Korxona chekini ko'rish
+                </button>
+              ) : (
+                <span className="text-amber-700 font-medium">⚠️ Chek yuklanmagan</span>
+              )}
+            </div>
+            <div className="flex justify-between items-center pt-1 border-t border-slate-200">
+              <span className="text-slate-500">Admin tasdiqlagan vaqt:</span>
+              <span className="font-bold text-emerald-700">{payout.invoiceConfirmedAt ? when(payout.invoiceConfirmedAt) : 'Tasdiqlanmagan'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-3.5 border-t border-slate-100 bg-slate-50 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition cursor-pointer"
+          >
+            Yopish
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
