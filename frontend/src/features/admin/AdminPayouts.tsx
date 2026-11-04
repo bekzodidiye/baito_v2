@@ -601,26 +601,24 @@ export const AdminPayouts: React.FC = () => {
               <table className="w-full text-xs text-left border-collapse">
                 <thead className="bg-slate-50/90 text-slate-500 border-b border-slate-200/90 font-bold uppercase tracking-wider text-[11px] select-none">
                   <tr>
-                    <th className="px-4 py-3 min-w-[230px]">{a.jobLabel} va Korxona</th>
+                    <th className="px-4 py-3 min-w-[240px]">{a.jobLabel} va Korxona</th>
                     <th className="px-4 py-3 min-w-[170px]">Ishchi va Ish haqi</th>
-                    <th className="px-4 py-3 min-w-[190px]">Hisob-faktura</th>
-                    <th className="px-4 py-3 min-w-[160px]">Korxona To'lov Cheki</th>
-                    <th className="px-4 py-3 min-w-[170px]">To'lov Holati</th>
-                    <th className="px-4 py-3 min-w-[170px]">Admin Amallari</th>
-                    <th className="px-4 py-3 text-right min-w-[110px]">{a.dateLabel}</th>
+                    <th className="px-4 py-3 min-w-[200px]">Hisob-faktura va To'lov</th>
+                    <th className="px-4 py-3 min-w-[180px]">To'lov Holati</th>
+                    <th className="px-4 py-3 text-right min-w-[210px]">Admin Amallari</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
                   {payouts.isLoading ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-16 text-center text-slate-400">
+                      <td colSpan={5} className="px-4 py-16 text-center text-slate-400">
                         <Loader2 size={24} className="animate-spin mx-auto mb-2 text-brand-primary" />
                         Yuklanmoqda…
                       </td>
                     </tr>
                   ) : filteredPayouts.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-16 text-center text-slate-400">
+                      <td colSpan={5} className="px-4 py-16 text-center text-slate-400">
                         <Receipt size={32} className="mx-auto mb-2 text-slate-300" />
                         <p className="font-bold text-slate-700 text-sm">To'lovlar topilmadi</p>
                         <p className="text-xs text-slate-400 mt-0.5">Filtr yoki qidiruv so'zini o'zgartirib ko'ring</p>
@@ -634,21 +632,29 @@ export const AdminPayouts: React.FC = () => {
 
                       return (
                         <tr key={p.id} className="hover:bg-slate-50/80 transition-colors group">
-                          {/* 1. Job & Company */}
+                          {/* 1. Job, Company & Date */}
                           <td className="px-4 py-3.5 align-middle">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200/80 flex items-center justify-center font-bold text-xs text-slate-700 shrink-0 shadow-2xs">
                                 {(p.company ? p.company.charAt(0) : 'B').toUpperCase()}
                               </div>
                               <div className="min-w-0">
-                                <span className="font-bold text-slate-900 block text-xs truncate max-w-[210px] hover:text-brand-primary transition-colors" title={p.jobTitle || ''}>
+                                <span className="font-bold text-slate-900 block text-xs truncate max-w-[220px] hover:text-brand-primary transition-colors" title={p.jobTitle || ''}>
                                   {p.jobTitle ? p.jobTitle : '—'}
                                 </span>
                                 <div className="flex items-center gap-1.5 text-slate-500 font-medium text-[11px] truncate mt-0.5">
                                   <Building2 size={11} className="text-slate-400 shrink-0" />
-                                  <span className="truncate">{p.company ? p.company : 'Baito hamkori'}</span>
+                                  <span className="truncate max-w-[130px]">{p.company ? p.company : 'Baito hamkori'}</span>
                                   <span className="text-slate-300">·</span>
                                   <span className="font-mono text-[10px] text-slate-400 shrink-0">#{p.jobId.slice(0, 8)}</span>
+                                  {p.paidAt && (
+                                    <>
+                                      <span className="text-slate-300">·</span>
+                                      <span className="text-slate-400 text-[10px] tabular-nums shrink-0">
+                                        {new Date(p.paidAt).toLocaleDateString('uz-UZ')}
+                                      </span>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -661,7 +667,7 @@ export const AdminPayouts: React.FC = () => {
                                 {(p.workerName ? p.workerName.charAt(0) : 'I').toUpperCase()}
                               </div>
                               <div className="min-w-0">
-                                <span className="font-bold text-slate-900 block text-xs truncate max-w-[130px]">
+                                <span className="font-bold text-slate-900 block text-xs truncate max-w-[140px]">
                                   {p.workerName ? p.workerName : '—'}
                                 </span>
                                 <div className="flex items-center gap-1.5 mt-0.5">
@@ -686,10 +692,10 @@ export const AdminPayouts: React.FC = () => {
                             </div>
                           </td>
 
-                          {/* 3. Invoice Details */}
+                          {/* 3. Invoice & Employer Bank Payment */}
                           <td className="px-4 py-3.5 align-middle">
                             {p.invoiceSentAt ? (
-                              <div className="min-w-0">
+                              <div className="min-w-0 space-y-1">
                                 <div className="flex items-center gap-2">
                                   <span className="font-mono text-[11px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/80">
                                     {p.invoiceNumber}
@@ -698,52 +704,41 @@ export const AdminPayouts: React.FC = () => {
                                     {money(p.invoiceAmount ?? 0)}
                                   </span>
                                 </div>
-                                <span className="text-[10px] text-slate-500 block truncate mt-1 max-w-[180px]">
-                                  {p.invoiceSentTo ? p.invoiceSentTo : 'Email kiritilmagan'}
-                                </span>
+                                <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                                  {p.invoicePaidReceiptUrl ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => setViewingReceipt({
+                                        url: p.invoicePaidReceiptUrl!,
+                                        title: `Korxona to'lov kvitansiyasi (${p.invoiceNumber || 'INV'})`
+                                      })}
+                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-bold border border-indigo-200/80 transition-colors cursor-pointer"
+                                      title="Korxona to'lov chekini ko'rish"
+                                    >
+                                      <Receipt size={10} className="text-indigo-600" />
+                                      <span>Chek</span>
+                                    </button>
+                                  ) : isDeclaredPending ? (
+                                    <span className="text-amber-700 font-medium">Kvitansiyasiz</span>
+                                  ) : null}
+                                  {p.invoicePaidReference && (
+                                    <span className="font-mono text-slate-400 truncate max-w-[100px]" title={`Ref: #${p.invoicePaidReference}`}>
+                                      #{p.invoicePaidReference}
+                                    </span>
+                                  )}
+                                  {p.invoiceSentTo && (
+                                    <span className="text-slate-400 truncate max-w-[120px]" title={p.invoiceSentTo}>
+                                      {p.invoiceSentTo}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             ) : (
-                              <span className="text-[11px] text-slate-400 font-medium italic">— Faktura ochilmagan</span>
+                              <span className="text-[11px] text-slate-400 font-medium italic">— Fakturasiz</span>
                             )}
                           </td>
 
-                          {/* 4. Employer Bank Payment Receipt */}
-                          <td className="px-4 py-3.5 align-middle">
-                            {p.invoicePaidReceiptUrl ? (
-                              <div className="min-w-0">
-                                <button
-                                  type="button"
-                                  onClick={() => setViewingReceipt({
-                                    url: p.invoicePaidReceiptUrl!,
-                                    title: `Korxona to'lov kvitansiyasi (${p.invoiceNumber || 'INV'})`
-                                  })}
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200/80 font-bold text-[11px] transition shadow-2xs cursor-pointer group"
-                                >
-                                  <Receipt size={12} className="text-indigo-600 group-hover:scale-110 transition-transform" />
-                                  <span>Korxona cheki</span>
-                                </button>
-                                {p.invoicePaidReference && (
-                                  <span className="block text-[10px] font-mono text-slate-500 mt-1 truncate">
-                                    Ref: #{p.invoicePaidReference}
-                                  </span>
-                                )}
-                              </div>
-                            ) : p.invoicePaidDeclaredAt ? (
-                              <div className="min-w-0">
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-semibold">
-                                  <AlertTriangle size={11} className="text-amber-600 shrink-0" />
-                                  Chek ilova qilinmagan
-                                </span>
-                                <span className="block text-[10px] text-amber-700/80 font-medium mt-0.5">
-                                  Bankdan tekshiring
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-slate-400 font-mono">—</span>
-                            )}
-                          </td>
-
-                          {/* 5. Payment Status */}
+                          {/* 4. Payment Status */}
                           <td className="px-4 py-3.5 align-middle">
                             {isConfirmed ? (
                               <div className="min-w-0">
@@ -783,14 +778,14 @@ export const AdminPayouts: React.FC = () => {
                             )}
                           </td>
 
-                          {/* 6. Admin Actions */}
-                          <td className="px-4 py-3.5 align-middle">
-                            <div className="flex items-center gap-2">
+                          {/* 5. Admin Actions */}
+                          <td className="px-4 py-3.5 align-middle text-right whitespace-nowrap">
+                            <div className="inline-flex items-center justify-end gap-2">
                               {isDeclaredPending && (
                                 <button
                                   type="button"
                                   onClick={() => setReconcileModal(p)}
-                                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-xs transition-all cursor-pointer shrink-0"
+                                  className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer shrink-0"
                                   title="Bank ko'chirmasi bilan solishtirish va tasdiqlash"
                                 >
                                   <CheckCircle size={13} />
@@ -800,23 +795,13 @@ export const AdminPayouts: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => setAuditDetailModal(p)}
-                                className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold text-[11px] transition-all cursor-pointer shadow-2xs shrink-0"
+                                className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold text-xs transition-all cursor-pointer shadow-2xs shrink-0"
                                 title="To'lov audit jurnalini ko'rish"
                               >
                                 <Eye size={12} className="text-slate-500" />
                                 <span>Audit ko'rish</span>
                               </button>
                             </div>
-                          </td>
-
-                          {/* 7. Date */}
-                          <td className="px-4 py-3.5 align-middle text-right whitespace-nowrap">
-                            <span className="font-semibold text-slate-800 text-xs block tabular-nums">
-                              {p.paidAt ? new Date(p.paidAt).toLocaleDateString('uz-UZ') : '—'}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-mono block mt-0.5">
-                              {p.paidAt ? new Date(p.paidAt).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }) : ''}
-                            </span>
                           </td>
                         </tr>
                       );
@@ -837,12 +822,19 @@ export const AdminPayouts: React.FC = () => {
                       <td className="px-4 py-3 text-slate-900 font-black tabular-nums text-xs">
                         {money(totalInvoiceSum)}
                       </td>
-                      <td className="px-4 py-3">—</td>
-                      <td className="px-4 py-3 text-amber-700 font-bold text-[11px]">
-                        {pendingConfirmCount > 0 ? `⚡ ${pendingConfirmCount} ta tasdiqlash kutilmoqda` : 'Barchasi tekshirilgan'}
+                      <td className="px-4 py-3">
+                        {pendingConfirmCount > 0 ? (
+                          <span className="text-amber-800 text-[11px] font-bold flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            {pendingConfirmCount} ta tasdiqlash kutilmoqda
+                          </span>
+                        ) : (
+                          <span className="text-emerald-700 text-[11px] font-bold">
+                            Barchasi tasdiqlangan
+                          </span>
+                        )}
                       </td>
-                      <td className="px-4 py-3">—</td>
-                      <td className="px-4 py-3 text-right text-slate-400 font-medium">—</td>
+                      <td className="px-4 py-3 text-right text-slate-400 font-mono">—</td>
                     </tr>
                   </tfoot>
                 )}
@@ -965,9 +957,9 @@ export const AdminPayouts: React.FC = () => {
 
                       return (
                         <tr key={w.id} className="hover:bg-slate-50/70 transition-colors">
-                          <td className="px-4 py-3.5 align-top">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-xs text-slate-700 shrink-0">
+                          <td className="px-4 py-3.5 align-middle">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200/80 flex items-center justify-center font-bold text-xs text-slate-700 shrink-0 shadow-2xs">
                                 {(w.userName ? w.userName.charAt(0) : 'U').toUpperCase()}
                               </div>
                               <div className="min-w-0">
@@ -980,16 +972,16 @@ export const AdminPayouts: React.FC = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3.5 align-top">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 font-mono text-slate-800 font-bold border border-slate-200">
+                          <td className="px-4 py-3.5 align-middle">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 font-mono text-slate-800 font-semibold text-xs border border-slate-200/80">
                               <CreditCard size={13} className="text-slate-400 shrink-0" />
                               <span>{w.bankCardMask ? w.bankCardMask : 'Karta biriktirilgan'}</span>
                             </span>
                           </td>
-                          <td className="px-4 py-3.5 align-top font-black text-slate-900 tabular-nums text-sm">
+                          <td className="px-4 py-3.5 align-middle font-black text-slate-900 tabular-nums text-sm">
                             {money(w.amountUzs)}
                           </td>
-                          <td className="px-4 py-3.5 align-top text-slate-500 font-medium">
+                          <td className="px-4 py-3.5 align-middle text-slate-500 font-medium">
                             <span className="font-semibold text-slate-800 text-xs block tabular-nums">
                               {w.createdAt ? new Date(w.createdAt).toLocaleDateString('uz-UZ') : '—'}
                             </span>
@@ -997,14 +989,14 @@ export const AdminPayouts: React.FC = () => {
                               {w.createdAt ? new Date(w.createdAt).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }) : ''}
                             </span>
                           </td>
-                          <td className="px-4 py-3.5 align-top text-right">
+                          <td className="px-4 py-3.5 align-middle text-right whitespace-nowrap">
                             {isPending ? (
                               <div className="flex items-center justify-end gap-2">
                                 <button
                                   type="button"
                                   disabled={busyId === w.id}
                                   onClick={() => handleOpenDecision(w, 'approve')}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold cursor-pointer hover:bg-emerald-700 transition shadow-2xs disabled:opacity-50 active:scale-95"
+                                  className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-600 text-white font-bold text-xs cursor-pointer hover:bg-emerald-700 transition shadow-2xs disabled:opacity-50 active:scale-95"
                                 >
                                   {busyId === w.id ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
                                   <span>Tasdiqlash</span>
@@ -1013,19 +1005,19 @@ export const AdminPayouts: React.FC = () => {
                                   type="button"
                                   disabled={busyId === w.id}
                                   onClick={() => handleOpenDecision(w, 'reject')}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 font-bold cursor-pointer hover:bg-rose-100 transition disabled:opacity-50 active:scale-95"
+                                  className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 font-bold text-xs cursor-pointer hover:bg-rose-100 transition disabled:opacity-50 active:scale-95 shadow-2xs"
                                 >
                                   <X size={13} />
                                   <span>Rad etish</span>
                                 </button>
                               </div>
                             ) : isApproved ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200/80">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200/80">
                                 <CheckCircle size={12} className="text-emerald-600" />
                                 <span>O'tkazilgan{w.reference ? ` · Ref: ${w.reference}` : ''}</span>
                               </span>
                             ) : isRejected ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200/80">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200/80">
                                 <X size={12} className="text-rose-600" />
                                 <span>Rad etilgan</span>
                               </span>
