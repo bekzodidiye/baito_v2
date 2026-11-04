@@ -218,7 +218,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
               placeholder={a.searchShort}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-slate-800"
+              className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:outline-none focus:ring-0 focus:border-slate-300 text-slate-800 transition-colors"
             />
             {search && (
               <button
@@ -648,10 +648,10 @@ const WorkerPopover: React.FC<WorkerPopoverProps> = ({
         onClick={onClose}
       />
 
-      {/* Floating Popover Container */}
+      {/* Floating Popover Container - 100% flush and aligned with Worker Column */}
       <div 
         ref={popoverRef}
-        className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 w-full sm:w-[350px] bg-white rounded-2xl shadow-2xl border border-slate-200/90 ring-1 ring-black/5 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="absolute top-full left-0 right-0 w-full mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-slate-200/90 ring-1 ring-black/5 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Header */}
         <div className="px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
@@ -673,7 +673,7 @@ const WorkerPopover: React.FC<WorkerPopoverProps> = ({
           </button>
         </div>
 
-        {/* Search Bar */}
+        {/* Search Bar - Seamless without harsh active frame */}
         <div className="p-2.5 border-b border-slate-100 bg-white">
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -682,7 +682,7 @@ const WorkerPopover: React.FC<WorkerPopoverProps> = ({
               placeholder="Ishchini qidirish..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-slate-800 transition-all placeholder:text-slate-400 placeholder:font-normal"
+              className="w-full pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100/70 focus:bg-slate-100/70 border border-transparent rounded-xl text-xs font-semibold text-slate-800 outline-none focus:outline-none focus:ring-0 focus:border-transparent transition-all placeholder:text-slate-400 placeholder:font-normal"
               autoFocus
             />
             {searchQuery && (
