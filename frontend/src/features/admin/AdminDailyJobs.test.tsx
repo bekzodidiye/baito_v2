@@ -15,6 +15,9 @@ const mockUser: AdminUser = {
   isVerified: true,
 };
 
+const now = new Date();
+const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
 const baseJob: AdminJob = {
   id: 'j1',
   title: 'Omborda yuk tashish',
@@ -24,7 +27,7 @@ const baseJob: AdminJob = {
   location: 'Toshkent, Sergeli',
   description: 'Yuk tushirish va taxlash',
   status: 'open',
-  workDate: '2026-10-04',
+  workDate: todayStr,
   workTime: '09:00 - 18:00',
   category: 'Logistika',
   vacancies: 2,

@@ -47,7 +47,7 @@ def list_withdrawals(
 ) -> Any:
     """Payout requests awaiting a decision."""
     query = db.query(Transaction).filter(Transaction.type == "withdraw")
-    if status:
+    if status and status != "all":
         query = query.filter(Transaction.status == status)
 
     total = query.count()
