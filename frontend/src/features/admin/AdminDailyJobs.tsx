@@ -642,9 +642,9 @@ const WorkerPopover: React.FC<WorkerPopoverProps> = ({
 
   return (
     <>
-      {/* Click-outside backdrop */}
+      {/* Click-outside backdrop (fully transparent, no blur, no darkening) */}
       <div 
-        className="fixed inset-0 z-40 bg-slate-900/10 backdrop-blur-[1px] animate-in fade-in duration-100"
+        className="fixed inset-0 z-40 bg-transparent"
         onClick={onClose}
       />
 
@@ -653,48 +653,43 @@ const WorkerPopover: React.FC<WorkerPopoverProps> = ({
         ref={popoverRef}
         className="absolute top-full left-0 right-0 w-full mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-slate-200/90 ring-1 ring-black/5 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       >
-        {/* Header */}
-        <div className="px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-6 h-6 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0">
-              <Users size={13} />
-            </div>
-            <div className="min-w-0">
-              <h5 className="font-bold text-xs text-slate-800 truncate">Ishchi tanlash</h5>
-              <p className="text-[10px] text-slate-400 truncate">{job.title}</p>
-            </div>
-          </div>
+        {/* Integrated Command Search Header */}
+        <div className="relative flex items-center gap-2.5 px-3.5 py-3 border-b border-slate-100 bg-white">
+          <Search size={15} className="text-slate-400 shrink-0 select-none" />
+          <input
+            type="text"
+            placeholder="Ishchini qidirish..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-transparent border-0 p-0 text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-0 focus:border-0"
+            autoFocus
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X size={12} />
+            </button>
+          )}
           <button
             type="button"
             onClick={onClose}
-            className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+            className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0 cursor-pointer"
+            title="Yopish (ESC)"
           >
-            <X size={14} />
+            <kbd className="hidden sm:inline-block text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">ESC</kbd>
+            <X size={13} className="sm:hidden" />
           </button>
         </div>
 
-        {/* Search Bar - Seamless without harsh active frame */}
-        <div className="p-2.5 border-b border-slate-100 bg-white">
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Ishchini qidirish..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 bg-slate-50 hover:bg-slate-100/70 focus:bg-slate-100/70 border border-transparent rounded-xl text-xs font-semibold text-slate-800 outline-none focus:outline-none focus:ring-0 focus:border-transparent transition-all placeholder:text-slate-400 placeholder:font-normal"
-              autoFocus
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-              >
-                <X size={13} />
-              </button>
-            )}
-          </div>
+        {/* Sub-header Context / Meta Bar */}
+        <div className="px-3.5 py-1.5 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
+          <span className="truncate pr-2">
+            <span className="text-slate-700 font-bold">{job.title}</span> uchun
+          </span>
+          <span className="text-slate-400 shrink-0 font-medium text-[10px]">{filtered.length} ta ishchi</span>
         </div>
 
         {/* Unassign option if someone is assigned */}
