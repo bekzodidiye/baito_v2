@@ -653,35 +653,42 @@ const WorkerPopover: React.FC<WorkerPopoverProps> = ({
         ref={popoverRef}
         className="absolute top-full left-0 right-0 w-full mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-slate-200/90 ring-1 ring-black/5 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
       >
-        {/* Integrated Command Search Header */}
-        <div className="relative flex items-center gap-2.5 px-3.5 py-3 border-b border-slate-100 bg-white">
-          <Search size={15} className="text-slate-400 shrink-0 select-none" />
-          <input
-            type="text"
-            placeholder="Ishchini qidirish..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent border-0 p-0 text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-0 focus:border-0"
-            autoFocus
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-            >
-              <X size={12} />
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0 cursor-pointer"
-            title="Yopish (ESC)"
-          >
-            <kbd className="hidden sm:inline-block text-[9px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">ESC</kbd>
-            <X size={13} className="sm:hidden" />
-          </button>
+        {/* Search Header with Modern Inset Input & Refined Focus State */}
+        <div className="p-2.5 border-b border-slate-100 bg-white">
+          <div className="relative flex items-center group">
+            <Search 
+              size={14} 
+              className="absolute left-3 text-slate-400 group-focus-within:text-brand-primary transition-colors pointer-events-none select-none" 
+            />
+            <input
+              type="text"
+              placeholder="Ishchini qidirish..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 bg-slate-50/80 hover:bg-slate-50 focus:bg-white border border-slate-200/90 focus:border-brand-primary rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none focus:outline-none focus:ring-4 focus:ring-brand-primary/10 transition-all shadow-2xs"
+              autoFocus
+              style={{ outline: 'none' }}
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                title="Tozalash"
+              >
+                <X size={13} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onClose}
+                className="absolute right-2.5 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                title="Yopish"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Sub-header Context / Meta Bar */}
