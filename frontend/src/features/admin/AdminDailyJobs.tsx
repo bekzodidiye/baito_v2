@@ -63,6 +63,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [pendingWorkerJobId, setPendingWorkerJobId] = useState<string | null>(null);
   const [payoutJobId, setPayoutJobId] = useState<string | null>(null);
+  const [assigningJobId, setAssigningJobId] = useState<string | null>(null);
 
   const today = new Date();
   const yy = today.getFullYear();
@@ -272,6 +273,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
             const vacancies = Number(j.vacancies || (j.neededWorkers ? parseInt(j.neededWorkers) : 1));
             const hired = Number(j.hiredCount || (j.workerId ? 1 : 0));
             const assignedWorker = j.workerId ? users.find(u => u.id === j.workerId) : null;
+            const isAssigningThis = assigningJobId === j.id;
 
             return (
               <div
@@ -425,8 +427,8 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                     </div>
                   </div>
 
-                  {/* Column 3: Worker Assignment - Modern Executive Worker Chip */}
-                  <div className="min-w-0">
+                  {/* Column 3: Worker Assignment - Modern Executive Worker Chip with Centered Popover */}
+                  <div className="min-w-0 relative">
                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1.5">
                       {a.roleWorker}
                     </span>
@@ -463,7 +465,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-0.5 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             type="button"
                             onClick={() => handleUserClick(j.workerId)}
@@ -473,40 +475,49 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                           >
                             <Eye size={14} />
                           </button>
-                          <WorkerAssignDropdown
-                            currentWorkerId={j.workerId}
-                            workers={workersList}
-                            onSelectWorker={(workerId) => {
-                              if (!workerId) {
-                                onChangeJobWorker?.(j.id, null);
-                              } else {
-                                const selectedW = users.find(u => u.id === workerId);
-                                if (selectedW) {
-                                  setSelectedUser(selectedW);
-                                  setPendingWorkerJobId(j.id);
-                                }
-                              }
-                            }}
-                            trigger={
-                              <button
-                                type="button"
-                                className="p-1.5 text-slate-400 hover:text-brand-primary hover:bg-white rounded-lg transition-colors cursor-pointer border border-transparent hover:border-slate-200 shadow-2xs"
-                                title="Ishchini almashtirish"
-                                aria-label="Ishchini almashtirish"
-                              >
-                                <ChevronDown size={14} />
-                              </button>
-                            }
-                            align="right"
-                          />
+                          <button
+                            type="button"
+                            onClick={() => setAssigningJobId(isAssigningThis ? null : j.id)}
+                            className={`flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${
+                              isAssigningThis
+                                ? 'bg-brand-primary text-white border-brand-primary shadow-xs'
+                                : 'bg-white text-slate-600 hover:text-brand-primary border-slate-200 hover:border-brand-primary/40 shadow-2xs'
+                            }`}
+                            title="Ishchini almashtirish"
+                            aria-label="Ishchini almashtirish"
+                          >
+                            <span>Almashtirish</span>
+                            <ChevronDown size={12} className={`transition-transform duration-200 ${isAssigningThis ? 'rotate-180' : ''}`} />
+                          </button>
                         </div>
                       </div>
                     ) : (
-                      <WorkerAssignDropdown
-                        currentWorkerId={null}
+                      <button
+                        type="button"
+                        onClick={() => setAssigningJobId(isAssigningThis ? null : j.id)}
+                        className={`w-full h-[72px] flex items-center justify-center gap-2 px-3 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer group shadow-2xs border ${
+                          isAssigningThis
+                            ? 'bg-brand-primary/10 border-brand-primary text-brand-primary ring-2 ring-brand-primary/20'
+                            : 'bg-slate-50/80 hover:bg-brand-primary/5 border-dashed border-slate-300 hover:border-brand-primary/50 text-slate-600 hover:text-brand-primary'
+                        }`}
+                      >
+                        <UserPlus size={15} className="text-slate-400 group-hover:text-brand-primary transition-colors" />
+                        <span>{a.assignWorker}</span>
+                      </button>
+                    )}
+
+                    {/* POPOVER SELECTION - Perfectly anchored beneath Column 3 */}
+                    {isAssigningThis && (
+                      <WorkerPopover
+                        job={j}
+                        currentWorkerId={j.workerId}
                         workers={workersList}
+                        onClose={() => setAssigningJobId(null)}
                         onSelectWorker={(workerId) => {
-                          if (workerId) {
+                          setAssigningJobId(null);
+                          if (!workerId) {
+                            onChangeJobWorker?.(j.id, null);
+                          } else {
                             const selectedW = users.find(u => u.id === workerId);
                             if (selectedW) {
                               setSelectedUser(selectedW);
@@ -514,15 +525,6 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
                             }
                           }
                         }}
-                        trigger={
-                          <button
-                            type="button"
-                            className="w-full h-[72px] flex items-center justify-center gap-2 px-3 py-2 bg-slate-50/80 hover:bg-brand-primary/5 border border-dashed border-slate-300 hover:border-brand-primary/50 rounded-2xl text-xs font-bold text-slate-600 hover:text-brand-primary transition-all cursor-pointer group shadow-2xs"
-                          >
-                            <UserPlus size={15} className="text-slate-400 group-hover:text-brand-primary transition-colors" />
-                            <span>{a.assignWorker}</span>
-                          </button>
-                        }
                       />
                     )}
                   </div>
@@ -601,37 +603,32 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
   );
 };
 
-/* ===================== WORKER ASSIGN DROPDOWN ===================== */
-interface WorkerAssignDropdownProps {
+/* ===================== WORKER SELECTION POPOVER ===================== */
+interface WorkerPopoverProps {
+  job: AdminJob;
   currentWorkerId?: string | null;
   workers: AdminUser[];
+  onClose: () => void;
   onSelectWorker: (workerId: string | null) => void;
-  trigger: React.ReactNode;
-  align?: 'left' | 'right';
 }
 
-const WorkerAssignDropdown: React.FC<WorkerAssignDropdownProps> = ({
+const WorkerPopover: React.FC<WorkerPopoverProps> = ({
+  job,
   currentWorkerId,
   workers,
+  onClose,
   onSelectWorker,
-  trigger,
-  align = 'left'
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const ref = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
     };
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const filtered = workers.filter(w => {
     const q = searchQuery.toLowerCase().trim();
@@ -644,97 +641,137 @@ const WorkerAssignDropdown: React.FC<WorkerAssignDropdownProps> = ({
   });
 
   return (
-    <div className="relative inline-block" ref={ref}>
-      <div onClick={() => setIsOpen(!isOpen)}>
-        {trigger}
-      </div>
+    <>
+      {/* Click-outside backdrop */}
+      <div 
+        className="fixed inset-0 z-40 bg-slate-900/10 backdrop-blur-[1px] animate-in fade-in duration-100"
+        onClick={onClose}
+      />
 
-      {isOpen && (
-        <div className={`absolute z-50 mt-1.5 w-72 bg-white rounded-2xl shadow-xl border border-slate-200/90 py-1.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100 ${
-          align === 'right' ? 'right-0' : 'left-0'
-        }`}>
-          {/* Search bar */}
-          <div className="p-2 border-b border-slate-100">
-            <div className="relative">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Ishchini qidirish..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-7 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-slate-800"
-                autoFocus
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                >
-                  <X size={12} />
-                </button>
-              )}
+      {/* Floating Popover Container */}
+      <div 
+        ref={popoverRef}
+        className="absolute top-full left-0 sm:left-auto sm:right-0 mt-2 z-50 w-full sm:w-[350px] bg-white rounded-2xl shadow-2xl border border-slate-200/90 ring-1 ring-black/5 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      >
+        {/* Header */}
+        <div className="px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-6 h-6 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0">
+              <Users size={13} />
+            </div>
+            <div className="min-w-0">
+              <h5 className="font-bold text-xs text-slate-800 truncate">Ishchi tanlash</h5>
+              <p className="text-[10px] text-slate-400 truncate">{job.title}</p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-6 h-6 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+          >
+            <X size={14} />
+          </button>
+        </div>
 
-          {/* Unassign option */}
-          {currentWorkerId && (
-            <button
-              type="button"
-              onClick={() => {
-                onSelectWorker(null);
-                setIsOpen(false);
-              }}
-              className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-b border-slate-100 transition-colors cursor-pointer"
-            >
-              <UserX size={14} className="shrink-0" />
-              <span>Biriktirishni bekor qilish</span>
-            </button>
-          )}
-
-          {/* Workers list */}
-          <div className="max-h-56 overflow-y-auto py-1 divide-y divide-slate-50 no-scrollbar">
-            {filtered.length === 0 ? (
-              <div className="py-5 text-center text-xs text-slate-400 font-medium">
-                Ishchi topilmadi
-              </div>
-            ) : (
-              filtered.map((w) => {
-                const isSelected = w.id === currentWorkerId;
-                return (
-                  <button
-                    key={w.id}
-                    type="button"
-                    onClick={() => {
-                      onSelectWorker(w.id);
-                      setIsOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between gap-2 hover:bg-slate-50 transition-colors cursor-pointer ${
-                      isSelected ? 'bg-brand-primary/5 text-brand-primary font-bold' : 'text-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 font-bold text-[11px] flex items-center justify-center shrink-0 border border-slate-200">
-                        {w.avatarUrl ? (
-                          <img src={w.avatarUrl} alt="" className="w-full h-full rounded-lg object-cover" />
-                        ) : (
-                          (w.name || 'I').charAt(0).toUpperCase()
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-bold text-xs truncate leading-snug">{w.name || 'Ismsiz ishchi'}</p>
-                        <p className="text-[10px] text-slate-400 font-mono truncate">{w.phone || w.region || '—'}</p>
-                      </div>
-                    </div>
-                    {isSelected && <Check size={14} className="text-brand-primary shrink-0" />}
-                  </button>
-                );
-              })
+        {/* Search Bar */}
+        <div className="p-2.5 border-b border-slate-100 bg-white">
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Ishchini qidirish..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-slate-800 transition-all placeholder:text-slate-400 placeholder:font-normal"
+              autoFocus
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X size={13} />
+              </button>
             )}
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Unassign option if someone is assigned */}
+        {currentWorkerId && (
+          <div className="p-2 border-b border-slate-100 bg-rose-50/40">
+            <button
+              type="button"
+              onClick={() => onSelectWorker(null)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-rose-600 bg-white hover:bg-rose-50 border border-rose-200/80 transition-colors cursor-pointer shadow-2xs"
+            >
+              <div className="flex items-center gap-2">
+                <UserX size={14} className="text-rose-500 shrink-0" />
+                <span>Biriktirishni bekor qilish</span>
+              </div>
+              <span className="text-[10px] font-normal text-rose-400">Bo'shatish</span>
+            </button>
+          </div>
+        )}
+
+        {/* Workers List */}
+        <div className="max-h-64 overflow-y-auto p-1.5 space-y-1">
+          {filtered.length === 0 ? (
+            <div className="py-8 text-center text-xs text-slate-400 font-medium">
+              <Users size={20} className="mx-auto text-slate-300 mb-1.5" />
+              <span>Ishchi topilmadi</span>
+            </div>
+          ) : (
+            filtered.map((w) => {
+              const isSelected = w.id === currentWorkerId;
+              return (
+                <button
+                  key={w.id}
+                  type="button"
+                  onClick={() => onSelectWorker(w.id)}
+                  className={`w-full text-left p-2 rounded-xl text-xs flex items-center justify-between gap-2.5 transition-all cursor-pointer group ${
+                    isSelected
+                      ? 'bg-brand-primary/10 border border-brand-primary/20 text-brand-primary font-bold'
+                      : 'hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 border border-slate-200/80 overflow-hidden shadow-2xs">
+                      {w.avatarUrl ? (
+                        <img src={w.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        (w.name || 'I').charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-bold text-xs truncate leading-snug">{w.name || 'Ismsiz ishchi'}</p>
+                        {w.isVerified && (
+                          <CheckCircle2 size={12} className="text-brand-primary shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-[10px] text-slate-400 font-mono truncate mt-0.5">
+                        {w.phone || w.region || '—'}
+                      </p>
+                    </div>
+                  </div>
+                  {isSelected ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-brand-primary bg-white px-2 py-0.5 rounded-md border border-brand-primary/20 shadow-2xs shrink-0">
+                      <Check size={12} />
+                      <span>Faol</span>
+                    </span>
+                  ) : (
+                    <span className="text-[11px] font-semibold text-brand-primary opacity-0 group-hover:opacity-100 shrink-0 transition-opacity">
+                      Tanlash →
+                    </span>
+                  )}
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </>
   );
 };
 

@@ -111,4 +111,33 @@ describe('AdminDailyJobs — Modern UI & Layout', () => {
     expect(screen.getByPlaceholderText('Ishchini qidirish...')).toBeTruthy();
     expect(screen.getByText('Test Ishchi')).toBeTruthy();
   });
+
+  it('allows unassigning a worker from the popover', () => {
+    const onChangeJobWorker = vi.fn();
+    const assignedJob: AdminJob = {
+      ...baseJob,
+      status: 'confirmed',
+      workerId: 'w1',
+      hiredCount: 1,
+    };
+
+    render(
+      <AdminDailyJobs
+        jobs={[assignedJob]}
+        users={[mockUser]}
+        onChangeJobStatus={vi.fn()}
+        onChangeJobWorker={onChangeJobWorker}
+        onDeleteJob={vi.fn()}
+      />
+    );
+
+    const changeBtn = screen.getByLabelText('Ishchini almashtirish');
+    fireEvent.click(changeBtn);
+
+    const unassignBtn = screen.getByText('Biriktirishni bekor qilish');
+    fireEvent.click(unassignBtn);
+
+    expect(onChangeJobWorker).toHaveBeenCalledWith('j1', null);
+  });
 });
+
