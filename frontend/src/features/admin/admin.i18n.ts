@@ -112,6 +112,7 @@ export const ADMIN_TEXTS = {
 
     // Job detail modal
     assignedWorker: 'Biriktirilgan ishchi',
+    assignWorker: 'Ishchi biriktirish',
     extraInfo: "Qo'shimcha ma'lumot",
 
     // Payouts
@@ -349,6 +350,7 @@ export const ADMIN_TEXTS = {
     rejectNotePlaceholder: 'Пожалуйста, напишите причину, чтобы объявление можно было исправить...',
 
     assignedWorker: 'Назначенный работник',
+    assignWorker: 'Назначить работника',
     extraInfo: 'Дополнительная информация',
 
     withdrawalRequests: 'Запросы на вывод',
@@ -568,6 +570,7 @@ export const ADMIN_TEXTS = {
     rejectNotePlaceholder: 'Please write the reason, so the posting can be corrected...',
 
     assignedWorker: 'Assigned worker',
+    assignWorker: 'Assign worker',
     extraInfo: 'Additional information',
 
     withdrawalRequests: 'Withdrawal requests',

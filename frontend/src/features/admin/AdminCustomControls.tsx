@@ -224,7 +224,7 @@ export const StatusSelect = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider border cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all shadow-2xs ${currentOption.color} ${className}`}
+        className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all shadow-2xs ${currentOption.color} ${className}`}
       >
         <span className={`w-1.5 h-1.5 rounded-full ${currentOption.dot}`} />
         <span>{currentOption.label}</span>
