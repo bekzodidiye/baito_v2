@@ -137,6 +137,14 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
     });
   }, [transactions, typeFilter, statusFilter, search]);
 
+  const totalAmountSum = useMemo(() => {
+    return filteredTransactions.reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+  }, [filteredTransactions]);
+
+  const totalFeeSum = useMemo(() => {
+    return filteredTransactions.reduce((acc, t) => acc + (Number(t.platformFee) || 0), 0);
+  }, [filteredTransactions]);
+
   const handleExportCSV = () => {
     if (filteredTransactions.length === 0) {
       showToast('Eksport qilish uchun tranzaksiyalar mavjud emas', 'error');
@@ -493,7 +501,39 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
                   })
                 )}
               </tbody>
+              {filteredTransactions.length > 0 && (
+                <tfoot className="bg-slate-50/80 border-t border-slate-200/80 text-xs font-bold text-slate-700">
+                  <tr>
+                    <td className="p-4 pl-5">
+                      Jami ({filteredTransactions.length} ta operatsiya)
+                    </td>
+                    <td className="p-4 font-mono font-black tabular-nums text-sm text-slate-900">
+                      {formatSum(totalAmountSum)}
+                    </td>
+                    <td className="p-4 font-mono font-bold tabular-nums text-indigo-600">
+                      {formatSum(totalFeeSum)}
+                    </td>
+                    <td className="p-4">—</td>
+                    <td className="p-4">—</td>
+                    <td className="p-4 pr-5 text-right font-medium text-slate-400">—</td>
+                  </tr>
+                </tfoot>
+              )}
             </table>
+          </div>
+
+          {/* Table Bottom Navigation & Summary Bar */}
+          <div className="p-3.5 border-t border-slate-100 bg-slate-50/60 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+            <span className="font-medium">
+              Ko'rsatilmoqda: <strong className="text-slate-800 font-bold">{filteredTransactions.length}</strong> ta tranzaksiya (jami {transactions.length} tadan)
+            </span>
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 font-bold text-xs cursor-pointer hover:underline"
+            >
+              <Download size={12} /> CSV yuklab olish
+            </button>
           </div>
         </div>
       )}
@@ -591,6 +631,22 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
                   })
                 )}
               </tbody>
+              {withdrawals.length > 0 && (
+                <tfoot className="bg-slate-50/80 border-t border-slate-200/80 text-xs font-bold text-slate-700">
+                  <tr>
+                    <td className="p-4 pl-5">
+                      Jami ({withdrawals.length} ta so'rov)
+                    </td>
+                    <td className="p-4">—</td>
+                    <td className="p-4 font-mono font-black tabular-nums text-sm text-slate-900">
+                      {formatSum(withdrawals.reduce((acc, w) => acc + (Number(w.amount) || 0), 0))}
+                    </td>
+                    <td className="p-4">—</td>
+                    <td className="p-4">—</td>
+                    <td className="p-4 pr-5 text-right font-medium text-slate-400">—</td>
+                  </tr>
+                </tfoot>
+              )}
             </table>
           </div>
         </div>

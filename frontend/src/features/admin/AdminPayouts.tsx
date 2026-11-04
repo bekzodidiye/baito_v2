@@ -7,7 +7,7 @@ import {
   Wallet, Check, X, Loader2, RefreshCw, Receipt, Landmark, Save, 
   CreditCard, ArrowUpRight, CheckCircle2, AlertCircle, Building2,
   FileText, ShieldCheck, Search, Clock, ExternalLink, Eye,
-  CheckCircle, AlertTriangle
+  CheckCircle, AlertTriangle, Download, Mail, Copy, FileCheck
 } from 'lucide-react';
 import { apiClient, unwrapList } from '../../api/client';
 import { showToast } from '../../utils/toast';
@@ -227,6 +227,112 @@ export const AdminPayouts: React.FC = () => {
     });
   }, [rawWithdrawals, withdrawalSearch]);
 
+  const totalWageSum = useMemo(() => {
+    return filteredPayouts.reduce((acc, p) => acc + (p.amount || 0), 0);
+  }, [filteredPayouts]);
+
+  const totalInvoiceSum = useMemo(() => {
+    return filteredPayouts.reduce((acc, p) => acc + (p.invoiceAmount || 0), 0);
+  }, [filteredPayouts]);
+
+  const totalWithdrawalsSum = useMemo(() => {
+    return filteredWithdrawals.reduce((acc, w) => acc + (w.amountUzs || 0), 0);
+  }, [filteredWithdrawals]);
+
+  // Keyboard shortcut listener for modals
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setViewingReceipt(null);
+        setDecisionModal(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const exportPayoutsCsv = () => {
+    if (filteredPayouts.length === 0) {
+      showToast("Eksport qilish uchun to'lovlar topilmadi", 'error');
+      return;
+    }
+    const headers = [
+      'ID',
+      'Ish nomi',
+      'Korxona',
+      'Ishchi',
+      'Ish haqi (UZS)',
+      'Chek mavjudligi',
+      'Hisob-faktura raqami',
+      'Faktura summasi (UZS)',
+      'Yuborilgan email',
+      'Holat',
+      'Sana'
+    ];
+    const rows = filteredPayouts.map(p => [
+      p.id,
+      `"${(p.jobTitle || '').replace(/"/g, '""')}"`,
+      `"${(p.company || '').replace(/"/g, '""')}"`,
+      `"${(p.workerName || '').replace(/"/g, '""')}"`,
+      p.amount,
+      p.receiptUrl ? 'Mavjud' : 'Mavjud emas',
+      p.invoiceNumber || '',
+      p.invoiceAmount || 0,
+      p.invoiceSentTo || '',
+      p.invoiceConfirmedAt ? 'Tasdiqlangan' : p.invoicePaidDeclaredAt ? "To'lov e'lon qilingan" : p.invoiceSentAt ? "To'lov kutilmoqda" : 'Fakturasiz',
+      p.paidAt ? when(p.paidAt) : ''
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `baito_tolovlar_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast("To'lovlar CSV formatida muvaffaqiyatli yuklab olindi", 'success');
+  };
+
+  const exportWithdrawalsCsv = () => {
+    if (filteredWithdrawals.length === 0) {
+      showToast("Eksport qilish uchun so'rovlar topilmadi", 'error');
+      return;
+    }
+    const headers = [
+      'ID',
+      'Foydalanuvchi',
+      'Telefon',
+      'Karta raqami',
+      'Miqdor (UZS)',
+      'Holat',
+      'Bank referensi',
+      'Sana'
+    ];
+    const rows = filteredWithdrawals.map(w => [
+      w.id,
+      `"${(w.userName || '').replace(/"/g, '""')}"`,
+      `"${(w.userPhone || '').replace(/"/g, '""')}"`,
+      `"${(w.bankCardMask || '').replace(/"/g, '""')}"`,
+      w.amountUzs,
+      w.status,
+      w.reference || '',
+      w.createdAt ? when(w.createdAt) : ''
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `baito_yechishlar_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast("Yechish so'rovlari CSV formatida muvaffaqiyatli yuklab olindi", 'success');
+  };
+
   const hasBankConfigured = Boolean(bank.data?.payoutBankName && bank.data?.payoutBankAccount);
 
   return (
@@ -404,16 +510,16 @@ export const AdminPayouts: React.FC = () => {
         ) : tab === 'payouts' ? (
           <div>
             {/* Payouts Filter Bar */}
-            <div className="p-3.5 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
+            <div className="p-3.5 border-b border-slate-200/80 bg-slate-50/60 flex flex-wrap items-center justify-between gap-3">
               {/* Search */}
-              <div className="relative flex-1 min-w-[240px] max-w-sm">
+              <div className="relative flex-1 min-w-[260px] max-w-md">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Ish, korxona, ishchi yoki INV- raqami..."
                   value={payoutSearch}
                   onChange={(e) => setPayoutSearch(e.target.value)}
-                  className="w-full pl-9 pr-8 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all shadow-2xs"
+                  className="w-full pl-9 pr-8 py-2 bg-white border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all shadow-2xs"
                   style={{ outline: 'none' }}
                 />
                 {payoutSearch && (
@@ -427,62 +533,76 @@ export const AdminPayouts: React.FC = () => {
                 )}
               </div>
 
-              {/* Status Filter Chips */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {[
-                  { id: 'all', label: 'Barchasi', count: payoutsList.length },
-                  { id: 'pending_confirm', label: '⚡ Tasdiqlash kutilmoqda', count: pendingConfirmCount },
-                  { id: 'invoiced', label: "To'lov kutilmoqda", count: payoutsList.filter(p => !!p.invoiceSentAt && !p.invoicePaidDeclaredAt && !p.invoiceConfirmedAt).length },
-                  { id: 'confirmed', label: 'Tasdiqlangan', count: confirmedCount },
-                  { id: 'no_invoice', label: 'Fakturasiz', count: payoutsList.filter(p => !p.invoiceSentAt).length },
-                ].map((item) => {
-                  const isActive = payoutStatusFilter === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setPayoutStatusFilter(item.id as any)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                        isActive
-                          ? 'bg-slate-900 text-white shadow-2xs'
-                          : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-100/70'
-                      }`}
-                    >
-                      <span>{item.label}</span>
-                      <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
-                        isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
-                      }`}>
-                        {item.count}
-                      </span>
-                    </button>
-                  );
-                })}
+              {/* Status Filter Chips & Export */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[
+                    { id: 'all', label: 'Barchasi', count: payoutsList.length },
+                    { id: 'pending_confirm', label: '⚡ Tasdiqlash kutilmoqda', count: pendingConfirmCount },
+                    { id: 'invoiced', label: "To'lov kutilmoqda", count: payoutsList.filter(p => Boolean(p.invoiceSentAt && !p.invoicePaidDeclaredAt && !p.invoiceConfirmedAt)).length },
+                    { id: 'confirmed', label: 'Tasdiqlangan', count: confirmedCount },
+                    { id: 'no_invoice', label: 'Fakturasiz', count: payoutsList.filter(p => !p.invoiceSentAt).length },
+                  ].map((item) => {
+                    const isActive = payoutStatusFilter === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setPayoutStatusFilter(item.id as any)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          isActive
+                            ? 'bg-slate-900 text-white shadow-2xs'
+                            : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-100/70'
+                        }`}
+                      >
+                        <span>{item.label}</span>
+                        <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+                          isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {item.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={exportPayoutsCsv}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition-all cursor-pointer active:scale-95"
+                  title="CSV jadvalini yuklab olish"
+                >
+                  <Download size={13} className="text-slate-500" />
+                  <span>Eksport (CSV)</span>
+                </button>
               </div>
             </div>
 
             {/* Payouts Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-slate-50 text-slate-500 border-b border-slate-100 font-black">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-200/80 font-bold uppercase tracking-wider text-[11px]">
                   <tr>
-                    <th className="text-left font-black px-4 py-3.5 uppercase tracking-wider text-[11px] min-w-[200px]">{a.jobLabel} va Korxona</th>
-                    <th className="text-left font-black px-4 py-3.5 uppercase tracking-wider text-[11px] min-w-[140px]">{a.roleWorker}</th>
-                    <th className="text-left font-black px-4 py-3.5 uppercase tracking-wider text-[11px] min-w-[130px]">{a.paidLabel}</th>
-                    <th className="text-left font-black px-4 py-3.5 uppercase tracking-wider text-[11px] min-w-[250px]">Hisob-faktura & Tushum</th>
-                    <th className="text-right font-black px-4 py-3.5 uppercase tracking-wider text-[11px] min-w-[120px]">{a.dateLabel}</th>
+                    <th className="px-4 py-3.5 min-w-[220px]">{a.jobLabel} va Korxona</th>
+                    <th className="px-4 py-3.5 min-w-[150px]">{a.roleWorker}</th>
+                    <th className="px-4 py-3.5 min-w-[130px]">{a.paidLabel}</th>
+                    <th className="px-4 py-3.5 min-w-[120px]">Ishchi Cheki</th>
+                    <th className="px-4 py-3.5 min-w-[200px]">Hisob-faktura</th>
+                    <th className="px-4 py-3.5 min-w-[230px]">Tushum va Tasdiqlash</th>
+                    <th className="px-4 py-3.5 text-right min-w-[110px]">{a.dateLabel}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 font-medium">
                   {payouts.isLoading ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-16 text-center text-slate-400">
+                      <td colSpan={7} className="px-4 py-16 text-center text-slate-400">
                         <Loader2 size={24} className="animate-spin mx-auto mb-2 text-brand-primary" />
                         Yuklanmoqda…
                       </td>
                     </tr>
                   ) : filteredPayouts.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-16 text-center text-slate-400">
+                      <td colSpan={7} className="px-4 py-16 text-center text-slate-400">
                         <Receipt size={32} className="mx-auto mb-2 text-slate-300" />
                         <p className="font-bold text-slate-700 text-sm">To'lovlar topilmadi</p>
                         <p className="text-xs text-slate-400 mt-0.5">Filtr yoki qidiruv so'zini o'zgartirib ko'ring</p>
@@ -495,168 +615,275 @@ export const AdminPayouts: React.FC = () => {
                       const isInvoiced = Boolean(p.invoiceSentAt && !p.invoicePaidDeclaredAt && !p.invoiceConfirmedAt);
 
                       return (
-                        <tr key={p.id} className="hover:bg-slate-50/80 transition-colors group">
-                          {/* Job & Company */}
-                          <td className="px-4 py-3.5">
-                            <span className="font-bold text-slate-900 block text-xs leading-snug">
-                              {p.jobTitle ?? '—'}
-                            </span>
-                            <span className="text-slate-500 font-medium flex items-center gap-1.5 mt-1 text-[11px]">
-                              <Building2 size={12} className="text-slate-400 shrink-0" />
-                              <span className="truncate">{p.company ?? 'Baito hamkori'}</span>
-                            </span>
-                          </td>
-
-                          {/* Worker */}
-                          <td className="px-4 py-3.5">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0">
-                                {(p.workerName || 'I').charAt(0).toUpperCase()}
+                        <tr key={p.id} className="hover:bg-slate-50/70 transition-colors group">
+                          {/* 1. Job & Company */}
+                          <td className="px-4 py-3.5 align-top">
+                            <div className="flex items-start gap-2.5">
+                              <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200/80 flex items-center justify-center font-extrabold text-xs text-slate-700 shrink-0 shadow-2xs mt-0.5">
+                                {(p.company ? p.company.charAt(0) : 'B').toUpperCase()}
                               </div>
                               <div className="min-w-0">
-                                <span className="font-bold text-slate-900 block truncate">{p.workerName ?? '—'}</span>
-                                <span className="text-[10px] text-slate-400 font-mono">ID: {p.id.slice(0, 8)}</span>
+                                <span className="font-bold text-slate-900 block text-xs leading-snug hover:text-brand-primary transition-colors">
+                                  {p.jobTitle ? p.jobTitle : '—'}
+                                </span>
+                                <span className="text-slate-500 font-medium flex items-center gap-1 mt-1 text-[11px] truncate">
+                                  <Building2 size={12} className="text-slate-400 shrink-0" />
+                                  <span className="truncate">{p.company ? p.company : 'Baito hamkori'}</span>
+                                </span>
+                                <span className="inline-block text-[10px] font-mono text-slate-400 mt-0.5">
+                                  Job #{p.jobId.slice(0, 8)}
+                                </span>
                               </div>
                             </div>
                           </td>
 
-                          {/* Wage Settled */}
-                          <td className="px-4 py-3.5">
-                            <div className="space-y-1">
-                              <span className="font-black text-slate-900 tabular-nums text-sm block">
-                                {money(p.amount)}
-                              </span>
-                              {p.receiptUrl ? (
-                                <button
-                                  type="button"
-                                  onClick={() => setViewingReceipt({ url: p.receiptUrl, title: p.workerName ? `${p.workerName}ga to'lov cheki` : "To'lov cheki" })}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[10px] transition-colors cursor-pointer border border-emerald-200/60"
-                                >
-                                  <Eye size={11} /> Chekni ko'rish
-                                </button>
-                              ) : (
-                                <span className="text-[10px] text-slate-400 font-medium">—</span>
-                              )}
+                          {/* 2. Worker */}
+                          <td className="px-4 py-3.5 align-top">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-linear-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                {(p.workerName ? p.workerName.charAt(0) : 'I').toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <span className="font-bold text-slate-900 block text-xs truncate">
+                                  {p.workerName ? p.workerName : '—'}
+                                </span>
+                                <span className="text-[10px] font-mono text-slate-400 block mt-0.5">
+                                  ID: {p.id.slice(0, 8)}
+                                </span>
+                              </div>
                             </div>
                           </td>
 
-                          {/* Invoice & Status */}
-                          <td className="px-4 py-3.5">
+                          {/* 3. Wage Settled */}
+                          <td className="px-4 py-3.5 align-top">
+                            <div className="space-y-1">
+                              <span className="font-extrabold text-slate-900 tabular-nums text-sm block tracking-tight">
+                                {money(p.amount)}
+                              </span>
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60">
+                                <Check size={10} className="stroke-[3]" /> Ishchiga to'langan
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* 4. Worker Receipt */}
+                          <td className="px-4 py-3.5 align-top">
+                            {p.receiptUrl ? (
+                              <button
+                                type="button"
+                                onClick={() => setViewingReceipt({
+                                  url: p.receiptUrl,
+                                  title: p.workerName ? `${p.workerName}ga to'lov cheki` : "Ish haqi cheki"
+                                })}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 hover:text-slate-900 font-semibold text-xs transition-all shadow-2xs cursor-pointer group"
+                              >
+                                <FileText size={12} className="text-brand-primary group-hover:scale-110 transition-transform" />
+                                <span>Chekni ko'rish</span>
+                              </button>
+                            ) : (
+                              <span className="text-xs text-slate-400 font-medium italic">—</span>
+                            )}
+                          </td>
+
+                          {/* 5. Invoice Details */}
+                          <td className="px-4 py-3.5 align-top">
                             {p.invoiceSentAt ? (
-                              <div className="space-y-1.5">
-                                {/* Invoice number and amount */}
+                              <div className="space-y-1">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-mono text-[11px] font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/80">
+                                  <span className="font-mono text-[11px] font-extrabold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/80">
                                     {p.invoiceNumber}
                                   </span>
-                                  <span className="text-slate-700 font-bold tabular-nums text-xs">
+                                  <span className="text-slate-900 font-bold tabular-nums text-xs">
                                     {money(p.invoiceAmount ?? 0)}
                                   </span>
                                 </div>
 
-                                {/* Sent recipient */}
-                                <div className="text-[11px] text-slate-400 truncate">
+                                <div className="text-[11px] text-slate-500 truncate flex items-center gap-1">
                                   {p.invoiceSentTo ? (
-                                    <span>Yuborildi: <strong className="text-slate-600 font-medium">{p.invoiceSentTo}</strong></span>
+                                    <>
+                                      <Mail size={11} className="text-slate-400 shrink-0" />
+                                      <span className="truncate">{p.invoiceSentTo}</span>
+                                    </>
                                   ) : (
                                     <span className="text-slate-400 italic">Email kiritilmagan</span>
                                   )}
                                 </div>
 
-                                {/* Single Clear Status Badge */}
-                                {isConfirmed ? (
-                                  <div className="space-y-1">
-                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200/80 shadow-2xs">
-                                      <ShieldCheck size={13} className="text-emerald-600 shrink-0" />
-                                      <span>Tasdiqlandi · {when(p.invoiceConfirmedAt)}</span>
-                                    </div>
-                                    {p.invoicePaidReceiptUrl && (
-                                      <div>
-                                        <button
-                                          type="button"
-                                          onClick={() => setViewingReceipt({ url: p.invoicePaidReceiptUrl!, title: `Bank to'lov cheki (${p.invoiceNumber})` })}
-                                          className="inline-flex items-center gap-1 text-brand-primary hover:text-brand-primary/80 font-bold text-[11px] underline underline-offset-2 cursor-pointer"
-                                        >
-                                          <Receipt size={12} /> Bank chekini tekshirish
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : isDeclaredPending ? (
-                                  <div className="space-y-1.5 bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/80">
-                                    <div className="text-[11px] text-amber-800 font-bold flex items-center gap-1.5">
-                                      <Clock size={13} className="text-amber-600 shrink-0 animate-pulse" />
-                                      <span>To'ladim dedi · {when(p.invoicePaidDeclaredAt)}</span>
-                                    </div>
-
-                                    {p.invoicePaidReference && (
-                                      <div className="text-[10px] text-amber-700 font-mono">
-                                        Ma'lumotnoma: <strong>№{p.invoicePaidReference}</strong>
-                                      </div>
-                                    )}
-
-                                    {p.invoicePaidReceiptUrl && (
-                                      <div>
-                                        <button
-                                          type="button"
-                                          onClick={() => setViewingReceipt({ url: p.invoicePaidReceiptUrl!, title: `Bank kvitansiyasi (${p.invoiceNumber})` })}
-                                          className="inline-flex items-center gap-1 text-brand-primary hover:text-brand-primary/80 font-bold text-[11px] underline underline-offset-2 cursor-pointer"
-                                        >
-                                          <Receipt size={12} /> Korxona bank chekini ko'rish
-                                        </button>
-                                      </div>
-                                    )}
-
-                                    <button
-                                      type="button"
-                                      onClick={() => confirmPayment.mutate(p.jobId)}
-                                      disabled={confirmPayment.isPending}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold text-[11px] transition-all cursor-pointer shadow-xs disabled:opacity-50"
-                                    >
-                                      {confirmPayment.isPending ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle size={13} />}
-                                      <span>To'lovni tasdiqlash</span>
-                                    </button>
-                                  </div>
-                                ) : isInvoiced ? (
-                                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px] border border-blue-200/80">
-                                    <Clock size={12} className="text-blue-500 shrink-0" />
-                                    <span>To'lov kutilmoqda (Faktura yuborilgan)</span>
-                                  </div>
-                                ) : null}
+                                <div className="text-[10px] text-slate-400 font-medium">
+                                  Yuborilgan: {when(p.invoiceSentAt)}
+                                </div>
                               </div>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg font-bold text-[11px] border border-amber-200/60">
-                                <AlertCircle size={12} className="shrink-0" />
-                                <span>Faktura yuborilmagan</span>
-                              </span>
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 font-medium text-[11px]">
+                                <AlertCircle size={11} className="text-slate-400 shrink-0" />
+                                <span>Faktura ochilmagan</span>
+                              </div>
                             )}
                           </td>
 
-                          {/* Date */}
-                          <td className="px-4 py-3.5 text-right text-slate-500 font-medium whitespace-nowrap">
-                            {when(p.paidAt)}
+                          {/* 6. Reconciliation & Admin Decision */}
+                          <td className="px-4 py-3.5 align-top">
+                            {isConfirmed ? (
+                              <div className="space-y-1.5">
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200/80 shadow-2xs">
+                                  <ShieldCheck size={13} className="text-emerald-600 shrink-0" />
+                                  <span>Tasdiqlangan</span>
+                                </div>
+                                <div className="text-[10px] text-slate-400 font-medium">
+                                  {when(p.invoiceConfirmedAt)}
+                                </div>
+                                {p.invoicePaidReceiptUrl && (
+                                  <div>
+                                    <button
+                                      type="button"
+                                      onClick={() => setViewingReceipt({
+                                        url: p.invoicePaidReceiptUrl!,
+                                        title: `Bank to'lov cheki (${p.invoiceNumber})`
+                                      })}
+                                      className="inline-flex items-center gap-1 text-brand-primary hover:text-brand-primary/80 font-bold text-[11px] underline underline-offset-2 cursor-pointer transition-colors"
+                                    >
+                                      <Receipt size={12} /> Bank chekini tekshirish
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ) : isDeclaredPending ? (
+                              <div className="space-y-2 bg-amber-50/90 border border-amber-200/90 rounded-xl p-2.5 shadow-2xs max-w-xs">
+                                <div className="flex items-center justify-between gap-1.5">
+                                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-900">
+                                    <span className="relative flex h-2 w-2">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                    </span>
+                                    <span>To'ladim dedi</span>
+                                  </span>
+                                  <span className="text-[10px] text-amber-700 font-mono font-medium">
+                                    {when(p.invoicePaidDeclaredAt)}
+                                  </span>
+                                </div>
+
+                                {p.invoicePaidReference && (
+                                  <div className="text-[10px] text-amber-800 font-mono bg-amber-100/70 px-2 py-0.5 rounded border border-amber-200/60 truncate">
+                                    Ref: #{p.invoicePaidReference}
+                                  </div>
+                                )}
+
+                                {p.invoicePaidReceiptUrl && (
+                                  <div>
+                                    <button
+                                      type="button"
+                                      onClick={() => setViewingReceipt({
+                                        url: p.invoicePaidReceiptUrl!,
+                                        title: `Bank kvitansiyasi (${p.invoiceNumber})`
+                                      })}
+                                      className="inline-flex items-center gap-1 text-amber-900 hover:text-amber-950 font-bold text-[11px] underline underline-offset-2 cursor-pointer transition-colors"
+                                    >
+                                      <Receipt size={12} /> Korxona bank chekini ko'rish
+                                    </button>
+                                  </div>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => confirmPayment.mutate(p.jobId)}
+                                  disabled={confirmPayment.isPending}
+                                  className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                                >
+                                  {confirmPayment.isPending ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle size={13} />}
+                                  <span>To'lovni tasdiqlash</span>
+                                </button>
+                              </div>
+                            ) : isInvoiced ? (
+                              <div className="space-y-1">
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold text-xs border border-blue-200/80">
+                                  <Clock size={12} className="text-blue-500 shrink-0" />
+                                  <span>To'lov kutilmoqda</span>
+                                </div>
+                                <div className="text-[10px] text-slate-400 font-medium">
+                                  Faktura bo'yicha to'lov
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-slate-400 font-medium italic">—</span>
+                            )}
+                          </td>
+
+                          {/* 7. Date */}
+                          <td className="px-4 py-3.5 align-top text-right text-slate-500 font-medium whitespace-nowrap">
+                            <span className="font-semibold text-slate-800 text-xs block tabular-nums">
+                              {p.paidAt ? new Date(p.paidAt).toLocaleDateString('uz-UZ') : '—'}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono block mt-0.5">
+                              {p.paidAt ? new Date(p.paidAt).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </span>
                           </td>
                         </tr>
                       );
                     })
                   )}
                 </tbody>
+
+                {/* Table Footer Totals */}
+                {filteredPayouts.length > 0 && (
+                  <tfoot className="bg-slate-50/80 border-t border-slate-200/80 text-xs text-slate-600 font-bold">
+                    <tr>
+                      <td className="px-4 py-3">
+                        Jami ({filteredPayouts.length} ta operatsiya)
+                      </td>
+                      <td className="px-4 py-3">—</td>
+                      <td className="px-4 py-3 text-slate-900 font-black tabular-nums text-sm">
+                        {money(totalWageSum)}
+                      </td>
+                      <td className="px-4 py-3">—</td>
+                      <td className="px-4 py-3 text-slate-900 font-black tabular-nums text-sm">
+                        {money(totalInvoiceSum)}
+                      </td>
+                      <td className="px-4 py-3 text-amber-700 font-bold text-[11px]">
+                        {pendingConfirmCount > 0 ? `⚡ ${pendingConfirmCount} ta tasdiqlash kutilmoqda` : 'Barchasi tekshirilgan'}
+                      </td>
+                      <td className="px-4 py-3 text-right text-slate-400 font-medium">—</td>
+                    </tr>
+                  </tfoot>
+                )}
               </table>
+            </div>
+
+            {/* Table Bottom Navigation & Summary Bar */}
+            <div className="p-3.5 border-t border-slate-100 bg-slate-50/60 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">
+                  Ko'rsatilmoqda: <strong className="text-slate-800 font-bold">{filteredPayouts.length}</strong> ta to'lov (jami {payoutsList.length} tadan)
+                </span>
+                {pendingConfirmCount > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px]">
+                    ⚡ {pendingConfirmCount} ta tasdiqlash kutilmoqda
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={exportPayoutsCsv}
+                  className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 font-bold text-xs cursor-pointer hover:underline"
+                >
+                  <Download size={12} /> CSV yuklab olish
+                </button>
+              </div>
             </div>
           </div>
         ) : tab === 'withdrawals' ? (
           <div>
             {/* Withdrawals Filter Bar */}
-            <div className="p-3.5 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
+            <div className="p-3.5 border-b border-slate-200/80 bg-slate-50/60 flex flex-wrap items-center justify-between gap-3">
               {/* Search */}
-              <div className="relative flex-1 min-w-[240px] max-w-sm">
+              <div className="relative flex-1 min-w-[260px] max-w-md">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Ishchi ismi, telefon yoki karta raqami..."
                   value={withdrawalSearch}
                   onChange={(e) => setWithdrawalSearch(e.target.value)}
-                  className="w-full pl-9 pr-8 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all shadow-2xs"
+                  className="w-full pl-9 pr-8 py-2 bg-white border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all shadow-2xs"
                   style={{ outline: 'none' }}
                 />
                 {withdrawalSearch && (
@@ -670,46 +897,58 @@ export const AdminPayouts: React.FC = () => {
                 )}
               </div>
 
-              {/* Status Tabs */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {[
-                  { id: 'pending', label: 'Kutilmoqda' },
-                  { id: 'paid', label: 'Tasdiqlangan' },
-                  { id: 'canceled', label: 'Rad etilgan' },
-                  { id: 'all', label: 'Barchasi' },
-                ].map((item) => {
-                  const isActive = withdrawalStatusFilter === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setWithdrawalStatusFilter(item.id as any)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        isActive
-                          ? 'bg-slate-900 text-white shadow-2xs'
-                          : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-100/70'
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  );
-                })}
+              {/* Status Tabs & Export */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[
+                    { id: 'pending', label: 'Kutilmoqda' },
+                    { id: 'paid', label: 'Tasdiqlangan' },
+                    { id: 'canceled', label: 'Rad etilgan' },
+                    { id: 'all', label: 'Barchasi' },
+                  ].map((item) => {
+                    const isActive = withdrawalStatusFilter === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setWithdrawalStatusFilter(item.id as any)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          isActive
+                            ? 'bg-slate-900 text-white shadow-2xs'
+                            : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-100/70'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={exportWithdrawalsCsv}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition-all cursor-pointer active:scale-95"
+                  title="Yechish so'rovlarini CSV faylga yuklash"
+                >
+                  <Download size={13} className="text-slate-500" />
+                  <span>Eksport (CSV)</span>
+                </button>
               </div>
             </div>
 
             {/* Withdrawals Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-slate-50 text-slate-500 border-b border-slate-100 font-black">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead className="bg-slate-50/80 text-slate-500 border-b border-slate-200/80 font-bold uppercase tracking-wider text-[11px]">
                   <tr>
-                    <th className="text-left font-black px-4 py-3.5 uppercase tracking-wider text-[11px]">{a.roleWorker}</th>
-                    <th className="text-left font-black px-4 py-3.5 uppercase tracking-wider text-[11px]">Bank Kartasi</th>
-                    <th className="text-left font-black px-4 py-3.5 uppercase tracking-wider text-[11px]">So'ralgan Summa</th>
-                    <th className="text-left font-black px-4 py-3.5 uppercase tracking-wider text-[11px]">{a.dateLabel}</th>
-                    <th className="text-right font-black px-4 py-3.5 uppercase tracking-wider text-[11px]">Holat & Qaror</th>
+                    <th className="px-4 py-3.5 min-w-[200px]">{a.roleWorker}</th>
+                    <th className="px-4 py-3.5 min-w-[170px]">Bank Kartasi</th>
+                    <th className="px-4 py-3.5 min-w-[140px]">So'ralgan Summa</th>
+                    <th className="px-4 py-3.5 min-w-[140px]">{a.dateLabel}</th>
+                    <th className="px-4 py-3.5 text-right min-w-[180px]">Holat & Qaror</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 font-medium">
                   {withdrawals.isLoading ? (
                     <tr>
                       <td colSpan={5} className="px-4 py-16 text-center text-slate-400">
@@ -732,24 +971,40 @@ export const AdminPayouts: React.FC = () => {
                       const isRejected = w.status === 'canceled' || w.status === 'rejected';
 
                       return (
-                        <tr key={w.id} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="px-4 py-3.5">
-                            <span className="font-bold text-slate-900 block text-xs">{w.userName || 'Foydalanuvchi'}</span>
-                            <span className="text-slate-400 font-mono text-[11px]">{w.userPhone || '—'}</span>
+                        <tr key={w.id} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="px-4 py-3.5 align-top">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-xs text-slate-700 shrink-0">
+                                {(w.userName ? w.userName.charAt(0) : 'U').toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <span className="font-bold text-slate-900 block text-xs truncate">
+                                  {w.userName ? w.userName : 'Foydalanuvchi'}
+                                </span>
+                                <span className="text-slate-400 font-mono text-[11px] block mt-0.5">
+                                  {w.userPhone ? w.userPhone : '—'}
+                                </span>
+                              </div>
+                            </div>
                           </td>
-                          <td className="px-4 py-3.5">
+                          <td className="px-4 py-3.5 align-top">
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 font-mono text-slate-800 font-bold border border-slate-200">
                               <CreditCard size={13} className="text-slate-400 shrink-0" />
-                              <span>{w.bankCardMask || 'Karta biriktirilgan'}</span>
+                              <span>{w.bankCardMask ? w.bankCardMask : 'Karta biriktirilgan'}</span>
                             </span>
                           </td>
-                          <td className="px-4 py-3.5 font-black text-slate-900 tabular-nums text-sm">
+                          <td className="px-4 py-3.5 align-top font-black text-slate-900 tabular-nums text-sm">
                             {money(w.amountUzs)}
                           </td>
-                          <td className="px-4 py-3.5 text-slate-500 font-medium">
-                            {when(w.createdAt)}
+                          <td className="px-4 py-3.5 align-top text-slate-500 font-medium">
+                            <span className="font-semibold text-slate-800 text-xs block tabular-nums">
+                              {w.createdAt ? new Date(w.createdAt).toLocaleDateString('uz-UZ') : '—'}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono block mt-0.5">
+                              {w.createdAt ? new Date(w.createdAt).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </span>
                           </td>
-                          <td className="px-4 py-3.5 text-right">
+                          <td className="px-4 py-3.5 align-top text-right">
                             {isPending ? (
                               <div className="flex items-center justify-end gap-2">
                                 <button
@@ -790,7 +1045,38 @@ export const AdminPayouts: React.FC = () => {
                     })
                   )}
                 </tbody>
+
+                {/* Withdrawals Footer Totals */}
+                {filteredWithdrawals.length > 0 && (
+                  <tfoot className="bg-slate-50/80 border-t border-slate-200/80 text-xs text-slate-600 font-bold">
+                    <tr>
+                      <td className="px-4 py-3">
+                        Jami ({filteredWithdrawals.length} ta so'rov)
+                      </td>
+                      <td className="px-4 py-3">—</td>
+                      <td className="px-4 py-3 text-slate-900 font-black tabular-nums text-sm">
+                        {money(totalWithdrawalsSum)}
+                      </td>
+                      <td className="px-4 py-3">—</td>
+                      <td className="px-4 py-3 text-right text-slate-400 font-medium">—</td>
+                    </tr>
+                  </tfoot>
+                )}
               </table>
+            </div>
+
+            {/* Withdrawals Bottom Navigation */}
+            <div className="p-3.5 border-t border-slate-100 bg-slate-50/60 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+              <span className="font-medium">
+                Ko'rsatilmoqda: <strong className="text-slate-800 font-bold">{filteredWithdrawals.length}</strong> ta so'rov (jami {rawWithdrawals.length} tadan)
+              </span>
+              <button
+                type="button"
+                onClick={exportWithdrawalsCsv}
+                className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 font-bold text-xs cursor-pointer hover:underline"
+              >
+                <Download size={12} /> CSV yuklab olish
+              </button>
             </div>
           </div>
         ) : null}
@@ -932,6 +1218,16 @@ export const AdminPayouts: React.FC = () => {
               <div className="flex items-center gap-1">
                 <a
                   href={viewingReceipt.url}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+                  title="Faylni yuklab olish"
+                >
+                  <Download size={16} />
+                </a>
+                <a
+                  href={viewingReceipt.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
@@ -1057,14 +1353,29 @@ const BankDetailsForm: React.FC<{ data?: BankDetails; onSaved: () => void }> = (
               <span className="text-xs font-bold text-slate-700">{label}</span>
               <span className="text-[10px] text-slate-400">{hint}</span>
             </div>
-            <input
-              type="text"
-              value={form[k] ?? ''}
-              onChange={set(k)}
-              placeholder={placeholder}
-              className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all shadow-2xs"
-              style={{ outline: 'none' }}
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={form[k] ?? ''}
+                onChange={set(k)}
+                placeholder={placeholder}
+                className="w-full h-11 pl-4 pr-10 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all shadow-2xs"
+                style={{ outline: 'none' }}
+              />
+              {Boolean(form[k]) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(form[k] || '');
+                    showToast(`${label} nusxalandi`, 'success');
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                  title="Nusxalash"
+                >
+                  <Copy size={13} />
+                </button>
+              )}
+            </div>
           </label>
         ))}
       </div>
