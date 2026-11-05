@@ -452,7 +452,7 @@ export const AdminPayouts: React.FC = () => {
       </div>
 
       {/* Segmented Tabs Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-slate-200/80 shadow-2xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs">
         <div className="inline-flex items-center p-1 bg-slate-100/90 rounded-xl gap-1">
           {/* Tab 1: Payouts & Invoices */}
           <button
@@ -526,7 +526,7 @@ export const AdminPayouts: React.FC = () => {
       </div>
 
       {/* Main Tab Content */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
         {tab === 'bank' ? (
           <BankDetailsForm data={bank.data} onSaved={refreshAll} />
         ) : tab === 'payouts' ? (
@@ -1060,7 +1060,7 @@ export const AdminPayouts: React.FC = () => {
       {/* Decision Modal for Withdrawals */}
       {decisionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+          <div className="bg-white rounded-xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
             <div className={`p-5 ${decisionModal.action === 'approve' ? 'bg-emerald-50 border-b border-emerald-100' : 'bg-rose-50 border-b border-rose-100'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -1091,7 +1091,7 @@ export const AdminPayouts: React.FC = () => {
             </div>
 
             <div className="p-6 space-y-4">
-              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2 text-xs">
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2 text-xs">
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500 font-semibold">Foydalanuvchi:</span>
                   <span className="font-extrabold text-slate-900">{decisionModal.withdrawal.userName || 'Foydalanuvchi'}</span>
@@ -1179,7 +1179,7 @@ export const AdminPayouts: React.FC = () => {
       {/* In-app Receipt Viewer Modal */}
       {viewingReceipt && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold">
@@ -1296,7 +1296,7 @@ const ReconciliationModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="bg-white rounded-xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="px-6 py-4.5 border-b border-slate-100 flex items-center justify-between bg-white">
           <div className="flex items-center gap-3">
@@ -1322,7 +1322,7 @@ const ReconciliationModal: React.FC<{
         {/* Content body */}
         <div className="p-6 overflow-y-auto space-y-4 text-xs">
           {/* Summary Banner */}
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 grid grid-cols-2 gap-3">
+          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/90 grid grid-cols-2 gap-3">
             <div>
               <span className="text-[11px] text-slate-400 font-semibold block">Buyurtmachi korxona</span>
               <span className="font-extrabold text-slate-900 text-xs flex items-center gap-1.5 mt-0.5">
@@ -1359,7 +1359,7 @@ const ReconciliationModal: React.FC<{
           </div>
 
           {/* Baito Bank Account Info */}
-          <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-2">
+          <div className="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-2">
             <div className="flex items-center justify-between text-indigo-950 font-bold text-xs">
               <span className="flex items-center gap-1.5">
                 <Landmark size={14} className="text-indigo-600" />
@@ -1395,7 +1395,7 @@ const ReconciliationModal: React.FC<{
               Korxona taqdim etgan to'lov hujjati (Chek):
             </label>
             {hasReceipt ? (
-              <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between gap-3">
+              <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-white border border-emerald-200 overflow-hidden flex items-center justify-center shrink-0 shadow-2xs">
                     <img
@@ -1437,7 +1437,7 @@ const ReconciliationModal: React.FC<{
                 </div>
               </div>
             ) : (
-              <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/90 space-y-1.5">
+              <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200/90 space-y-1.5">
                 <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
                   <AlertTriangle size={15} className="text-amber-600 shrink-0" />
                   <span>Korxona tomonidan to'lov cheki yuklanmagan!</span>
@@ -1453,7 +1453,7 @@ const ReconciliationModal: React.FC<{
 
           {/* Admin Statement Verification Checkbox */}
           <div className="pt-2">
-            <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 border-2 border-slate-200 hover:border-brand-primary/50 transition-colors cursor-pointer select-none">
+            <label className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border-2 border-slate-200 hover:border-brand-primary/50 transition-colors cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={statementChecked}
@@ -1504,7 +1504,7 @@ const AuditDetailModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
           <div className="flex items-center gap-2.5">
@@ -1528,7 +1528,7 @@ const AuditDetailModal: React.FC<{
         {/* Content */}
         <div className="p-5 overflow-y-auto space-y-4 text-xs">
           {/* Section 1: Buyurtma */}
-          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">Buyurtma va Taraflar</span>
             <div className="flex justify-between items-center">
               <span className="text-slate-500">Ish nomi:</span>
@@ -1545,7 +1545,7 @@ const AuditDetailModal: React.FC<{
           </div>
 
           {/* Section 2: Ishchi To'lovi */}
-          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">1. Ishchiga To'langan Ish Haqi</span>
             <div className="flex justify-between items-center">
               <span className="text-slate-500">Summa:</span>
@@ -1572,7 +1572,7 @@ const AuditDetailModal: React.FC<{
           </div>
 
           {/* Section 3: Korxona Hisob-Fakturasi */}
-          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">2. Korxonaga Hisob-Faktura</span>
             <div className="flex justify-between items-center">
               <span className="text-slate-500">Faktura raqami:</span>
@@ -1593,7 +1593,7 @@ const AuditDetailModal: React.FC<{
           </div>
 
           {/* Section 4: Korxona Tushumi va Cheki */}
-          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">3. Korxona Bank To'lovi va Cheki</span>
             <div className="flex justify-between items-center">
               <span className="text-slate-500">To'lov e'lon qilingan vaqt:</span>
