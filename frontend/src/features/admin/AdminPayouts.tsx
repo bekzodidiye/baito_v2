@@ -467,11 +467,11 @@ export const AdminPayouts: React.FC = () => {
             <Receipt size={14} className={tab === 'payouts' ? 'text-brand-primary' : 'text-slate-400'} />
             <span>Ish haqi to'lovlari & Fakturalar</span>
             {pendingConfirmCount > 0 ? (
-              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white animate-pulse">
+              <span className="ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-500 text-white animate-pulse">
                 {pendingConfirmCount} kutilmoqda
               </span>
             ) : payoutsList.length > 0 ? (
-              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">
+              <span className="ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-200 text-slate-700">
                 {payoutsList.length}
               </span>
             ) : null}
@@ -490,7 +490,7 @@ export const AdminPayouts: React.FC = () => {
             <Wallet size={14} className={tab === 'withdrawals' ? 'text-amber-600' : 'text-slate-400'} />
             <span>{a.withdrawalRequests}</span>
             {pendingWithdrawalsCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white">
+              <span className="ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-500 text-white">
                 {pendingWithdrawalsCount}
               </span>
             )}
@@ -581,7 +581,7 @@ export const AdminPayouts: React.FC = () => {
                       >
                         {item.alert && item.count > 0 && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
                         <span>{item.label}</span>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
+                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
                           isActive
                             ? 'bg-slate-100 text-slate-800'
                             : item.alert && item.count > 0
@@ -744,7 +744,7 @@ export const AdminPayouts: React.FC = () => {
                           <td className="px-4 py-3.5 align-middle">
                             {isConfirmed ? (
                               <div className="min-w-0">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold text-[11px] border border-emerald-200/70 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold text-[11px] border border-emerald-200/70 whitespace-nowrap">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                                   <span>Tasdiqlangan</span>
                                 </span>
@@ -754,7 +754,7 @@ export const AdminPayouts: React.FC = () => {
                               </div>
                             ) : isDeclaredPending ? (
                               <div className="min-w-0">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-semibold text-[11px] border border-amber-200/80 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 font-semibold text-[11px] border border-amber-200/80 whitespace-nowrap">
                                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 animate-pulse" />
                                   <span>To'lov e'lon qilingan</span>
                                 </span>
@@ -764,7 +764,7 @@ export const AdminPayouts: React.FC = () => {
                               </div>
                             ) : isInvoiced ? (
                               <div className="min-w-0">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 whitespace-nowrap">
                                   <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
                                   <span>To'lov kutilmoqda</span>
                                 </span>
@@ -1002,12 +1002,12 @@ export const AdminPayouts: React.FC = () => {
                                 </button>
                               </div>
                             ) : isApproved ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200/80">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200/80">
                                 <CheckCircle size={12} className="text-emerald-600" />
                                 <span>O'tkazilgan{w.reference ? ` · Ref: ${w.reference}` : ''}</span>
                               </span>
                             ) : isRejected ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200/80">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200/80">
                                 <X size={12} className="text-rose-600" />
                                 <span>Rad etilgan</span>
                               </span>
