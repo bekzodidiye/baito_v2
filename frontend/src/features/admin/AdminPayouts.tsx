@@ -259,11 +259,11 @@ export const AdminPayouts: React.FC = () => {
   }, []);
 
   const payoutsTableRef = React.useRef<HTMLDivElement>(null);
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     if (payoutsTableRef.current) {
       payoutsTableRef.current.scrollLeft = 0;
     }
-  }, [tab, payoutStatusFilter, payoutSearch]);
+  });
 
   const exportPayoutsCsv = () => {
     if (filteredPayouts.length === 0) {
@@ -609,13 +609,13 @@ export const AdminPayouts: React.FC = () => {
 
             {/* Payouts Table */}
             <div ref={payoutsTableRef} className="overflow-x-auto">
-              <table className="w-full text-xs text-left border-collapse table-fixed min-w-[860px]">
+              <table className="w-full text-xs text-left border-collapse table-fixed">
                 <colgroup>
-                  <col className="w-[27%]" />
-                  <col className="w-[20%]" />
-                  <col className="w-[19%]" />
-                  <col className="w-[17%]" />
-                  <col className="w-[17%]" />
+                  <col className="w-[22%]" />
+                  <col className="w-[22%]" />
+                  <col className="w-[21%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[21%]" />
                 </colgroup>
                 <thead className="bg-slate-50/75 border-b border-slate-200/80 text-xs font-semibold text-slate-600 select-none">
                   <tr>
@@ -662,7 +662,7 @@ export const AdminPayouts: React.FC = () => {
                                 {p.paidAt && (
                                   <>
                                     <span className="text-slate-300">·</span>
-                                    <span className="text-slate-400 text-[10px] tabular-nums shrink-0">
+                                    <span className="text-slate-400 text-[10px] tabular-nums shrink-0 whitespace-nowrap">
                                       {new Date(p.paidAt).toLocaleDateString('uz-UZ')}
                                     </span>
                                   </>
@@ -674,15 +674,15 @@ export const AdminPayouts: React.FC = () => {
                           {/* 2. Worker & Wage */}
                           <td className="px-4 py-3.5 align-middle">
                             <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                              <div className="w-7.5 h-7.5 rounded-full bg-gradient-to-tr from-brand-primary/10 via-indigo-50 to-indigo-100 border border-indigo-200/50 text-brand-primary font-bold text-xs flex items-center justify-center shadow-2xs shrink-0">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-primary/15 via-indigo-50 to-indigo-100 border border-indigo-200/60 text-brand-primary font-bold text-xs flex items-center justify-center shadow-2xs shrink-0">
                                 {(p.workerName ? p.workerName.charAt(0) : 'I').toUpperCase()}
                               </div>
                               <div className="min-w-0">
                                 <span className="font-semibold text-slate-900 block text-xs truncate">
                                   {p.workerName ? p.workerName : '—'}
                                 </span>
-                                <div className="flex items-center gap-1.5 mt-0.5">
-                                  <span className="font-bold text-slate-800 tabular-nums text-xs">
+                                <div className="flex items-center gap-1.5 mt-0.5 whitespace-nowrap">
+                                  <span className="font-bold text-slate-900 tabular-nums text-xs whitespace-nowrap">
                                     {money(p.amount)}
                                   </span>
                                   {p.receiptUrl && (
@@ -692,7 +692,7 @@ export const AdminPayouts: React.FC = () => {
                                         url: p.receiptUrl,
                                         title: p.workerName ? `${p.workerName}ga to'lov kvitansiyasi` : "Ish haqi kvitansiyasi"
                                       })}
-                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200/80 text-slate-600 hover:text-slate-900 font-medium text-[10px] transition cursor-pointer"
+                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200/80 text-slate-600 hover:text-slate-900 font-medium text-[10px] transition cursor-pointer whitespace-nowrap shrink-0"
                                       title="Ishchi to'lov kvitansiyasini ko'rish"
                                     >
                                       <Receipt size={10} className="text-slate-500" />
@@ -708,11 +708,11 @@ export const AdminPayouts: React.FC = () => {
                           <td className="px-4 py-3.5 align-middle">
                             {p.invoiceSentAt ? (
                               <div className="min-w-0 pr-2">
-                                <div className="font-bold text-slate-900 tabular-nums text-xs">
+                                <div className="font-bold text-slate-900 tabular-nums text-xs whitespace-nowrap">
                                   {money(p.invoiceAmount ?? 0)}
                                 </div>
-                                <div className="flex items-center gap-1.5 text-[10px] mt-0.5">
-                                  <span className="font-mono text-[10px] text-slate-600 font-medium bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/60">
+                                <div className="flex items-center gap-1.5 text-[10px] mt-0.5 whitespace-nowrap">
+                                  <span className="font-mono text-[10px] text-slate-600 font-medium bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/60 whitespace-nowrap shrink-0">
                                     {p.invoiceNumber}
                                   </span>
                                   {p.invoicePaidReceiptUrl ? (
@@ -722,21 +722,21 @@ export const AdminPayouts: React.FC = () => {
                                         url: p.invoicePaidReceiptUrl!,
                                         title: `Korxona to'lov kvitansiyasi (${p.invoiceNumber || 'INV'})`
                                       })}
-                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold border border-indigo-200/70 transition cursor-pointer"
+                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold border border-indigo-200/70 transition cursor-pointer whitespace-nowrap shrink-0 text-[10px]"
                                       title="Korxona bank to'lov chekini ko'rish"
                                     >
                                       <Receipt size={10} className="text-indigo-600" />
                                       <span>Bank cheki</span>
                                     </button>
                                   ) : isDeclaredPending ? (
-                                    <span className="inline-flex items-center gap-0.5 text-amber-700 text-[10px] font-medium bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60" title="Bank to'lov kvitansiyasi biriktirilmagan">
+                                    <span className="inline-flex items-center gap-0.5 text-amber-700 text-[10px] font-medium bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 whitespace-nowrap shrink-0" title="Bank to'lov kvitansiyasi biriktirilmagan">
                                       <span>Kvitansiyasiz</span>
                                     </span>
                                   ) : null}
                                 </div>
                               </div>
                             ) : (
-                              <span className="text-[11px] text-slate-400 font-medium italic">— Fakturasiz</span>
+                              <span className="text-[11px] text-slate-400 font-medium italic whitespace-nowrap">— Fakturasiz</span>
                             )}
                           </td>
 
@@ -744,36 +744,36 @@ export const AdminPayouts: React.FC = () => {
                           <td className="px-4 py-3.5 align-middle">
                             {isConfirmed ? (
                               <div className="min-w-0">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold text-[11px] border border-emerald-200/70">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold text-[11px] border border-emerald-200/70 whitespace-nowrap">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                                   <span>Tasdiqlangan</span>
                                 </span>
-                                <span className="text-[10px] text-slate-400 block mt-0.5 font-medium">
+                                <span className="text-[10px] text-slate-400 block mt-0.5 font-medium whitespace-nowrap">
                                   {when(p.invoiceConfirmedAt)}
                                 </span>
                               </div>
                             ) : isDeclaredPending ? (
                               <div className="min-w-0">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-semibold text-[11px] border border-amber-200/80">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-semibold text-[11px] border border-amber-200/80 whitespace-nowrap">
                                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 animate-pulse" />
                                   <span>To'lov e'lon qilingan</span>
                                 </span>
-                                <span className="text-[10px] text-amber-700 font-medium block mt-0.5">
-                                  Tasdiqlash kutilmoqda ({when(p.invoicePaidDeclaredAt)})
+                                <span className="text-[10px] text-amber-700 font-medium block mt-0.5 whitespace-nowrap">
+                                  {when(p.invoicePaidDeclaredAt)}
                                 </span>
                               </div>
                             ) : isInvoiced ? (
                               <div className="min-w-0">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 whitespace-nowrap">
                                   <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
                                   <span>To'lov kutilmoqda</span>
                                 </span>
-                                <span className="text-[10px] text-slate-400 block mt-0.5 font-medium">
+                                <span className="text-[10px] text-slate-400 block mt-0.5 font-medium whitespace-nowrap">
                                   Faktura yuborilgan
                                 </span>
                               </div>
                             ) : (
-                              <span className="text-xs text-slate-400 font-medium italic">— Fakturasiz</span>
+                              <span className="text-xs text-slate-400 font-medium italic whitespace-nowrap">— Fakturasiz</span>
                             )}
                           </td>
 
@@ -784,7 +784,7 @@ export const AdminPayouts: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => setReconcileModal(p)}
-                                  className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer shrink-0"
+                                  className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer shrink-0 whitespace-nowrap"
                                   title="Bank ko'chirmasi bilan solishtirish va tasdiqlash"
                                 >
                                   <CheckCircle2 size={13} />
@@ -794,7 +794,7 @@ export const AdminPayouts: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => setAuditDetailModal(p)}
-                                className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold text-xs transition-all cursor-pointer shadow-2xs shrink-0"
+                                className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold text-xs transition-all cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
                                 title="To'lov audit jurnalini ko'rish"
                               >
                                 <Eye size={12} className="text-slate-400" />
@@ -819,26 +819,26 @@ export const AdminPayouts: React.FC = () => {
               </div>
 
               {filteredPayouts.length > 0 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200/80 shadow-2xs">
-                    <span className="text-slate-400 text-[11px] font-medium">Jami ish haqi:</span>
-                    <span className="font-bold text-slate-900 tabular-nums">{money(totalWageSum)}</span>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                    <span className="text-slate-400 text-xs font-medium">Jami ish haqi:</span>
+                    <span className="font-bold text-slate-900 tabular-nums text-xs whitespace-nowrap">{money(totalWageSum)}</span>
                   </div>
 
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200/80 shadow-2xs">
-                    <span className="text-slate-400 text-[11px] font-medium">Jami faktura:</span>
-                    <span className="font-bold text-slate-900 tabular-nums">{money(totalInvoiceSum)}</span>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                    <span className="text-slate-400 text-xs font-medium">Jami faktura:</span>
+                    <span className="font-bold text-slate-900 tabular-nums text-xs whitespace-nowrap">{money(totalInvoiceSum)}</span>
                   </div>
 
                   {pendingConfirmCount > 0 ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200/80 text-[11px] font-bold">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/80 text-xs font-bold shadow-2xs whitespace-nowrap">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                      {pendingConfirmCount} ta tasdiqlash kutilmoqda
+                      <span>{pendingConfirmCount} ta tasdiqlash kutilmoqda</span>
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-[11px] font-semibold">
-                      <CheckCircle2 size={11} className="text-emerald-600" />
-                      Barchasi tasdiqlangan
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-xs font-semibold whitespace-nowrap">
+                      <CheckCircle2 size={12} className="text-emerald-600" />
+                      <span>Barchasi tasdiqlangan</span>
                     </span>
                   )}
                 </div>
