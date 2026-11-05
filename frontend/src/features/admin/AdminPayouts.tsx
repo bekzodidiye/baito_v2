@@ -611,11 +611,11 @@ export const AdminPayouts: React.FC = () => {
             <div ref={payoutsTableRef} className="overflow-x-auto">
               <table className="w-full text-xs text-left border-collapse table-fixed">
                 <colgroup>
-                  <col className="w-[22%]" />
-                  <col className="w-[22%]" />
-                  <col className="w-[21%]" />
+                  <col className="w-[26%]" />
+                  <col className="w-[26%]" />
+                  <col className="w-[23%]" />
                   <col className="w-[14%]" />
-                  <col className="w-[21%]" />
+                  <col className="w-[11%]" />
                 </colgroup>
                 <thead className="bg-slate-50/75 border-b border-slate-200/80 text-xs font-semibold text-slate-600 select-none">
                   <tr>
@@ -784,11 +784,12 @@ export const AdminPayouts: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => setReconcileModal(p)}
-                                  className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs shadow-2xs transition-all cursor-pointer shrink-0 whitespace-nowrap"
-                                  title="Bank ko'chirmasi bilan solishtirish va tasdiqlash"
+                                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white transition-all cursor-pointer shadow-2xs shrink-0"
+                                  title="Bank ko'chirmasi bilan solishtirish va to'lovni tasdiqlash"
+                                  aria-label="To'lovni tasdiqlash"
                                 >
-                                  <CheckCircle2 size={13} />
-                                  <span>To'lovni tasdiqlash</span>
+                                  <CheckCircle2 size={15} />
+                                  <span className="sr-only">To'lovni tasdiqlash</span>
                                 </button>
                               )}
                               <button
