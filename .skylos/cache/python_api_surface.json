@@ -1,0 +1,587 @@
+{
+  "schema_version": 1,
+  "environment": {
+    "key": "10a0ffd5084b0089",
+    "executable": "/home/Bekzod/Desktop/baito-v3-/backend/venv/bin/python3",
+    "version": "3.14.7 (main, Aug 10 2026, 07:46:56) [GCC 16.1.1 20260728]",
+    "prefix": "/home/Bekzod/Desktop/baito-v3-/backend/venv",
+    "base_prefix": "/usr",
+    "site_paths": [
+      "/home/Bekzod/.local/lib/python3.14/site-packages",
+      "/home/Bekzod/Desktop/baito-v3-/backend/venv/lib/python3.14/site-packages"
+    ]
+  },
+  "modules": {
+    "boto3": {
+      "module": "boto3",
+      "origin": "/home/Bekzod/Desktop/baito-v3-/backend/venv/lib/python3.14/site-packages/boto3/__init__.py",
+      "captured_at": "2026-09-23T06:30:40Z",
+      "members": {
+        "NullHandler": {
+          "kind": "class",
+          "signature": "(level=0)",
+          "parameters": [
+            {
+              "name": "level",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "required": false
+            }
+          ],
+          "methods": {
+            "acquire": {
+              "kind": "method",
+              "signature": "(self)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "addFilter": {
+              "kind": "method",
+              "signature": "(self, filter)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "filter",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "close": {
+              "kind": "method",
+              "signature": "(self)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "createLock": {
+              "kind": "method",
+              "signature": "(self)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "emit": {
+              "kind": "method",
+              "signature": "(self, record)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "record",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "filter": {
+              "kind": "method",
+              "signature": "(self, record)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "record",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "flush": {
+              "kind": "method",
+              "signature": "(self)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "format": {
+              "kind": "method",
+              "signature": "(self, record)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "record",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "get_name": {
+              "kind": "method",
+              "signature": "(self)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "handle": {
+              "kind": "method",
+              "signature": "(self, record)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "record",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "handleError": {
+              "kind": "method",
+              "signature": "(self, record)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "record",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "release": {
+              "kind": "method",
+              "signature": "(self)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "removeFilter": {
+              "kind": "method",
+              "signature": "(self, filter)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "filter",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "setFormatter": {
+              "kind": "method",
+              "signature": "(self, fmt)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "fmt",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "setLevel": {
+              "kind": "method",
+              "signature": "(self, level)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "level",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "set_name": {
+              "kind": "method",
+              "signature": "(self, name)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "name",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            }
+          },
+          "methods_truncated": false,
+          "properties": {}
+        },
+        "Session": {
+          "kind": "class",
+          "signature": "(aws_access_key_id=None, aws_secret_access_key=None, aws_session_token=None, region_name=None, botocore_session=None, profile_name=None, aws_account_id=None)",
+          "parameters": [
+            {
+              "name": "aws_access_key_id",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "required": false
+            },
+            {
+              "name": "aws_secret_access_key",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "required": false
+            },
+            {
+              "name": "aws_session_token",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "required": false
+            },
+            {
+              "name": "region_name",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "required": false
+            },
+            {
+              "name": "botocore_session",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "required": false
+            },
+            {
+              "name": "profile_name",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "required": false
+            },
+            {
+              "name": "aws_account_id",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "required": false
+            }
+          ],
+          "methods": {
+            "client": {
+              "kind": "method",
+              "signature": "(self, service_name, region_name=None, api_version=None, use_ssl=True, verify=None, endpoint_url=None, aws_access_key_id=None, aws_secret_access_key=None, aws_session_token=None, config=None, aws_account_id=None)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "service_name",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "region_name",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "api_version",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "use_ssl",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "verify",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "endpoint_url",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "aws_access_key_id",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "aws_secret_access_key",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "aws_session_token",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "config",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "aws_account_id",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                }
+              ]
+            },
+            "get_available_partitions": {
+              "kind": "method",
+              "signature": "(self)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "get_available_regions": {
+              "kind": "method",
+              "signature": "(self, service_name, partition_name='aws', allow_non_regional=False)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "service_name",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "partition_name",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "allow_non_regional",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                }
+              ]
+            },
+            "get_available_resources": {
+              "kind": "method",
+              "signature": "(self)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "get_available_services": {
+              "kind": "method",
+              "signature": "(self)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "get_credentials": {
+              "kind": "method",
+              "signature": "(self)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "get_partition_for_region": {
+              "kind": "method",
+              "signature": "(self, region_name)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "region_name",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                }
+              ]
+            },
+            "resource": {
+              "kind": "method",
+              "signature": "(self, service_name, region_name=None, api_version=None, use_ssl=True, verify=None, endpoint_url=None, aws_access_key_id=None, aws_secret_access_key=None, aws_session_token=None, config=None)",
+              "parameters": [
+                {
+                  "name": "self",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "service_name",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": true
+                },
+                {
+                  "name": "region_name",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "api_version",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "use_ssl",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "verify",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "endpoint_url",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "aws_access_key_id",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "aws_secret_access_key",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "aws_session_token",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                },
+                {
+                  "name": "config",
+                  "kind": "POSITIONAL_OR_KEYWORD",
+                  "required": false
+                }
+              ]
+            }
+          },
+          "methods_truncated": false,
+          "properties": {}
+        },
+        "client": {
+          "kind": "function",
+          "signature": "(*args, **kwargs)",
+          "parameters": [
+            {
+              "name": "args",
+              "kind": "VAR_POSITIONAL",
+              "required": true
+            },
+            {
+              "name": "kwargs",
+              "kind": "VAR_KEYWORD",
+              "required": true
+            }
+          ]
+        },
+        "resource": {
+          "kind": "function",
+          "signature": "(*args, **kwargs)",
+          "parameters": [
+            {
+              "name": "args",
+              "kind": "VAR_POSITIONAL",
+              "required": true
+            },
+            {
+              "name": "kwargs",
+              "kind": "VAR_KEYWORD",
+              "required": true
+            }
+          ]
+        },
+        "set_stream_logger": {
+          "kind": "function",
+          "signature": "(name='boto3', level=10, format_string=None)",
+          "parameters": [
+            {
+              "name": "name",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "required": false
+            },
+            {
+              "name": "level",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "required": false
+            },
+            {
+              "name": "format_string",
+              "kind": "POSITIONAL_OR_KEYWORD",
+              "required": false
+            }
+          ]
+        },
+        "setup_default_session": {
+          "kind": "function",
+          "signature": "(**kwargs)",
+          "parameters": [
+            {
+              "name": "kwargs",
+              "kind": "VAR_KEYWORD",
+              "required": true
+            }
+          ]
+        }
+      },
+      "members_truncated": false
+    }
+  }
+}
