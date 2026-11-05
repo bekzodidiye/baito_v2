@@ -794,11 +794,11 @@ export const AdminPayouts: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => setAuditDetailModal(p)}
-                                className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold text-xs transition-all cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white hover:bg-slate-100/80 border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-900 transition-all cursor-pointer shadow-2xs shrink-0"
                                 title="To'lov audit jurnalini ko'rish"
+                                aria-label="Audit"
                               >
-                                <Eye size={12} className="text-slate-400" />
-                                <span>Audit</span>
+                                <Eye size={14} className="text-slate-500" />
                               </button>
                             </div>
                           </td>
