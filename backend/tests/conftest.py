@@ -24,7 +24,7 @@ from app.core.limiter import limiter  # noqa: E402
 from app.core.security import get_password_hash  # noqa: E402
 from app.db.base import Base  # noqa: E402
 from app.db.session import SessionLocal, engine  # noqa: E402
-from sqlalchemy import event  # noqa: E402
+from sqlalchemy import event, text  # noqa: E402
 from app.main import app  # noqa: E402
 from app.models import Job, User  # noqa: E402
 from app.models.job import JobStatus  # noqa: E402
@@ -57,6 +57,9 @@ limiter.enabled = False
 
 @pytest.fixture(scope="session", autouse=True)
 def _schema():
+    if engine.url.get_backend_name() == "postgresql":
+        with engine.begin() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)

@@ -21,9 +21,17 @@ def upgrade() -> None:
     dialect_name = bind.dialect.name if bind else "postgresql"
 
     if dialect_name == "postgresql":
-        op.create_unique_constraint(
-            "uq_dispute_job_id", "disputes", ["jobId"]
+        from sqlalchemy import inspect
+        inspector = inspect(bind) if bind is not None else None
+        existing_disputes = (
+            {c["name"] for c in inspector.get_unique_constraints("disputes")}
+            | {ix["name"] for ix in inspector.get_indexes("disputes")}
+            if inspector else set()
         )
+        if "uq_dispute_job_id" not in existing_disputes:
+            op.create_unique_constraint(
+                "uq_dispute_job_id", "disputes", ["jobId"]
+            )
     elif context.is_offline_mode():
         op.create_index("uq_dispute_job_id", "disputes", ["jobId"], unique=True)
     else:
