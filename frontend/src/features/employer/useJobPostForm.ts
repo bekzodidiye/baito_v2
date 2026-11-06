@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export interface JobPostFormData {
   // Step 1: Basic Info
@@ -28,34 +28,145 @@ export interface JobPostFormData {
   coordinateY: number;
 }
 
+export const DRAFT_STORAGE_KEY = 'baito_job_post_draft';
+export const STEP_STORAGE_KEY = 'baito_job_post_step';
+
+export const loadSavedDraft = (): Partial<JobPostFormData> | null => {
+  try {
+    if (typeof window === 'undefined') return null;
+    const raw = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(DRAFT_STORAGE_KEY) : null)
+      || (typeof localStorage !== 'undefined' ? localStorage.getItem(DRAFT_STORAGE_KEY) : null);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
+export const clearSavedDraft = () => {
+  try {
+    if (typeof window !== 'undefined') {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+        sessionStorage.removeItem(STEP_STORAGE_KEY);
+      }
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+        localStorage.removeItem(STEP_STORAGE_KEY);
+      }
+      if (window.history && window.location) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('step')) {
+          url.searchParams.delete('step');
+          window.history.replaceState({}, '', url.toString());
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+};
+
+export const loadSavedStep = (): number => {
+  try {
+    if (typeof window === 'undefined') return 1;
+    const params = new URLSearchParams(window.location.search);
+    const urlStep = parseInt(params.get('step') || '', 10);
+    if (urlStep >= 1 && urlStep <= 3) return urlStep;
+
+    const raw = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(STEP_STORAGE_KEY) : null)
+      || (typeof localStorage !== 'undefined' ? localStorage.getItem(STEP_STORAGE_KEY) : null);
+    const step = raw ? parseInt(raw, 10) : 1;
+    return step >= 1 && step <= 3 ? step : 1;
+  } catch {
+    return 1;
+  }
+};
+
+export const saveSavedStep = (step: number) => {
+  try {
+    if (typeof window !== 'undefined') {
+      if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(STEP_STORAGE_KEY, String(step));
+      if (typeof localStorage !== 'undefined') localStorage.setItem(STEP_STORAGE_KEY, String(step));
+      if (window.history && window.location) {
+        const url = new URL(window.location.href);
+        if (step > 1) {
+          url.searchParams.set('step', String(step));
+        } else {
+          url.searchParams.delete('step');
+        }
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  } catch {
+    // ignore
+  }
+};
+
 export const useJobPostFormState = (initialCompany: string = '') => {
   const getTodayDate = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
-  const [formData, setFormData] = useState<JobPostFormData>(() => ({
-    title: '',
-    category: 'retail',
-    company: initialCompany,
-    imageUrl: '',
-    responsibilities: '',
-    description: '',
-    tags: ['#Tezkor', "#KunlikTo'lov"],
-    neededWorkers: '1',
-    workDate: getTodayDate(),
-    startTime: '09:00',
-    endTime: '18:00',
-    durationLabel: '1 kunlik',
-    hourlyRate: '',
-    transportRate: '',
-    requirements: '',
-    importantNote: '',
-    city: 'Toshkent',
-    addressLine: '',
-    coordinateX: 41.3111,
-    coordinateY: 69.2406,
-  }));
+  const getInitialData = (): JobPostFormData => {
+    const defaultData: JobPostFormData = {
+      title: '',
+      category: 'retail',
+      company: initialCompany,
+      imageUrl: '',
+      responsibilities: '',
+      description: '',
+      tags: ['#Tezkor', "#KunlikTo'lov"],
+      neededWorkers: '1',
+      workDate: getTodayDate(),
+      startTime: '09:00',
+      endTime: '18:00',
+      durationLabel: '1 kunlik',
+      hourlyRate: '',
+      transportRate: '',
+      requirements: '',
+      importantNote: '',
+      city: 'Toshkent',
+      addressLine: '',
+      coordinateX: 41.3111,
+      coordinateY: 69.2406,
+    };
+
+    const saved = loadSavedDraft();
+    if (!saved) return defaultData;
+
+    return {
+      ...defaultData,
+      ...saved,
+      company: saved.company || initialCompany,
+    };
+  };
+
+  const [formData, setFormData] = useState<JobPostFormData>(getInitialData);
+
+  // Auto-save draft whenever meaningful fields change
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+      const isModified =
+        !!formData.title ||
+        !!formData.responsibilities ||
+        !!formData.hourlyRate ||
+        !!formData.addressLine ||
+        !!formData.imageUrl ||
+        formData.category !== 'retail' ||
+        formData.city !== 'Toshkent';
+
+      if (isModified) {
+        const json = JSON.stringify(formData);
+        if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(DRAFT_STORAGE_KEY, json);
+        if (typeof localStorage !== 'undefined') localStorage.setItem(DRAFT_STORAGE_KEY, json);
+      }
+    } catch {
+      // ignore
+    }
+  }, [formData]);
 
   const updateField = useCallback(<K extends keyof JobPostFormData>(key: K, value: JobPostFormData[K]) => {
     setFormData(prev => prev[key] === value ? prev : { ...prev, [key]: value });

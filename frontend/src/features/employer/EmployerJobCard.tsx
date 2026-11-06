@@ -86,7 +86,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
               {localizedTitle}
             </h3>
             {/* Delete Button */}
-            {job.status === 'open' && (
+            {(job.status === 'open' || job.status === 'pending') && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -166,7 +166,7 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
                 {language === 'uz' ? "To'lov tasdiqlandi" : language === 'ru' ? "Оплата подтверждена" : "Payment confirmed"}
               </span>
             </span>
-          ) : (job.status === 'cancelled' || job.status === 'dispute') ? (
+          ) : (job.status === 'cancelled' || job.status === 'dispute' || job.status === 'rejected') ? (
             /* There was no branch for this, so a cancelled posting fell through
                to "Kutilyapti" and claimed on the dashboard to be waiting for a
                worker while the jobs screen counted it, correctly, as history. */
@@ -175,6 +175,8 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
               <span className="truncate">
                 {job.status === 'dispute'
                   ? (language === 'uz' ? "Nizo holatida" : language === 'ru' ? "В споре" : "In dispute")
+                  : job.status === 'rejected'
+                  ? (language === 'uz' ? "Rad etildi" : language === 'ru' ? "Отклонено" : "Rejected")
                   : (language === 'uz' ? "Bekor qilindi" : language === 'ru' ? "Отменено" : "Cancelled")}
               </span>
             </span>
@@ -216,6 +218,13 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
               <CheckCircle2 size={14} />
               <span className="truncate">
                 {language === 'uz' ? "Ishchi olindi" : language === 'ru' ? "Работник нанят" : "Worker Hired"}
+              </span>
+            </span>
+          ) : job.status === 'pending' ? (
+            <span className="w-full min-w-0 h-11 rounded-lg bg-amber-50 text-amber-700 border border-amber-200/80 text-[12px] font-bold flex items-center justify-center gap-1.5">
+              <Hourglass size={14} className="text-amber-600" />
+              <span className="truncate">
+                {language === 'uz' ? "Tasdiqlanishi kutilmoqda" : language === 'ru' ? "Ожидает модерации" : "Pending approval"}
               </span>
             </span>
           ) : (

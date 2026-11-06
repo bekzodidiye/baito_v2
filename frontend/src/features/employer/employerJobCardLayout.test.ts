@@ -75,9 +75,9 @@ describe('the number of columns follows the width of a card', () => {
 
 describe('the status control is one height whatever the status', () => {
   it('covers every branch of the footer', () => {
-    // Nine since `cancelled` got a branch of its own; it used to fall through
+    // Ten since `cancelled` and `pending` got branches of their own; they used to fall through
     // to the last `else` and read "Kutilyapti".
-    expect(statusControlClasses()).toHaveLength(9);
+    expect(statusControlClasses()).toHaveLength(10);
   });
 
   it('gives all of them the same height', () => {
@@ -99,7 +99,7 @@ describe('the status control is one height whatever the status', () => {
   it('puts every label in something that truncates', () => {
     // Otherwise "Tasdiqlanishi kutilmoqda" wraps and makes that one card taller.
     const labels = read(CARD).match(/<span className="truncate">/g) || [];
-    expect(labels).toHaveLength(9);
+    expect(labels).toHaveLength(10);
   });
 });
 

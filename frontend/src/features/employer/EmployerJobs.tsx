@@ -35,7 +35,16 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
   const [visibleCount, setVisibleCount] = useState(12);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const openJobs = useMemo(() => postedJobs.filter(j => j.status === 'open'), [postedJobs]);
+  const openJobs = useMemo(
+    () => postedJobs
+      .filter(j => j.status === 'open' || j.status === 'pending')
+      .sort((a, b) => {
+        if (a.status === 'pending' && b.status !== 'pending') return -1;
+        if (b.status === 'pending' && a.status !== 'pending') return 1;
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      }),
+    [postedJobs],
+  );
   const activeJobs = useMemo(() => {
     return postedJobs
       .filter(j => ['confirmed', 'in_progress', 'start_requested'].includes(j.status))
@@ -64,7 +73,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
   // in history - otherwise it looks finished while money is outstanding.
   const historyJobs = useMemo(
     () => postedJobs.filter(j =>
-      ['completed', 'cancelled', 'closed'].includes(j.status)
+      ['completed', 'cancelled', 'closed', 'rejected'].includes(j.status)
       && j.payoutStatus !== 'invoiced'
       && j.payoutStatus !== 'payment_declared'),
     [postedJobs],

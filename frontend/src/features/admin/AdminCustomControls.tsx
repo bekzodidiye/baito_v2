@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { ChevronDown, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Check } from 'lucide-react';
@@ -193,55 +194,114 @@ export const StatusSelect = ({
   className?: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const language = useAuthStore(st => st.language);
   const t = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
 
   const options = [
+    { value: 'pending', label: t.statusPending || 'Kutilmoqda', color: 'bg-amber-50 text-amber-700 border-amber-200/80', dot: 'bg-amber-500' },
     { value: 'open', label: t.statusOpen || 'Ochiq', color: 'bg-emerald-50 text-emerald-700 border-emerald-200/80', dot: 'bg-emerald-500' },
     { value: 'confirmed', label: t.statusHired || 'Ishchi olindi', color: 'bg-brand-primary/10 text-brand-primary border-brand-primary/20', dot: 'bg-brand-primary' },
-    { value: 'in_progress', label: t.statusStarted || 'Ish boshlandi', color: 'bg-amber-50 text-amber-700 border-amber-200/80', dot: 'bg-amber-500' },
+    { value: 'in_progress', label: t.statusStarted || 'Ish boshlandi', color: 'bg-sky-50 text-sky-700 border-sky-200/80', dot: 'bg-sky-500' },
     { value: 'completed', label: t.statusFinished || 'Ish tugatildi', color: 'bg-indigo-50 text-indigo-700 border-indigo-200/80', dot: 'bg-indigo-500' },
     { value: 'dispute', label: t.chipDispute || 'Nizo', color: 'bg-orange-50 text-orange-700 border-orange-200/80', dot: 'bg-orange-500' },
+    { value: 'rejected', label: t.statusRejected || 'Rad etildi', color: 'bg-rose-50 text-rose-700 border-rose-200/80', dot: 'bg-rose-500' },
     { value: 'cancelled', label: t.statusCancelledJob || 'Bekor qilindi', color: 'bg-rose-50 text-rose-700 border-rose-200/80', dot: 'bg-rose-500' },
   ];
 
   const currentOption = options.find(o => o.value === value) || options[0];
 
+  const updatePosition = () => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    const dropdownHeight = 290;
+    const dropdownWidth = 180;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUpwards = spaceBelow < dropdownHeight && rect.top > dropdownHeight;
+
+    const top = openUpwards ? rect.top - dropdownHeight - 4 : rect.bottom + 4;
+    const left = Math.max(8, Math.min(rect.left, (window.innerWidth || 1200) - dropdownWidth - 8));
+
+    setCoords({ top, left });
+  };
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isOpen) {
+      updatePosition();
+    }
+    setIsOpen(prev => !prev);
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        buttonRef.current && !buttonRef.current.contains(target) &&
+        dropdownRef.current && !dropdownRef.current.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleScrollOrResize = () => {
+      updatePosition();
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScrollOrResize, true);
+    window.addEventListener("resize", handleScrollOrResize);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      window.removeEventListener("resize", handleScrollOrResize);
+    };
+  }, [isOpen]);
+
   return (
-    <div className="relative inline-block" ref={containerRef}>
+    <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all shadow-2xs ${currentOption.color} ${className}`}
       >
         <span className={`w-1.5 h-1.5 rounded-full ${currentOption.dot}`} />
         <span>{currentOption.label}</span>
         <ChevronDown size={12} className={`transition-transform duration-200 ml-0.5 opacity-60 ${isOpen ? 'rotate-180 opacity-100' : ''}`} />
       </button>
-      
-      {isOpen && (
-        <div className="absolute top-full right-0 mt-1 w-44 bg-white border border-slate-200/90 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100 py-1">
+
+      {isOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          ref={dropdownRef}
+          onClick={(e) => e.stopPropagation()}
+          style={coords ? {
+            position: 'fixed',
+            top: `${coords.top}px`,
+            left: `${coords.left}px`,
+            zIndex: 9999,
+          } : {
+            position: 'fixed',
+            zIndex: 9999,
+          }}
+          className="w-48 bg-white border border-slate-200/90 rounded-2xl shadow-2xl overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-100 max-h-72 overflow-y-auto no-scrollbar"
+        >
           {options.map((opt) => (
             <button
               key={opt.value}
               type="button"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 onChange(opt.value);
                 setIsOpen(false);
               }}
-              className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-50 flex items-center justify-between cursor-pointer ${
+              className={`w-full text-left px-3 py-2 text-xs transition-colors hover:bg-slate-50 flex items-center justify-between cursor-pointer ${
                 value === opt.value ? 'bg-slate-50/90 font-bold text-slate-900' : 'text-slate-600 font-medium'
               }`}
             >
@@ -252,7 +312,8 @@ export const StatusSelect = ({
               {value === opt.value && <Check size={13} className="text-brand-primary" />}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -15,8 +15,8 @@ from .admin_users import get_admin_user
 router = APIRouter()
 
 VALID_STATUSES = {
-    JobStatus.OPEN, JobStatus.CONFIRMED, JobStatus.IN_PROGRESS,
-    JobStatus.COMPLETED, JobStatus.CANCELLED,
+    JobStatus.PENDING, JobStatus.OPEN, JobStatus.CONFIRMED, JobStatus.IN_PROGRESS,
+    JobStatus.COMPLETED, JobStatus.CANCELLED, JobStatus.REJECTED,
 }
 
 

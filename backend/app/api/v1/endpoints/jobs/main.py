@@ -72,8 +72,16 @@ def create_job(
     job_in_dict = job_in.model_dump()
     # Never take these from the request body.
     job_in_dict.pop("views", None)
+    lat = job_in_dict.pop("latitude", None)
+    lng = job_in_dict.pop("longitude", None)
+    if lat is not None and job_in_dict.get("coordinateX") is None:
+        job_in_dict["coordinateX"] = lat
+    if lng is not None and job_in_dict.get("coordinateY") is None:
+        job_in_dict["coordinateY"] = lng
     job_in_dict["employerId"] = current_user.id
-    job_in_dict["status"] = JobStatus.OPEN
+    setting = db.query(models.SystemSetting).filter(models.SystemSetting.id == "singleton").first()
+    auto_approve = bool(setting and setting.autoApproveJobs)
+    job_in_dict["status"] = JobStatus.OPEN if auto_approve else JobStatus.PENDING
     job_in_dict["views"] = 0
     if not job_in_dict.get("company") or job_in_dict["company"] == "Ish beruvchi":
         job_in_dict["company"] = current_user.companyName or current_user.name or "Ish beruvchi"
@@ -94,6 +102,18 @@ def create_job(
     # the admin's day-by-day view and the employer's own list all need the days
     # before anybody has been taken on.
     job_days.sync_days(db, db_job)
+
+    if not auto_approve:
+        admin_users = db.query(models.User).filter(models.User.role == "admin").all()
+        for admin in admin_users:
+            db.add(models.Notification(
+                userId=admin.id,
+                title="Yangi e'lon moderatsiyada",
+                message=f"'{db_job.title}' e'loni tasdiqlash uchun kutilmoqda.",
+                type="system",
+                relatedJobId=db_job.id,
+            ))
+
     db.commit()
     db.refresh(db_job)
     background_tasks.add_task(_trigger_job_translation, db_job.id)
@@ -129,6 +149,12 @@ def update_job(
 
     update_data = job_in.model_dump(exclude_unset=True)
     update_data.pop("views", None)
+    lat = update_data.pop("latitude", None)
+    lng = update_data.pop("longitude", None)
+    if lat is not None and update_data.get("coordinateX") is None:
+        update_data["coordinateX"] = lat
+    if lng is not None and update_data.get("coordinateY") is None:
+        update_data["coordinateY"] = lng
 
     # Only an admin may move a job between lifecycle states directly.
     requested_status = update_data.pop("status", None)

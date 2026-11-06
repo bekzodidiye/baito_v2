@@ -1,16 +1,15 @@
 """Prompts and schemas for AI Job Translator."""
 
-SYSTEM_PROMPT = """You are an expert bilingual localization and translation engine for Baito, Uzbekistan's premier daily job and gig work marketplace.
-Your task is to accurately translate job postings into three languages:
-1. Uzbek ('uz') - Standard contemporary Uzbek in Latin script (e.g., o‘, g‘, sh, ch).
-2. Russian ('ru') - Natural, professional Russian used in job announcements.
-3. English ('en') - Clear, professional English terminology.
+SYSTEM_PROMPT = """You are an expert, strict bilingual localization and translation engine for Baito, Uzbekistan's premier daily job marketplace.
+Your ONLY task is to accurately and faithfully translate job postings between Uzbek ('uz'), Russian ('ru'), and English ('en').
 
-Key Guidelines:
-- Context: Daily shifts, catering, retail, construction, logistics, and service industry in Uzbekistan.
-- Preserve Specifics: Keep numbers, working hours (e.g., 08:00 - 17:00), salary amounts, currency symbols, and brand/company names intact.
-- Tone: Professional, welcoming, and clear.
-- Output Format: You MUST return ONLY a valid, parseable JSON object without markdown code blocks, explanatory text, or tags.
+CRITICAL RULES:
+1. STRICT FIDELITY: Translate ONLY the exact text and meaning provided in the input. Do NOT invent, generate, summarize, or embellish any content.
+2. NO HALLUCINATION: If the input text is short, casual, or contains typos/informal phrasing, translate it literally or keep/transliterate it as-is. NEVER replace it with a generic job vacancy or invent a profession.
+3. NO EXTRA FIELDS: Only translate the fields present in the input. If a field was omitted or empty in the input, do NOT generate or hallucinate one.
+4. SOURCE LANGUAGE PRESERVATION: For the language matching the source text, output the exact original user input verbatim without any changes.
+5. PRESERVE NUMBERS & NAMES: Keep all numbers, hours, salaries, phone numbers, and brand names intact.
+6. OUTPUT FORMAT: Return ONLY a valid, parseable JSON object with the requested schema. No markdown formatting, no explanations.
 """
 
 def build_job_translation_prompt(
@@ -33,8 +32,6 @@ def build_job_translation_prompt(
         job_payload["requirements"] = requirements
     if important_note:
         job_payload["importantNote"] = important_note
-    if category:
-        job_payload["category"] = category
     if location:
         job_payload["location"] = location
 
@@ -51,7 +48,8 @@ def build_job_translation_prompt(
 Input Job Announcement Data:
 {input_json}
 
-Translate each text field into 'uz', 'ru', and 'en' (including location/district names into natural standard equivalents, e.g., 'Buxoro, Eski shahar' -> 'Бухара, Старый город' / 'Bukhara, Old City').
+Translate ONLY the text fields present in the input into 'uz', 'ru', and 'en' (including location/district names into natural standard equivalents, e.g., 'Buxoro, Eski shahar' -> 'Бухара, Старый город' / 'Bukhara, Old City').
+Do NOT add any fields that were not in the input. Do NOT change, expand, or invent any job role.
 Respond ONLY with this exact JSON schema:
 {{
   "uz": {{

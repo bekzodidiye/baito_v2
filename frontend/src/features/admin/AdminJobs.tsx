@@ -5,22 +5,217 @@ import { AdminJob } from './types';
 import { money } from '../../utils/money';
 import { getJobBannerImage } from '../employer/EmployerJobCard';
 import {
-  Search, Trash2, MapPin, Building2, DollarSign, XCircle, Briefcase,
-  CheckCircle, Clock, AlertTriangle, LayoutGrid, Table, Eye, X,
-  ArrowUpRight, Calendar, Copy, Check, Sparkles, Users
+  Search, Trash2, Building2, XCircle, Briefcase,
+  CheckCircle, Clock, AlertTriangle, LayoutGrid, Table, Eye,
+  Copy, Check
 } from 'lucide-react';
 import { RejectJobModal } from './RejectJobModal';
 import { AdminJobsAutoDeleteBanner } from './AdminJobsAutoDeleteBanner';
 import { JobDetailModal } from './JobDetailModal';
 import { StatusSelect } from './AdminCustomControls';
 
+const getCompanyBrand = (name: string = '') => {
+  const clean = name.trim() || 'B';
+  const initial = clean.charAt(0).toUpperCase();
+  const colors = [
+    { bg: 'bg-gradient-to-br from-indigo-500 to-blue-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-emerald-500 to-teal-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-amber-500 to-orange-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-rose-500 to-pink-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-violet-500 to-purple-600', text: 'text-white' },
+    { bg: 'bg-gradient-to-br from-cyan-500 to-sky-600', text: 'text-white' },
+  ];
+  let hash = 0;
+  for (let i = 0; i < clean.length; i++) {
+    hash = clean.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const color = colors[Math.abs(hash) % colors.length];
+  return { initial, color };
+};
+
+const CompanyAvatar: React.FC<{ url?: string; name: string; title: string; size?: 'sm' | 'md' }> = ({
+  url,
+  name,
+  title,
+  size = 'md',
+}) => {
+  const [hasError, setHasError] = useState(false);
+  const brand = getCompanyBrand(name || title);
+  const sizeClass = size === 'sm' ? 'w-9 h-9 rounded-xl text-xs' : 'w-12 h-12 rounded-2xl text-lg';
+
+  if (url && !hasError) {
+    return (
+      <div className={`relative ${sizeClass} overflow-hidden bg-slate-100 shrink-0 border border-slate-200/90 shadow-2xs group-hover:scale-105 transition-transform duration-300`}>
+        <img
+          src={url}
+          alt={name}
+          className="w-full h-full object-cover"
+          onError={() => setHasError(true)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`relative ${sizeClass} shrink-0 ${brand.color.bg} ${brand.color.text} flex items-center justify-center font-black shadow-2xs group-hover:scale-105 transition-transform duration-300 border border-white/20 select-none`}
+    >
+      <span>{brand.initial}</span>
+    </div>
+  );
+};
+
+interface AdminJobGridCardProps {
+  job: AdminJob;
+  language: 'uz' | 'ru' | 'en';
+  a: Record<string, string>;
+  copiedId: string | null;
+  onCopyId: (e: React.MouseEvent, id: string) => void;
+  onOpen: (job: AdminJob) => void;
+  onDelete: (jobId: string, title: string, isRunning: boolean) => void;
+  onApprove?: (jobId: string) => void;
+  onRejectRequest: (job: AdminJob) => void;
+  onChangeStatus: (jobId: string, status: string) => void;
+}
+
+const AdminJobGridCard: React.FC<AdminJobGridCardProps> = ({
+  job: j,
+  a,
+  copiedId,
+  onCopyId,
+  onOpen,
+  onDelete,
+  onApprove,
+  onRejectRequest,
+  onChangeStatus,
+}) => {
+  const avatarUrl = j.logoUrl || j.imageUrl;
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`${j.title} — batafsil`}
+      onClick={() => onOpen(j)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen(j);
+        }
+      }}
+      className={`bg-white rounded-2xl sm:rounded-3xl border transition-all duration-300 shadow-2xs hover:shadow-lg hover:-translate-y-0.5 flex flex-col gap-3.5 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-brand-primary/20 relative p-4 sm:p-5 ${
+        j.status === 'pending'
+          ? 'border-amber-300/80 hover:border-amber-400 bg-gradient-to-b from-amber-500/[0.03] to-transparent shadow-amber-500/5'
+          : 'border-slate-200/90 hover:border-brand-primary/40 hover:shadow-brand-primary/5'
+      }`}
+    >
+      {/* Pending glowing stripe */}
+      {j.status === 'pending' && (
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-400 rounded-t-2xl sm:rounded-t-3xl" />
+      )}
+
+      <div className="space-y-3.5">
+        {/* Top Header: Status (at the top) & Actions */}
+        <div className="flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+            {/* Status positioned at the top */}
+            {j.status === 'pending' ? (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => onRejectRequest(j)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all border border-rose-200/80 active:scale-95 cursor-pointer shadow-2xs"
+                  title={a.rejectWithReason}
+                >
+                  <XCircle size={12} />
+                  <span>Rad etish</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onApprove ? onApprove(j.id) : onChangeStatus(j.id, 'open')}
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-2xs hover:shadow-emerald-600/20"
+                  title={a.approveJob || "Tasdiqlash"}
+                >
+                  <CheckCircle size={12} />
+                  <span>Tasdiqlash</span>
+                </button>
+              </div>
+            ) : (
+              <StatusSelect
+                value={j.status}
+                onChange={(val) => onChangeStatus(j.id, val)}
+              />
+            )}
+          </div>
+
+          {/* Top Right: Copy ID & Delete button */}
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={(e) => onCopyId(e, j.id)}
+              className="text-[10px] text-slate-400 hover:text-slate-700 font-mono flex items-center gap-1 px-1.5 py-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer border border-transparent hover:border-slate-200"
+              title="ID nusxalash"
+            >
+              {copiedId === j.id ? (
+                <span className="text-emerald-600 font-bold flex items-center gap-0.5">
+                  <Check size={11} /> Nusxalandi
+                </span>
+              ) : (
+                <span className="flex items-center gap-0.5">
+                  <Copy size={11} /> #{j.id.slice(0, 6)}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onDelete(j.id, j.title, j.status === 'in_progress')}
+              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-rose-200"
+              title={a.deletePosting}
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* Job Identity Block: Avatar + Title + Company (no salary or extra boxes) */}
+        <div className="flex items-start gap-3.5 pt-1">
+          <CompanyAvatar
+            url={avatarUrl}
+            name={j.company || j.employerName || ''}
+            title={j.title}
+          />
+
+          <div className="flex-1 min-w-0">
+            <h3 className="font-black text-slate-900 text-sm sm:text-[15px] leading-snug group-hover:text-brand-primary transition-colors line-clamp-2">
+              {j.title}
+            </h3>
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500 font-semibold truncate">
+              <Building2 size={13} className="text-slate-400 shrink-0" />
+              <span className="truncate">{j.company || j.employerName || '—'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface AdminJobsProps {
   jobs: AdminJob[];
   onChangeJobStatus: (jobId: string, status: string) => void;
   onDeleteJob: (jobId: string) => void;
+  onApproveJob?: (jobId: string) => void;
+  onRejectJob?: (jobId: string, reason?: string) => void;
 }
 
-export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, onDeleteJob }) => {
+export const AdminJobs: React.FC<AdminJobsProps> = ({
+  jobs,
+  onChangeJobStatus,
+  onDeleteJob,
+  onApproveJob,
+  onRejectJob,
+}) => {
   const language = useAuthStore(st => st.language);
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [search, setSearch] = useState('');
@@ -41,10 +236,11 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
     return matchSearch && matchStatus;
   });
 
+  const countPending = jobs.filter(j => j.status === 'pending').length;
   const countOpen = jobs.filter(j => j.status === 'open').length;
   const countInProgress = jobs.filter(j => j.status === 'in_progress').length;
   const countCompleted = jobs.filter(j => j.status === 'completed').length;
-  const countCancelled = jobs.filter(j => j.status === 'cancelled').length;
+  const countCancelled = jobs.filter(j => j.status === 'cancelled' || j.status === 'rejected').length;
   const countDispute = jobs.filter(j => j.status === 'dispute').length;
 
   const handleCopyId = (e: React.MouseEvent, id: string) => {
@@ -58,7 +254,12 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
 
   const handleConfirmReject = (reason: string, comment: string) => {
     if (rejectingJob) {
-      onChangeJobStatus(rejectingJob.id, 'cancelled');
+      const fullReason = comment ? `${reason}: ${comment}` : reason;
+      if (onRejectJob) {
+        onRejectJob(rejectingJob.id, fullReason);
+      } else {
+        onChangeJobStatus(rejectingJob.id, 'rejected');
+      }
       alert(`"${rejectingJob.title}" rad etildi. Sabab: ${reason}. Izoh: ${comment}`);
       setRejectingJob(null);
     }
@@ -86,7 +287,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
       />
 
       {/* Metric Summary Ribbon */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-3.5">
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
           <div className="flex items-center justify-between text-slate-500 mb-1.5">
             <span className="text-[11px] font-extrabold uppercase tracking-wider">{a.totalPostings}</span>
@@ -96,6 +297,17 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
           </div>
           <div className="text-2xl font-black text-slate-900 tracking-tight">{jobs.length}</div>
           <div className="text-[11px] text-slate-400 font-medium mt-0.5">Barcha e'lonlar</div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
+          <div className="flex items-center justify-between text-slate-500 mb-1.5">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-600">Kutilmoqda</span>
+            <div className="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Clock size={14} />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-amber-600 tracking-tight">{countPending}</div>
+          <div className="text-[11px] text-amber-600/80 font-medium mt-0.5">Moderatsiyada</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
@@ -112,12 +324,12 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
           <div className="flex items-center justify-between text-slate-500 mb-1.5">
             <span className="text-[11px] font-extrabold uppercase tracking-wider">Jarayonda</span>
-            <div className="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-              <Clock size={14} />
+            <div className="w-7 h-7 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
+              <Briefcase size={14} />
             </div>
           </div>
-          <div className="text-2xl font-black text-amber-600 tracking-tight">{countInProgress}</div>
-          <div className="text-[11px] text-amber-600/80 font-medium mt-0.5">Ish davom etmoqda</div>
+          <div className="text-2xl font-black text-sky-600 tracking-tight">{countInProgress}</div>
+          <div className="text-[11px] text-sky-600/80 font-medium mt-0.5">Ish davom etmoqda</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
@@ -171,6 +383,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
           <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80">
             {[
               { id: 'all', label: a.statusAll || 'Barchasi' },
+              { id: 'pending', label: `${a.statusPending || 'Kutilmoqda'}${countPending > 0 ? ` (${countPending})` : ''}` },
               { id: 'open', label: a.chipOpen || 'Ochiq' },
               { id: 'in_progress', label: a.chipInProgress || 'Jarayonda' },
               { id: 'completed', label: a.chipDone || 'Bajarilgan' },
@@ -217,7 +430,7 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
 
       {/* Grid or Table Representation */}
       {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
           {filteredJobs.length === 0 ? (
             <div className="col-span-full bg-white p-12 rounded-3xl border border-slate-200 text-center text-slate-400 font-bold shadow-2xs">
               <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
@@ -225,172 +438,41 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
               </div>
               <p className="text-sm font-bold text-slate-700">E'lonlar topilmadi</p>
               <p className="text-xs text-slate-400 mt-1">Qidiruv parametrlarini o'zgartirib ko'ring</p>
+              {(search || statusFilter !== 'all') && (
+                <button
+                  onClick={() => {
+                    setSearch('');
+                    setStatusFilter('all');
+                  }}
+                  className="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                >
+                  Filtrlarni tozalash
+                </button>
+              )}
             </div>
           ) : (
-            filteredJobs.map((j) => {
-              const bannerUrl = getJobBannerImage(j as any);
-              const salaryFormatted = money(j.salary, language);
-              const vacancies = Number(j.vacancies || (j.neededWorkers ? parseInt(j.neededWorkers) : 1));
-              const hired = Number(j.hiredCount || 0);
-
-              return (
-                <div
-                  key={j.id}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`${j.title} — batafsil`}
-                  onClick={() => setOpenJob(j)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setOpenJob(j);
-                    }
-                  }}
-                  className="bg-white p-5 rounded-3xl border border-slate-200/90 hover:border-brand-primary/40 hover:shadow-lg hover:shadow-brand-primary/5 transition-all duration-300 shadow-2xs flex flex-col justify-between gap-4 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-brand-primary/20 relative"
-                >
-                  <div className="space-y-3.5">
-                    {/* Top badges & moderation actions row */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {/* Category Tag */}
-                        <span className="inline-flex items-center gap-1.5 bg-brand-primary/5 text-brand-primary px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-brand-primary/15">
-                          <span className="w-1.5 h-1.5 rounded-full bg-brand-primary" />
-                          <span className="truncate max-w-[120px]">{j.category || a.jobTypeFallback || 'Umumiy'}</span>
-                        </span>
-
-                        {/* Workers fulfillment pill */}
-                        <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-[10px] font-extrabold border border-slate-200/70" title="Biriktirilgan ishchilar">
-                          <Users size={11} className="text-slate-500" />
-                          <span>{hired}/{vacancies}</span>
-                        </span>
-
-                        {j.urgent && (
-                          <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full text-[10px] font-black border border-rose-200/60 animate-pulse">
-                            <Sparkles size={10} />
-                            Zudlik
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Quick Moderation Icons */}
-                      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => setRejectingJob(j)}
-                          className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-amber-200"
-                          title={a.rejectWithReason}
-                        >
-                          <XCircle size={15} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            const isRunning = j.status === 'in_progress';
-                            const confirmMsg = isRunning
-                              ? `⚠️ DIQQAT! Bu e'lon jarayonda — ishchi ishlayapti.\n\n"${j.title}" e'lonini baribir tizimdan o'chirasizmi?`
-                              : `"${j.title}" e'lonini tizimdan to'liq o'chirib tashlaysizmi?`;
-                            if (confirm(confirmMsg)) {
-                              onDeleteJob(j.id);
-                            }
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-rose-200"
-                          title={a.deletePosting}
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Job Image & Title Block */}
-                    <div className="flex items-start gap-3.5">
-                      <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/80 shadow-2xs group-hover:scale-105 transition-transform duration-300">
-                        <img
-                          src={bannerUrl}
-                          alt={j.title}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.currentTarget;
-                            const fallback = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(j.company || 'B') + '&background=F1F5F9&color=64748B&size=120';
-                            if (target.src !== fallback) target.src = fallback;
-                          }}
-                        />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-black text-slate-900 text-sm leading-snug group-hover:text-brand-primary transition-colors line-clamp-2">
-                          {j.title}
-                        </h3>
-                        <div className="flex items-center gap-1.5 mt-1 text-slate-600 text-xs font-semibold">
-                          <Building2 size={13} className="text-slate-400 shrink-0" />
-                          <span className="truncate">{j.company || j.employerName || '—'}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Bento Metadata Box (Location & Date) */}
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2 min-w-0">
-                        <MapPin size={13} className="text-brand-primary shrink-0" />
-                        <span className="text-[11px] font-semibold text-slate-600 truncate">{j.rawLocation || j.location || '—'}</span>
-                      </div>
-                      <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2 min-w-0">
-                        <Calendar size={13} className="text-brand-primary shrink-0" />
-                        <span className="text-[11px] font-semibold text-slate-600 truncate">{j.workDate ? `${j.workDate} ${j.workTime ? `(${j.workTime})` : ''}` : 'Sana belgilanmagan'}</span>
-                      </div>
-                    </div>
-
-                    {/* Salary Highlight Banner */}
-                    <div className="bg-emerald-50/60 p-2.5 px-3 rounded-2xl border border-emerald-100/90 flex items-center justify-between">
-                      <div>
-                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-800/70 block">Ish haqi</span>
-                        <div className="text-[16px] font-black text-emerald-700 font-mono tracking-tight leading-none mt-0.5">
-                          {salaryFormatted}
-                        </div>
-                      </div>
-                      {j.durationLabel && (
-                        <span className="px-2 py-0.5 bg-emerald-100/80 text-emerald-800 text-[10px] font-bold rounded-lg uppercase tracking-wide">
-                          {j.durationLabel}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Card Bottom: Status Pill + Copy ID + Details Link */}
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
-                    <StatusSelect
-                      value={j.status}
-                      onChange={(val) => onChangeJobStatus(j.id, val)}
-                    />
-
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={(e) => handleCopyId(e, j.id)}
-                        className="text-[11px] text-slate-400 hover:text-slate-700 font-mono flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
-                        title="ID nusxalash"
-                      >
-                        {copiedId === j.id ? (
-                          <span className="text-emerald-600 font-bold flex items-center gap-0.5">
-                            <Check size={11} /> Nusxalandi
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-0.5">
-                            <Copy size={11} /> #{j.id.slice(0, 6)}
-                          </span>
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setOpenJob(j)}
-                        className="px-3 py-1.5 bg-brand-primary/10 hover:bg-brand-primary text-brand-primary hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-2xs hover:shadow-brand-primary/20 active:scale-95 cursor-pointer"
-                      >
-                        <span>Batafsil</span>
-                        <ArrowUpRight size={13} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
+            filteredJobs.map((j) => (
+              <AdminJobGridCard
+                key={j.id}
+                job={j}
+                language={language}
+                a={a}
+                copiedId={copiedId}
+                onCopyId={handleCopyId}
+                onOpen={setOpenJob}
+                onDelete={(jobId, title, isRunning) => {
+                  const confirmMsg = isRunning
+                    ? `⚠️ DIQQAT! Bu e'lon jarayonda — ishchi ishlayapti.\n\n"${title}" e'lonini baribir tizimdan o'chirasizmi?`
+                    : `"${title}" e'lonini tizimdan to'liq o'chirib tashlaysizmi?`;
+                  if (confirm(confirmMsg)) {
+                    onDeleteJob(jobId);
+                  }
+                }}
+                onApprove={onApproveJob}
+                onRejectRequest={setRejectingJob}
+                onChangeStatus={onChangeJobStatus}
+              />
+            ))
           )}
         </div>
       ) : (
@@ -420,15 +502,11 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                     <tr key={j.id} className="hover:bg-slate-50/90 transition-colors group">
                       <td className="p-4 pl-5 font-bold text-slate-900 group-hover:text-brand-primary cursor-pointer" onClick={() => setOpenJob(j)}>
                         <div className="flex items-center gap-3">
-                          <img
-                            src={getJobBannerImage(j as any)}
-                            alt={j.title}
-                            className="w-9 h-9 rounded-xl object-cover shrink-0 border border-slate-100"
-                            onError={(e) => {
-                              const target = e.currentTarget;
-                              const fallback = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(j.company || 'B') + '&background=F1F5F9&color=64748B&size=100';
-                              if (target.src !== fallback) target.src = fallback;
-                            }}
+                          <CompanyAvatar
+                            size="sm"
+                            url={j.logoUrl || j.imageUrl}
+                            name={j.company || j.employerName || ''}
+                            title={j.title}
                           />
                           <div className="min-w-0">
                             <div className="truncate max-w-xs">{j.title}</div>
@@ -442,10 +520,23 @@ export const AdminJobs: React.FC<AdminJobsProps> = ({ jobs, onChangeJobStatus, o
                         {money(j.salary, language)}
                       </td>
                       <td className="p-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                        <StatusSelect
-                          value={j.status}
-                          onChange={(val) => onChangeJobStatus(j.id, val)}
-                        />
+                        <div className="flex items-center gap-1.5">
+                          {j.status === 'pending' && (
+                            <button
+                              type="button"
+                              onClick={() => onApproveJob ? onApproveJob(j.id) : onChangeJobStatus(j.id, 'open')}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                              title={a.approveJob || "Tasdiqlash"}
+                            >
+                              <CheckCircle size={12} />
+                              <span>{a.approveJob || "Tasdiqlash"}</span>
+                            </button>
+                          )}
+                          <StatusSelect
+                            value={j.status}
+                            onChange={(val) => onChangeJobStatus(j.id, val)}
+                          />
+                        </div>
                       </td>
                       <td className="p-4 pr-5 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">

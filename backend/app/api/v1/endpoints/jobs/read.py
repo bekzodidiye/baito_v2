@@ -257,7 +257,7 @@ def read_job(
             .first()
         )
 
-    if job.status in JobStatus.CLOSED_STATUSES and not (is_owner or is_admin or app_item):
+    if (job.status in JobStatus.CLOSED_STATUSES or job.status == JobStatus.PENDING) and not (is_owner or is_admin or app_item):
         raise HTTPException(status_code=404, detail="Ish e'loni topilmadi")
 
     job_dict = schemas.JobWithApplicationStatus.model_validate(job)

@@ -273,7 +273,7 @@ class JobQueryService:
 
         is_owner = bool(current_user and job.employerId == current_user.id)
         is_admin = bool(current_user and current_user.role == 'admin')
-        if job.status in JobStatus.CLOSED_STATUSES and not (is_owner or is_admin):
+        if (job.status in JobStatus.CLOSED_STATUSES or job.status == JobStatus.PENDING) and not (is_owner or is_admin):
             raise JobNotFoundError("Ish e'loni topilmadi")
 
         return job

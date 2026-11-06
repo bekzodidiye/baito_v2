@@ -102,7 +102,7 @@ export interface AdminJob {
   salary: string;
   location: string;
   description: string;
-  status: 'open' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'dispute';
+  status: 'pending' | 'rejected' | 'open' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'dispute';
   durationLabel?: string;
   createdAt?: string;
   workDate?: string;

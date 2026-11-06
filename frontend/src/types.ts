@@ -17,7 +17,7 @@ export interface Job {
   // So TypeScript could not warn that the employer card had no branch for
   // it, and a cancelled posting fell through to the "waiting for a worker"
   // pill. `jobStatusUnion.test.ts` reads the backend's own list now.
-  status: 'applied' | 'confirmed' | 'todo' | 'completed' | 'cancelled' | 'dispute' | 'none' | 'open' | 'in_progress' | 'start_requested' | 'hired';
+  status: 'pending' | 'rejected' | 'applied' | 'confirmed' | 'todo' | 'completed' | 'cancelled' | 'dispute' | 'none' | 'open' | 'in_progress' | 'start_requested' | 'hired';
   description: string;
   hourlyRate?: string;
   transportRate?: string;

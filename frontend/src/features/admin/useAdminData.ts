@@ -147,6 +147,38 @@ export function useAdminData() {
     }
   };
 
+  const approveJob = async (jobId: string) => {
+    try {
+      const res = await apiClient(`/admin/jobs/${jobId}/approve`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      if (res !== undefined) {
+        showToast("E'lon tasdiqlandi va faol holatga o'tkazildi!", 'success');
+        fetchAllData();
+      }
+    } catch (e: any) {
+      console.error(e);
+      showToast(e.message || "Tasdiqlab bo'lmadi", 'error');
+    }
+  };
+
+  const rejectJob = async (jobId: string, reason?: string) => {
+    try {
+      const res = await apiClient(`/admin/jobs/${jobId}/reject`, {
+        method: 'POST',
+        body: JSON.stringify({ reason: reason || undefined }),
+      });
+      if (res !== undefined) {
+        showToast("E'lon rad etildi", 'info');
+        fetchAllData();
+      }
+    } catch (e: any) {
+      console.error(e);
+      showToast(e.message || "Rad etib bo'lmadi", 'error');
+    }
+  };
+
   const changeJobWorker = async (jobId: string, workerId: string | null) => {
     try {
       const res = await apiClient(`/admin/jobs/${jobId}/worker`, {
@@ -226,6 +258,8 @@ export function useAdminData() {
     changeRole,
     toggleBan,
     changeJobStatus,
+    approveJob,
+    rejectJob,
     changeJobWorker,
     deleteJob,
     updateSettings,

@@ -9,7 +9,7 @@ class SystemSetting(Base):
     platformFeePercent = Column(Integer, default=10)
     minHourlyRate = Column(Integer, default=15000)
     maintenanceMode = Column(Boolean, default=False)
-    autoApproveJobs = Column(Boolean, default=True)
+    autoApproveJobs = Column(Boolean, default=False)
     autoExpireJobs = Column(Boolean, default=True)
     autoExpireDays = Column(Integer, default=14)
     autoDeleteSpamJobs = Column(Boolean, default=True)

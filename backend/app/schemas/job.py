@@ -1,5 +1,6 @@
+import re
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 
 
@@ -31,6 +32,28 @@ def _reject_control_chars(v):
     elif isinstance(v, list):
         for item in v:
             _reject_control_chars(item)
+    return v
+
+
+def _coerce_optional_int(v: Any) -> Optional[int]:
+    """Parse integer from int, float, or formatted strings like '200000 UZS', '200 000 so'm'.
+    Returns None for empty/unparseable values like '', 'Yo'q', None.
+    Preserves negative numbers so validation rules can reject them.
+    """
+    if v is None or v == '' or v is False:
+        return None
+    if isinstance(v, (int, float)):
+        return int(v)
+    if isinstance(v, str):
+        s = v.strip()
+        if not s or s.lower() in ("yo'q", "yoq", "none", "null", "false", "no", "n/a"):
+            return None
+        is_negative = s.startswith("-") or ("-" in s and not any(c.isdigit() for c in s.split("-")[0]))
+        digits = re.sub(r'\D', '', s)
+        if not digits:
+            return None
+        val = int(digits)
+        return -val if is_negative else val
     return v
 
 
@@ -87,6 +110,11 @@ class JobBase(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     translations: Optional[Dict[str, Any]] = None
+
+    @field_validator("salary", "hourlyRate", "transportRate", mode="before")
+    @classmethod
+    def coerce_rates(cls, v):
+        return _coerce_optional_int(v)
 
     @model_validator(mode="after")
     def sync_coordinates(self):

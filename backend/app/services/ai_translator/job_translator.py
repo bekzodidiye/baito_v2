@@ -90,6 +90,16 @@ def _build_fallback_translations(
     }
 
 
+def _detect_source_language(text: str) -> str:
+    """Detect whether source text is primarily Cyrillic (Russian) or Latin (Uzbek/English)."""
+    if re.search(r'[\u0400-\u04FF]', text):
+        return "ru"
+    return "uz"
+
+
+from .agent import JobTranslationAgent, get_translation_agent
+
+
 def translate_job_content(
     title: str,
     description: str,
@@ -100,71 +110,24 @@ def translate_job_content(
     location: str = "",
     client: Optional[GeminiClient] = None,
 ) -> Dict[str, Any]:
-    """Translate job announcement fields into uz, ru, and en.
+    """Translate job announcement fields into uz, ru, and en via JobTranslationAgent.
 
     Returns a dict with 'uz', 'ru', 'en' containing translated fields.
     Falls back gracefully if the translation model is unavailable.
     """
-    if not title and not description:
-        return _build_fallback_translations(title, description, responsibilities, requirements, important_note, location)
-
-    prompt = build_job_translation_prompt(
+    agent = JobTranslationAgent(client=client) if client else get_translation_agent()
+    return agent.translate(
         title=title,
         description=description,
         responsibilities=responsibilities,
         requirements=requirements,
         important_note=important_note,
-        category=category,
         location=location,
     )
 
-    ai_client = client or get_gemini_client()
-
-    try:
-        logger.info("Requesting Gemini translation for job title: %s (location: %s)", title[:50], location)
-        response_text = ai_client.generate(prompt)
-        parsed = _parse_json_from_response(response_text)
-
-        if parsed and isinstance(parsed, dict):
-            # Validate essential language keys
-            has_uz = "uz" in parsed and isinstance(parsed["uz"], dict)
-            has_ru = "ru" in parsed and isinstance(parsed["ru"], dict)
-            has_en = "en" in parsed and isinstance(parsed["en"], dict)
-
-            if has_uz and has_ru and has_en:
-                logger.info("Successfully translated job into 3 languages via Gemini")
-                return parsed
-
-        logger.warning("Gemini response did not match expected 3-language schema: %s", response_text[:200])
-    except Exception as e:
-        logger.warning("Gemini translation error (falling back to original): %s", e)
-
-    return _build_fallback_translations(title, description, responsibilities, requirements, important_note, location)
-
 
 def translate_and_save_job(db: Session, job_id: str) -> Optional[Dict[str, Any]]:
-    """Translate an existing job by ID and persist the translations in the database."""
-    from app import models
-
-    job = db.query(models.Job).filter(models.Job.id == job_id).first()
-    if not job:
-        logger.warning("Job %s not found for translation", job_id)
-        return None
-
-    translations = translate_job_content(
-        title=job.title,
-        description=job.description,
-        responsibilities=job.responsibilities or "",
-        requirements=job.requirements or "",
-        important_note=job.importantNote or "",
-        category=job.category or "",
-        location=job.location or "",
-    )
-
-    job.translations = translations
-    db.add(job)
-    db.commit()
-    db.refresh(job)
-    logger.info("Saved translations for job %s: %s", job_id, list(translations.keys()))
-    return translations
+    """Translate an existing job by ID and persist the translations in the database via JobTranslationAgent."""
+    agent = get_translation_agent()
+    return agent.translate_and_save(db=db, job_id=job_id)
 

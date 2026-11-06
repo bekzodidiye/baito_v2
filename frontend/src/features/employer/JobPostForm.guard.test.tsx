@@ -35,6 +35,7 @@ const UZ = {
   responsibilities: '1. Yuklarni tushirish va joylash...',
   wage: '200000',
   address: "Masalan: Ibn Sino ko'chasi, 17A",
+  imageUrl: 'Yoki rasm havolasini (URL) kiriting...',
 };
 
 const typeInto = (placeholder: string, value: string) =>
@@ -45,6 +46,7 @@ const clickContinue = () => fireEvent.click(screen.getByText('Davom etish'));
 const fillStepOne = () => {
   typeInto(UZ.title, 'Omborchi');
   typeInto(UZ.responsibilities, 'Omborda yuk ortish va tushirish ishlari.');
+  typeInto(UZ.imageUrl, 'https://example.com/job.jpg');
 };
 
 afterEach(cleanup);
@@ -56,7 +58,26 @@ afterEach(cleanup);
  * them — so the guard is tested here, not assumed.
  */
 describe('JobPostForm — the guard that stands where the invented defaults used to', () => {
-  beforeEach(() => postNewJob.mockClear());
+  beforeEach(() => {
+    postNewJob.mockClear();
+    if (typeof sessionStorage !== 'undefined') sessionStorage.clear();
+    if (typeof localStorage !== 'undefined') localStorage.clear();
+    if (typeof window !== 'undefined' && window.history) {
+      window.history.replaceState({}, '', '/');
+    }
+  });
+
+  it('will not move past step one while the image is blank', async () => {
+    render(<JobPostForm onBack={vi.fn()} onSubmitSuccess={vi.fn()} />);
+
+    typeInto(UZ.title, 'Omborchi');
+    typeInto(UZ.responsibilities, 'Omborda yuk ortish va tushirish ishlari.');
+    clickContinue();
+
+    // Still on step one: wage field must not be visible
+    expect(screen.queryByPlaceholderText(UZ.wage)).toBeNull();
+    expect(postNewJob).not.toHaveBeenCalled();
+  });
 
   it('will not move past the wage step while the wage is blank', async () => {
     render(<JobPostForm onBack={vi.fn()} onSubmitSuccess={vi.fn()} />);

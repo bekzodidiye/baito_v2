@@ -69,6 +69,8 @@ export const AdminPanel: React.FC = () => {
     changeRole,
     toggleBan,
     changeJobStatus,
+    approveJob,
+    rejectJob,
     changeJobWorker,
     deleteJob,
     updateSettings,
@@ -114,6 +116,8 @@ export const AdminPanel: React.FC = () => {
                 jobs={jobs}
                 onChangeJobStatus={changeJobStatus}
                 onDeleteJob={deleteJob}
+                onApproveJob={approveJob}
+                onRejectJob={rejectJob}
               />
             )}
 
@@ -127,6 +131,8 @@ export const AdminPanel: React.FC = () => {
                 onAddBalance={addBalance}
                 onChangeRole={changeRole}
                 onToggleBan={toggleBan}
+                onApproveJob={approveJob}
+                onRejectJob={rejectJob}
               />
             )}
 

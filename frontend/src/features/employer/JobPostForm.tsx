@@ -10,20 +10,20 @@ import { JobPostStepThree } from './components/JobPostStepThree';
 import { CATEGORIES_LIST } from '../../constants/categories';
 import { showToast } from '../../utils/toast';
 import { useAuthStore } from "../../store/useAuthStore";
-import { useJobPostFormState } from './useJobPostForm';
+import { useJobPostFormState, loadSavedStep, saveSavedStep, clearSavedDraft } from './useJobPostForm';
 
 interface JobPostFormProps {
   onBack: () => void;
   onSubmitSuccess: () => void;
+  initialStep?: number;
 }
 
-export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSuccess }) => {
+export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSuccess, initialStep }) => {
   const { postNewJob, language, companyName } = useEmployer();
   // The server refuses a posting from an unverified account. Checking here
   // means the refusal arrives before three steps of form, not after them.
   const userProfile = useAuthStore(s => s.userProfile);
   const isVerified = !!userProfile?.isVerified;
-  const [step, setStep] = useState(1);
   
   const {
     formData,
@@ -39,6 +39,46 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
     transportRate, requirements, importantNote,
     city, addressLine, coordinateX, coordinateY
   } = formData;
+
+  const getValidStep = (targetStep: number): number => {
+    if (targetStep <= 1) return 1;
+    const isStepOneValid =
+      formData.title.trim().length >= 3 &&
+      !!formData.category &&
+      formData.responsibilities.trim().length >= 10 &&
+      !!formData.imageUrl &&
+      !!formData.imageUrl.trim();
+    if (!isStepOneValid) return 1;
+    if (targetStep === 2) return 2;
+
+    const isStepTwoValid =
+      !!formData.workDate &&
+      !!formData.startTime &&
+      !!formData.endTime &&
+      !!formData.hourlyRate &&
+      !isNaN(Number(formData.hourlyRate)) &&
+      Number(formData.hourlyRate) > 0 &&
+      !!formData.neededWorkers &&
+      !isNaN(Number(formData.neededWorkers)) &&
+      Number(formData.neededWorkers) > 0;
+    if (!isStepTwoValid) return 2;
+
+    return 3;
+  };
+
+  const [step, setStepState] = useState<number>(() => {
+    if (initialStep !== undefined) return initialStep;
+    const stored = loadSavedStep();
+    return getValidStep(stored);
+  });
+
+  const setStep = (updater: number | ((prev: number) => number)) => {
+    setStepState(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      saveSavedStep(next);
+      return next;
+    });
+  };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -99,6 +139,10 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
         showToast(language === 'uz' ? "Ish vazifalarini batafsilroq yozing (kamida 10 ta belgi)!" : language === 'ru' ? "Пожалуйста, опишите обязанности подробнее (не менее 10 символов)!" : "Please provide more details in responsibilities (at least 10 chars)!");
         return;
       }
+      if (!imageUrl || !imageUrl.trim()) {
+        showToast(language === 'uz' ? "Ish rasmini yuklash majburiy!" : language === 'ru' ? "Загрузите изображение для вакансии!" : "Job image is required!");
+        return;
+      }
     }
     if (step === 2 && (!workDate || !startTime || !endTime || !hourlyRate || isNaN(Number(hourlyRate)) || Number(hourlyRate) <= 0 || !neededWorkers || isNaN(Number(neededWorkers)) || Number(neededWorkers) <= 0)) {
       showToast(language === 'uz' ? "Ish sanasi, vaqti, ishchilar soni va to'lov summasini to'g'ri kiriting!" : language === 'ru' ? "Введите корректные дату, время, количество работников и зарплату!" : "Enter valid date, time, workers count and salary!");
@@ -108,11 +152,19 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
   };
 
   const handleBack = () => {
-    if (step > 1) setStep(s => s - 1);
-    else onBack();
+    if (step > 1) {
+      setStep(s => s - 1);
+    } else {
+      clearSavedDraft();
+      onBack();
+    }
   };
 
   const handleSubmit = async () => {
+    if (!imageUrl || !imageUrl.trim()) {
+      showToast(language === 'uz' ? "Ish rasmini yuklash majburiy!" : language === 'ru' ? "Загрузите изображение для вакансии!" : "Job image is required!");
+      return;
+    }
     if (!addressLine || !addressLine.trim() || !city) {
       showToast(language === 'uz' ? "Manzilni kiriting!" : language === 'ru' ? "Введите адрес!" : "Enter address!");
       return;
@@ -147,6 +199,7 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
         tags,
         coordinates: { x: coordinateX, y: coordinateY }
       });
+      clearSavedDraft();
       onSubmitSuccess();
     } catch (err: any) {
       const msg = err?.message || (language === 'uz' ? "Serverda xatolik yuz berdi. Qaytadan urinib ko'ring." : language === 'ru' ? "Произошла ошибка. Пожалуйста, попробуйте еще раз." : "An error occurred. Please try again.");

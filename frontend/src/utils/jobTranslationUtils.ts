@@ -90,12 +90,40 @@ export function translateJobLocation(rawLocation: string | undefined | null, lan
   return translatedParts.join(', ');
 }
 
+const isCyrillic = (text?: string | null) => !!text && /[\u0400-\u04FF]/.test(text);
+
 /**
  * Returns translated fields for a job matching the user's selected language ('uz', 'ru', 'en').
  * Gracefully falls back to the job's original fields if a translation is not yet available.
  */
 export function getJobLocalizedFields(job: Job, language: string): LocalizedJobFields {
   const langKey = language?.toLowerCase() || 'uz';
+  const originalIsCyrillic = isCyrillic(job.title || job.description);
+
+  // If viewing in Uzbek and original was written in Uzbek Latin, always use employer's authentic input
+  if (langKey === 'uz' && !originalIsCyrillic) {
+    return {
+      title: job.title,
+      description: job.description,
+      responsibilities: job.responsibilities,
+      requirements: job.requirements,
+      importantNote: job.importantNote,
+      location: job.location,
+    };
+  }
+
+  // If viewing in Russian and original was written in Russian Cyrillic, always use employer's authentic input
+  if (langKey === 'ru' && originalIsCyrillic) {
+    return {
+      title: job.title,
+      description: job.description,
+      responsibilities: job.responsibilities,
+      requirements: job.requirements,
+      importantNote: job.importantNote,
+      location: translateJobLocation(job.location, 'ru'),
+    };
+  }
+
   const trans = job.translations?.[langKey];
 
   return {
@@ -110,11 +138,29 @@ export function getJobLocalizedFields(job: Job, language: string): LocalizedJobF
 
 export function getJobTitle(job: Job, language: string): string {
   const langKey = language?.toLowerCase() || 'uz';
+  const originalIsCyrillic = isCyrillic(job.title);
+
+  if (langKey === 'uz' && !originalIsCyrillic) {
+    return job.title;
+  }
+  if (langKey === 'ru' && originalIsCyrillic) {
+    return job.title;
+  }
+
   return (job.translations?.[langKey]?.title && job.translations[langKey].title!.trim()) || job.title;
 }
 
 export function getJobDescription(job: Job, language: string): string {
   const langKey = language?.toLowerCase() || 'uz';
+  const originalIsCyrillic = isCyrillic(job.title || job.description);
+
+  if (langKey === 'uz' && !originalIsCyrillic) {
+    return job.description;
+  }
+  if (langKey === 'ru' && originalIsCyrillic) {
+    return job.description;
+  }
+
   return (job.translations?.[langKey]?.description && job.translations[langKey].description!.trim()) || job.description;
 }
 

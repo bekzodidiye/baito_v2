@@ -86,7 +86,12 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
       }} />
               
               {/* Top-left Badge (like "12 soat qoldi") */}
-              {job.status === 'in_progress' ? (
+              {job.status === 'pending' ? (
+                <div className="absolute top-4 left-4 bg-amber-500 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold text-[13px] shadow-sm">
+                  <Clock size={16} strokeWidth={2.5} />
+                  <span>{language === 'ru' ? "На модерации" : language === 'en' ? "Pending approval" : "Tasdiqlanishi kutilmoqda"}</span>
+                </div>
+              ) : job.status === 'in_progress' ? (
                 <div className="absolute top-4 left-4 bg-emerald-600 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold text-[13px] shadow-sm">
                   <Clock size={16} strokeWidth={2.5} />
                   <span>{language === 'ru' ? "В работе" : language === 'en' ? "In progress" : "Jarayonda"}</span>
@@ -256,7 +261,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
           {/* Fixed Footer Actions */}
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100 bg-white/90 backdrop-blur-md z-30">
             <div className="flex items-center gap-3">
-              {job.status === 'open' && onDelete ? (
+              {(job.status === 'open' || job.status === 'pending') && onDelete ? (
                 <>
                   <button
                     onClick={() => setShowDeleteConfirm(true)}

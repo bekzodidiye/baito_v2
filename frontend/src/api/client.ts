@@ -53,15 +53,14 @@ const refreshSession = async (): Promise<boolean> => {
 };
 
 export const apiClient = async (endpoint: string, options: RequestInit = {}, isRetry = false): Promise<any> => {
-  const isFormData = options.body instanceof FormData;
+  const hasBody = options.body !== undefined && options.body !== null;
+  const isFormData = hasBody && options.body instanceof FormData;
 
   const config: RequestInit = {
     ...options,
     credentials: 'include',
     headers: {
-      // Setting Content-Type on a FormData body strips the multipart boundary
-      // and the request becomes unparseable.
-      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(hasBody && !isFormData ? { 'Content-Type': 'application/json' } : {}),
       ...options.headers,
     },
   };

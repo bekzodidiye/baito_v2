@@ -18,8 +18,8 @@ from .audit import record_admin_action
 router = APIRouter()
 
 VALID_STATUSES = {
-    JobStatus.OPEN, JobStatus.CONFIRMED, JobStatus.IN_PROGRESS,
-    JobStatus.COMPLETED, JobStatus.CANCELLED,
+    JobStatus.PENDING, JobStatus.OPEN, JobStatus.CONFIRMED, JobStatus.IN_PROGRESS,
+    JobStatus.COMPLETED, JobStatus.CANCELLED, JobStatus.REJECTED,
 }
 
 
@@ -28,19 +28,13 @@ class JobStatusPayload(BaseModel):
     reason: Optional[str] = Field(default=None, max_length=500)
 
 
-class JobWorkerPayload(BaseModel):
-    workerId: Optional[str] = None
+class JobRejectPayload(BaseModel):
     reason: Optional[str] = Field(default=None, max_length=500)
 
 
-
-
-
-
-
-
-
-
+class JobWorkerPayload(BaseModel):
+    workerId: Optional[str] = None
+    reason: Optional[str] = Field(default=None, max_length=500)
 
 
 @router.patch("/jobs/{job_id}/status")
@@ -106,7 +100,15 @@ def change_job_status(
                 type="system",
                 relatedJobId=job.id,
             ))
-    elif payload.status == JobStatus.CANCELLED:
+        if previous == JobStatus.PENDING:
+            db.add(models.Notification(
+                userId=job.employerId,
+                title="E'loningiz tasdiqlandi",
+                message=f"'{job.title}' e'loningiz administrator tomonidan tasdiqlandi va faol holatga o'tkazildi.",
+                type="system",
+                relatedJobId=job.id,
+            ))
+    elif payload.status in (JobStatus.CANCELLED, JobStatus.REJECTED):
         job.hiredWorkerId = None
         active_apps = (
             db.query(models.Application)
@@ -127,6 +129,18 @@ def change_job_status(
                 day.status = JobDayStatus.CANCELLED
                 db.add(day)
 
+        if previous == JobStatus.PENDING:
+            msg = f"'{job.title}' e'loningiz administrator tomonidan rad etildi."
+            if payload.reason:
+                msg += f" Sabab: {payload.reason}"
+            db.add(models.Notification(
+                userId=job.employerId,
+                title="E'loningiz rad etildi",
+                message=msg,
+                type="system",
+                relatedJobId=job.id,
+            ))
+
     record_admin_action(
         db, admin, "job.status", target_type="job", target_id=job.id,
         details={"from": previous, "to": payload.status},
@@ -134,6 +148,77 @@ def change_job_status(
     )
     db.commit()
     return {"success": True, "status": job.status}
+
+
+@router.post("/jobs/{job_id}/approve")
+def approve_job(
+    job_id: str,
+    request: Request,
+    db: Session = Depends(deps.get_db),
+    admin: models.User = Depends(get_admin_user),
+) -> Any:
+    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Ish topilmadi")
+
+    previous = job.status
+    job.status = JobStatus.OPEN
+
+    db.add(models.Notification(
+        userId=job.employerId,
+        title="E'loningiz tasdiqlandi",
+        message=f"'{job.title}' e'loningiz administrator tomonidan tasdiqlandi va ishchilarga ko'rina boshladi.",
+        type="system",
+        relatedJobId=job.id,
+    ))
+    record_admin_action(
+        db, admin, "job.approve", target_type="job", target_id=job.id,
+        details={"from": previous, "to": JobStatus.OPEN},
+        request=request, note="Admin e'lonni tasdiqladi",
+    )
+    db.commit()
+    return {"success": True, "status": job.status, "message": "E'lon muvaffaqiyatli tasdiqlandi"}
+
+
+@router.post("/jobs/{job_id}/reject")
+def reject_job(
+    job_id: str,
+    request: Request,
+    payload: Optional[JobRejectPayload] = None,
+    db: Session = Depends(deps.get_db),
+    admin: models.User = Depends(get_admin_user),
+) -> Any:
+    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Ish topilmadi")
+
+    reason = payload.reason if payload else None
+    previous = job.status
+    job.status = JobStatus.REJECTED
+    job.hiredWorkerId = None
+
+    for day in job_days.days_of(db, job.id):
+        if day.status == JobDayStatus.PENDING:
+            day.status = JobDayStatus.CANCELLED
+            db.add(day)
+
+    msg = f"'{job.title}' e'loningiz administrator tomonidan rad etildi."
+    if reason:
+        msg += f" Sabab: {reason}"
+    db.add(models.Notification(
+        userId=job.employerId,
+        title="E'loningiz rad etildi",
+        message=msg,
+        type="system",
+        relatedJobId=job.id,
+    ))
+    record_admin_action(
+        db, admin, "job.reject", target_type="job", target_id=job.id,
+        details={"from": previous, "to": JobStatus.REJECTED},
+        request=request, note=reason,
+    )
+    db.commit()
+    return {"success": True, "status": job.status, "message": "E'lon rad etildi"}
 
 
 @router.patch("/jobs/{job_id}/worker")

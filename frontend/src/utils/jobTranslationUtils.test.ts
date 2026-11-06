@@ -100,6 +100,68 @@ describe('Job Translation Utilities', () => {
     expect(translatedUz.title).toBe('Kassir kerak');
   });
 
+  it('preserves authentic Uzbek Latin title and description on uz locale even if translations object has different text', () => {
+    const jobWithAlteredTrans: Job = {
+      ...mockJob,
+      title: 'Omborchi kerak',
+      description: 'Omborda yuk ortish',
+      responsibilities: 'Yuk tushirish',
+      translations: {
+        uz: {
+          title: 'Sotuvchi-kassir', // AI hallucinated title
+          description: 'Chakana savdo do\'koni',
+          responsibilities: 'Kassada ishlash',
+        },
+        ru: {
+          title: 'Грузчик на склад',
+          description: 'Погрузка на складе',
+          responsibilities: 'Разгрузка',
+        },
+        en: {
+          title: 'Warehouse Loader',
+          description: 'Loading at warehouse',
+          responsibilities: 'Unloading',
+        },
+      },
+    };
+
+    // On Uzbek locale, must NEVER display the AI hallucinated "Sotuvchi-kassir", but the employer's real input
+    expect(getJobTitle(jobWithAlteredTrans, 'uz')).toBe('Omborchi kerak');
+    expect(getJobDescription(jobWithAlteredTrans, 'uz')).toBe('Omborda yuk ortish');
+    const fieldsUz = getJobLocalizedFields(jobWithAlteredTrans, 'uz');
+    expect(fieldsUz.title).toBe('Omborchi kerak');
+    expect(fieldsUz.responsibilities).toBe('Yuk tushirish');
+
+    // On Russian and English locales, it correctly displays the translations
+    expect(getJobTitle(jobWithAlteredTrans, 'ru')).toBe('Грузчик на склад');
+    expect(getJobTitle(jobWithAlteredTrans, 'en')).toBe('Warehouse Loader');
+  });
+
+  it('preserves authentic Russian Cyrillic title on ru locale and translates to uz locale', () => {
+    const russianJob: Job = {
+      ...mockJob,
+      title: 'Повар горячего цеха',
+      description: 'Приготовление блюд',
+      translations: {
+        uz: {
+          title: 'Issiq sex oshpazi',
+          description: 'Taomlar tayyorlash',
+        },
+        ru: {
+          title: 'Шеф-повар ресторана', // altered
+        },
+        en: {
+          title: 'Hot Line Cook',
+        },
+      },
+    };
+
+    // On ru locale, original Russian input is preserved
+    expect(getJobTitle(russianJob, 'ru')).toBe('Повар горячего цеха');
+    // On uz locale, translated Uzbek is shown
+    expect(getJobTitle(russianJob, 'uz')).toBe('Issiq sex oshpazi');
+  });
+
   describe('Location Translation QA Edge Cases', () => {
     it('correctly translates composite location into Russian and English', () => {
       expect(translateJobLocation('Buxoro, Eski shahar', 'ru')).toBe('Бухара, Старый город');

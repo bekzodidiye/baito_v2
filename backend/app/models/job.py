@@ -13,16 +13,18 @@ class JobStatus:
     nothing. Everything now goes through these constants.
     """
 
+    PENDING = "pending"          # awaiting admin approval / moderation
     OPEN = "open"                # accepting applications
     CONFIRMED = "confirmed"      # at least one worker hired
     IN_PROGRESS = "in_progress"  # work has started
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+    REJECTED = "rejected"        # rejected by admin
 
     # Statuses a job seeker may still see and apply to.
     OPEN_STATUSES = (OPEN, CONFIRMED)
     # Statuses that mean the job is done with and should stay out of listings.
-    CLOSED_STATUSES = (COMPLETED, CANCELLED)
+    CLOSED_STATUSES = (COMPLETED, CANCELLED, REJECTED)
 
 
 class Job(Base):
@@ -43,7 +45,7 @@ class Job(Base):
     durationLabel = Column(String)
     urgent = Column(Boolean, default=False)
     description = Column(String, nullable=False)
-    status = Column(String, nullable=False, default=JobStatus.OPEN, index=True)
+    status = Column(String, nullable=False, default=JobStatus.PENDING, index=True)
     views = Column(Integer, default=0)
     hiredWorkerId = Column(String, ForeignKey("users.id"))
     createdAt = Column(DateTime(timezone=True), server_default=func.now())
@@ -70,6 +72,15 @@ class Job(Base):
 
     employer = relationship("User", foreign_keys=[employerId])
     hiredWorker = relationship("User", foreign_keys=[hiredWorkerId])
+
+    def __init__(self, **kwargs):
+        lat = kwargs.pop("latitude", None)
+        lng = kwargs.pop("longitude", None)
+        if lat is not None and kwargs.get("coordinateX") is None:
+            kwargs["coordinateX"] = lat
+        if lng is not None and kwargs.get("coordinateY") is None:
+            kwargs["coordinateY"] = lng
+        super().__init__(**kwargs)
 
     @property
     def vacancies(self) -> int:

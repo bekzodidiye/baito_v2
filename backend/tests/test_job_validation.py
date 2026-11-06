@@ -149,3 +149,55 @@ def test_real_text_from_real_alphabets_is_still_allowed(client):
     login(client, make_user(role="employer", phone="+998911112223"))
     for title in ("Omborchi 📦", "عامل مستودع", "Кладовщик", "Magasinier — café"):
         assert _post(client, title=title).status_code == 200, title
+
+
+def test_formatted_salary_and_rates_from_frontend_are_accepted(client):
+    """The frontend sends '200000 UZS', 'hourlyRate': '200000 UZS', 'transportRate': 'Yo\'q'
+    which previously crashed with Pydantic 422 'Input should be a valid Integer'."""
+    login(client, make_user(role="employer", phone="+998911112224"))
+    resp = _post(
+        client,
+        salary="200000 UZS",
+        hourlyRate="200000 UZS",
+        transportRate="Yo'q"
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["salary"] == 200000
+    assert data["hourlyRate"] == 200000
+    assert data["transportRate"] is None
+
+    # Also test formatted transport rate
+    resp2 = _post(
+        client,
+        salary="250 000 so'm",
+        hourlyRate="250000 UZS",
+        transportRate="30000 UZS"
+    )
+    assert resp2.status_code == 200
+    data2 = resp2.json()
+    assert data2["salary"] == 250000
+    assert data2["transportRate"] == 30000
+
+
+def test_posting_job_with_coordinates_does_not_crash(client):
+    """The map picker sends coordinateX and coordinateY. JobBase schema syncs
+    latitude and longitude onto the schema, which previously crashed with
+    TypeError: 'latitude' is an invalid keyword argument for Job."""
+    login(client, make_user(role="employer", phone="+998911112225"))
+    resp = _post(
+        client,
+        title="Samarqandda omborchi",
+        salary="200000 UZS",
+        hourlyRate="200000 UZS",
+        transportRate="Yo'q",
+        coordinateX=39.6542,
+        coordinateY=66.9597,
+        location="Samarqand shahri, Ibn Sino ko'chasi, 17a"
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["coordinateX"] == 39.6542
+    assert data["coordinateY"] == 66.9597
+
+

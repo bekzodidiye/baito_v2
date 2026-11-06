@@ -17,7 +17,7 @@ interface JobPostStepThreeProps {
 }
 
 export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
-  language, city, setCity, addressLine, setAddressLine, setCoordinateX, setCoordinateY
+  language, city, setCity, addressLine, setAddressLine, coordinateX, setCoordinateX, coordinateY, setCoordinateY
 }) => {
   // One string for the visible label and the field's accessible name, so a
   // screen reader announces the field rather than an example of what to type.
@@ -26,7 +26,11 @@ export const JobPostStepThree: React.FC<JobPostStepThreeProps> = ({
     : language === 'ru' ? 'Точный адрес (Название улицы и № здания/дома) *'
     : 'Exact Address & Building # *';
 
-  const [currentCoords, setCurrentCoords] = useState(CITY_COORDINATES[city] || CITY_COORDINATES['Toshkent']);
+  const [currentCoords, setCurrentCoords] = useState(() => (
+    coordinateX && coordinateY
+      ? { lat: coordinateX, lon: coordinateY }
+      : CITY_COORDINATES[city] || CITY_COORDINATES['Toshkent']
+  ));
   const [isLocating, setIsLocating] = useState(false);
   const [gpsSuccess, setGpsSuccess] = useState(false);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);

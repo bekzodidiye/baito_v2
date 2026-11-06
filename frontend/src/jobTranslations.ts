@@ -30,6 +30,18 @@ import { translateJobLocation } from './utils/jobTranslationUtils';
 export const getTranslatedJob = (job: Job, lang: Language): Job => {
   if (!job) return job;
 
+  const isCyrillic = (text?: string | null) => !!text && /[\u0400-\u04FF]/.test(text);
+  const originalIsCyrillic = isCyrillic(job.title || job.description);
+
+  // If viewing in same script family as original input, preserve authentic user input
+  if ((lang === 'uz' && !originalIsCyrillic) || (lang === 'ru' && originalIsCyrillic)) {
+    return {
+      ...job,
+      location: translateJobLocation(job.location, lang),
+      rawLocation: job.rawLocation || job.location,
+    };
+  }
+
   // 1. Check for dynamic AI translations saved with the job
   if (job.translations && job.translations[lang]) {
     const t = job.translations[lang];

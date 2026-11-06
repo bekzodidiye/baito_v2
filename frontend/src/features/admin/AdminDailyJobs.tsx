@@ -42,6 +42,8 @@ interface AdminJobsProps {
   onAddBalance?: (userId: string, amount: number, reason: string) => void;
   onChangeRole?: (userId: string, role: string) => void;
   onToggleBan?: (userId: string, isBanned?: boolean) => void;
+  onApproveJob?: (jobId: string) => void;
+  onRejectJob?: (jobId: string, reason?: string) => void;
 }
 
 export const AdminDailyJobs: React.FC<AdminJobsProps> = ({ 
@@ -52,7 +54,9 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
   onDeleteJob,
   onAddBalance,
   onChangeRole,
-  onToggleBan
+  onToggleBan,
+  onApproveJob,
+  onRejectJob,
 }) => {
   const language = useAuthStore(st => st.language);
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
@@ -106,7 +110,12 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
 
   const handleConfirmReject = (reason: string, comment: string) => {
     if (rejectingJob) {
-      onChangeJobStatus(rejectingJob.id, 'cancelled');
+      const fullReason = comment ? `${reason}: ${comment}` : reason;
+      if (onRejectJob) {
+        onRejectJob(rejectingJob.id, fullReason);
+      } else {
+        onChangeJobStatus(rejectingJob.id, 'rejected');
+      }
       alert(`"${rejectingJob.title}" rad etildi. Sabab: ${reason}. Izoh: ${comment}`);
       setRejectingJob(null);
     }
@@ -122,6 +131,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
   };
 
   const dayJobs = jobs.filter(j => isMatchDate(j, selectedDate));
+  const pendingCount = dayJobs.filter(j => j.status === 'pending').length;
   const openCount = dayJobs.filter(j => j.status === 'open').length;
   const activeCount = dayJobs.filter(j => j.status === 'confirmed' || j.status === 'in_progress').length;
   const completedCount = dayJobs.filter(j => j.status === 'completed').length;
@@ -130,7 +140,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
   return (
     <div className="space-y-5 pb-8">
       {/* Date-specific Stats Ribbon */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
         <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
           <div className="flex items-center justify-between text-slate-500 mb-1.5">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Kunlik E'lonlar</span>
@@ -140,6 +150,17 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
           </div>
           <div className="text-2xl font-black text-slate-900 tracking-tight">{dayJobs.length} ta</div>
           <div className="text-[11px] font-semibold text-slate-400 mt-0.5">{selectedDate} sanasi</div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
+          <div className="flex items-center justify-between text-slate-500 mb-1.5">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-600">Kutilmoqda</span>
+            <div className="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Clock size={14} />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-amber-600 tracking-tight">{pendingCount} ta</div>
+          <div className="text-[11px] font-semibold text-amber-600/80 mt-0.5">Moderatsiyada</div>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
@@ -156,15 +177,15 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
         <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
           <div className="flex items-center justify-between text-slate-500 mb-1.5">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Jarayonda / Band</span>
-            <div className="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-              <Clock size={14} />
+            <div className="w-7 h-7 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
+              <Briefcase size={14} />
             </div>
           </div>
-          <div className="text-2xl font-black text-amber-600 tracking-tight">{activeCount} ta</div>
-          <div className="text-[11px] font-semibold text-amber-600/80 mt-0.5">Ishchi biriktirilgan</div>
+          <div className="text-2xl font-black text-sky-600 tracking-tight">{activeCount} ta</div>
+          <div className="text-[11px] font-semibold text-sky-600/80 mt-0.5">Ishchi biriktirilgan</div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow col-span-2 sm:col-span-1">
           <div className="flex items-center justify-between text-slate-500 mb-1.5">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Yakunlangan</span>
             <div className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -236,6 +257,7 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {[
             { id: 'all', label: a.statusAll },
+            { id: 'pending', label: `${a.statusPending || 'Kutilmoqda'}${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
             { id: 'open', label: a.statusOpen },
             { id: 'confirmed', label: a.statusHired },
             { id: 'in_progress', label: a.statusStarted },
@@ -320,6 +342,36 @@ export const AdminDailyJobs: React.FC<AdminJobsProps> = ({
 
                   {/* Right Status Pill & Actions */}
                   <div className="flex items-center gap-2">
+                    {/* Prominent Approve & Reject buttons for pending moderation jobs */}
+                    {j.status === 'pending' && (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setRejectingJob(j)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 active:scale-95 text-xs font-bold border border-rose-200/80 transition-all cursor-pointer"
+                          title={a.rejectWithReason}
+                        >
+                          <XCircle size={13} />
+                          <span>Rad etish</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onApproveJob) {
+                              onApproveJob(j.id);
+                            } else {
+                              onChangeJobStatus(j.id, 'open');
+                            }
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold shadow-xs hover:shadow-sm transition-all cursor-pointer"
+                          title={a.approveJob || "Tasdiqlash"}
+                        >
+                          <CheckCircle2 size={13} />
+                          <span>{a.approveJob || "Tasdiqlash"}</span>
+                        </button>
+                      </div>
+                    )}
+
                     <StatusSelect
                       value={j.status}
                       onChange={(val) => onChangeJobStatus(j.id, val)}

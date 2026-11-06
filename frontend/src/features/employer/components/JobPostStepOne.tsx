@@ -82,7 +82,7 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
       <div className="flex flex-col gap-2">
         <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
           <ImageIcon size={14} className="text-brand-primary" />
-          {language === 'uz' ? "Ish rasmi (Banner / Rasm)" : language === 'ru' ? "Изображение вакансии" : "Job Image"}
+          {language === 'uz' ? "Ish rasmi (Banner / Rasm) *" : language === 'ru' ? "Изображение вакансии *" : "Job Image *"}
         </label>
         {imageUrl ? (
           <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-slate-200 group">
@@ -99,9 +99,21 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
             </div>
           </div>
         ) : (
-          <div {...clickable(() => fileInputRef.current?.click())} className="w-full h-32 border-2 border-dashed border-slate-200 bg-slate-50/60 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-100/50">
-            <Upload size={22} className="text-brand-primary/70" />
-            <span className="text-xs font-bold text-slate-600">{language === 'uz' ? "Rasm yuklash uchun bosing" : language === 'ru' ? "Нажмите, чтобы загрузить изображение" : "Click to upload image"}</span>
+          <div className="flex flex-col gap-2">
+            <div {...clickable(() => fileInputRef.current?.click())} className="w-full h-32 border-2 border-dashed border-slate-200 bg-slate-50/60 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-100/50">
+              <Upload size={22} className="text-brand-primary/70" />
+              <span className="text-xs font-bold text-slate-600">{language === 'uz' ? "Rasm yuklash majburiy (bosing)" : language === 'ru' ? "Загрузка изображения обязательна (нажмите)" : "Image upload is required (click)"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                aria-label={language === 'uz' ? "Rasm havolasi (URL)" : language === 'ru' ? "Ссылка на изображение" : "Image URL"}
+                type="text"
+                value={imageUrl}
+                onChange={(e) => setImageUrl && setImageUrl(e.target.value)}
+                placeholder={language === 'uz' ? "Yoki rasm havolasini (URL) kiriting..." : language === 'ru' ? "Или введите ссылку на изображение..." : "Or enter image URL..."}
+                className="w-full bg-slate-50 border rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+              />
+            </div>
           </div>
         )}
         <input

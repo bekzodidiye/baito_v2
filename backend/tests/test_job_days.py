@@ -108,6 +108,12 @@ def test_one_application_covers_the_whole_run(client):
         "workDate": THREE_DAYS, "neededWorkers": "1",
     }).json()["id"]
 
+    with SessionLocal() as db:
+        j = db.query(Job).filter(Job.id == job_id).first()
+        j.status = JobStatus.OPEN
+        db.add(j)
+        db.commit()
+
     worker = make_user(role="worker", phone=_phone())
     login(client, worker)
     assert client.post(f"/api/v1/jobs/{job_id}/apply").status_code == 200

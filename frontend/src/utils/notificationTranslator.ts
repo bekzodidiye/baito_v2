@@ -9,6 +9,8 @@ export const translateNotification = (
     "Ariza qaytarib olindi": { ru: "Заявка отозвана", en: "Application withdrawn" },
     "Ariza rad etildi": { ru: "Заявка отклонена", en: "Application rejected" },
     "E'lon muddati tugadi": { ru: "Срок объявления истек", en: "Job posting expired" },
+    "E'loningiz rad etildi": { ru: "Ваше объявление отклонено", en: "Your job ad was rejected" },
+    "E'loningiz tasdiqlandi": { ru: "Ваше объявление одобрено", en: "Your job ad was approved" },
     "Hisob-faktura to'landi deb belgilandi": { ru: "Счет-фактура отмечен как оплаченный", en: "Invoice marked as paid" },
     "Ish beruvchi sharh qoldirdi": { ru: "Работодатель оставил отзыв", en: "Employer left a review" },
     "Ish boshlandi!": { ru: "Работа началась!", en: "Job started!" },
@@ -34,6 +36,7 @@ export const translateNotification = (
     "To'lov tasdiqlandi": { ru: "Оплата подтверждена", en: "Payment confirmed" },
     "Verifikatsiya holati": { ru: "Статус верификации", en: "Verification status" },
     "Yangi ariza keldi": { ru: "Поступила новая заявка", en: "New application received" },
+    "Yangi e'lon moderatsiyada": { ru: "Новое объявление на модерации", en: "New job ad under moderation" },
     "Yangi nizo kelib tushdi": { ru: "Поступил новый спор", en: "New dispute submitted" },
     "Yangi yordam so'rovi": { ru: "Новый запрос в поддержку", en: "New support request" },
     "Yechish so'rovi rad etildi": { ru: "Запрос на вывод отклонен", en: "Withdrawal request rejected" },
@@ -60,6 +63,46 @@ export const translateNotification = (
     return lang === 'ru' 
       ? `Объявление '${match[1]}' отменено работодателем.`
       : `Job ad '${match[1]}' was cancelled by employer.`;
+  }
+
+  // message=f"'{db_job.title}' e'loni tasdiqlash uchun kutilmoqda."
+  match = text.match(/^'(.*)' e'loni tasdiqlash uchun kutilmoqda\.$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Объявление '${match[1]}' ожидает подтверждения.`
+      : `Job ad '${match[1]}' is pending approval.`;
+  }
+
+  // message=f"'{job.title}' e'loningiz administrator tomonidan rad etildi. Sabab: {reason}"
+  match = text.match(/^'(.*)' e'loningiz administrator tomonidan rad etildi\. Sabab: (.*)$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Ваше объявление '${match[1]}' отклонено администратором. Причина: ${match[2]}`
+      : `Your job ad '${match[1]}' was rejected by administrator. Reason: ${match[2]}`;
+  }
+
+  // message=f"'{job.title}' e'loningiz administrator tomonidan rad etildi."
+  match = text.match(/^'(.*)' e'loningiz administrator tomonidan rad etildi\.$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Ваше объявление '${match[1]}' отклонено администратором.`
+      : `Your job ad '${match[1]}' was rejected by administrator.`;
+  }
+
+  // message=f"'{job.title}' e'loningiz administrator tomonidan tasdiqlandi va faol holatga o'tkazildi."
+  match = text.match(/^'(.*)' e'loningiz administrator tomonidan tasdiqlandi va faol holatga o'tkazildi\.$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Ваше объявление '${match[1]}' одобрено администратором и переведено в активный статус.`
+      : `Your job ad '${match[1]}' was approved by administrator and marked active.`;
+  }
+
+  // message=f"'{job.title}' e'loningiz administrator tomonidan tasdiqlandi va ishchilarga ko'rina boshladi."
+  match = text.match(/^'(.*)' e'loningiz administrator tomonidan tasdiqlandi va ishchilarga ko'rina boshladi\.$/);
+  if (match) {
+    return lang === 'ru'
+      ? `Ваше объявление '${match[1]}' одобрено администратором и стало видно работникам.`
+      : `Your job ad '${match[1]}' was approved by administrator and is now visible to workers.`;
   }
 
   // message=f"'{job.title}' ishi bo'yicha arizangiz rad etildi."
