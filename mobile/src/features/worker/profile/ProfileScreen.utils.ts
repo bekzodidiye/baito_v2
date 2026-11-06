@@ -2,7 +2,7 @@ export const getProfileTranslations = (language: string) => {
   const t = {
     uz: {
       profileTitle: 'Mening profilim',
-      workerRole: 'Tajribali Ishchi',
+      workerRole: '',
       employerRole: 'Ish Beruvchi',
       jobs: 'Ishlar',
       rating: 'Reyting',
@@ -43,7 +43,7 @@ export const getProfileTranslations = (language: string) => {
     },
     ru: {
       profileTitle: 'Мой профиль',
-      workerRole: 'Опытный работник',
+      workerRole: '',
       employerRole: 'Работодатель',
       jobs: 'Работы',
       rating: 'Рейтинг',
@@ -84,7 +84,7 @@ export const getProfileTranslations = (language: string) => {
     },
     en: {
       profileTitle: 'My Profile',
-      workerRole: 'Experienced Worker',
+      workerRole: '',
       employerRole: 'Employer',
       jobs: 'Jobs',
       rating: 'Rating',

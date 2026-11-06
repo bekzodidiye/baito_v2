@@ -234,7 +234,9 @@ export const useProfileScreen = () => {
   };
 
   const handleShare = () => {
-    const shareText = `Baito platformasidagi profilim: ${profileName} (${profileRole})`;
+    const shareText = profileRole 
+      ? `Baito platformasidagi profilim: ${profileName} (${profileRole})`
+      : `Baito platformasidagi profilim: ${profileName}`;
     if (navigator.share) {
       navigator.share({ title: 'Baito Profil', text: shareText, url: window.location.href }).catch(console.log);
     } else {

@@ -20,7 +20,6 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({ onClose }) => {
         </div>
         <div>
           <h4 className="font-bold text-slate-800 text-base">Ozodbek Salimov</h4>
-          <p className="text-xs text-brand-primary font-bold mt-0.5">{t.professional}</p>
           <div className="flex items-center gap-1.5 mt-1 text-slate-500 text-[11px] font-medium">
             <MapPin size={12} />
             <span>{language === 'ru' ? 'Самарканд, Узбекистан' : language === 'en' ? 'Samarkand, Uzbekistan' : "Samarqand, O'zbekiston"}</span>

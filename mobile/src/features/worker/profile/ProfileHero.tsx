@@ -71,7 +71,9 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
 
         <div className="text-center mt-4 z-10 w-full">
           <h2 className="font-display text-lg font-black text-slate-800 tracking-tight">{profileName}</h2>
-          <p className="text-xs text-brand-primary font-bold mt-1 uppercase tracking-wider">{profileRole}</p>
+          {profileRole ? (
+            <p className="text-xs text-brand-primary font-bold mt-1 uppercase tracking-wider">{profileRole}</p>
+          ) : null}
           
           {region && (
             <div className="flex items-center justify-center gap-1.5 mt-2 text-slate-500 text-[11px] font-semibold">
