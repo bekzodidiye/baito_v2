@@ -277,22 +277,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                     {language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                   </button>
                 </>
-              ) : job.status === 'in_progress' && onComplete ? (
-                <>
-                  <button
-                    onClick={onClose}
-                    className="w-1/3 py-4 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
-                  >
-                    {language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
-                  </button>
-                  <button
-                    onClick={() => { onComplete(job.id); onClose(); }}
-                    className="w-2/3 py-4 bg-brand-primary text-white font-black rounded-xl text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 cursor-pointer active:scale-[0.98] transition-all"
-                  >
-                    {language === 'uz' ? 'Ishni yakunlash' : language === 'ru' ? 'Завершить работу' : 'Complete job'}
-                    <ChevronRight size={20} />
-                  </button>
-                </>
+
               ) : job.status === 'start_requested' && onConfirmStart ? (
                 <>
                   <button

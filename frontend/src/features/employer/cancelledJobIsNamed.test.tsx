@@ -56,7 +56,7 @@ describe('what the card calls a cancelled posting', () => {
     const cases: [Job['status'], string][] = [
       ['open', 'Kutilyapti'],
       ['confirmed', 'Ishchi olindi'],
-      ['in_progress', 'Yakunlash'],
+      ['in_progress', 'Jarayonda'],
       ['completed', 'Yopildi'],
     ];
     for (const [status, label] of cases) {
