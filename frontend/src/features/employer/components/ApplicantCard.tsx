@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, X, Star, Briefcase, MapPin, Clock, CheckCircle, Loader2, MessageCircle } from 'lucide-react';
+import { Check, X, Star, Briefcase, MapPin, Clock, CheckCircle, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { confirmStartJobApi } from '../../../api/queries';
 import { ConfirmModal } from '../../../components/common/ConfirmModal';
@@ -9,14 +9,13 @@ interface ApplicantCardProps {
   app: any;
   language: string;
   updateApplicationStatus: (id: string, status: 'hired' | 'rejected') => void;
-  onChatClick: (candidateName: string) => void;
+  onChatClick?: (candidateName: string) => void;
 }
 
 export const ApplicantCard: React.FC<ApplicantCardProps> = ({
   app,
   language,
   updateApplicationStatus,
-  onChatClick
 }) => {
   const isHired = app.status === 'hired';
   const isRejected = app.status === 'rejected';
@@ -140,19 +139,6 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
                 <Star size={11} className="fill-amber-400 text-amber-400" />
                 {app.workerRating ? Number(app.workerRating).toFixed(1) : (app.rating || '5.0')}
               </span>
-              {/* Chat Icon Button */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChatClick(app.workerName || app.candidateName);
-                }}
-                aria-label={language === 'uz' ? "Xabar yozish" : language === 'ru' ? "Написать сообщение" : "Chat"}
-                title={language === 'uz' ? "Xabar yozish" : language === 'ru' ? "Написать сообщение" : "Chat"}
-                className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-brand-primary/10 text-slate-600 hover:text-brand-primary flex items-center justify-center transition-colors cursor-pointer"
-              >
-                <MessageCircle size={14} />
-              </button>
             </div>
           </div>
 
