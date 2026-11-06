@@ -69,11 +69,11 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ onSelectRole }) =>
               </li>
               <li className="flex items-center gap-2">
                 <Mail size={14} className="text-sky-400" />
-                <span>support@baito.uz</span>
+                <span>info@baito.uz</span>
               </li>
               <li className="flex items-center gap-2">
                 <MapPin size={14} className="text-sky-400" />
-                <span>Toshkent sh., Chilonzor tumani</span>
+                <span>Samarqand, O'zbekiston</span>
               </li>
             </ul>
           </div>

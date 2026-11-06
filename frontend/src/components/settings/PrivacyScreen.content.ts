@@ -42,9 +42,9 @@ export interface PrivacyContent {
   sections: PrivacySection[];
 }
 
-const SUPPORT_EMAIL = 'support@timee-uzb.uz';
-const SUPPORT_TELEGRAM = '@timee_uzb_support';
-const TELEGRAM_HREF = 'https://t.me/timee_uzb_support';
+const SUPPORT_EMAIL = 'info@baito.uz';
+const SUPPORT_TELEGRAM = '@baito_support';
+const TELEGRAM_HREF = 'https://t.me/baito_support';
 
 const uz: PrivacyContent = {
   screenTitle: 'Maxfiylik Siyosati',

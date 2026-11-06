@@ -48,14 +48,14 @@ export const HelpScreen: React.FC = () => {
               <ChevronRight size={22} className="text-brand-text-variant group-hover:text-brand-primary transition-colors" />
             </a>
 
-            <a href="mailto:support@baito.uz" className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group border-b border-slate-100">
+            <a href="mailto:info@baito.uz" className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group border-b border-slate-100">
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-brand-primary group-hover:text-white group-hover:border-brand-primary group-hover:scale-105 transition-all duration-200">
                   <Mail size={20} className="stroke-[2.2]" />
                 </div>
                 <div>
                   <p className="text-[16px] font-semibold text-brand-text">{t.helpByEmail}</p>
-                  <p className="text-[13px] text-brand-text-variant font-medium">support@baito.uz</p>
+                  <p className="text-[13px] text-brand-text-variant font-medium">info@baito.uz</p>
                 </div>
               </div>
               <ChevronRight size={22} className="text-brand-text-variant group-hover:text-brand-primary transition-colors" />

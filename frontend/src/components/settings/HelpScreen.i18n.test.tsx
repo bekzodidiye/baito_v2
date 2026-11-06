@@ -72,7 +72,7 @@ describe('HelpScreen — the page answers in the language that was chosen', () =
       language.current = lang;
       render(<HelpScreen />);
       expect(screen.getByText('+998 90 123 45 67')).toBeTruthy();
-      expect(screen.getByText('support@baito.uz')).toBeTruthy();
+      expect(screen.getByText('info@baito.uz')).toBeTruthy();
     }
   });
 });

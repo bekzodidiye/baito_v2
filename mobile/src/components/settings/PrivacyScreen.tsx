@@ -123,7 +123,7 @@ const SECTIONS = [
           <li>Shikoyat bilan nazorat organiga murojaat qilish huquqi</li>
         </ul>
         <div className="bg-brand-primary-light/20 border-l-4 border-brand-primary p-3 rounded-r-md text-[13px] text-brand-text-variant">
-          Huquqlaringizdan foydalanish uchun: <strong className="text-brand-primary">support@timee-uzb.uz</strong> — 30 kun ichida javob beramiz.
+          Huquqlaringizdan foydalanish uchun: <strong className="text-brand-primary">info@baito.uz</strong> — 30 kun ichida javob beramiz.
         </div>
       </>
     )
@@ -183,8 +183,8 @@ const SECTIONS = [
     title: "Aloqa va shikoyatlar",
     content: (
       <ul className="list-disc pl-5 mb-1 text-[14px] text-brand-text-variant space-y-1">
-        <li>Elektron pochta: <a href="mailto:support@timee-uzb.uz" className="text-brand-primary underline">support@timee-uzb.uz</a></li>
-        <li>Telegram: <a href="https://t.me/timee_uzb_support" className="text-brand-primary underline">@timee_uzb_support</a></li>
+        <li>Elektron pochta: <a href="mailto:info@baito.uz" className="text-brand-primary underline">info@baito.uz</a></li>
+        <li>Telegram: <a href="https://t.me/baito_support" className="text-brand-primary underline">@baito_support</a></li>
         <li>Javob vaqti: ish kunlarida 24 soat ichida</li>
       </ul>
     )
