@@ -89,13 +89,7 @@ export const useJobMarkers = ({
       const pointerColor = isSelected ? '#000666' : category.hexColor;
 
       const logoHtml = job.logoUrl
-        ? `<img src="${job.logoUrl}" alt="${job.company}" class="marker-logo-img"  onError={(e) => {
-        const target = e.currentTarget;
-        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
-        if (target.src !== fallback) {
-          target.src = fallback;
-        }
-      }} />`
+        ? `<img src="${job.logoUrl}" alt="${job.company}" class="marker-logo-img" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';" />`
         : `<div class="marker-logo-placeholder bg-slate-100 text-slate-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>`;
 
       const jobHtml = `

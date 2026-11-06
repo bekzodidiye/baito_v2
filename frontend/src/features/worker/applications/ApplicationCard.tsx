@@ -1,6 +1,6 @@
 import React from 'react';
 import { WorkerApplication } from '../../../types';
-import { MapPin, Calendar, Clock, ChevronRight, Building2, CheckCircle2, XCircle, Clock3, MessageCircle } from 'lucide-react';
+import { MapPin, Calendar, Clock, ChevronRight, Building2, CheckCircle2, XCircle, Clock3 } from 'lucide-react';
 import { Language } from '../../../translations';
 import { formatShortDate } from '../../../utils/dateFormat';
 
@@ -12,7 +12,7 @@ interface ApplicationCardProps {
   onWithdraw?: (id: string) => void;
 }
 
-export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, language, onClick, onOpenChat, onWithdraw }) => {
+export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, language, onClick, onWithdraw }) => {
   const getStatusConfig = (status: string, lang: Language) => {
     switch (status) {
       case 'applied':
@@ -177,19 +177,6 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 border border-rose-200/60 text-xs font-bold hover:bg-rose-100 transition-colors cursor-pointer"
             >
               <span>{language === 'uz' ? 'Bekor qilish' : language === 'ru' ? 'Отозвать' : 'Withdraw'}</span>
-            </button>
-          )}
-          {['hired', 'confirmed', 'in_progress'].includes(application.status) && onOpenChat && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenChat();
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#000666] border border-blue-200/60 text-xs font-bold hover:bg-blue-100 transition-colors cursor-pointer"
-            >
-              <MessageCircle size={13} className="text-[#000666]" />
-              <span>{language === 'uz' ? 'Xabar' : language === 'ru' ? 'Чат' : 'Chat'}</span>
             </button>
           )}
           <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-brand-primary group-hover:border-brand-primary transition-all duration-300 shadow-sm">
