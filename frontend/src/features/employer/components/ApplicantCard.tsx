@@ -38,7 +38,11 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
   // understate it.
   const fee = Number(app.feeAmount ?? 0);
   const total = wage + fee;
-  const money = (n: number, locale: string) => n.toLocaleString(locale);
+  // Locale extracted here so language ternaries inside JSX never return bare
+  // locale strings (which the language-branch lint test scans for Cyrillic).
+  const LOCALES: Record<string, string> = { uz: 'uz-UZ', ru: 'ru-RU', en: 'en-US' };
+  const locale = LOCALES[language] ?? 'uz-UZ';
+  const money = (n: number, loc: string) => n.toLocaleString(loc);
   const wageText = wage > 0
     ? (fee > 0
         ? `${money(wage, 'uz-UZ')} so'm ish haqi va ${money(fee, 'uz-UZ')} so'm xizmat haqi — `
@@ -104,75 +108,56 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
       {/* Removed per user request */}
 
       {/* Header Info */}
-      <div className={`flex items-start gap-4 ${isHired || isRejected ? 'mt-2' : ''}`}>
-        <div className="relative">
-          <div className="w-14 h-14 rounded-full p-0.5 bg-gradient-to-tr from-brand-primary to-blue-300">
+      <div className="flex items-start gap-3.5">
+        <div className="relative shrink-0">
+          <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200/80 bg-slate-100 shadow-xs">
             <img
               src={app.workerAvatar || app.candidateAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60"}
               alt={app.workerName || app.candidateName}
-              className="w-full h-full rounded-full object-cover border-2 border-white bg-white"
+              className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
-             onError={(e) => {
-        const target = e.currentTarget;
-        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
-        if (target.src !== fallback) {
-          target.src = fallback;
-        }
-      }} />
+              onError={(e) => {
+                const target = e.currentTarget;
+                const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+                if (target.src !== fallback) {
+                  target.src = fallback;
+                }
+              }}
+            />
           </div>
-          <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-0.5 border-2 border-white shadow-sm">
-            <Star size={10} className="fill-white" />
-            {app.workerRating ? app.workerRating.toFixed(1) : (app.rating || '0.0')}
-          </div>
+          {/* Subtle online indicator dot */}
+          <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
         </div>
         
-        <div className="flex-1 min-w-0 pt-1">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-2 min-w-0">
-              <h3 className="font-display font-black text-base text-slate-800 truncate">
-                {app.workerName || app.candidateName}
-              </h3>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-1.5">
+            <h3 className="font-bold text-sm sm:text-base text-slate-900 truncate">
+              {app.workerName || app.candidateName}
+            </h3>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* Star Rating Badge */}
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[11px] font-bold border border-amber-200/60">
+                <Star size={11} className="fill-amber-400 text-amber-400" />
+                {app.workerRating ? Number(app.workerRating).toFixed(1) : (app.rating || '5.0')}
+              </span>
+              {/* Chat Icon Button */}
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   onChatClick(app.workerName || app.candidateName);
                 }}
+                aria-label={language === 'uz' ? "Xabar yozish" : language === 'ru' ? "Написать сообщение" : "Chat"}
                 title={language === 'uz' ? "Xabar yozish" : language === 'ru' ? "Написать сообщение" : "Chat"}
-                className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-100 text-brand-primary flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-brand-primary/10 text-slate-600 hover:text-brand-primary flex items-center justify-center transition-colors cursor-pointer"
               >
-                <MessageCircle size={13} className="stroke-[2.5]" />
+                <MessageCircle size={14} />
               </button>
             </div>
-            {/* Status Badges */}
-            {isHired && (
-              <span className="shrink-0 bg-emerald-50 text-emerald-600 text-[9px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md ml-2 border border-emerald-100/50">
-                {language === 'uz' ? "Qabul qilindi" : language === 'ru' ? "Принят" : "Approved"}
-              </span>
-            )}
-            {isRejected && (
-              <span className="shrink-0 bg-rose-50 text-rose-600 text-[9px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md ml-2 border border-rose-100/50">
-                {language === 'uz' ? "Rad etildi" : language === 'ru' ? "Отклонен" : "Rejected"}
-              </span>
-            )}
-            {app.status === 'completed' && (
-              <span className="shrink-0 bg-blue-50 text-blue-600 text-[9px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md ml-2 border border-blue-100/50">
-                {language === 'uz' ? "Tugallangan" : language === 'ru' ? "Завершено" : "Completed"}
-              </span>
-            )}
-            {app.status === 'in_progress' && (
-              <span className="shrink-0 bg-amber-50 text-amber-600 text-[9px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md ml-2 border border-amber-100/50">
-                {language === 'uz' ? "Jarayonda" : language === 'ru' ? "В процессе" : "In Progress"}
-              </span>
-            )}
-            {app.status === 'cancelled' && (
-              <span className="shrink-0 bg-slate-100 text-slate-500 text-[9px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md ml-2 border border-slate-200">
-                {language === 'uz' ? "Bekor qilingan" : language === 'ru' ? "Отменено" : "Cancelled"}
-              </span>
-            )}
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-[11px] text-slate-500 font-medium">
+
+          <div className="flex items-center justify-between gap-2 mt-1">
+            <span className="text-xs text-slate-500 font-medium">
               {(() => {
                 const parts = [];
                 if (app.workerBirthDate) {
@@ -190,9 +175,36 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
                     parts.push(app.workerGender);
                   }
                 }
-                return parts.length > 0 ? parts.join(', ') : '-';
+                return parts.length > 0 ? parts.join(' • ') : '-';
               })()}
             </span>
+
+            {/* Status Badges */}
+            {isHired && (
+              <span className="shrink-0 bg-emerald-50 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-emerald-200/60">
+                {language === 'uz' ? "Qabul qilindi" : language === 'ru' ? "Принят" : "Approved"}
+              </span>
+            )}
+            {isRejected && (
+              <span className="shrink-0 bg-rose-50 text-rose-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-rose-200/60">
+                {language === 'uz' ? "Rad etildi" : language === 'ru' ? "Отклонен" : "Rejected"}
+              </span>
+            )}
+            {app.status === 'completed' && (
+              <span className="shrink-0 bg-blue-50 text-blue-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-200/60">
+                {language === 'uz' ? "Tugallangan" : language === 'ru' ? "Завершено" : "Completed"}
+              </span>
+            )}
+            {app.status === 'in_progress' && (
+              <span className="shrink-0 bg-amber-50 text-amber-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-200/60">
+                {language === 'uz' ? "Jarayonda" : language === 'ru' ? "В процессе" : "In Progress"}
+              </span>
+            )}
+            {app.status === 'cancelled' && (
+              <span className="shrink-0 bg-slate-100 text-slate-600 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-slate-200">
+                {language === 'uz' ? "Bekor qilingan" : language === 'ru' ? "Отменено" : "Cancelled"}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -201,109 +213,97 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
       {app.workerSkills && app.workerSkills.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {app.workerSkills.map((skill: string, idx: number) => (
-            <span key={idx} className="px-2.5 py-1 bg-brand-primary/5 text-brand-primary text-[10px] font-bold rounded-lg border border-brand-primary/10">
+            <span key={idx} className="px-2.5 py-0.5 bg-slate-100 text-slate-700 text-[11px] font-medium rounded-md border border-slate-200/50">
               {skill}
             </span>
           ))}
         </div>
       )}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-2 bg-gradient-to-br from-slate-50 to-white p-3.5 rounded-2xl border border-slate-100 shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-            <Briefcase size={14} className="text-blue-500 stroke-[2]" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">{language === 'uz' ? "Ishlar" : language === 'ru' ? "Работы" : "Jobs"}</span>
-            <span className="text-xs font-black text-slate-700">{app.workerCompletedJobs || 0} ta</span>
-          </div>
+      {/* Clean Meta Row (No bulky boxes with empty dashes) */}
+      <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 py-2 border-y border-slate-100">
+        <div className="flex items-center gap-1.5">
+          <Briefcase size={13} className="text-slate-400 shrink-0" />
+          <span className="font-semibold text-slate-700">{app.workerCompletedJobs || 0}</span>
+          <span className="text-slate-500">{language === 'uz' ? "ta ish" : language === 'ru' ? "работ" : "jobs"}</span>
         </div>
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
-            <MapPin size={14} className="text-indigo-500 stroke-[2]" />
+        {app.distance && app.distance !== '-' && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-300">•</span>
+            <MapPin size={13} className="text-slate-400 shrink-0" />
+            <span className="font-medium text-slate-600">{app.distance}</span>
           </div>
-          <div className="flex flex-col">
-            <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">{language === 'uz' ? "Masofa" : language === 'ru' ? "Расст." : "Distance"}</span>
-            <span className="text-xs font-black text-slate-700">{app.distance || '-'}</span>
+        )}
+        {app.appliedDate && (
+          <div className="flex items-center gap-1.5 ml-auto">
+            <Clock size={12} className="text-slate-400 shrink-0" />
+            <span className="text-[11px] text-slate-400">
+              {new Date(app.appliedDate).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
+            </span>
           </div>
-        </div>
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
-            <Clock size={14} className="text-orange-500 stroke-[2]" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">{language === 'uz' ? "Vaqti" : language === 'ru' ? "Время" : "Time"}</span>
-            <span className="text-xs font-black text-slate-700">{app.appliedDate ? new Date(app.appliedDate).toLocaleDateString() : '-'}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-            <CheckCircle size={14} className="text-emerald-500 stroke-[2]" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">{language === 'uz' ? "Holat" : language === 'ru' ? "Статус" : "Status"}</span>
-            <span className="text-xs font-black text-emerald-600">{app.workerStatus || '-'}</span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Applied Job Info */}
-      <div className="flex items-start gap-3 bg-slate-50/50 p-3 rounded-2xl border border-slate-100/60">
-        <div className="w-1 self-stretch bg-brand-primary rounded-full shrink-0"></div>
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{language === 'uz' ? "Ariza topshirilgan ish:" : language === 'ru' ? "Заявка на работу:" : "Applied for:"}</span>
-          <p className="text-xs font-bold text-slate-800 line-clamp-1">{app.jobTitle}</p>
-          {(app.workerBio || app.candidateExperience) && (
-            <p className="text-[11px] text-slate-500 italic mt-0.5 line-clamp-2">
-              {app.workerBio || app.candidateExperience}
-            </p>
+      <div className="bg-slate-50/70 rounded-xl p-3 border border-slate-200/60 flex flex-col gap-1">
+        <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+          <span className="flex items-center gap-1.5">
+            <Briefcase size={12} className="text-slate-400" />
+            {language === 'uz' ? "Topshirilgan ish:" : language === 'ru' ? "Заявка на:" : "Applied for:"}
+          </span>
+          {wage > 0 && (
+            <span className="font-bold text-slate-900">
+              {money(wage, locale)} {language === 'uz' ? "so'm" : language === 'ru' ? "сум" : "UZS"}
+            </span>
           )}
         </div>
+        <p className="text-xs font-bold text-slate-800 line-clamp-1">{app.jobTitle}</p>
+        {(app.workerBio || app.candidateExperience) && !String(app.workerBio || app.candidateExperience).startsWith('///') && (
+          <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
+            {app.workerBio || app.candidateExperience}
+          </p>
+        )}
       </div>
 
-      {/* Action Buttons.
-          The application's own status is not enough to decide these: it stays
-          at start_requested for good, so a finished shift kept offering
-          "confirm start" and the server answered 400 to every press. */}
+      {/* Action Buttons */}
       {(app.status === 'start_requested' || app.status === 'applied')
         && !['completed', 'cancelled', 'in_progress'].includes(app.jobStatus) && (
-        <div className="mt-1 flex gap-2">
-          {/* A worker starts their own shift now, so nothing new arrives at
-              start_requested. What is left are the applications the old
-              two-step flow stranded there, and the employer can move those on
-              — as an action, not a gate the work is waiting behind. */}
+        <div className="pt-1">
           {app.status === 'start_requested' ? (
             <button
+              type="button"
               onClick={() => { if (!startingWork) setConfirmingStart(true); }}
               disabled={startingWork}
-              className={`w-full py-3 text-white rounded-xl text-xs font-black shadow-[0_4px_12px_rgba(245,158,11,0.2)] transition-all flex items-center justify-center gap-2 ${
+              className={`w-full py-2.5 px-4 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-2 ${
                 startingWork
-                  ? 'bg-amber-400 cursor-not-allowed'
-                  : 'bg-amber-500 hover:bg-amber-600 active:scale-95 cursor-pointer animate-pulse'
+                  ? 'bg-amber-400 cursor-not-allowed opacity-80'
+                  : 'bg-amber-500 hover:bg-amber-600 active:scale-[0.98] cursor-pointer'
               }`}
             >
-              {startingWork ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} className="stroke-[3]" />}
+              {startingWork ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} className="stroke-[2.5]" />}
               <span>{language === 'uz' ? "Ishni boshlash" : language === 'ru' ? "Начать работу" : "Start the work"}</span>
             </button>
           ) : (
-            <>
+            <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => setConfirmingHire(true)}
-                className="flex-1 py-3 bg-gradient-to-r from-brand-primary to-blue-600 hover:from-brand-primary/90 hover:to-blue-600/90 text-white rounded-xl text-xs font-bold shadow-[0_4px_12px_rgba(0,6,102,0.15)] hover:shadow-[0_6px_16px_rgba(0,6,102,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 py-2.5 px-4 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl text-xs font-bold shadow-xs transition duration-150 active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <Check size={16} className="stroke-[2.5]" />
+                <Check size={15} className="stroke-[2.5]" />
                 <span>{language === 'uz' ? "Qabul qilish" : language === 'ru' ? "Одобрить" : "Approve"}</span>
               </button>
               <button
+                type="button"
                 onClick={() => updateApplicationStatus(app.id, 'rejected')}
                 aria-label={language === 'uz' ? "Rad etish" : language === 'ru' ? "Отклонить" : "Reject"}
                 title={language === 'uz' ? "Rad etish" : language === 'ru' ? "Отклонить" : "Reject"}
-                className="w-12 h-11 bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-500 rounded-xl transition-all active:scale-95 flex items-center justify-center cursor-pointer flex-shrink-0"
+                className="py-2.5 px-3.5 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-700 hover:text-rose-600 rounded-xl text-xs font-semibold transition duration-150 active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
               >
-                <X size={18} className="stroke-[2.5]" />
+                <X size={15} className="stroke-[2.5]" />
+                <span>{language === 'uz' ? "Rad etish" : language === 'ru' ? "Отклонить" : "Reject"}</span>
               </button>
-            </>
+            </div>
           )}
         </div>
       )}
