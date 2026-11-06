@@ -174,9 +174,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/admin/admin_jobs.py": {
-    "mtime": 1790887969.6593077,
-    "seen": 1791063691.1275222,
-    "ast_hash": "2e1da36ebbc80e41c87da8d10b10d088",
+    "mtime": 1791266091.8873866,
+    "seen": 1791312832.7314942,
+    "ast_hash": "b162170c3453e52a46897a851e9bad5a",
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/admin/admin_payouts.py": {
@@ -468,9 +468,9 @@
     "semantic_hash": "286ea388085c320f624e0d318c1e76b2"
   },
   "backend/app/models/job.py": {
-    "mtime": 1790865524.003776,
-    "seen": 1791063691.1282506,
-    "ast_hash": "140c285bedf6ec5edb8fc0717d849ad9",
+    "mtime": 1791266003.7203689,
+    "seen": 1791312832.7315588,
+    "ast_hash": "00f2b9a718b6fccc6c238ece06a0324c",
     "semantic_hash": ""
   },
   "backend/app/models/job_day.py": {
@@ -528,9 +528,9 @@
     "semantic_hash": "899b1686cc9ffee2b5d0207d6dd9393a"
   },
   "backend/app/models/system_setting.py": {
-    "mtime": 1790061168.8666174,
-    "seen": 1790061468.3479097,
-    "ast_hash": "0014dd8233c6ba1ee5a9417876144e0d",
+    "mtime": 1791266009.320378,
+    "seen": 1791312832.731568,
+    "ast_hash": "e564158f8b9889c3f52e03d1a7f89321",
     "semantic_hash": ""
   },
   "backend/app/models/transaction.py": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "backend/app/schemas/job.py": {
-    "mtime": 1790865552.223973,
-    "seen": 1791063691.1288047,
-    "ast_hash": "c043554dd6051a2046e8acd04d9e9299",
+    "mtime": 1791253553.808906,
+    "seen": 1791312832.7315772,
+    "ast_hash": "b4da296d550af025fdaed1a5db479c9d",
     "semantic_hash": ""
   },
   "backend/app/schemas/notification.py": {
@@ -804,9 +804,9 @@
     "semantic_hash": "4b9451c42e63df53e4c024de1d7053a2"
   },
   "backend/tests/test_job_days.py": {
-    "mtime": 1790061382.401901,
-    "seen": 1790061468.348004,
-    "ast_hash": "4cc5848690891609577998e032be083b",
+    "mtime": 1791271862.6222095,
+    "seen": 1791312832.7316318,
+    "ast_hash": "8f58e83b6c3d0fa48f611228530b5c95",
     "semantic_hash": ""
   },
   "backend/tests/test_job_started_at.py": {
@@ -816,9 +816,9 @@
     "semantic_hash": ""
   },
   "backend/tests/test_job_validation.py": {
-    "mtime": 1790092425.8412619,
-    "seen": 1790092450.2101233,
-    "ast_hash": "e92ae6dcb4e484fc57031812d750bf60",
+    "mtime": 1791254714.1141498,
+    "seen": 1791312832.7316344,
+    "ast_hash": "4cf62556b95481fb90e1df892246ca0a",
     "semantic_hash": ""
   },
   "backend/tests/test_platform_fee_setting.py": {
@@ -924,9 +924,9 @@
     "semantic_hash": "9020519b2106693fb08c7a65c282e6bf"
   },
   "frontend/src/api/client.ts": {
-    "mtime": 1790866767.631344,
-    "seen": 1791063691.1303432,
-    "ast_hash": "7f34f9ef2a7b29ba7b8e72aa457b50a4",
+    "mtime": 1791270810.839099,
+    "seen": 1791312832.7316618,
+    "ast_hash": "49a1115630b13dd75ba6cb88ba3a2c99",
     "semantic_hash": ""
   },
   "frontend/src/api/queries.ts": {
@@ -1902,15 +1902,15 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminCustomControls.tsx": {
-    "mtime": 1791137661.1153255,
-    "seen": 1791138327.8929598,
-    "ast_hash": "aa6a2755f7f1a23575828bd5a561200f",
+    "mtime": 1791304177.5929365,
+    "seen": 1791312832.7318459,
+    "ast_hash": "c922f0d1f9ba3bb47833341d9f7e85eb",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminDailyJobs.tsx": {
-    "mtime": 1791139978.7051146,
-    "seen": 1791140219.0683177,
-    "ast_hash": "f52d4069510222fa4fdd03b80e790a5c",
+    "mtime": 1791270982.8756542,
+    "seen": 1791312832.731848,
+    "ast_hash": "745b8168f1cd1f4bafec491e7243211b",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminDisputes.tsx": {
@@ -1926,9 +1926,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminJobs.tsx": {
-    "mtime": 1791113136.6392126,
-    "seen": 1791113569.5381486,
-    "ast_hash": "5bf834484ac0692898471f02c15fe21c",
+    "mtime": 1791304197.0430984,
+    "seen": 1791312832.7318518,
+    "ast_hash": "b285fb472da99ca185d777a5fcbe8992",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminJobsAutoDeleteBanner.tsx": {
@@ -1950,15 +1950,15 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminPanel.tsx": {
-    "mtime": 1791070512.898385,
-    "seen": 1791112236.8460457,
-    "ast_hash": "369b913641afbbf83b32717ccfdf3ce5",
+    "mtime": 1791266691.3276162,
+    "seen": 1791312832.7318554,
+    "ast_hash": "86428885576776ec295ec726e81e253f",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminPayouts.tsx": {
-    "mtime": 1791189793.8069735,
-    "seen": 1791189893.962359,
-    "ast_hash": "3b89b320acb97a65c0d5434e0df6a46d",
+    "mtime": 1791200763.8714426,
+    "seen": 1791312832.7318573,
+    "ast_hash": "8f796ae643644ede7f41d6195bf0346a",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminPromotions.tsx": {
@@ -2094,9 +2094,9 @@
     "semantic_hash": "e823e564a20515a14184cc467c8faf17"
   },
   "frontend/src/features/admin/types.ts": {
-    "mtime": 1791115034.1144931,
-    "seen": 1791115228.8995755,
-    "ast_hash": "da2b96c84b5c9da7e7f50e484f824284",
+    "mtime": 1791266163.391299,
+    "seen": 1791312832.731885,
+    "ast_hash": "1c4dbf2cabe4249c8fe7b47bbfb7f4cd",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/useAdminData.test.tsx": {
@@ -2106,9 +2106,9 @@
     "semantic_hash": "deb5d842529b56da11e09c8b42446f28"
   },
   "frontend/src/features/admin/useAdminData.ts": {
-    "mtime": 1790160780.895824,
-    "seen": 1791063691.133043,
-    "ast_hash": "8db699baf1a875961c67d6bdbeb113a4",
+    "mtime": 1791270842.1415856,
+    "seen": 1791312832.7318869,
+    "ast_hash": "ff45bf9f49f7f289db912a6a8ccae23f",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/workTiming.test.ts": {
@@ -2160,21 +2160,21 @@
     "semantic_hash": ""
   },
   "frontend/src/features/employer/EmployerJobCard.tsx": {
-    "mtime": 1790881131.4093,
-    "seen": 1791063691.1331491,
-    "ast_hash": "e38427eda4f2b5f43cfb9432d81cabaa",
+    "mtime": 1791266345.6870668,
+    "seen": 1791312832.7318952,
+    "ast_hash": "b151ae4bf5f44a98298cbe888893746e",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/EmployerJobDetailModal.tsx": {
-    "mtime": 1790849428.4371862,
-    "seen": 1791063691.1331499,
-    "ast_hash": "04c9b92a88d0b8e6c87b30f0f7a57db0",
+    "mtime": 1791266417.2349932,
+    "seen": 1791312832.7318962,
+    "ast_hash": "a300663aa9be722fa22ae6113d2f9de2",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/EmployerJobs.tsx": {
-    "mtime": 1790924777.615298,
-    "seen": 1791063691.133151,
-    "ast_hash": "34c161a1d255f6a54444df8de31390b8",
+    "mtime": 1791266373.9975474,
+    "seen": 1791312832.731897,
+    "ast_hash": "2e218c5e14e146dd43813d63a9ea2c63",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/EmployerJobsList.tsx": {
@@ -2232,9 +2232,9 @@
     "semantic_hash": "5893173ccc6270252d4179586bd594d7"
   },
   "frontend/src/features/employer/JobPostForm.tsx": {
-    "mtime": 1790865809.855947,
-    "seen": 1791063691.1333845,
-    "ast_hash": "fb52c4aa11846dc99ee2bb5a96b786c2",
+    "mtime": 1791256622.4133883,
+    "seen": 1791312832.7319078,
+    "ast_hash": "d4438e1f3052f0c5ce9564e2b520c264",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/components/ApplicantCard.test.tsx": {
@@ -2298,15 +2298,15 @@
     "semantic_hash": ""
   },
   "frontend/src/features/employer/components/JobPostStepOne.tsx": {
-    "mtime": 1790160780.8969874,
-    "seen": 1791063691.1334343,
-    "ast_hash": "9c59a98080f542c22a613c4f218ed57c",
+    "mtime": 1791256586.63325,
+    "seen": 1791312832.7319202,
+    "ast_hash": "ea18f144242d5fa8a0a67efddde853b8",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/components/JobPostStepThree.tsx": {
-    "mtime": 1790773462.25412,
-    "seen": 1791063691.1334355,
-    "ast_hash": "5e143129d5be3b877b1068b74880fc89",
+    "mtime": 1791255895.099152,
+    "seen": 1791312832.7319207,
+    "ast_hash": "9ea85354e7b7d85daba3e554a14488fb",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/components/JobPostStepThree.utils.ts": {
@@ -2730,9 +2730,9 @@
     "semantic_hash": "70b49f5bd3d2b3b6df7fcb773aa5dd58"
   },
   "frontend/src/jobTranslations.ts": {
-    "mtime": 1790849223.7858706,
-    "seen": 1791063691.1348405,
-    "ast_hash": "31858d23da9e6bb5758215e3b3ac8c2d",
+    "mtime": 1791258630.5552504,
+    "seen": 1791312832.732004,
+    "ast_hash": "14019daaefbf4b5c45d99b7b3344f6a3",
     "semantic_hash": ""
   },
   "frontend/src/lib/recoverFromStaleChunks.ts": {
@@ -2802,9 +2802,9 @@
     "semantic_hash": ""
   },
   "frontend/src/types.ts": {
-    "mtime": 1790890751.9087324,
-    "seen": 1791063691.1350665,
-    "ast_hash": "570af5f269850212d8067a5ff9811e23",
+    "mtime": 1791266154.2345448,
+    "seen": 1791312832.7320197,
+    "ast_hash": "dd0ddc0bb0443842c18beb26747b4d4a",
     "semantic_hash": ""
   },
   "frontend/src/utils/cardUtils.test.ts": {
@@ -2874,9 +2874,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/notificationTranslator.ts": {
-    "mtime": 1790882012.1475115,
-    "seen": 1791063691.1355107,
-    "ast_hash": "2966bb4880273ff54369d96b38a1ca18",
+    "mtime": 1791271710.777714,
+    "seen": 1791312832.732041,
+    "ast_hash": "6b8aa4707e80a62b5ede6495a457df6c",
     "semantic_hash": ""
   },
   "frontend/src/utils/profileCompleteness.ts": {
@@ -5796,9 +5796,9 @@
     "semantic_hash": ""
   },
   "backend/tests/test_notification_templates_are_known.py": {
-    "mtime": 1790881899.8013182,
-    "seen": 1791063691.1299267,
-    "ast_hash": "6056c99638de1d775f6de0e5d6ec3724",
+    "mtime": 1791271890.513042,
+    "seen": 1791312832.731635,
+    "ast_hash": "b77fea93144dff2b81cc00208cd46270",
     "semantic_hash": ""
   },
   "backend/tests/test_refund_stranded_escrow_holds.py": {
@@ -5958,9 +5958,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/admin.i18n.ts": {
-    "mtime": 1791137968.2050931,
-    "seen": 1791138327.892992,
-    "ast_hash": "16abf6040781b993d3cc8ce7531f2d42",
+    "mtime": 1791266202.1383762,
+    "seen": 1791312832.73188,
+    "ast_hash": "00a8e01cf0d37a782a299d55684d95cd",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/adminFallbacks.test.ts": {
@@ -5982,15 +5982,15 @@
     "semantic_hash": ""
   },
   "frontend/src/features/employer/JobPostForm.guard.test.tsx": {
-    "mtime": 1790154839.0589774,
-    "seen": 1791063691.1333835,
-    "ast_hash": "1b0d796631ea601532947f86ea11d73e",
+    "mtime": 1791256636.5301094,
+    "seen": 1791312832.7319064,
+    "ast_hash": "f40f3a852a13c5b8abf3ed5cb4cbe3dc",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/employerJobCardLayout.test.ts": {
-    "mtime": 1790061640.860971,
-    "seen": 1790061666.390934,
-    "ast_hash": "ef16a63339d767205d95bb1e7b1d00fb",
+    "mtime": 1791266745.1989493,
+    "seen": 1791312832.7319267,
+    "ast_hash": "979118008b435ca0c2680b41b499add4",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/employerJobScreens.i18n.test.ts": {
@@ -6120,9 +6120,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/notificationTranslator.test.ts": {
-    "mtime": 1790881984.3590772,
-    "seen": 1791063691.1355093,
-    "ast_hash": "9f2bc2d1e9b744db63fade1da31f0810",
+    "mtime": 1791271799.75034,
+    "seen": 1791312832.7320402,
+    "ast_hash": "1abb3ba96fde7b04ebfb23a2b9d79ce4",
     "semantic_hash": ""
   },
   "frontend/src/utils/plural.test.ts": {
@@ -6204,9 +6204,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/admin/admin_jobs_actions.py": {
-    "mtime": 1790888010.596052,
-    "seen": 1791063691.1275237,
-    "ast_hash": "5fc53de90dc386a294501af6cbd2e96e",
+    "mtime": 1791270787.9654539,
+    "seen": 1791312832.7314954,
+    "ast_hash": "887381b751c6f59b3094f89669fdac1f",
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/applications/__init__.py": {
@@ -6270,9 +6270,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/jobs/main.py": {
-    "mtime": 1790886034.8628244,
-    "seen": 1791063691.127549,
-    "ast_hash": "82c947d9db87824341d6babfbdb18822",
+    "mtime": 1791266045.7604823,
+    "seen": 1791312832.731519,
+    "ast_hash": "8702733b69cb1e6554faa5e6c3feef2c",
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/jobs/my.py": {
@@ -6288,9 +6288,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/jobs/read.py": {
-    "mtime": 1790889511.9704309,
-    "seen": 1791063691.1275518,
-    "ast_hash": "fda44adb762638028c50add401586a1a",
+    "mtime": 1791266063.6338942,
+    "seen": 1791312832.7315226,
+    "ast_hash": "c6a78cbd563ddd9683cce568d8608e61",
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/jobs/recommended.py": {
@@ -6300,9 +6300,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/ai_translator/__init__.py": {
-    "mtime": 1790838672.8329687,
-    "seen": 1791063691.1289618,
-    "ast_hash": "37a321a0f73cef53cad2ff07be26f4b2",
+    "mtime": 1791260595.6129043,
+    "seen": 1791312832.7315845,
+    "ast_hash": "8e0cdfc4b80f0c48694310411df5a1f1",
     "semantic_hash": ""
   },
   "backend/app/services/ai_translator/gemini_client.py": {
@@ -6312,27 +6312,27 @@
     "semantic_hash": ""
   },
   "backend/app/services/ai_translator/job_translator.py": {
-    "mtime": 1790849186.1756103,
-    "seen": 1791063691.1289647,
-    "ast_hash": "d15e91f6479bbe43300a83d19af5c0f5",
+    "mtime": 1791260634.9265015,
+    "seen": 1791312832.7315888,
+    "ast_hash": "85494a6d329b3d2a1dd4a9b2e6c88463",
     "semantic_hash": ""
   },
   "backend/app/services/ai_translator/prompts.py": {
-    "mtime": 1790849163.3121154,
-    "seen": 1791063691.1289654,
-    "ast_hash": "1a89b5c13c1822f910f82845d3e82394",
+    "mtime": 1791258458.2114475,
+    "seen": 1791312832.7315898,
+    "ast_hash": "d16296d083f4c6a9bd4a63cbe1b4a417",
     "semantic_hash": ""
   },
   "backend/app/services/job_queries.py": {
-    "mtime": 1790889550.024009,
-    "seen": 1791063691.1290343,
-    "ast_hash": "3b62408ffde5267a26b3dfec0b30728d",
+    "mtime": 1791266073.9372807,
+    "seen": 1791312832.7315962,
+    "ast_hash": "1436fcf249d1d6133bba7b1bf094726e",
     "semantic_hash": ""
   },
   "backend/tests/test_ai_translator.py": {
-    "mtime": 1790847481.319107,
-    "seen": 1791063691.1295214,
-    "ast_hash": "9a9578376fcb25729441ab8d28bdd3e9",
+    "mtime": 1791260661.843345,
+    "seen": 1791312832.7316172,
+    "ast_hash": "d96829fd1d10acbc3911e39cccf744ee",
     "semantic_hash": ""
   },
   "backend/tests/test_dispute_and_application_fixes.py": {
@@ -6444,9 +6444,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/employer/useJobPostForm.ts": {
-    "mtime": 1790865910.673454,
-    "seen": 1791063691.1336484,
-    "ast_hash": "f8789b2ab5e0aa5963c49003361246fe",
+    "mtime": 1791256601.26664,
+    "seen": 1791312832.7319334,
+    "ast_hash": "c92607f402d1447d462a29c90e335b63",
     "semantic_hash": ""
   },
   "frontend/src/features/payments/TxReceiptModal.tsx": {
@@ -6462,15 +6462,15 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/jobTranslationUtils.test.ts": {
-    "mtime": 1790851073.9057198,
-    "seen": 1791063691.135473,
-    "ast_hash": "08bb0d81a6c54e83685f13012760cc09",
+    "mtime": 1791258724.535518,
+    "seen": 1791312832.7320354,
+    "ast_hash": "15197ec2b3147b6f570374cac8e5f3cb",
     "semantic_hash": ""
   },
   "frontend/src/utils/jobTranslationUtils.ts": {
-    "mtime": 1790849213.052139,
-    "seen": 1791063691.135474,
-    "ast_hash": "58344b3a596133eebe1520ec1e062cdb",
+    "mtime": 1791258598.9624147,
+    "seen": 1791312832.7320364,
+    "ast_hash": "609bac8465f3222f403b5c0de89d6091",
     "semantic_hash": ""
   },
   "mobile/src/components/chat/ImageModal.tsx": {
@@ -6543,6 +6543,30 @@
     "mtime": 1791143847.6223054,
     "seen": 1791144014.3512993,
     "ast_hash": "d77ff8746addb0dfa4fa486ef5ab235f",
+    "semantic_hash": ""
+  },
+  "backend/app/services/ai_translator/agent.py": {
+    "mtime": 1791260552.9692762,
+    "seen": 1791312832.7315862,
+    "ast_hash": "05b72f423a1f9e694d778690b0eb53a7",
+    "semantic_hash": ""
+  },
+  "backend/tests/test_job_moderation_flow.py": {
+    "mtime": 1791268263.5549784,
+    "seen": 1791312832.7316327,
+    "ast_hash": "1cb7178bff628e55293814ec3522409c",
+    "semantic_hash": ""
+  },
+  "frontend/src/features/admin/AdminJobs.test.tsx": {
+    "mtime": 1791304332.9175546,
+    "seen": 1791312832.731851,
+    "ast_hash": "2036ef11e2fd6e703338ef05a24e14ac",
+    "semantic_hash": ""
+  },
+  "frontend/src/features/employer/JobPostForm.persistence.test.tsx": {
+    "mtime": 1791256661.070204,
+    "seen": 1791312832.7319071,
+    "ast_hash": "4a50c4ff9c550ad80ded5c99ccd89d18",
     "semantic_hash": ""
   }
 }
