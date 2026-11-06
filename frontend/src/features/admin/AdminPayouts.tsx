@@ -354,7 +354,7 @@ export const AdminPayouts: React.FC = () => {
       {/* Financial Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
         {/* Card 1: Withdrawals */}
-        <div className="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+        <div className="bg-white p-4.5 rounded-lg border border-slate-200/80 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Kutilayotgan Yechishlar</span>
             <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
@@ -373,7 +373,7 @@ export const AdminPayouts: React.FC = () => {
         </div>
 
         {/* Card 2: Settled Wages */}
-        <div className="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+        <div className="bg-white p-4.5 rounded-lg border border-slate-200/80 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">To'langan Ish Haqlar</span>
             <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
@@ -392,7 +392,7 @@ export const AdminPayouts: React.FC = () => {
         </div>
 
         {/* Card 3: Invoices Status */}
-        <div className="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+        <div className="bg-white p-4.5 rounded-lg border border-slate-200/80 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Tasdiqlangan Fakturalar</span>
             <div className="w-8 h-8 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center border border-brand-primary/20">
@@ -422,7 +422,7 @@ export const AdminPayouts: React.FC = () => {
         {/* Card 4: Bank Details */}
         <div 
           onClick={() => setTab('bank')}
-          className="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-2xs hover:border-brand-primary/50 transition-all flex flex-col justify-between cursor-pointer group"
+          className="bg-white p-4.5 rounded-lg border border-slate-200/80 shadow-2xs hover:border-brand-primary/50 transition-all flex flex-col justify-between cursor-pointer group"
         >
           <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Baito Rekvizitlari</span>
@@ -452,8 +452,8 @@ export const AdminPayouts: React.FC = () => {
       </div>
 
       {/* Segmented Tabs Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-slate-200/80 shadow-2xs">
-        <div className="inline-flex items-center p-1 bg-slate-100/90 rounded-xl gap-1">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-lg border border-slate-200/80 shadow-2xs">
+        <div className="inline-flex items-center p-1 bg-slate-100/90 rounded-lg gap-1">
           {/* Tab 1: Payouts & Invoices */}
           <button
             type="button"
@@ -517,7 +517,7 @@ export const AdminPayouts: React.FC = () => {
         <button
           type="button"
           onClick={refreshAll}
-          className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200/80 shadow-2xs"
+          className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200/80 shadow-2xs"
           title="Ma'lumotlarni yangilash"
           aria-label="Yangilash"
         >
@@ -526,7 +526,7 @@ export const AdminPayouts: React.FC = () => {
       </div>
 
       {/* Main Tab Content */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-white border border-slate-200/80 rounded-lg shadow-xs overflow-hidden">
         {tab === 'bank' ? (
           <BankDetailsForm data={bank.data} onSaved={refreshAll} />
         ) : tab === 'payouts' ? (
@@ -858,7 +858,7 @@ export const AdminPayouts: React.FC = () => {
                   placeholder="Ishchi ismi, telefon yoki karta raqami..."
                   value={withdrawalSearch}
                   onChange={(e) => setWithdrawalSearch(e.target.value)}
-                  className="w-full pl-9 pr-8 py-2 bg-white border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all shadow-2xs"
+                  className="w-full pl-9 pr-8 py-2 bg-white border border-slate-200/90 rounded-lg text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all shadow-2xs"
                   style={{ outline: 'none' }}
                 />
                 {withdrawalSearch && (
@@ -887,7 +887,7 @@ export const AdminPayouts: React.FC = () => {
                         key={item.id}
                         type="button"
                         onClick={() => setWithdrawalStatusFilter(item.id as any)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           isActive
                             ? 'bg-slate-900 text-white shadow-2xs'
                             : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-100/70'
@@ -902,7 +902,7 @@ export const AdminPayouts: React.FC = () => {
                 <button
                   type="button"
                   onClick={exportWithdrawalsCsv}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition-all cursor-pointer active:scale-95"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition-all cursor-pointer active:scale-95"
                   title="Yechish so'rovlarini CSV faylga yuklash"
                 >
                   <Download size={13} className="text-slate-500" />
@@ -1060,7 +1060,7 @@ export const AdminPayouts: React.FC = () => {
       {/* Decision Modal for Withdrawals */}
       {decisionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+          <div className="bg-white rounded-lg max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
             <div className={`p-5 ${decisionModal.action === 'approve' ? 'bg-emerald-50 border-b border-emerald-100' : 'bg-rose-50 border-b border-rose-100'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -1083,7 +1083,7 @@ export const AdminPayouts: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setDecisionModal(null)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-white/80 cursor-pointer transition-colors"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-white/80 cursor-pointer transition-colors"
                 >
                   <X size={18} />
                 </button>
@@ -1091,7 +1091,7 @@ export const AdminPayouts: React.FC = () => {
             </div>
 
             <div className="p-6 space-y-4">
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2 text-xs">
+              <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200/80 space-y-2 text-xs">
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500 font-semibold">Foydalanuvchi:</span>
                   <span className="font-extrabold text-slate-900">{decisionModal.withdrawal.userName || 'Foydalanuvchi'}</span>
@@ -1121,7 +1121,7 @@ export const AdminPayouts: React.FC = () => {
                   value={decisionReason}
                   onChange={(e) => setDecisionReason(e.target.value)}
                   placeholder={decisionModal.action === 'approve' ? "Masalan: Tranzaksiya o'tkazildi, bank cheki tekshirildi" : "Masalan: Karta raqamida noaniqlik mavjud"}
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all"
                   style={{ outline: 'none' }}
                   required
                 />
@@ -1137,7 +1137,7 @@ export const AdminPayouts: React.FC = () => {
                     value={bankReference}
                     onChange={(e) => setBankReference(e.target.value)}
                     placeholder="Masalan: PAYME-98721345 yoki Tranzaksiya №"
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all"
                     style={{ outline: 'none' }}
                   />
                 </div>
@@ -1147,7 +1147,7 @@ export const AdminPayouts: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setDecisionModal(null)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 text-xs hover:bg-slate-50 transition cursor-pointer"
+                  className="px-4 py-2.5 rounded-lg border border-slate-200 font-bold text-slate-600 text-xs hover:bg-slate-50 transition cursor-pointer"
                 >
                   Bekor qilish
                 </button>
@@ -1155,7 +1155,7 @@ export const AdminPayouts: React.FC = () => {
                   type="button"
                   onClick={handleExecuteDecision}
                   disabled={busyId === decisionModal.withdrawal.id || !decisionReason.trim()}
-                  className={`px-5 py-2.5 rounded-xl font-extrabold text-white text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm disabled:opacity-50 active:scale-95 ${
+                  className={`px-5 py-2.5 rounded-lg font-extrabold text-white text-xs transition cursor-pointer flex items-center gap-1.5 shadow-sm disabled:opacity-50 active:scale-95 ${
                     decisionModal.action === 'approve'
                       ? 'bg-emerald-600 hover:bg-emerald-700'
                       : 'bg-rose-600 hover:bg-rose-700'
@@ -1179,7 +1179,7 @@ export const AdminPayouts: React.FC = () => {
       {/* In-app Receipt Viewer Modal */}
       {viewingReceipt && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded-lg max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold">
@@ -1196,7 +1196,7 @@ export const AdminPayouts: React.FC = () => {
                   download
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
                   title="Faylni yuklab olish"
                 >
                   <Download size={16} />
@@ -1205,7 +1205,7 @@ export const AdminPayouts: React.FC = () => {
                   href={viewingReceipt.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
                   title="Yangi oynada ochish"
                 >
                   <ExternalLink size={16} />
@@ -1213,7 +1213,7 @@ export const AdminPayouts: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setViewingReceipt(null)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
                   title="Yopish"
                 >
                   <X size={18} />
@@ -1235,7 +1235,7 @@ export const AdminPayouts: React.FC = () => {
                     fallback.className = 'text-center p-8 space-y-2';
                     fallback.innerHTML = `
                       <p class="font-bold text-slate-700 text-xs">Faylni brauzerda to'g'ridan-to'g'ri ko'rish imkoni yo'q</p>
-                      <a href="${viewingReceipt.url}" target="_blank" rel="noreferrer" class="inline-block px-4 py-2 rounded-xl bg-brand-primary text-white text-xs font-bold">Yangi oynada ochish</a>
+                      <a href="${viewingReceipt.url}" target="_blank" rel="noreferrer" class="inline-block px-4 py-2 rounded-lg bg-brand-primary text-white text-xs font-bold">Yangi oynada ochish</a>
                     `;
                     parent.appendChild(fallback);
                   }
@@ -1247,7 +1247,7 @@ export const AdminPayouts: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setViewingReceipt(null)}
-                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
               >
                 Yopish
               </button>
@@ -1296,7 +1296,7 @@ const ReconciliationModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+      <div className="bg-white rounded-lg max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="px-6 py-4.5 border-b border-slate-100 flex items-center justify-between bg-white">
           <div className="flex items-center gap-3">
@@ -1322,7 +1322,7 @@ const ReconciliationModal: React.FC<{
         {/* Content body */}
         <div className="p-6 overflow-y-auto space-y-4 text-xs">
           {/* Summary Banner */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/90 grid grid-cols-2 gap-3">
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/90 grid grid-cols-2 gap-3">
             <div>
               <span className="text-[11px] text-slate-400 font-semibold block">Buyurtmachi korxona</span>
               <span className="font-extrabold text-slate-900 text-xs flex items-center gap-1.5 mt-0.5">
@@ -1343,7 +1343,7 @@ const ReconciliationModal: React.FC<{
           </div>
 
           {/* Payment Reference & Method */}
-          <div className="p-3.5 rounded-xl bg-slate-100/70 border border-slate-200/70 flex items-center justify-between text-xs">
+          <div className="p-3.5 rounded-lg bg-slate-100/70 border border-slate-200/70 flex items-center justify-between text-xs">
             <div>
               <span className="text-slate-500 font-semibold block text-[11px]">To'lov usuli / Bank ma'lumotnomasi</span>
               <span className="font-mono font-bold text-slate-800 mt-0.5 block">
@@ -1359,7 +1359,7 @@ const ReconciliationModal: React.FC<{
           </div>
 
           {/* Baito Bank Account Info */}
-          <div className="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-2">
+          <div className="p-4 rounded-lg bg-indigo-50/60 border border-indigo-100 space-y-2">
             <div className="flex items-center justify-between text-indigo-950 font-bold text-xs">
               <span className="flex items-center gap-1.5">
                 <Landmark size={14} className="text-indigo-600" />
@@ -1395,7 +1395,7 @@ const ReconciliationModal: React.FC<{
               Korxona taqdim etgan to'lov hujjati (Chek):
             </label>
             {hasReceipt ? (
-              <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between gap-3">
+              <div className="p-3.5 rounded-lg bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-white border border-emerald-200 overflow-hidden flex items-center justify-center shrink-0 shadow-2xs">
                     <img
@@ -1419,7 +1419,7 @@ const ReconciliationModal: React.FC<{
                   <button
                     type="button"
                     onClick={() => onViewReceipt(payout.invoicePaidReceiptUrl!, `Bank kvitansiyasi (${payout.invoiceNumber || 'INV'})`)}
-                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-bold text-xs transition shadow-2xs cursor-pointer flex items-center gap-1"
+                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-bold text-xs transition shadow-2xs cursor-pointer flex items-center gap-1"
                   >
                     <Eye size={12} />
                     <span>Ko'rish</span>
@@ -1429,7 +1429,7 @@ const ReconciliationModal: React.FC<{
                     download
                     target="_blank"
                     rel="noreferrer"
-                    className="p-1.5 rounded-xl bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-900 transition shadow-2xs"
+                    className="p-1.5 rounded-lg bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-900 transition shadow-2xs"
                     title="Yuklab olish"
                   >
                     <Download size={13} />
@@ -1437,7 +1437,7 @@ const ReconciliationModal: React.FC<{
                 </div>
               </div>
             ) : (
-              <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200/90 space-y-1.5">
+              <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-200/90 space-y-1.5">
                 <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
                   <AlertTriangle size={15} className="text-amber-600 shrink-0" />
                   <span>Korxona tomonidan to'lov cheki yuklanmagan!</span>
@@ -1453,7 +1453,7 @@ const ReconciliationModal: React.FC<{
 
           {/* Admin Statement Verification Checkbox */}
           <div className="pt-2">
-            <label className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border-2 border-slate-200 hover:border-brand-primary/50 transition-colors cursor-pointer select-none">
+            <label className="flex items-start gap-3 p-3.5 rounded-lg bg-slate-50 border-2 border-slate-200 hover:border-brand-primary/50 transition-colors cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={statementChecked}
@@ -1473,7 +1473,7 @@ const ReconciliationModal: React.FC<{
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer"
+            className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer"
           >
             Bekor qilish
           </button>
@@ -1482,7 +1482,7 @@ const ReconciliationModal: React.FC<{
             type="button"
             onClick={() => onConfirm(payout.jobId)}
             disabled={!statementChecked || isConfirming}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold text-xs shadow-sm transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold text-xs shadow-sm transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             {isConfirming ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
             <span>To'lovni tasdiqlash</span>
@@ -1504,7 +1504,7 @@ const AuditDetailModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-lg max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
           <div className="flex items-center gap-2.5">
@@ -1528,7 +1528,7 @@ const AuditDetailModal: React.FC<{
         {/* Content */}
         <div className="p-5 overflow-y-auto space-y-4 text-xs">
           {/* Section 1: Buyurtma */}
-          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
+          <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200/80 space-y-2">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">Buyurtma va Taraflar</span>
             <div className="flex justify-between items-center">
               <span className="text-slate-500">Ish nomi:</span>
@@ -1545,7 +1545,7 @@ const AuditDetailModal: React.FC<{
           </div>
 
           {/* Section 2: Ishchi To'lovi */}
-          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
+          <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200/80 space-y-2">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">1. Ishchiga To'langan Ish Haqi</span>
             <div className="flex justify-between items-center">
               <span className="text-slate-500">Summa:</span>
@@ -1572,7 +1572,7 @@ const AuditDetailModal: React.FC<{
           </div>
 
           {/* Section 3: Korxona Hisob-Fakturasi */}
-          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
+          <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200/80 space-y-2">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">2. Korxonaga Hisob-Faktura</span>
             <div className="flex justify-between items-center">
               <span className="text-slate-500">Faktura raqami:</span>
@@ -1593,7 +1593,7 @@ const AuditDetailModal: React.FC<{
           </div>
 
           {/* Section 4: Korxona Tushumi va Cheki */}
-          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
+          <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200/80 space-y-2">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block">3. Korxona Bank To'lovi va Cheki</span>
             <div className="flex justify-between items-center">
               <span className="text-slate-500">To'lov e'lon qilingan vaqt:</span>
@@ -1714,7 +1714,7 @@ const BankDetailsForm: React.FC<{ data?: BankDetails; onSaved: () => void }> = (
                 value={form[k] ?? ''}
                 onChange={set(k)}
                 placeholder={placeholder}
-                className="w-full h-11 pl-4 pr-10 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all shadow-2xs"
+                className="w-full h-11 pl-4 pr-10 rounded-lg border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-brand-primary focus:ring-3 focus:ring-brand-primary/10 transition-all shadow-2xs"
                 style={{ outline: 'none' }}
               />
               {Boolean(form[k]) && (
@@ -1740,7 +1740,7 @@ const BankDetailsForm: React.FC<{ data?: BankDetails; onSaved: () => void }> = (
           type="button"
           onClick={save}
           disabled={saving}
-          className="h-11 px-6 rounded-xl bg-brand-primary text-white font-black text-xs hover:bg-brand-primary/95 transition-all disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer shadow-sm shadow-brand-primary/20 active:scale-95"
+          className="h-11 px-6 rounded-lg bg-brand-primary text-white font-black text-xs hover:bg-brand-primary/95 transition-all disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer shadow-sm shadow-brand-primary/20 active:scale-95"
         >
           {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
           <span>Bank rekvizitlarini saqlash</span>
