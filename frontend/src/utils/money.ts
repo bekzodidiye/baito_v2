@@ -38,7 +38,11 @@ export const money = (value: unknown, language: string): string =>
 
 /** If a salary string has a raw number or messy currency attached (e.g. "240000",
  *  "240000 UZS", "240 000 so'm"), extract the number and format it cleanly
- *  in the reader's language ("240 000 so'm", "240 000 сум", "240 000 UZS"). */
+ *  in the reader's language.
+ *  @example formatSalary("240000", "uz") => "240 000 so'm"
+ *  @example formatSalary("240000", "ru") => "240 000 сум"
+ *  @example formatSalary("240000", "en") => "240 000 UZS"
+ */
 export const formatSalary = (value: unknown, language: string): string => {
   if (value === null || value === undefined || value === '') return '';
   const str = String(value).trim();
