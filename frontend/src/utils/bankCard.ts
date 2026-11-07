@@ -58,7 +58,9 @@ export const cardProblem = (
   return null;
 };
 
-/** How the number reads where it is only being shown back, not edited. */
+/** How the number reads where it is only being shown back, not edited.
+ * @example "8600 **** **** 9012"
+ */
 export const maskCard = (value: string): string => {
   const digits = cardDigits(value);
   if (digits.length < 16) return formatCard(digits);
