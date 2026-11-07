@@ -7,6 +7,10 @@
  *
  *  `backend/tests/test_error_details_are_known.py` walks the backend source
  *  and fails when a detail appears that this file does not cover.
+ *
+ *  Translation contract:
+ *  - Unknown details fall back gracefully to the original server string.
+ *  - Localized messages preserve actionable guidance for the user.
  */
 
 /** Provider-side and internal strings. They do not reach a person in normal
