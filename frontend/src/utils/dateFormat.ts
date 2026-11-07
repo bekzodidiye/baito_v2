@@ -33,7 +33,9 @@ export const WEEKDAYS_TRANSLATIONS: Record<DateLanguage, string[]> = {
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-/** "3-sentyabr, 2026" · "3 сентября 2026 г." · "September 3, 2026" */
+/** Formats date into localized long string representation.
+ * @example "3-sentyabr, 2026" (uz) · "3 сентября 2026 г." (ru) · "September 3, 2026" (en)
+ */
 export function formatLongDate(value: Date | string | number, language: DateLanguage): string {
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return '';
