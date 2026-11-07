@@ -61,6 +61,7 @@ export interface Job {
   }>;
 }
 
+/** Chat message item transferred between user and recruiter. */
 export interface Message {
   id: string;
   sender: 'user' | 'recruiter';
@@ -70,6 +71,7 @@ export interface Message {
   mapLocation?: string;
 }
 
+/** Recruiter-applicant conversation thread model. */
 export interface Chat {
   id: string;
   companyName: string;
