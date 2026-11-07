@@ -4,7 +4,7 @@ import logging
 import math
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response
 from sqlalchemy import or_, select, func
 from sqlalchemy.orm import Session
 
@@ -390,14 +390,18 @@ def get_map_jobs(
 
     # Derived strictly from verified identity via canonical deps.get_current_user_optional (FIX A)
     user_id = current_user.id if current_user else None
+    vary_header = "Cookie, Authorization, Accept-Encoding"
 
     if user_id:
         user_ver = get_user_map_cache_version(user_id)
         effective_cache_key = f"{base_cache_key}:u:{user_id}:uv{user_ver}"
-        cache_control = "private, max-age=15, stale-while-revalidate=30"
+        cache_control = "private, no-cache"
     else:
         effective_cache_key = base_cache_key
         cache_control = "public, max-age=15, stale-while-revalidate=30"
+
+    response.headers["Cache-Control"] = cache_control
+    response.headers["Vary"] = vary_header
 
     # 1. FAST PATH: Check effective cache key (works for BOTH authenticated and guest visitors)
     try:
@@ -502,12 +506,14 @@ def get_map_jobs(
                     etag = f'"{hashlib.md5(payload_json.encode("utf-8")).hexdigest()}"'
                     response.headers["Cache-Control"] = cache_control
                     response.headers["ETag"] = etag
+                    response.headers["Vary"] = vary_header
                     if request.headers.get("if-none-match") == etag:
                         return Response(
                             status_code=304,
                             headers={
                                 "ETag": etag,
                                 "Cache-Control": cache_control,
+                                "Vary": vary_header,
                             },
                         )
                     return Response(
@@ -516,6 +522,7 @@ def get_map_jobs(
                         headers={
                             "ETag": etag,
                             "Cache-Control": cache_control,
+                            "Vary": vary_header,
                         },
                     )
     except Exception as e:
@@ -795,12 +802,14 @@ def get_map_jobs(
             etag = f'"{hashlib.md5(user_payload_str.encode("utf-8")).hexdigest()}"'
             response.headers["Cache-Control"] = cache_control
             response.headers["ETag"] = etag
+            response.headers["Vary"] = vary_header
             if request.headers.get("if-none-match") == etag:
                 return Response(
                     status_code=304,
                     headers={
                         "ETag": etag,
                         "Cache-Control": cache_control,
+                        "Vary": vary_header,
                     },
                 )
             return Response(
@@ -809,6 +818,7 @@ def get_map_jobs(
                 headers={
                     "ETag": etag,
                     "Cache-Control": cache_control,
+                    "Vary": vary_header,
                 },
             )
         except Exception as e:
@@ -955,10 +965,13 @@ def get_map_jobs(
             if not user_id:
                 empty_str = "[]"
                 empty_etag = f'"{hashlib.md5(empty_str.encode("utf-8")).hexdigest()}"'
+                response.headers["Cache-Control"] = cache_control
+                response.headers["ETag"] = empty_etag
+                response.headers["Vary"] = vary_header
                 return Response(
                     content=empty_str,
                     media_type="application/json",
-                    headers={"Cache-Control": cache_control, "ETag": empty_etag},
+                    headers={"Cache-Control": cache_control, "ETag": empty_etag, "Vary": vary_header},
                 )
 
         job_ids = [j.id for j in jobs]
@@ -1209,12 +1222,14 @@ def get_map_jobs(
     etag = f'"{hashlib.md5(payload_str.encode("utf-8")).hexdigest()}"'
     response.headers["Cache-Control"] = cache_control
     response.headers["ETag"] = etag
+    response.headers["Vary"] = vary_header
     if request.headers.get("if-none-match") == etag:
         return Response(
             status_code=304,
             headers={
                 "ETag": etag,
                 "Cache-Control": cache_control,
+                "Vary": vary_header,
             },
         )
 
@@ -1224,6 +1239,7 @@ def get_map_jobs(
         headers={
             "ETag": etag,
             "Cache-Control": cache_control,
+            "Vary": vary_header,
         },
     )
 
@@ -1399,11 +1415,11 @@ def get_map_geojson(
 
 @router.get("/map/tile/{z}/{x}/{y}")
 def get_map_tile(
-    z: int,
-    x: int,
-    y: int,
-    response: Response,
-    request: Request,
+    z: int = Path(..., ge=0, le=20, description="Zoom level (0 to 20)"),
+    x: int = Path(..., ge=0, description="Tile X coordinate"),
+    y: int = Path(..., ge=0, description="Tile Y coordinate"),
+    response: Response = None,
+    request: Request = None,
     db: Optional[Session] = Depends(deps.get_db_optional),
     category: Optional[str] = Query(None, max_length=100),
     limit: int = Query(200, ge=1, le=500),
@@ -1411,6 +1427,18 @@ def get_map_tile(
     """Standard Slippy Map (TMS/XYZ) tile endpoint for high-speed spatial vector partitioning.
     Converts (z, x, y) coordinates to spatial bounds and returns pre-partitioned pins with tile caching.
     """
+    if z < 0 or z > 20:
+        raise HTTPException(
+            status_code=400,
+            detail="Zoom darajasi (z) 0 va 20 oralig'ida bo'lishi kerak",
+        )
+    max_coord = 2 ** z
+    if x < 0 or x >= max_coord or y < 0 or y >= max_coord:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Noto'g'ri tile koordinatalari: z={z} uchun x va y [0, {max_coord - 1}] oralig'ida bo'lishi kerak",
+        )
+
     version = get_map_cache_version()
     cache_key = f"cache:jobs:tile:v{version}:{z}:{x}:{y}:{category or ''}:{limit}"
 
@@ -1421,9 +1449,10 @@ def get_map_tile(
             etag = f'"{hashlib.md5(cached_str.encode("utf-8")).hexdigest()}"'
             response.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=60"
             response.headers["ETag"] = etag
+            response.headers["Vary"] = "Accept-Encoding"
             if request.headers.get("if-none-match") == etag:
-                return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "public, max-age=30, stale-while-revalidate=60"})
-            return Response(content=cached_str, media_type="application/json", headers={"ETag": etag, "Cache-Control": "public, max-age=30, stale-while-revalidate=60"})
+                return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "public, max-age=30, stale-while-revalidate=60", "Vary": "Accept-Encoding"})
+            return Response(content=cached_str, media_type="application/json", headers={"ETag": etag, "Cache-Control": "public, max-age=30, stale-while-revalidate=60", "Vary": "Accept-Encoding"})
     except Exception as e:
         logger.warning("Redis lookup failed in tile: %s", e)
 
@@ -1461,6 +1490,7 @@ def get_map_tile(
             except Exception:
                 pass
         res.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=60"
+        res.headers["Vary"] = "Accept-Encoding"
         return res
 
     return res

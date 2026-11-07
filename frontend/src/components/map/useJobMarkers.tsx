@@ -28,8 +28,78 @@ export interface UseJobMarkersProps {
 }
 
 /**
+ * Validates that an image URL is safe against XSS, protocol smuggling, and open redirects.
+ * - Rejects any control characters, quotes, angle brackets, whitespace, and backslashes.
+ * - Rejects encoded backslashes (%5c / %5C) to prevent browser normalization bypasses (e.g. /\example.org).
+ * - Rejects scheme-relative URLs (//example.org).
+ * - For relative URLs (/... or ./...), ensures resolution stays strictly on the same origin.
+ * - For absolute URLs, strictly enforces http: or https: protocols.
+ * - Supports safe data:image/ base64 URIs.
+ */
+export function isSafeImageUrl(url: unknown): boolean {
+  if (typeof url !== 'string') return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+
+  // Reject control characters, HTML delimiters, whitespace, and backslashes
+  if (/[\x00-\x20\x7F<>"'`\\]/.test(trimmed)) return false;
+
+  // Reject URL-encoded backslashes (%5c / %5C)
+  if (/%5c/i.test(trimmed)) return false;
+
+  // Reject protocol-relative or Windows-style paths (//..., /\, \\)
+  if (trimmed.startsWith('//') || trimmed.startsWith('/\\') || trimmed.startsWith('\\')) {
+    return false;
+  }
+
+  // Allow strict data:image base64 URIs
+  if (/^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=]+$/i.test(trimmed)) {
+    return true;
+  }
+
+  const baseOrigin = typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : 'http://localhost';
+
+  try {
+    // If it starts with / or ./, treat as relative and verify it stays on the same origin
+    if (trimmed.startsWith('/') || trimmed.startsWith('./')) {
+      const parsed = new URL(trimmed, baseOrigin);
+      return parsed.origin === baseOrigin && (parsed.protocol === 'http:' || parsed.protocol === 'https:');
+    }
+
+    // Absolute URLs: strictly http: or https:
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Escapes special HTML characters to prevent stored XSS and HTML tag injection.
+ */
+export function escapeHtml(str: unknown): string {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Escapes characters for safe inclusion within HTML attributes.
+ */
+export function escapeAttr(str: unknown): string {
+  return escapeHtml(str);
+}
+
+/**
  * Creates the custom HTML DivIcon for a job marker pin.
  * Reflects selection state (border, pointer color, scale) without tearing down the layer.
+ * Strictly sanitizes all interpolated values to protect against Stored XSS.
  */
 export const createJobMarkerIcon = (job: Job, isSelected: boolean, language: Language): L.DivIcon => {
   const category = getJobCategory(job);
@@ -37,19 +107,22 @@ export const createJobMarkerIcon = (job: Job, isSelected: boolean, language: Lan
   const pointerColor = isSelected ? '#000666' : category.hexColor;
 
   const fallbackSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='20' height='14' x='2' y='7' rx='2' ry='2'/%3E%3Cpath d='M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'/%3E%3C/svg%3E";
-  const logoHtml = job.logoUrl
-    ? `<img src="${job.logoUrl}" alt="${job.company}" class="marker-logo-img" onerror="this.onerror=null; this.src='${fallbackSvg}';" />`
-    : `<div class="marker-logo-placeholder bg-slate-100 text-slate-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>`;
+  const logoHtml = job.logoUrl && isSafeImageUrl(job.logoUrl)
+    ? `<img src="${escapeAttr(job.logoUrl.trim())}" alt="${escapeAttr(job.company || '')}" class="marker-logo-img" onerror="this.onerror=null; this.src='${fallbackSvg}';" />`
+    : `<div class="marker-logo-placeholder bg-slate-100 text-slate-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>`;
+
+  const safeTitle = escapeHtml(job.title || '');
+  const safeAriaLabel = escapeAttr(job.title || '');
 
   const jobHtml = `
-    <div tabindex="0" role="button" aria-label="${job.title}" class="flex flex-col items-center justify-center cursor-pointer select-none transition-transform duration-200 ease-out origin-bottom hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 rounded-sm ${isSelected ? 'scale-110' : ''}" style="width: 44px; height: 42px;">
+    <div tabindex="0" role="button" aria-label="${safeAriaLabel}" class="flex flex-col items-center justify-center cursor-pointer select-none transition-transform duration-200 ease-out origin-bottom hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 rounded-sm ${isSelected ? 'scale-110' : ''}" style="width: 44px; height: 42px;">
       <div class="relative flex items-center justify-center rounded-full bg-white shadow-sm" style="width: 26px !important; height: 26px !important; border: 2.5px solid ${borderColor};">
         ${logoHtml}
         <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white shadow-xs" style="background-color: ${category.hexColor};"></span>
         <div class="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]" style="border-t-color: ${pointerColor};"></div>
       </div>
       <div class="mt-0.5 text-white text-[7.5px] font-bold px-1.5 py-0.5 rounded shadow-xs max-w-[54px] truncate text-center leading-none ${isSelected ? 'font-black' : ''}" style="background-color: ${isSelected ? '#000666' : category.hexColor};">
-        ${job.title}
+        ${safeTitle}
       </div>
     </div>
   `;
@@ -67,19 +140,28 @@ export const createJobMarkerIcon = (job: Job, isSelected: boolean, language: Lan
  * Creates the DivIcon for a server-side cluster marker pin.
  */
 export const createServerClusterMarkerIcon = (count: number): L.DivIcon => {
-  const size = count < 10 ? 30 : count < 100 ? 36 : 42;
+  const safeCount = Number.isFinite(Number(count)) && Number(count) > 0 ? Math.floor(Number(count)) : 1;
+  const size = safeCount < 10 ? 30 : safeCount < 100 ? 36 : 42;
   const half = size / 2;
-  const fontSize = count < 100 ? '11px' : '9.5px';
+  const fontSize = safeCount < 100 ? '11px' : '9.5px';
   const shadowClass = 'shadow-[0_4px_12px_rgba(0,6,102,0.3)]';
 
+  const clusterEl = document.createElement('div');
+  clusterEl.setAttribute('tabindex', '0');
+  clusterEl.setAttribute('role', 'button');
+  clusterEl.setAttribute('aria-label', `${safeCount} ta ish o'rni`);
+  clusterEl.className = `flex items-center justify-center rounded-full text-white font-extrabold ${shadowClass} select-none transition-transform duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-primary`;
+  clusterEl.style.width = `${size}px`;
+  clusterEl.style.height = `${size}px`;
+  clusterEl.style.backgroundColor = 'var(--color-brand-primary, #000666)';
+  clusterEl.style.lineHeight = `${size - 3}px`;
+  clusterEl.style.fontSize = fontSize;
+  clusterEl.style.border = '2.5px solid white';
+  clusterEl.textContent = String(safeCount);
+
   return L.divIcon({
-    html: `
-      <div tabindex="0" role="button" aria-label="${count} ta ish o'rni" class="flex items-center justify-center rounded-full text-white font-extrabold ${shadowClass} select-none transition-transform duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-primary"
-           style="width: ${size}px; height: ${size}px; background-color: var(--color-brand-primary, #000666); line-height: ${size - 3}px; font-size: ${fontSize}; border: 2.5px solid white;">
-        ${count}
-      </div>
-    `,
-    className: `custom-server-cluster-marker cluster-count-${count}`,
+    html: clusterEl.outerHTML,
+    className: `custom-server-cluster-marker cluster-count-${safeCount}`,
     iconSize: [size, size],
     iconAnchor: [half, half],
   });
@@ -161,17 +243,22 @@ export const useJobMarkers = ({
     jobsRef.current = jobs;
   }, [jobs]);
 
+  const rawDisplayedJobs = propDisplayedJobs || (getDisplayedJobs ? getDisplayedJobs() : jobs);
+
   // Compute a stable signature so that background polling of jobs (which creates
   // new array references every 10s) does NOT tear down all Leaflet markers unless
-  // the job IDs, statuses, bookmarks, applications, or cluster metrics/coordinates actually changed.
+  // visible attributes (title, company, salary, logoUrl, category), statuses,
+  // bookmarks, applications, or cluster metrics/coordinates actually changed.
+  // Must track rawDisplayedJobs so that updates to displayedJobs re-render markers
+  // even when the fallback jobs: [] prop is untouched.
   const jobsSignature = useMemo(() => {
-    return jobs.map(j => {
+    return rawDisplayedJobs.map(j => {
       const anyJ = j as any;
       const coordX = anyJ.coordinateX ?? anyJ.latitude ?? '';
       const coordY = anyJ.coordinateY ?? anyJ.longitude ?? '';
-      return `${j.id}:${j.status}:${j.bookmarked}:${j.applied}:${Boolean(j.isCluster)}:${j.count ?? 1}:${coordX}:${coordY}`;
+      return `${j.id}:${j.title ?? ''}:${j.company ?? ''}:${j.salary ?? ''}:${j.logoUrl ?? ''}:${j.category ?? ''}:${j.status}:${j.bookmarked}:${j.applied}:${Boolean(j.isCluster)}:${j.count ?? 1}:${coordX}:${coordY}`;
     }).join('|');
-  }, [jobs]);
+  }, [rawDisplayedJobs]);
 
   const activeRootsRef = useRef<Map<string, import('react-dom/client').Root>>(new Map());
 

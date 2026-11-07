@@ -14,14 +14,19 @@ from app.db.session import SessionLocal
 from app.redis_client import redis_client
 from app.schemas.chat import MAX_MESSAGE_LENGTH
 from app.services.session_window import is_live
-from .manager import manager
+from .manager import manager, is_session_revoked
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Per-socket flood control: at most this many messages in the window.
-MSG_RATE_LIMIT = 20
-MSG_RATE_WINDOW_SECONDS = 10
+_is_session_revoked = is_session_revoked
+
+# Per-socket flood control limits:
+TOTAL_FRAME_LIMIT = 40        # Maximum total frames per window
+CONTROL_FRAME_LIMIT = 20      # Maximum ping / typing / read frames per window
+MSG_RATE_LIMIT = 20           # Maximum text messages per window
+RATE_WINDOW_SECONDS = 10      # Sliding window duration in seconds
+MAX_RATE_VIOLATIONS = 5       # Max sustained rate limit violations before closing socket
 
 
 
@@ -114,23 +119,32 @@ def _authenticate_ticket(ticket: Optional[str], chat_id: str) -> Optional[dict]:
 
         user_uid = data.get("user_uid")
         session_id = data.get("session_id")
+        if not user_uid or not session_id:
+            logger.warning("Ticket authentication error: session_id is required")
+            return None
 
         with SessionLocal() as db:
             user = crud.user.get_by_uid(db, uid=user_uid)
             if not user or user.isBanned:
                 return None
 
-            # Revalidate session revocation if session ID was attached at issuance
-            if session_id:
-                session_record = (
-                    db.query(models.ActiveSession)
-                    .filter(models.ActiveSession.id == session_id)
-                    .first()
+            session_record = (
+                db.query(models.ActiveSession)
+                .filter(
+                    models.ActiveSession.id == session_id,
+                    models.ActiveSession.user_uid == user_uid,
                 )
-                if not is_live(session_record):
-                    return None
+                .first()
+            )
+            if not session_record or session_record.user_uid != user_uid or not is_live(session_record):
+                return None
 
-            return {"id": user.id, "uid": getattr(user, "uid", None), "role": user.role}
+            return {
+                "id": user.id,
+                "uid": getattr(user, "uid", None),
+                "role": user.role,
+                "session_id": session_id,
+            }
     except Exception as e:
         logger.warning("Ticket authentication error: %s", type(e).__name__)
         return None
@@ -143,35 +157,53 @@ def _authenticate_socket(token: Optional[str]) -> Optional[dict]:
     connection, so a few dozen idle chat windows exhausted the pool.
     """
     token_data = deps._decode(token, "access") if token else None
-    if not token_data:
+    if not token_data or not token_data.sid:
+        logger.warning("Socket authentication rejected: session-bound token (sid) is required")
         return None
     with SessionLocal() as db:
         user = crud.user.get_by_uid(db, uid=token_data.sub)
         if not user or user.isBanned:
             return None
-        if token_data.sid:
-            session = (
-                db.query(models.ActiveSession)
-                .filter(models.ActiveSession.id == token_data.sid)
-                .first()
+        session = (
+            db.query(models.ActiveSession)
+            .filter(
+                models.ActiveSession.id == token_data.sid,
+                models.ActiveSession.user_uid == user.uid,
             )
-            if not is_live(session):
-                return None
-        return {"id": user.id, "uid": getattr(user, "uid", None), "role": user.role}
+            .first()
+        )
+        if not session or session.user_uid != user.uid or not is_live(session):
+            return None
+        return {
+            "id": user.id,
+            "uid": getattr(user, "uid", None),
+            "role": user.role,
+            "session_id": token_data.sid,
+        }
 
 
 @router.websocket("/ws/{chat_id}")
 async def websocket_endpoint(websocket: WebSocket, chat_id: str):
-    # Support short-lived single-use connection ticket (avoids reusable JWT in URL query string)
-    ticket = websocket.query_params.get("ticket")
+    # Origin validation against configured CORS origins to prevent Cross-Site WebSocket Hijacking (CSWSH)
+    origin = websocket.headers.get("origin")
+    if origin and settings.cors_origins:
+        allowed = {o.rstrip("/") for o in settings.cors_origins if o}
+        if origin.rstrip("/") not in allowed:
+            logger.warning("WebSocket rejected untrusted origin: %s", origin)
+            await websocket.close(code=1008)
+            return
+
+    # Strictly reject reusable JWT tokens in URL query strings (CWE-598)
+    # to prevent credential leakage into Nginx/ASGI access logs, proxy caches, and browser histories.
     query_token = websocket.query_params.get("token")
     if query_token:
-        logger.warning("Deprecated: WebSocket connected via ?token= query parameter; client should migrate to ?ticket=")
+        logger.warning("Rejected WebSocket connection attempt via ?token= query parameter; clients must use ?ticket= or session cookies")
+        await websocket.close(code=1008)
+        return
 
-    token = (
-        websocket.cookies.get(settings.ACCESS_COOKIE_NAME)
-        or query_token
-    )
+    # Support short-lived single-use connection ticket or HttpOnly session cookie
+    ticket = websocket.query_params.get("ticket")
+    token = websocket.cookies.get(settings.ACCESS_COOKIE_NAME)
 
     if ticket:
         user_info = await run_in_threadpool(_authenticate_ticket, ticket, chat_id)
@@ -197,12 +229,35 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str):
         await websocket.close(code=1008)
         return
 
-    await manager.connect(websocket, chat_id)
+    await manager.connect(
+        websocket,
+        chat_id,
+        user_uid=user_info.get("uid"),
+        session_id=user_info.get("session_id"),
+    )
 
-    sent_times: list[float] = []
+    frame_times: list[float] = []
+    control_times: list[float] = []
+    msg_times: list[float] = []
+    rate_violations: int = 0
+
     try:
         while True:
             data = await websocket.receive_text()
+
+            # Global per-socket frame rate limit
+            now = time.monotonic()
+            frame_times = [t for t in frame_times if now - t < RATE_WINDOW_SECONDS]
+            if len(frame_times) >= TOTAL_FRAME_LIMIT:
+                rate_violations += 1
+                if rate_violations >= MAX_RATE_VIOLATIONS:
+                    logger.warning("Closing WebSocket for chat %s: sustained frame flood (%d violations)", chat_id, rate_violations)
+                    await websocket.send_json({"error": "flood_detected"})
+                    await websocket.close(code=1008)
+                    break
+                await websocket.send_json({"error": "rate_limited"})
+                continue
+            frame_times.append(now)
 
             # Malformed frames used to escape as an unhandled exception and
             # kill the connection loop.
@@ -215,10 +270,40 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str):
                 continue
 
             msg_type = message_data.get("type")
+
+            # Rate limiting on control frames (ping, typing, read) BEFORE session DB check
+            # Guarantees that control frame floods are dropped in-memory with 0 DB overhead
+            if msg_type in ("ping", "typing", "read"):
+                control_times = [t for t in control_times if now - t < RATE_WINDOW_SECONDS]
+                if len(control_times) >= CONTROL_FRAME_LIMIT:
+                    rate_violations += 1
+                    if rate_violations >= MAX_RATE_VIOLATIONS:
+                        logger.warning("Closing WebSocket for chat %s: sustained control flood (%d violations)", chat_id, rate_violations)
+                        await websocket.send_json({"error": "flood_detected"})
+                        await websocket.close(code=1008)
+                        break
+                    await websocket.send_json({"error": "rate_limited"})
+                    continue
+                control_times.append(now)
+
+            # Re-verify active authorization and session state for the open connection
+            is_revoked = await run_in_threadpool(
+                _is_session_revoked,
+                user_info.get("uid"),
+                user_info.get("session_id"),
+            )
+            if is_revoked:
+                logger.info("Closing active WebSocket for chat %s: session revoked or unverified", chat_id)
+                await websocket.send_json({"error": "session_revoked"})
+                await websocket.close(code=1008)
+                break
+
             if msg_type == "ping":
+                rate_violations = max(0, rate_violations - 1)
                 await websocket.send_json({"type": "pong"})
                 continue
             if msg_type == "typing":
+                rate_violations = max(0, rate_violations - 1)
                 is_typing_val = message_data.get("isTyping") if "isTyping" in message_data else message_data.get("is_typing", True)
                 await manager.broadcast_to_chat({
                     "type": "typing",
@@ -230,6 +315,7 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str):
                 }, chat_id)
                 continue
             if msg_type == "read":
+                rate_violations = max(0, rate_violations - 1)
                 def mark_read():
                     with SessionLocal() as db:
                         u_ids = [str(uid) for uid in [user_info["id"], user_info.get("uid")] if uid]
@@ -255,12 +341,17 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str):
                 continue
 
             # Flood control for chat messages.
-            now = time.monotonic()
-            sent_times = [t for t in sent_times if now - t < MSG_RATE_WINDOW_SECONDS]
-            if len(sent_times) >= MSG_RATE_LIMIT:
+            msg_times = [t for t in msg_times if now - t < RATE_WINDOW_SECONDS]
+            if len(msg_times) >= MSG_RATE_LIMIT:
+                rate_violations += 1
+                if rate_violations >= MAX_RATE_VIOLATIONS:
+                    logger.warning("Closing WebSocket for chat %s: sustained message flood (%d violations)", chat_id, rate_violations)
+                    await websocket.send_json({"error": "flood_detected"})
+                    await websocket.close(code=1008)
+                    break
                 await websocket.send_json({"error": "rate_limited"})
                 continue
-            sent_times.append(now)
+            msg_times.append(now)
 
             text = (message_data.get("text") or "").strip()
             if not text:
@@ -297,6 +388,7 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str):
                     }
 
             msg_dict = await run_in_threadpool(save_message)
+            rate_violations = max(0, rate_violations - 1)
             await manager.broadcast_to_chat(msg_dict, chat_id)
     except WebSocketDisconnect:
         pass

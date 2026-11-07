@@ -169,6 +169,7 @@ const EXACT: Record<string, { ru: string; en: string }> = {
   'Yangi parol eskisidan farq qilishi kerak': { ru: 'Новый пароль должен отличаться от старого', en: 'The new password must differ from the old one' },
   'Yechish so\'rovi topilmadi': { ru: 'Запрос на вывод не найден', en: 'Withdrawal request not found' },
   'Yollangan ishchini rad etib bo\'lmaydi, avval ishni bekor qiling': { ru: 'Нанятого работника нельзя отклонить — сначала отмените работу', en: 'A hired worker cannot be rejected; cancel the job first' },
+  'Zoom darajasi (z) 0 va 20 oralig\'ida bo\'lishi kerak': { ru: 'Уровень масштабирования (z) должен быть от 0 до 20', en: 'Zoom level (z) must be between 0 and 20' },
 };
 
 /** The details the server builds with a value in them. The `{}` stands where
@@ -180,6 +181,7 @@ const TEMPLATED: { re: RegExp; ru: string; en: string }[] = [
   { re: /^Bu\ so'rov\ allaqachon\ ko'rib\ chiqilgan\ \(holat:\ (.+?)\)$/, ru: 'Этот запрос уже рассмотрен (статус: $1)', en: 'This request has already been handled (status: $1)' },
   { re: /^Ko'pi\ bilan\ (.+?)\ ta\ karta\ qo'shish\ mumkin$/, ru: 'Можно добавить не более $1 карт', en: 'At most $1 cards can be added' },
   { re: /^Noma'lum\ holat\.\ Ruxsat\ etilgan:\ (.+?)$/, ru: 'Неизвестный статус. Допустимые: $1', en: 'Unknown status. Allowed: $1' },
+  { re: /^Noto'g'ri\ tile\ koordinatalari:\ z=(.+?)\ uchun\ x\ va\ y\ \[0,\ (.+?)\]\ oralig'ida\ bo'lishi\ kerak$/, ru: 'Неверные координаты тайла: для z=$1 значения x и y должны быть в диапазоне [0, $2]', en: 'Invalid tile coordinates: for z=$1, x and y must be within [0, $2]' },
   { re: /^Ushbu\ kategoriyada\ (.+?)\ ta\ faol\ ish\ e'loni\ mavjud,\ uni\ o'chirib\ bo'lmaydi$/, ru: 'В этой категории есть $1 активных объявлений, её нельзя удалить', en: 'There are $1 active job postings in this category, it cannot be deleted' },
 ];
 
