@@ -22,6 +22,11 @@ baito-v3-/
 │   ├── Dockerfile            # Backend konteyneri
 │   └── .env                  # Backend muhit o'zgaruvchilari
 │
+├── mobile/                   # 📱 React 19 + TypeScript + Vite (Mobile web & PWA)
+│   ├── src/                  # Mobil UI komponentlar va hooklar
+│   ├── package.json          # Mobil bog'liqliklari
+│   └── vite.config.ts        # Vite konfiguratsiyasi
+│
 ├── docker-compose.yml        # To'liq tizim (DB, Redis, MinIO, Backend, Frontend)
 ├── package.json              # Monorepo boshqaruv skriptlari (npm workspaces)
 └── README.md
@@ -62,6 +67,9 @@ docker-compose up --build
 
 ## 🛠️ Monorepo Skriptlari:
 - `npm run dev:frontend` — Frontend Vite serverini ishga tushirish (Port: 5173).
+- `npm run dev:mobile` — Mobil Vite serverini ishga tushirish (Port: 5174).
 - `npm run dev:backend` — Backend FastAPI serverini ishga tushirish (Port: 8000).
+- `npm run test:frontend` — Frontend Vitest testlarini to'liq yurgizish.
 - `npm run build:frontend` — Frontend ishlab chiqarish buildini yaratish.
 - `npm run lint:frontend` — Frontend TypeScript tekshiruvini yurgizish.
+
