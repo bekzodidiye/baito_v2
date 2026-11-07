@@ -69,8 +69,12 @@ class ConnectionManager:
         chat_id: str,
         user_uid: Optional[str] = None,
         session_id: Optional[str] = None,
+        subprotocol: Optional[str] = None,
     ):
-        await websocket.accept()
+        if subprotocol:
+            await websocket.accept(subprotocol=subprotocol)
+        else:
+            await websocket.accept()
         self.active_connections.setdefault(chat_id, []).append(websocket)
         self.connection_meta[websocket] = {
             "user_uid": user_uid,

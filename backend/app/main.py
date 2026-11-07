@@ -1,4 +1,5 @@
 import logging
+import re
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response, status
@@ -23,6 +24,50 @@ from app.redis_client import redis_client, redis_is_mock
 from app.s3_client import create_bucket_if_not_exists
 
 logger = logging.getLogger(__name__)
+
+
+def _strip_query_from_log_item(item: str) -> str:
+    """Strips query string from URLs, request lines, or path segments."""
+    if not isinstance(item, str) or "?" not in item:
+        return item
+    return re.sub(r"\?([^\s\"]*)", "", item)
+
+
+class RedactQueryFilter(logging.Filter):
+    """Completely strips query strings from all HTTP and WebSocket log records.
+    Guarantees that sensitive authentication parameters (tokens, tickets, secrets, etc.)
+    are never recorded in plain-text access or error logs (CWE-598).
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.args:
+            if isinstance(record.args, tuple):
+                record.args = tuple(
+                    _strip_query_from_log_item(a) if isinstance(a, str) else a
+                    for a in record.args
+                )
+            elif isinstance(record.args, dict):
+                record.args = {
+                    k: _strip_query_from_log_item(v) if isinstance(v, str) else v
+                    for k, v in record.args.items()
+                }
+        if isinstance(record.msg, str) and "?" in record.msg:
+            record.msg = _strip_query_from_log_item(record.msg)
+        return True
+
+
+_query_redact_filter = RedactQueryFilter()
+
+
+def _apply_log_sanitizer():
+    for _logger_name in ("uvicorn.access", "uvicorn.error", "uvicorn", "uvicorn.asgi"):
+        _l = logging.getLogger(_logger_name)
+        _l.addFilter(_query_redact_filter)
+        for _h in _l.handlers:
+            _h.addFilter(_query_redact_filter)
+
+
+_apply_log_sanitizer()
 
 if not settings.SENTRY_DSN and not settings.error_reporting_enabled and settings.is_production:
     # Silence here is the problem: the integration is wired up and the package
@@ -64,6 +109,7 @@ async def lifespan(app: FastAPI):
     from the migration history, so it is limited to development.
     """
     import anyio
+    _apply_log_sanitizer()
     limiter = anyio.to_thread.current_default_thread_limiter()
     limiter.total_tokens = 200
 

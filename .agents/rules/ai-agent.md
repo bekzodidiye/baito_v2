@@ -1,5 +1,6 @@
 ---
-trigger: always_on
+trigger: model_decision
+description: Use when the user asks to write, convert, or format technical project experience into a senior-level portfolio entry, CV snippet, or case study.
 ---
 
 # ROL

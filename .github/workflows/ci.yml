@@ -606,6 +606,14 @@ jobs:
             exit 1
           fi
 
+      - name: 🛡️ Nginx Log Redaction & Upstream Outage Regression Test
+        run: |
+          PY="$(command -v python3.11 || command -v python3 || true)"
+          if [ -z "$PY" ]; then
+            PY="$(ls -d "${PYENV_ROOT:-$HOME/.pyenv}"/versions/3.11.*/bin/python3.11 2>/dev/null | head -1)"
+          fi
+          "$PY" qa/test_nginx_upstream_down_regression.py
+
   # ==========================================================
   # 3b. IMAGE BUILD
   # ==========================================================
