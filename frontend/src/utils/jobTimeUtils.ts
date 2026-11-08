@@ -2,7 +2,8 @@ import { parseWorkDates } from './workDates';
 import { Job } from '../types';
 
 /**
- * Extract clean working hours (e.g. "09:00 - 18:00") from a job
+ * Extract clean working hours from a job.
+ * @example "09:00 - 18:00"
  */
 export const getJobShiftTime = (job: Job): string => {
   if (job.workTime) {
