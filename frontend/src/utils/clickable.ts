@@ -10,6 +10,7 @@ import React from 'react';
  *
  * A `<button>` is still the better answer where the layout allows one; this is
  * for the places where it does not.
+ * @example <div {...clickable(handleClick)}>Clickable Card</div>
  */
 export const clickable = (onActivate: () => void) => ({
   role: 'button',
