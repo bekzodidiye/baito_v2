@@ -36,7 +36,9 @@ export const PRESET_TAGS = [
 ] as const;
 
 /** Normalised form of a tag, so "#TushlikBilan", "tushlikbilan" and
- *  "#TUSHLIKBILAN" are one thing. */
+ *  "#TUSHLIKBILAN" are one thing.
+ *  @example tagKey("#TushlikBilan") => "tushlikbilan"
+ */
 export const tagKey = (tag: string): string =>
   // Trim before stripping the hash, not after: a tag typed as " #Tushlik" does
   // not start with '#' until the space is gone, so the other order left the
