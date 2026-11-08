@@ -220,7 +220,6 @@ class GeoSpatialService:
         candidates = [
             Path(__file__).resolve().parent.parent / "data" / "uzbekistan_regions.json",
             Path(__file__).resolve().parents[3] / "frontend" / "src" / "data" / "geo" / "uzbekistan_regions.json",
-            Path(__file__).resolve().parents[3] / "mobile" / "public" / "uzbekistan_regions_std.json",
         ]
         geojson_path = None
         for p in candidates:
