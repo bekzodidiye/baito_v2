@@ -1,5 +1,6 @@
 import { Job } from '../types';
 
+/** Category metadata and visual styling configuration for job tags and badges. */
 export interface CategoryInfo {
   id: string;
   nameUz: string;
