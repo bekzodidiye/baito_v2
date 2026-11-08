@@ -29,7 +29,9 @@ const parseOne = (token: string): Date | null => {
   return isNaN(d.getTime()) ? null : d;
 };
 
-/** Every day a job is worked, as `YYYY-MM-DD`, in the order written. */
+/** Every day a job is worked, as `YYYY-MM-DD`, in the order written.
+ * @example parseWorkDates("2026-09-02, 2026-09-03") => ["2026-09-02", "2026-09-03"]
+ */
 export const parseWorkDates = (workDate?: string | null): string[] => {
   const raw = (workDate || '').trim();
   if (!raw) return [];
