@@ -31,7 +31,11 @@ export const pluralOf = (
   language: Lang,
 ): string => forms[pluralIndex(n, language)] ?? forms[0];
 
-/** "8 работников", "1 worker", "8 ishchi". */
+/** Returns formatted count with properly inflected plural noun.
+ * @example counted(1, ['worker', 'workers'], 'en') => "1 worker"
+ * @example counted(5, ['работник', 'работника', 'работников'], 'ru') => "5 работников"
+ * @example counted(5, ['ishchi'], 'uz') => "5 ishchi"
+ */
 export const counted = (
   n: number,
   forms: readonly string[],
