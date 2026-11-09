@@ -3,6 +3,7 @@ import { safeGetItem, safeSetItem } from '../context/utils';
 import { UserProfile } from '../context/types';
 import { STORAGE_KEYS, clearAuthStorage, removeStorageItem } from '../constants/storage';
 
+/** Global authentication and user session store state interface. */
 interface AuthState {
   language: 'uz' | 'ru' | 'en';
   setLanguage: (lang: 'uz' | 'ru' | 'en') => void;
