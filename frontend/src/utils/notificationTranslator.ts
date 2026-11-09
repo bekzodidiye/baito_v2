@@ -1,3 +1,7 @@
+/**
+ * Localizes backend push/in-app notification messages into user's current language.
+ * Falls back to original text if language is Uzbek or translation pattern is unmatched.
+ */
 export const translateNotification = (
   text: string,
   lang: 'uz' | 'ru' | 'en'
