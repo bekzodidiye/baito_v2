@@ -63,3 +63,16 @@ uvicorn app.main:app --reload --port 8000
 Server ishga tushgach, brauzerda quyidagi manzillarni oching:
 - **Swagger UI:** `http://127.0.0.1:8000/docs`
 - **ReDoc:** `http://127.0.0.1:8000/redoc`
+
+---
+
+## ⚡ Asinxron Celery Worker & Beat
+
+```bash
+# Celery ishchi jarayonini ishga tushirish:
+celery -A app.celery_app.celery worker --loglevel=info
+
+# Rejalashtirilgan vazifalar uchun (Celery Beat):
+celery -A app.celery_app.celery beat --loglevel=info
+```
+
