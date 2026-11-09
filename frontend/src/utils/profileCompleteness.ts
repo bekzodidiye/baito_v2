@@ -1,5 +1,9 @@
 import { UserProfile } from '../context/types';
 
+/**
+ * Validates whether the user profile has filled all mandatory fields based on active role.
+ * Employers require `aboutMe` (company info); Workers require `lastName`.
+ */
 export const isProfileComplete = (profile: UserProfile | null): boolean => {
   if (!profile) return false;
 
