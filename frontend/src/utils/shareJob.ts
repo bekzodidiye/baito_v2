@@ -7,6 +7,8 @@ import { Language } from '../translations';
  *  no `else`, so on a desktop the button did nothing at all — no sheet, no copy,
  *  no message. Only the job-details header had the fallback. This is that
  *  fallback, in one place, so the three agree.
+ *  @param job Job metadata required for sharing (id, title, company).
+ *  @param language Active UI language for feedback toast messages.
  */
 export const shareJob = async (
   job: { id: string; title: string; company: string },
