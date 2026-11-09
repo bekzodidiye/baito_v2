@@ -1770,9 +1770,9 @@
     "semantic_hash": ""
   },
   "frontend/src/constants/perks.ts": {
-    "mtime": 1790061168.9427192,
-    "seen": 1790061468.348304,
-    "ast_hash": "bcc85936cc497b20cb7e5865ed104ca7",
+    "mtime": 1791610673.6082783,
+    "seen": 1791610687.2623763,
+    "ast_hash": "4740a46fa63dd5a4915c948dca5bfe78",
     "semantic_hash": ""
   },
   "frontend/src/context/AppContext.tsx": {
@@ -2802,9 +2802,9 @@
     "semantic_hash": ""
   },
   "frontend/src/types.ts": {
-    "mtime": 1791266154.2345448,
-    "seen": 1791312832.7320197,
-    "ast_hash": "dd0ddc0bb0443842c18beb26747b4d4a",
+    "mtime": 1791610544.827269,
+    "seen": 1791610558.8410368,
+    "ast_hash": "9dd363734166f7a3b54d6439aa90fc3d",
     "semantic_hash": ""
   },
   "frontend/src/utils/cardUtils.test.ts": {
@@ -2814,10 +2814,10 @@
     "semantic_hash": "b623c460e1ee3ad30d9452e6180d35da"
   },
   "frontend/src/utils/cardUtils.ts": {
-    "mtime": 1787253103.6409502,
-    "seen": 1789900503.0195913,
-    "ast_hash": "3bab0353b5bfc102a6981b092ed948ca",
-    "semantic_hash": "3bab0353b5bfc102a6981b092ed948ca"
+    "mtime": 1791611381.9142087,
+    "seen": 1791611393.8049839,
+    "ast_hash": "aa9c717cb6b8095c0cf183f33e25fc38",
+    "semantic_hash": ""
   },
   "frontend/src/utils/chime.ts": {
     "mtime": 1788865057.6999137,
@@ -2832,10 +2832,10 @@
     "semantic_hash": "6603a5516113203d3cc120106c4b6258"
   },
   "frontend/src/utils/clickable.ts": {
-    "mtime": 1788518943.8360236,
-    "seen": 1789900503.019595,
-    "ast_hash": "2c09f035b0468b7f328475f15612868b",
-    "semantic_hash": "2c09f035b0468b7f328475f15612868b"
+    "mtime": 1791610875.5561757,
+    "seen": 1791610891.1805081,
+    "ast_hash": "ddb72beb3014cbda5a04b5879e70a1d6",
+    "semantic_hash": ""
   },
   "frontend/src/utils/dateFormat.test.ts": {
     "mtime": 1788518943.840771,
@@ -2844,22 +2844,22 @@
     "semantic_hash": "fbb8631883a28ae917943b9c11bdfa5d"
   },
   "frontend/src/utils/dateFormat.ts": {
-    "mtime": 1788518943.8410213,
-    "seen": 1789900503.0195978,
-    "ast_hash": "40e24e2b9bebf08fdaa7af42a9d3be09",
-    "semantic_hash": "40e24e2b9bebf08fdaa7af42a9d3be09"
+    "mtime": 1791610562.560418,
+    "seen": 1791610576.5232608,
+    "ast_hash": "72dbae7b15872d9d07d5d210d0cc79ae",
+    "semantic_hash": ""
   },
   "frontend/src/utils/jobCategoryUtils.ts": {
-    "mtime": 1785828363.4945645,
-    "seen": 1789900503.0195992,
-    "ast_hash": "c2733058e19bf188aae9b864dd540a13",
-    "semantic_hash": "c2733058e19bf188aae9b864dd540a13"
+    "mtime": 1791610957.2565901,
+    "seen": 1791610971.122245,
+    "ast_hash": "df2754abd3d69b1ba6e33564379e080c",
+    "semantic_hash": ""
   },
   "frontend/src/utils/jobDetailHelpers.ts": {
-    "mtime": 1787950822.0141518,
-    "seen": 1789900503.0196004,
-    "ast_hash": "21f3d764a3c5548a68ee40da9e27c4ee",
-    "semantic_hash": "21f3d764a3c5548a68ee40da9e27c4ee"
+    "mtime": 1791611393.5439968,
+    "seen": 1791611393.8049912,
+    "ast_hash": "7144c07614bc41db23bfac11b838c16b",
+    "semantic_hash": ""
   },
   "frontend/src/utils/jobTimeUtils.test.ts": {
     "mtime": 1788518943.8412366,
@@ -2868,34 +2868,34 @@
     "semantic_hash": "774b79034abed2c5302406486df1dcc1"
   },
   "frontend/src/utils/jobTimeUtils.ts": {
-    "mtime": 1790061168.979106,
-    "seen": 1790061468.3486466,
-    "ast_hash": "de660cd52f7adbc95a402b3923f2bfaa",
+    "mtime": 1791610925.6174026,
+    "seen": 1791610938.7632737,
+    "ast_hash": "24c054482e73fd6345b3a4b4d58cacfd",
     "semantic_hash": ""
   },
   "frontend/src/utils/notificationTranslator.ts": {
-    "mtime": 1791271710.777714,
-    "seen": 1791312832.732041,
-    "ast_hash": "6b8aa4707e80a62b5ede6495a457df6c",
+    "mtime": 1791611340.1649818,
+    "seen": 1791611360.6787827,
+    "ast_hash": "9babc98c76a88384b2d9d1aa88490631",
     "semantic_hash": ""
   },
   "frontend/src/utils/profileCompleteness.ts": {
-    "mtime": 1789662612.120995,
-    "seen": 1789900503.0196068,
-    "ast_hash": "e463d28fe681da1f0eb2416c17c277b9",
-    "semantic_hash": "e463d28fe681da1f0eb2416c17c277b9"
+    "mtime": 1791611365.1978493,
+    "seen": 1791611379.6322758,
+    "ast_hash": "cbe0cf3cb4f55fd7c0c146c423d9d825",
+    "semantic_hash": ""
   },
   "frontend/src/utils/shareJob.ts": {
-    "mtime": 1788518943.8421223,
-    "seen": 1789900503.019608,
-    "ast_hash": "8c5458f28eabbe3c27052b0efd97b965",
-    "semantic_hash": "8c5458f28eabbe3c27052b0efd97b965"
+    "mtime": 1791611011.1285956,
+    "seen": 1791611098.1270618,
+    "ast_hash": "6d63092471bfadce3d31bbbbdc4ee740",
+    "semantic_hash": ""
   },
   "frontend/src/utils/toast.ts": {
-    "mtime": 1786083439.5863094,
-    "seen": 1789900503.0196095,
-    "ast_hash": "38b8caf5176f714606983cd13f100e8c",
-    "semantic_hash": "38b8caf5176f714606983cd13f100e8c"
+    "mtime": 1791610991.1257474,
+    "seen": 1791611006.51434,
+    "ast_hash": "c097614864fd5c1134b5fc394349d1a9",
+    "semantic_hash": ""
   },
   "frontend/src/utils/workDates.test.ts": {
     "mtime": 1790061168.9826014,
@@ -2904,9 +2904,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/workDates.ts": {
-    "mtime": 1790061168.983122,
-    "seen": 1790061468.348667,
-    "ast_hash": "d1cc0ee6ffb993150277b4ad28fa11d8",
+    "mtime": 1791610828.5100641,
+    "seen": 1791610850.8085454,
+    "ast_hash": "1ddae25c29804d3f8e1f1c2348262ad6",
     "semantic_hash": ""
   },
   "frontend/src/vite-env.d.ts": {
@@ -6084,9 +6084,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/apiErrorTranslator.ts": {
-    "mtime": 1790886020.1656232,
-    "seen": 1791063691.1350687,
-    "ast_hash": "857089bd8bb724353d9e93df0f584178",
+    "mtime": 1791610526.0374646,
+    "seen": 1791610543.7559564,
+    "ast_hash": "f305ccbf752a63cd7b6c96d0241bf998",
     "semantic_hash": ""
   },
   "frontend/src/utils/bankCard.test.ts": {
@@ -6096,9 +6096,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/bankCard.ts": {
-    "mtime": 1790061168.9789498,
-    "seen": 1790061468.3486276,
-    "ast_hash": "7708f2bfb36ccbe9609cefd223e01808",
+    "mtime": 1791610582.7835414,
+    "seen": 1791610600.3334236,
+    "ast_hash": "d6a227b99cc29ea32a5823a585dcdfb6",
     "semantic_hash": ""
   },
   "frontend/src/utils/money.test.ts": {
@@ -6108,9 +6108,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/money.ts": {
-    "mtime": 1790799423.5992396,
-    "seen": 1791063691.135476,
-    "ast_hash": "5c57b5ac29212c5b53c683c773ada388",
+    "mtime": 1791610650.8924057,
+    "seen": 1791610665.9719503,
+    "ast_hash": "4e8ca4a00c2bd222b0529215907cd550",
     "semantic_hash": ""
   },
   "frontend/src/utils/multiDayJob.test.ts": {
@@ -6132,9 +6132,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/plural.ts": {
-    "mtime": 1790061168.9814754,
-    "seen": 1790061468.3486588,
-    "ast_hash": "f61780c4a25703b7383eb5751684928c",
+    "mtime": 1791610790.9078374,
+    "seen": 1791610810.4886613,
+    "ast_hash": "97d78f7fd4adba3c02feb9797327d713",
     "semantic_hash": ""
   },
   "backend/alembic/versions/75143b7a6f6a_merge_migration_branches.py": {
@@ -6576,9 +6576,21 @@
     "semantic_hash": ""
   },
   "backend/README.md": {
-    "mtime": 1791609859.2013996,
-    "seen": 1791609873.1738222,
-    "ast_hash": "c2371b7444bfaffc61c60c9e057f678d",
+    "mtime": 1791611437.3565438,
+    "seen": 1791611451.2993224,
+    "ast_hash": "8b1be81bb0adce86bcffe5041c959d55",
+    "semantic_hash": ""
+  },
+  "mobile/README.md": {
+    "mtime": 1791610603.786657,
+    "seen": 1791610619.75622,
+    "ast_hash": "ba513e120394724b350be828561a7ecf",
+    "semantic_hash": ""
+  },
+  "frontend/README.md": {
+    "mtime": 1791610894.3782299,
+    "seen": 1791610913.9630713,
+    "ast_hash": "32ee60b2dd128f2578c38de7d5d40608",
     "semantic_hash": ""
   }
 }
