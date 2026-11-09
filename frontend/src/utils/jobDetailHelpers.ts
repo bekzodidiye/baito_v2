@@ -2,6 +2,9 @@ import { Job } from '../types';
 import { Language } from '../translations';
 import { DETAILS_MAP, DetailSet } from '../data/jobDetailsMap';
 
+/**
+ * Resolves a contextual fallback hero banner image URL according to job title keywords.
+ */
 export const getJobHeroImage = (job: Job): string => {
   if (job.imageUrl) return job.imageUrl;
   if (job.logoUrl) return job.logoUrl;
