@@ -36,6 +36,10 @@ const note = (ac: AudioContext, freq: number, startAt: number, seconds: number) 
   osc.stop(startAt + seconds + 0.02);
 };
 
+/**
+ * Plays a pleasant two-note synthesized sound cue using Web Audio API.
+ * Safely fails silently if audio context is unavailable or user gesture is pending.
+ */
 export const chime = (): void => {
   const ac = context();
   if (!ac) return;
