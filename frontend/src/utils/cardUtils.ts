@@ -1,3 +1,7 @@
+/**
+ * Identifies the issuing bank name in Uzbekistan from card's 6-digit BIN prefix.
+ * @example getBankName("8600490012345678") => "Kapitalbank"
+ */
 export const getBankName = (cardNumber: string): string => {
   const clean = cardNumber.replace(/\s/g, '');
   if (clean.length < 6) return '';
