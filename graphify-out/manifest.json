@@ -2634,10 +2634,10 @@
     "semantic_hash": "88359d23b49b884811fc9a182b13d36e"
   },
   "frontend/src/hooks/useDebouncedValue.ts": {
-    "mtime": 1788518943.7204707,
-    "seen": 1789900503.019552,
-    "ast_hash": "514c292e563be1d824ef230a4ea862af",
-    "semantic_hash": "514c292e563be1d824ef230a4ea862af"
+    "mtime": 1791625575.7159162,
+    "seen": 1791625583.216959,
+    "ast_hash": "4b68f03e84b92d636021f2006c0c3903",
+    "semantic_hash": ""
   },
   "frontend/src/hooks/useEmployer.ts": {
     "mtime": 1790869302.9825003,
@@ -2754,9 +2754,9 @@
     "semantic_hash": "8e16ea2c379d76ab6863b98c86dcf79c"
   },
   "frontend/src/store/useAuthStore.ts": {
-    "mtime": 1790863535.8128626,
-    "seen": 1791063691.1349983,
-    "ast_hash": "5d1470381b30a530beef2ab3a4bedf66",
+    "mtime": 1791625588.7589447,
+    "seen": 1791625595.5918126,
+    "ast_hash": "f09b96fe005f4a59ec390b7bbd5fe10c",
     "semantic_hash": ""
   },
   "frontend/src/store/useUIStore.ts": {
@@ -2820,16 +2820,16 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/chime.ts": {
-    "mtime": 1788865057.6999137,
-    "seen": 1789900503.0195925,
-    "ast_hash": "49b5cdbd6cb4bdc0644dddab4da068e1",
-    "semantic_hash": "49b5cdbd6cb4bdc0644dddab4da068e1"
+    "mtime": 1791625556.5730581,
+    "seen": 1791625583.2170298,
+    "ast_hash": "f2259bc66fe7496f1a63cd6ffcd4c66b",
+    "semantic_hash": ""
   },
   "frontend/src/utils/clickable.test.ts": {
-    "mtime": 1788518943.8358817,
-    "seen": 1789900503.0195937,
-    "ast_hash": "6603a5516113203d3cc120106c4b6258",
-    "semantic_hash": "6603a5516113203d3cc120106c4b6258"
+    "mtime": 1791625670.317692,
+    "seen": 1791625690.3281162,
+    "ast_hash": "cd6bfe16b906a2ca5289d44f65e16722",
+    "semantic_hash": ""
   },
   "frontend/src/utils/clickable.ts": {
     "mtime": 1791610875.5561757,
@@ -2838,10 +2838,10 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/dateFormat.test.ts": {
-    "mtime": 1788518943.840771,
-    "seen": 1789900503.0195966,
-    "ast_hash": "fbb8631883a28ae917943b9c11bdfa5d",
-    "semantic_hash": "fbb8631883a28ae917943b9c11bdfa5d"
+    "mtime": 1791625688.087387,
+    "seen": 1791625690.3281238,
+    "ast_hash": "631933e723f8e340efe3bb6f481f699e",
+    "semantic_hash": ""
   },
   "frontend/src/utils/dateFormat.ts": {
     "mtime": 1791610562.560418,
@@ -2898,9 +2898,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/workDates.test.ts": {
-    "mtime": 1790061168.9826014,
-    "seen": 1790061468.3486652,
-    "ast_hash": "188688686b3b731aafa07ffc32107a07",
+    "mtime": 1791625753.2395167,
+    "seen": 1791625769.791308,
+    "ast_hash": "a8a6fa82c63e5078f43a714bbc4a775d",
     "semantic_hash": ""
   },
   "frontend/src/utils/workDates.ts": {
@@ -6078,9 +6078,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/apiErrorTranslator.test.ts": {
-    "mtime": 1790886265.6812193,
-    "seen": 1791063691.1350677,
-    "ast_hash": "75c5d09677c2658d3f6e0c0b73bb693e",
+    "mtime": 1791625733.6965544,
+    "seen": 1791625752.461884,
+    "ast_hash": "c18120ddf217316ddc00d11ea660c670",
     "semantic_hash": ""
   },
   "frontend/src/utils/apiErrorTranslator.ts": {
@@ -6090,9 +6090,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/bankCard.test.ts": {
-    "mtime": 1790061168.9785311,
-    "seen": 1790061468.3486257,
-    "ast_hash": "5ae67af55cfc63bf30ce7b80ad2e93ed",
+    "mtime": 1791625703.3771145,
+    "seen": 1791625707.960154,
+    "ast_hash": "31a574451621508f31f81698c37b797a",
     "semantic_hash": ""
   },
   "frontend/src/utils/bankCard.ts": {
@@ -6102,9 +6102,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/money.test.ts": {
-    "mtime": 1790799571.3181145,
-    "seen": 1791063691.1354752,
-    "ast_hash": "66d05de552332676f01b1369f39d6710",
+    "mtime": 1791625608.2852557,
+    "seen": 1791625622.8671176,
+    "ast_hash": "0428ad7a0fc0bbeffdd97300fbee7e2d",
     "semantic_hash": ""
   },
   "frontend/src/utils/money.ts": {
@@ -6126,9 +6126,9 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/plural.test.ts": {
-    "mtime": 1790061168.9814026,
-    "seen": 1790061468.3486574,
-    "ast_hash": "d44a69e65b2ebe47d2cf6aff8d99a8f0",
+    "mtime": 1791625635.3649056,
+    "seen": 1791625654.5696073,
+    "ast_hash": "be76aa2e5d590b419a08ad8373e7da10",
     "semantic_hash": ""
   },
   "frontend/src/utils/plural.ts": {
