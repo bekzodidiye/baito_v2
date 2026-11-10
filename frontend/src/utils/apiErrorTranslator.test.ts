@@ -14,6 +14,7 @@ import { translateApiError } from './apiErrorTranslator';
 const LANGS = ['ru', 'en'] as const;
 
 /** Letter pairs that occur in Uzbek and in neither of the other two. */
+// Used by tests to detect whether untranslated Uzbek phrases leak into Russian or English views
 const UZBEK = /\b(bo['’]lmaydi|yo['’]q|topilmadi|emas|kerak|qiling|huquqingiz|allaqachon|mumkin|yuborilmagan|tasdiqlang|kiriting)\b/i;
 
 const SAMPLES = [
