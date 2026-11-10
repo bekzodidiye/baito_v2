@@ -6,6 +6,7 @@ const d = new Date(2026, 8, 3, 14, 5);
 
 describe('formatLongDate', () => {
   it('names the month in Uzbek instead of ICU\'s "M09"', () => {
+    // Chrome ICU lacks standalone Uzbek month names, requiring our mapped lookup
     const out = formatLongDate(d, 'uz');
     expect(out).toContain('sentyabr');
     expect(out).not.toMatch(/M\d\d/);
