@@ -18,6 +18,7 @@ describe('a payout card', () => {
   });
 
   it('knows the two schemes that can be paid to', () => {
+    // Only domestic UzCard (8600) and Humo (9860) BINs are supported for direct payout
     expect(schemeOf(UZCARD)).toBe('uzcard');
     expect(schemeOf(HUMO)).toBe('humo');
     expect(schemeOf('4276123456789012')).toBeNull();
