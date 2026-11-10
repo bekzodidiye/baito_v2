@@ -38,6 +38,7 @@ describe('a sum of money', () => {
   });
 
   it('formats raw or messy salary strings in the reader language', () => {
+    // Strips extraneous symbols while ensuring correct locale currency affix
     expect(formatSalary('240000', 'uz')).toContain("so'm");
     expect(formatSalary('240000 UZS', 'ru')).toContain('сум');
     expect(formatSalary('240 000 so\'m', 'en')).toContain('UZS');
