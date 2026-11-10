@@ -696,11 +696,9 @@ jobs:
     name: ⏱️ 4b. Deploy Runner Watchdog
     needs: [test-backend, test-frontend, test-e2e, validate-docker, build-images]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    # The one job deliberately left on the laptop. Everything else moved to
-    # baito-server, but this is the alarm for "the deploy runner is not picking
-    # jobs up" — put it on the runner it watches and it sits in the same queue,
-    # silent, exactly when it is needed. It polls an API; it needs no memory.
-    runs-on: [self-hosted, baito-aws]
+    # Run on GitHub-hosted ubuntu-latest so it never competes for or deadlocks
+    # the single self-hosted production deploy runner.
+    runs-on: ubuntu-latest
     permissions:
       actions: read
     timeout-minutes: 20
