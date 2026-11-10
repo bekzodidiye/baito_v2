@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { PromoCode } from './types';
+import { PortalSelect } from './AdminCustomControls';
 
 interface AddPromoModalProps {
   isOpen: boolean;
@@ -59,14 +60,16 @@ export const AddPromoModal: React.FC<AddPromoModalProps> = ({ isOpen, onClose, o
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1">Tur</label>
-            <select
+            <PortalSelect
               value={discountType}
-              onChange={(e) => setDiscountType(e.target.value as any)}
-              className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs"
-            >
-              <option value="percentage">Foiz (%)</option>
-              <option value="fixed">Fikslangan sum</option>
-            </select>
+              onChange={(val) => setDiscountType(val as any)}
+              containerClassName="w-full"
+              className="w-full justify-between py-2.5"
+              options={[
+                { value: 'percentage', label: 'Foiz (%)' },
+                { value: 'fixed', label: 'Fikslangan sum' },
+              ]}
+            />
           </div>
           <div>
             <label className="text-xs font-semibold text-slate-700 block mb-1">Miqdori</label>

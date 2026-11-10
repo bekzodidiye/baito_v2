@@ -10,6 +10,7 @@ import {
   TrendingUp, FileSpreadsheet, ArrowLeftRight, PieChart, ShieldCheck,
   Download, RefreshCw, X, Loader2
 } from 'lucide-react';
+import { PortalSelect } from './AdminCustomControls';
 
 interface AdminTransactionsProps {
   onRefresh?: () => void;
@@ -350,29 +351,29 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
             {/* Type & Status Filters */}
             <div className="flex items-center gap-2 flex-wrap">
               {/* Type Select */}
-              <select
+              <PortalSelect
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value as any)}
-                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 outline-none focus:border-brand-primary cursor-pointer shadow-2xs"
-              >
-                <option value="all">Barcha turlar</option>
-                <option value="deposit">Depozitlar</option>
-                <option value="payout">Ishchiga to'lov</option>
-                <option value="withdraw">Pul yechish</option>
-                <option value="refund">Qaytarish (Refund)</option>
-              </select>
+                onChange={(val) => setTypeFilter(val as any)}
+                options={[
+                  { value: 'all', label: 'Barcha turlar' },
+                  { value: 'deposit', label: 'Depozitlar', dot: 'bg-emerald-500' },
+                  { value: 'payout', label: "Ishchiga to'lov", dot: 'bg-brand-primary' },
+                  { value: 'withdraw', label: 'Pul yechish', dot: 'bg-amber-500' },
+                  { value: 'refund', label: 'Qaytarish (Refund)', dot: 'bg-purple-500' },
+                ]}
+              />
 
               {/* Status Select */}
-              <select
+              <PortalSelect
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 outline-none focus:border-brand-primary cursor-pointer shadow-2xs"
-              >
-                <option value="all">Barcha holatlar</option>
-                <option value="paid">Muvaffaqiyatli</option>
-                <option value="pending">Kutilmoqda</option>
-                <option value="canceled">Bekor qilingan</option>
-              </select>
+                onChange={(val) => setStatusFilter(val as any)}
+                options={[
+                  { value: 'all', label: 'Barcha holatlar' },
+                  { value: 'paid', label: 'Muvaffaqiyatli', dot: 'bg-emerald-500' },
+                  { value: 'pending', label: 'Kutilmoqda', dot: 'bg-amber-500' },
+                  { value: 'canceled', label: 'Bekor qilingan', dot: 'bg-rose-500' },
+                ]}
+              />
             </div>
           </div>
 

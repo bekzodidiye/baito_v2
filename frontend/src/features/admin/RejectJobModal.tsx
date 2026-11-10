@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { XCircle, X } from 'lucide-react';
+import { PortalSelect } from './AdminCustomControls';
 
 interface RejectJobModalProps {
   jobTitle: string;
@@ -44,17 +45,19 @@ export const RejectJobModal: React.FC<RejectJobModalProps> = ({
 
           <div>
             <label className="block text-slate-700 font-bold mb-1">Rad etish sababi:</label>
-            <select
+            <PortalSelect
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-            >
-              <option value="Noto'g'ri kategoriya">{a.rejectWrongCategory}</option>
-              <option value="Narx ko'rsatilmagan">{a.rejectWrongPrice}</option>
-              <option value="Joylashuv noto'g'ri">{a.rejectWrongLocation}</option>
-              <option value="Spam / Tahlil yetarsiz">{a.rejectSpam}</option>
-              <option value="Boshqa">Boshqa sabab</option>
-            </select>
+              onChange={(val) => setReason(val)}
+              containerClassName="w-full"
+              className="w-full justify-between py-2"
+              options={[
+                { value: 'Noto\'g\'ri kategoriya', label: a.rejectWrongCategory },
+                { value: 'Narx ko\'rsatilmagan', label: a.rejectWrongPrice },
+                { value: 'Joylashuv noto\'g\'ri', label: a.rejectWrongLocation },
+                { value: 'Spam / Tahlil yetarsiz', label: a.rejectSpam },
+                { value: 'Boshqa', label: 'Boshqa sabab' },
+              ]}
+            />
           </div>
 
           <div>

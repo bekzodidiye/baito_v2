@@ -8,6 +8,7 @@ import {
   ShieldAlert, Search, Filter, Download, UserCheck, Ban, CheckCircle2, 
   Clock, ShieldCheck, Activity, Globe, Loader2 
 } from 'lucide-react';
+import { PortalSelect } from './AdminCustomControls';
 
 // Human labels for the action slugs the backend records.
 const ACTION_LABELS: Record<string, string> = {
@@ -157,15 +158,15 @@ export const AdminAuditLogs: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <select
+          <PortalSelect
             value={actionFilter}
-            onChange={(e) => setActionFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
-          >
-            <option value="all">{a.allActions}</option>
-            <option value="Super Admin">Super Admin</option>
-            <option value="Moderator">Moderator</option>
-          </select>
+            onChange={(val) => setActionFilter(val)}
+            options={[
+              { value: 'all', label: a.allActions },
+              { value: 'Super Admin', label: 'Super Admin', dot: 'bg-purple-500' },
+              { value: 'Moderator', label: 'Moderator', dot: 'bg-indigo-500' },
+            ]}
+          />
 
           <button
             onClick={handleExportCSV}

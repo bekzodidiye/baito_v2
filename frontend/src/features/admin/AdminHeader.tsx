@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { AdminTab } from './types';
-import { RefreshCw, Menu, ShieldCheck, Globe, ChevronRight, Activity, Sparkles } from 'lucide-react';
+import { RefreshCw, Menu, ShieldCheck, Globe, ChevronRight, Activity, Sparkles, ChevronDown, Check } from 'lucide-react';
 import { useAuthStore } from "../../store/useAuthStore";
 
 interface AdminHeaderProps {
@@ -19,6 +19,37 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   const language = useAuthStore(s => s.language);
   const setLanguage = useAuthStore(s => s.setLanguage);
   const userProfile = useAuthStore(s => s.userProfile);
+
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
+  const selectRef = useRef<HTMLSelectElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(event.target as Node)) {
+        setIsLangOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLangChange = (newLang: 'uz' | 'ru' | 'en') => {
+    setLanguage(newLang);
+    if (selectRef.current) {
+      selectRef.current.value = newLang;
+      selectRef.current.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    setIsLangOpen(false);
+  };
+
+  const languages = [
+    { code: 'uz' as const, label: "O'zbekcha", flag: "🇺🇿", short: "UZ" },
+    { code: 'ru' as const, label: "Русский", flag: "🇷🇺", short: "RU" },
+    { code: 'en' as const, label: "English", flag: "🇬🇧", short: "EN" },
+  ];
+
+  const currentLang = languages.find(l => l.code === language) || languages[0];
 
   const getTabTitle = (tab: AdminTab) => {
     if (language === 'ru') {
@@ -170,18 +201,56 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           </div>
 
           {/* Language Selector Pill */}
-          <div className="flex items-center gap-1.5 bg-slate-100/90 hover:bg-slate-200/70 p-1 px-2.5 rounded-xl border border-slate-200/80 transition-colors">
-            <Globe size={13} className="text-slate-500 shrink-0" />
+          <div className="relative" ref={langRef}>
+            {/* Hidden select for testing library & accessibility */}
             <select
+              ref={selectRef}
               value={language}
               onChange={(e) => setLanguage(e.target.value as 'uz' | 'ru' | 'en')}
-              className="bg-transparent font-extrabold text-xs text-slate-800 focus:outline-none cursor-pointer pr-1"
+              tabIndex={-1}
               aria-label="Tilni tanlash"
+              className="sr-only pointer-events-none"
             >
               <option value="uz">UZ</option>
               <option value="ru">RU</option>
               <option value="en">EN</option>
             </select>
+
+            <button
+              type="button"
+              onClick={() => setIsLangOpen(!isLangOpen)}
+              className="flex items-center gap-1.5 bg-slate-100/90 hover:bg-slate-200/70 p-1 px-2.5 rounded-xl border border-slate-200/80 transition-colors cursor-pointer text-xs font-extrabold text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+            >
+              <Globe size={13} className="text-slate-500 shrink-0" />
+              <span>{currentLang.short}</span>
+              <ChevronDown size={11} className={`text-slate-400 transition-transform duration-200 ${isLangOpen ? 'rotate-180 text-brand-primary' : ''}`} />
+            </button>
+
+            {isLangOpen && (
+              <div className="absolute right-0 mt-1.5 w-36 bg-white border border-slate-200/90 rounded-2xl shadow-xl overflow-hidden py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+                {languages.map((item) => {
+                  const isSelected = language === item.code;
+                  return (
+                    <button
+                      key={item.code}
+                      type="button"
+                      onClick={() => handleLangChange(item.code)}
+                      className={`w-full px-3 py-1.5 text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                        isSelected
+                          ? 'bg-brand-primary/10 text-brand-primary font-bold'
+                          : 'text-slate-700 hover:bg-slate-50 font-medium'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>{item.flag}</span>
+                        <span>{item.label}</span>
+                      </div>
+                      {isSelected && <Check size={13} className="text-brand-primary" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Refresh Action Button */}

@@ -21,6 +21,7 @@ import { Orb } from "@/components/ui/thinking-orbs";
 import { BanUserModal } from './BanUserModal';
 import { UserTabsMain } from './UserTabsMain';
 import { UserTabsExtra } from './UserTabsExtra';
+import { RoleSelect } from './AdminCustomControls';
 
 interface UserDetailModalProps {
   user: AdminUser;
@@ -236,15 +237,10 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
         <div className="p-3.5 sm:p-4 bg-white border-t border-slate-100 flex items-center justify-between shrink-0 text-xs gap-3">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">Rol:</span>
-            <select
+            <RoleSelect
               value={user.role}
-              onChange={(e) => handleChangeRole(user.id, e.target.value)}
-              className="bg-slate-50 font-bold text-xs text-slate-700 px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-primary/10 transition-all cursor-pointer shadow-2xs"
-            >
-              <option value="worker">{a.roleWorker}</option>
-              <option value="employer">{a.roleEmployer}</option>
-              <option value="admin">Admin</option>
-            </select>
+              onChange={(val) => handleChangeRole(user.id, val)}
+            />
           </div>
 
           <div className="flex items-center gap-2">

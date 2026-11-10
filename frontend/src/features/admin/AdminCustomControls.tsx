@@ -10,7 +10,10 @@ export const CustomSelect = ({
   options, 
   placeholder,
   className = "",
-  containerClassName = ""
+  containerClassName = "",
+  name,
+  id,
+  'aria-label': ariaLabel,
 }: { 
   value: string; 
   onChange: (val: string) => void; 
@@ -18,12 +21,16 @@ export const CustomSelect = ({
   placeholder?: string;
   className?: string;
   containerClassName?: string;
+  name?: string;
+  id?: string;
+  'aria-label'?: string;
 }) => {
   const language = useAuthStore(st => st.language);
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const placeholderText = placeholder ?? a.chooseLabel;
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const selectRef = useRef<HTMLSelectElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -37,8 +44,33 @@ export const CustomSelect = ({
 
   const selectedOption = options.find(o => o.value === value);
 
+  const handleSelect = (val: string) => {
+    onChange(val);
+    if (selectRef.current) {
+      selectRef.current.value = val;
+      selectRef.current.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    setIsOpen(false);
+  };
+
   return (
     <div className={`relative ${containerClassName}`} ref={containerRef}>
+      {/* Hidden real select for testing-library & accessibility */}
+      <select
+        ref={selectRef}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        tabIndex={-1}
+        name={name}
+        id={id}
+        aria-label={ariaLabel}
+        className="sr-only pointer-events-none"
+      >
+        {options.map(opt => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -56,10 +88,7 @@ export const CustomSelect = ({
               <button
                 key={opt.value}
                 type="button"
-                onClick={() => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
+                onClick={() => handleSelect(opt.value)}
                 className={`w-full text-left px-3.5 py-2 text-xs transition-colors flex items-center justify-between cursor-pointer ${
                   isSelected 
                     ? 'bg-brand-primary/10 text-brand-primary font-bold' 
@@ -72,6 +101,365 @@ export const CustomSelect = ({
             );
           })}
         </div>
+      )}
+    </div>
+  );
+};
+
+export interface PortalSelectOption {
+  value: string;
+  label: string;
+  color?: string;
+  dot?: string;
+}
+
+export const PortalSelect = ({
+  value,
+  onChange,
+  options,
+  placeholder,
+  className = "",
+  containerClassName = "",
+  name,
+  id,
+  'aria-label': ariaLabel,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  options: PortalSelectOption[];
+  placeholder?: string;
+  className?: string;
+  containerClassName?: string;
+  name?: string;
+  id?: string;
+  'aria-label'?: string;
+}) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
+  const placeholderText = placeholder ?? a.chooseLabel;
+  const [isOpen, setIsOpen] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number; width: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const selectRef = useRef<HTMLSelectElement>(null);
+
+  const selectedOption = options.find(o => o.value === value);
+
+  const updatePosition = () => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    const dropdownHeight = Math.min(280, options.length * 38 + 16);
+    const minWidth = Math.max(rect.width, 170);
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUpwards = spaceBelow < dropdownHeight && rect.top > dropdownHeight;
+
+    const top = openUpwards ? rect.top - dropdownHeight - 4 : rect.bottom + 4;
+    const left = Math.max(8, Math.min(rect.left, (window.innerWidth || 1200) - minWidth - 8));
+
+    setCoords({ top, left, width: minWidth });
+  };
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isOpen) {
+      updatePosition();
+    }
+    setIsOpen(prev => !prev);
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        buttonRef.current && !buttonRef.current.contains(target) &&
+        dropdownRef.current && !dropdownRef.current.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleScrollOrResize = () => {
+      updatePosition();
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScrollOrResize, true);
+    window.addEventListener("resize", handleScrollOrResize);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      window.removeEventListener("resize", handleScrollOrResize);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (val: string) => {
+    onChange(val);
+    if (selectRef.current) {
+      selectRef.current.value = val;
+      selectRef.current.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    setIsOpen(false);
+  };
+
+  return (
+    <div className={`relative inline-block ${containerClassName}`} onClick={(e) => e.stopPropagation()}>
+      {/* Hidden real select for testing-library & accessibility */}
+      <select
+        ref={selectRef}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        tabIndex={-1}
+        name={name}
+        id={id}
+        aria-label={ariaLabel}
+        className="sr-only pointer-events-none"
+      >
+        {options.map(opt => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={handleToggle}
+        className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50/80 text-xs font-bold text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all shadow-2xs ${className}`}
+      >
+        <span className="flex items-center gap-2 truncate">
+          {selectedOption?.dot && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${selectedOption.dot}`} />}
+          <span className="truncate">{selectedOption ? selectedOption.label : <span className="text-slate-400 italic">{placeholderText}</span>}</span>
+        </span>
+        <ChevronDown size={13} className={`text-slate-400 transition-transform duration-200 shrink-0 ml-1 ${isOpen ? 'rotate-180 text-brand-primary' : ''}`} />
+      </button>
+
+      {isOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          ref={dropdownRef}
+          onClick={(e) => e.stopPropagation()}
+          style={coords ? {
+            position: 'fixed',
+            top: `${coords.top}px`,
+            left: `${coords.left}px`,
+            minWidth: `${coords.width}px`,
+            zIndex: 9999,
+          } : {
+            position: 'fixed',
+            zIndex: 9999,
+          }}
+          className="bg-white border border-slate-200/90 rounded-2xl shadow-2xl overflow-hidden py-1.5 animate-in fade-in zoom-in-95 duration-100 max-h-72 overflow-y-auto no-scrollbar"
+        >
+          {options.map((opt) => {
+            const isSelected = value === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSelect(opt.value);
+                }}
+                className={`w-full text-left px-3.5 py-2 text-xs transition-colors flex items-center justify-between cursor-pointer ${
+                  isSelected 
+                    ? 'bg-slate-50/90 font-bold text-slate-900' 
+                    : 'text-slate-600 hover:bg-slate-50 font-medium'
+                }`}
+              >
+                <div className="flex items-center gap-2 truncate pr-2">
+                  {opt.dot && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${opt.dot}`} />}
+                  <span className="truncate">{opt.label}</span>
+                </div>
+                {isSelected && <Check size={13} className="text-brand-primary shrink-0" />}
+              </button>
+            );
+          })}
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+};
+
+export const RoleSelect = ({
+  value,
+  onChange,
+  className = "",
+  disabled = false,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  className?: string;
+  disabled?: boolean;
+}) => {
+  const language = useAuthStore(st => st.language);
+  const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
+  const [isOpen, setIsOpen] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const selectRef = useRef<HTMLSelectElement>(null);
+
+  const roleConfigs: Record<string, { label: string; badgeClass: string; dotClass: string }> = {
+    worker: {
+      label: a.roleWorker,
+      badgeClass: 'bg-brand-primary/10 text-brand-primary border-brand-primary/20 hover:bg-brand-primary/15',
+      dotClass: 'bg-brand-primary',
+    },
+    employer: {
+      label: a.roleEmployer,
+      badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100',
+      dotClass: 'bg-indigo-500',
+    },
+    admin: {
+      label: 'Admin',
+      badgeClass: 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100',
+      dotClass: 'bg-purple-500',
+    },
+  };
+
+  const currentRole = roleConfigs[value] || {
+    label: value,
+    badgeClass: 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200',
+    dotClass: 'bg-slate-400',
+  };
+
+  const roles = [
+    { value: 'worker', ...roleConfigs.worker },
+    { value: 'employer', ...roleConfigs.employer },
+    { value: 'admin', ...roleConfigs.admin },
+  ];
+
+  const updatePosition = () => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    const dropdownHeight = 150;
+    const dropdownWidth = 160;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUpwards = spaceBelow < dropdownHeight && rect.top > dropdownHeight;
+
+    const top = openUpwards ? rect.top - dropdownHeight - 4 : rect.bottom + 4;
+    const left = Math.max(8, Math.min(rect.left, (window.innerWidth || 1200) - dropdownWidth - 8));
+
+    setCoords({ top, left });
+  };
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (disabled) return;
+    if (!isOpen) {
+      updatePosition();
+    }
+    setIsOpen(prev => !prev);
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        buttonRef.current && !buttonRef.current.contains(target) &&
+        dropdownRef.current && !dropdownRef.current.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleScrollOrResize = () => {
+      updatePosition();
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScrollOrResize, true);
+    window.addEventListener("resize", handleScrollOrResize);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      window.removeEventListener("resize", handleScrollOrResize);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (newRole: string) => {
+    onChange(newRole);
+    if (selectRef.current) {
+      selectRef.current.value = newRole;
+      selectRef.current.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+      {/* Hidden real select for testing-library & accessibility */}
+      <select
+        ref={selectRef}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        tabIndex={-1}
+        aria-label="Foydalanuvchi roli"
+        className="sr-only pointer-events-none"
+      >
+        <option value="worker">{a.roleWorker}</option>
+        <option value="employer">{a.roleEmployer}</option>
+        <option value="admin">Admin</option>
+      </select>
+
+      <button
+        ref={buttonRef}
+        type="button"
+        disabled={disabled}
+        onClick={handleToggle}
+        className={`font-bold text-xs px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${currentRole.badgeClass} ${className} ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+      >
+        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${currentRole.dotClass}`} />
+        <span>{currentRole.label}</span>
+        <ChevronDown size={13} className={`transition-transform duration-200 ml-0.5 opacity-60 ${isOpen ? 'rotate-180 opacity-100' : ''}`} />
+      </button>
+
+      {isOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          ref={dropdownRef}
+          onClick={(e) => e.stopPropagation()}
+          style={coords ? {
+            position: 'fixed',
+            top: `${coords.top}px`,
+            left: `${coords.left}px`,
+            zIndex: 9999,
+          } : {
+            position: 'fixed',
+            zIndex: 9999,
+          }}
+          className="w-44 bg-white border border-slate-200/90 rounded-2xl shadow-2xl overflow-hidden py-1.5 animate-in fade-in zoom-in-95 duration-100"
+        >
+          {roles.map((r) => {
+            const isSelected = value === r.value;
+            return (
+              <button
+                key={r.value}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSelect(r.value);
+                }}
+                className={`w-full text-left px-3.5 py-2 text-xs transition-colors flex items-center justify-between cursor-pointer ${
+                  isSelected 
+                    ? 'bg-slate-50/90 font-bold text-slate-900' 
+                    : 'text-slate-600 hover:bg-slate-50 font-medium'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className={`w-1.5 h-1.5 rounded-full ${r.dotClass}`} />
+                  <span>{r.label}</span>
+                </div>
+                {isSelected && <Check size={13} className="text-brand-primary shrink-0" />}
+              </button>
+            );
+          })}
+        </div>,
+        document.body
       )}
     </div>
   );

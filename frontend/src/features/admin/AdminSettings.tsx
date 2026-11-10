@@ -6,6 +6,7 @@ import {
   Sliders, Save, CheckCircle2, ShieldAlert, ToggleLeft, ToggleRight, 
   Plus, X, Percent, Banknote, Shield, Clock, Trash2, UserCheck, ShieldCheck
 } from 'lucide-react';
+import { PortalSelect } from './AdminCustomControls';
 
 interface AdminSettingsProps {
   settings: SystemSettings;
@@ -368,15 +369,17 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Rol</label>
-                <select
+                <PortalSelect
                   value={newAdminRole}
-                  onChange={(e) => setNewAdminRole(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
-                >
-                  <option value="Moderator Admin">Moderator Admin</option>
-                  <option value="Super Admin">Super Admin</option>
-                  <option value="Moliya Admin">Moliya Admin</option>
-                </select>
+                  onChange={(val) => setNewAdminRole(val)}
+                  containerClassName="w-full"
+                  className="w-full justify-between py-2.5"
+                  options={[
+                    { value: 'Moderator Admin', label: 'Moderator Admin', dot: 'bg-indigo-500' },
+                    { value: 'Super Admin', label: 'Super Admin', dot: 'bg-purple-500' },
+                    { value: 'Moliya Admin', label: 'Moliya Admin', dot: 'bg-emerald-500' },
+                  ]}
+                />
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">

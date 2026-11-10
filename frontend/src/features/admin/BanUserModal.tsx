@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { AlertTriangle, X, Ban } from 'lucide-react';
+import { PortalSelect } from './AdminCustomControls';
 
 interface BanUserModalProps {
   userName: string;
@@ -44,17 +45,19 @@ export const BanUserModal: React.FC<BanUserModalProps> = ({
 
           <div>
             <label className="block text-slate-700 font-bold mb-1">Bloklash Sababi:</label>
-            <select
+            <PortalSelect
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-            >
-              <option value="Qoidabuzarlik">Platforma qoidalarini buzish</option>
-              <option value="Spam / Reklama">{a.banSpam}</option>
-              <option value="Firibgarlik">{a.banFraud}</option>
-              <option value="Haqorat / Noto'g'ri xulq">{a.banAbuse}</option>
-              <option value="Boshqa">Boshqa sabab</option>
-            </select>
+              onChange={(val) => setReason(val)}
+              containerClassName="w-full"
+              className="w-full justify-between py-2"
+              options={[
+                { value: 'Qoidabuzarlik', label: 'Platforma qoidalarini buzish' },
+                { value: 'Spam / Reklama', label: a.banSpam },
+                { value: 'Firibgarlik', label: a.banFraud },
+                { value: 'Haqorat / Noto\'g\'ri xulq', label: a.banAbuse },
+                { value: 'Boshqa', label: 'Boshqa sabab' },
+              ]}
+            />
           </div>
 
           <div>

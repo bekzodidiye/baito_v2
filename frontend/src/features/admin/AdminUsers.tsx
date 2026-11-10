@@ -10,6 +10,7 @@ import {
 import { UserDetailModal } from './UserDetailModal';
 import { BanUserModal } from './BanUserModal';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
+import { RoleSelect } from './AdminCustomControls';
 
 interface AdminUsersProps {
   users: AdminUser[];
@@ -261,24 +262,10 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onAddBalance, onC
 
                     {/* Role Selection Dropdown */}
                     <td className="p-4">
-                      <div className="relative inline-block">
-                        <select
-                          value={u.role}
-                          onChange={(e) => setRoleChange({ user: u, role: e.target.value })}
-                          className={`font-bold text-xs px-3 py-1.5 rounded-xl border appearance-none pr-8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all ${
-                            u.role === 'admin'
-                              ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
-                              : u.role === 'employer'
-                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
-                              : 'bg-brand-primary/10 text-brand-primary border-brand-primary/20 hover:bg-brand-primary/15'
-                          }`}
-                        >
-                          <option value="worker">{a.roleWorker}</option>
-                          <option value="employer">{a.roleEmployer}</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                        <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500" />
-                      </div>
+                      <RoleSelect
+                        value={u.role}
+                        onChange={(val) => setRoleChange({ user: u, role: val })}
+                      />
                     </td>
 
                     {/* Phone Column with Copy */}
