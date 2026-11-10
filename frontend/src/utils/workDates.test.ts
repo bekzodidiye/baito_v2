@@ -21,6 +21,7 @@ describe('parseWorkDates', () => {
   });
 
   it('does not mistake an ISO date for a range', () => {
+    // Hyphens in YYYY-MM-DD should not be treated as date range delimiters
     expect(parseWorkDates('2026-09-02')).toEqual(['2026-09-02']);
   });
 
