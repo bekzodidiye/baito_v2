@@ -14,6 +14,7 @@ const keyEvent = (key: string) => {
 
 describe('clickable', () => {
   it('gives the element the role and focusability a button has', () => {
+    // Meets WCAG requirements for interactive custom controls
     const props = clickable(() => {});
     expect(props.role).toBe('button');
     expect(props.tabIndex).toBe(0);
