@@ -44,6 +44,7 @@ describe('English has two forms, Uzbek one', () => {
   });
 
   it('never inflects after a numeral in Uzbek', () => {
+    // In Uzbek grammar, nouns preceded by quantitative numerals remain singular
     for (const n of [0, 1, 2, 5, 11, 21]) {
       expect(counted(n, UZ_WORKER, 'uz')).toBe(`${n} ishchi`);
     }
