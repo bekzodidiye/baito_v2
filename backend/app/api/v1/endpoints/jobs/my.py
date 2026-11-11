@@ -53,8 +53,24 @@ def get_my_jobs(
     ) if job_ids else []
 
     hired_counts = {}
-    for a in apps:
-        hired_counts[a.jobId] = hired_counts.get(a.jobId, 0) + 1
+    job_hired_workers = {}
+    if apps:
+        for a in apps:
+            hired_counts[a.jobId] = hired_counts.get(a.jobId, 0) + 1
+
+        worker_ids = list({a.workerId for a in apps if a.workerId})
+        if worker_ids:
+            hired_users = db.query(models.User).filter(models.User.id.in_(worker_ids)).all()
+            user_map = {u.id: u for u in hired_users}
+            for a in apps:
+                u = user_map.get(a.workerId)
+                if u:
+                    job_hired_workers.setdefault(a.jobId, []).append({
+                        "id": u.id,
+                        "name": u.name or "Foydalanuvchi",
+                        "phone": u.phone,
+                        "avatarUrl": u.avatarUrl,
+                    })
 
     # One query for every job on the page rather than one per card. Only jobs
     # that have actually been invoiced appear here; the rest get None, which is
@@ -82,7 +98,7 @@ def get_my_jobs(
             "hiredCount": hired_cnt,
             "vacancies": vacancies_num,
             "appliedDate": None,
-            "hiredWorkers": [],
+            "hiredWorkers": job_hired_workers.get(job.id, []),
         })
 
         payout = payouts.get(job.id)
