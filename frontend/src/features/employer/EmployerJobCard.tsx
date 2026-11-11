@@ -21,17 +21,23 @@ interface EmployerJobCardProps {
 export const getJobBannerImage = (job: Job): string => {
   if (job.imageUrl) return job.imageUrl;
   if (job.logoUrl) return job.logoUrl;
-  const t = job.title.toLowerCase();
+  const t = `${job.title} ${job.company || ''} ${(job as any).category || ''}`.toLowerCase();
   if (t.includes('auto') || t.includes('usta') || t.includes('servis')) {
-    return 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=600&auto=format&fit=crop&q=80';
+    return 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=800&auto=format&fit=crop&q=80';
   }
-  if (t.includes('qadoq') || t.includes('saralovchi') || t.includes('ombor')) {
-    return 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&auto=format&fit=crop&q=80';
+  if (t.includes('qadoq') || t.includes('saralovchi') || t.includes('ombor') || t.includes('construction') || t.includes('qurilish')) {
+    return 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=80';
   }
-  if (t.includes('kassir') || t.includes('sotuvchi') || t.includes('magazin')) {
-    return 'https://images.unsplash.com/photo-1556742049-0a67568d049f?w=600&auto=format&fit=crop&q=80';
+  if (t.includes('kassir') || t.includes('sotuvchi') || t.includes('magazin') || t.includes('retail') || t.includes('korzinka') || t.includes('savdo')) {
+    return 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&auto=format&fit=crop&q=80';
   }
-  return 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=600&auto=format&fit=crop&q=80';
+  if (t.includes('kuryer') || t.includes('courier') || t.includes('yetkaz')) {
+    return 'https://images.unsplash.com/photo-1616401784845-180882ba9ba8?w=800&auto=format&fit=crop&q=80';
+  }
+  if (t.includes('ofitsiant') || t.includes('kafe') || t.includes('restoran') || t.includes('food') || t.includes('oshpaz')) {
+    return 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80';
+  }
+  return 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&auto=format&fit=crop&q=80';
 };
 
 export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({

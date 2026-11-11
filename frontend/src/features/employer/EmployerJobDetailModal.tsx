@@ -1,9 +1,28 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Clock, Users, Calendar, MapPin, CheckCircle2, Trash2, ChevronRight, Zap } from 'lucide-react';
+import {
+  ArrowLeft,
+  X,
+  Clock,
+  Users,
+  Calendar,
+  MapPin,
+  CheckCircle2,
+  Trash2,
+  ChevronRight,
+  Zap,
+  Building2,
+  Wallet,
+  Share2,
+  Phone,
+} from 'lucide-react';
 import { Job } from '../../types';
 import { getJobDetails } from '../../utils/jobDetailHelpers';
 import { getJobLocalizedFields } from '../../utils/jobTranslationUtils';
+import { getJobCategory } from '../../utils/jobCategoryUtils';
+import { formatSalary } from '../../utils/money';
+import { getJobShiftTime, getJobDateDisplay, getJobDuration } from '../../utils/jobTimeUtils';
+import { shareJob } from '../../utils/shareJob';
 import { getJobBannerImage } from './EmployerJobCard';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 
@@ -25,7 +44,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
   onConfirmStart,
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  
+
   if (!job) return null;
 
   const localized = getJobLocalizedFields(job, language);
@@ -34,187 +53,369 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
   const requirements = localized.requirements ? localized.requirements.split('\n').filter(Boolean) : fallback.requirements;
 
   const hired = Number(job.hiredCount ?? 0);
-  const vac = Number(job.vacancies ?? (job.neededWorkers ? parseInt(job.neededWorkers) : 1));
-  const bannerUrl = getJobBannerImage(job);
+  const vac = Math.max(1, Number(job.vacancies ?? (job.neededWorkers ? parseInt(job.neededWorkers, 10) : 1)));
+  const progressPercent = Math.min(100, Math.round((hired / vac) * 100));
 
-  // Fallbacks for data that might not be in the Job type directly
-  const category = (job as any).category || 'Savdo & Kassirlik';
+  const bannerUrl = getJobBannerImage(job);
+  const catInfo = getJobCategory(job);
+  const categoryLabel = language === 'ru' ? catInfo.nameRu : language === 'en' ? catInfo.nameEn : catInfo.nameUz;
   const company = job.company || 'Korzinka';
+
+  const renderStatusBadge = () => {
+    if (job.status === 'pending') {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/95 backdrop-blur-md text-white text-xs font-bold shadow-md">
+          <Clock size={14} strokeWidth={2.5} />
+          <span>{language === 'ru' ? 'На модерации' : language === 'en' ? 'Pending approval' : 'Tasdiqlanishi kutilmoqda'}</span>
+        </div>
+      );
+    }
+    if (job.status === 'in_progress') {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600/95 backdrop-blur-md text-white text-xs font-bold shadow-md">
+          <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+          <span>{language === 'ru' ? 'В процессе' : language === 'en' ? 'In progress' : 'Jarayonda'}</span>
+        </div>
+      );
+    }
+    if (job.status === 'start_requested') {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-600/95 backdrop-blur-md text-white text-xs font-bold shadow-md">
+          <Clock size={14} strokeWidth={2.5} />
+          <span>{language === 'ru' ? 'Ожидает начала' : language === 'en' ? 'Start requested' : "Boshlash so'ralgan"}</span>
+        </div>
+      );
+    }
+    if (job.status === 'completed') {
+      return (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-600/95 backdrop-blur-md text-white text-xs font-bold shadow-md">
+          <CheckCircle2 size={14} strokeWidth={2.5} />
+          <span>{language === 'ru' ? 'Завершено' : language === 'en' ? 'Completed' : 'Tugallangan'}</span>
+        </div>
+      );
+    }
+    return (
+      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/85 backdrop-blur-md text-white text-xs font-bold border border-white/20 shadow-md">
+        <span className="w-2 h-2 rounded-full bg-emerald-400" />
+        <span>{language === 'ru' ? 'Активно' : language === 'en' ? 'Active' : "Faol e'lon"}</span>
+      </div>
+    );
+  };
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/40 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/60 backdrop-blur-sm">
         <motion.div
-          initial={{ opacity: 0, y: 100 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 100 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="bg-white rounded-t-[24px] sm:rounded-3xl shadow-2xl w-full max-w-xl max-h-[96vh] sm:max-h-[85vh] flex flex-col overflow-hidden relative"
+          initial={{ opacity: 0, y: 40, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 40, scale: 0.98 }}
+          transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+          className="bg-white rounded-t-[28px] sm:rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] sm:max-h-[88vh] flex flex-col overflow-hidden relative border border-slate-100"
         >
-            {/* Top White Header */}
-          <div className="flex items-center justify-between px-5 py-4 bg-white z-10 shrink-0">
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={onClose} 
-                className="text-slate-900 hover:text-brand-primary transition-colors cursor-pointer w-8 h-8 flex items-center justify-center -ml-2"
+          {/* Top Sticky Header */}
+          <div className="flex items-center justify-between px-5 py-3.5 bg-white border-b border-slate-100/90 z-20 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={onClose}
+                aria-label="Back"
+                className="w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
               >
-                <ArrowLeft size={24} strokeWidth={2.5} />
+                <ArrowLeft size={18} strokeWidth={2.5} />
               </button>
-              <h2 className="text-[17px] font-bold text-slate-900">
-                {language === 'uz' ? 'Ish tafsilotlari' : language === 'ru' ? 'Детали работы' : 'Job details'}
-              </h2>
+              <div>
+                <h2 className="text-[16px] font-bold text-slate-900 leading-tight">
+                  {language === 'ru' ? 'Детали работы' : language === 'en' ? 'Job details' : 'Ish tafsilotlari'}
+                </h2>
+                <span className="text-[11px] font-medium text-slate-400 block leading-none mt-0.5">
+                  ID: #{job.id ? job.id.slice(0, 8) : ''}
+                </span>
+              </div>
             </div>
-            {/* Action buttons removed as requested */}
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => shareJob({ id: job.id, title: localized.title, company }, language)}
+                title={language === 'ru' ? 'Поделиться' : language === 'en' ? 'Share' : 'Ulashish'}
+                className="w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <Share2 size={16} strokeWidth={2.2} />
+              </button>
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X size={18} strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
 
-          {/* Scrollable Area */}
-          <div className="flex-1 overflow-y-auto no-scrollbar bg-slate-50 relative pb-24">
-            
+          {/* Scrollable Modal Content */}
+          <div className="flex-1 overflow-y-auto no-scrollbar bg-slate-50/60 relative">
             {/* Image Banner */}
-            <div className="w-full h-[240px] relative shrink-0 bg-slate-900">
+            <div className="w-full h-[200px] sm:h-[220px] relative shrink-0 bg-slate-950 overflow-hidden">
               <img
                 src={bannerUrl}
                 alt={job.title}
-                className="w-full h-full object-cover opacity-95"
+                className="w-full h-full object-cover opacity-90 transition-transform duration-700 hover:scale-105"
                 loading="lazy"
-               onError={(e) => {
-        const target = e.currentTarget;
-        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
-        if (target.src !== fallback) {
-          target.src = fallback;
-        }
-      }} />
-              
-              {/* Top-left Badge (like "12 soat qoldi") */}
-              {job.status === 'pending' ? (
-                <div className="absolute top-4 left-4 bg-amber-500 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold text-[13px] shadow-sm">
-                  <Clock size={16} strokeWidth={2.5} />
-                  <span>{language === 'ru' ? "На модерации" : language === 'en' ? "Pending approval" : "Tasdiqlanishi kutilmoqda"}</span>
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  const fallback = 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=600&auto=format&fit=crop&q=80';
+                  if (target.src !== fallback) {
+                    target.src = fallback;
+                  }
+                }}
+              />
+
+              {/* Gradient scrim for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-black/30 pointer-events-none" />
+
+              {/* Status Badge (Top-left) */}
+              <div className="absolute top-4 left-4 z-10">
+                {renderStatusBadge()}
+              </div>
+
+              {/* Duration Pill (Top-right) */}
+              <div className="absolute top-4 right-4 z-10">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md text-white/95 text-xs font-semibold border border-white/10 shadow-md">
+                  <Clock size={13} strokeWidth={2.2} />
+                  <span>{getJobDuration(job, language)}</span>
                 </div>
-              ) : job.status === 'in_progress' ? (
-                <div className="absolute top-4 left-4 bg-emerald-600 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold text-[13px] shadow-sm">
-                  <Clock size={16} strokeWidth={2.5} />
-                  <span>{language === 'ru' ? "В работе" : language === 'en' ? "In progress" : "Jarayonda"}</span>
-                </div>
-              ) : (
-                <div className="absolute top-4 left-4 bg-[#FF004D] text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold text-[13px] shadow-sm">
-                  <Clock size={16} strokeWidth={2.5} />
-                  <span>{language === 'ru' ? '12 часов осталось' : language === 'en' ? '12 hours left' : '12 soat qoldi'}</span>
-                </div>
-              )}
+              </div>
             </div>
 
-            {/* Body Content Overlapping Image */}
-            <div className="bg-white relative z-20 rounded-t-[24px] -mt-6 px-5 pt-6 pb-8 min-h-[400px]">
-              
-              {/* Category & Company */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-md text-[13px] font-bold border border-emerald-100/50">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  {category}
+            {/* Overlapping Content Container */}
+            <div className="bg-white relative z-10 rounded-t-[26px] -mt-5 px-5 sm:px-6 pt-5 pb-8 shadow-sm">
+              {/* Category & Company Header */}
+              <div className="flex items-center justify-between gap-3 mb-2.5">
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${catInfo.badgeBg} ${catInfo.badgeText} border ${catInfo.borderClass}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${catInfo.dotBg}`} />
+                  {categoryLabel}
                 </div>
-                <span className="text-slate-300 mx-1">•</span>
-                <span className="text-slate-400 font-bold text-[14px]">{company}</span>
+
+                <div className="flex items-center gap-1.5 text-slate-500 font-semibold text-xs sm:text-sm">
+                  <Building2 size={14} className="text-slate-400 shrink-0" />
+                  <span className="truncate max-w-[180px]">{company}</span>
+                </div>
               </div>
 
               {/* Job Title */}
-              <h1 className="text-[22px] font-black text-[#1A1A40] mb-4 leading-tight">{localized.title}</h1>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight mb-4 tracking-tight">
+                {localized.title}
+              </h1>
 
-              {/* Tags Row */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                <div className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg text-[13px] font-bold flex items-center gap-1.5 border border-indigo-100/50">
-                  <Users size={16} strokeWidth={2.5} /> {language === 'uz' ? 'Ishchilar:' : language === 'ru' ? 'Работники:' : 'Workers:'} {hired}/{vac}
+              {/* Recruitment Progress Card */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-slate-50 border border-blue-100/80 mb-5 shadow-xs">
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                      <Users size={18} strokeWidth={2.4} />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block leading-tight">
+                        {language === 'ru' ? 'Набор персонала' : language === 'en' ? 'Staff recruitment' : 'Xodimlar qabuli'}
+                      </span>
+                      <span className="text-[14px] font-black text-slate-900">
+                        {hired} / {vac} {language === 'ru' ? 'принято' : language === 'en' ? 'accepted' : 'qabul qilindi'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                      hired >= vac
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                        : 'bg-blue-100 text-blue-800 border border-blue-200'
+                    }`}
+                  >
+                    {hired >= vac
+                      ? (language === 'ru' ? 'Заполнено' : language === 'en' ? 'Filled' : "To'ldirildi")
+                      : (language === 'ru' ? 'Идет набор' : language === 'en' ? 'Recruiting' : 'Qidirilmoqda')}
+                  </span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full bg-slate-200/80 h-2 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      hired >= vac ? 'bg-emerald-500' : 'bg-blue-600'
+                    }`}
+                    style={{ width: `${Math.max(6, progressPercent)}%` }}
+                  />
                 </div>
               </div>
 
-              {/* Location */}
-              <div className="p-4 border border-slate-200/80 rounded-[16px] flex items-center gap-3 bg-white mb-4">
-                 <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
-                    <MapPin size={20} className="text-orange-500" strokeWidth={2.2} />
-                 </div>
-                 <div className="min-w-0">
-                    <span className="text-[12px] font-semibold text-slate-400 block mb-0.5">
-                      {language === 'uz' ? 'Joylashuv' : language === 'ru' ? 'Локация' : 'Location'}
+              {/* Location Card */}
+              <div className="p-4 rounded-2xl border border-slate-200/70 bg-slate-50/70 mb-4 flex items-start gap-3.5 hover:border-slate-300 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 shadow-xs">
+                  <MapPin size={20} strokeWidth={2.2} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="text-xs font-semibold text-slate-400 block mb-0.5">
+                    {language === 'ru' ? 'Локация' : language === 'en' ? 'Location' : 'Joylashuv'}
+                  </span>
+                  <span className="text-sm font-bold text-slate-900 block leading-snug">
+                    {localized.location || job.rawLocation || job.location}
+                  </span>
+                  {job.addressDetails && (
+                    <span className="text-xs text-slate-500 mt-1 block">
+                      {job.addressDetails}
                     </span>
-                    <span className="text-[14px] font-bold text-[#1A1A40] truncate block">
-                      {localized.location || job.rawLocation || job.location}
-                    </span>
-                 </div>
+                  )}
+                </div>
               </div>
 
-              {/* 2x2 Grid Stats (Salary and Hourly) */}
+              {/* 2x2 Bento Grid for Financials & Schedule */}
               <div className="grid grid-cols-2 gap-3 mb-4">
-                {/* Salary */}
-                <div className="p-3.5 border border-slate-200/80 rounded-[16px] flex flex-col gap-1.5 bg-white">
-                  <div className="flex items-center gap-1.5 text-slate-400">
-                    <span className="text-lg leading-none font-bold">$</span>
-                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Maosh' : language === 'ru' ? 'Зарплата' : 'Salary'}</span>
+                {/* Salary Card */}
+                <div className="p-3.5 rounded-2xl border border-slate-200/70 bg-slate-50/70 flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <Wallet size={16} strokeWidth={2.2} />
+                    </div>
+                    <span className="text-xs font-semibold text-slate-500">
+                      {language === 'ru' ? 'Зарплата' : language === 'en' ? 'Salary' : 'Maosh'}
+                    </span>
                   </div>
-                  <div className="text-[15px] font-black text-[#1A1A40]">{job.salary}</div>
+                  <div>
+                    <div className="text-base font-black text-slate-900 leading-tight">
+                      {formatSalary(job.salary, language)}
+                    </div>
+                    <span className="text-[11px] font-medium text-slate-400">
+                      {language === 'ru' ? 'за смену' : language === 'en' ? 'per shift' : 'smena uchun'}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Hourly or type */}
-                <div className="p-3.5 border border-slate-200/80 rounded-[16px] flex flex-col gap-1.5 bg-white">
-                  <div className="flex items-center gap-1.5 text-slate-400">
-                    <Zap size={18} strokeWidth={2.2} />
-                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Soatlik' : language === 'ru' ? 'Почасовая' : 'Hourly'}</span>
+                {/* Hourly Rate Card */}
+                <div className="p-3.5 rounded-2xl border border-slate-200/70 bg-slate-50/70 flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                      <Zap size={16} strokeWidth={2.2} />
+                    </div>
+                    <span className="text-xs font-semibold text-slate-500">
+                      {language === 'ru' ? 'Почасовая' : language === 'en' ? 'Hourly' : 'Soatlik'}
+                    </span>
                   </div>
-                  <div className="text-[15px] font-black text-[#1A1A40]">
-                    {job.salary}
+                  <div>
+                    <div className="text-base font-black text-slate-900 leading-tight">
+                      {job.hourlyRate
+                        ? `${formatSalary(job.hourlyRate, language)} / ${language === 'ru' ? 'час' : language === 'en' ? 'hour' : 'soat'}`
+                        : (language === 'ru' ? 'По договоренности' : language === 'en' ? 'Negotiable' : 'Kelishilgan')}
+                    </div>
+                    <span className="text-[11px] font-medium text-slate-400">
+                      {language === 'ru' ? 'ставка' : language === 'en' ? 'rate' : 'stavka'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Work Date Card */}
+                <div className="p-3.5 rounded-2xl border border-slate-200/70 bg-slate-50/70 flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                      <Calendar size={16} strokeWidth={2.2} />
+                    </div>
+                    <span className="text-xs font-semibold text-slate-500">
+                      {language === 'ru' ? 'Дата' : language === 'en' ? 'Date' : 'Sana'}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="text-sm font-black text-slate-900 leading-tight">
+                      {getJobDateDisplay(job)}
+                    </div>
+                    <span className="text-[11px] font-medium text-slate-400">
+                      {getJobDuration(job, language)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Work Time Card */}
+                <div className="p-3.5 rounded-2xl border border-slate-200/70 bg-slate-50/70 flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                      <Clock size={16} strokeWidth={2.2} />
+                    </div>
+                    <span className="text-xs font-semibold text-slate-500">
+                      {language === 'ru' ? 'Время' : language === 'en' ? 'Time' : 'Vaqt'}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="text-sm font-black text-slate-900 leading-tight">
+                      {getJobShiftTime(job)}
+                    </div>
+                    <span className="text-[11px] font-medium text-slate-400">
+                      {language === 'ru' ? 'рабочее время' : language === 'en' ? 'working hours' : 'ish vaqti'}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* 2x2 Grid Stats (Date and Time) */}
-              <div className="grid grid-cols-2 gap-3 mb-8">
-                {/* Date */}
-                <div className="p-3.5 border border-slate-200/80 rounded-[16px] flex flex-col gap-1.5 bg-white">
-                  <div className="flex items-center gap-1.5 text-slate-400">
-                    <Calendar size={18} strokeWidth={2.2} />
-                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Sana' : language === 'ru' ? 'Дата' : 'Date'}</span>
-                  </div>
-                  <div className="text-[15px] font-black text-[#1A1A40]">{job.workDate || '2026-08-22'}</div>
-                </div>
-                
-                {/* Time */}
-                <div className="p-3.5 border border-slate-200/80 rounded-[16px] flex flex-col gap-1.5 bg-white">
-                  <div className="flex items-center gap-1.5 text-slate-400">
-                    <Clock size={18} strokeWidth={2.2} />
-                    <span className="text-[13px] font-semibold">{language === 'uz' ? 'Vaqt' : language === 'ru' ? 'Время' : 'Time'}</span>
-                  </div>
-                  <div className="text-[15px] font-black text-[#1A1A40]">
-                    {job.workTime || '09:00 - 18:00'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Accepted Workers */}
-              {(job.hiredWorkers || []).length > 0 && (
-                <div className="mb-8">
-                  <h3 className="text-[17px] font-black text-[#1A1A40] mb-4">
-                    {language === 'uz' ? 'Qabul qilingan ishchilar' : language === 'ru' ? 'Принятые работники' : 'Hired workers'}
+              {/* Description Section (if present) */}
+              {(localized.description || job.description) && (
+                <div className="mb-6">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+                    {language === 'ru' ? 'Описание' : language === 'en' ? 'Description' : 'Tavsif'}
                   </h3>
-                  <div className="space-y-3">
+                  <div className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/60 text-slate-700 text-sm leading-relaxed whitespace-pre-line">
+                    {localized.description || job.description}
+                  </div>
+                </div>
+              )}
+
+              {/* Accepted Workers Section */}
+              {(job.hiredWorkers || []).length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                      {language === 'ru' ? 'Принятые работники' : language === 'en' ? 'Hired workers' : 'Qabul qilingan ishchilar'}
+                    </h3>
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                      {job.hiredWorkers!.length}
+                    </span>
+                  </div>
+                  <div className="space-y-2.5">
                     {job.hiredWorkers!.map((worker) => (
-                      <div key={worker.id} className="flex items-center justify-between p-4 bg-white border border-slate-200/80 shadow-sm rounded-[16px]">
+                      <div
+                        key={worker.id}
+                        className="flex items-center justify-between p-3.5 bg-slate-50/80 border border-slate-200/70 rounded-2xl hover:bg-slate-100/60 transition-colors"
+                      >
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-400 text-lg shrink-0 overflow-hidden">
+                          <div className="w-10 h-10 rounded-full bg-slate-200 border border-slate-300/80 flex items-center justify-center font-bold text-slate-600 text-sm shrink-0 overflow-hidden">
                             {worker.avatarUrl ? (
-                              <img src={worker.avatarUrl} alt={worker.name} className="w-full h-full object-cover"  onError={(e) => {
-        const target = e.currentTarget;
-        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
-        if (target.src !== fallback) {
-          target.src = fallback;
-        }
-      }} />
+                              <img
+                                src={worker.avatarUrl}
+                                alt={worker.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.currentTarget;
+                                  const fallback =
+                                    'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+                                  if (target.src !== fallback) {
+                                    target.src = fallback;
+                                  }
+                                }}
+                              />
                             ) : (
                               worker.name.charAt(0).toUpperCase()
                             )}
                           </div>
                           <div>
-                            <h5 className="font-bold text-[#1A1A40] text-[15px]">{worker.name}</h5>
+                            <h5 className="font-bold text-slate-900 text-sm">{worker.name}</h5>
+                            {worker.phone && (
+                              <p className="text-xs text-slate-500 font-medium">{worker.phone}</p>
+                            )}
                           </div>
                         </div>
+                        {worker.phone && (
+                          <a
+                            href={`tel:${worker.phone}`}
+                            className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-slate-300 text-slate-600 flex items-center justify-center transition-colors shadow-xs"
+                            title={language === 'ru' ? 'Позвонить' : language === 'en' ? 'Call' : "Qo'ng'iroq qilish"}
+                          >
+                            <Phone size={14} />
+                          </a>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -222,82 +423,99 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
               )}
 
               {/* Responsibilities */}
-              <div className="mb-8">
-                <h3 className="text-[17px] font-black text-[#1A1A40] mb-4">
-                  {language === 'uz' ? 'Vazifalar' : language === 'ru' ? 'Обязанности' : 'Responsibilities'}
-                </h3>
-                <div className="bg-white p-5 rounded-[16px] border border-slate-200/80 shadow-sm">
-                  <ul className="space-y-4">
+              {tasks.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                      {language === 'ru' ? 'Обязанности' : language === 'en' ? 'Responsibilities' : 'Vazifalar'}
+                    </h3>
+                    <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                      {tasks.length}
+                    </span>
+                  </div>
+                  <div className="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-200/70 space-y-3">
                     {tasks.map((task, idx) => (
-                      <li key={idx} className="flex items-start gap-3">
-                        <CheckCircle2 size={20} className="text-brand-primary shrink-0 mt-0.5" strokeWidth={2.5} />
-                        <span className="text-slate-700 font-semibold text-[14px] leading-relaxed">{task}</span>
-                      </li>
+                      <div key={idx} className="flex items-start gap-3">
+                        <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                          <CheckCircle2 size={13} strokeWidth={2.8} />
+                        </div>
+                        <span className="text-slate-800 font-medium text-sm leading-relaxed">
+                          {task}
+                        </span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Requirements */}
-              <div>
-                <h3 className="text-[17px] font-black text-[#1A1A40] mb-4">
-                  {language === 'uz' ? 'Talablar' : language === 'ru' ? 'Требования' : 'Requirements'}
-                </h3>
-                <div className="bg-white p-5 rounded-[16px] border border-slate-200/80 shadow-sm">
-                  <ul className="space-y-4">
+              {requirements.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                      {language === 'ru' ? 'Требования' : language === 'en' ? 'Requirements' : 'Talablar'}
+                    </h3>
+                    <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                      {requirements.length}
+                    </span>
+                  </div>
+                  <div className="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-200/70 space-y-3">
                     {requirements.map((req, idx) => (
-                      <li key={idx} className="flex items-start gap-3">
-                        <div className="w-2 h-2 rounded-full bg-slate-400 mt-2 shrink-0"></div>
-                        <span className="text-slate-700 font-semibold text-[14px] leading-relaxed">{req}</span>
-                      </li>
+                      <div key={idx} className="flex items-start gap-3">
+                        <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 shrink-0" />
+                        <span className="text-slate-800 font-medium text-sm leading-relaxed">
+                          {req}
+                        </span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
-              </div>
-              
+              )}
             </div>
           </div>
 
           {/* Fixed Footer Actions */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100 bg-white/90 backdrop-blur-md z-30">
+          <div className="shrink-0 p-4 sm:px-6 border-t border-slate-100 bg-white/95 backdrop-blur-md z-30">
             <div className="flex items-center gap-3">
               {(job.status === 'open' || job.status === 'pending') && onDelete ? (
                 <>
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="flex-1 py-4 px-4 bg-rose-50 text-rose-600 font-bold rounded-xl text-[15px] flex items-center justify-center gap-2 cursor-pointer border border-rose-100 active:scale-[0.98] transition-all"
+                    className="py-3.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 font-bold rounded-xl text-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] transition-all shadow-xs"
                   >
-                    <Trash2 size={20} />
+                    <Trash2 size={18} />
                     <span>{language === 'uz' ? "O'chirish" : language === 'ru' ? 'Удалить' : 'Delete'}</span>
                   </button>
                   <button
                     onClick={onClose}
-                    className="flex-1 py-4 px-6 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
+                    className="flex-1 py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm cursor-pointer active:scale-[0.98] transition-all shadow-sm flex items-center justify-center"
                   >
                     {language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                   </button>
                 </>
-
               ) : job.status === 'start_requested' && onConfirmStart ? (
                 <>
                   <button
                     onClick={onClose}
-                    className="w-1/3 py-4 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
+                    className="w-1/3 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm cursor-pointer active:scale-[0.98] transition-all"
                   >
                     {language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                   </button>
                   <button
-                    onClick={() => { onConfirmStart(job.id); onClose(); }}
-                    className="w-2/3 py-4 bg-amber-500 text-white font-black rounded-xl text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 cursor-pointer active:scale-[0.98] transition-all"
+                    onClick={() => {
+                      onConfirmStart(job.id);
+                      onClose();
+                    }}
+                    className="w-2/3 py-3.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 cursor-pointer active:scale-[0.98] transition-all"
                   >
-                    {language === 'uz' ? 'Boshlashni tasdiqlash' : language === 'ru' ? 'Подтвердить начало' : 'Confirm start'}
-                    <ChevronRight size={20} />
+                    <span>{language === 'uz' ? 'Boshlashni tasdiqlash' : language === 'ru' ? 'Подтвердить начало' : 'Confirm start'}</span>
+                    <ChevronRight size={18} />
                   </button>
                 </>
               ) : (
                 <button
                   onClick={onClose}
-                  className="w-full py-4 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
+                  className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm cursor-pointer active:scale-[0.98] transition-all shadow-sm"
                 >
                   {language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                 </button>
@@ -309,11 +527,20 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
 
       <ConfirmModal
         isOpen={showDeleteConfirm}
-        title={language === 'uz' ? "O'chirishni tasdiqlash" : language === 'ru' ? "Подтвердите удаление" : "Confirm deletion"}
-        message={language === 'uz' ? "Rostdan ham ushbu e'lonni o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi." : language === 'ru' ? "Вы действительно хотите удалить эту вакансию? Это действие нельзя отменить." : "Are you sure you want to delete this job? This action cannot be undone."}
-        confirmText={language === 'uz' ? "O'chirish" : language === 'ru' ? "Удалить" : "Delete"}
-        cancelText={language === 'uz' ? "Bekor qilish" : language === 'ru' ? "Отмена" : "Cancel"}
-        onConfirm={() => { onDelete?.(job.id); onClose(); }}
+        title={language === 'uz' ? "O'chirishni tasdiqlash" : language === 'ru' ? 'Подтвердите удаление' : 'Confirm deletion'}
+        message={
+          language === 'uz'
+            ? "Rostdan ham ushbu e'lonni o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi."
+            : language === 'ru'
+              ? 'Вы действительно хотите удалить эту вакансию? Это действие нельзя отменить.'
+              : 'Are you sure you want to delete this job? This action cannot be undone.'
+        }
+        confirmText={language === 'uz' ? "O'chirish" : language === 'ru' ? 'Удалить' : 'Delete'}
+        cancelText={language === 'uz' ? 'Bekor qilish' : language === 'ru' ? 'Отмена' : 'Cancel'}
+        onConfirm={() => {
+          onDelete?.(job.id);
+          onClose();
+        }}
         onCancel={() => setShowDeleteConfirm(false)}
       />
     </AnimatePresence>
