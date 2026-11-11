@@ -152,13 +152,13 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
         <motion.div
           role="dialog"
           aria-modal="true"
-          initial={{ y: '100%', opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: '100%', opacity: 0 }}
+          initial={{ opacity: 0, x: typeof window !== 'undefined' && window.innerWidth >= 640 ? 400 : 0, y: typeof window !== 'undefined' && window.innerWidth >= 640 ? 0 : 200 }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
+          exit={{ opacity: 0, x: typeof window !== 'undefined' && window.innerWidth >= 640 ? 400 : 0, y: typeof window !== 'undefined' && window.innerWidth >= 640 ? 0 : 200 }}
           transition={{
             type: 'spring',
-            damping: 28,
-            stiffness: 260,
+            damping: 30,
+            stiffness: 300,
           }}
           className="relative bg-slate-50 w-full sm:w-[540px] md:w-[600px] lg:w-[640px] h-[90vh] sm:h-full max-h-[92vh] sm:max-h-full rounded-t-3xl sm:rounded-t-none sm:rounded-l-3xl shadow-2xl flex flex-col overflow-hidden z-10 pointer-events-auto border-t sm:border-t-0 sm:border-l border-slate-200/80 mb-0 [transform:translateZ(0)] text-slate-900"
         >
