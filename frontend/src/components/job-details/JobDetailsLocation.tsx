@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { MapPin, ExternalLink, Navigation } from 'lucide-react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { Job } from '../../types';
 import { getLatLng } from '../map/mapUtils';
 import { translations } from '../../translations';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useUIStore } from "../../store/useUIStore";
 import { useAuthStore } from "../../store/useAuthStore";
-
 import { getJobLocation } from '../../utils/jobTranslationUtils';
 
 interface JobDetailsLocationProps {
@@ -24,11 +25,14 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
   handleCalculateDistance,
   isLocating,
 }) => {
-  const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const { setCurrentScreen } = useCurrentScreen();
   const language = useAuthStore(s => s.language);
-    const setMapFocusedJobId = useUIStore(s => s.setMapFocusedJobId);
-    const setJobsView = useUIStore(s => s.setJobsView);
+  const setMapFocusedJobId = useUIStore(s => s.setMapFocusedJobId);
+  const setJobsView = useUIStore(s => s.setJobsView);
   const t = translations[language];
+
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const leafletMapRef = useRef<L.Map | null>(null);
 
   const handleMapButtonClick = () => {
     if (onOpenOnMap) {
@@ -41,7 +45,47 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
   };
 
   const coords = getLatLng(selectedJob);
-  const bbox = `${coords.lng - 0.012}%2C${coords.lat - 0.008}%2C${coords.lng + 0.012}%2C${coords.lat + 0.008}`;
+
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+    if (leafletMapRef.current) {
+      leafletMapRef.current.setView([coords.lat, coords.lng], 15);
+      return;
+    }
+
+    try {
+      const map = L.map(mapContainerRef.current, {
+        center: [coords.lat, coords.lng],
+        zoom: 15,
+        zoomControl: false,
+        attributionControl: false,
+        dragging: false,
+        touchZoom: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        keyboard: false,
+      });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+      }).addTo(map);
+
+      leafletMapRef.current = map;
+
+      const timer = setTimeout(() => {
+        map.invalidateSize();
+      }, 150);
+
+      return () => {
+        clearTimeout(timer);
+        map.remove();
+        leafletMapRef.current = null;
+      };
+    } catch {
+      // Graceful fallback in SSR / headless test environments
+    }
+  }, [coords.lat, coords.lng]);
 
   return (
     <section className="mt-6">
@@ -68,23 +112,38 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
               </span>
             )}
           </p>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {language === 'uz' ? "Amir Temur shoh ko'chasi, 120" : language === 'ru' ? "Проспект Амира Темура, 120" : "Amir Temur Avenue, 120"}
-          </p>
+          {selectedJob.addressDetails && (
+            <p className="text-xs text-slate-500 mt-0.5">
+              {selectedJob.addressDetails}
+            </p>
+          )}
         </div>
       </div>
 
       {/* Interactive Map Preview Box */}
-      <div className="w-full h-48 rounded-xl overflow-hidden border border-slate-200 relative shadow-xs bg-slate-100">
-        <iframe
-          title={`map-preview-${selectedJob.id}`}
-          className="w-full h-full border-0 pointer-events-none opacity-90"
-          src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${coords.lat}%2C${coords.lng}`}
-        />
+      <div
+        onClick={handleMapButtonClick}
+        role="button"
+        tabIndex={0}
+        aria-label={t.openOnMap || "Xaritada ko'rish"}
+        className="w-full h-48 rounded-xl overflow-hidden border border-slate-200 relative shadow-xs bg-slate-100 cursor-pointer group hover:border-brand-primary/50 transition-colors"
+      >
+        <div ref={mapContainerRef} className="w-full h-full" />
+
+        {/* Center Marker Pin */}
         <div className="absolute inset-0 bg-black/5 flex items-center justify-center pointer-events-none">
-          <div className="w-12 h-12 bg-brand-primary rounded-full flex items-center justify-center text-white shadow-xl ring-4 ring-brand-primary/20">
-            <MapPin size={22} />
+          <div className="relative flex items-center justify-center">
+            <div className="absolute w-12 h-12 bg-brand-primary/20 rounded-full animate-ping pointer-events-none" />
+            <div className="relative w-12 h-12 bg-brand-primary rounded-full flex items-center justify-center text-white shadow-xl ring-4 ring-white group-hover:scale-105 transition-transform">
+              <MapPin size={22} className="stroke-[2.2]" />
+            </div>
           </div>
+        </div>
+
+        {/* Click to open badge on bottom right */}
+        <div className="absolute bottom-2.5 right-2.5 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-700 shadow-sm border border-slate-200/80 flex items-center gap-1 group-hover:bg-brand-primary group-hover:text-white transition-colors pointer-events-none">
+          <span>{t.openOnMap || "Xaritada ko'rish"}</span>
+          <ExternalLink size={12} />
         </div>
       </div>
 
