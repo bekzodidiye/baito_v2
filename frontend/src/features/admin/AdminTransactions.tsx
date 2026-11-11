@@ -59,6 +59,29 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
     }
   };
 
+  const getTxStatusLabel = (status: string) => {
+    const s = status.toLowerCase();
+    if (s === 'paid' || s === 'released') {
+      return language === 'ru' ? "Оплачено" : language === 'en' ? "Paid" : "To'langan";
+    }
+    if (s === 'credited') {
+      return language === 'ru' ? "Зачислено" : language === 'en' ? "Credited" : "Qaytarildi";
+    }
+    if (s === 'pending') {
+      return language === 'ru' ? "В ожидании" : language === 'en' ? "Pending" : "Kutilmoqda";
+    }
+    if (s === 'canceled' || s === 'cancelled') {
+      return language === 'ru' ? "Отменено" : language === 'en' ? "Cancelled" : "Bekor qilingan";
+    }
+    if (s === 'rejected') {
+      return language === 'ru' ? "Отклонено" : language === 'en' ? "Rejected" : "Rad etilgan";
+    }
+    if (s === 'approved') {
+      return language === 'ru' ? "Одобрено" : language === 'en' ? "Approved" : "Tasdiqlangan";
+    }
+    return status;
+  };
+
   const handleCopy = (text: string, id: string) => {
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(text);
@@ -260,9 +283,9 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-2xs">
         <div className="flex items-center gap-2 flex-wrap">
           {[
-            { id: 'tx', label: 'Tranzaksiyalar (Ledger)', icon: ArrowLeftRight, count: transactions.length },
-            { id: 'withdrawals', label: "Chiqarish So'rovlari", icon: Wallet, badge: pendingWithdrawalsCount > 0 ? String(pendingWithdrawalsCount) : undefined },
-            { id: 'commission', label: 'Komissiya Hisoboti', icon: PieChart },
+            { id: 'tx', label: language === 'ru' ? 'Транзакции' : language === 'en' ? 'Transactions' : 'Tranzaksiyalar', icon: ArrowLeftRight, count: transactions.length },
+            { id: 'withdrawals', label: language === 'ru' ? 'Запросы на вывод' : language === 'en' ? 'Withdrawal Requests' : "Chiqarish So'rovlari", icon: Wallet, badge: pendingWithdrawalsCount > 0 ? String(pendingWithdrawalsCount) : undefined },
+            { id: 'commission', label: language === 'ru' ? 'Отчет комиссии' : language === 'en' ? 'Commission Report' : 'Komissiya Hisoboti', icon: PieChart },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -305,7 +328,7 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
               title="CSV yuklab olish"
             >
               <Download size={14} className="text-slate-500" />
-              <span>CSV Eksport</span>
+              <span>{language === 'ru' ? 'Скачать CSV' : language === 'en' ? 'Export CSV' : 'CSV Eksport'}</span>
             </button>
           )}
 
@@ -477,7 +500,7 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
                             <span className={`w-1.5 h-1.5 rounded-full ${
                               tx.status === 'paid' || tx.status === 'released' ? 'bg-emerald-500' : tx.status === 'pending' ? 'bg-amber-500 animate-pulse' : 'bg-slate-400'
                             }`} />
-                            <span>{tx.status}</span>
+                            <span>{getTxStatusLabel(tx.status)}</span>
                           </span>
                         </td>
 
@@ -592,7 +615,7 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
                                 : 'bg-rose-50 text-rose-700 border-rose-200'
                             }`}
                           >
-                            {w.status.toUpperCase()}
+                            {getTxStatusLabel(w.status)}
                           </span>
                         </td>
                         <td className="p-4 pr-5 text-right">
