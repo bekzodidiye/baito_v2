@@ -146,16 +146,9 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
   ];
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isModalOpen && (
-        <motion.div
-          key="employer-job-detail-modal"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-100 flex items-end sm:items-stretch sm:justify-end"
-        >
+        <div key="employer-job-detail-modal-root" className="fixed inset-0 z-100 flex items-end sm:items-stretch sm:justify-end pointer-events-none">
           {/* Backdrop overlay */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -163,7 +156,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto"
           />
 
           {/* Slide-over Sheet Container: Bottom Sheet on Mobile, Right Drawer on Desktop */}
@@ -184,8 +177,9 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
             }}
             transition={{
               type: 'spring',
-              damping: 30,
-              stiffness: 300
+              damping: 28,
+              stiffness: 280,
+              mass: 0.8
             }}
             className="relative bg-slate-50 w-full sm:w-[540px] md:w-[600px] lg:w-[640px] h-[90vh] sm:h-full max-h-[92vh] sm:max-h-full rounded-t-3xl sm:rounded-t-none sm:rounded-l-3xl shadow-2xl flex flex-col overflow-hidden z-10 pointer-events-auto border-t sm:border-t-0 sm:border-l border-slate-200/80 mb-0 [transform:translateZ(0)] text-slate-900"
           >
@@ -464,7 +458,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
             )}
           </footer>
         </motion.div>
-      </motion.div>
+      </div>
       )}
 
       <ConfirmModal
