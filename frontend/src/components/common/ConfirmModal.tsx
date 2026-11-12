@@ -31,9 +31,14 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isOpen && (
-        <div
+        <motion.div
+          key="confirm-modal-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
           role="dialog"
           aria-modal="true"
           aria-label={title}
@@ -44,7 +49,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ duration: 0.15 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative"
             onClick={e => e.stopPropagation()}
           >
@@ -69,7 +74,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               </button>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>,
     document.body

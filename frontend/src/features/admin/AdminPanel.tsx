@@ -27,6 +27,7 @@ import { AdminAutoModeration } from './AdminAutoModeration';
 import { AdminAutoMatching } from './AdminAutoMatching';
 import { AdminAutoReports } from './AdminAutoReports';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
+import { motion, AnimatePresence } from 'motion/react';
 
 export const AdminPanel: React.FC = () => {
   // The URL is the tab. Every section is its own address, so it can be linked
@@ -97,10 +98,18 @@ export const AdminPanel: React.FC = () => {
         />
 
         <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          <ErrorBoundary key={activeTab}>
-            {activeTab === 'overview' && (
-              <AdminOverview stats={stats} loading={loading} onNavigate={setActiveTab} />
-            )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ErrorBoundary key={activeTab}>
+                {activeTab === 'overview' && (
+                  <AdminOverview stats={stats} loading={loading} onNavigate={setActiveTab} />
+                )}
 
             {activeTab === 'users' && (
               <AdminUsers
@@ -208,7 +217,9 @@ export const AdminPanel: React.FC = () => {
             {activeTab === 'settings' && (
               <AdminSettings settings={settings} onUpdateSettings={updateSettings} />
             )}
-          </ErrorBoundary>
+              </ErrorBoundary>
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>

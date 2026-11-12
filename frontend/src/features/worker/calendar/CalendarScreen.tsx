@@ -94,16 +94,12 @@ export const CalendarScreen: React.FC = () => {
         </div>
       </div>
 
-      <AnimatePresence>
-        {selectedJob && (
-          <JobSearchModalDetail
-            selectedJob={selectedJob}
-            setSelectedJob={setSelectedJob}
-            toggleBookmark={toggleBookmark}
-            applyToJob={applyToJob}
-          />
-        )}
-      </AnimatePresence>
+      <JobSearchModalDetail
+        selectedJob={selectedJob}
+        setSelectedJob={setSelectedJob}
+        toggleBookmark={toggleBookmark}
+        applyToJob={applyToJob}
+      />
     </div>
   );
 };

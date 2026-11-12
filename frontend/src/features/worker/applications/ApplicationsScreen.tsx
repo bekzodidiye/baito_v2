@@ -8,6 +8,7 @@ import { WorkerApplication } from '../../../types';
 
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from "../../../store/useAuthStore";
 
 export const ApplicationsScreen: React.FC = () => {
@@ -127,10 +128,11 @@ export const ApplicationsScreen: React.FC = () => {
         {/* Custom Tabs */}
         <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-1">
           {tabs.map(tab => (
-            <button
+            <motion.button
               key={tab.id}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold whitespace-nowrap transition-all duration-300 ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
                 activeTab === tab.id 
                 ? 'bg-slate-800 text-white shadow-md' 
                 : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-100'
@@ -138,7 +140,7 @@ export const ApplicationsScreen: React.FC = () => {
             >
               {tab.icon}
               {getTabLabel(tab.id)}
-            </button>
+            </motion.button>
           ))}
         </div>
       </header>
@@ -174,7 +176,11 @@ export const ApplicationsScreen: React.FC = () => {
             </div>
           </div>
         ) : filteredApplications.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center mt-10">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex-1 flex flex-col items-center justify-center mt-10"
+          >
             <div className="w-24 h-24 rounded-3xl bg-white shadow-sm border border-slate-100 flex items-center justify-center mb-5 rotate-3 hover:rotate-0 transition-transform duration-300">
               <Inbox size={40} className="text-slate-300 stroke-[1.5]" />
             </div>
@@ -194,23 +200,32 @@ export const ApplicationsScreen: React.FC = () => {
                 {language === 'uz' ? 'Ish qidirish' : language === 'ru' ? 'Поиск работы' : 'Find Jobs'}
               </button>
             )}
-          </div>
+          </motion.div>
         ) : (
-          <div className="flex flex-col gap-4 pb-8 animate-in slide-in-from-bottom-4 duration-500 fade-in">
-            {filteredApplications.map((app: WorkerApplication) => (
-              <ApplicationCard 
-                key={app.id} 
-                application={app} 
-                language={language}
-                onClick={() => handleCardClick(app.jobId)}
-                onWithdraw={handleWithdraw}
-                onOpenChat={() => {
-                  setCurrentScreen('messages');
-                  navigate('/messages');
-                }}
-              />
-            ))}
-          </div>
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={activeTab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18 }}
+              className="flex flex-col gap-4 pb-8"
+            >
+              {filteredApplications.map((app: WorkerApplication) => (
+                <ApplicationCard 
+                  key={app.id} 
+                  application={app} 
+                  language={language}
+                  onClick={() => handleCardClick(app.jobId)}
+                  onWithdraw={handleWithdraw}
+                  onOpenChat={() => {
+                    setCurrentScreen('messages');
+                    navigate('/messages');
+                  }}
+                />
+              ))}
+            </motion.div>
+          </AnimatePresence>
         )}
       </div>
     </div>

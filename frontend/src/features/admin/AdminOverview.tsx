@@ -9,6 +9,7 @@ import {
   Zap, ArrowRight, Server, MessageSquare, Send
 } from 'lucide-react';
 import { LoadingOrb } from "@/components/ui/loading-orb";
+import { motion } from 'motion/react';
 
 interface AdminOverviewProps {
   stats: AdminStats | null;
@@ -109,7 +110,11 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
       {/* Primary KPI Cards Grid (4 Columns) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* Total Commission Revenue Card */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+        <motion.div 
+          whileHover={{ y: -3 }}
+          transition={{ duration: 0.2 }}
+          className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between"
+        >
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{a.commissionRevenue}</span>
@@ -131,10 +136,14 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
               +14.2%
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Escrow Owed to Workers */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+        <motion.div 
+          whileHover={{ y: -3 }}
+          transition={{ duration: 0.2 }}
+          className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between"
+        >
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{a.owedToWorkers}</span>
@@ -153,10 +162,14 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
               Eskrou
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Total Users Metric with Ratio Bar */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+        <motion.div 
+          whileHover={{ y: -3 }}
+          transition={{ duration: 0.2 }}
+          className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between"
+        >
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{a.usersLabel}</span>
@@ -183,10 +196,14 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
               {counted(stats?.employersCount || 0, a.employersShort, language)}
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Jobs Metric with Status Breakdown */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+        <motion.div 
+          whileHover={{ y: -3 }}
+          transition={{ duration: 0.2 }}
+          className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between"
+        >
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{a.totalPostings}</span>
@@ -213,12 +230,16 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
               <span>{completedJobs} {a.postingsShort}</span>
             </span>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Secondary Operational Counters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 flex items-center gap-4 shadow-2xs">
+        <motion.div 
+          whileHover={{ y: -2 }}
+          transition={{ duration: 0.2 }}
+          className="p-4 rounded-2xl bg-white border border-slate-200/80 flex items-center gap-4 shadow-2xs"
+        >
           <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
             <CheckCircle2 size={22} />
           </div>
@@ -228,9 +249,13 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
             </div>
             <p className="text-xs text-slate-500 font-medium">{a.completedAndPaid}</p>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 flex items-center gap-4 shadow-2xs">
+        <motion.div 
+          whileHover={{ y: -2 }}
+          transition={{ duration: 0.2 }}
+          className="p-4 rounded-2xl bg-white border border-slate-200/80 flex items-center gap-4 shadow-2xs"
+        >
           <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-700 border border-amber-100 flex items-center justify-center shrink-0">
             <Clock size={22} />
           </div>
@@ -240,9 +265,13 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
             </div>
             <p className="text-xs text-slate-500 font-medium">{a.applicationsFromWorkers}</p>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 flex items-center gap-4 shadow-2xs">
+        <motion.div 
+          whileHover={{ y: -2 }}
+          transition={{ duration: 0.2 }}
+          className="p-4 rounded-2xl bg-white border border-slate-200/80 flex items-center gap-4 shadow-2xs"
+        >
           <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-700 border border-purple-100 flex items-center justify-center shrink-0">
             <FileCheck size={22} />
           </div>
@@ -252,7 +281,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ stats, loading, on
             </div>
             <p className="text-xs text-slate-500 font-medium">{a.financialTransactionsDone}</p>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* System Infrastructure Health Status */}

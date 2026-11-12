@@ -62,24 +62,28 @@ export const ProfileDialogs: React.FC<ProfileDialogsProps> = ({
 }) => {
   const lang = (language as 'uz' | 'ru' | 'en');
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {activeDialog !== 'none' && (
-        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4">
+        <div key="profile-dialogs-root" className="fixed inset-0 z-[6000] flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={() => setActiveDialog('none')}
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs pointer-events-auto"
           />
 
           {/* Content box */}
           <motion.div 
+            role="dialog"
+            aria-modal="true"
             initial={{ scale: 0.95, opacity: 0, y: 10 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 10 }}
-            className="bg-white w-full max-w-md rounded-[24px] shadow-2xl border border-slate-100 overflow-hidden relative z-10 flex flex-col max-h-[85vh]"
+            transition={{ type: "spring", damping: 25, stiffness: 280 }}
+            className="bg-white w-full max-w-md rounded-[24px] shadow-2xl border border-slate-100 overflow-hidden relative z-10 flex flex-col max-h-[85vh] pointer-events-auto text-slate-900"
           >
             <div className="flex items-center justify-between p-6 pb-4 border-b border-slate-100 shrink-0">
               <h3 className="font-display font-black text-slate-800 text-base">

@@ -60,10 +60,14 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.99 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
       onClick={() => onSelect(job)}
-      className="bg-white rounded-2xl p-5 flex flex-col h-full shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all duration-300 group cursor-pointer relative"
+      className="bg-white rounded-2xl p-5 flex flex-col h-full shadow-sm border border-slate-100 hover:shadow-lg hover:border-slate-200 transition-shadow duration-300 group cursor-pointer relative"
     >
       {/* Top Section: Image & Basic Info */}
       <div className="flex items-start gap-4 mb-4">

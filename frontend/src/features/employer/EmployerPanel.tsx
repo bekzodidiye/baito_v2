@@ -8,7 +8,7 @@ import { EmployerProfile } from './EmployerProfile';
 import { JobPostForm } from './JobPostForm';
 import { EmployerAnalytics } from './EmployerAnalytics';
 import { Briefcase, FileText, MessageCircle, LayoutDashboard, User } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { MandatoryReviewModal } from './components/MandatoryReviewModal';
 import { Sidebar } from '../../components/Sidebar';
@@ -149,7 +149,18 @@ export const EmployerPanel: React.FC = () => {
       {/* ===== MAIN CONTENT AREA ===== */}
       <div className={`flex-1 ${isChatScreen ? 'h-full overflow-hidden' : 'overflow-y-auto'} ${isChatOpenOnMobile ? 'pb-0' : 'pb-24 md:pb-0'}`}>
         <ErrorBoundary key={currentScreen}>
-          {renderContent()}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentScreen}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              className="w-full h-full"
+            >
+              {renderContent()}
+            </motion.div>
+          </AnimatePresence>
         </ErrorBoundary>
       </div>
 

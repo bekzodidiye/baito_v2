@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'motion/react';
+import React, { useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Job } from '../../../types';
 import { getJobDetails } from '../../../utils/jobDetailHelpers';
 import { getJobLocalizedFields } from '../../../utils/jobTranslationUtils';
@@ -13,9 +13,9 @@ import { JobDetailsFooter } from '../../../components/job-details/JobDetailsFoot
 import { useAuthStore } from "../../../store/useAuthStore";
 
 interface JobSearchModalDetailProps {
-  selectedJob: Job;
+  selectedJob: Job | null;
   setSelectedJob: (job: Job | null) => void;
-  toggleBookmark: (id: string) => void;
+  toggleBookmark?: (id: string) => void;
   applyToJob: (id: string) => Promise<boolean> | boolean;
 }
 
@@ -25,15 +25,37 @@ export const JobSearchModalDetail: React.FC<JobSearchModalDetailProps> = ({
   applyToJob,
 }) => {
   const language = useAuthStore(s => s.language);
-  const modalScrollRef = React.useRef<HTMLDivElement>(null);
+  const modalScrollRef = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
+  // Preserve last valid job for smooth exit animation
+  const lastJobRef = useRef<Job | null>(selectedJob);
+  if (selectedJob) {
+    lastJobRef.current = selectedJob;
+  }
+  const currentJob = selectedJob || lastJobRef.current;
+  const isModalOpen = Boolean(selectedJob);
+
+  useEffect(() => {
     if (modalScrollRef.current) {
       modalScrollRef.current.scrollTop = 0;
     }
   }, [selectedJob?.id]);
 
-  const localized = getJobLocalizedFields(selectedJob, language);
+  // Handle escape key to close
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedJob(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setSelectedJob]);
+
+  if (!currentJob) return null;
+  const activeJob = currentJob;
+
+  const localized = getJobLocalizedFields(activeJob, language);
   const fallbackDetails = getJobDetails(localized.title, language);
 
   const tasks = localized.responsibilities
@@ -47,54 +69,73 @@ export const JobSearchModalDetail: React.FC<JobSearchModalDetailProps> = ({
   const warning = localized.importantNote || fallbackDetails.warning;
 
   return (
-    <div className="fixed inset-0 z-100 flex items-end justify-center p-0">
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={() => setSelectedJob(null)}
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-      />
+    <AnimatePresence mode="wait">
+      {isModalOpen && (
+        <div
+          key="worker-job-detail-modal-root"
+          className="fixed inset-0 z-100 flex items-end justify-center p-0 pointer-events-none"
+        >
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            onClick={() => setSelectedJob(null)}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto"
+          />
 
-      {/* Modal Container */}
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-        className="relative bg-slate-50 w-full md:max-w-md rounded-t-3xl shadow-2xl flex flex-col h-[55vh] max-h-[88vh] md:h-[65vh] overflow-hidden z-10 [transform:translateZ(0)]"
-      >
-        {/* Header */}
-        <JobDetailsHeader 
-          selectedJob={selectedJob} 
-          onClose={() => setSelectedJob(null)} 
-        />
-
-        {/* Scrollable Content Area */}
-        <div ref={modalScrollRef} className="flex-1 overflow-y-auto no-scrollbar">
-          {/* Hero Image Section */}
-          <JobDetailsHero selectedJob={selectedJob} />
-
-          {/* Overlapping Content Container */}
-          <div className="px-4 -mt-6 relative z-10 pb-6">
-            <JobDetailsCard selectedJob={selectedJob} />
-            <JobDetailsLocation selectedJob={selectedJob} />
-            <JobDetailsTasks tasks={tasks} />
-            <JobDetailsRequirements 
-              requirements={requirements} 
-              warning={warning} 
+          {/* Modal Container */}
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{
+              type: 'spring',
+              damping: 28,
+              stiffness: 280,
+              mass: 0.8,
+            }}
+            className="relative bg-slate-50 w-full md:max-w-md rounded-t-3xl shadow-2xl flex flex-col h-[65vh] max-h-[88vh] overflow-hidden z-10 pointer-events-auto [transform:translateZ(0)] text-slate-900"
+          >
+            {/* Header */}
+            <JobDetailsHeader 
+              selectedJob={activeJob} 
+              onClose={() => setSelectedJob(null)} 
             />
-          </div>
-        </div>
 
-        {/* Action Footer */}
-        <JobDetailsFooter 
-          selectedJob={selectedJob} 
-          applyToJob={applyToJob}
-          onApplied={(newStatus?: any) => setSelectedJob({ ...selectedJob, applied: true, status: newStatus || 'applied' })}
-        />
-      </motion.div>
-    </div>
+            {/* Scrollable Content Area */}
+            <div ref={modalScrollRef} className="flex-1 overflow-y-auto no-scrollbar">
+              {/* Hero Image Section */}
+              <JobDetailsHero selectedJob={activeJob} />
+
+              {/* Overlapping Content Container */}
+              <div className="px-4 -mt-6 relative z-10 pb-6">
+                <JobDetailsCard selectedJob={activeJob} />
+                <JobDetailsLocation selectedJob={activeJob} />
+                <JobDetailsTasks tasks={tasks} />
+                <JobDetailsRequirements 
+                  requirements={requirements} 
+                  warning={warning} 
+                />
+              </div>
+            </div>
+
+            {/* Action Footer */}
+            <JobDetailsFooter 
+              selectedJob={activeJob} 
+              applyToJob={applyToJob}
+              onApplied={(newStatus?: any) => {
+                if (selectedJob) {
+                  setSelectedJob({ ...selectedJob, applied: true, status: newStatus || 'applied' });
+                }
+              }}
+            />
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 };

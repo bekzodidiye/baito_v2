@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { clickable } from '../../utils/clickable';
 import { Briefcase, FileText, Eye, Activity, Plus } from 'lucide-react';
 import { Language } from '../../translations';
@@ -55,7 +56,12 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
           {/* Card 1 */}
-          <div {...clickable(onViewAllJobsClick)} className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 cursor-pointer hover:border-white/30 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all overflow-hidden relative">
+          <motion.div
+            whileHover={{ y: -3, scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+            {...clickable(onViewAllJobsClick)}
+            className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 cursor-pointer hover:border-white/30 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all overflow-hidden relative"
+          >
             <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
             <div className="flex flex-col gap-3 relative z-10">
               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/90">
@@ -68,10 +74,15 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
                 </span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 2 */}
-          <div {...clickable(onViewApplicantsClick)} className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 cursor-pointer hover:border-white/30 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all overflow-hidden relative">
+          <motion.div
+            whileHover={{ y: -3, scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+            {...clickable(onViewApplicantsClick)}
+            className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 cursor-pointer hover:border-white/30 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition-all overflow-hidden relative"
+          >
             <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
             {pendingApplicantsCount > 0 && (
               <span className="absolute top-4 right-4 flex h-3 w-3">
@@ -90,10 +101,13 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
                 </span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 3 */}
-          <div className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 overflow-hidden relative">
+          <motion.div
+            whileHover={{ y: -3, scale: 1.01 }}
+            className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 overflow-hidden relative"
+          >
             <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
             <div className="flex flex-col gap-3 relative z-10">
               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/90">
@@ -106,10 +120,13 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
                 </span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 4 */}
-          <div className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 overflow-hidden relative">
+          <motion.div
+            whileHover={{ y: -3, scale: 1.01 }}
+            className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-4 border border-white/10 overflow-hidden relative"
+          >
             <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
             <div className="flex flex-col gap-3 relative z-10">
               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/90">
@@ -122,18 +139,20 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
                 </span>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
-        <button
+        <motion.button
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.98 }}
           onClick={onPostJobClick}
-          className="mt-8 w-full py-4.5 bg-white text-brand-primary hover:bg-slate-50 hover:shadow-[0_12px_24px_rgba(255,255,255,0.2)] font-display font-black text-[15px] rounded-2xl shadow-[0_8px_16px_rgba(0,0,0,0.1)] transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer group"
+          className="mt-8 w-full py-4.5 bg-white text-brand-primary hover:bg-slate-50 hover:shadow-[0_12px_24px_rgba(255,255,255,0.2)] font-display font-black text-[15px] rounded-2xl shadow-[0_8px_16px_rgba(0,0,0,0.1)] transition-all flex items-center justify-center gap-2 cursor-pointer group"
         >
           <div className="w-6 h-6 rounded-full bg-brand-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
             <Plus size={16} className="stroke-[3]" />
           </div>
           {language === 'uz' ? "Yangi ish yaratish" : language === 'ru' ? "Создать новую работу" : "Post a new job"}
-        </button>
+        </motion.button>
       </div>
     </div>
   );

@@ -4,6 +4,8 @@ import { MapPin, Calendar, Clock, ChevronRight, Building2, CheckCircle2, XCircle
 import { Language } from '../../../translations';
 import { formatShortDate } from '../../../utils/dateFormat';
 
+import { motion } from 'motion/react';
+
 interface ApplicationCardProps {
   application: WorkerApplication;
   language: Language;
@@ -119,9 +121,15 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
   const displayTitle = (application as any).jobTranslations?.[language]?.title || application.jobTitle;
 
   return (
-    <div 
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.2 }}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.99 }}
       onClick={onClick}
-      className="relative bg-white rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-slate-100/60 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group active:scale-[0.98] overflow-hidden"
+      className="relative bg-white rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-slate-100/60 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300 cursor-pointer group overflow-hidden"
     >
       {/* Decorative Gradient Line */}
       <div className={`absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b ${config.gradient}`} />
@@ -184,6 +192,6 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, l
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

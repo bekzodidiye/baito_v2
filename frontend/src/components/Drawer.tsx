@@ -164,17 +164,17 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
   }
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {drawerOpen && (
-        <aside className="fixed inset-0 z-[5000] md:hidden flex">
+        <aside key="mobile-drawer-root" className="fixed inset-0 z-[5000] md:hidden flex pointer-events-none">
           {/* Overlay backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            transition={{ duration: 0.22, ease: 'easeInOut' }}
             onClick={() => setDrawerOpen(false)}
-            className="absolute inset-0 bg-slate-950/40 backdrop-blur-xs cursor-pointer"
+            className="absolute inset-0 bg-slate-950/40 backdrop-blur-xs cursor-pointer pointer-events-auto"
           />
 
           {/* Drawer content */}
@@ -185,8 +185,8 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
-            transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-            className="relative w-72 max-w-[85vw] h-full bg-white flex flex-col justify-between shadow-[10px_0_40px_rgba(0,0,0,0.12)] border-r border-slate-100 overflow-hidden"
+            transition={{ type: 'spring', damping: 28, stiffness: 280, mass: 0.8 }}
+            className="relative w-72 max-w-[85vw] h-full bg-white flex flex-col justify-between shadow-[10px_0_40px_rgba(0,0,0,0.12)] border-r border-slate-100 overflow-hidden pointer-events-auto"
           >
             {/* Top Header */}
             <div>

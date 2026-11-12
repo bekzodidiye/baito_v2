@@ -18,33 +18,42 @@ interface MenuModalProps {
 
 export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) => {
   const language = useAuthStore(s => s.language);
-  if (!isOpen || !type) return null;
+  const lastTypeRef = React.useRef(type);
+  if (type) {
+    lastTypeRef.current = type;
+  }
+  const currentType = type || lastTypeRef.current;
+  const showModal = isOpen && Boolean(currentType);
 
   const t = MODAL_TRANSLATIONS[language];
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4">
-        {/* Backdrop overlay */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-        />
+    <AnimatePresence mode="wait">
+      {showModal && (
+        <div key="menu-modal-root" className="fixed inset-0 z-[6000] flex items-center justify-center p-4 pointer-events-none">
+          {/* Backdrop overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm pointer-events-auto"
+          />
 
-        {/* Modal Sheet */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          transition={{ type: 'spring', duration: 0.4, bounce: 0.15 }}
-          className={`relative bg-white w-full max-w-md rounded-[20px] shadow-2xl border border-slate-100/80 overflow-hidden flex flex-col transition-all duration-300 ${
-            type === 'auth' ? 'max-h-[94vh] md:max-h-[91vh]' : 'max-h-[85vh]'
-          } z-10`}
-        >
-          {type === 'auth' ? (
+          {/* Modal Sheet */}
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+            className={`relative bg-white w-full max-w-md rounded-[20px] shadow-2xl border border-slate-100/80 overflow-hidden flex flex-col pointer-events-auto text-slate-900 ${
+              currentType === 'auth' ? 'max-h-[94vh] md:max-h-[91vh]' : 'max-h-[85vh]'
+            } z-10`}
+          >
+          {currentType === 'auth' ? (
             <div className="flex-1 h-full min-h-0 flex flex-col overflow-hidden">
               <Suspense fallback={<div className="flex-1 flex items-center justify-center p-8"><Orb state="working" size={24} className="text-brand-primary" /></div>}>
                 <LoginPromptScreen isModal onClose={onClose} />
@@ -55,19 +64,19 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
               {/* Header */}
               <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0">
                 <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
-                  {type === 'profile' && (
+                  {currentType === 'profile' && (
                     <>
                       <User size={20} className="text-brand-primary" />
                       <span>{t.profileTitle}</span>
                     </>
                   )}
-                  {type === 'settings' && (
+                  {currentType === 'settings' && (
                     <>
                       <Shield size={20} className="text-brand-primary" />
                       <span>{t.settingsTitle}</span>
                     </>
                   )}
-                  {type === 'help' && (
+                  {currentType === 'help' && (
                     <>
                       <HelpCircle size={20} className="text-brand-primary" />
                       <span>{t.helpTitle}</span>
@@ -84,14 +93,15 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
 
               {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {type === 'profile' && <ProfileContent onClose={onClose} />}
-                {type === 'settings' && <SettingsContent />}
-                {type === 'help' && <HelpContent />}
+                {currentType === 'profile' && <ProfileContent onClose={onClose} />}
+                {currentType === 'settings' && <SettingsContent />}
+                {currentType === 'help' && <HelpContent />}
               </div>
             </>
           )}
         </motion.div>
       </div>
+      )}
     </AnimatePresence>
   );
 };

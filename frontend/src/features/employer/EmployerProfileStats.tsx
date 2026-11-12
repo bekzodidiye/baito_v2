@@ -84,8 +84,9 @@ export const EmployerProfileStats: React.FC<EmployerProfileStatsProps> = ({
         const Icon = tile.icon;
         const isBalance = tile.label === t('Jami xarajatlar', 'Общие расходы', 'Total expenses');
         return (
-          <div
+          <motion.div
             key={tile.label}
+            whileHover={{ y: -2 }}
             onClick={isBalance ? onPaymentsClick : undefined}
             className={`bg-white rounded-2xl border border-slate-100 shadow-xs p-4 flex flex-col gap-2 ${isBalance ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
           >
@@ -101,7 +102,7 @@ export const EmployerProfileStats: React.FC<EmployerProfileStatsProps> = ({
                 <p className="text-[10px] font-bold text-slate-500 mt-1">{tile.hint}</p>
               )}
             </div>
-          </div>
+          </motion.div>
         );
       })}
     </motion.div>

@@ -199,18 +199,14 @@ export const JobSearchScreen: React.FC = () => {
       </div>
 
       {/* Mobile Detail Overlay */}
-      <AnimatePresence>
-        {selectedJob && (
-          <div className="md:hidden">
-            <JobSearchModalDetail 
-              selectedJob={selectedJob}
-              setSelectedJob={setSelectedJob}
-              toggleBookmark={toggleBookmark}
-              applyToJob={handleApply}
-            />
-          </div>
-        )}
-      </AnimatePresence>
+      <div className="md:hidden">
+        <JobSearchModalDetail 
+          selectedJob={selectedJob}
+          setSelectedJob={setSelectedJob}
+          toggleBookmark={toggleBookmark}
+          applyToJob={handleApply}
+        />
+      </div>
     </div>
   );
 };
