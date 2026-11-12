@@ -44,6 +44,13 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const modalScrollRef = useRef<HTMLDivElement>(null);
 
+  // Preserve last valid job for smooth exit animation
+  const lastJobRef = useRef<Job | null>(job);
+  if (job) {
+    lastJobRef.current = job;
+  }
+  const currentJob = job || lastJobRef.current;
+
   useEffect(() => {
     if (modalScrollRef.current) {
       modalScrollRef.current.scrollTop = 0;
@@ -61,9 +68,11 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  if (!job) return null;
+  if (!currentJob) return null;
+  const activeJob = currentJob;
+  const isModalOpen = Boolean(job);
 
-  const localized = getJobLocalizedFields(job, language);
+  const localized = getJobLocalizedFields(activeJob, language);
   const fallbackDetails = getJobDetails(localized.title, language);
 
   const tasks = localized.responsibilities
@@ -76,14 +85,14 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
 
   const warning = localized.importantNote || fallbackDetails.warning;
 
-  const hired = Number(job.hiredCount ?? 0);
-  const vac = Math.max(1, Number(job.vacancies ?? (job.neededWorkers ? parseInt(job.neededWorkers, 10) : 1)));
+  const hired = Number(activeJob.hiredCount ?? 0);
+  const vac = Math.max(1, Number(activeJob.vacancies ?? (activeJob.neededWorkers ? parseInt(activeJob.neededWorkers, 10) : 1)));
 
   // Calculate current workflow step index (1-4)
   const getWorkflowStep = () => {
-    if (job.status === 'completed') return 4;
-    if (job.status === 'in_progress') return 3;
-    if (job.status === 'start_requested') return 3;
+    if (activeJob.status === 'completed') return 4;
+    if (activeJob.status === 'in_progress') return 3;
+    if (activeJob.status === 'start_requested') return 3;
     if (hired > 0) return 2;
     return 1;
   };
@@ -93,8 +102,8 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
     {
       step: 1,
       title: language === 'uz' ? "E'lon yaratildi" : language === 'ru' ? 'Вакансия создана' : 'Job posted',
-      desc: job.createdAt
-        ? new Date(job.createdAt).toLocaleDateString()
+      desc: activeJob.createdAt
+        ? new Date(activeJob.createdAt).toLocaleDateString()
         : language === 'uz' ? 'Moderatsiyadan o\'tgan va faol' : language === 'ru' ? 'Активно' : 'Active',
       status: activeStep > 1 ? 'completed' : 'current',
     },
@@ -111,57 +120,72 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
     {
       step: 3,
       title: language === 'uz' ? 'Ish jarayoni' : language === 'ru' ? 'Выполнение работы' : 'Work in progress',
-      desc: job.status === 'start_requested'
+      desc: activeJob.status === 'start_requested'
         ? (language === 'uz' ? 'Xodim kelgan, boshlashni tasdiqlang' : language === 'ru' ? 'Работник ожидает подтверждения начала' : 'Worker waiting for start confirmation')
-        : job.status === 'in_progress'
+        : activeJob.status === 'in_progress'
           ? (language === 'uz' ? 'Smena davom etmoqda' : language === 'ru' ? 'Работа в процессе выполнения' : 'Shift in progress')
-          : job.status === 'completed'
+          : activeJob.status === 'completed'
             ? (language === 'uz' ? 'Smena muvaffaqiyatli yakunlangan' : language === 'ru' ? 'Работа успешно завершена' : 'Shift completed')
             : (language === 'uz' ? 'Smena boshlanishi kutilmoqda' : language === 'ru' ? 'Ожидается выход на смену' : 'Shift pending'),
-      status: job.status === 'completed' ? 'completed' : activeStep === 3 ? 'current' : 'pending',
+      status: activeJob.status === 'completed' ? 'completed' : activeStep === 3 ? 'current' : 'pending',
     },
     {
       step: 4,
       title: language === 'uz' ? 'Yakunlash va Hisob-kitob' : language === 'ru' ? 'Завершение и расчет' : 'Completion & Payment',
-      desc: job.status === 'completed'
-        ? job.payoutStatus === 'paid'
+      desc: activeJob.status === 'completed'
+        ? activeJob.payoutStatus === 'paid'
           ? (language === 'uz' ? 'To\'lov to\'liq amalga oshirilgan' : language === 'ru' ? 'Оплата произведена' : 'Payment completed')
-          : job.payoutStatus === 'payment_declared'
+          : activeJob.payoutStatus === 'payment_declared'
             ? (language === 'uz' ? 'To\'lov tekshirilmoqda' : language === 'ru' ? 'Оплата ожидает подтверждения' : 'Payment verification pending')
-            : job.payoutStatus === 'invoiced'
+            : activeJob.payoutStatus === 'invoiced'
               ? (language === 'uz' ? 'Hisob taqdim etilgan, to\'lov kutilmoqda' : language === 'ru' ? 'Ожидает оплаты' : 'Awaiting payment')
               : (language === 'uz' ? 'Ish muvaffaqiyatli tugatilgan' : language === 'ru' ? 'Работа завершена' : 'Job finished')
         : (language === 'uz' ? 'Smena yakunlangach hisob-kitob qilinadi' : language === 'ru' ? 'Оплата после завершения' : 'Settlement after shift'),
-      status: job.status === 'completed' ? 'completed' : 'pending',
+      status: activeJob.status === 'completed' ? 'completed' : 'pending',
     },
   ];
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-100 flex items-end sm:items-stretch sm:justify-end">
-        {/* Backdrop overlay */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        />
+      {isModalOpen && (
+        <div className="fixed inset-0 z-100 flex items-end sm:items-stretch sm:justify-end">
+          {/* Backdrop overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          />
 
-        {/* Slide-over Sheet Container: Bottom Sheet on Mobile, Right Drawer on Desktop */}
-        <motion.div
-          role="dialog"
-          aria-modal="true"
-          initial={{ opacity: 0, x: typeof window !== 'undefined' && window.innerWidth >= 640 ? 400 : 0, y: typeof window !== 'undefined' && window.innerWidth >= 640 ? 0 : 200 }}
-          animate={{ opacity: 1, x: 0, y: 0 }}
-          exit={{ opacity: 0, x: typeof window !== 'undefined' && window.innerWidth >= 640 ? 400 : 0, y: typeof window !== 'undefined' && window.innerWidth >= 640 ? 0 : 200 }}
-          transition={{
-            type: 'spring',
-            damping: 30,
-            stiffness: 300,
-          }}
-          className="relative bg-slate-50 w-full sm:w-[540px] md:w-[600px] lg:w-[640px] h-[90vh] sm:h-full max-h-[92vh] sm:max-h-full rounded-t-3xl sm:rounded-t-none sm:rounded-l-3xl shadow-2xl flex flex-col overflow-hidden z-10 pointer-events-auto border-t sm:border-t-0 sm:border-l border-slate-200/80 mb-0 [transform:translateZ(0)] text-slate-900"
-        >
+          {/* Slide-over Sheet Container: Bottom Sheet on Mobile, Right Drawer on Desktop */}
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            initial={{
+              opacity: 0,
+              x: typeof window !== 'undefined' && window.innerWidth >= 640 ? '100%' : 0,
+              y: typeof window !== 'undefined' && window.innerWidth >= 640 ? 0 : '100%'
+            }}
+            animate={{
+              opacity: 1,
+              x: 0,
+              y: 0
+            }}
+            exit={{
+              opacity: 0,
+              x: typeof window !== 'undefined' && window.innerWidth >= 640 ? '100%' : 0,
+              y: typeof window !== 'undefined' && window.innerWidth >= 640 ? 0 : '100%'
+            }}
+            transition={{
+              type: 'spring',
+              damping: 32,
+              stiffness: 320,
+              mass: 0.8
+            }}
+            className="relative bg-slate-50 w-full sm:w-[540px] md:w-[600px] lg:w-[640px] h-[90vh] sm:h-full max-h-[92vh] sm:max-h-full rounded-t-3xl sm:rounded-t-none sm:rounded-l-3xl shadow-2xl flex flex-col overflow-hidden z-10 pointer-events-auto border-t sm:border-t-0 sm:border-l border-slate-200/80 mb-0 [transform:translateZ(0)] text-slate-900"
+          >
           {/* Sticky Drawer Header */}
           <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 h-14 md:h-16 flex items-center px-4 md:px-6 justify-between shrink-0 sm:rounded-tl-3xl">
             <div className="flex items-center gap-3 min-w-0">
@@ -178,19 +202,19 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                     {language === 'uz' ? 'Ish tafsilotlari' : language === 'ru' ? 'Детали работы' : 'Job Details'}
                   </h1>
                   <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                    job.status === 'in_progress'
+                    activeJob.status === 'in_progress'
                       ? 'bg-emerald-100 text-emerald-800'
-                      : job.status === 'completed'
+                      : activeJob.status === 'completed'
                         ? 'bg-blue-100 text-blue-800'
-                        : job.status === 'pending'
+                        : activeJob.status === 'pending'
                           ? 'bg-amber-100 text-amber-800'
                           : 'bg-slate-100 text-slate-700'
                   }`}>
-                    {job.status === 'in_progress'
+                    {activeJob.status === 'in_progress'
                       ? (language === 'uz' ? 'Jarayonda' : language === 'ru' ? 'В процессе' : 'In progress')
-                      : job.status === 'completed'
+                      : activeJob.status === 'completed'
                         ? (language === 'uz' ? 'Tugallangan' : language === 'ru' ? 'Завершено' : 'Completed')
-                        : job.status === 'pending'
+                        : activeJob.status === 'pending'
                           ? (language === 'uz' ? 'Kutilmoqda' : language === 'ru' ? 'На модерации' : 'Pending')
                           : (language === 'uz' ? 'Ochiq' : language === 'ru' ? 'Активно' : 'Open')}
                   </span>
@@ -200,7 +224,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
 
             <div className="flex items-center gap-1.5 shrink-0">
               <button
-                onClick={() => shareJob({ id: job.id, title: localized.title, company: job.company }, language)}
+                onClick={() => shareJob({ id: activeJob.id, title: localized.title, company: activeJob.company }, language)}
                 className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
                 title={language === 'uz' ? 'Ulashish' : language === 'ru' ? 'Поделиться' : 'Share'}
               >
@@ -219,12 +243,12 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
           {/* Scrollable Content (Single vertical flow with optimal reading width) */}
           <div ref={modalScrollRef} className="flex-1 overflow-y-auto no-scrollbar">
             {/* Hero Image Section */}
-            <JobDetailsHero selectedJob={job} />
+            <JobDetailsHero selectedJob={activeJob} />
 
             {/* Overlapping Content Feed */}
             <div className="px-4 sm:px-6 -mt-6 relative z-10 pb-8 space-y-4">
               {/* Job Specs Card */}
-              <JobDetailsCard selectedJob={job} />
+              <JobDetailsCard selectedJob={activeJob} />
 
               {/* Ish jarayoni bosqichlari (Job Workflow Timeline) */}
               <section className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
@@ -373,7 +397,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
               </section>
 
               {/* Location with Leaflet Map Preview */}
-              <JobDetailsLocation selectedJob={job} />
+              <JobDetailsLocation selectedJob={activeJob} />
 
               {/* Tasks & Requirements */}
               <JobDetailsTasks tasks={tasks} />
@@ -383,15 +407,15 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
 
           {/* Action Footer */}
           <footer className="sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 p-3 sm:p-4 shrink-0 flex items-center gap-3">
-            {job.status === 'in_progress' && onComplete ? (
+            {activeJob.status === 'in_progress' && onComplete ? (
               <button
-                onClick={() => onComplete(job.id)}
+                onClick={() => onComplete(activeJob.id)}
                 className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 active:scale-[0.98] transition-all cursor-pointer"
               >
                 <CheckCircle2 size={18} />
                 <span>{language === 'uz' ? 'Ishni yakunlash' : language === 'ru' ? 'Завершить работу' : 'Complete Job'}</span>
               </button>
-            ) : job.status === 'start_requested' && onConfirmStart ? (
+            ) : activeJob.status === 'start_requested' && onConfirmStart ? (
               <>
                 <button
                   onClick={onClose}
@@ -401,7 +425,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                 </button>
                 <button
                   onClick={() => {
-                    onConfirmStart(job.id);
+                    onConfirmStart(activeJob.id);
                     onClose();
                   }}
                   className="w-2/3 py-3.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 cursor-pointer active:scale-[0.98] transition-all"
@@ -411,7 +435,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                   <ChevronRight size={18} />
                 </button>
               </>
-            ) : (job.status === 'open' || job.status === 'pending') && onDelete ? (
+            ) : (activeJob.status === 'open' || activeJob.status === 'pending') && onDelete ? (
               <>
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
@@ -438,6 +462,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
           </footer>
         </motion.div>
       </div>
+      )}
 
       <ConfirmModal
         isOpen={showDeleteConfirm}
@@ -452,7 +477,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
         confirmText={language === 'uz' ? "O'chirish" : language === 'ru' ? 'Удалить' : 'Delete'}
         cancelText={language === 'uz' ? 'Bekor qilish' : language === 'ru' ? 'Отмена' : 'Cancel'}
         onConfirm={() => {
-          onDelete?.(job.id);
+          onDelete?.(activeJob.id);
           onClose();
         }}
         onCancel={() => setShowDeleteConfirm(false)}
