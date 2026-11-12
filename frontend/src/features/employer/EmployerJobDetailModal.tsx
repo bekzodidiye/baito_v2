@@ -148,13 +148,20 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
   return (
     <AnimatePresence>
       {isModalOpen && (
-        <div className="fixed inset-0 z-100 flex items-end sm:items-stretch sm:justify-end">
+        <motion.div
+          key="employer-job-detail-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 z-100 flex items-end sm:items-stretch sm:justify-end"
+        >
           {/* Backdrop overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            transition={{ duration: 0.25 }}
             onClick={onClose}
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
@@ -164,25 +171,21 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
             role="dialog"
             aria-modal="true"
             initial={{
-              opacity: 0,
               x: typeof window !== 'undefined' && window.innerWidth >= 640 ? '100%' : 0,
               y: typeof window !== 'undefined' && window.innerWidth >= 640 ? 0 : '100%'
             }}
             animate={{
-              opacity: 1,
               x: 0,
               y: 0
             }}
             exit={{
-              opacity: 0,
               x: typeof window !== 'undefined' && window.innerWidth >= 640 ? '100%' : 0,
               y: typeof window !== 'undefined' && window.innerWidth >= 640 ? 0 : '100%'
             }}
             transition={{
               type: 'spring',
-              damping: 32,
-              stiffness: 320,
-              mass: 0.8
+              damping: 30,
+              stiffness: 300
             }}
             className="relative bg-slate-50 w-full sm:w-[540px] md:w-[600px] lg:w-[640px] h-[90vh] sm:h-full max-h-[92vh] sm:max-h-full rounded-t-3xl sm:rounded-t-none sm:rounded-l-3xl shadow-2xl flex flex-col overflow-hidden z-10 pointer-events-auto border-t sm:border-t-0 sm:border-l border-slate-200/80 mb-0 [transform:translateZ(0)] text-slate-900"
           >
@@ -461,7 +464,7 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
             )}
           </footer>
         </motion.div>
-      </div>
+      </motion.div>
       )}
 
       <ConfirmModal
