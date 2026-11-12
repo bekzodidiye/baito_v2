@@ -117,122 +117,121 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
     );
   };
 
-  if (typeof document === 'undefined') return null;
+  if (typeof document === 'undefined' || !isOpen) return null;
 
   return createPortal(
     <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 md:p-8">
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-black/60 backdrop-blur-md"
-          />
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 md:p-8">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-black/60 backdrop-blur-md"
+        />
 
-          {/* Modal Content */}
-          <motion.div
-            role="dialog"
-            aria-modal="true"
-            initial={{ opacity: 0, scale: 0.95, y: 16 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 16 }}
-            transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-            className="relative bg-white w-full sm:max-w-4xl h-[90vh] sm:h-[82vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden z-10 pointer-events-auto border border-slate-200/90"
-          >
-            {/* Modal Header */}
-            <div className="bg-white/95 backdrop-blur-md px-4 sm:px-6 py-3.5 border-b border-slate-200 flex items-center justify-between shrink-0 z-20">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-brand-primary flex items-center justify-center shrink-0">
-                  <MapPin size={20} className="stroke-[2.5]" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate">
-                    {language === 'uz' ? 'Ish joyi xaritasi' : language === 'ru' ? 'Локация работы' : 'Job Location'}
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium truncate">
+        {/* Modal Content */}
+        <motion.div
+          role="dialog"
+          aria-modal="true"
+          initial={{ opacity: 0, scale: 0.95, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 16 }}
+          transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+          className="relative bg-white w-full sm:max-w-4xl h-[90vh] sm:h-[82vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden z-10 pointer-events-auto border border-slate-200/90"
+        >
+          {/* Modal Header */}
+          <div className="bg-white/95 backdrop-blur-md px-4 sm:px-6 py-3.5 border-b border-slate-200 flex items-center justify-between shrink-0 z-20">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-brand-primary flex items-center justify-center shrink-0">
+                <MapPin size={20} className="stroke-[2.5]" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate">
+                  {language === 'uz' ? 'Ish joyi xaritasi' : language === 'ru' ? 'Локация работы' : 'Job Location'}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium truncate">
+                  {locationTitle}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExternalNav}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+              >
+                <Navigation size={14} className="rotate-45" />
+                <span>Google Maps</span>
+                <ExternalLink size={12} />
+              </button>
+              <button
+                onClick={onClose}
+                aria-label={language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
+                className="w-10 h-10 rounded-full hover:bg-slate-100 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* Map Canvas */}
+          <div className="relative flex-1 w-full h-full bg-slate-100 overflow-hidden">
+            <div ref={mapContainerRef} className="w-full h-full" />
+
+            {/* Map Floating Zoom & Recenter Controls */}
+            <div className="absolute top-4 right-4 z-[500] flex flex-col gap-2">
+              <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col">
+                <button
+                  onClick={handleZoomIn}
+                  aria-label="Zoom in"
+                  className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 text-slate-700 transition-colors border-b border-slate-100 cursor-pointer"
+                >
+                  <ZoomIn size={18} />
+                </button>
+                <button
+                  onClick={handleZoomOut}
+                  aria-label="Zoom out"
+                  className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer"
+                >
+                  <ZoomOut size={18} />
+                </button>
+              </div>
+
+              <button
+                onClick={handleRecenter}
+                title={language === 'uz' ? 'Markazga qaytish' : language === 'ru' ? 'К маркеру' : 'Recenter'}
+                className="w-10 h-10 bg-white rounded-xl shadow-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-brand-primary transition-colors cursor-pointer"
+              >
+                <MapPin size={18} />
+              </button>
+            </div>
+
+            {/* Bottom Address Info Bar */}
+            <div className="absolute bottom-4 left-4 right-4 z-[500]">
+              <div className="bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl shadow-xl border border-slate-200/80 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-brand-primary uppercase tracking-wider">
+                    {language === 'uz' ? 'Aniq manzil' : language === 'ru' ? 'Точный адрес' : 'Exact address'}
+                  </p>
+                  <p className="text-sm font-bold text-slate-900 truncate mt-0.5">
                     {locationTitle}
                   </p>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-2">
                 <button
                   onClick={handleExternalNav}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                  className="inline-flex sm:hidden items-center justify-center w-10 h-10 rounded-xl bg-brand-primary text-white shrink-0 shadow-md cursor-pointer"
                 >
-                  <Navigation size={14} className="rotate-45" />
-                  <span>Google Maps</span>
-                  <ExternalLink size={12} />
-                </button>
-                <button
-                  onClick={onClose}
-                  aria-label={language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
-                  className="w-10 h-10 rounded-full hover:bg-slate-100 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
-                >
-                  <X size={20} />
+                  <Navigation size={18} className="rotate-45" />
                 </button>
               </div>
             </div>
-
-            {/* Map Canvas */}
-            <div className="relative flex-1 w-full h-full bg-slate-100 overflow-hidden">
-              <div ref={mapContainerRef} className="w-full h-full" />
-
-              {/* Map Floating Zoom & Recenter Controls */}
-              <div className="absolute top-4 right-4 z-[500] flex flex-col gap-2">
-                <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col">
-                  <button
-                    onClick={handleZoomIn}
-                    aria-label="Zoom in"
-                    className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 text-slate-700 transition-colors border-b border-slate-100 cursor-pointer"
-                  >
-                    <ZoomIn size={18} />
-                  </button>
-                  <button
-                    onClick={handleZoomOut}
-                    aria-label="Zoom out"
-                    className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer"
-                  >
-                    <ZoomOut size={18} />
-                  </button>
-                </div>
-
-                <button
-                  onClick={handleRecenter}
-                  title={language === 'uz' ? 'Markazga qaytish' : language === 'ru' ? 'К маркеру' : 'Recenter'}
-                  className="w-10 h-10 bg-white rounded-xl shadow-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-brand-primary transition-colors cursor-pointer"
-                >
-                  <MapPin size={18} />
-                </button>
-              </div>
-
-              {/* Bottom Address Info Bar */}
-              <div className="absolute bottom-4 left-4 right-4 z-[500]">
-                <div className="bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl shadow-xl border border-slate-200/80 flex items-center justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-brand-primary uppercase tracking-wider">
-                      {language === 'uz' ? 'Aniq manzil' : language === 'ru' ? 'Точный адрес' : 'Exact address'}
-                    </p>
-                    <p className="text-sm font-bold text-slate-900 truncate mt-0.5">
-                      {locationTitle}
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={handleExternalNav}
-                    className="inline-flex sm:hidden items-center justify-center w-10 h-10 rounded-xl bg-brand-primary text-white shrink-0 shadow-md cursor-pointer"
-                  >
-                    <Navigation size={18} className="rotate-45" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>,
+    document.body
   );
 };
