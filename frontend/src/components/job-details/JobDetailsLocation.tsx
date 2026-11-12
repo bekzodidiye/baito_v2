@@ -70,7 +70,11 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
       });
 
       // Use fast cached Google Maps vector road tiles for instant rendering
-      createTileLayers('jobs', map);
+      const { baseLayer, labelLayer } = createTileLayers('jobs', map);
+      baseLayer.addTo(map);
+      if (labelLayer) {
+        labelLayer.addTo(map);
+      }
 
       // Custom pulsing map pin on the exact coordinate
       const customPinIcon = L.divIcon({

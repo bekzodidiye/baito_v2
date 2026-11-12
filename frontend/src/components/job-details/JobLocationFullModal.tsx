@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, MapPin, Navigation, ExternalLink, ZoomIn, ZoomOut } from 'lucide-react';
 import L from 'leaflet';
@@ -39,55 +40,67 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
 
   // Initialize interactive Leaflet map when modal is open
   useEffect(() => {
-    if (!isOpen || !mapContainerRef.current) return;
+    if (!isOpen) return;
 
-    try {
-      const map = L.map(mapContainerRef.current, {
-        center: [coords.lat, coords.lng],
-        zoom: 16,
-        zoomControl: false,
-        attributionControl: false,
-      });
+    let timer: NodeJS.Timeout;
+    const initTimer = setTimeout(() => {
+      if (!mapContainerRef.current) return;
 
-      // Use fast cached Google Maps vector road tiles
-      createTileLayers('jobs', map);
+      try {
+        const map = L.map(mapContainerRef.current, {
+          center: [coords.lat, coords.lng],
+          zoom: 16,
+          zoomControl: false,
+          attributionControl: false,
+        });
 
-      // Stylish pulsing custom pin marker
-      const customPinIcon = L.divIcon({
-        className: 'custom-map-pin',
-        html: `
-          <div style="position: relative; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; transform: translate(-50%, -100%);">
-            <div style="position: absolute; width: 48px; height: 48px; background: rgba(30, 58, 138, 0.25); border-radius: 50%; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-            <div style="position: relative; width: 42px; height: 42px; background: #1e3a8a; border: 3px solid #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 20px -4px rgba(0, 0, 0, 0.35); color: white;">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
+        // Add base layers and optional label layers
+        const { baseLayer, labelLayer } = createTileLayers('jobs', map);
+        baseLayer.addTo(map);
+        if (labelLayer) {
+          labelLayer.addTo(map);
+        }
+
+        // Stylish pulsing custom pin marker
+        const customPinIcon = L.divIcon({
+          className: 'custom-map-pin',
+          html: `
+            <div style="position: relative; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; transform: translate(-50%, -100%);">
+              <div style="position: absolute; width: 48px; height: 48px; background: rgba(30, 58, 138, 0.25); border-radius: 50%; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+              <div style="position: relative; width: 42px; height: 42px; background: #1e3a8a; border: 3px solid #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 20px -4px rgba(0, 0, 0, 0.35); color: white;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+              </div>
+              <div style="position: absolute; bottom: 2px; width: 10px; height: 10px; background: #1e3a8a; transform: rotate(45deg); border-right: 2px solid white; border-bottom: 2px solid white;"></div>
             </div>
-            <div style="position: absolute; bottom: 2px; width: 10px; height: 10px; background: #1e3a8a; transform: rotate(45deg); border-right: 2px solid white; border-bottom: 2px solid white;"></div>
-          </div>
-        `,
-        iconSize: [0, 0],
-        iconAnchor: [0, 0],
-      });
+          `,
+          iconSize: [0, 0],
+          iconAnchor: [0, 0],
+        });
 
-      const marker = L.marker([coords.lat, coords.lng], { icon: customPinIcon }).addTo(map);
+        L.marker([coords.lat, coords.lng], { icon: customPinIcon }).addTo(map);
 
-      leafletMapRef.current = map;
+        leafletMapRef.current = map;
 
-      // Invalidate size immediately once visible
-      const timer = setTimeout(() => {
-        map.invalidateSize();
-      }, 100);
+        // Invalidate size immediately
+        timer = setTimeout(() => {
+          map.invalidateSize();
+        }, 120);
+      } catch {
+        // Fallback gracefully
+      }
+    }, 50);
 
-      return () => {
-        clearTimeout(timer);
-        map.remove();
+    return () => {
+      clearTimeout(initTimer);
+      clearTimeout(timer);
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
         leafletMapRef.current = null;
-      };
-    } catch {
-      // Fallback gracefully
-    }
+      }
+    };
   }, [isOpen, coords.lat, coords.lng]);
 
   const handleZoomIn = () => leafletMapRef.current?.zoomIn();
@@ -104,10 +117,12 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
     );
   };
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-0 sm:p-4 md:p-6">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 md:p-8">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -121,11 +136,11 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
           <motion.div
             role="dialog"
             aria-modal="true"
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative bg-white w-full sm:max-w-4xl h-full sm:h-[85vh] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden z-10 pointer-events-auto border border-slate-200"
+            exit={{ opacity: 0, scale: 0.95, y: 16 }}
+            transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+            className="relative bg-white w-full sm:max-w-4xl h-[90vh] sm:h-[82vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden z-10 pointer-events-auto border border-slate-200/90"
           >
             {/* Modal Header */}
             <div className="bg-white/95 backdrop-blur-md px-4 sm:px-6 py-3.5 border-b border-slate-200 flex items-center justify-between shrink-0 z-20">
