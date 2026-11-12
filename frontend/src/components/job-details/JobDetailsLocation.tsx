@@ -9,6 +9,8 @@ import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useUIStore } from "../../store/useUIStore";
 import { useAuthStore } from "../../store/useAuthStore";
 import { getJobLocation } from '../../utils/jobTranslationUtils';
+import { createTileLayers } from '../map/mapTileLayers';
+import { JobLocationFullModal } from './JobLocationFullModal';
 
 interface JobDetailsLocationProps {
   selectedJob: Job;
@@ -31,6 +33,8 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
   const setJobsView = useUIStore(s => s.setJobsView);
   const t = translations[language];
 
+  const [isFullMapOpen, setIsFullMapOpen] = React.useState(false);
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<L.Map | null>(null);
 
@@ -38,9 +42,7 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
     if (onOpenOnMap) {
       onOpenOnMap();
     } else {
-      setMapFocusedJobId(selectedJob.id);
-      setJobsView('map');
-      setCurrentScreen('jobs');
+      setIsFullMapOpen(true);
     }
   };
 
@@ -49,7 +51,7 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
   useEffect(() => {
     if (!mapContainerRef.current) return;
     if (leafletMapRef.current) {
-      leafletMapRef.current.setView([coords.lat, coords.lng], 15);
+      leafletMapRef.current.setView([coords.lat, coords.lng], 16);
       return;
     }
 
@@ -67,9 +69,8 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
         keyboard: false,
       });
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-      }).addTo(map);
+      // Use fast cached Google Maps vector road tiles for instant rendering
+      createTileLayers('jobs', map);
 
       // Custom pulsing map pin on the exact coordinate
       const customPinIcon = L.divIcon({
@@ -94,9 +95,10 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
 
       leafletMapRef.current = map;
 
+      // Invalidate size fast
       const timer = setTimeout(() => {
         map.invalidateSize();
-      }, 150);
+      }, 50);
 
       return () => {
         clearTimeout(timer);
@@ -186,6 +188,14 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
           </button>
         </div>
       )}
+
+      {/* Interactive Full Map Modal on Click */}
+      <JobLocationFullModal
+        isOpen={isFullMapOpen}
+        onClose={() => setIsFullMapOpen(false)}
+        job={selectedJob}
+        language={language}
+      />
     </section>
   );
 };
