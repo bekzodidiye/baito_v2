@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, fireEvent } from '@testing-library/react';
 
 const language = vi.hoisted(() => ({ current: 'ru' as 'uz' | 'ru' | 'en' }));
 
@@ -99,5 +99,26 @@ describe('JobDetailsCard — the rates and the deadline read in one language', (
       workTime: '09:00 - 18:00',
     })} />);
     expect(text()).toContain("25 000 so'm");
+  });
+
+  it('opens schedule and shift hours preview modal when clicking date or time tile', async () => {
+    language.current = 'uz';
+    const { getByTitle, getByRole, queryByRole } = render(<JobDetailsCard selectedJob={job({
+      workDate: '2026-09-16',
+      workTime: '09:00 - 18:00',
+    })} />);
+
+    expect(queryByRole('dialog')).toBeNull();
+
+    // Click Sana tile
+    const dateBtn = getByTitle("Ish jadvalini ko'rish");
+    fireEvent.click(dateBtn);
+
+    expect(getByRole('dialog')).toBeDefined();
+    expect(text()).toContain("Ish jadvali va smena vaqti");
+    expect(text()).toContain("Faqat ko'rish uchun");
+    expect(text()).toContain("09:00");
+    expect(text()).toContain("18:00");
+    expect(text()).toContain("Sentyabr 2026");
   });
 });

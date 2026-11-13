@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, Timer, DollarSign, Clock, Truck, Users } from 'lucide-react';
 import { Job } from '../../types';
 import { getJobDateDisplay, getJobShiftTime, getJobShiftHours } from '../../utils/jobTimeUtils';
@@ -7,12 +7,14 @@ import { translations } from '../../translations';
 import { formatSalary } from '../../utils/money';
 import { getJobTitle } from '../../utils/jobTranslationUtils';
 import { useAuthStore } from "../../store/useAuthStore";
+import { JobSchedulePreviewModal } from './JobSchedulePreviewModal';
 
 interface JobDetailsCardProps {
   selectedJob: Job;
 }
 
 export const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ selectedJob }) => {
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const language = useAuthStore(s => s.language);
   const t = translations[language];
   const category = getJobCategory(selectedJob);
@@ -93,27 +95,47 @@ export const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ selectedJob }) =
 
       {/* 2x2 Bento Grid */}
       <div className="grid grid-cols-2 gap-2">
-        {/* Sana */}
-        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
-          <div className="flex items-center gap-1.5 mb-0.5 text-slate-500">
-            <Calendar size={15} className="text-slate-500" />
-            <span className="text-xs font-medium">{t.date || "Sana"}</span>
+        {/* Sana (Clickable Schedule Preview) */}
+        <button
+          type="button"
+          onClick={() => setIsScheduleModalOpen(true)}
+          className="bg-slate-50 hover:bg-blue-50/60 p-2.5 rounded-xl border border-slate-200/60 hover:border-brand-primary/30 transition-all text-left cursor-pointer group active:scale-[0.98]"
+          title={language === 'uz' ? "Ish jadvalini ko'rish" : language === 'ru' ? "Посмотреть график" : "View schedule"}
+        >
+          <div className="flex items-center justify-between mb-0.5 text-slate-500 group-hover:text-brand-primary transition-colors">
+            <div className="flex items-center gap-1.5">
+              <Calendar size={15} className="text-slate-500 group-hover:text-brand-primary" />
+              <span className="text-xs font-medium">{t.date || "Sana"}</span>
+            </div>
+            <span className="text-[10px] font-semibold text-brand-primary opacity-0 group-hover:opacity-100 transition-opacity">
+              {language === 'uz' ? "Ko'rish" : language === 'ru' ? "Смотреть" : "View"}
+            </span>
           </div>
           <p className="text-xs sm:text-sm font-bold text-brand-primary">
             {getJobDateDisplay(selectedJob)}
           </p>
-        </div>
+        </button>
 
-        {/* Vaqt */}
-        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
-          <div className="flex items-center gap-1.5 mb-0.5 text-slate-500">
-            <Timer size={15} className="text-slate-500" />
-            <span className="text-xs font-medium">{t.time || "Vaqt"}</span>
+        {/* Vaqt (Clickable Shift Time Preview) */}
+        <button
+          type="button"
+          onClick={() => setIsScheduleModalOpen(true)}
+          className="bg-slate-50 hover:bg-blue-50/60 p-2.5 rounded-xl border border-slate-200/60 hover:border-brand-primary/30 transition-all text-left cursor-pointer group active:scale-[0.98]"
+          title={language === 'uz' ? "Smena soatlarini ko'rish" : language === 'ru' ? "Посмотреть часы смены" : "View shift hours"}
+        >
+          <div className="flex items-center justify-between mb-0.5 text-slate-500 group-hover:text-brand-primary transition-colors">
+            <div className="flex items-center gap-1.5">
+              <Timer size={15} className="text-slate-500 group-hover:text-brand-primary" />
+              <span className="text-xs font-medium">{t.time || "Vaqt"}</span>
+            </div>
+            <span className="text-[10px] font-semibold text-brand-primary opacity-0 group-hover:opacity-100 transition-opacity">
+              {language === 'uz' ? "Ko'rish" : language === 'ru' ? "Смотреть" : "View"}
+            </span>
           </div>
           <p className="text-xs font-bold text-brand-primary truncate">
             {getJobShiftTime(selectedJob)}
           </p>
-        </div>
+        </button>
 
         {/* Maosh */}
         <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
@@ -148,6 +170,13 @@ export const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ selectedJob }) =
           {getDisplayTransport()}
         </span>
       </div>
+
+      {/* Schedule & Shift Hours Preview Modal (Read-only) */}
+      <JobSchedulePreviewModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        job={selectedJob}
+      />
     </div>
   );
 };
