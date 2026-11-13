@@ -47,7 +47,7 @@ class Job(Base):
     description = Column(String, nullable=False)
     status = Column(String, nullable=False, default=JobStatus.PENDING, index=True)
     views = Column(Integer, default=0)
-    hiredWorkerId = Column(String, ForeignKey("users.id"))
+    hiredWorkerId = Column(String, ForeignKey("users.id"), index=True)
     createdAt = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     # When the work actually began. ``workTime`` is the shift the posting
     # advertised — "09:00 - 18:00" — and it says nothing about whether anyone
