@@ -13,6 +13,7 @@ import { EmployerEditProfileModal } from './EmployerEditProfileModal';
 import { EmployerProfileStats } from './EmployerProfileStats';
 import { EmployerProfileCompletion } from './EmployerProfileCompletion';
 import { useAuthStore } from "../../store/useAuthStore";
+import { useUIStore } from "../../store/useUIStore";
 
 export const EmployerProfile: React.FC = () => {
   const { language, balance, postedJobs, applications } = useEmployer();
@@ -180,7 +181,7 @@ export const EmployerProfile: React.FC = () => {
 
           {/* Support and Logout */}
           <div className="flex flex-col gap-3 mt-2">
-          <motion.button onClick={() => setCurrentScreen("settings")}
+          <motion.button onClick={() => useUIStore.getState().setActiveModal('settings')}
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
             className="w-full bg-white p-4 rounded-2xl shadow-xs border border-slate-100 flex items-center justify-center gap-2 hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 font-bold text-xs"
           >

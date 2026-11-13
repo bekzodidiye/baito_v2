@@ -32,6 +32,8 @@ interface UIState {
   setActiveCalendarFilter: (filter: 'all' | 'applied' | 'confirmed' | 'todo' | 'completed') => void;
   activeCalendarDay: string;
   setActiveCalendarDay: (day: string) => void;
+  activeModal: 'profile' | 'settings' | 'help' | 'auth' | null;
+  setActiveModal: (modal: 'profile' | 'settings' | 'help' | 'auth' | null) => void;
   hasSeenTour: boolean;
   /** Which half of the job search the worker is looking at. The header toggles
    *  it; App decides whether to render the map or the list from it. */
@@ -41,6 +43,8 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
+  activeModal: null,
+  setActiveModal: (modal) => set({ activeModal: modal }),
   selectedChatId: null,
   setSelectedChatId: (id) => set({ selectedChatId: id }),
   

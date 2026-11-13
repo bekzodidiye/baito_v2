@@ -30,8 +30,9 @@ function AppContent() {
     const requireAuth = useApp().requireAuth;
     const jobsView = useUIStore(s => s.jobsView);
     const language = useAuthStore(s => s.language);
+    const activeModal = useUIStore(s => s.activeModal);
+    const setActiveModal = useUIStore(s => s.setActiveModal);
   const [hasOpenedMap, setHasOpenedMap] = useState(false);
-  const [activeModal, setActiveModal] = useState<'profile' | 'settings' | 'help' | 'auth' | null>(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
@@ -66,7 +67,6 @@ function AppContent() {
   
   const handleOpenModal = (type: 'profile' | 'settings' | 'help' | 'auth') => {
     if (type === 'auth') setCurrentScreen('login');
-    else if (type === 'settings') { setActiveModal(null); setCurrentScreen('settings'); }
     else if (type === 'help') { setActiveModal(null); setCurrentScreen('help'); }
     else setActiveModal(type);
   };

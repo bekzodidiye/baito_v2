@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, User, Shield, HelpCircle } from 'lucide-react';
+import { X, User, Shield, HelpCircle, Settings } from 'lucide-react';
 import { MODAL_TRANSLATIONS } from './menu/MenuTranslations';
 import { ProfileContent } from './menu/ProfileContent';
 import { SettingsContent } from './menu/SettingsContent';
@@ -72,7 +72,7 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
                   )}
                   {currentType === 'settings' && (
                     <>
-                      <Shield size={20} className="text-brand-primary" />
+                      <Settings size={20} className="text-brand-primary" />
                       <span>{t.settingsTitle}</span>
                     </>
                   )}
@@ -94,7 +94,7 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
               {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {currentType === 'profile' && <ProfileContent onClose={onClose} />}
-                {currentType === 'settings' && <SettingsContent />}
+                {currentType === 'settings' && <SettingsContent onClose={onClose} />}
                 {currentType === 'help' && <HelpContent />}
               </div>
             </>

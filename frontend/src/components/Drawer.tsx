@@ -136,7 +136,7 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
       id: 'settings',
       label: t.settings,
       icon: Settings,
-      action: () => { setDrawerOpen(false); setCurrentScreen('settings'); },
+      action: () => handleModalOpen('settings'),
       active: currentScreen === 'settings',
     },
     {

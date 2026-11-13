@@ -2,6 +2,7 @@ import React from 'react';
 import type { ScreenType } from '../../../context/types';
 import { Briefcase, ChevronRight, History, MessageCircle, FileText, ClipboardList, Coins } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useUIStore } from '../../../store/useUIStore';
 
 interface ProfileAccordionProps {
   expandedSection: 'activity' | 'settings' | 'help' | null;
@@ -116,7 +117,7 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
       {/* 2. Sozlamalar Accordion (Direct Link) */}
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
         <button 
-          onClick={() => { setCurrentScreen('settings'); (null); }}
+          onClick={() => useUIStore.getState().setActiveModal('settings')}
           className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           <div className="flex items-center gap-2">
