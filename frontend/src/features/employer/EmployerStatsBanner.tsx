@@ -151,7 +151,7 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
           <div className="w-6 h-6 rounded-full bg-brand-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
             <Plus size={16} className="stroke-[3]" />
           </div>
-          {language === 'uz' ? "Yangi ish yaratish" : language === 'ru' ? "Создать новую работу" : "Post a new job"}
+          {language === 'uz' ? "Yangi e'lon yaratish" : language === 'ru' ? "Создать новое объявление" : "Post a new job"}
         </motion.button>
       </div>
     </div>
