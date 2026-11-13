@@ -38,6 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
     const userProfile = useAuthStore(s => s.userProfile);
     const unreadNotificationsCount = useUIStore(s => s.unreadNotificationsCount);
     const activeModal = useUIStore(s => s.activeModal);
+    const activeSettingsTab = useUIStore(s => s.activeSettingsTab);
     const { pendingApplications, unreadMessages } = useSidebarBadges();
     const requireAuth = useApp().requireAuth;
 
@@ -166,9 +167,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 whileHover={{ x: 2 }}
-                onClick={() => onOpenModal ? onOpenModal('settings') : useUIStore.getState().setActiveModal('settings')}
+                onClick={() => {
+                  useUIStore.getState().setActiveSettingsTab('settings');
+                  if (onOpenModal) onOpenModal('settings');
+                  else useUIStore.getState().setActiveModal('settings');
+                }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-[13px] transition-colors duration-200 cursor-pointer ${
-                  activeModal === 'settings' || currentScreen === 'settings' || currentScreen === 'security' ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/15' : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                  (activeModal === 'settings' && (activeSettingsTab === 'settings' || activeSettingsTab === 'security')) || currentScreen === 'settings' || currentScreen === 'security' ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/15' : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -196,9 +201,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 whileHover={{ x: 2 }}
-                onClick={() => setCurrentScreen('help')}
+                onClick={() => {
+                  useUIStore.getState().setActiveSettingsTab('help');
+                  if (onOpenModal) onOpenModal('help');
+                  else useUIStore.getState().setActiveModal('settings');
+                }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-[13px] transition-colors duration-200 cursor-pointer ${
-                  currentScreen === 'help' || currentScreen === 'faq' || currentScreen === 'guide' || currentScreen === 'terms' || currentScreen === 'support-chat' ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/15' : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                  (activeModal === 'settings' && activeSettingsTab !== 'settings' && activeSettingsTab !== 'security') || ['help', 'faq', 'guide', 'privacy', 'terms', 'support-chat'].includes(currentScreen) ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/15' : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
                 }`}
               >
                 <div className="flex items-center gap-3">

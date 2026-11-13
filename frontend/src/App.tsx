@@ -67,8 +67,13 @@ function AppContent() {
   
   const handleOpenModal = (type: 'profile' | 'settings' | 'help' | 'auth') => {
     if (type === 'auth') setCurrentScreen('login');
-    else if (type === 'help') { setActiveModal(null); setCurrentScreen('help'); }
-    else setActiveModal(type);
+    else if (type === 'help') {
+      useUIStore.getState().setActiveSettingsTab('help');
+      setActiveModal('settings');
+    } else if (type === 'settings') {
+      useUIStore.getState().setActiveSettingsTab('settings');
+      setActiveModal('settings');
+    } else setActiveModal(type);
   };
 
   const isSettingsOrHelp = ['settings', 'security', 'help', 'faq', 'guide', 'terms', 'privacy', 'support-chat'].includes(currentScreen);

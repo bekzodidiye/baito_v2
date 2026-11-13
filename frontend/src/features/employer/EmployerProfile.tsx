@@ -181,7 +181,10 @@ export const EmployerProfile: React.FC = () => {
 
           {/* Support and Logout */}
           <div className="flex flex-col gap-3 mt-2">
-          <motion.button onClick={() => useUIStore.getState().setActiveModal('settings')}
+          <motion.button onClick={() => {
+            useUIStore.getState().setActiveSettingsTab('settings');
+            useUIStore.getState().setActiveModal('settings');
+          }}
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
             className="w-full bg-white p-4 rounded-2xl shadow-xs border border-slate-100 flex items-center justify-center gap-2 hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 font-bold text-xs"
           >
@@ -189,7 +192,10 @@ export const EmployerProfile: React.FC = () => {
             <span>{language === 'uz' ? "Sozlamalar" : language === 'ru' ? "Настройки" : "Settings"}</span>
           </motion.button>
 
-            <motion.button onClick={() => setCurrentScreen("help")}
+            <motion.button onClick={() => {
+              useUIStore.getState().setActiveSettingsTab('help');
+              useUIStore.getState().setActiveModal('settings');
+            }}
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
               className="w-full bg-white p-4 rounded-2xl shadow-xs border border-slate-100 flex items-center justify-center gap-2 hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 font-bold text-xs"
             >

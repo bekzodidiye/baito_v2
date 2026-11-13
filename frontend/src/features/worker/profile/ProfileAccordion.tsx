@@ -117,7 +117,10 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
       {/* 2. Sozlamalar Accordion (Direct Link) */}
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
         <button 
-          onClick={() => useUIStore.getState().setActiveModal('settings')}
+          onClick={() => {
+            useUIStore.getState().setActiveSettingsTab('settings');
+            useUIStore.getState().setActiveModal('settings');
+          }}
           className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           <div className="flex items-center gap-2">
@@ -131,7 +134,10 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
       {/* 3. Yordam Accordion (Direct Link) */}
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs">
         <button 
-          onClick={() => { setCurrentScreen('help'); (null); }}
+          onClick={() => {
+            useUIStore.getState().setActiveSettingsTab('help');
+            useUIStore.getState().setActiveModal('settings');
+          }}
           className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           <div className="flex items-center gap-2">
@@ -144,7 +150,10 @@ export const ProfileAccordion: React.FC<ProfileAccordionProps> = ({
       {/* 4. Maxfiylik siyosati (Direct Link) */}
       <div className="bg-white rounded-xl border border-slate-100 overflow-hidden shadow-3xs mt-3">
         <button 
-          onClick={() => { setCurrentScreen('privacy'); (null); }}
+          onClick={() => {
+            useUIStore.getState().setActiveSettingsTab('privacy');
+            useUIStore.getState().setActiveModal('settings');
+          }}
           className="w-full flex items-center justify-between p-4.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
         >
           <div className="flex items-center gap-2">

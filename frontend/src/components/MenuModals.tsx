@@ -1,11 +1,12 @@
 import React, { Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, User, Shield, HelpCircle, Settings } from 'lucide-react';
+import { X, User, Shield, HelpCircle, Settings, Lock, BookOpen, ShieldCheck, FileText, Headphones } from 'lucide-react';
 import { MODAL_TRANSLATIONS } from './menu/MenuTranslations';
 import { ProfileContent } from './menu/ProfileContent';
 import { SettingsContent } from './menu/SettingsContent';
 import { HelpContent } from './menu/HelpContent';
 import { useAuthStore } from "../store/useAuthStore";
+import { useUIStore } from "../store/useUIStore";
 import { Orb } from "@/components/ui/thinking-orbs";
 
 const LoginPromptScreen = React.lazy(() => import('./login/LoginPromptScreen').then(m => ({ default: m.LoginPromptScreen })));
@@ -18,6 +19,7 @@ interface MenuModalProps {
 
 export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) => {
   const language = useAuthStore(s => s.language);
+  const activeSettingsTab = useUIStore(s => s.activeSettingsTab);
   const lastTypeRef = React.useRef(type);
   if (type) {
     lastTypeRef.current = type;
@@ -89,8 +91,47 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
                   )}
                   {currentType === 'settings' && (
                     <>
-                      <Settings size={20} className="text-brand-primary" />
-                      <span>{t.settingsTitle}</span>
+                      {activeSettingsTab === 'security' ? (
+                        <>
+                          <Lock size={20} className="text-brand-primary" />
+                          <span>{language === 'ru' ? 'Безопасность' : language === 'en' ? 'Security' : 'Xavfsizlik'}</span>
+                        </>
+                      ) : activeSettingsTab === 'help' ? (
+                        <>
+                          <HelpCircle size={20} className="text-brand-primary" />
+                          <span>{t.helpTitle}</span>
+                        </>
+                      ) : activeSettingsTab === 'faq' ? (
+                        <>
+                          <HelpCircle size={20} className="text-brand-primary" />
+                          <span>FAQ</span>
+                        </>
+                      ) : activeSettingsTab === 'guide' ? (
+                        <>
+                          <BookOpen size={20} className="text-brand-primary" />
+                          <span>{language === 'uz' ? "Qo'llanma" : language === 'ru' ? 'Руководство' : 'Guide'}</span>
+                        </>
+                      ) : activeSettingsTab === 'privacy' ? (
+                        <>
+                          <ShieldCheck size={20} className="text-brand-primary" />
+                          <span>{language === 'uz' ? 'Maxfiylik' : language === 'ru' ? 'Конфиденциальность' : 'Privacy'}</span>
+                        </>
+                      ) : activeSettingsTab === 'terms' ? (
+                        <>
+                          <FileText size={20} className="text-brand-primary" />
+                          <span>{language === 'uz' ? 'Shartlar' : language === 'ru' ? 'Условия' : 'Terms'}</span>
+                        </>
+                      ) : activeSettingsTab === 'support-chat' ? (
+                        <>
+                          <Headphones size={20} className="text-brand-primary" />
+                          <span>{language === 'uz' ? 'Chat' : language === 'ru' ? 'Чат' : 'Chat'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Settings size={20} className="text-brand-primary" />
+                          <span>{t.settingsTitle}</span>
+                        </>
+                      )}
                     </>
                   )}
                   {currentType === 'help' && (

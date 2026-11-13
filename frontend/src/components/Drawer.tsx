@@ -136,14 +136,20 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
       id: 'settings',
       label: t.settings,
       icon: Settings,
-      action: () => handleModalOpen('settings'),
+      action: () => {
+        useUIStore.getState().setActiveSettingsTab('settings');
+        handleModalOpen('settings');
+      },
       active: currentScreen === 'settings',
     },
     {
       id: 'help',
       label: t.help,
       icon: HelpCircle,
-      action: () => handleModalOpen('help'),
+      action: () => {
+        useUIStore.getState().setActiveSettingsTab('help');
+        handleModalOpen('settings');
+      },
       active: false,
     }
   );
