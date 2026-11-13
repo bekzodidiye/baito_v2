@@ -53,7 +53,7 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
               currentType === 'auth'
                 ? 'max-w-md max-h-[94vh] md:max-h-[91vh]'
                 : currentType === 'settings'
-                ? 'max-w-xl max-h-[90vh]'
+                ? 'max-w-5xl h-[88vh] max-h-[88vh]'
                 : 'max-w-md max-h-[85vh]'
             } z-10`}
           >
@@ -65,8 +65,21 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
             </div>
           ) : (
             <>
-              {/* Header */}
-              <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0 bg-white">
+              {/* Desktop Close button for Settings modal */}
+              {currentType === 'settings' && (
+                <button
+                  onClick={onClose}
+                  aria-label="Yopish"
+                  className="hidden md:flex absolute top-4 right-4 z-40 p-2 rounded-full hover:bg-slate-200/70 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer bg-white/80 backdrop-blur-xs border border-slate-200/60 shadow-2xs"
+                >
+                  <X size={18} />
+                </button>
+              )}
+
+              {/* Header (visible on mobile for settings, always visible for profile/help) */}
+              <div className={`flex items-center justify-between p-5 border-b border-slate-100 shrink-0 bg-white ${
+                currentType === 'settings' ? 'md:hidden' : ''
+              }`}>
                 <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
                   {currentType === 'profile' && (
                     <>
@@ -95,8 +108,10 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
                 </button>
               </div>
 
-              {/* Scrollable Content */}
-              <div className={`flex-1 overflow-y-auto ${currentType === 'settings' ? 'p-5 md:p-6 bg-brand-surface space-y-6' : 'p-6 space-y-6'}`}>
+              {/* Content Container */}
+              <div className={`flex-1 min-h-0 ${
+                currentType === 'settings' ? 'p-0 overflow-hidden flex flex-col md:flex-row' : 'overflow-y-auto p-6 space-y-6'
+              }`}>
                 {currentType === 'profile' && <ProfileContent onClose={onClose} />}
                 {currentType === 'settings' && <SettingsContent onClose={onClose} />}
                 {currentType === 'help' && <HelpContent />}
