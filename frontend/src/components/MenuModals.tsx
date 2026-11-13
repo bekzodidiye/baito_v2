@@ -49,8 +49,12 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-            className={`relative bg-white w-full max-w-md rounded-[20px] shadow-2xl border border-slate-100/80 overflow-hidden flex flex-col pointer-events-auto text-slate-900 ${
-              currentType === 'auth' ? 'max-h-[94vh] md:max-h-[91vh]' : 'max-h-[85vh]'
+            className={`relative bg-white w-full rounded-[24px] shadow-2xl border border-slate-100/80 overflow-hidden flex flex-col pointer-events-auto text-slate-900 ${
+              currentType === 'auth'
+                ? 'max-w-md max-h-[94vh] md:max-h-[91vh]'
+                : currentType === 'settings'
+                ? 'max-w-xl max-h-[90vh]'
+                : 'max-w-md max-h-[85vh]'
             } z-10`}
           >
           {currentType === 'auth' ? (
@@ -62,7 +66,7 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
           ) : (
             <>
               {/* Header */}
-              <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0 bg-white">
                 <h3 className="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
                   {currentType === 'profile' && (
                     <>
@@ -92,7 +96,7 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
               </div>
 
               {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className={`flex-1 overflow-y-auto ${currentType === 'settings' ? 'p-5 md:p-6 bg-brand-surface space-y-6' : 'p-6 space-y-6'}`}>
                 {currentType === 'profile' && <ProfileContent onClose={onClose} />}
                 {currentType === 'settings' && <SettingsContent onClose={onClose} />}
                 {currentType === 'help' && <HelpContent />}

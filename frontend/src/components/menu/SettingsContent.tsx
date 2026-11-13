@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Bell, Globe, Lock, ChevronRight, Loader2, Info } from 'lucide-react';
 import { translations } from '../../translations';
-import { MODAL_TRANSLATIONS } from './MenuTranslations';
+import { Lock, Globe, Bell, Info, HelpCircle, ChevronRight, Briefcase, MessageCircle, Loader2 } from 'lucide-react';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
-import { useAuthStore } from "../../store/useAuthStore";
 import { updateUserProfileApi } from '../../api/queries';
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface SettingsContentProps {
   onClose?: () => void;
@@ -17,9 +16,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
   const userProfile = useAuthStore(s => s.userProfile);
   const setUserProfile = useAuthStore(s => s.setUserProfile);
   const isLoggedIn = useAuthStore(s => s.isLoggedIn);
-
   const t = translations[language];
-  const mt = MODAL_TRANSLATIONS[language];
   const isEmployer = userProfile?.selectedRole === 'employer';
 
   const [newJobsNotifications, setNewJobsNotifications] = useState(userProfile?.notify_new_jobs ?? true);
@@ -27,11 +24,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
   const [generalNotifications, setGeneralNotifications] = useState(userProfile?.notify_general ?? true);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleToggle = async (
-    key: 'notify_new_jobs' | 'notify_interviews' | 'notify_general',
-    value: boolean,
-    setter: (val: boolean) => void
-  ) => {
+  const handleToggle = async (key: 'notify_new_jobs' | 'notify_interviews' | 'notify_general', value: boolean, setter: (val: boolean) => void) => {
     setter(value);
     if (!isLoggedIn) return;
     setIsUpdating(true);
@@ -42,7 +35,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
       }
     } catch (error) {
       console.error('Failed to update settings:', error);
-      setter(!value);
+      setter(!value); // Revert on failure
     } finally {
       setIsUpdating(false);
     }
@@ -50,164 +43,170 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
 
   return (
     <div className="space-y-6">
-      {/* Language Section */}
-      <div className="space-y-3">
-        <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-          <Globe size={13} className="text-brand-primary" />
-          <span>{mt.appLanguage}</span>
-        </h5>
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={() => setLanguage('uz')}
-            className={`py-2.5 px-2 text-center rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-              language === 'uz'
-                ? 'bg-brand-primary text-white border-brand-primary shadow-sm shadow-brand-primary/20'
-                : 'bg-slate-50 border-slate-200/80 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
+      {/* Account Section */}
+      <section>
+        <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">{t.settingsAccount}</h2>
+        <div className="bg-brand-surface-lowest rounded-3xl shadow-[0_4px_20px_rgba(0,6,102,0.05),0_1px_3px_rgba(0,6,102,0.02)] overflow-hidden">
+          <button 
+            onClick={() => {
+              onClose?.();
+              setCurrentScreen('security');
+            }}
+            className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group cursor-pointer"
           >
-            O'zbekcha
-          </button>
-          <button
-            type="button"
-            onClick={() => setLanguage('ru')}
-            className={`py-2.5 px-2 text-center rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-              language === 'ru'
-                ? 'bg-brand-primary text-white border-brand-primary shadow-sm shadow-brand-primary/20'
-                : 'bg-slate-50 border-slate-200/80 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            Русский
-          </button>
-          <button
-            type="button"
-            onClick={() => setLanguage('en')}
-            className={`py-2.5 px-2 text-center rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-              language === 'en'
-                ? 'bg-brand-primary text-white border-brand-primary shadow-sm shadow-brand-primary/20'
-                : 'bg-slate-50 border-slate-200/80 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            English
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-brand-primary group-hover:text-white group-hover:border-brand-primary group-hover:scale-105 transition-all duration-200">
+                <Lock size={20} className="stroke-[2.2]" />
+              </div>
+              <div>
+                <p className="text-[16px] font-semibold text-brand-text">{t.security}</p>
+              </div>
+            </div>
+            <ChevronRight size={22} className="text-brand-text-variant group-hover:text-brand-primary transition-colors" />
           </button>
         </div>
-      </div>
+      </section>
+
+      {/* Preferences Section */}
+      <section>
+        <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">{t.settingsPreferences}</h2>
+        <div className="bg-brand-surface-lowest rounded-3xl shadow-[0_4px_20px_rgba(0,6,102,0.05),0_1px_3px_rgba(0,6,102,0.02)] overflow-hidden">
+          <div className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group relative cursor-pointer">
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-brand-primary group-hover:text-white group-hover:border-brand-primary group-hover:scale-105 transition-all duration-200">
+                <Globe size={20} className="stroke-[2.2]" />
+              </div>
+              <div>
+                <p className="text-[16px] font-semibold text-brand-text">{t.appLanguage}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[14px] text-brand-text-variant font-medium">
+                {language === "uz" ? "O'zbek" : language === "ru" ? "Русский" : "English"}
+              </span>
+              <ChevronRight size={22} className="text-brand-text-variant group-hover:text-brand-primary transition-colors" />
+            </div>
+            <select 
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as any)}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            >
+              <option value="uz">O'zbek</option>
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+        </div>
+      </section>
 
       {/* Notifications Section */}
-      <div className="space-y-3 pt-1 border-t border-slate-100">
-        <div className="flex items-center justify-between">
-          <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 pt-2">
-            <Bell size={13} className="text-brand-primary" />
-            <span>{mt.notifications}</span>
-          </h5>
-          {isUpdating && (
-            <Loader2 size={13} className="animate-spin text-brand-primary mt-2" />
-          )}
+      <section>
+        <div className="flex items-center justify-between mb-3 px-2">
+          <h2 className="text-[12px] text-brand-primary uppercase tracking-wider font-bold">{t.notifications}</h2>
+          {isUpdating && <Loader2 size={16} className="animate-spin text-brand-primary" />}
         </div>
-
-        <div className="space-y-2">
-          {/* Job / Application notifications */}
-          <button
-            type="button"
-            disabled={isUpdating}
+        <div className="bg-brand-surface-lowest rounded-3xl shadow-[0_4px_20px_rgba(0,6,102,0.05),0_1px_3px_rgba(0,6,102,0.02)] overflow-hidden">
+          
+          <button 
+            className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group border-b border-slate-100 cursor-pointer"
             onClick={() => handleToggle('notify_new_jobs', !newJobsNotifications, setNewJobsNotifications)}
-            className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100/70 transition-colors rounded-xl border border-slate-100 text-left cursor-pointer group"
+            disabled={isUpdating}
           >
-            <div className="flex flex-col gap-0.5 pr-2">
-              <span className="text-xs font-bold text-slate-700">
-                {isEmployer
-                  ? (language === 'uz' ? 'Yangi arizalar' : language === 'ru' ? 'Новые отклики' : 'New applicants')
-                  : mt.notifyNewJobs}
-              </span>
-              <span className="text-[10px] text-slate-400">
-                {isEmployer
-                  ? (language === 'uz' ? "E'loningizga tushgan arizalar haqida" : language === 'ru' ? 'О новых откликах на ваши вакансии' : 'About new applications for your jobs')
-                  : mt.notifyNewJobsDesc}
-              </span>
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-brand-primary group-hover:text-white group-hover:border-brand-primary group-hover:scale-105 transition-all duration-200">
+                <Briefcase size={20} className="stroke-[2.2]" />
+              </div>
+              <div>
+                <p className="text-[16px] font-semibold text-brand-text">{isEmployer ? (language === 'uz' ? 'Yangi arizalar' : language === 'ru' ? 'Новые отклики' : 'New applicants') : t.notifyNewJobs}</p>
+                <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium">{isEmployer ? (language === 'uz' ? 'E\'loningizga tushgan arizalar haqida' : language === 'ru' ? 'О новых откликах на ваши вакансии' : 'About new applications for your jobs') : t.notifyNewJobsDesc}</p>
+              </div>
             </div>
-            <div className={`w-10 h-5.5 rounded-full relative transition-colors duration-200 shrink-0 ${newJobsNotifications ? 'bg-brand-primary' : 'bg-slate-200'}`}>
-              <div className={`absolute top-0.5 w-4.5 h-4.5 bg-white rounded-full transition-all duration-200 shadow-xs ${newJobsNotifications ? 'right-0.5' : 'left-0.5'}`} />
+            
+            <div className={`w-12 h-6 rounded-full relative transition-all duration-300 ${newJobsNotifications ? 'bg-brand-primary' : 'bg-slate-200'}`}>
+              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-xs ${newJobsNotifications ? 'right-1' : 'left-1'}`}></div>
             </div>
           </button>
 
-          {/* Messages / Chat notifications */}
-          <button
-            type="button"
-            disabled={isUpdating}
+          <button 
+            className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group border-b border-slate-100 cursor-pointer"
             onClick={() => handleToggle('notify_interviews', !interviewNotifications, setInterviewNotifications)}
-            className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100/70 transition-colors rounded-xl border border-slate-100 text-left cursor-pointer group"
-          >
-            <div className="flex flex-col gap-0.5 pr-2">
-              <span className="text-xs font-bold text-slate-700">
-                {isEmployer
-                  ? (language === 'uz' ? 'Yangi xabarlar' : language === 'ru' ? 'Новые сообщения' : 'New messages')
-                  : (language === 'uz' ? 'Xabarlar bildirishnomasi' : language === 'ru' ? 'Уведомления сообщений' : 'Message notifications')}
-              </span>
-              <span className="text-[10px] text-slate-400">
-                {isEmployer
-                  ? (language === 'uz' ? 'Nomzodlardan kelgan xabarlar haqida' : language === 'ru' ? 'О сообщениях от кандидатов' : 'About messages from candidates')
-                  : (language === 'uz' ? 'Yangi kelgan xabarlar haqida bildirishnoma' : language === 'ru' ? 'О новых входящих сообщениях' : 'About incoming messages')}
-              </span>
-            </div>
-            <div className={`w-10 h-5.5 rounded-full relative transition-colors duration-200 shrink-0 ${interviewNotifications ? 'bg-brand-primary' : 'bg-slate-200'}`}>
-              <div className={`absolute top-0.5 w-4.5 h-4.5 bg-white rounded-full transition-all duration-200 shadow-xs ${interviewNotifications ? 'right-0.5' : 'left-0.5'}`} />
-            </div>
-          </button>
-
-          {/* General / System notifications */}
-          <button
-            type="button"
             disabled={isUpdating}
-            onClick={() => handleToggle('notify_general', !generalNotifications, setGeneralNotifications)}
-            className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100/70 transition-colors rounded-xl border border-slate-100 text-left cursor-pointer group"
           >
-            <div className="flex flex-col gap-0.5 pr-2">
-              <span className="text-xs font-bold text-slate-700">
-                {t.notifyGeneral}
-              </span>
-              <span className="text-[10px] text-slate-400">
-                {t.notifySystem}
-              </span>
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-brand-primary group-hover:text-white group-hover:border-brand-primary group-hover:scale-105 transition-all duration-200">
+                <MessageCircle size={20} className="stroke-[2.2]" />
+              </div>
+              <div>
+                <p className="text-[16px] font-semibold text-brand-text">{isEmployer ? (language === 'uz' ? 'Yangi xabarlar' : language === 'ru' ? 'Новые сообщения' : 'New messages') : t.notifyChat}</p>
+                <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium">{isEmployer ? (language === 'uz' ? 'Nomzodlardan kelgan xabarlar haqida' : language === 'ru' ? 'О сообщениях от кандидатов' : 'About messages from candidates') : t.notifyOffers}</p>
+              </div>
             </div>
-            <div className={`w-10 h-5.5 rounded-full relative transition-colors duration-200 shrink-0 ${generalNotifications ? 'bg-brand-primary' : 'bg-slate-200'}`}>
-              <div className={`absolute top-0.5 w-4.5 h-4.5 bg-white rounded-full transition-all duration-200 shadow-xs ${generalNotifications ? 'right-0.5' : 'left-0.5'}`} />
+            
+            <div className={`w-12 h-6 rounded-full relative transition-all duration-300 ${interviewNotifications ? 'bg-brand-primary' : 'bg-slate-200'}`}>
+              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-xs ${interviewNotifications ? 'right-1' : 'left-1'}`}></div>
             </div>
           </button>
-        </div>
-      </div>
 
-      {/* Security Section (Change Password) */}
-      <div className="space-y-3 pt-1 border-t border-slate-100">
-        <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 pt-2">
-          <Lock size={13} className="text-brand-primary" />
-          <span>{mt.security}</span>
-        </h5>
-        <button
-          type="button"
-          onClick={() => {
-            onClose?.();
-            setCurrentScreen('security');
-          }}
-          className="w-full p-3 bg-slate-50 hover:bg-slate-100/80 text-slate-700 font-bold text-xs rounded-xl border border-slate-100 transition-colors text-left flex items-center justify-between cursor-pointer group"
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-colors">
-              <Lock size={14} />
+          <button 
+            className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group cursor-pointer"
+            onClick={() => handleToggle('notify_general', !generalNotifications, setGeneralNotifications)}
+            disabled={isUpdating}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-brand-primary group-hover:text-white group-hover:border-brand-primary group-hover:scale-105 transition-all duration-200">
+                <Bell size={20} className="stroke-[2.2]" />
+              </div>
+              <div>
+                <p className="text-[16px] font-semibold text-brand-text">{t.notifyGeneral}</p>
+                <p className="text-[13px] text-brand-text-variant mt-0.5 font-medium">{t.notifySystem}</p>
+              </div>
             </div>
-            <span className="text-xs font-bold text-slate-800">{mt.changePassword}</span>
-          </div>
-          <ChevronRight size={16} className="text-slate-400 group-hover:text-brand-primary transition-colors" />
-        </button>
-      </div>
+            
+            <div className={`w-12 h-6 rounded-full relative transition-all duration-300 ${generalNotifications ? 'bg-brand-primary' : 'bg-slate-200'}`}>
+              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-xs ${generalNotifications ? 'right-1' : 'left-1'}`}></div>
+            </div>
+          </button>
+          
+        </div>
+      </section>
 
-      {/* Footer Info */}
-      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-medium">
-        <span className="flex items-center gap-1">
-          <Info size={12} className="text-slate-400" />
-          Baito Platform
-        </span>
-        <span>v{__APP_VERSION__}</span>
-      </div>
+      {/* About Section */}
+      <section>
+        <h2 className="text-[12px] text-brand-primary mb-3 px-2 uppercase tracking-wider font-bold">{t.settingsExtra}</h2>
+        <div className="bg-brand-surface-lowest rounded-3xl shadow-[0_4px_20px_rgba(0,6,102,0.05),0_1px_3px_rgba(0,6,102,0.02)] overflow-hidden">
+          
+          <div className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest border-b border-slate-100">
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+                <Info size={20} className="stroke-[2.2]" />
+              </div>
+              <div>
+                <p className="text-[16px] font-semibold text-brand-text">{t.settingsAbout}</p>
+              </div>
+            </div>
+            <span className="text-[14px] text-brand-text-variant font-medium">v{__APP_VERSION__}</span>
+          </div>
+
+          <button 
+            onClick={() => {
+              onClose?.();
+              setCurrentScreen('help');
+            }}
+            className="w-full flex items-center justify-between p-5 bg-brand-surface-lowest hover:bg-brand-surface-low transition-colors text-left group cursor-pointer"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-white text-brand-primary border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-brand-primary group-hover:text-white group-hover:border-brand-primary group-hover:scale-105 transition-all duration-200">
+                <HelpCircle size={20} className="stroke-[2.2]" />
+              </div>
+              <div>
+                <p className="text-[16px] font-semibold text-brand-text">{t.settingsHelpCenter}</p>
+              </div>
+            </div>
+            <ChevronRight size={22} className="text-brand-text-variant group-hover:text-brand-primary transition-colors" />
+          </button>
+
+        </div>
+      </section>
     </div>
   );
 };
