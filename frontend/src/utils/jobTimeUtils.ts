@@ -22,6 +22,27 @@ export const getJobShiftTime = (job: Job): string => {
 };
 
 /**
+ * Calculate the duration of a job shift in hours.
+ * Defaults to 8 if cannot be parsed.
+ */
+export const getJobShiftHours = (job: Job): number => {
+  const shiftTime = getJobShiftTime(job);
+  const match = shiftTime.match(/(\d{1,2}):(\d{2})\s*[-~]\s*(\d{1,2}):(\d{2})/);
+  if (!match) return 8;
+  const startHour = parseInt(match[1], 10);
+  const startMin = parseInt(match[2], 10);
+  const endHour = parseInt(match[3], 10);
+  const endMin = parseInt(match[4], 10);
+
+  let totalMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);
+  if (totalMinutes <= 0) {
+    totalMinutes += 24 * 60; // overnight shift, e.g. 22:00 - 06:00
+  }
+  const hours = totalMinutes / 60;
+  return hours > 0 ? hours : 8;
+};
+
+/**
  * Extract clean date display (e.g. "2026-08-05") from a job.
  */
 export const getJobDateDisplay = (job: Job): string => {

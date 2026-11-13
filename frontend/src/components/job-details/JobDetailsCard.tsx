@@ -1,7 +1,7 @@
 import React from 'react';
-import { Calendar, Timer, DollarSign, Zap, Truck, Users } from 'lucide-react';
+import { Calendar, Timer, DollarSign, Clock, Truck, Users } from 'lucide-react';
 import { Job } from '../../types';
-import { getJobDateDisplay, getJobShiftTime } from '../../utils/jobTimeUtils';
+import { getJobDateDisplay, getJobShiftTime, getJobShiftHours } from '../../utils/jobTimeUtils';
 import { getJobCategory } from '../../utils/jobCategoryUtils';
 import { translations } from '../../translations';
 import { formatSalary } from '../../utils/money';
@@ -30,8 +30,26 @@ export const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ selectedJob }) =
   const rateOrNull = (v?: string | number) =>
     !v || String(v) === "Yo'q" || String(v) === "Нет" || String(v) === "No" ? null : v;
 
-  const getDisplayHourly = () =>
-    withCurrency(rateOrNull(selectedJob.hourlyRate) ?? '50 000', t.hourlyVal);
+  const getDisplayHourly = () => {
+    const rawHourly = rateOrNull(selectedJob.hourlyRate);
+    const hourlyDigits = rawHourly ? String(rawHourly).replace(/\D/g, '') : '';
+    const salaryDigits = selectedJob.salary ? String(selectedJob.salary).replace(/\D/g, '') : '';
+
+    const hourlyNum = hourlyDigits ? parseInt(hourlyDigits, 10) : 0;
+    const salaryNum = salaryDigits ? parseInt(salaryDigits, 10) : 0;
+    const shiftHours = getJobShiftHours(selectedJob);
+
+    // If hourlyRate was never set, or was mistakenly stored equal to (or greater than) daily salary:
+    // calculate the actual hourly rate = daily salary / shift hours
+    let effectiveHourly: number = hourlyNum;
+    if ((!hourlyNum || (salaryNum > 0 && hourlyNum >= salaryNum)) && salaryNum > 0 && shiftHours > 0) {
+      effectiveHourly = Math.round(salaryNum / shiftHours);
+    } else if (!effectiveHourly) {
+      effectiveHourly = 50000;
+    }
+
+    return formatSalary(effectiveHourly, language);
+  };
 
   const getDisplayTransport = () => {
     const rate = rateOrNull(selectedJob.transportRate);
@@ -111,7 +129,7 @@ export const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ selectedJob }) =
         {/* Soatlik */}
         <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
           <div className="flex items-center gap-1.5 mb-0.5 text-slate-500">
-            <Zap size={15} className="text-slate-500" />
+            <Clock size={15} className="text-slate-500" />
             <span className="text-xs font-medium">{t.hourly || "Soatlik"}</span>
           </div>
           <p className="text-xs sm:text-sm font-bold text-brand-primary truncate">

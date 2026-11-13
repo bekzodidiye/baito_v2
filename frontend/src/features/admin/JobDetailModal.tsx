@@ -12,6 +12,7 @@ import {
   MapPin, 
   CheckCircle2,
   Zap,
+  Clock,
   Briefcase,
   DollarSign,
   Timer,
@@ -446,7 +447,7 @@ const InfoTab: React.FC<InfoTabProps> = ({ j, tasks, requirements, bannerUrl, de
             color="text-emerald-700 font-extrabold"
           />
           <StatCard
-            icon={<Zap size={15} className="text-amber-600" />}
+            icon={<Clock size={15} className="text-amber-600" />}
             bg="bg-amber-50"
             label="Soatlik stavka"
             value={j.hourlyRate ? `${j.hourlyRate} / soat` : "Yo'q"}

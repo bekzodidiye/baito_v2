@@ -80,4 +80,24 @@ describe('JobDetailsCard — the rates and the deadline read in one language', (
     render(<JobDetailsCard selectedJob={job()} />);
     expect(text()).toContain('12 soat muddatgacha');
   });
+
+  it('calculates hourly rate from daily pay and shift hours when hourlyRate was saved equal to salary', () => {
+    language.current = 'uz';
+    render(<JobDetailsCard selectedJob={job({
+      salary: '100000 UZS',
+      hourlyRate: '100000 UZS',
+      workTime: '09:00 - 18:00', // 9 hours -> 100,000 / 9 = 11,111
+    })} />);
+    expect(text()).toContain("11 111 so'm");
+  });
+
+  it('formats genuine hourlyRate when it is lower than daily salary', () => {
+    language.current = 'uz';
+    render(<JobDetailsCard selectedJob={job({
+      salary: '200000 UZS',
+      hourlyRate: '25000 UZS',
+      workTime: '09:00 - 18:00',
+    })} />);
+    expect(text()).toContain("25 000 so'm");
+  });
 });

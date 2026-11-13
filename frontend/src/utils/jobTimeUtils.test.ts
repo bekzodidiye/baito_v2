@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getJobShiftTime, getJobDateDisplay, getJobDuration } from './jobTimeUtils';
+import { getJobShiftTime, getJobDateDisplay, getJobDuration, getJobShiftHours } from './jobTimeUtils';
 import type { Job } from '../types';
 
 /**
@@ -71,5 +71,19 @@ describe('getJobDuration', () => {
 
   it('falls back to a single day', () => {
     expect(getJobDuration(job({}))).toBe('1 kunlik');
+  });
+});
+
+describe('getJobShiftHours', () => {
+  it('calculates duration for standard shift 09:00 - 18:00 as 9 hours', () => {
+    expect(getJobShiftHours(job({ workTime: '09:00 - 18:00' }))).toBe(9);
+  });
+
+  it('calculates duration for 08:00 - 16:00 as 8 hours', () => {
+    expect(getJobShiftHours(job({ workTime: '08:00 - 16:00' }))).toBe(8);
+  });
+
+  it('handles overnight shifts e.g. 22:00 - 06:00', () => {
+    expect(getJobShiftHours(job({ workTime: '22:00 - 06:00' }))).toBe(8);
   });
 });

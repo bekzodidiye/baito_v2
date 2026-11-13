@@ -172,7 +172,16 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
 
     try {
       setIsSubmitting(true);
+      const dailySalaryNum = parseFloat(hourlyRate.replace(/\D/g, '')) || 0;
+      const startParts = (startTime || '09:00').split(':').map(Number);
+      const endParts = (endTime || '18:00').split(':').map(Number);
+      let diffMins = (endParts[0] * 60 + (endParts[1] || 0)) - (startParts[0] * 60 + (startParts[1] || 0));
+      if (diffMins <= 0) diffMins += 24 * 60;
+      const shiftHours = diffMins / 60 || 8;
+      const calculatedHourly = Math.round(dailySalaryNum / shiftHours);
+
       const formattedSalary = hourlyRate.includes("so'm") || hourlyRate.includes("UZS") ? hourlyRate : `${hourlyRate} UZS`;
+      const calculatedHourlyRate = `${calculatedHourly} UZS`;
       const formattedTransport = transportRate ? (transportRate.includes("so'm") || transportRate.includes("UZS") ? transportRate : `${transportRate} UZS`) : "Yo'q";
       const safeCompany = (company || companyName || "Ish beruvchi").trim();
       const rawDesc = (description || responsibilities || '').trim();
@@ -184,7 +193,7 @@ export const JobPostForm: React.FC<JobPostFormProps> = ({ onBack, onSubmitSucces
         imageUrl,
         category,
         salary: formattedSalary,
-        hourlyRate: formattedSalary,
+        hourlyRate: calculatedHourlyRate,
         transportRate: formattedTransport,
         location: `${city}, ${addressLine}`,
         rawLocation: `${city}, ${addressLine}`,
