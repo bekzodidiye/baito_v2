@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { SettingsLayout } from './settings/SettingsLayout';
 
 const LandingScreen = React.lazy(() => import('./landing/LandingScreen').then(m => ({ default: m.LandingScreen })));
@@ -74,11 +75,30 @@ const AuthGuestRoute = ({ mode }: { mode: 'login' | 'register' }) => {
   return <LoginPromptScreen initialMode={mode} />;
 };
 
+const getScreenKey = (pathname: string) => {
+  const segment = pathname.slice(1).split('/')[0] || 'landing';
+  if (segment.startsWith('employer-')) return 'employer';
+  if (segment === 'admin') return 'admin';
+  return segment;
+};
+
 export const AppRoutes = () => {
+  const location = useLocation();
+  const screenKey = getScreenKey(location.pathname);
+
   return (
     <Suspense fallback={<SuspenseFallback />}>
-      <Routes>
-        <Route path="/" element={<LandingScreen />} />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={screenKey}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full flex-1 flex flex-col min-h-0"
+        >
+          <Routes location={location}>
+            <Route path="/" element={<LandingScreen />} />
                 {/* Worker routes */}
         <Route path="/jobs" element={<ProtectedRoute allowedRoles={['worker']}><JobSearchScreen /></ProtectedRoute>} />
         <Route path="/jobs/:id" element={<ProtectedRoute allowedRoles={['worker']}><JobSearchScreen /></ProtectedRoute>} />
@@ -159,6 +179,8 @@ export const AppRoutes = () => {
         <Route path="/ui-demo" element={<Demo />} />
         <Route path="*" element={<NotFoundScreen />} />
       </Routes>
+        </motion.div>
+      </AnimatePresence>
     </Suspense>
   );
 };

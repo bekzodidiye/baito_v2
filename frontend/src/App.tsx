@@ -123,9 +123,9 @@ function AppContent() {
 
         {/* Main Content Layout */}
         <main id="main-content" tabIndex={-1} className={`flex-1 w-full min-w-0 ${!isCenteredContainer ? 'max-w-none px-0 md:px-0' : 'max-w-7xl mx-auto px-4 md:px-6'} ${isSettingsOrHelp || currentScreen === 'messages' || currentScreen === 'chat' || currentScreen === 'support-chat' ? 'h-full flex flex-col' : ''}`}>
-          {/* Keyed on the screen so a crashed screen's fallback clears as soon as
-              the user navigates away. Only route content belongs in here. */}
-          <ErrorBoundary key={currentScreen}>
+          {/* resetKey clears a crashed screen's fallback when the user navigates away,
+              without destroying the component tree on every normal navigation. */}
+          <ErrorBoundary resetKey={currentScreen}>
             {/* If not logged in, and trying to access a protected screen, redirect to landing */}
             {isAuthGatedScreen ? (
               <Navigate to="/" replace />
