@@ -1,11 +1,13 @@
+import io
 import logging
+import os
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 try:
-    import boto3  # noqa: F401
+    import boto3
     from botocore.exceptions import ClientError
     HAS_BOTO3 = True
 except ImportError:
@@ -13,41 +15,97 @@ except ImportError:
     ClientError = Exception
 
 
-class LocalStorageClient:
-    def __init__(self, upload_dir="uploads"):
-        import os
-        self.upload_dir = upload_dir
+class HybridStorageClient:
+    """Enterprise Hybrid Storage Client.
+
+    Writes to both MinIO/S3 and local disk (uploads/).
+    Reads from MinIO/S3 with fallback to local disk.
+    If MinIO/S3 is unavailable or in unit tests, gracefully operates on local disk.
+    """
+    def __init__(self, upload_dir=None):
+        self.upload_dir = upload_dir or os.getenv("UPLOAD_DIR", "uploads")
         os.makedirs(self.upload_dir, exist_ok=True)
+        self._s3 = None
+        if HAS_BOTO3 and (settings.AWS_ENDPOINT_URL or settings.AWS_ACCESS_KEY_ID):
+            try:
+                s3_kwargs = {
+                    "aws_access_key_id": settings.AWS_ACCESS_KEY_ID,
+                    "aws_secret_access_key": settings.AWS_SECRET_ACCESS_KEY,
+                    "region_name": settings.AWS_REGION,
+                }
+                if settings.AWS_ENDPOINT_URL:
+                    s3_kwargs["endpoint_url"] = settings.AWS_ENDPOINT_URL
+                self._s3 = boto3.client("s3", **s3_kwargs)
+            except Exception as e:
+                logger.warning(f"Could not initialize S3 client: {e}")
 
     def upload_fileobj(self, file_obj, bucket, filename, ExtraArgs=None):
-        import os
-        import shutil
+        # 1. Always ensure saved to local disk
         filepath = os.path.join(self.upload_dir, filename)
+        file_bytes = file_obj.read()
         with open(filepath, "wb") as f:
-            shutil.copyfileobj(file_obj, f)
-        logger.info(f"[LocalStorage] Saved file {filename} locally")
+            f.write(file_bytes)
+
+        # 2. Upload to MinIO/S3 if available
+        if self._s3:
+            try:
+                extra = ExtraArgs or {}
+                self._s3.upload_fileobj(io.BytesIO(file_bytes), bucket, filename, ExtraArgs=extra)
+                logger.info(f"[HybridStorage] Uploaded {filename} to MinIO/S3 bucket '{bucket}' and local disk")
+                return True
+            except Exception as e:
+                logger.warning(f"[HybridStorage] MinIO/S3 upload failed for {filename}, kept on local disk: {e}")
+                return True
+
+        logger.info(f"[HybridStorage] Saved {filename} locally")
         return True
 
     def head_bucket(self, Bucket):
+        if self._s3:
+            return self._s3.head_bucket(Bucket=Bucket)
+        return True
+
+    def create_bucket(self, Bucket, **kwargs):
+        if self._s3:
+            return self._s3.create_bucket(Bucket=Bucket, **kwargs)
         return True
 
     def get_object(self, Bucket, Key):
-        import os
+        # 1. Try MinIO/S3 first
+        if self._s3:
+            try:
+                return self._s3.get_object(Bucket=Bucket, Key=Key)
+            except Exception as e:
+                logger.debug(f"[HybridStorage] S3 get_object failed for {Key}, checking local disk: {e}")
+
+        # 2. Fallback to local disk
         filepath = os.path.join(self.upload_dir, Key)
-        if not os.path.exists(filepath):
-            raise FileNotFoundError(f"[LocalStorage] no object {Key}")
-        return {"Body": open(filepath, "rb")}
+        if os.path.exists(filepath):
+            return {"Body": open(filepath, "rb")}
+
+        raise FileNotFoundError(f"[HybridStorage] No object {Key} found in MinIO/S3 or local storage")
 
     def delete_object(self, Bucket, Key):
-        import os
+        # Delete from local
         filepath = os.path.join(self.upload_dir, Key)
         if os.path.exists(filepath):
             os.remove(filepath)
+        # Delete from S3
+        if self._s3:
+            try:
+                self._s3.delete_object(Bucket=Bucket, Key=Key)
+            except Exception as e:
+                logger.warning(f"[HybridStorage] S3 delete_object failed for {Key}: {e}")
         return True
 
 
+_global_client = None
+
 def get_s3_client():
-    return LocalStorageClient()
+    global _global_client
+    if _global_client is None:
+        _global_client = HybridStorageClient()
+    return _global_client
 
 
 def _error_code(exc) -> str:

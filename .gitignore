@@ -58,3 +58,5 @@ backups/
 # how a real change gets lost in the noise.
 .swarm/
 .claude-flow/
+uploads/
+backend/uploads/

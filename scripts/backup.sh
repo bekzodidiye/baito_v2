@@ -18,6 +18,7 @@ fi
 
 DB_SERVICE="db"
 MINIO_SERVICE="minio"
+BACKEND_SERVICE="backend"
 DB_USER="${POSTGRES_USER:-admin}"
 DB_NAME="${POSTGRES_DB:-baito}"
 POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-}"
@@ -82,24 +83,38 @@ ok "SHA-256 nazorat summasi: ${DUMP_SHA256:0:16}..."
 ALEMBIC_VERSION=$(docker compose -f "$ROOT_DIR/docker-compose.yml" exec -T -e PGPASSWORD="$POSTGRES_PASSWORD" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" -c "SELECT version_num FROM alembic_version;" 2>/dev/null || echo "unknown")
 ok "Alembic sxema versiyasi: ${ALEMBIC_VERSION:-unknown}"
 
-say "3/6 MinIO media fayllarini zaxiralash (${MEDIA_BUCKET})"
+say "3/6 Media fayllarini zaxiralash (${MEDIA_BUCKET} & lokal uploads)"
 MEDIA_COUNT=0
 MEDIA_SIZE_BYTES=0
 
 if docker compose -f "$ROOT_DIR/docker-compose.yml" ps "$MINIO_SERVICE" 2>/dev/null | grep -q "Up"; then
     if docker compose -f "$ROOT_DIR/docker-compose.yml" cp "$MINIO_SERVICE:/data/${MEDIA_BUCKET}/." "$MEDIA_STAGE/" 2>/dev/null; then
-        MEDIA_COUNT=$(find "$MEDIA_STAGE" -type f | wc -l)
-        MEDIA_SIZE_BYTES=$(du -sb "$MEDIA_STAGE" 2>/dev/null | cut -f1 || du -sk "$MEDIA_STAGE" | awk '{print $1*1024}')
-        ok "MinIO media nusxalandi ($MEDIA_COUNT ta fayl)"
+        ok "MinIO media nusxalandi"
     else
         warn "MinIO fayllarini to'g'ridan-to'g'ri nusxalash imkoni bo'lmadi"
     fi
 else
-    warn "MinIO servisi ishlamayapti yoki topilmadi; media qismi o'tkazib yuborildi"
+    warn "MinIO servisi ishlamayapti yoki topilmadi; MinIO tekshiruvi o'tkazib yuborildi"
 fi
 
-if [ "$MEDIA_COUNT" -eq 0 ]; then
+# Also collect from local backend uploads directory and container
+if [ -d "$ROOT_DIR/backend/uploads" ]; then
+    cp -n "$ROOT_DIR/backend/uploads"/* "$MEDIA_STAGE/" 2>/dev/null || true
+fi
+if docker compose -f "$ROOT_DIR/docker-compose.yml" ps "$BACKEND_SERVICE" 2>/dev/null | grep -q "Up"; then
+    docker compose -f "$ROOT_DIR/docker-compose.yml" cp "$BACKEND_SERVICE:/app/uploads/." "$MEDIA_STAGE/" 2>/dev/null || true
+fi
+
+# Count real media files excluding info.txt
+MEDIA_COUNT=$(find "$MEDIA_STAGE" -type f ! -name "info.txt" | wc -l)
+if [ "$MEDIA_COUNT" -gt 0 ]; then
+    rm -f "${MEDIA_STAGE}/info.txt"
+    MEDIA_SIZE_BYTES=$(du -sb "$MEDIA_STAGE" 2>/dev/null | cut -f1 || du -sk "$MEDIA_STAGE" | awk '{print $1*1024}')
+    ok "Media fayllar nusxalandi ($MEDIA_COUNT ta fayl, $(du -sh "$MEDIA_STAGE" | awk '{print $1}'))"
+else
     echo "Baito Media Snapshot: 0 active files in '${MEDIA_BUCKET}' at ${TIMESTAMP}." > "${MEDIA_STAGE}/info.txt"
+    MEDIA_SIZE_BYTES=0
+    warn "Hech qanday media fayl topilmadi (0 ta)"
 fi
 
 say "4/6 Zaxira Manifest (backup_manifest.json) yaratish"

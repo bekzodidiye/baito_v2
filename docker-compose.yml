@@ -146,6 +146,8 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+    volumes:
+      - ./backend/uploads:/app/uploads
     environment:
       - TZ=Asia/Tashkent
       # Without this the app ran in development mode in production: /docs was
@@ -281,6 +283,8 @@ services:
     volumes:
       - ./backups:/app/backups
       - ./backend/scripts/backup_bot.py:/app/backup_bot.py:ro
+      - ./backend/uploads:/app/uploads:ro
+      - ./backend/.env:/app/backend/.env:ro
     env_file:
       - path: ./backend/.env
         required: false

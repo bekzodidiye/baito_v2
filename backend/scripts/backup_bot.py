@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import json
 import shutil
@@ -24,6 +23,24 @@ RETENTION_DAYS = 14
 MIN_BACKUPS_TO_KEEP = 10
 
 # --- Configuration ---
+def _load_env_fallback():
+    for env_path in ["/app/backend/.env", "/app/.env", "backend/.env", ".env"]:
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if "=" in line and not line.startswith("#"):
+                            k, v = line.split("=", 1)
+                            k = k.strip()
+                            v = v.strip().strip("'\"")
+                            if v and not os.getenv(k):
+                                os.environ[k] = v
+            except Exception:
+                pass
+
+_load_env_fallback()
+
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 TELEGRAM_CHANNEL_ID = os.getenv("TELEGRAM_CHANNEL_ID")
@@ -324,18 +341,42 @@ def get_all_backup_files():
     return found_files
 
 def get_minio_media_stats():
-    """MinIO-dagi barcha rasmlar va media fayllarning umumiy soni va hajmini hisoblaydi."""
+    """MinIO va lokal uploads-dagi barcha rasmlar va media fayllarning umumiy soni va hajmini hisoblaydi."""
     ensure_all_buckets()
+    seen_keys = set()
     total_files = 0
     total_size = 0
     try:
         paginator = s3_client.get_paginator('list_objects_v2')
         for page in paginator.paginate(Bucket=MEDIA_BUCKET):
             for obj in page.get('Contents', []):
+                key = obj['Key']
+                seen_keys.add(key)
                 total_files += 1
                 total_size += obj['Size']
     except Exception as e:
         print(f"MinIO stats error: {e}")
+
+    # Also include any local uploads not yet in MinIO
+    candidate_upload_dirs = [
+        "/app/uploads",
+        "/uploads",
+        os.path.join(os.path.dirname(__file__), "../uploads"),
+        os.path.join(os.path.dirname(__file__), "../../backend/uploads"),
+        "./backend/uploads",
+        "./uploads"
+    ]
+    for u_dir in candidate_upload_dirs:
+        if os.path.exists(u_dir) and os.path.isdir(u_dir):
+            try:
+                for fname in os.listdir(u_dir):
+                    fpath = os.path.join(u_dir, fname)
+                    if os.path.isfile(fpath) and fname not in seen_keys:
+                        seen_keys.add(fname)
+                        total_files += 1
+                        total_size += os.path.getsize(fpath)
+            except Exception:
+                pass
         
     size_mb = total_size / (1024 * 1024)
     size_str = f"{size_mb:.2f} MB" if size_mb >= 1 else f"{total_size / 1024:.1f} KB"
@@ -630,6 +671,7 @@ def run_unified_backup(chat_id=None, send_to_channel=True):
         paginator = s3_client.get_paginator('list_objects_v2')
         media_count = 0
         media_bytes = 0
+        seen_media_keys = set()
         try:
             for page in paginator.paginate(Bucket=MEDIA_BUCKET):
                 for obj in page.get('Contents', []):
@@ -639,8 +681,39 @@ def run_unified_backup(chat_id=None, send_to_channel=True):
                     s3_client.download_file(MEDIA_BUCKET, key, target_local)
                     media_count += 1
                     media_bytes += obj['Size']
+                    seen_media_keys.add(key)
         except Exception as me:
             print(f"⚠️ MinIO media ko'chirishda ogohlantirish: {me}")
+
+        # 2.1 Also check candidate local upload directories for any media
+        candidate_upload_dirs = [
+            "/app/uploads",
+            "/uploads",
+            os.path.join(os.path.dirname(__file__), "../uploads"),
+            os.path.join(os.path.dirname(__file__), "../../backend/uploads"),
+            "./backend/uploads",
+            "./uploads"
+        ]
+        for u_dir in candidate_upload_dirs:
+            if os.path.exists(u_dir) and os.path.isdir(u_dir):
+                try:
+                    for fname in os.listdir(u_dir):
+                        fpath = os.path.join(u_dir, fname)
+                        if os.path.isfile(fpath) and fname not in seen_media_keys:
+                            target_local = os.path.join(media_stage_dir, fname)
+                            os.makedirs(os.path.dirname(target_local), exist_ok=True)
+                            shutil.copy2(fpath, target_local)
+                            f_sz = os.path.getsize(fpath)
+                            media_count += 1
+                            media_bytes += f_sz
+                            seen_media_keys.add(fname)
+                            # Sync to MinIO so it is preserved in both places
+                            try:
+                                s3_client.upload_file(fpath, MEDIA_BUCKET, fname)
+                            except Exception:
+                                pass
+                except Exception as ue:
+                    print(f"⚠️ Lokal uploads ko'chirishda ogohlantirish: {ue}")
 
         if media_count == 0:
             with open(os.path.join(media_stage_dir, "info.txt"), "w") as f:
