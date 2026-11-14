@@ -66,11 +66,42 @@ def set_channel_id(new_id):
         print(f"Kanal ID saqlashda xatolik: {e}")
         return False
 
-if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-    print("TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set")
-    sys.exit(1)
+TELEGRAM_ENABLED = bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)
 
-bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
+if TELEGRAM_ENABLED:
+    bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
+    print("🤖 Telegram bot konfiguratsiyasi mavjud va faollashtirildi.")
+else:
+    class DummyBot:
+        def message_handler(self, *args, **kwargs):
+            return lambda fn: fn
+        def callback_query_handler(self, *args, **kwargs):
+            return lambda fn: fn
+        def channel_post_handler(self, *args, **kwargs):
+            return lambda fn: fn
+        def my_chat_member_handler(self, *args, **kwargs):
+            return lambda fn: fn
+        def send_message(self, *args, **kwargs):
+            return None
+        def send_document(self, *args, **kwargs):
+            return None
+        def reply_to(self, *args, **kwargs):
+            return None
+        def delete_message(self, *args, **kwargs):
+            return None
+        def edit_message_text(self, *args, **kwargs):
+            return None
+        def answer_callback_query(self, *args, **kwargs):
+            return None
+        def send_chat_action(self, *args, **kwargs):
+            return None
+        def set_my_commands(self, *args, **kwargs):
+            return None
+        def infinity_polling(self, *args, **kwargs):
+            pass
+
+    bot = DummyBot()
+    print("ℹ️ TELEGRAM_BOT_TOKEN yoki TELEGRAM_CHAT_ID sozlanmagan. Backup xizmati HEADLESS DAEMON rejimida ishga tushadi.")
 
 # Parse S3 Bucket Path
 parsed_s3 = urlparse(S3_BUCKET_PATH)
@@ -539,10 +570,17 @@ def handle_menu_buttons(message):
 
 # --- Business Logic Functions ---
 
-def run_unified_backup(chat_id, send_to_channel=True):
+def run_unified_backup(chat_id=None, send_to_channel=True):
     """PostgreSQL baza va MinIO media rasmlarini bitta umumiy .zip paketiga jamlab zaxira oladi."""
     ensure_bucket()
-    status_msg = bot.send_message(chat_id, "⏳ Baza va media rasmlari bitta papkaga jamlanmoqda... Iltimos kuting.")
+    status_msg = None
+    if TELEGRAM_ENABLED and chat_id:
+        try:
+            status_msg = bot.send_message(chat_id, "⏳ Baza va media rasmlari bitta papkaga jamlanmoqda... Iltimos kuting.")
+        except Exception as e:
+            print(f"⚠️ Telegram status xabari yuborilmadi: {e}")
+    else:
+        print("⏳ Baza va media rasmlari bitta papkaga jamlanmoqda... Iltimos kuting.")
     
     date_str = datetime.now(UZ_TZ).strftime("%Y-%m-%d_%H-%M-%S")
     bundle_name = f"baito_backup_{date_str}"
@@ -657,15 +695,19 @@ def run_unified_backup(chat_id, send_to_channel=True):
         )
 
         # 7. Send single ZIP to Admin Chat
-        if zip_size_mb < 49:
-            with open(zip_filepath, 'rb') as doc_file:
-                bot.send_document(chat_id, doc_file, caption=caption, parse_mode="Markdown")
-        else:
-            bot.send_message(chat_id, caption + "\n\n⚠️ Arxiv 50MB dan katta bo'lgani uchun MinIO bulutida saqlandi.", parse_mode="Markdown")
+        if TELEGRAM_ENABLED and chat_id:
+            try:
+                if zip_size_mb < 49:
+                    with open(zip_filepath, 'rb') as doc_file:
+                        bot.send_document(chat_id, doc_file, caption=caption, parse_mode="Markdown")
+                else:
+                    bot.send_message(chat_id, caption + "\n\n⚠️ Arxiv 50MB dan katta bo'lgani uchun MinIO bulutida saqlandi.", parse_mode="Markdown")
+            except Exception as tg_err:
+                print(f"⚠️ Telegramga yuborishda xatolik: {tg_err}")
 
         # 8. Send to Channel
         ch_id = get_channel_id()
-        if send_to_channel and ch_id and str(ch_id) != str(chat_id):
+        if TELEGRAM_ENABLED and send_to_channel and ch_id and str(ch_id) != str(chat_id):
             try:
                 if zip_size_mb < 49:
                     with open(zip_filepath, 'rb') as doc_file:
@@ -676,12 +718,23 @@ def run_unified_backup(chat_id, send_to_channel=True):
             except Exception as ch_err:
                 print(f"⚠️ Kanalga ({ch_id}) yuborishda xatolik: {ch_err}")
 
-        bot.delete_message(chat_id, status_msg.message_id)
+        if status_msg and TELEGRAM_ENABLED and chat_id:
+            try:
+                bot.delete_message(chat_id, status_msg.message_id)
+            except Exception:
+                pass
+
+        print(f"✅ Baito yagona zaxira paketi muvaffaqiyatli tayyorlandi: {zip_filename} ({size_str})")
         return zip_filename
 
     except Exception as e:
         shutil.rmtree(temp_stage_dir, ignore_errors=True)
-        bot.send_message(chat_id, f"❌ Zaxira olishda xatolik: {e}")
+        print(f"❌ Zaxira olishda xatolik: {e}")
+        if TELEGRAM_ENABLED and chat_id:
+            try:
+                bot.send_message(chat_id, f"❌ Zaxira olishda xatolik: {e}")
+            except Exception:
+                pass
         return None
 
 def send_backup_list(chat_id, message_id=None):
@@ -861,45 +914,55 @@ def register_bot_commands():
 
 def scheduled_backup_worker():
     """Server orqa fonida har 6 soatda avtomatik bitta to'liq ZIP zaxira oladi va yuboradi."""
-    time.sleep(30)  # Ishga tushgandan 30s keyin
+    time.sleep(10)  # Ishga tushgandan 10s keyin
 
-    # Skip the start-up backup when a recent one already exists. Every deploy
-    # recreates this container, so a busy day produced one archive per deploy —
-    # 20 in a single day here. That makes the archive count scale with deploy
-    # frequency rather than with time, and at a realistic database size it
-    # would dominate both the disk and the offsite bill.
     try:
+        take_initial = True
         if os.path.exists(BACKUPS_DIR):
             newest = max(
                 (os.path.getmtime(os.path.join(BACKUPS_DIR, f))
                  for f in os.listdir(BACKUPS_DIR) if f.endswith(".zip")),
                 default=0,
             )
-            age_hours = (time.time() - newest) / 3600
-            if age_hours < 3:
-                print(f"⏭️  So'nggi zaxira {age_hours:.1f} soat oldin olingan — "
-                      f"ishga tushishdagi zaxira o'tkazib yuborildi.")
-                time.sleep(6 * 3600)
+            if newest > 0:
+                age_hours = (time.time() - newest) / 3600
+                if age_hours < 3:
+                    print(f"⏭️  So'nggi zaxira {age_hours:.1f} soat oldin olingan — ishga tushishdagi zaxira o'tkazib yuborildi.")
+                    take_initial = False
+        if take_initial:
+            print("🚀 Dastlabki zaxira olinmoqda...")
+            target_chat = TELEGRAM_CHAT_ID if TELEGRAM_ENABLED else None
+            run_unified_backup(target_chat, send_to_channel=TELEGRAM_ENABLED)
     except Exception as e:
         print(f"Zaxira yoshini tekshirib bo'lmadi: {e}")
 
     while True:
+        time.sleep(6 * 3600)
         try:
             print("⏰ [Avtomatik Zaxira]: Rejalashtirilgan 6 soatlik yagona ZIP zaxira boshlanmoqda...")
-            run_unified_backup(TELEGRAM_CHAT_ID, send_to_channel=True)
+            target_chat = TELEGRAM_CHAT_ID if TELEGRAM_ENABLED else None
+            run_unified_backup(target_chat, send_to_channel=TELEGRAM_ENABLED)
         except Exception as e:
             print(f"Scheduled backup xatolik: {e}")
-        # Har 6 soatda (6 * 3600 soniya)
-        time.sleep(6 * 3600)
 
 if __name__ == "__main__":
     print("Starting Baito Backup & System Bot (Single Bundle Mode)...")
     ensure_bucket()
-    register_bot_commands()
+    if TELEGRAM_ENABLED:
+        register_bot_commands()
     
     # Start auto-backup thread in background
     scheduler_thread = threading.Thread(target=scheduled_backup_worker, daemon=True)
     scheduler_thread.start()
     print("✅ 6 soatlik avtomatik yagona ZIP zaxira xizmati ishga tushirildi.")
     
-    bot.infinity_polling()
+    if TELEGRAM_ENABLED:
+        print("🤖 Telegram bot faol (polling)...")
+        bot.infinity_polling()
+    else:
+        print("🛡️ Backup xizmati HEADLESS DAEMON rejimida ishlamoqda.")
+        try:
+            while True:
+                time.sleep(3600)
+        except (KeyboardInterrupt, SystemExit):
+            print("Backup daemon to'xtatildi.")

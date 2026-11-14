@@ -22,11 +22,23 @@ set -euo pipefail
 ARCHIVE="${1:-}"
 MODE="${2:-}"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+if [ -f "$ROOT_DIR/.env" ]; then
+    set -a; source "$ROOT_DIR/.env"; set +a
+elif [ -f .env ]; then
+    set -a; source .env; set +a
+elif [ -f backend/.env ]; then
+    set -a; source backend/.env; set +a
+fi
+
 DB_SERVICE=db
 MINIO_SERVICE=minio
-DB_USER="${POSTGRES_USER:-user}"
+DB_USER="${POSTGRES_USER:-admin}"
 DB_NAME="${POSTGRES_DB:-baito}"
 BUCKET="${AWS_BUCKET_NAME:-baito-bucket}"
+export PGPASSWORD="${POSTGRES_PASSWORD:-}"
 
 say()  { printf '\n\033[1m▸ %s\033[0m\n' "$*"; }
 ok()   { printf '  \033[32m✓\033[0m %s\n' "$*"; }
@@ -41,7 +53,11 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
 say "1/5  Unpacking"
-unzip -q "$ARCHIVE" -d "$WORK"
+if command -v unzip >/dev/null; then
+    unzip -q "$ARCHIVE" -d "$WORK"
+else
+    python3 -m zipfile -e "$ARCHIVE" "$WORK"
+fi
 DUMP=$(find "$WORK" -name 'database.sql.gz' | head -1)
 MEDIA=$(find "$WORK" -type d -name media | head -1)
 [ -n "$DUMP" ] || die "database.sql.gz not found inside the archive"
@@ -58,22 +74,22 @@ ok "dump readable and well-formed"
 if [ "$MODE" = "--drill" ]; then
     DRILL_DB="baito_restore_drill_$(date +%s)"
     say "3/5  DRILL — restoring into $DRILL_DB (production untouched)"
-    docker compose exec -T "$DB_SERVICE" createdb -U "$DB_USER" "$DRILL_DB"
-    gunzip -c "$DUMP" | docker compose exec -T "$DB_SERVICE" psql -q -U "$DB_USER" -d "$DRILL_DB" >/dev/null
+    docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" createdb -U "$DB_USER" "$DRILL_DB"
+    gunzip -c "$DUMP" | docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -q -U "$DB_USER" -d "$DRILL_DB" >/dev/null
     ok "restored"
 
     say "4/5  Comparing against production"
     printf '  %-22s %10s %10s\n' TABLE DRILL LIVE
     for t in users jobs applications transactions chats messages; do
-        d=$(docker compose exec -T "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DRILL_DB" \
+        d=$(docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DRILL_DB" \
               -c "select count(*) from $t" 2>/dev/null | tr -d '\r' || echo '-')
-        l=$(docker compose exec -T "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" \
+        l=$(docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" \
               -c "select count(*) from $t" 2>/dev/null | tr -d '\r' || echo '-')
         printf '  %-22s %10s %10s\n' "$t" "$d" "$l"
     done
 
     say "5/5  Cleaning up"
-    docker compose exec -T "$DB_SERVICE" dropdb -U "$DB_USER" "$DRILL_DB"
+    docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" dropdb -U "$DB_USER" "$DRILL_DB"
     ok "drill database removed"
     printf '\n  \033[32mDrill passed — this archive is restorable.\033[0m\n\n'
     exit 0
@@ -94,17 +110,17 @@ read -r answer
 
 say "     Taking a safety dump of the current database first"
 SAFETY="$HOME/baito-pre-restore-$(date +%Y%m%d-%H%M%S).sql.gz"
-docker compose exec -T "$DB_SERVICE" pg_dump -U "$DB_USER" "$DB_NAME" | gzip > "$SAFETY"
+docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" pg_dump -U "$DB_USER" "$DB_NAME" | gzip > "$SAFETY"
 chmod 600 "$SAFETY"
 ok "safety dump: $SAFETY"
 
 say "4/5  Restoring the database"
 # Recreate cleanly so the dump does not merge into existing rows.
-docker compose exec -T "$DB_SERVICE" psql -q -U "$DB_USER" -d postgres \
+docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -q -U "$DB_USER" -d postgres \
   -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='$DB_NAME' AND pid<>pg_backend_pid();" >/dev/null
-docker compose exec -T "$DB_SERVICE" dropdb -U "$DB_USER" --if-exists "$DB_NAME"
-docker compose exec -T "$DB_SERVICE" createdb -U "$DB_USER" "$DB_NAME"
-gunzip -c "$DUMP" | docker compose exec -T "$DB_SERVICE" psql -q -U "$DB_USER" -d "$DB_NAME" >/dev/null
+docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" dropdb -U "$DB_USER" --if-exists "$DB_NAME"
+docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" createdb -U "$DB_USER" "$DB_NAME"
+gunzip -c "$DUMP" | docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -q -U "$DB_USER" -d "$DB_NAME" >/dev/null
 ok "database restored"
 
 say "5/5  Restoring media"

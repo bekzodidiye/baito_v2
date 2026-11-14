@@ -408,9 +408,9 @@
     "semantic_hash": "e4171bb5aa2f3e0cdc8cd86cede94586"
   },
   "backend/app/main.py": {
-    "mtime": 1791128398.4593892,
-    "seen": 1791128675.6393049,
-    "ast_hash": "064f56b6f1d8e44def0c4e763569537e",
+    "mtime": 1791634860.0698054,
+    "seen": 1791635837.2253535,
+    "ast_hash": "24f97bb3e26966dc7e2c0ce568eb6e8f",
     "semantic_hash": ""
   },
   "backend/app/models/__init__.py": {
@@ -840,9 +840,9 @@
     "semantic_hash": ""
   },
   "backend/tests/test_security_fixes.py": {
-    "mtime": 1790154839.0449638,
-    "seen": 1791063691.1300702,
-    "ast_hash": "0ee45e660b8595084256067c6e074dde",
+    "mtime": 1791735491.3300908,
+    "seen": 1791735824.1728153,
+    "ast_hash": "b3faae90a79987daf12d1e1fa1e02f1d",
     "semantic_hash": ""
   },
   "backend/tests/test_verification_required.py": {
@@ -912,16 +912,16 @@
     "semantic_hash": "5e3eb7ddb19d2283c1b27b20c4eea555"
   },
   "frontend/src/App.tsx": {
-    "mtime": 1791061861.5616584,
-    "seen": 1791063691.1303096,
-    "ast_hash": "7cfe9bc14f67ae9d144cc0732a0754a4",
+    "mtime": 1791703946.936963,
+    "seen": 1791705041.4832857,
+    "ast_hash": "60f9a7ef04736d51a19d1c521ccec22a",
     "semantic_hash": ""
   },
   "frontend/src/api/chatSocket.ts": {
-    "mtime": 1788518942.6988082,
-    "seen": 1789900503.0191934,
-    "ast_hash": "9020519b2106693fb08c7a65c282e6bf",
-    "semantic_hash": "9020519b2106693fb08c7a65c282e6bf"
+    "mtime": 1791737330.7676888,
+    "seen": 1791737580.1241581,
+    "ast_hash": "bdbb67c717fb03cab341c19b3c14c756",
+    "semantic_hash": ""
   },
   "frontend/src/api/client.ts": {
     "mtime": 1791270810.839099,
@@ -942,9 +942,9 @@
     "semantic_hash": "f08afdc47bb2b8e7672c6c0eab66cf39"
   },
   "frontend/src/components/AppRoutes.tsx": {
-    "mtime": 1790928042.5491068,
-    "seen": 1791063691.1303744,
-    "ast_hash": "96c94aaf09c4e04a74a59e52cbcfd7a0",
+    "mtime": 1791702140.0997052,
+    "seen": 1791702213.4782903,
+    "ast_hash": "3c933335a19503191a569c80d3d3d6c2",
     "semantic_hash": ""
   },
   "frontend/src/components/BottomNav.tsx": {
@@ -954,9 +954,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/Drawer.tsx": {
-    "mtime": 1790928673.419438,
-    "seen": 1791063691.130377,
-    "ast_hash": "ba1a67b182992adc80d1841d2fb2ed65",
+    "mtime": 1791704028.1524897,
+    "seen": 1791705041.4832978,
+    "ast_hash": "8966e5a2fb0b9e3f7771aeee5de06153",
     "semantic_hash": ""
   },
   "frontend/src/components/DrawerMenuItem.tsx": {
@@ -966,9 +966,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/ErrorBoundary.tsx": {
-    "mtime": 1790863502.396029,
-    "seen": 1791063691.1304107,
-    "ast_hash": "81f7a135f0ee5323985fc0d18ff332a7",
+    "mtime": 1791702003.1180134,
+    "seen": 1791702213.4782968,
+    "ast_hash": "1692715093245f3547acdf41e83055fe",
     "semantic_hash": ""
   },
   "frontend/src/components/GatedLockScreen.tsx": {
@@ -996,9 +996,9 @@
     "semantic_hash": "13b29f953b4cb7fead0f25772617fa02"
   },
   "frontend/src/components/MenuModals.tsx": {
-    "mtime": 1790924799.0284736,
-    "seen": 1791063691.1305077,
-    "ast_hash": "eda46e71a3b591088d8c2c248574f8af",
+    "mtime": 1791704663.3496554,
+    "seen": 1791705041.4833086,
+    "ast_hash": "10ca858d4cc4a554370e20fc44abb0d2",
     "semantic_hash": ""
   },
   "frontend/src/components/NotFoundScreen.tsx": {
@@ -1026,9 +1026,9 @@
     "semantic_hash": "206198c91d988f74fa4931a1aadeb494"
   },
   "frontend/src/components/Sidebar.tsx": {
-    "mtime": 1790928623.9206932,
-    "seen": 1791063691.1306329,
-    "ast_hash": "575519596233b80249b62a5941d53557",
+    "mtime": 1791704747.046538,
+    "seen": 1791705041.4833162,
+    "ast_hash": "867cbbdd87b891387f7a48d5a09a7056",
     "semantic_hash": ""
   },
   "frontend/src/components/ToastContainer.tsx": {
@@ -1080,10 +1080,10 @@
     "semantic_hash": "54adde68435f02dc8b300387bdac6eb7"
   },
   "frontend/src/components/common/ConfirmModal.tsx": {
-    "mtime": 1789057656.9104114,
-    "seen": 1789900503.0192258,
-    "ast_hash": "45fbc36afc4f45f9bfc63bebcb165dfe",
-    "semantic_hash": "45fbc36afc4f45f9bfc63bebcb165dfe"
+    "mtime": 1791662664.189882,
+    "seen": 1791662870.8451169,
+    "ast_hash": "5f80e42ee0ac720e259c1b80f5d2b43a",
+    "semantic_hash": ""
   },
   "frontend/src/components/common/DateTimePickerModal.tsx": {
     "mtime": 1790678501.7008107,
@@ -1098,9 +1098,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/job-details/JobDetailsCard.tsx": {
-    "mtime": 1790839347.9789836,
-    "seen": 1791063691.1307504,
-    "ast_hash": "4c01ae57bd83d989bd44dd48c168be87",
+    "mtime": 1791707694.4576228,
+    "seen": 1791707815.3032176,
+    "ast_hash": "a3dadfc0d1b86d650f73d34d1777b563",
     "semantic_hash": ""
   },
   "frontend/src/components/job-details/JobDetailsFooter.test.tsx": {
@@ -1128,9 +1128,9 @@
     "semantic_hash": "014c428349ed319dd77a2d556fe5de02"
   },
   "frontend/src/components/job-details/JobDetailsLocation.tsx": {
-    "mtime": 1790849246.8810565,
-    "seen": 1791063691.1308215,
-    "ast_hash": "051407071c098d14261e55b034ae84d8",
+    "mtime": 1791653756.4269693,
+    "seen": 1791653900.8029404,
+    "ast_hash": "1bb64e1a1d56e9c526ceaea31b1b627e",
     "semantic_hash": ""
   },
   "frontend/src/components/job-details/JobDetailsRequirements.tsx": {
@@ -1614,10 +1614,10 @@
     "semantic_hash": ""
   },
   "frontend/src/components/menu/SettingsContent.tsx": {
-    "mtime": 1790150945.4413872,
-    "seen": 1791063691.1322908,
-    "ast_hash": "90af0bb5e90e92bd4a2e7b733f0e9662",
-    "semantic_hash": "90af0bb5e90e92bd4a2e7b733f0e9662"
+    "mtime": 1791704917.4642184,
+    "seen": 1791705041.4834967,
+    "ast_hash": "05eab08ddb0bc14d4f877a4077215910",
+    "semantic_hash": ""
   },
   "frontend/src/components/messages/MessagesScreen.tsx": {
     "mtime": 1790708412.7895143,
@@ -1836,9 +1836,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AddPromoModal.tsx": {
-    "mtime": 1791071319.171194,
-    "seen": 1791112236.84603,
-    "ast_hash": "c141f134010982e9e86b1c50e594a0a6",
+    "mtime": 1791630813.8652198,
+    "seen": 1791635837.2258227,
+    "ast_hash": "0354f4a414e5aeee8852fa58d5ba446c",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AddRegionModal.tsx": {
@@ -1854,9 +1854,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminAuditLogs.tsx": {
-    "mtime": 1791071478.8217857,
-    "seen": 1791112236.8460326,
-    "ast_hash": "a9be77ffa06b17d3ca88c8e4e6e2019d",
+    "mtime": 1791630813.8652198,
+    "seen": 1791635837.2258272,
+    "ast_hash": "4938ad5d08190ff6d12004e64bc35bc9",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminAutoMatching.tsx": {
@@ -1902,9 +1902,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminCustomControls.tsx": {
-    "mtime": 1791304177.5929365,
-    "seen": 1791312832.7318459,
-    "ast_hash": "c922f0d1f9ba3bb47833341d9f7e85eb",
+    "mtime": 1791630813.8652198,
+    "seen": 1791635837.2258396,
+    "ast_hash": "5a1cf6d99f57b7ad767eda685f5acf80",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminDailyJobs.tsx": {
@@ -1920,9 +1920,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminHeader.tsx": {
-    "mtime": 1791071015.3389997,
-    "seen": 1791112236.8460417,
-    "ast_hash": "1d30139ff712bb6e1b7714da78df8248",
+    "mtime": 1791630813.8652198,
+    "seen": 1791635837.2258463,
+    "ast_hash": "af850c3cb795cb4579822311318eaeb7",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminJobs.tsx": {
@@ -1944,15 +1944,15 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminOverview.tsx": {
-    "mtime": 1791070901.2252736,
-    "seen": 1791112236.846045,
-    "ast_hash": "ea3ef4d007165370168bca42207fe91f",
+    "mtime": 1791662697.6193426,
+    "seen": 1791662870.8452897,
+    "ast_hash": "2e09e462ba7174f8125f5d6449af9c08",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminPanel.tsx": {
-    "mtime": 1791266691.3276162,
-    "seen": 1791312832.7318554,
-    "ast_hash": "86428885576776ec295ec726e81e253f",
+    "mtime": 1791662428.8503103,
+    "seen": 1791662870.8452907,
+    "ast_hash": "c8181d5c53b284918b110f1a0eebbc0a",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminPayouts.tsx": {
@@ -1980,9 +1980,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminSettings.tsx": {
-    "mtime": 1791071333.9150243,
-    "seen": 1791112236.8460498,
-    "ast_hash": "d71dcdf2bceb98c8fe113d5536a21c3a",
+    "mtime": 1791630813.8652198,
+    "seen": 1791635837.225865,
+    "ast_hash": "36dcadc26439fabc9eea1f0bd6035e03",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminSidebar.tsx": {
@@ -1998,9 +1998,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminTransactions.tsx": {
-    "mtime": 1791146825.0934205,
-    "seen": 1791147004.7111008,
-    "ast_hash": "7849526f86576c508a6f79aec938a08c",
+    "mtime": 1791635642.7400916,
+    "seen": 1791635837.225871,
+    "ast_hash": "e314b127c8e1cc83d5a343cce66d53f6",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminUsers.test.tsx": {
@@ -2010,9 +2010,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminUsers.tsx": {
-    "mtime": 1791071047.7425973,
-    "seen": 1791112236.8460538,
-    "ast_hash": "4404606906bf75368f0eaba72fd7ebac",
+    "mtime": 1791630813.8652198,
+    "seen": 1791635837.2258742,
+    "ast_hash": "47b6db400b9d172a1b8d21a9f7052541",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/AdminVerifications.tsx": {
@@ -2022,15 +2022,15 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/BanUserModal.tsx": {
-    "mtime": 1791011458.9260814,
-    "seen": 1791063691.1328583,
-    "ast_hash": "385922ea2b6695ab6b9cd84b1f12ac49",
+    "mtime": 1791630813.8652198,
+    "seen": 1791635837.225877,
+    "ast_hash": "c6a01a370e27c096e3ff5610d61efdf7",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/JobDetailModal.tsx": {
-    "mtime": 1791113949.6192443,
-    "seen": 1791114048.3458793,
-    "ast_hash": "e2fe82c81b57d26b4bf30fdbfab1fced",
+    "mtime": 1791737273.0954342,
+    "seen": 1791737580.1243706,
+    "ast_hash": "eb9a2d89d3a1f3b5ab9721fd089efd32",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/PayoutModal.tsx": {
@@ -2040,9 +2040,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/RejectJobModal.tsx": {
-    "mtime": 1791011474.3700702,
-    "seen": 1791063691.132861,
-    "ast_hash": "37e1a3c20bc21b279fd7b8f5bdb90ddd",
+    "mtime": 1791630813.8652198,
+    "seen": 1791635837.2258813,
+    "ast_hash": "d1cf7740d090e039461d086d70276d84",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/SupportTicketChat.tsx": {
@@ -2052,9 +2052,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/UserDetailModal.tsx": {
-    "mtime": 1791114460.016891,
-    "seen": 1791114615.7810411,
-    "ast_hash": "d83f1461788812a8ea6d61073c8a39ef",
+    "mtime": 1791630813.8652198,
+    "seen": 1791635837.2258842,
+    "ast_hash": "ad989a4a191eec28ae79aab4b203b662",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/UserDocumentsSection.tsx": {
@@ -2160,15 +2160,15 @@
     "semantic_hash": ""
   },
   "frontend/src/features/employer/EmployerJobCard.tsx": {
-    "mtime": 1791370334.8465886,
-    "seen": 1791370524.9819198,
-    "ast_hash": "595d2524fc260fa7975a0adbfef788a0",
+    "mtime": 1791661852.8223674,
+    "seen": 1791662870.8453312,
+    "ast_hash": "dde82c38a80fd062d6771360708b1e62",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/EmployerJobDetailModal.tsx": {
-    "mtime": 1791370345.5236623,
-    "seen": 1791370524.9819212,
-    "ast_hash": "e87926ca39c5f02f8e6c14ca716799ca",
+    "mtime": 1791735690.8108428,
+    "seen": 1791735824.1732597,
+    "ast_hash": "fd38ffc19d5a4dc192147ca2c76cd3d4",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/EmployerJobs.tsx": {
@@ -2190,9 +2190,9 @@
     "semantic_hash": "a1b1c73310293f610a5f9b0a7b8c4109"
   },
   "frontend/src/features/employer/EmployerPanel.tsx": {
-    "mtime": 1790928704.6142385,
-    "seen": 1791063691.1332421,
-    "ast_hash": "3d7e02ebaf0e680a4d12bdd66db61c5c",
+    "mtime": 1791661717.13424,
+    "seen": 1791662870.8453357,
+    "ast_hash": "64d0d8851434e47fbb8b995715455117",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/EmployerPayInvoiceModal.tsx": {
@@ -2202,9 +2202,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/employer/EmployerProfile.tsx": {
-    "mtime": 1790407701.3955119,
-    "seen": 1791063691.133278,
-    "ast_hash": "a3cb12181f1c98212915eb4bed213bc1",
+    "mtime": 1791704550.574306,
+    "seen": 1791705041.4836946,
+    "ast_hash": "868702da61acad78d65468ee119b5937",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/EmployerProfileCompletion.tsx": {
@@ -2220,21 +2220,21 @@
     "semantic_hash": "aaa3b17cd973f6247ac599fb925c5840"
   },
   "frontend/src/features/employer/EmployerProfileStats.tsx": {
-    "mtime": 1790407749.1725736,
-    "seen": 1791063691.1333487,
-    "ast_hash": "0c1f91f5d6410e2a61acc57be02fca90",
+    "mtime": 1791661928.887944,
+    "seen": 1791662870.8453405,
+    "ast_hash": "1b1114d185964e743a2f67b6e3ff77c9",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/EmployerStatsBanner.tsx": {
-    "mtime": 1789598389.0183692,
-    "seen": 1789900503.0194647,
-    "ast_hash": "5893173ccc6270252d4179586bd594d7",
-    "semantic_hash": "5893173ccc6270252d4179586bd594d7"
+    "mtime": 1791706671.1852665,
+    "seen": 1791706739.0767968,
+    "ast_hash": "4fbb03a9a1d46edf70856a447686f6d7",
+    "semantic_hash": ""
   },
   "frontend/src/features/employer/JobPostForm.tsx": {
-    "mtime": 1791256622.4133883,
-    "seen": 1791312832.7319078,
-    "ast_hash": "d4438e1f3052f0c5ce9564e2b520c264",
+    "mtime": 1791707083.006464,
+    "seen": 1791707363.5929549,
+    "ast_hash": "a9cfab7dda86abf204021e7288a24469",
     "semantic_hash": ""
   },
   "frontend/src/features/employer/components/ApplicantCard.test.tsx": {
@@ -2388,15 +2388,15 @@
     "semantic_hash": "4e5aa0c3fd3b6b7fb04669a22581d162"
   },
   "frontend/src/features/worker/applications/ApplicationCard.tsx": {
-    "mtime": 1791371702.3961124,
-    "seen": 1791372013.7843297,
-    "ast_hash": "6db44eea20d68d088e36b0f3bfd8642f",
+    "mtime": 1791662278.3926718,
+    "seen": 1791662870.84538,
+    "ast_hash": "c7fd99424f411cc120d3b4e9697dca23",
     "semantic_hash": ""
   },
   "frontend/src/features/worker/applications/ApplicationsScreen.tsx": {
-    "mtime": 1790881125.574634,
-    "seen": 1791063691.133761,
-    "ast_hash": "be477817b2083058cca3b3acda48da1c",
+    "mtime": 1791662314.965435,
+    "seen": 1791662870.845381,
+    "ast_hash": "0813e85e657d26291904001a1c0e8ba4",
     "semantic_hash": ""
   },
   "frontend/src/features/worker/calendar/CalendarAccordion.tsx": {
@@ -2442,10 +2442,10 @@
     "semantic_hash": "5dee48189f6377d0be7278b669ea7282"
   },
   "frontend/src/features/worker/calendar/CalendarScreen.tsx": {
-    "mtime": 1786431568.066694,
-    "seen": 1789900503.0195122,
-    "ast_hash": "741e070cda826d74b7c56694a69c56e2",
-    "semantic_hash": "741e070cda826d74b7c56694a69c56e2"
+    "mtime": 1791662239.2799451,
+    "seen": 1791662870.8453891,
+    "ast_hash": "6e1b31ccc8ab58dfa5b959261be33aec",
+    "semantic_hash": ""
   },
   "frontend/src/features/worker/calendar/CalendarScreen.utils.test.ts": {
     "mtime": 1788518943.6687918,
@@ -2472,9 +2472,9 @@
     "semantic_hash": "10634c502e01e861b54553ebaaacf7ae"
   },
   "frontend/src/features/worker/profile/ProfileAccordion.tsx": {
-    "mtime": 1790929004.338349,
-    "seen": 1791063691.1341643,
-    "ast_hash": "7f4af8079e91f1ceafb258036e1c89e2",
+    "mtime": 1791704082.0817368,
+    "seen": 1791705041.4837873,
+    "ast_hash": "89a96528d1c074526bf92d4ba0073ebb",
     "semantic_hash": ""
   },
   "frontend/src/features/worker/profile/ProfileCompletionWidget.tsx": {
@@ -2484,9 +2484,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/worker/profile/ProfileDialogs.tsx": {
-    "mtime": 1790160780.8971255,
-    "seen": 1791063691.1341672,
-    "ast_hash": "de427442ad94fa5866f642b77cea192d",
+    "mtime": 1791662384.9743366,
+    "seen": 1791662870.8453965,
+    "ast_hash": "28d5737afd5c22e19f0cf05a1798037d",
     "semantic_hash": ""
   },
   "frontend/src/features/worker/profile/ProfileHero.tsx": {
@@ -2550,15 +2550,15 @@
     "semantic_hash": ""
   },
   "frontend/src/features/worker/search/JobSearchModalDetail.tsx": {
-    "mtime": 1790839429.409103,
-    "seen": 1791063691.1342483,
-    "ast_hash": "36b0152bab80877a0dce6cee93c38fd5",
+    "mtime": 1791662224.446841,
+    "seen": 1791662870.8454063,
+    "ast_hash": "aff83985509a9878d95eb6a957d2d424",
     "semantic_hash": ""
   },
   "frontend/src/features/worker/search/JobSearchScreen.tsx": {
-    "mtime": 1790154839.0629606,
-    "seen": 1791063691.1342492,
-    "ast_hash": "3de68799117238e244e598235963c257",
+    "mtime": 1791662231.3034017,
+    "seen": 1791662870.8454072,
+    "ast_hash": "6b167cb1c7ed276c8d57369dd019d165",
     "semantic_hash": ""
   },
   "frontend/src/features/worker/search/JobSearchScreen.utils.ts": {
@@ -2760,9 +2760,9 @@
     "semantic_hash": ""
   },
   "frontend/src/store/useUIStore.ts": {
-    "mtime": 1790861027.9722092,
-    "seen": 1791063691.1349993,
-    "ast_hash": "85e240644a9a499fc04eaa18cae5757c",
+    "mtime": 1791703932.3005028,
+    "seen": 1791705041.4838781,
+    "ast_hash": "4a3a180a0df19378e78eb719c4218735",
     "semantic_hash": ""
   },
   "frontend/src/test-setup.ts": {
@@ -2862,15 +2862,15 @@
     "semantic_hash": ""
   },
   "frontend/src/utils/jobTimeUtils.test.ts": {
-    "mtime": 1788518943.8412366,
-    "seen": 1789900503.0196016,
-    "ast_hash": "774b79034abed2c5302406486df1dcc1",
-    "semantic_hash": "774b79034abed2c5302406486df1dcc1"
+    "mtime": 1791707187.907657,
+    "seen": 1791707363.5931547,
+    "ast_hash": "f2cfd83e99af11d861671a4bab9d6317",
+    "semantic_hash": ""
   },
   "frontend/src/utils/jobTimeUtils.ts": {
-    "mtime": 1791610925.6174026,
-    "seen": 1791610938.7632737,
-    "ast_hash": "24c054482e73fd6345b3a4b4d58cacfd",
+    "mtime": 1791707020.2077606,
+    "seen": 1791707363.5931559,
+    "ast_hash": "da9fb24f46bfa63817261d50e0cba00f",
     "semantic_hash": ""
   },
   "frontend/src/utils/notificationTranslator.ts": {
@@ -4932,9 +4932,9 @@
     "semantic_hash": ""
   },
   ".github/workflows/ci.yml": {
-    "mtime": 1791063708.0550945,
-    "seen": 1791063720.5195038,
-    "ast_hash": "42dfb3bb1c8743e2a85520bc18985dc7",
+    "mtime": 1791630813.8418868,
+    "seen": 1791635837.2267885,
+    "ast_hash": "ef5397f69bc03710a3c83dd2afe6c533",
     "semantic_hash": ""
   },
   ".github/workflows/dependabot-automerge.yml": {
@@ -5826,9 +5826,9 @@
     "semantic_hash": ""
   },
   "frontend/src/components/job-details/JobDetailsCard.i18n.test.tsx": {
-    "mtime": 1790154839.0449638,
-    "seen": 1791063691.1307495,
-    "ast_hash": "972e3288f3b12ae8f0288db87ed24eb9",
+    "mtime": 1791707760.5363376,
+    "seen": 1791707815.303215,
+    "ast_hash": "01bc4a8f8ecee409f36379b7bf4dfad1",
     "semantic_hash": ""
   },
   "frontend/src/components/landing/LandingFAQ.test.ts": {
@@ -6222,9 +6222,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/applications/main.py": {
-    "mtime": 1790871149.5109417,
-    "seen": 1791063691.1275358,
-    "ast_hash": "42a4f9d6db670459b22f78bf1ac2dbdb",
+    "mtime": 1791734946.8695521,
+    "seen": 1791735824.1725981,
+    "ast_hash": "eec2d95bf8b297347357788dbe2a290c",
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/chats/__init__.py": {
@@ -6276,9 +6276,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/jobs/my.py": {
-    "mtime": 1790888352.2940042,
-    "seen": 1791063691.1275496,
-    "ast_hash": "de8658243c2c9087e6506e5c1a6e1c7f",
+    "mtime": 1791734357.1340814,
+    "seen": 1791735824.17262,
+    "ast_hash": "e00beb2ce43dc8a22ee8d51b616e6637",
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/jobs/nearby.py": {
@@ -6288,9 +6288,9 @@
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/jobs/read.py": {
-    "mtime": 1791266063.6338942,
-    "seen": 1791312832.7315226,
-    "ast_hash": "c6a78cbd563ddd9683cce568d8608e61",
+    "mtime": 1791734751.2094703,
+    "seen": 1791735824.1726236,
+    "ast_hash": "ac136b4f6747c0d6fcf8956b881a8776",
     "semantic_hash": ""
   },
   "backend/app/api/v1/endpoints/jobs/recommended.py": {
@@ -6324,9 +6324,9 @@
     "semantic_hash": ""
   },
   "backend/app/services/job_queries.py": {
-    "mtime": 1791266073.9372807,
-    "seen": 1791312832.7315962,
-    "ast_hash": "1436fcf249d1d6133bba7b1bf094726e",
+    "mtime": 1791734572.6241753,
+    "seen": 1791735824.1727426,
+    "ast_hash": "612d3c4b7619a454be886731617f7a53",
     "semantic_hash": ""
   },
   "backend/tests/test_ai_translator.py": {
@@ -6591,6 +6591,24 @@
     "mtime": 1791610894.3782299,
     "seen": 1791610913.9630713,
     "ast_hash": "32ee60b2dd128f2578c38de7d5d40608",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/job-details/JobLocationFullModal.tsx": {
+    "mtime": 1791659454.9929757,
+    "seen": 1791659552.0837855,
+    "ast_hash": "d6ed73776335851f776e805ec3f57c7f",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/menu/SettingsContent.test.tsx": {
+    "mtime": 1791704932.4504254,
+    "seen": 1791705041.4834948,
+    "ast_hash": "a9cfe916eab1b53515660a114215c071",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/job-details/JobSchedulePreviewModal.tsx": {
+    "mtime": 1791711894.2506158,
+    "seen": 1791711981.9330049,
+    "ast_hash": "21b801ad0d546a2e17aef5e53f60cac1",
     "semantic_hash": ""
   }
 }

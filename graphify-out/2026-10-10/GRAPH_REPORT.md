@@ -1,114 +1,114 @@
 # Graph Report - baito-v3-  (2026-10-10)
 
 ## Corpus Check
-- 1036 files · ~664,940 words
+- 1037 files · ~668,631 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 43 file(s) not represented in the graph (top: (none) 13, .xml 10, .css 6)
 
 ## Summary
-- 5844 nodes · 15236 edges · 377 communities (256 shown, 121 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 403 edges (avg confidence: 0.93)
+- 5853 nodes · 15285 edges · 370 communities (245 shown, 125 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 402 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `11048d12`
+- Built from commit: `167fd159`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- frontend/src/components/settings/PrivacyScreen.tsx
+- frontend/src/components/login/LoginPromptScreen.tsx
 - create_job
-- JobService
-- create_accounts.py
+- job_actions.py
+- request_withdrawal
 - frontend/src/components/map/useUzbekistanGeoJson.ts
-- test_admin_job_steps.py
-- make_user
+- Application
+- useEmployer
 - mobile/src/context/AppContext.tsx
 - typing
-- schemas/job.py
-- test_admin_finance.py
+- schemas/__init__.py
+- frontend/src/types.ts
 - mobile/src/components/notifications/NotificationsScreen.tsx
-- frontend/src/features/employer/EmployerJobCard.tsx
-- job_actions.py
+- job_translator.py
+- Job
 - ref_leaflet
-- frontend/src/hooks/useMapViewScreen.ts
+- frontend/src/jobTranslations.ts
 - frontend/components/ui/thinking-orbs.tsx
 - alembic
-- post_chat_message
-- frontend/src/context/types.ts
-- apiClient
-- frontend/src/context/useChatsData.ts
-- ref_lucide_react
-- frontend/src/features/payments/MyCardsScreen.tsx
-- useCurrentScreen
-- frontend/src/features/worker/profile/ProfileScreen.tsx
-- send_payout_invoice
+- CRUDBase
+- employerProfileFields.test.ts
+- mobile/src/features/admin/AdminRegions.tsx
+- ref_react
+- frontend/src/features/admin/types.ts
+- mobile/src/components/login/LoginPromptScreen.tsx
+- ApplicantCardStart.test.tsx
+- frontend/src/features/worker/calendar/CalendarScreen.utils.ts
+- list_categories
 - workTiming.ts
-- mobile/src/translations.ts
+- mobile/src/features/employer/EmployerChats.tsx
 - mobile/src/features/worker/search/JobSearchScreen.tsx
-- refresh
+- auth.py
 - frontend_src_features_worker_calendar_calendarscreen_utils_months_translations
-- User
+- mobile/src/api/queries.ts
 - apiClient
 - JobStatus
-- record_admin_action
+- useApp
 - Tasdiqlash cheklisti — pul va qaytarib bo'lmaydigan amallar
-- Job
+- error_reporter.py
 - mobile/src/features/admin/AdminPanel.tsx
-- frontend/src/features/employer/EmployerPanel.tsx
+- frontend/src/api/queries.ts
 - src/components/ui/thinking-orbs.tsx
-- login
+- make_user
 - ref_claude_flow_memory
-- ref_react
-- frontend/src/features/worker/profile/ProfileDialogs.tsx
+- test_admin_status_settles_money.py
+- frontend/src/components/login/LoginPromptBody.tsx
 - mobile/src/components/common/DateTimePickerModal.tsx
 - ref_better_sqlite3
 - mobile/package.json
-- crud_notification.py
-- test_invoice_settlement_flow.py
-- _hired_three_day_job
-- test_email_config.py
-- mobile/src/components/AppRoutes.tsx
-- get_job_dates_set
-- frontend/src/features/employer/components/JobPostStepThree.tsx
+- User
+- frontend/src/store/useAuthStore.ts
+- frontend/src/features/employer/EmployerJobCard.tsx
+- email_service.py
+- test_worker_starts_shift.py
+- record_admin_action
+- apiClient
 - frontend/package.json
 - ref_child_process
-- schemas/application.py
+- schemas/job.py
 - frontend/src/components/notifications/NotificationsScreen.tsx
 - Capacitor Dependencies
-- useApp
-- components.json
-- frontend/src/components/map/mapTileLayers.ts
-- mobile/src/hooks/useMapViewScreen.ts
 - src/components/ui/loading-orb.tsx
+- components.json
+- frontend/src/hooks/useMapViewScreen.ts
+- mobile/src/components/map/useRegionPolygons.ts
+- frontend/src/components/map/JobSummaryCard.tsx
 - Frontend TS Config
 - MemoryStorage
-- schemas/session.py
+- test_platform_fee_setting.py
 - get_admin_job_detail
-- declare_payment
+- mobile/src/jobTranslations.ts
 - GeoSpatialService
-- upload_file
+- app/main.py
 - QA Report — Baito — 2026-09-02 — `00c34cc6693d`
 - reply_to_ticket
 - devDependencies
-- frontend/src/components/login/LoginPromptScreen.translations.ts
+- InvoicePayScreen.tsx
 - SoliqFiscalService
 - backup_bot.py
-- InvoicePayScreen.tsx
-- perks.ts
-- frontend/src/features/employer/JobPostForm.tsx
-- frontend/src/components/login/LoginPromptScreen.tsx
+- mobile/src/components/login/ProfileInfoView.tsx
+- test_security_fixes.py
+- _resolve_dispute
+- ref_react_router_dom
 - ref_sql_js
-- ref_vitest
+- test_verification_required.py
 - frontend/src/features/admin/JobDetailModal.tsx
-- frontend/src/components/map/latLngUtils.ts
+- frontend/src/components/map/districtUtils.ts
 - mobile/src/features/employer/components/JobPostStepThree.tsx
-- useLandingCategories.ts
+- frontend/src/features/employer/JobPostForm.tsx
 - get_my_jobs
 - devDependencies
 - Mobile TS Config
 - mobile/src/features/admin/UserDetailModal.tsx
-- JobTranslationAgent
+- upload_file
 - send_support_message
 - MockRedis
 - Untitled UI React Component Library Guidelines
@@ -118,67 +118,69 @@
 - get_recommended_jobs
 - create_notification
 - admin.py
-- test_verification_required.py
+- Language
 - mobile/src/features/admin/types.ts
-- dateFormat.ts
+- Job
 - celery_app.py
 - Settings
 - dependencies
-- test_audit_remediation_fixes.py
-- create_category
+- mobile/src/components/map/useMapSetup.ts
+- admin_categories.py
 - QA Report — Round 2 — Baito — 2026-09-03 — `91f9ad0e3f6e`
-- ConnectionManager
+- mobile/src/components/login/LoginPromptBody.tsx
 - test_idle_sessions_are_over.py
-- money
+- invoice_link.py
 - fixtures.ts
-- _resolve_dispute
+- ConnectionManager
 - mobile/src/features/admin/AdminDailyJobs.tsx
 - Android Instrumented Tests
 - Most Used Components Reference
 - Most Used Components Reference
-- frontend/src/features/employer/components/JobPostStepTwo.tsx
+- days_of
 - test_refund_stranded_escrow_holds.py
 - create_promotion
 - get_regions
 - mobile/src/features/admin/JobDetailModal.tsx
-- mobile/src/jobTranslations.ts
-- applicationStatus.test.tsx
+- frontend/src/components/ErrorBoundary.tsx
+- JobTranslationAgent
+- frontend/src/features/worker/search/SearchSidebar.tsx
 - Frontend PWA Manifest
 - Mobile PWA Manifest
-- frontend/src/features/worker/search/SearchFilterSection.tsx
-- mobile/src/components/map/useUzbekistanGeoJson.ts
-- test_close_idle_sessions_migration.py
-- test_platform_fee_setting.py
+- perks.ts
+- mobile/src/translations.ts
+- mobile/src/components/login/DocumentsView.tsx
+- test_advanced_features.py
 - BUG-018 — "Jonli chat" answers the user itself; the message never leaves the browser
-- mobile/src/main.tsx
+- mobile/src/features/employer/components/EmployerChatWindow.tsx
 - Remediation Script
 - Rollback Script
-- showToast
-- test_security_fixes.py
+- job_fee_percent
+- frontend/src/hooks/useJobSearchFilters.ts
 - Locust Load Testing
 - Component Patterns
 - Component Patterns
 - Frontend NPM Scripts
-- useAuthStore
+- useCurrentScreen
 - Mobile NPM Scripts
 - TypeScript Node Config
 - Merge PR Script
 - Release Script
 - Restore Backup Script
 - get_bookmarked_jobs
-- _finished_posting
-- request_withdrawal
+- applicationStatus.test.tsx
+- send_payout_invoice
 - Home.tsx
-- test_job_started_at.py
-- _Bind
+- test_a_day_closes_once_it_has_arrived.py
+- mobile/src/main.tsx
 - Gradle Wrapper Script
 - Docker Build Script
 - DB Backup Script
+- mobile/src/components/settings/PrivacyScreen.tsx
 - Android Main Activity
 - Capacitor Config
 - Cypress Config
-- decide_withdrawal
-- frontend/src/components/map/JobCardItem.tsx
+- Any
+- useAuthStore
 - Animation and Interactions
 - Icon Usage
 - COLORS
@@ -192,15 +194,15 @@
 - Session
 - COLORS
 - Styling Guidelines
-- i18n-sweep.test.ts
+- adminFallbacks.test.ts
 - hire_applicant
 - Key Architecture Principles
-- conftest.py
+- i18n-fallbacks.test.ts
 - Key Architecture Principles
 - OWASP LLM Top 10 — Security Assessment (Baito AI Translator)
-- recoverFromStaleChunks.ts
-- expire_stale_jobs
-- field_validator
+- frontend/src/main.tsx
+- domain_exception_handler
+- BUG-024 — actions that commit money or cut off a user go through on one press
 - ⚙️ Baito Backend — FastAPI Architecture
 - pathlib
 - ref_node_fs
@@ -209,11 +211,11 @@
 - rules/graphify.md
 - workflows/graphify.md
 - BUG-001-auto-release-never-releases.md
-- salary_to_uzs
+- get_employer_applications
 - app_crud_base
 - GeminiClient
 - app_models_admin_audit_log
-- CRUDBase
+- get_job_dates_set
 - Any
 - Security assessment — round 2 (deeper attacks)
 - Uzum Bank Merchant API
@@ -223,18 +225,20 @@
 - app_models_dispute
 - app_models_idempotency
 - test_notification_templates_are_known.py
-- schemas/chat.py
+- test_the_variable_built_messages_reach_the_translator
+- Any
 - BaseModel
 - test_error_details_are_known.py
+- read_jobs
 - app_models_media_file
-- frontend/src/jobTranslations.ts
+- get
 - app_models_promotion
 - test_celery_routing.py
 - app_models_region
 - get
 - app_models_support_ticket
 - app_models_system_setting
-- test_e2e_flow.py
+- conftest.py
 - Job
 - app_schemas_application
 - simplify-geojson.mjs
@@ -258,29 +262,22 @@
 - Ruflo — Claude Code Configuration
 - requests
 - patch
-- HiredWorkerInfo
-- mobile/src/components/map/useMapSetup.ts
+- Job
+- mobile/src/features/admin/AdminHeader.tsx
 - Request
 - models/__init__.py
 - Session
 - field_validator
-- s3_client.py
-- test_admin_payouts.py
+- chime
+- User
 - 🤖 AI-Rules — Sun'iy Intellekt Uchun Professional Qoidalar
 - test_row_locking.py
-- read_jobs
+- invoice-card.tsx
 - frontend_src_components_map_maputils_getdistrictcolor
 - _render_invoice
-- create_chat
-- domain_exception_handler
+- onboarding.spec.ts
 - mobile/src/features/admin/AdminSupport.tsx
-- email_service.py
-- JobPostForm.guard.test.tsx
-- saveErrorsSayWhy.test.ts
-- frontend/src/types.ts
-- parse_salary_amounts
 - languageBranches.test.ts
-- test_security_audit.py
 - Any
 - BaseModel
 - get
@@ -291,17 +288,14 @@
 - User
 - 🎨 Baito Frontend — Web Application
 - mobile/src/features/admin/AdminPromotions.tsx
-- onboarding.spec.ts
 - 🎭 Har bir Mutaxassisning Batafsil Ko'rsatmalari
 - generate_geojson.cjs
 - app_models_notification
-- Job
-- mobile/src/features/admin/AdminRegions.tsx
-- mobile/src/features/admin/AdminHeader.tsx
-- currencyWord.test.ts
+- money
+- get
+- Request
+- saveErrorsSayWhy.test.ts
 - mapFillsTheScreen.test.ts
-- chime
-- finished_job
 - test_category_region_commission.py
 - patch
 - BackgroundTasks
@@ -311,7 +305,6 @@
 - field_validator
 - skipif
 - AGENTS.md — Senior QA Engineer Protocol for AI Systems
-- invoice-card.tsx
 - ai-agent.md
 - Part II — Senior practice
 - Per-control click sweep — every user-facing route — 2026-09-03
@@ -364,11 +357,11 @@
 - sqlalchemy_ext_declarative
 
 ## God Nodes (most connected - your core abstractions)
-1. `useAuthStore` - 266 edges
+1. `useAuthStore` - 268 edges
 2. `make_user()` - 199 edges
 3. `login()` - 188 edges
 4. `useApp()` - 146 edges
-5. `JobStatus` - 116 edges
+5. `JobStatus` - 114 edges
 6. `make_job()` - 109 edges
 7. `apiClient()` - 95 edges
 8. `useCurrentScreen()` - 87 edges
@@ -384,77 +377,77 @@
   AI-rules/application_rules.md → backend/app/api/v1/endpoints/applications/actions.py
 - `1. Tasdiq so'ramaydigan amallar — TUZATILDI (2026-09-06)` --references--> `salary_to_uzs()`  [INFERRED]
   qa/CHECKLIST.md → backend/app/core/money.py
-- `[BUG-016] The completion bonus is promised, recorded, reported as earned — and never paid` --references--> `AuditLedger`  [INFERRED]
-  qa/findings/BUG-016-completion-bonus-is-promised-but-never-paid.md → backend/app/models/audit_ledger.py
+- `Fix (2026-09-06)` --references--> `salary_to_uzs()`  [INFERRED]
+  qa/findings/BUG-024-committing-actions-do-not-ask.md → backend/app/core/money.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (377 total, 121 thin omitted)
+## Communities (370 total, 125 thin omitted)
 
-### Community 0 - "frontend/src/components/settings/PrivacyScreen.tsx"
-Cohesion: 0.11
-Nodes (17): PrivacyScreen, text(), PrivacyScreen, language, en, PRIVACY, PrivacyBlock, PrivacyContent (+9 more)
+### Community 0 - "frontend/src/components/login/LoginPromptScreen.tsx"
+Cohesion: 0.05
+Nodes (45): LoginPromptScreen, PrivacyScreen, DateTimePickerModal(), DateTimePickerModalProps, getDaysInMonth(), getFirstDayOfWeek(), monthNames(), parseInitial24hTime() (+37 more)
 
 ### Community 1 - "create_job"
 Cohesion: 0.15
 Nodes (20): create_job(), delete_job(), Any, delete, Request, Session, User, Edit a posting. There was no update route at all, so fixing a typo meant… (+12 more)
 
-### Community 2 - "JobService"
-Cohesion: 0.06
-Nodes (47): app_core_error_reporter, AsyncClient, asyncio, _fingerprint(), _post(), Report unhandled exceptions to Telegram. Production had no error reporting at…, Report something that is worth an alert but is not an exception. Used for…, Group identical failures. Uses the exception type plus the last frame, so the… (+39 more)
+### Community 2 - "job_actions.py"
+Cohesion: 0.07
+Nodes (61): app_core_error_reporter, app_services_job_service, apply_to_job(), complete_job(), complete_job_day(), confirm_start_job(), declare_job_payout(), dispute_job() (+53 more)
 
-### Community 3 - "create_accounts.py"
-Cohesion: 0.06
-Nodes (47): app_core_security, _require_valid_phone(), create_user(), limit, post, Request, Update current user profile., Register a new account. Requires the ``verification_token`` handed out by… (+39 more)
+### Community 3 - "request_withdrawal"
+Cohesion: 0.08
+Nodes (28): _decode(), get_access_token(), get_current_active_user(), get_current_admin(), get_current_employer(), get_current_user(), get_current_user_optional(), get_idempotent_response() (+20 more)
 
 ### Community 4 - "frontend/src/components/map/useUzbekistanGeoJson.ts"
 Cohesion: 0.11
 Nodes (24): formatDistrictName(), LAT_OFFSET, LNG_OFFSET, shiftCoordinates(), shiftGeoJson(), shiftGeometry(), isPointInFeature(), isPointInPolygon() (+16 more)
 
-### Community 5 - "test_admin_job_steps.py"
-Cohesion: 0.27
-Nodes (16): _admin(), _phone(), The lifecycle checklist an administrator sees when they open a job.…, Billing, their word, and the money arriving stay three separate stages., Nothing ahead of a cancelled job is coming, so nothing is "current"., A brand new posting still shows the nine stages ahead of it., The stage nobody timestamps. Nothing records the moment a job starts, so this…, _state() (+8 more)
+### Community 5 - "Application"
+Cohesion: 0.15
+Nodes (31): Application, PayoutStatus, Where a payout is in the two-sided settlement. Completing a job credits the…, _admin(), _phone(), The lifecycle checklist an administrator sees when they open a job.…, Billing, their word, and the money arriving stay three separate stages., Nothing ahead of a cancelled job is coming, so nothing is "current". (+23 more)
 
-### Community 6 - "make_user"
-Cohesion: 0.08
-Nodes (44): make_user(), User, _phone(), The worker applies once, not once per day., One row in Job, three in JobDay. It was briefly the other way round — three Job…, 2026-09-02~04" is the other way the form writes a run of days., test_a_range_written_with_a_tilde_is_still_one_posting(), test_a_three_day_posting_is_one_posting_with_three_days() (+36 more)
+### Community 6 - "useEmployer"
+Cohesion: 0.14
+Nodes (20): ConfirmModal(), ConfirmModalProps, FinishJobModal(), FinishJobModalProps, EmployerAnalytics(), EmployerApplicants(), EmployerApplicantsProps, EmployerDashboard() (+12 more)
 
 ### Community 7 - "mobile/src/context/AppContext.tsx"
-Cohesion: 0.08
-Nodes (42): addPaymentCardApi(), changePasswordApi(), deletePaymentCardApi(), fetchActiveSessionsApi(), fetchPaymentCardsApi(), fetchTransactionsApi(), fetchUserProfileApi(), logoutAllOtherSessionsApi() (+34 more)
+Cohesion: 0.05
+Nodes (59): addPaymentCardApi(), deletePaymentCardApi(), fetchPaymentCardsApi(), fetchTransactionsApi(), fetchUserProfileApi(), updatePaymentCardApi(), AddCardScreen, AdminPanel (+51 more)
 
 ### Community 8 - "typing"
-Cohesion: 0.05
-Nodes (87): app, app_api, app_api_v1_endpoints, app_core, app_core_config, app_core_limiter, app_core_money, app_core_phone (+79 more)
+Cohesion: 0.09
+Nodes (50): app, app_api, app_api_v1_endpoints, app_core, app_core_limiter, app_core_money, app_models_audit_ledger, app_models_job (+42 more)
 
-### Community 9 - "schemas/job.py"
-Cohesion: 0.16
-Nodes (14): CRUDJob, _coerce_optional_int(), Job, JobBase, JobCreate, JobInDBBase, JobUpdate, JobWithApplicationStatus (+6 more)
-
-### Community 10 - "test_admin_finance.py"
+### Community 9 - "schemas/__init__.py"
 Cohesion: 0.06
-Nodes (41): _hire(), _open_ticket(), Tests for the administrator money controls and transaction atomicity., Transaction.amount/platformFee are stored in tiyin (UZS * 100), same as every…, The fixed numbers above collide once a test is parametrised., The service used to commit internally while callers committed again. A failure…, A hire that raises after the hold must not keep the wage frozen., The models and the chat UI existed; no endpoint connected them. (+33 more)
+Nodes (43): CRUDApplication, CRUDNotification, Session, Application, ApplicationBase, ApplicationCreate, ApplicationInDBBase, ApplicationUpdate (+35 more)
+
+### Community 10 - "frontend/src/types.ts"
+Cohesion: 0.15
+Nodes (24): language, text(), JobDetailsCard(), JobCardItem, JobMarkerPopup, JobMarkerPopupProps, JobCardItem, JobCardItemComponent() (+16 more)
 
 ### Community 11 - "mobile/src/components/notifications/NotificationsScreen.tsx"
 Cohesion: 0.18
 Nodes (16): fetchNotificationsApi(), markAllNotificationsReadApi(), NotificationsScreen, NotificationCategory, NotificationFilterPanel(), NotificationFilterPanelProps, getIcon(), getTypeBadge() (+8 more)
 
-### Community 12 - "frontend/src/features/employer/EmployerJobCard.tsx"
-Cohesion: 0.14
-Nodes (14): ConfirmModal(), ConfirmModalProps, EmployerJobCard(), EmployerJobCardProps, getJobBannerImage(), job, EmployerJobDetailModal(), EmployerJobDetailModalProps (+6 more)
+### Community 12 - "job_translator.py"
+Cohesion: 0.08
+Nodes (26): _columns(), downgrade(), give categories and regions their own commission, and fill both in The…, Fill both tables in, row by row, matching on the natural key. Not "insert…, _seed(), upgrade(), _columns(), downgrade() (+18 more)
 
-### Community 13 - "job_actions.py"
-Cohesion: 0.26
-Nodes (25): app_services_job_service, apply_to_job(), complete_job(), complete_job_day(), confirm_start_job(), declare_job_payout(), dispute_job(), get_job_payout_for_employer() (+17 more)
+### Community 13 - "Job"
+Cohesion: 0.06
+Nodes (63): JobDetailsCard(), JobDetailsCardProps, JobDetailsHeader(), JobDetailsHeaderProps, JobDetailsHero(), JobDetailsHeroProps, JobDetailsLocation(), JobDetailsLocationProps (+55 more)
 
 ### Community 14 - "ref_leaflet"
-Cohesion: 0.18
-Nodes (26): createDistrictOnEachFeature(), areDistrictNamesEqual(), MapDistrict, MapRegion, UZBEKISTAN_REGIONS, frontend_src_components_map_maputils_aredistrictnamesequal, frontend_src_components_map_maputils_mapfeaturetoregionid, BOUNDARY_COLOUR (+18 more)
+Cohesion: 0.17
+Nodes (27): createDistrictOnEachFeature(), areDistrictNamesEqual(), MapDistrict, MapRegion, UZBEKISTAN_REGIONS, frontend_src_components_map_maputils_aredistrictnamesequal, frontend_src_components_map_maputils_mapfeaturetoregionid, BOUNDARY_COLOUR (+19 more)
 
-### Community 15 - "frontend/src/hooks/useMapViewScreen.ts"
-Cohesion: 0.20
-Nodes (15): getLatLng(), frontend_src_components_map_maputils_getlatlng, frontend_src_components_map_maputils_isregionname, isRegionName(), useJobMarkers(), UseJobMarkersProps, useMapFilterJobs(), useMapLocationAction() (+7 more)
+### Community 15 - "frontend/src/jobTranslations.ts"
+Cohesion: 0.23
+Nodes (7): jobDataEn2, jobDataEn, jobDataRu2, jobDataRu, combinedEn, combinedRu, jobTransData
 
 ### Community 16 - "frontend/components/ui/thinking-orbs.tsx"
 Cohesion: 0.09
@@ -462,107 +455,107 @@ Nodes (32): getLook(), LoadingOrb(), LoadingOrbPreset, LoadingOrbProps, LoadingO
 
 ### Community 17 - "alembic"
 Cohesion: 0.03
-Nodes (34): alembic, _create_admin_audit_logs(), _create_media_files(), upgrade(), Message read state, and indexes for the foreign keys that had none The unread…, _create_payment_orders(), _create_uzum_transactions(), upgrade() (+26 more)
+Nodes (20): alembic, _create_admin_audit_logs(), _create_media_files(), upgrade(), Message read state, and indexes for the foreign keys that had none The unread…, _create_payment_orders(), _create_uzum_transactions(), upgrade() (+12 more)
 
-### Community 18 - "post_chat_message"
-Cohesion: 0.18
-Nodes (18): _get_participant_chat(), delete_chat_message(), get_chat_messages(), mark_chat_read(), post_chat_message(), Any, delete, get (+10 more)
+### Community 18 - "CRUDBase"
+Cohesion: 0.07
+Nodes (42): create_chat(), get_chats(), _get_participant_chat(), Any, get, post, Session, User (+34 more)
 
-### Community 19 - "frontend/src/context/types.ts"
-Cohesion: 0.24
-Nodes (12): AppContextType, UserProfile, EmployerProfileCompletion(), EmployerProfileCompletionProps, isFilled(), Lang, missingFrom(), OPTIONAL_FIELDS (+4 more)
+### Community 19 - "employerProfileFields.test.ts"
+Cohesion: 0.26
+Nodes (11): UserProfile, EmployerProfileCompletion(), EmployerProfileCompletionProps, isFilled(), Lang, missingFrom(), OPTIONAL_FIELDS, ProfileField (+3 more)
 
-### Community 20 - "apiClient"
-Cohesion: 0.18
-Nodes (17): apiClient(), getApiBaseUrl(), getStoredRefreshToken(), refreshSession(), setStoredRefreshToken(), setStoredToken(), createChatApi(), deleteChatMessageApi() (+9 more)
+### Community 20 - "mobile/src/features/admin/AdminRegions.tsx"
+Cohesion: 0.70
+Nodes (3): AddRegionModal(), AddRegionModalProps, RegionConfig
 
-### Community 21 - "frontend/src/context/useChatsData.ts"
-Cohesion: 0.05
-Nodes (63): ChatSocket, openChatSocket(), SocketMessage, createChatApi(), deleteChatMessageApi(), deleteSupportMessageApi(), fetchChatMessages(), fetchChats() (+55 more)
-
-### Community 22 - "ref_lucide_react"
+### Community 21 - "ref_react"
 Cohesion: 0.04
-Nodes (78): AddCategoryModal(), AddCategoryModalProps, AddPromoModal(), AddPromoModalProps, AddRegionModal(), AddRegionModalProps, ADMIN_TEXTS, AdminAutoModeration() (+70 more)
+Nodes (63): MapViewScreen, BottomNav(), DrawerMenuItem(), DrawerMenuItemProps, GATED_TEXTS, GatedLockScreen(), GatedLockScreenProps, Header() (+55 more)
 
-### Community 23 - "frontend/src/features/payments/MyCardsScreen.tsx"
-Cohesion: 0.20
-Nodes (13): addPaymentCardApi(), deletePaymentCardApi(), fetchPaymentCardsApi(), fetchUserProfileApi(), updatePaymentCardApi(), AddCardScreen, MyCardsScreen, TopUpScreen (+5 more)
+### Community 22 - "frontend/src/features/admin/types.ts"
+Cohesion: 0.03
+Nodes (130): unwrapList(), fetchAdminTicketApi(), replyToTicketApi(), sendDigestNowApi(), updateTicketStatusApi(), AddCategoryModal(), AddCategoryModalProps, AddPromoModal() (+122 more)
 
-### Community 24 - "useCurrentScreen"
-Cohesion: 0.04
-Nodes (71): updateUserProfileApi(), withdrawApplicationApi(), AppContent(), MapViewScreen, AdminPanel, ApplicationsScreen, AppRoutes(), AuthGuestRoute() (+63 more)
-
-### Community 25 - "frontend/src/features/worker/profile/ProfileScreen.tsx"
-Cohesion: 0.17
-Nodes (12): ProfileScreen, NavItem, ScreenType, ProfileAboutWidget(), ProfileAboutWidgetProps, ProfileAccordion(), ProfileAccordionProps, ProfileCompletionWidget() (+4 more)
-
-### Community 26 - "send_payout_invoice"
+### Community 23 - "mobile/src/components/login/LoginPromptScreen.tsx"
 Cohesion: 0.18
-Nodes (19): confirm_invoice_payment(), confirm_payout(), get_job_payout(), InvoiceSend, list_payouts(), PayoutCreate, Any, BaseModel (+11 more)
+Nodes (10): LoginPromptScreen, LoginPromptFooter(), LoginPromptFooterProps, LoginPromptHeader(), LoginPromptHeaderProps, LoginPromptScreen(), LoginPromptScreenProps, LoginPromptStepper() (+2 more)
+
+### Community 24 - "ApplicantCardStart.test.tsx"
+Cohesion: 0.40
+Nodes (4): applicant(), confirmStartJobApi, renderCard(), showToast
+
+### Community 25 - "frontend/src/features/worker/calendar/CalendarScreen.utils.ts"
+Cohesion: 0.14
+Nodes (24): CalendarAccordion(), CalendarAccordionProps, CalendarDayButton(), CalendarDayButtonProps, CalendarDayTooltip(), CalendarDayTooltipProps, CalendarGridCard(), CalendarGridCardProps (+16 more)
+
+### Community 26 - "list_categories"
+Cohesion: 0.38
+Nodes (7): list_categories(), list_regions(), Any, get, Session, Every category, with how much work is actually going in it. The landing page's…, Active regions only — a deactivated one should stop being offered.
 
 ### Community 27 - "workTiming.ts"
 Cohesion: 0.32
 Nodes (9): ActualTiming(), clockOf(), humanMinutes(), LATE_THRESHOLD_MIN, minutesOf(), pad(), scheduledWindow(), WorkTiming (+1 more)
 
-### Community 28 - "mobile/src/translations.ts"
-Cohesion: 0.14
-Nodes (22): uploadFileApi(), chatDataTrans, getTranslatedChat(), ChatDetailPanel(), ChatDetailPanelProps, ChatHeader(), ChatHeaderProps, ChatInputBar() (+14 more)
+### Community 28 - "mobile/src/features/employer/EmployerChats.tsx"
+Cohesion: 0.09
+Nodes (29): uploadFileApi(), chatDataTrans, getTranslatedChat(), ChatScreen, MessagesScreen, SupportChatScreen, ChatDetailPanel(), ChatDetailPanelProps (+21 more)
 
 ### Community 29 - "mobile/src/features/worker/search/JobSearchScreen.tsx"
+Cohesion: 0.09
+Nodes (24): JobSearchScreen, JobCardSkeleton(), JobCardSkeletonProps, JobMarkerPopup, JobMarkerPopupProps, DesktopJobDetailsPanel, JobCardItem, JobSearchModalDetail() (+16 more)
+
+### Community 30 - "auth.py"
 Cohesion: 0.05
-Nodes (48): applyToJobApi(), bookmarkJobApi(), fetchJobs(), requestStartJobApi(), JobSearchScreen, LandingHero(), LandingHeroProps, LandingHeroBackground() (+40 more)
+Nodes (69): app_core_config, app_core_phone, get_refresh_token(), _clear_auth_cookies(), _device_name(), login(), logout(), Any (+61 more)
 
-### Community 30 - "refresh"
-Cohesion: 0.08
-Nodes (45): _decode(), get_access_token(), get_current_active_user(), get_current_admin(), get_current_employer(), get_current_user(), get_current_user_optional(), get_refresh_token() (+37 more)
-
-### Community 32 - "User"
-Cohesion: 0.21
-Nodes (17): change_password(), deactivate_all_other_sessions(), _deactivate_other_sessions(), deactivate_session(), Any, delete, get, put (+9 more)
+### Community 32 - "mobile/src/api/queries.ts"
+Cohesion: 0.07
+Nodes (38): applyToJobApi(), bookmarkJobApi(), changePasswordApi(), confirmStartJobApi(), fetchActiveSessionsApi(), fetchJobs(), logoutAllOtherSessionsApi(), logoutSessionApi() (+30 more)
 
 ### Community 33 - "apiClient"
-Cohesion: 0.04
-Nodes (96): apiClient(), Lang, LANGS, readLanguage(), refreshSession(), REQUEST_FAILED, unwrapList(), applyToJobApi() (+88 more)
+Cohesion: 0.05
+Nodes (73): apiClient(), Lang, LANGS, readLanguage(), refreshSession(), REQUEST_FAILED, confirmStartJobApi(), loginApi() (+65 more)
 
 ### Community 34 - "JobStatus"
-Cohesion: 0.05
-Nodes (88): app_models_application, app_models_job_day, app_services_work_dates, JobDay, JobDayStatus, One calendar day of a posting, with its own status and its own wage.…, Where one day of a posting stands. A day is the unit of work and the unit of…, Job (+80 more)
+Cohesion: 0.06
+Nodes (63): app_models_application, Job, JobStatus, Base, Canonical longitude (stored in legacy coordinateY column)., Canonical job lifecycle vocabulary. Several endpoints used to filter on…, Canonical latitude (stored in legacy coordinateX column)., _delivery_failed() (+55 more)
 
-### Community 35 - "record_admin_action"
-Cohesion: 0.12
-Nodes (31): approve_job(), change_job_status(), change_job_worker(), delete_job(), JobRejectPayload, JobStatusPayload, JobWorkerPayload, Any (+23 more)
+### Community 35 - "useApp"
+Cohesion: 0.04
+Nodes (72): registerApi(), requestWithdrawalApi(), AppContent(), AppRoutes(), ProfileScreen, TaxesScreen, BottomNav(), Drawer() (+64 more)
 
 ### Community 36 - "Tasdiqlash cheklisti — pul va qaytarib bo'lmaydigan amallar"
 Cohesion: 0.18
 Nodes (10): 1. Tasdiq so'ramaydigan amallar — TUZATILDI (2026-09-06), 2. Yolg'on muvaffaqiyat — TUZATILDI (2026-09-06), 2b. Ovozsiz muvaffaqiyat — TUZATILDI (BUG-026), 3. To'g'ri ishlaydi — qayta ochilmasin, 4. O'lchandi (2026-09-06), 5. O'lchov usuli, 6. Holat, Ikkita topilgan nuqson (+2 more)
 
-### Community 37 - "Job"
-Cohesion: 0.05
-Nodes (69): confirmStartJobApi(), CalendarScreen, ChatListItem(), ChatListItemProps, ChatListPanelProps, ConfirmModal(), ConfirmModalProps, JobDetailsCard() (+61 more)
+### Community 37 - "error_reporter.py"
+Cohesion: 0.12
+Nodes (17): AsyncClient, asyncio, _post(), Report unhandled exceptions to Telegram. Production had no error reporting at…, Report something that is worth an alert but is not an exception. Used for…, One alert per distinct error per hour. Fails open if Redis is unavailable., report_message(), _should_send() (+9 more)
 
 ### Community 38 - "mobile/src/features/admin/AdminPanel.tsx"
 Cohesion: 0.10
 Nodes (22): AdminAnalytics(), AdminAutoEscrowDocs(), AdminAutoMatching(), AdminAutoModeration(), AdminAutoReports(), AdminBroadcast(), AdminBroadcastProps, AdminCategories() (+14 more)
 
-### Community 39 - "frontend/src/features/employer/EmployerPanel.tsx"
-Cohesion: 0.06
-Nodes (32): completeJobDayApi(), fetchJobDaysApi(), ErrorBoundary, Props, State, language, Sidebar(), SidebarProps (+24 more)
+### Community 39 - "frontend/src/api/queries.ts"
+Cohesion: 0.05
+Nodes (69): ChatSocket, openChatSocket(), SocketMessage, changePasswordApi(), createChatApi(), createDisputeApi(), deleteChatMessageApi(), deleteSupportMessageApi() (+61 more)
 
 ### Community 40 - "src/components/ui/thinking-orbs.tsx"
 Cohesion: 0.12
 Nodes (23): arms(), clocks, dist2(), distribute(), DOTS, ease(), lensAt(), Look (+15 more)
 
-### Community 41 - "login"
-Cohesion: 0.07
-Nodes (69): Application, login(), make_job(), Job, Authenticate the shared TestClient cookie jar as ``user``., _hire(), Regression tests for the functional and business-logic findings., The employer's confirmation step is gone. It used to stand between a worker… (+61 more)
+### Community 41 - "make_user"
+Cohesion: 0.03
+Nodes (160): app_api_v1_endpoints_chats_websocket, app_models, login(), make_job(), make_user(), Job, User, Authenticate the shared TestClient cookie jar as ``user``. (+152 more)
 
-### Community 43 - "ref_react"
-Cohesion: 0.02
-Nodes (88): DrawerMenuItem(), DrawerMenuItemProps, GATED_TEXTS, GatedLockScreen(), GatedLockScreenProps, CustomSelect(), CustomSelectProps, DocumentsView() (+80 more)
+### Community 43 - "test_admin_status_settles_money.py"
+Cohesion: 0.19
+Nodes (19): _balance(), _credited(), _days(), _hired_three_day_job(), _phone(), Changing a posting's status from the admin panel has to settle the money. Found…, A refusal that half-applied would be worse than the bug., The guard is about stranded money, not about admins. (+11 more)
 
-### Community 44 - "frontend/src/features/worker/profile/ProfileDialogs.tsx"
-Cohesion: 0.23
-Nodes (15): EMPTY_FORM, openIn(), MONTHS, ProfileDialogs(), ProfileDialogsProps, getProfileTranslations(), cardDigits(), cardProblem() (+7 more)
+### Community 44 - "frontend/src/components/login/LoginPromptBody.tsx"
+Cohesion: 0.05
+Nodes (42): SWEPT, CustomSelect(), CustomSelectProps, DocumentsView(), DocumentsViewProps, EmployerDocsSection(), EmployerDocsSectionProps, EmployerProfileInfoView() (+34 more)
 
 ### Community 45 - "mobile/src/components/common/DateTimePickerModal.tsx"
 Cohesion: 0.26
@@ -572,41 +565,41 @@ Nodes (10): DateTimePickerModal(), DateTimePickerModalProps, getDaysInMonth(), g
 Cohesion: 0.04
 Nodes (52): description, autoprefixer, eslint, eslint-plugin-react-hooks, eslint-plugin-react-refresh, eslint-plugin-unused-imports, globals, jsdom (+44 more)
 
-### Community 48 - "crud_notification.py"
-Cohesion: 0.30
-Nodes (8): CRUDNotification, Session, Notification, NotificationBase, NotificationCreate, NotificationInDBBase, NotificationUpdate, BaseModel
+### Community 48 - "User"
+Cohesion: 0.07
+Nodes (41): add_payment_card(), delete_payment_card(), get_payment_cards(), get_transactions(), delete, get, post, put (+33 more)
 
-### Community 49 - "test_invoice_settlement_flow.py"
-Cohesion: 0.30
-Nodes (14): PayoutStatus, Where a payout is in the two-sided settlement. Completing a job credits the…, _admin(), _invoiced_job(), The settlement loop, from the invoice to the money being confirmed. The pieces…, A finished shift the company has been billed for., _status(), test_an_invoice_becomes_confirmed_only_after_someone_checks_it() (+6 more)
+### Community 49 - "frontend/src/store/useAuthStore.ts"
+Cohesion: 0.06
+Nodes (37): fetchNotificationsApi(), logoutApi(), ProfileScreen, NONE, NotificationWatcher(), chime, rows, setUnreadNotificationsCount (+29 more)
 
-### Community 50 - "_hired_three_day_job"
-Cohesion: 0.24
-Nodes (11): _hired_three_day_job(), _phone(), The guard is about stranded money, not about admins., Re-sending the status it already has must not start failing., A three-day posting with a worker hired and no day worked yet., test_a_posting_already_finished_is_not_refused_again(), test_a_posting_with_no_money_frozen_can_still_be_closed(), test_a_posting_with_unfinished_days_cannot_be_called_finished() (+3 more)
+### Community 50 - "frontend/src/features/employer/EmployerJobCard.tsx"
+Cohesion: 0.19
+Nodes (9): EmployerJobCard(), EmployerJobCardProps, getJobBannerImage(), job, pad(), parseOne(), parseWorkDates(), toIsoDate() (+1 more)
 
-### Community 51 - "test_email_config.py"
-Cohesion: 0.22
-Nodes (15): is_configured(), missing_config(), What stops mail being sent, phrased so an operator can act on it. Returns None…, Whether mail can be sent at all. Checked by the endpoint before it does any…, fixture, What the SMTP guard accepts, and what it now catches. The guard used to check…, Set the SMTP settings for one test, whatever the environment holds., smtp() (+7 more)
+### Community 51 - "email_service.py"
+Cohesion: 0.14
+Nodes (22): is_configured(), missing_config(), Sending mail. The only caller today is the payout invoice. Deliberately small…, What stops mail being sent, phrased so an operator can act on it. Returns None…, Whether mail can be sent at all. Checked by the endpoint before it does any…, Send one message, or raise. Never returns a boolean. A caller that has to…, send_email(), fixture (+14 more)
 
-### Community 52 - "mobile/src/components/AppRoutes.tsx"
-Cohesion: 0.04
-Nodes (48): AdminPanel, ChatScreen, FaqScreen, HelpScreen, LoginPromptScreen, MessagesScreen, NotFoundScreen, PaymentResult (+40 more)
-
-### Community 53 - "get_job_dates_set"
-Cohesion: 0.13
-Nodes (15): 1. Bir kunda maksimal ariza soni, 2. Ariza tasdiqlanganda, 3. Tasdiqlangan ishi bor kunga ariza, Baito Application Rules, Eslatma:, get_job_dates_set(), job_dates(), _parse_single_date() (+7 more)
-
-### Community 54 - "frontend/src/features/employer/components/JobPostStepThree.tsx"
+### Community 52 - "test_worker_starts_shift.py"
 Cohesion: 0.21
-Nodes (14): JobLocationLeafletMap(), JobLocationLeafletMapProps, JobPostStepThree(), JobPostStepThreeProps, AddressSuggestion, CITY_COORDINATES, CYRILLIC_MAP, cyrillicToLatin() (+6 more)
+Nodes (18): _app_status(), _hired(), _job(), _phone(), The worker starts their own shift; nobody confirms it afterwards. Pressing…, The refusal the console was full of, now reachable from this route too., A multi-vacancy shift. confirm-start advances everyone at once, which is right…, The employer is told, not asked. (+10 more)
+
+### Community 53 - "record_admin_action"
+Cohesion: 0.18
+Nodes (21): approve_job(), change_job_status(), change_job_worker(), delete_job(), JobRejectPayload, JobStatusPayload, JobWorkerPayload, Any (+13 more)
+
+### Community 54 - "apiClient"
+Cohesion: 0.18
+Nodes (17): apiClient(), getApiBaseUrl(), getStoredRefreshToken(), refreshSession(), setStoredRefreshToken(), setStoredToken(), createChatApi(), deleteChatMessageApi() (+9 more)
 
 ### Community 55 - "frontend/package.json"
 Cohesion: 0.05
 Nodes (37): autoprefixer, eslint, eslint-plugin-react-hooks, eslint-plugin-react-refresh, eslint-plugin-unused-imports, globals, jsdom, leaflet (+29 more)
 
-### Community 57 - "schemas/application.py"
-Cohesion: 0.44
-Nodes (7): CRUDApplication, Application, ApplicationBase, ApplicationCreate, ApplicationInDBBase, ApplicationUpdate, BaseModel
+### Community 57 - "schemas/job.py"
+Cohesion: 0.09
+Nodes (22): CRUDJob, _coerce_optional_int(), HiredWorkerInfo, Job, JobBase, JobCreate, JobInDBBase, JobUpdate (+14 more)
 
 ### Community 58 - "frontend/src/components/notifications/NotificationsScreen.tsx"
 Cohesion: 0.13
@@ -616,53 +609,53 @@ Nodes (22): markAllNotificationsReadApi(), NotificationsScreen, NotificationCate
 Cohesion: 0.07
 Nodes (29): dependencies, autoprefixer, axios, @capacitor/android, @capacitor/app, @capacitor/core, @capacitor/device, @capacitor/haptics (+21 more)
 
-### Community 60 - "useApp"
-Cohesion: 0.04
-Nodes (79): fetchWorkerApplicationsApi(), registerApi(), AppContent(), MapViewScreen, ApplicationsScreen, AppRoutes(), TaxesScreen, BottomNav() (+71 more)
+### Community 60 - "src/components/ui/loading-orb.tsx"
+Cohesion: 0.19
+Nodes (12): looks, Demo, looks, getLook(), LoadingOrb(), LoadingOrbPreset, LoadingOrbProps, LoadingOrbSize (+4 more)
 
 ### Community 61 - "components.json"
 Cohesion: 0.11
 Nodes (17): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+9 more)
 
-### Community 62 - "frontend/src/components/map/mapTileLayers.ts"
-Cohesion: 0.18
-Nodes (12): createClusterIcon(), CachedTileLayer, createCachedTileLayer(), createTileLayers(), layerCacheByMap, MapType, osmFallbackUrl(), tileErrorFallback() (+4 more)
+### Community 62 - "frontend/src/hooks/useMapViewScreen.ts"
+Cohesion: 0.11
+Nodes (21): JobLocationFullModal(), JobLocationFullModalProps, createClusterIcon(), CachedTileLayer, createCachedTileLayer(), createTileLayers(), layerCacheByMap, MapType (+13 more)
 
-### Community 63 - "mobile/src/hooks/useMapViewScreen.ts"
-Cohesion: 0.07
-Nodes (57): createDistrictOnEachFeature(), calculateAreDistrictNamesEqual(), areDistrictNamesEqual(), districtMatchCache, getDistrictColor(), calculateDistance(), getFeatureBounds(), getFeatureCenter() (+49 more)
+### Community 63 - "mobile/src/components/map/useRegionPolygons.ts"
+Cohesion: 0.11
+Nodes (33): createDistrictOnEachFeature(), calculateAreDistrictNamesEqual(), areDistrictNamesEqual(), districtMatchCache, getDistrictColor(), getFeatureBounds(), getFeatureCenter(), calculateLatLng() (+25 more)
 
-### Community 64 - "src/components/ui/loading-orb.tsx"
-Cohesion: 0.19
-Nodes (12): looks, Demo, looks, getLook(), LoadingOrb(), LoadingOrbPreset, LoadingOrbProps, LoadingOrbSize (+4 more)
+### Community 64 - "frontend/src/components/map/JobSummaryCard.tsx"
+Cohesion: 0.26
+Nodes (9): applyToJobApi(), bookmarkJobApi(), fetchJobs(), JobQuery, JobCardSkeleton(), JobCardSkeletonProps, JobSummaryCard(), JobSummaryCardProps (+1 more)
 
 ### Community 65 - "Frontend TS Config"
 Cohesion: 0.08
 Nodes (24): compilerOptions, allowImportingTsExtensions, allowJs, alwaysStrict, experimentalDecorators, forceConsistentCasingInFileNames, isolatedModules, jsx (+16 more)
 
-### Community 67 - "schemas/session.py"
-Cohesion: 0.48
-Nodes (6): ActiveSession, ActiveSessionBase, ActiveSessionCreate, ActiveSessionInDBBase, ActiveSessionUpdate, BaseModel
+### Community 67 - "test_platform_fee_setting.py"
+Cohesion: 0.20
+Nodes (23): _balance(), _billed(), _credit(), _hire(), _phone(), The commission: whose it is, where the rate comes from, and when it is fixed.…, A database nobody has configured yet., The rate is pinned when a day is credited, not read again at invoice time.… (+15 more)
 
 ### Community 68 - "get_admin_job_detail"
 Cohesion: 0.23
 Nodes (13): _build_steps(), get_admin_job_detail(), get_admin_jobs(), _iso(), Any, get, Job, Session (+5 more)
 
-### Community 69 - "declare_payment"
-Cohesion: 0.17
-Nodes (17): declare_payment(), get_invoice(), _load(), _methods(), PaymentDeclaration, Any, BaseModel, get (+9 more)
+### Community 69 - "mobile/src/jobTranslations.ts"
+Cohesion: 0.23
+Nodes (7): jobDataEn2, jobDataEn, jobDataRu2, jobDataRu, combinedEn, combinedRu, jobTransData
 
 ### Community 70 - "GeoSpatialService"
 Cohesion: 0.16
 Nodes (13): get_nearby_jobs(), Any, get, Session, Jobs within a radius, with commute estimates. A coarse bounding box is applied…, GeoSpatialService, Any, Calculate the great-circle distance between two GPS points on Earth in… (+5 more)
 
-### Community 71 - "upload_file"
-Cohesion: 0.17
-Nodes (13): Any, limit, post, Request, Session, User, Upload a file to S3/MinIO, converting images to WebP. The returned URL points…, Read the upload, aborting as soon as it exceeds the limit. The previous version… (+5 more)
+### Community 71 - "app/main.py"
+Cohesion: 0.04
+Nodes (44): app_api_v1_api, app_core_exceptions, app_core_security, app_db_base, app_db_init_db, Run migrations in 'offline' mode., Run migrations in 'online' mode., run_migrations_offline() (+36 more)
 
 ### Community 72 - "QA Report — Baito — 2026-09-02 — `00c34cc6693d`"
-Cohesion: 0.07
-Nodes (36): _get_or_create(), get_settings(), Any, BaseModel, get, post, put, Request (+28 more)
+Cohesion: 0.06
+Nodes (37): _get_or_create(), get_settings(), Any, BaseModel, get, post, put, Request (+29 more)
 
 ### Community 73 - "reply_to_ticket"
 Cohesion: 0.17
@@ -672,9 +665,9 @@ Nodes (16): get_ticket(), Any, BaseModel, get, patch, post, Request, Session (+8
 Cohesion: 0.09
 Nodes (23): devDependencies, @capacitor/cli, cypress, eslint, eslint-plugin-react, eslint-plugin-react-hooks, eslint-plugin-react-refresh, eslint-plugin-unused-imports (+15 more)
 
-### Community 75 - "frontend/src/components/login/LoginPromptScreen.translations.ts"
-Cohesion: 0.43
-Nodes (3): en, ru, uz
+### Community 75 - "InvoicePayScreen.tsx"
+Cohesion: 0.20
+Nodes (12): declareInvoicePaymentApi(), fetchInvoiceApi(), InvoicePayScreen, getAudioContext(), InvoicePayScreen(), METHOD_ICONS, money(), playPaperTearSound() (+4 more)
 
 ### Community 76 - "SoliqFiscalService"
 Cohesion: 0.22
@@ -684,45 +677,45 @@ Nodes (9): Any, Soliq.uz & Fiscalization Integration for Self-Employed ("O'zini 
 Cohesion: 0.09
 Nodes (49): cleanup_old_backups(), deliver_backup_file(), deny(), download_backup(), ensure_bucket(), _expired(), get_all_backup_files(), get_channel_id() (+41 more)
 
-### Community 78 - "InvoicePayScreen.tsx"
-Cohesion: 0.20
-Nodes (12): declareInvoicePaymentApi(), fetchInvoiceApi(), InvoicePayScreen, getAudioContext(), InvoicePayScreen(), METHOD_ICONS, money(), playPaperTearSound() (+4 more)
+### Community 78 - "mobile/src/components/login/ProfileInfoView.tsx"
+Cohesion: 0.18
+Nodes (10): CustomSelect(), CustomSelectProps, EmployerProfileInfoView(), EmployerProfileInfoViewProps, MONTHS, ProfileInfoView(), ProfileInfoViewProps, MONTHS (+2 more)
 
-### Community 79 - "perks.ts"
-Cohesion: 0.26
-Nodes (10): bareTag(), PERK_BY_TAG, PerkLabel, pick(), PRESET_TAGS, tagKey(), tagLabel(), ALLOWED (+2 more)
+### Community 79 - "test_security_fixes.py"
+Cohesion: 0.15
+Nodes (8): MediaVisibility, Who may read an uploaded object. ``PUBLIC`` covers things already visible in…, Regression tests for the security findings fixed in this change. Each test…, POST /users used to accept any phone number outright., Chat images were uploaded as 'job', which made them public. Anyone holding the…, test_a_chat_attachment_is_readable_by_the_other_participant_only(), test_private_media_is_not_readable_anonymously(), test_registration_without_sms_verification_is_rejected()
 
-### Community 80 - "frontend/src/features/employer/JobPostForm.tsx"
-Cohesion: 0.22
-Nodes (13): JobPostHeader(), JobPostHeaderProps, JobPostForm(), JobPostFormProps, postNewJob, clearSavedDraft(), DRAFT_STORAGE_KEY, JobPostFormData (+5 more)
+### Community 80 - "_resolve_dispute"
+Cohesion: 0.25
+Nodes (14): DisputeResolve, DisputeUpdate, get_disputes(), Any, BaseModel, get, patch, post (+6 more)
 
-### Community 81 - "frontend/src/components/login/LoginPromptScreen.tsx"
-Cohesion: 0.16
-Nodes (11): LoginPromptScreen, LoginPromptBody(), LoginPromptFooter(), LoginPromptFooterProps, LoginPromptHeader(), LoginPromptHeaderProps, LoginPromptScreen(), LoginPromptScreenProps (+3 more)
+### Community 81 - "ref_react_router_dom"
+Cohesion: 0.08
+Nodes (28): addPaymentCardApi(), deletePaymentCardApi(), fetchPaymentCardsApi(), fetchTransactionsApi(), fetchUserProfileApi(), updatePaymentCardApi(), AddCardScreen, MyCardsScreen (+20 more)
 
-### Community 83 - "ref_vitest"
-Cohesion: 0.05
-Nodes (33): language, language, FAQ_ITEMS, JOB_CATEGORIES, LANDING_TEXTS, LandingFAQ(), CARD_STYLE, FEATURES_TEXTS (+25 more)
+### Community 83 - "test_verification_required.py"
+Cohesion: 0.31
+Nodes (12): _phone(), Nothing that puts two strangers together happens before the documents are…, Admins are made by create_accounts.py, which has no document step. Holding them…, A 403 that still left a row behind would be worse than no guard., Editing a document clears the flag (users.py), so this is reachable., _set_verified(), test_a_verified_worker_still_can(), test_an_administrator_is_not_held_up_by_it() (+4 more)
 
 ### Community 84 - "frontend/src/features/admin/JobDetailModal.tsx"
 Cohesion: 0.12
 Nodes (22): adminLang(), adminText(), ApplicationsTab(), appStatusLabels, formatDate(), InfoTab(), InfoTabProps, JobDetailModalProps (+14 more)
 
-### Community 85 - "frontend/src/components/map/latLngUtils.ts"
-Cohesion: 0.17
-Nodes (11): calculateAreDistrictNamesEqual(), districtMatchCache, getFeatureBounds(), calculateLatLng(), findKnownCityCoords(), isInsideUzbekistan(), KNOWN_CITIES, latLngCache (+3 more)
+### Community 85 - "frontend/src/components/map/districtUtils.ts"
+Cohesion: 0.31
+Nodes (5): calculateAreDistrictNamesEqual(), districtMatchCache, DISTRICT_MAP, REGION_INFOS, RegionInfo
 
 ### Community 86 - "mobile/src/features/employer/components/JobPostStepThree.tsx"
 Cohesion: 0.21
 Nodes (15): JobLocationYandexMap(), JobLocationYandexMapProps, JobPostStepThree(), JobPostStepThreeProps, AddressSuggestion, CITY_COORDINATES, CYRILLIC_MAP, cyrillicToLatin() (+7 more)
 
-### Community 87 - "useLandingCategories.ts"
-Cohesion: 0.07
-Nodes (36): LandingCategories(), LandingCategoriesProps, categoryDescription(), categoryName(), countText(), LandingCategory, Lang, money() (+28 more)
+### Community 87 - "frontend/src/features/employer/JobPostForm.tsx"
+Cohesion: 0.05
+Nodes (51): categoryDescription(), categoryName(), countText(), LandingCategory, Lang, money(), NO_POSTINGS, PER_DAY (+43 more)
 
 ### Community 88 - "get_my_jobs"
-Cohesion: 0.33
-Nodes (6): get_my_jobs(), Any, get, Session, User, Retrieve all jobs posted by the currently authenticated employer only.
+Cohesion: 0.50
+Nodes (4): get_my_jobs(), Session, User, Retrieve all jobs posted by the currently authenticated employer only.
 
 ### Community 89 - "devDependencies"
 Cohesion: 0.09
@@ -736,9 +729,9 @@ Nodes (16): compilerOptions, allowJs, experimentalDecorators, isolatedModules, j
 Cohesion: 0.13
 Nodes (20): getStoredToken(), AdminUsers(), AdminUsersProps, AdminVerifications(), AdminVerificationsProps, BanUserModal(), BanUserModalProps, JobDetailModal() (+12 more)
 
-### Community 92 - "JobTranslationAgent"
-Cohesion: 0.06
-Nodes (32): app_services_ai_translator_gemini_client, app_services_ai_translator_job_translator, get_translation_agent(), JobTranslationAgent, Any, GeminiClient, Session, Translate job announcement fields strictly as written. Returns verified… (+24 more)
+### Community 92 - "upload_file"
+Cohesion: 0.17
+Nodes (13): Any, limit, post, Request, Session, User, Upload a file to S3/MinIO, converting images to WebP. The returned URL points…, Read the upload, aborting as soon as it exceeds the limit. The previous version… (+5 more)
 
 ### Community 93 - "send_support_message"
 Cohesion: 0.18
@@ -776,17 +769,17 @@ Nodes (15): create_notification(), mark_all_read(), mark_one_read(), Any, get, p
 Cohesion: 0.26
 Nodes (13): BaseModel, SupportTicket, SupportTicketBase, SupportTicketCreate, SupportTicketInDBBase, TicketMessage, TicketMessageBase, TicketMessageCreate (+5 more)
 
-### Community 102 - "test_verification_required.py"
-Cohesion: 0.31
-Nodes (12): _phone(), Nothing that puts two strangers together happens before the documents are…, Admins are made by create_accounts.py, which has no document step. Holding them…, A 403 that still left a row behind would be worse than no guard., Editing a document clears the flag (users.py), so this is reachable., _set_verified(), test_a_verified_worker_still_can(), test_an_administrator_is_not_held_up_by_it() (+4 more)
+### Community 102 - "Language"
+Cohesion: 0.09
+Nodes (26): fetchWorkerApplicationsApi(), ApplicationsScreen, ReviewsScreen, UseDistrictPolygonsProps, UseJobMarkersProps, UseMapLabelsProps, UseRegionPolygonsProps, UseUserLocationMarkerProps (+18 more)
 
 ### Community 103 - "mobile/src/features/admin/types.ts"
 Cohesion: 0.14
 Nodes (15): AddCategoryModal(), AddCategoryModalProps, AdminAuditLogs(), INITIAL_LOGS, AdminNotificationRules(), INITIAL_RULES, AdminDispute, AdminLog (+7 more)
 
-### Community 104 - "dateFormat.ts"
-Cohesion: 0.22
-Nodes (13): DateTimePickerModal(), DateTimePickerModalProps, getDaysInMonth(), getFirstDayOfWeek(), monthNames(), parseInitial24hTime(), weekdayNames(), WEEKDAYS_SUNDAY_FIRST (+5 more)
+### Community 104 - "Job"
+Cohesion: 0.08
+Nodes (31): JobDetailsCardProps, JobDetailsFooterProps, completeJobMock, job, showToast, JobDetailsHeaderProps, JobDetailsHeroProps, JobCardItemProps (+23 more)
 
 ### Community 105 - "celery_app.py"
 Cohesion: 0.17
@@ -800,33 +793,33 @@ Nodes (4): The address to put in an email, without a trailing slash. Falls back 
 Cohesion: 0.12
 Nodes (16): dependencies, leaflet, leaflet.markercluster, lucide-react, motion, react, react-dom, react-leaflet (+8 more)
 
-### Community 108 - "test_audit_remediation_fixes.py"
-Cohesion: 0.17
-Nodes (13): app_api_v1_endpoints_chats_websocket, app_models, _authenticate_socket(), Resolve a socket's user id using a short-lived DB session. A request-scoped…, websocket_endpoint(), _phone(), Tests for Senior Fullstack audit remediations: 1. Phone update requires SMS…, test_multi_vacancy_payouts_for_multiple_workers() (+5 more)
+### Community 108 - "mobile/src/components/map/useMapSetup.ts"
+Cohesion: 0.23
+Nodes (9): createClusterIcon(), CachedTileLayer, createCachedTileLayer(), createTileLayers(), layerCacheByMap, MapType, tileMemoryCache, UseMapSetupProps (+1 more)
 
-### Community 109 - "create_category"
-Cohesion: 0.18
-Nodes (16): create_category(), delete_category(), get_categories(), Any, delete, get, patch, post (+8 more)
+### Community 109 - "admin_categories.py"
+Cohesion: 0.19
+Nodes (17): create_category(), delete_category(), get_categories(), Any, delete, get, patch, post (+9 more)
 
 ### Community 110 - "QA Report — Round 2 — Baito — 2026-09-03 — `91f9ad0e3f6e`"
 Cohesion: 0.09
 Nodes (28): BroadcastPayload, get_stats(), get_support_tickets(), get_transactions(), Any, BaseModel, get, post (+20 more)
 
-### Community 111 - "ConnectionManager"
-Cohesion: 0.20
-Nodes (8): ConnectionManager, WebSocket, Fan-out for chat sockets. Messages are published to Redis so that sockets…, health_check(), get, Liveness/readiness probe. Failure details are logged, never returned — the old…, redis_is_mock(), Response
+### Community 111 - "mobile/src/components/login/LoginPromptBody.tsx"
+Cohesion: 0.21
+Nodes (8): FinishView(), FinishViewProps, LoginPromptBody(), LoginPromptBodyProps, LoginView(), LoginViewProps, RoleSelectionView(), RoleSelectionViewProps
 
 ### Community 112 - "test_idle_sessions_are_over.py"
-Cohesion: 0.10
-Nodes (43): ActiveSession, _as_utc(), expire_idle(), has_expired(), idle_window(), is_live(), Session, timedelta (+35 more)
-
-### Community 113 - "money"
 Cohesion: 0.07
-Nodes (32): fetchTransactionsApi(), fetchWorkerApplicationsApi(), ReviewsScreen, MandatoryReviewModal(), MandatoryReviewModalProps, PaymentModalType, PaymentsScreen(), rows (+24 more)
+Nodes (60): ActiveSession, expire_idle(), has_expired(), idle_window(), is_live(), Session, timedelta, Read at call time so a changed refresh lifetime carries straight over. (+52 more)
 
-### Community 115 - "_resolve_dispute"
-Cohesion: 0.25
-Nodes (14): DisputeResolve, DisputeUpdate, get_disputes(), Any, BaseModel, get, patch, post (+6 more)
+### Community 113 - "invoice_link.py"
+Cohesion: 0.09
+Nodes (30): declare_payment(), get_invoice(), _load(), _methods(), PaymentDeclaration, Any, BaseModel, get (+22 more)
+
+### Community 115 - "ConnectionManager"
+Cohesion: 0.22
+Nodes (7): ConnectionManager, WebSocket, Fan-out for chat sockets. Messages are published to Redis so that sockets…, health_check(), Liveness/readiness probe. Failure details are logged, never returned — the old…, redis_is_mock(), Response
 
 ### Community 116 - "mobile/src/features/admin/AdminDailyJobs.tsx"
 Cohesion: 0.17
@@ -844,9 +837,9 @@ Nodes (11): Avatar, Badge, Button, Checkbox, Common Component Patterns, Featured
 Cohesion: 0.18
 Nodes (11): Avatar, Badge, Button, Checkbox, Common Component Patterns, FeaturedIcon, Icon Usage, Input (+3 more)
 
-### Community 120 - "frontend/src/features/employer/components/JobPostStepTwo.tsx"
-Cohesion: 0.38
-Nodes (5): JobPostStepTwo(), JobPostStepTwoProps, formatDateDisplay(), Lang, MONTH_SHORTS
+### Community 120 - "days_of"
+Cohesion: 0.29
+Nodes (10): day_count(), days_of(), payable_days(), Any, Session, Make the day rows match what the posting's ``workDate`` now says. Called when a…, Every day of a posting, earliest first., The days still owed: not yet worked, not called off. (+2 more)
 
 ### Community 121 - "test_refund_stranded_escrow_holds.py"
 Cohesion: 0.18
@@ -864,13 +857,17 @@ Nodes (11): create_region(), delete_region(), get_regions(), Any, delete, get, p
 Cohesion: 0.13
 Nodes (16): ApplicationsTab(), appStatusLabels, formatDate(), InfoTabProps, PaymentsTab(), statusLabels, TabKey, tabs (+8 more)
 
-### Community 125 - "mobile/src/jobTranslations.ts"
-Cohesion: 0.23
-Nodes (7): jobDataEn2, jobDataEn, jobDataRu2, jobDataRu, combinedEn, combinedRu, jobTransData
+### Community 125 - "frontend/src/components/ErrorBoundary.tsx"
+Cohesion: 0.18
+Nodes (4): ErrorBoundary, Props, State, language
 
-### Community 127 - "applicationStatus.test.tsx"
-Cohesion: 0.40
-Nodes (4): application(), draw(), LANGS, STATUSES
+### Community 126 - "JobTranslationAgent"
+Cohesion: 0.06
+Nodes (32): app_services_ai_translator_gemini_client, app_services_ai_translator_job_translator, get_translation_agent(), JobTranslationAgent, Any, GeminiClient, Session, Translate job announcement fields strictly as written. Returns verified… (+24 more)
+
+### Community 127 - "frontend/src/features/worker/search/SearchSidebar.tsx"
+Cohesion: 0.31
+Nodes (7): getRegionDisplayName(), REGIONS_LIST, SearchSidebar, SearchSidebarComponent(), SearchSidebarProps, CATEGORIES_CONFIG, CATEGORY_FILTERS_LIST
 
 ### Community 128 - "Frontend PWA Manifest"
 Cohesion: 0.20
@@ -880,29 +877,29 @@ Nodes (9): background_color, description, display, icons, name, orientation, sho
 Cohesion: 0.20
 Nodes (9): background_color, description, display, icons, name, orientation, short_name, start_url (+1 more)
 
-### Community 130 - "frontend/src/features/worker/search/SearchFilterSection.tsx"
-Cohesion: 0.24
-Nodes (10): getRegionDisplayName(), REGIONS_LIST, SearchFilterSection, SearchFilterSectionComponent(), SearchFilterSectionProps, SearchSidebar, SearchSidebarComponent(), SearchSidebarProps (+2 more)
+### Community 130 - "perks.ts"
+Cohesion: 0.26
+Nodes (10): bareTag(), PERK_BY_TAG, PerkLabel, pick(), PRESET_TAGS, tagKey(), tagLabel(), ALLOWED (+2 more)
 
-### Community 131 - "mobile/src/components/map/useUzbekistanGeoJson.ts"
-Cohesion: 0.11
-Nodes (27): formatDistrictName(), LAT_OFFSET, LNG_OFFSET, shiftCoordinates(), shiftGeoJson(), shiftGeometry(), isPointInFeature(), isPointInPolygon() (+19 more)
-
-### Community 132 - "test_close_idle_sessions_migration.py"
-Cohesion: 0.24
-Nodes (18): _is_active(), _load(), person(), _phone(), fixture, The migration that closes the backlog of sessions nobody came back to. The code…, A row this closed cannot be told apart from one its owner revoked, so re-…, Its refresh token is still good; closing it would sign someone out. (+10 more)
-
-### Community 133 - "test_platform_fee_setting.py"
+### Community 131 - "mobile/src/translations.ts"
 Cohesion: 0.06
-Nodes (55): app_services_ai_matcher, app_services_geo_service, app_services_growth_engine, app_services_soliq_service, app_services_spam_detector, AuditLedger, Immutable Double-entry Financial Audit Ledger for FinTech compliance. Every…, Transaction (+47 more)
+Nodes (56): MapViewScreen, formatDistrictName(), LAT_OFFSET, LNG_OFFSET, shiftCoordinates(), shiftGeoJson(), shiftGeometry(), isPointInFeature() (+48 more)
+
+### Community 132 - "mobile/src/components/login/DocumentsView.tsx"
+Cohesion: 0.28
+Nodes (6): DocumentsView(), DocumentsViewProps, EmployerDocsSection(), EmployerDocsSectionProps, WorkerDocsSection(), WorkerDocsSectionProps
+
+### Community 133 - "test_advanced_features.py"
+Cohesion: 0.15
+Nodes (13): app_services_ai_matcher, app_services_geo_service, app_services_growth_engine, app_services_soliq_service, app_services_spam_detector, Any, AI-assisted Anti-Fraud & Spam Moderation Engine. Detects blacklisted scam…, SpamFraudDetector (+5 more)
 
 ### Community 134 - "BUG-018 — "Jonli chat" answers the user itself; the message never leaves the browser"
 Cohesion: 0.25
 Nodes (7): BUG-018 — "Jonli chat" answers the user itself; the message never leaves the browser, Fix direction, Impact, Reproduction (live, on the disposable QA stack), Root cause, This is not a missing feature, What happens
 
-### Community 135 - "mobile/src/main.tsx"
-Cohesion: 0.33
-Nodes (5): App(), mobile_src_index, container, queryClient, root
+### Community 135 - "mobile/src/features/employer/components/EmployerChatWindow.tsx"
+Cohesion: 0.18
+Nodes (10): emojiCategories, EmojiPicker(), EmojiPickerProps, EmployerChatListProps, EmployerChatMessageBubble(), EmployerChatMessageBubbleProps, EmployerChatWindowProps, ChatMessage (+2 more)
 
 ### Community 136 - "Remediation Script"
 Cohesion: 0.54
@@ -912,13 +909,13 @@ Nodes (7): add_env(), check(), die(), ok(), say(), remediate.sh script, warn()
 Cohesion: 0.43
 Nodes (7): available_tags(), die(), IMAGE_TAG, ok(), say(), rollback.sh script, warn()
 
-### Community 138 - "showToast"
-Cohesion: 0.05
-Nodes (46): requestWithdrawalApi(), EmployerPanel, emojiCategories, EmojiPicker(), EmojiPickerProps, getTranslations(), VerificationPendingScreen(), CATEGORIES_LIST (+38 more)
+### Community 138 - "job_fee_percent"
+Cohesion: 0.33
+Nodes (7): job_fee_percent(), platform_fee_percent(), Session, The commission rate an administrator set, from the settings row. This used to…, The city a posting's address begins with. ``location`` is built by the posting…, The commission an employer pays on a job: what the work is, plus where. A…, _region_of()
 
-### Community 139 - "test_security_fixes.py"
-Cohesion: 0.12
-Nodes (10): Regression tests for the security findings fixed in this change. Each test…, POST /users used to accept any phone number outright., Chat images were uploaded as 'job', which made them public. Anyone holding the…, test_a_chat_attachment_is_readable_by_the_other_participant_only(), test_card_token_is_not_returned_to_the_client(), test_employer_job_history_is_not_publicly_enumerable(), test_password_change_revokes_other_sessions(), test_private_media_is_not_readable_anonymously() (+2 more)
+### Community 139 - "frontend/src/hooks/useJobSearchFilters.ts"
+Cohesion: 0.19
+Nodes (14): calculateDistance(), getFeatureBounds(), calculateLatLng(), findKnownCityCoords(), getLatLng(), isInsideUzbekistan(), KNOWN_CITIES, latLngCache (+6 more)
 
 ### Community 140 - "Locust Load Testing"
 Cohesion: 0.33
@@ -936,9 +933,9 @@ Nodes (7): 1. Base Components, 2. Application Components, 3. Styling Architectur
 Cohesion: 0.29
 Nodes (7): scripts, build, dev, lint, preview, test, test:e2e
 
-### Community 144 - "useAuthStore"
-Cohesion: 0.04
-Nodes (96): completeJobApi(), fetchNotificationsApi(), logoutApi(), App(), NotFoundScreen, BottomNav(), Drawer(), DrawerProps (+88 more)
+### Community 144 - "useCurrentScreen"
+Cohesion: 0.03
+Nodes (78): updateUserProfileApi(), AdminPanel, AppRoutes(), AuthGuestRoute(), CalendarScreen, ChatScreen, EmployerPanel, FaqScreen (+70 more)
 
 ### Community 145 - "Mobile NPM Scripts"
 Cohesion: 0.29
@@ -964,17 +961,21 @@ Nodes (5): die(), ok(), say(), restore_backup.sh script, warn()
 Cohesion: 0.33
 Nodes (6): get_bookmarked_jobs(), Any, get, Session, User, The jobs this user has saved.
 
-### Community 151 - "_finished_posting"
-Cohesion: 0.22
-Nodes (13): _finished_posting(), _phone(), Nobody has worked it, so there is nothing to contradict., A worker is hired but has not started: calling it off is legitimate., A posting worked to the end, with the worker credited for it., The override on the permission check is about whose posting it is., The guard that was already there., _status() (+5 more)
+### Community 151 - "applicationStatus.test.tsx"
+Cohesion: 0.40
+Nodes (4): application(), draw(), LANGS, STATUSES
 
-### Community 152 - "request_withdrawal"
-Cohesion: 0.09
-Nodes (23): get_idempotent_response(), Session, save_idempotent_response(), add_payment_card(), delete_payment_card(), get_payment_cards(), get_transactions(), BaseModel (+15 more)
+### Community 152 - "send_payout_invoice"
+Cohesion: 0.16
+Nodes (21): confirm_invoice_payment(), confirm_payout(), get_job_payout(), InvoiceSend, list_payouts(), PayoutCreate, Any, BaseModel (+13 more)
 
-### Community 154 - "test_job_started_at.py"
-Cohesion: 0.20
-Nodes (17): _hired_job(), _job_row(), _phone(), When the work actually started. ``workTime`` is the shift a posting advertised…, The screen needs the advertised shift and what happened, together., It was the one stage with no timestamp to show., The endpoint is reachable while the job is already in progress. Restamping…, Not a gap in the record — it simply has not happened. (+9 more)
+### Community 154 - "test_a_day_closes_once_it_has_arrived.py"
+Cohesion: 0.11
+Nodes (44): JobDay, JobDayStatus, One calendar day of a posting, with its own status and its own wage.…, Where one day of a posting stands. A day is the unit of work and the unit of…, _credited(), _day(), _day_id(), _days() (+36 more)
+
+### Community 155 - "mobile/src/main.tsx"
+Cohesion: 0.33
+Nodes (5): App(), mobile_src_index, container, queryClient, root
 
 ### Community 156 - "Gradle Wrapper Script"
 Cohesion: 0.83
@@ -984,13 +985,17 @@ Nodes (3): gradlew script, die(), warn()
 Cohesion: 0.83
 Nodes (3): build_one(), build_services(), docker-build.sh script
 
-### Community 163 - "decide_withdrawal"
-Cohesion: 0.17
-Nodes (27): Any, decide_withdrawal(), list_withdrawals(), Payout requests awaiting a decision., Approve or reject a payout request. Rejecting returns the money to the worker's…, WithdrawalDecision, add_balance(), add_user_note() (+19 more)
+### Community 159 - "mobile/src/components/settings/PrivacyScreen.tsx"
+Cohesion: 0.33
+Nodes (4): PrivacyScreen, PrivacyScreen, PrivacyScreenProps, SECTIONS
 
-### Community 164 - "frontend/src/components/map/JobCardItem.tsx"
-Cohesion: 0.15
-Nodes (24): calculateDistance(), JobCardItem, JobMarkerPopup, JobMarkerPopupProps, frontend_src_components_map_maputils_calculatedistance, JobCardItemComponent(), JobCardItemProps, useJobSearchFilters() (+16 more)
+### Community 163 - "Any"
+Cohesion: 0.13
+Nodes (31): Any, decide_withdrawal(), list_withdrawals(), Payout requests awaiting a decision., Approve or reject a payout request. Rejecting returns the money to the worker's…, WithdrawalDecision, add_balance(), add_user_note() (+23 more)
+
+### Community 164 - "useAuthStore"
+Cohesion: 0.07
+Nodes (47): completeJobApi(), requestStartJobApi(), PaymentResult, ConfirmModal(), ConfirmModalProps, JobDetailsFooter(), JobDetailsHeader(), JobDetailsHero() (+39 more)
 
 ### Community 165 - "Animation and Interactions"
 Cohesion: 0.40
@@ -1024,9 +1029,9 @@ Nodes (5): Background Color, Border Color, COLORS, Foreground Color, Text Color
 Cohesion: 0.40
 Nodes (5): Brand Color Customization, Style Organization, Styling Guidelines, Tailwind CSS v4.3, Utility Functions
 
-### Community 192 - "i18n-sweep.test.ts"
-Cohesion: 0.38
-Nodes (5): SWEPT, en, ru, locales, uz
+### Community 192 - "adminFallbacks.test.ts"
+Cohesion: 0.40
+Nodes (4): DIR, FALLBACK_KEYS, FILES, LANGS
 
 ### Community 193 - "hire_applicant"
 Cohesion: 0.32
@@ -1036,9 +1041,9 @@ Nodes (12): hire_applicant(), Any, limit, post, Request, Session, User, Reject a
 Cohesion: 0.50
 Nodes (4): Component Foundation, File Naming Convention, Import Naming Convention, Key Architecture Principles
 
-### Community 195 - "conftest.py"
-Cohesion: 0.05
-Nodes (47): app_api_v1_api, app_core_exceptions, app_db_base, app_db_init_db, app_db_session, Run migrations in 'offline' mode., Run migrations in 'online' mode., run_migrations_offline() (+39 more)
+### Community 195 - "i18n-fallbacks.test.ts"
+Cohesion: 0.40
+Nodes (3): FILES, SRC, walk()
 
 ### Community 196 - "Key Architecture Principles"
 Cohesion: 0.50
@@ -1048,17 +1053,17 @@ Nodes (4): Component Foundation, File Naming Convention, Import Naming Conventio
 Cohesion: 0.50
 Nodes (3): 1. Summary Matrix, 2. Technical Evidence & Edge Cases Verified, OWASP LLM Top 10 — Security Assessment (Baito AI Translator)
 
-### Community 198 - "recoverFromStaleChunks.ts"
-Cohesion: 0.60
-Nodes (4): CHUNK_ERROR_PATTERNS, installStaleChunkRecovery(), looksLikeStaleChunk(), reloadOnce()
+### Community 198 - "frontend/src/main.tsx"
+Cohesion: 0.31
+Nodes (7): App(), frontend_src_index, CHUNK_ERROR_PATTERNS, installStaleChunkRecovery(), looksLikeStaleChunk(), reloadOnce(), queryClient
 
-### Community 200 - "expire_stale_jobs"
-Cohesion: 0.29
-Nodes (7): expire_stale_jobs(), purge_expired_idempotency_keys(), task, Close postings nobody acted on. The admin panel exposes "auto expire jobs"…, Idempotency records are only useful for a short retry window., Translate a job posting into Uzbek, Russian, and English using Gemini., translate_job_task()
+### Community 200 - "domain_exception_handler"
+Cohesion: 0.40
+Nodes (5): domain_exception_handler(), validation_exception_handler(), DomainException, exception_handler, RequestValidationError
 
-### Community 201 - "field_validator"
-Cohesion: 0.19
-Nodes (5): Refuse text the database cannot store, at the boundary that can explain it.…, _reject_control_chars(), _validate_needed_workers(), _validate_password(), field_validator
+### Community 201 - "BUG-024 — actions that commit money or cut off a user go through on one press"
+Cohesion: 0.22
+Nodes (8): BUG-024 — actions that commit money or cut off a user go through on one press, Evidence, Fix (2026-09-06), Fix direction, Impact, What happens, What is *not* a defect — checked, and working, Why the ban case is the sharpest
 
 ### Community 202 - "⚙️ Baito Backend — FastAPI Architecture"
 Cohesion: 0.29
@@ -1069,8 +1074,8 @@ Cohesion: 0.33
 Nodes (4): An alembic revision id has to fit `alembic_version.version_num`. That column is…, Guards the test itself: a wrong path would make it pass on nothing., test_the_scan_finds_the_migrations(), pathlib
 
 ### Community 204 - "ref_node_fs"
-Cohesion: 0.11
-Nodes (15): code(), MAP_DIR, DIR, FALLBACK_KEYS, FILES, LANGS, read(), statusControlClasses() (+7 more)
+Cohesion: 0.13
+Nodes (11): code(), MAP_DIR, ALLOWED, SRC, walk(), read(), statusControlClasses(), read() (+3 more)
 
 ### Community 205 - "State Management"
 Cohesion: 0.67
@@ -1080,17 +1085,17 @@ Nodes (3): Component State, Global State, State Management
 Cohesion: 0.67
 Nodes (3): Component State, Global State, State Management
 
-### Community 212 - "salary_to_uzs"
-Cohesion: 0.10
-Nodes (23): get_employer_applications(), get_worker_applications(), _load_owned_application(), _mask_phone(), Any, get, Session, User (+15 more)
+### Community 212 - "get_employer_applications"
+Cohesion: 0.19
+Nodes (14): get_employer_applications(), get_worker_applications(), _load_owned_application(), _mask_phone(), Any, get, Session, User (+6 more)
 
 ### Community 214 - "GeminiClient"
 Cohesion: 0.18
 Nodes (8): GeminiClient, Clean code reference artifacts and internal UI tokens from Gemini output., Parse Gemini StreamGenerate raw wrb.fr chunks to extract the longest response…, Call the official Google Generative Language REST API., Execute a text generation call against official API or Gemini StreamGenerate…, Lightweight client communicating with Google Gemini StreamGenerate endpoint., Load cookie and SAPISID with mtime caching., Create SAPISIDHASH auth header from SAPISID.
 
-### Community 216 - "CRUDBase"
-Cohesion: 0.32
-Nodes (6): CRUDBase, Any, Session, CreateSchemaType, ModelType, UpdateSchemaType
+### Community 216 - "get_job_dates_set"
+Cohesion: 0.13
+Nodes (15): 1. Bir kunda maksimal ariza soni, 2. Ariza tasdiqlanganda, 3. Tasdiqlangan ishi bor kunga ariza, Baito Application Rules, Eslatma:, get_job_dates_set(), job_dates(), _parse_single_date() (+7 more)
 
 ### Community 218 - "Security assessment — round 2 (deeper attacks)"
 Cohesion: 0.18
@@ -1101,28 +1106,28 @@ Cohesion: 0.18
 Nodes (10): After onboarding — do this once Uzum gives you their IP ranges, Configuration, Error codes, How an order comes to exist, The flow, Two decisions worth knowing about, Units, Uzum Bank Merchant API (+2 more)
 
 ### Community 225 - "test_notification_templates_are_known.py"
-Cohesion: 0.21
-Nodes (13): collect(), A new notification must not ship without its translation. Notification titles…, Every string the expression can evaluate to, `{}` for each placeholder. Returns…, Strings each local name in `fn` can hold, including `x += "..."`. Statements…, A template removed from the backend should be removed from here too. Two…, The six that production leaked, named so a rename cannot silently drop them., _scope_of(), _strings() (+5 more)
+Cohesion: 0.29
+Nodes (10): collect(), A new notification must not ship without its translation. Notification titles…, Every string the expression can evaluate to, `{}` for each placeholder. Returns…, Strings each local name in `fn` can hold, including `x += "..."`. Statements…, A template removed from the backend should be removed from here too. Two…, _scope_of(), _strings(), test_every_notification_message_is_translated() (+2 more)
 
-### Community 226 - "schemas/chat.py"
-Cohesion: 0.32
-Nodes (10): CRUDChat, Chat, ChatBase, ChatCreate, ChatInDBBase, ChatUpdate, Message, MessageBase (+2 more)
+### Community 226 - "test_the_variable_built_messages_reach_the_translator"
+Cohesion: 0.67
+Nodes (3): The six that production leaked, named so a rename cannot silently drop them., test_the_variable_built_messages_reach_the_translator(), skipif
 
 ### Community 229 - "test_error_details_are_known.py"
 Cohesion: 0.23
 Nodes (11): ast, details(), _plain(), skipif, A new error message must not ship without its translation. Every…, Every string the expression can evaluate to, `{}` for each placeholder., The translator source with its escaping undone. Strings are TypeScript literals…, Guards the walk itself: a broken scan would make the test above pass. (+3 more)
 
-### Community 232 - "frontend/src/jobTranslations.ts"
-Cohesion: 0.23
-Nodes (7): jobDataEn2, jobDataEn, jobDataRu2, jobDataRu, combinedEn, combinedRu, jobTransData
+### Community 230 - "read_jobs"
+Cohesion: 0.36
+Nodes (8): Any, get, Session, User, Fetch a single job with application status for the caller., Retrieve jobs. If the caller is logged in, attach their application status.…, read_job(), read_jobs()
 
 ### Community 234 - "test_celery_routing.py"
 Cohesion: 0.33
 Nodes (8): _consumed_queues(), Every routed queue must actually be consumed by a worker. Verification SMS…, The `command:` of every celery worker service in docker-compose.yml., Queues a worker command consumes; without -Q that is just the default., The specific regression: SMS must land on a queue the worker reads., test_every_routed_queue_has_a_consumer(), test_send_sms_task_is_reachable(), _worker_commands()
 
-### Community 239 - "test_e2e_flow.py"
-Cohesion: 0.24
-Nodes (11): _apply(), _complete(), _hire(), lifecycle(), _open_chat(), fixture, End-to-end lifecycle: apply -> hire -> chat -> complete. Originally one…, An employer with money, a worker, and an open job between them. (+3 more)
+### Community 239 - "conftest.py"
+Cohesion: 0.07
+Nodes (36): _clean_redis(), _clean_tables(), _enforce_foreign_keys(), _flush_redis(), fixture, Empty whichever client is in use. Only the in-memory fallback used to be…, _schema(), _balance() (+28 more)
 
 ### Community 242 - "simplify-geojson.mjs"
 Cohesion: 0.27
@@ -1144,25 +1149,21 @@ Nodes (22): 🏢 AI ENGINEERING TEAM — System Prompt (v5.0), ⚠️ MAJBURIY P
 Cohesion: 0.09
 Nodes (22): 3-Tier Model Routing, After Success, Agent Comms (SendMessage-First Coordination), Agent Routing, Agents, Background Workers, Before Any Task, Build & Test (+14 more)
 
-### Community 263 - "HiredWorkerInfo"
-Cohesion: 0.36
-Nodes (6): HiredWorkerInfo, BaseModel, JobQueryService, Job, Session, User
-
-### Community 264 - "mobile/src/components/map/useMapSetup.ts"
-Cohesion: 0.23
-Nodes (10): createClusterIcon(), CachedTileLayer, createCachedTileLayer(), createTileLayers(), layerCacheByMap, MapType, tileMemoryCache, useMapSetup() (+2 more)
+### Community 264 - "mobile/src/features/admin/AdminHeader.tsx"
+Cohesion: 0.50
+Nodes (4): AdminHeader(), AdminHeaderProps, AdminSidebarProps, AdminTab
 
 ### Community 266 - "models/__init__.py"
-Cohesion: 0.16
-Nodes (25): app_db_base_class, as_declarative, Base, AdminAuditLog, Append-only record of privileged administrator actions. The admin panel already…, Bookmark, Chat, Message (+17 more)
+Cohesion: 0.13
+Nodes (27): app_db_base_class, as_declarative, Base, AdminAuditLog, Append-only record of privileged administrator actions. The admin panel already…, AuditLedger, Immutable Double-entry Financial Audit Ledger for FinTech compliance. Every…, Bookmark (+19 more)
 
-### Community 269 - "s3_client.py"
-Cohesion: 0.09
-Nodes (20): get_media(), _is_identity_document(), get, Session, User, Return the owning user id if this key is somebody's identity document., Are these two people in a conversation together?, Yield the S3 body in chunks to avoid loading the full file into RAM. (+12 more)
+### Community 269 - "chime"
+Cohesion: 0.83
+Nodes (3): chime(), context(), note()
 
-### Community 270 - "test_admin_payouts.py"
-Cohesion: 0.05
-Nodes (71): _serialize(), _b64(), invoice_url(), The link an invoice email carries. A company that has been billed must be able…, A token naming one invoice, safe to put in a URL., The (payout id, invoice number) a token names, or None. Returns None for…, The absolute address of the pay-this-invoice page. Absolute because mail is…, sign() (+63 more)
+### Community 270 - "User"
+Cohesion: 0.06
+Nodes (63): app_db_session, Job, _state(), JobPayout, One hand-made payment to a worker, and the invoice that recovers it. Kept apart…, Base, SystemSetting, User (+55 more)
 
 ### Community 271 - "🤖 AI-Rules — Sun'iy Intellekt Uchun Professional Qoidalar"
 Cohesion: 0.09
@@ -1172,53 +1173,17 @@ Nodes (21): 1. 🤝 Halollik va Ishonch, 1. 🖥️ Kiro CLI, 2. 💬 ChatGPT / 
 Cohesion: 0.29
 Nodes (7): _lock_sites(), A row lock that does not refresh the object protects nothing. Any logged-in…, The specific queries the withdrawal and crediting races went through., test_every_row_lock_refreshes_the_object(), test_the_balance_paths_are_actually_locked(), io, Path
 
-### Community 273 - "read_jobs"
-Cohesion: 0.36
-Nodes (8): Any, get, Session, User, Fetch a single job with application status for the caller., Retrieve jobs. If the caller is logged in, attach their application status.…, read_job(), read_jobs()
-
 ### Community 276 - "_render_invoice"
-Cohesion: 0.29
-Nodes (7): The invoice, as text and as HTML. Same content both ways., _render_invoice(), rows_html(), section(), Job, JobPayout, SystemSetting
-
-### Community 277 - "create_chat"
-Cohesion: 0.32
-Nodes (8): create_chat(), get_chats(), Any, get, post, Session, User, Open (or re-open) a conversation between a worker and an employer. Whichever…
-
-### Community 278 - "domain_exception_handler"
-Cohesion: 0.29
-Nodes (8): domain_exception_handler(), Request, security_headers(), validation_exception_handler(), DomainException, exception_handler, middleware, RequestValidationError
+Cohesion: 0.40
+Nodes (5): The invoice, as text and as HTML. Same content both ways., _render_invoice(), rows_html(), section(), SystemSetting
 
 ### Community 279 - "mobile/src/features/admin/AdminSupport.tsx"
 Cohesion: 0.48
 Nodes (5): AdminSupport(), AdminSupportProps, SupportTicketChat(), SupportTicketChatProps, SupportTicket
 
-### Community 280 - "email_service.py"
-Cohesion: 0.25
-Nodes (7): Sending mail. The only caller today is the payout invoice. Deliberately small…, Send one message, or raise. Never returns a boolean. A caller that has to…, send_email(), email_message, email_utils, smtplib, ssl
-
-### Community 281 - "JobPostForm.guard.test.tsx"
-Cohesion: 0.40
-Nodes (4): fillStepOne(), postNewJob, typeInto(), UZ
-
-### Community 282 - "saveErrorsSayWhy.test.ts"
-Cohesion: 0.29
-Nodes (4): code(), read(), SAVERS, SRC
-
-### Community 283 - "frontend/src/types.ts"
-Cohesion: 0.16
-Nodes (20): CalendarScreen, CalendarDayButton(), CalendarDayTooltip(), CalendarGridCard(), CalendarLegend(), CalendarLegendProps, CalendarScreen(), getDayStatusForList() (+12 more)
-
-### Community 284 - "parse_salary_amounts"
-Cohesion: 0.15
-Nodes (14): list_categories(), list_regions(), Any, get, Session, Every category, with how much work is actually going in it. The landing page's…, Active regions only — a deactivated one should stop being offered., parse_salary_amounts() (+6 more)
-
 ### Community 285 - "languageBranches.test.ts"
 Cohesion: 0.29
 Nodes (4): FILES, Finding, SRC, walk()
-
-### Community 286 - "test_security_audit.py"
-Cohesion: 0.33
-Nodes (4): Boundary probes: injection, auth, webhook forgery, withdrawal amounts.…, The original probe sent the payload as `employer_id` and read the 403 as proof…, test_sql_injection_in_free_text_search_is_not_executed(), test_withdrawal_refuses_negative_and_excessive_amounts()
 
 ### Community 295 - "🎨 Baito Frontend — Web Application"
 Cohesion: 0.40
@@ -1236,37 +1201,21 @@ Nodes (16): 🏢 15x AI Engineering Squad — Master Orchestration Plan, 📌 1-
 Cohesion: 0.09
 Nodes (20): admin3, admin4, admin6, finalDistrictsCollection, finalRegionsCollection, fs, ignoreNames, peshku (+12 more)
 
-### Community 301 - "Job"
-Cohesion: 0.07
-Nodes (30): JobDetailsCardProps, JobDetailsFooterProps, completeJobMock, job, showToast, JobDetailsHeaderProps, JobDetailsHeroProps, JobDetailsLocationProps (+22 more)
+### Community 301 - "money"
+Cohesion: 0.05
+Nodes (44): completeJobDayApi(), fetchJobDaysApi(), fetchWorkerApplicationsApi(), withdrawApplicationApi(), ApplicationsScreen, ReviewsScreen, FinishJobModal(), FinishJobModalProps (+36 more)
 
-### Community 302 - "mobile/src/features/admin/AdminRegions.tsx"
-Cohesion: 0.70
-Nodes (3): AddRegionModal(), AddRegionModalProps, RegionConfig
+### Community 304 - "saveErrorsSayWhy.test.ts"
+Cohesion: 0.40
+Nodes (4): code(), read(), SAVERS, SRC
 
-### Community 303 - "mobile/src/features/admin/AdminHeader.tsx"
-Cohesion: 0.50
-Nodes (4): AdminHeader(), AdminHeaderProps, AdminSidebarProps, AdminTab
-
-### Community 304 - "currencyWord.test.ts"
-Cohesion: 0.33
-Nodes (3): ALLOWED, SRC, walk()
-
-### Community 307 - "mapFillsTheScreen.test.ts"
+### Community 306 - "mapFillsTheScreen.test.ts"
 Cohesion: 0.83
 Nodes (3): bottomNavClasses(), defaultMapClasses(), read()
 
-### Community 308 - "chime"
-Cohesion: 0.83
-Nodes (3): chime(), context(), note()
-
-### Community 309 - "finished_job"
-Cohesion: 0.67
-Nodes (3): finished_job(), fixture, An employer and worker with the job walked up to the point of completion.
-
 ### Community 310 - "test_category_region_commission.py"
-Cohesion: 0.16
-Nodes (33): Category, Region, _balance(), _category(), _clean(), _phone(), _rate_for(), The employer's commission is two halves: what the work is, and where it is. A… (+25 more)
+Cohesion: 0.10
+Nodes (46): Category, Region, Transaction, What the platform owes a worker, and how it comes to owe it. Completing a day…, Record a day's work as owed to the worker., A bonus the employer chose to add when finishing the job. Credited to the…, WorkerEarnings, GrowthEngine (+38 more)
 
 ### Community 318 - "AGENTS.md — Senior QA Engineer Protocol for AI Systems"
 Cohesion: 0.13
@@ -1417,24 +1366,24 @@ Cohesion: 0.67
 Nodes (3): 8.1 OWASP LLM Top 10 (2026) — concrete tests, 8.2 Classic application security, 8. Security testing
 
 ## Knowledge Gaps
-- **1287 isolated node(s):** `PrivacyContent`, `PrivacySection`, `PrivacyScreenProps`, `TermsContent`, `AdminDispute` (+1282 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 2279 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **121 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **1290 isolated node(s):** `JobDetailsLocationProps`, `JobLocationFullModalProps`, `DateTimePickerModalProps`, `PrivacyContent`, `PrivacySection` (+1285 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 2285 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **125 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `refresh()` connect `refresh` to `typing`, `test_idle_sessions_are_over.py`?**
-  _High betweenness centrality (0.319) - this node is a cross-community bridge._
-- **Why does `AdminPayouts()` connect `apiClient` to `useAuthStore`, `refresh`?**
-  _High betweenness centrality (0.319) - this node is a cross-community bridge._
-- **Why does `[BUG-010] The admin header's "Yangilash" button does nothing on Payments & Escrow` connect `refresh` to `apiClient`?**
-  _High betweenness centrality (0.319) - this node is a cross-community bridge._
+- **Why does `refresh()` connect `auth.py` to `test_idle_sessions_are_over.py`, `request_withdrawal`?**
+  _High betweenness centrality (0.321) - this node is a cross-community bridge._
+- **Why does `[BUG-010] The admin header's "Yangilash" button does nothing on Payments & Escrow` connect `auth.py` to `apiClient`?**
+  _High betweenness centrality (0.321) - this node is a cross-community bridge._
+- **Why does `AdminPayouts()` connect `apiClient` to `useAuthStore`, `frontend/src/features/admin/types.ts`, `auth.py`?**
+  _High betweenness centrality (0.321) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `make_user()` (e.g. with `test_job_moderation_flow()` and `test_job_moderation_reject_flow()`) actually correct?**
   _`make_user()` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 2 inferred relationships involving `login()` (e.g. with `test_job_moderation_flow()` and `test_job_moderation_reject_flow()`) actually correct?**
   _`login()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `PrivacyContent`, `PrivacySection`, `PrivacyScreenProps` to the rest of the system?**
-  _1287 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `frontend/src/components/settings/PrivacyScreen.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.11462450592885376 - nodes in this community are weakly interconnected._
+- **What connects `JobDetailsLocationProps`, `JobLocationFullModalProps`, `DateTimePickerModalProps` to the rest of the system?**
+  _1290 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `frontend/src/components/login/LoginPromptScreen.tsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.05076679005817028 - nodes in this community are weakly interconnected._

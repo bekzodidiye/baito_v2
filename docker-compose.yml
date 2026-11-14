@@ -40,6 +40,10 @@ services:
       -c statement_timeout=30s
       -c idle_in_transaction_session_timeout=60s
       -c max_connections=100
+      -c wal_compression=on
+      -c checkpoint_completion_target=0.9
+      -c min_wal_size=512MB
+      -c max_wal_size=2GB
     networks:
       - baito_net
     environment:
@@ -62,6 +66,13 @@ services:
     mem_limit: 256m
     image: redis:7-alpine
     restart: unless-stopped
+    command: >
+      redis-server
+      --maxmemory 200mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
     networks:
       - baito_net
     volumes:
@@ -300,6 +311,12 @@ services:
       - OFFSITE_S3_KEY_ID=${OFFSITE_S3_KEY_ID:-}
       - OFFSITE_S3_SECRET=${OFFSITE_S3_SECRET:-}
       - OFFSITE_S3_REGION=${OFFSITE_S3_REGION:-us-west-004}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, sys; sys.exit(0 if os.path.exists('/app/backups') else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     logging: *default-logging
 
   frontend:
