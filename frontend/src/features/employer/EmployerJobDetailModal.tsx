@@ -6,7 +6,6 @@ import {
   Share2,
   Trash2,
   ChevronRight,
-  Phone,
   CheckCircle2,
   Clock,
   Users,
@@ -355,20 +354,11 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                           </div>
                           <div className="min-w-0">
                             <h5 className="font-bold text-brand-primary text-sm truncate">{worker.name}</h5>
-                            {worker.phone && (
-                              <p className="text-xs text-slate-500 font-medium truncate">{worker.phone}</p>
-                            )}
+                            <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md inline-block mt-0.5">
+                              {language === 'uz' ? 'Qabul qilingan' : language === 'ru' ? 'Принят' : 'Hired'}
+                            </span>
                           </div>
                         </div>
-                        {worker.phone && (
-                          <a
-                            href={`tel:${worker.phone}`}
-                            className="w-8 h-8 rounded-full bg-white border border-slate-200 hover:border-slate-300 text-slate-600 flex items-center justify-center transition-colors shadow-xs shrink-0"
-                            title={language === 'uz' ? "Qo'ng'iroq qilish" : language === 'ru' ? 'Позвонить' : 'Call'}
-                          >
-                            <Phone size={14} />
-                          </a>
-                        )}
                       </div>
                     ))}
                   </div>

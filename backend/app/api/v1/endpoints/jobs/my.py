@@ -68,7 +68,7 @@ def get_my_jobs(
                     job_hired_workers.setdefault(a.jobId, []).append({
                         "id": u.id,
                         "name": u.name or "Foydalanuvchi",
-                        "phone": u.phone,
+                        "phone": None,
                         "avatarUrl": u.avatarUrl,
                     })
 

@@ -249,4 +249,25 @@ def test_employer_job_history_is_not_publicly_enumerable(client):
     assert client.get(f"/api/v1/jobs?employer_id={employer.id}").status_code == 403
 
 
+def test_hired_worker_phone_is_never_exposed_to_employer(client):
+    from app.models import Application
+
+    employer = make_user(role="employer", phone="+998901234477")
+    worker = make_user(role="worker", phone="+998907654333")
+    job = make_job(employer.id, neededWorkers="2")
+    with SessionLocal() as db:
+        db.add(Application(jobId=job.id, workerId=worker.id, status="hired"))
+        db.commit()
+
+    login(client, employer)
+    my_jobs = client.get("/api/v1/jobs/my").json()
+    job_entry = next(j for j in my_jobs if j["id"] == job.id)
+    assert job_entry["hiredWorkers"]
+    assert job_entry["hiredWorkers"][0]["phone"] is None
+
+    emp_apps = client.get("/api/v1/applications/employer").json()
+    app_entry = next(a for a in emp_apps if a["jobId"] == job.id)
+    assert app_entry["workerPhone"] is None
+
+
 

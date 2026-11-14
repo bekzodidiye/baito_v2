@@ -155,12 +155,10 @@ def read_jobs(
             user = user_map.get(app.workerId)
             if not user:
                 continue
-            # A hired worker's phone number is contact detail for the employer
-            # who hired them (and for the worker themselves), not something to
-            # hand to every anonymous visitor browsing the job board.
+            # Workers and employers must not see each other's phone numbers.
+            # Only platform admins or the worker themselves may see their own phone.
             may_see_phone = bool(
                 is_admin
-                or app.jobId in employer_job_ids
                 or (current_user and current_user.id == user.id)
             )
             job_hired_workers.setdefault(app.jobId, []).append(HiredWorkerInfo(

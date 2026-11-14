@@ -189,9 +189,9 @@ def get_employer_applications(
     for app in apps:
         worker = worker_map.get(app.workerId)
         job = job_map.get(app.jobId)
-        # A candidate's phone number is revealed once they are actually hired,
-        # not to anyone who happens to receive an application.
-        contact_unlocked = app.status in COMMITTED_APP_STATUSES + ['completed']
+        # Workers and employers must not see each other's direct phone numbers.
+        # Direct phone numbers are withheld across all states; communication is kept through platform.
+        contact_unlocked = False
         result.append({
             "id": app.id,
             "jobId": app.jobId,
@@ -209,11 +209,8 @@ def get_employer_applications(
             "feeAmount": fee_for(salary_to_uzs(job.salary), rate_by_job.get(job.id, 0)) if job else 0,
             "workerId": app.workerId,
             "workerName": worker.name if worker else "Ishchi",
-            "workerPhone": (
-                (worker.phone if worker else None) if contact_unlocked
-                else _mask_phone(worker.phone if worker else None)
-            ),
-            "contactUnlocked": contact_unlocked,
+            "workerPhone": None,
+            "contactUnlocked": False,
             "workerAvatar": worker.avatarUrl if worker else None,
             "workerRating": worker.rating if worker else 0.0,
             "workerCompletedJobs": worker.completedJobsCount if worker else 0,
