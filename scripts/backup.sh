@@ -21,6 +21,7 @@ MINIO_SERVICE="minio"
 DB_USER="${POSTGRES_USER:-admin}"
 DB_NAME="${POSTGRES_DB:-baito}"
 POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-}"
+MEDIA_BUCKET="${AWS_BUCKET_NAME:-baito-bucket}"
 BACKUPS_DIR="${ROOT_DIR}/backups"
 RETENTION_DAYS=14
 MIN_BACKUPS_TO_KEEP=10
@@ -52,12 +53,19 @@ DB_STAGE="${STAGE_DIR}/${BUNDLE_NAME}/database"
 MEDIA_STAGE="${STAGE_DIR}/${BUNDLE_NAME}/media"
 mkdir -p "$DB_STAGE" "$MEDIA_STAGE"
 
-say "2/6 PostgreSQL ma'lumotlar bazasini eksport qilish (pg_dump | gzip)"
+say "2/6 PostgreSQL ma'lumotlar bazasi va rollarini eksport qilish"
 DUMP_FILE="${DB_STAGE}/database.sql.gz"
+GLOBALS_FILE="${DB_STAGE}/globals.sql.gz"
 
+# 1. Full database dump
 docker compose -f "$ROOT_DIR/docker-compose.yml" exec -T \
     -e PGPASSWORD="$POSTGRES_PASSWORD" "$DB_SERVICE" \
-    pg_dump -U "$DB_USER" "$DB_NAME" | gzip > "$DUMP_FILE"
+    pg_dump -U "$DB_USER" "$DB_NAME" --clean --if-exists --no-owner | gzip > "$DUMP_FILE"
+
+# 2. Server globals (roles & users) dump
+docker compose -f "$ROOT_DIR/docker-compose.yml" exec -T \
+    -e PGPASSWORD="$POSTGRES_PASSWORD" "$DB_SERVICE" \
+    pg_dumpall -U "$DB_USER" --globals-only --no-owner 2>/dev/null | gzip > "$GLOBALS_FILE" || true
 
 DUMP_SIZE_KB=$(du -k "$DUMP_FILE" | cut -f1)
 ok "Baza muvaffaqiyatli eksport qilindi (${DUMP_SIZE_KB} KB)"
@@ -66,53 +74,79 @@ ok "Baza muvaffaqiyatli eksport qilindi (${DUMP_SIZE_KB} KB)"
 gzip -t "$DUMP_FILE" || die "Eksport qilingan SQL gzip fayli buzilgan!"
 ok "Dump gzip yaxlitligi tekshirildi (OK)"
 
-say "3/6 MinIO media fayllarini zaxiralash"
+# Cryptographic SHA-256 hash of dump
+DUMP_SHA256=$(sha256sum "$DUMP_FILE" | awk '{print $1}')
+ok "SHA-256 nazorat summasi: ${DUMP_SHA256:0:16}..."
+
+# Query Alembic revision
+ALEMBIC_VERSION=$(docker compose -f "$ROOT_DIR/docker-compose.yml" exec -T -e PGPASSWORD="$POSTGRES_PASSWORD" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" -c "SELECT version_num FROM alembic_version;" 2>/dev/null || echo "unknown")
+ok "Alembic sxema versiyasi: ${ALEMBIC_VERSION:-unknown}"
+
+say "3/6 MinIO media fayllarini zaxiralash (${MEDIA_BUCKET})"
 MEDIA_COUNT=0
 MEDIA_SIZE_BYTES=0
 
 if docker compose -f "$ROOT_DIR/docker-compose.yml" ps "$MINIO_SERVICE" 2>/dev/null | grep -q "Up"; then
-    if docker compose -f "$ROOT_DIR/docker-compose.yml" cp "$MINIO_SERVICE:/data/baito-bucket/." "$MEDIA_STAGE/" 2>/dev/null; then
+    if docker compose -f "$ROOT_DIR/docker-compose.yml" cp "$MINIO_SERVICE:/data/${MEDIA_BUCKET}/." "$MEDIA_STAGE/" 2>/dev/null; then
         MEDIA_COUNT=$(find "$MEDIA_STAGE" -type f | wc -l)
         MEDIA_SIZE_BYTES=$(du -sb "$MEDIA_STAGE" 2>/dev/null | cut -f1 || du -sk "$MEDIA_STAGE" | awk '{print $1*1024}')
         ok "MinIO media nusxalandi ($MEDIA_COUNT ta fayl)"
     else
-        warn "MinIO fayllarini to'g'ridan-to'g'ri nusxalash imkoni bo'lmadi (bo'sh bo'lishi mumkin)"
+        warn "MinIO fayllarini to'g'ridan-to'g'ri nusxalash imkoni bo'lmadi"
     fi
 else
     warn "MinIO servisi ishlamayapti yoki topilmadi; media qismi o'tkazib yuborildi"
 fi
 
 if [ "$MEDIA_COUNT" -eq 0 ]; then
-    echo "Baito Media Snapshot: 0 active files at ${TIMESTAMP}." > "${MEDIA_STAGE}/info.txt"
+    echo "Baito Media Snapshot: 0 active files in '${MEDIA_BUCKET}' at ${TIMESTAMP}." > "${MEDIA_STAGE}/info.txt"
 fi
 
 say "4/6 Zaxira Manifest (backup_manifest.json) yaratish"
-# Query row counts
-USERS_COUNT=$(docker compose -f "$ROOT_DIR/docker-compose.yml" exec -T -e PGPASSWORD="$POSTGRES_PASSWORD" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" -c "SELECT count(*) FROM users;" 2>/dev/null || echo 0)
-JOBS_COUNT=$(docker compose -f "$ROOT_DIR/docker-compose.yml" exec -T -e PGPASSWORD="$POSTGRES_PASSWORD" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" -c "SELECT count(*) FROM jobs;" 2>/dev/null || echo 0)
-APPS_COUNT=$(docker compose -f "$ROOT_DIR/docker-compose.yml" exec -T -e PGPASSWORD="$POSTGRES_PASSWORD" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" -c "SELECT count(*) FROM applications;" 2>/dev/null || echo 0)
+# Query table row counts
+declare -A T_COUNTS
+for t in users jobs applications transactions chats messages media_files disputes payment_orders; do
+    cnt=$(docker compose -f "$ROOT_DIR/docker-compose.yml" exec -T -e PGPASSWORD="$POSTGRES_PASSWORD" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" -c "SELECT count(*) FROM $t;" 2>/dev/null || echo 0)
+    T_COUNTS[$t]=${cnt:-0}
+done
 
 cat <<EOF > "${STAGE_DIR}/${BUNDLE_NAME}/backup_manifest.json"
 {
   "project": "Baito Platform",
+  "backup_version": "2.0 (Senior DevOps Specification)",
   "created_at": "$(date --iso-8601=seconds 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%SZ")",
   "timezone": "Asia/Tashkent",
   "database": {
     "name": "${DB_NAME}",
     "dump_file": "database/database.sql.gz",
+    "dump_sha256": "${DUMP_SHA256}",
     "dump_size_kb": ${DUMP_SIZE_KB},
-    "users_count": ${USERS_COUNT:-0},
-    "jobs_count": ${JOBS_COUNT:-0},
-    "applications_count": ${APPS_COUNT:-0}
+    "alembic_version": "${ALEMBIC_VERSION}",
+    "tables_count": {
+      "users": ${T_COUNTS[users]},
+      "jobs": ${T_COUNTS[jobs]},
+      "applications": ${T_COUNTS[applications]},
+      "transactions": ${T_COUNTS[transactions]},
+      "chats": ${T_COUNTS[chats]},
+      "messages": ${T_COUNTS[messages]},
+      "media_files": ${T_COUNTS[media_files]},
+      "disputes": ${T_COUNTS[disputes]},
+      "payment_orders": ${T_COUNTS[payment_orders]}
+    }
   },
   "media": {
+    "source_bucket": "${MEDIA_BUCKET}",
     "folder": "media/",
     "files_count": ${MEDIA_COUNT},
     "total_size_bytes": ${MEDIA_SIZE_BYTES}
+  },
+  "retention": {
+    "retention_days": ${RETENTION_DAYS},
+    "min_backups_kept": ${MIN_BACKUPS_TO_KEEP}
   }
 }
 EOF
-ok "Manifest shakllantirildi (Foydalanuvchilar: ${USERS_COUNT:-0}, E'lonlar: ${JOBS_COUNT:-0})"
+ok "Manifest shakllantirildi (Users: ${T_COUNTS[users]}, Jobs: ${T_COUNTS[jobs]}, Applications: ${T_COUNTS[applications]})"
 
 say "5/6 Yagona ZIP arxivini yaratish va yaxlitligini tekshirish"
 python3 -c "

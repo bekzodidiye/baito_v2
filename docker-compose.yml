@@ -303,6 +303,7 @@ services:
       - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
       - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
       - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-baito-bucket}
       - S3_BUCKET_PATH=s3://${BACKUP_BUCKET_NAME:-baito-backups}/
       # Optional second destination, off this machine. All four must be set or
       # the offsite copy stays disabled — the local backup is unaffected.

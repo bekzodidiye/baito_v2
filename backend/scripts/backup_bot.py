@@ -103,9 +103,11 @@ else:
     bot = DummyBot()
     print("ℹ️ TELEGRAM_BOT_TOKEN yoki TELEGRAM_CHAT_ID sozlanmagan. Backup xizmati HEADLESS DAEMON rejimida ishga tushadi.")
 
-# Parse S3 Bucket Path
+# Parse S3 Bucket Paths
 parsed_s3 = urlparse(S3_BUCKET_PATH)
-BUCKET_NAME = parsed_s3.netloc or "baito-bucket"
+BACKUP_BUCKET = parsed_s3.netloc or "baito-backups"
+BUCKET_NAME = BACKUP_BUCKET  # Alias for backward compatibility
+MEDIA_BUCKET = os.getenv("AWS_BUCKET_NAME", "baito-bucket")
 PREFIX = parsed_s3.path.lstrip("/")
 if PREFIX and not PREFIX.endswith("/"):
     PREFIX += "/"
@@ -170,22 +172,27 @@ def upload_offsite(local_path, key):
         print(f"⚠️  Offsite upload failed: {e}")
         return False, str(e)[:200]
 
-def ensure_bucket():
+def ensure_bucket(target=None):
     global s3_client
+    bucket_to_check = target or BACKUP_BUCKET
     try:
-        s3_client.head_bucket(Bucket=BUCKET_NAME)
+        s3_client.head_bucket(Bucket=bucket_to_check)
     except Exception:
         try:
             if AWS_ENDPOINT_URL or AWS_REGION == "us-east-1":
-                s3_client.create_bucket(Bucket=BUCKET_NAME)
+                s3_client.create_bucket(Bucket=bucket_to_check)
             else:
                 s3_client.create_bucket(
-                    Bucket=BUCKET_NAME,
+                    Bucket=bucket_to_check,
                     CreateBucketConfiguration={'LocationConstraint': AWS_REGION}
                 )
-            print(f"✅ S3/MinIO bucket '{BUCKET_NAME}' created.")
+            print(f"✅ S3/MinIO bucket '{bucket_to_check}' created.")
         except Exception as e:
-            print(f"⚠️ S3 bucket check warning: {e}")
+            print(f"⚠️ S3 bucket check warning for '{bucket_to_check}': {e}")
+
+def ensure_all_buckets():
+    ensure_bucket(BACKUP_BUCKET)
+    ensure_bucket(MEDIA_BUCKET)
 
 # Additional Telegram user ids allowed to drive the bot, comma-separated.
 # TELEGRAM_CHAT_ID alone meant exactly one account could use it — anyone else
@@ -318,16 +325,15 @@ def get_all_backup_files():
 
 def get_minio_media_stats():
     """MinIO-dagi barcha rasmlar va media fayllarning umumiy soni va hajmini hisoblaydi."""
-    ensure_bucket()
+    ensure_all_buckets()
     total_files = 0
     total_size = 0
     try:
         paginator = s3_client.get_paginator('list_objects_v2')
-        for page in paginator.paginate(Bucket=BUCKET_NAME):
+        for page in paginator.paginate(Bucket=MEDIA_BUCKET):
             for obj in page.get('Contents', []):
-                if not obj['Key'].startswith(PREFIX):
-                    total_files += 1
-                    total_size += obj['Size']
+                total_files += 1
+                total_size += obj['Size']
     except Exception as e:
         print(f"MinIO stats error: {e}")
         
@@ -344,6 +350,10 @@ def get_system_status():
         "users": 0,
         "jobs": 0,
         "applications": 0,
+        "transactions": 0,
+        "chats": 0,
+        "messages": 0,
+        "media_files_table": 0,
         "disk_free": "0 GB",
         "disk_total": "0 GB",
         "backups_count": 0,
@@ -386,26 +396,14 @@ def get_system_status():
     except Exception:
         pass
 
-    try:
-        cmd_users = f"psql -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} -t -c \"SELECT count(*) FROM users;\""
-        out_users = subprocess.check_output(cmd_users, shell=True, executable='/bin/sh', text=True).strip()
-        status_info["users"] = int(out_users) if out_users.isdigit() else 0
-    except Exception:
-        pass
-
-    try:
-        cmd_jobs = f"psql -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} -t -c \"SELECT count(*) FROM jobs;\""
-        out_jobs = subprocess.check_output(cmd_jobs, shell=True, executable='/bin/sh', text=True).strip()
-        status_info["jobs"] = int(out_jobs) if out_jobs.isdigit() else 0
-    except Exception:
-        pass
-
-    try:
-        cmd_apps = f"psql -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} -t -c \"SELECT count(*) FROM applications;\""
-        out_apps = subprocess.check_output(cmd_apps, shell=True, executable='/bin/sh', text=True).strip()
-        status_info["applications"] = int(out_apps) if out_apps.isdigit() else 0
-    except Exception:
-        pass
+    for table_name in ["users", "jobs", "applications", "transactions", "chats", "messages", "media_files"]:
+        try:
+            cmd = f"psql -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} -t -c \"SELECT count(*) FROM {table_name};\""
+            out = subprocess.check_output(cmd, shell=True, executable='/bin/sh', text=True).strip()
+            key_name = "media_files_table" if table_name == "media_files" else table_name
+            status_info[key_name] = int(out) if out.isdigit() else 0
+        except Exception:
+            pass
 
     return status_info
 
@@ -599,46 +597,87 @@ def run_unified_backup(chat_id=None, send_to_channel=True):
         # 1. Dump PostgreSQL into database/
         os.environ['PGPASSWORD'] = POSTGRES_PASSWORD
         db_sql_gz = os.path.join(db_stage_dir, "database.sql.gz")
-        dump_cmd = f"pg_dump -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} | gzip > {db_sql_gz}"
+        dump_cmd = f"pg_dump -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} --clean --if-exists --no-owner | gzip > {db_sql_gz}"
         subprocess.run(dump_cmd, shell=True, check=True, executable='/bin/sh')
         db_size_kb = os.path.getsize(db_sql_gz) / 1024
+
+        # 1.1 Dump PostgreSQL server globals (roles & users)
+        globals_sql_gz = os.path.join(db_stage_dir, "globals.sql.gz")
+        try:
+            globals_cmd = f"pg_dumpall -h {POSTGRES_HOST} -U {POSTGRES_USER} --globals-only --no-owner 2>/dev/null | gzip > {globals_sql_gz}"
+            subprocess.run(globals_cmd, shell=True, check=True, executable='/bin/sh')
+        except Exception as ge:
+            print(f"⚠️ Globals dump ogohlantirish: {ge}")
+
+        # Compute SHA-256 for cryptographic integrity verification
+        import hashlib
+        hasher = hashlib.sha256()
+        with open(db_sql_gz, "rb") as f:
+            while chunk := f.read(65536):
+                hasher.update(chunk)
+        db_sha256 = hasher.hexdigest()
+
+        # Query Alembic migration revision
+        alembic_version = "unknown"
+        try:
+            cmd_alembic = f"psql -h {POSTGRES_HOST} -U {POSTGRES_USER} -d {POSTGRES_DB} -t -c \"SELECT version_num FROM alembic_version;\""
+            alembic_version = subprocess.check_output(cmd_alembic, shell=True, executable='/bin/sh', text=True).strip()
+        except Exception:
+            pass
         
-        # 2. Download all User Uploads from MinIO into media/
+        # 2. Download all User Uploads from MinIO MEDIA_BUCKET into media/
+        ensure_all_buckets()
         paginator = s3_client.get_paginator('list_objects_v2')
         media_count = 0
         media_bytes = 0
-        for page in paginator.paginate(Bucket=BUCKET_NAME):
-            for obj in page.get('Contents', []):
-                key = obj['Key']
-                if not key.startswith(PREFIX):
+        try:
+            for page in paginator.paginate(Bucket=MEDIA_BUCKET):
+                for obj in page.get('Contents', []):
+                    key = obj['Key']
                     target_local = os.path.join(media_stage_dir, key)
                     os.makedirs(os.path.dirname(target_local), exist_ok=True)
-                    s3_client.download_file(BUCKET_NAME, key, target_local)
+                    s3_client.download_file(MEDIA_BUCKET, key, target_local)
                     media_count += 1
                     media_bytes += obj['Size']
+        except Exception as me:
+            print(f"⚠️ MinIO media ko'chirishda ogohlantirish: {me}")
 
         if media_count == 0:
             with open(os.path.join(media_stage_dir, "info.txt"), "w") as f:
-                f.write(f"Baito Media Snapshot: 0 active files at {date_str}.\n")
+                f.write(f"Baito Media Snapshot: 0 active files in '{MEDIA_BUCKET}' at {date_str}.\n")
 
         # 3. Create Manifest JSON with stats
         stats = get_system_status()
         manifest = {
             "project": "Baito Platform",
+            "backup_version": "2.0 (Senior DevOps Specification)",
             "created_at": datetime.now(UZ_TZ).isoformat(),
             "timezone": "Asia/Tashkent (UTC+5)",
             "database": {
                 "name": POSTGRES_DB,
                 "dump_file": "database/database.sql.gz",
+                "dump_sha256": db_sha256,
                 "dump_size_kb": round(db_size_kb, 2),
-                "users_count": stats.get("users", 0),
-                "jobs_count": stats.get("jobs", 0),
-                "applications_count": stats.get("applications", 0)
+                "alembic_version": alembic_version,
+                "tables_count": {
+                    "users": stats.get("users", 0),
+                    "jobs": stats.get("jobs", 0),
+                    "applications": stats.get("applications", 0),
+                    "transactions": stats.get("transactions", 0),
+                    "chats": stats.get("chats", 0),
+                    "messages": stats.get("messages", 0),
+                    "media_files": stats.get("media_files_table", 0),
+                }
             },
             "media": {
+                "source_bucket": MEDIA_BUCKET,
                 "folder": "media/",
                 "files_count": media_count,
                 "total_size_bytes": media_bytes
+            },
+            "retention": {
+                "retention_days": RETENTION_DAYS,
+                "min_backups_kept": MIN_BACKUPS_TO_KEEP
             }
         }
         with open(os.path.join(temp_stage_dir, "backup_manifest.json"), "w", encoding="utf-8") as f:
@@ -685,8 +724,8 @@ def run_unified_backup(chat_id=None, send_to_channel=True):
             f"📦 *Baito Yagona Zaxira Paketi (All-in-One)*\n\n"
             f"📅 Sana: `{date_str}` (Toshkent vaqti)\n"
             f"📁 Fayl: `{zip_filename}`\n"
-            f"🗄️ Baza: `PostgreSQL` ({db_size_kb:.1f} KB)\n"
-            f"🖼️ Media: `{media_count}` ta rasm/fayl\n"
+            f"🗄️ Baza: `PostgreSQL` ({db_size_kb:.1f} KB, rev: `{alembic_version[:8]}`)\n"
+            f"🖼️ Media (`{MEDIA_BUCKET}`): `{media_count}` ta rasm/fayl\n"
             f"📊 Umumiy Arxiv: `{size_str}`\n"
             f"☁️ Saqlash: {'MinIO Buluti & Server Diski ✅' if s3_uploaded else 'Server Diski ✅'}\n"
             + (f"{offsite_line}\n" if offsite_line else "")

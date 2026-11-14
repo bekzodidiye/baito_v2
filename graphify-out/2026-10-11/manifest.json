@@ -918,10 +918,10 @@
     "semantic_hash": ""
   },
   "frontend/src/api/chatSocket.ts": {
-    "mtime": 1788518942.6988082,
-    "seen": 1789900503.0191934,
-    "ast_hash": "9020519b2106693fb08c7a65c282e6bf",
-    "semantic_hash": "9020519b2106693fb08c7a65c282e6bf"
+    "mtime": 1791737330.7676888,
+    "seen": 1791737580.1241581,
+    "ast_hash": "bdbb67c717fb03cab341c19b3c14c756",
+    "semantic_hash": ""
   },
   "frontend/src/api/client.ts": {
     "mtime": 1791270810.839099,
@@ -2028,9 +2028,9 @@
     "semantic_hash": ""
   },
   "frontend/src/features/admin/JobDetailModal.tsx": {
-    "mtime": 1791707115.0524735,
-    "seen": 1791707363.5928917,
-    "ast_hash": "cf1ca0102cd53760c3cde823270527db",
+    "mtime": 1791737273.0954342,
+    "seen": 1791737580.1243706,
+    "ast_hash": "eb9a2d89d3a1f3b5ab9721fd089efd32",
     "semantic_hash": ""
   },
   "frontend/src/features/admin/PayoutModal.tsx": {

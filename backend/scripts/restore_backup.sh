@@ -64,7 +64,19 @@ MEDIA=$(find "$WORK" -type d -name media | head -1)
 ok "database dump: $(du -h "$DUMP" | cut -f1)"
 [ -n "$MEDIA" ] && ok "media files: $(find "$MEDIA" -type f | wc -l)"
 
-say "2/5  Verifying the dump is readable"
+say "2/5  Verifying the dump and cryptographic integrity"
+MANIFEST=$(find "$WORK" -name 'backup_manifest.json' | head -1)
+if [ -n "$MANIFEST" ] && [ -f "$MANIFEST" ]; then
+    EXPECTED_SHA=$(grep -o '"dump_sha256": *"[^"]*"' "$MANIFEST" | cut -d'"' -f4 || true)
+    if [ -n "$EXPECTED_SHA" ]; then
+        ACTUAL_SHA=$(sha256sum "$DUMP" | awk '{print $1}')
+        if [ "$EXPECTED_SHA" != "$ACTUAL_SHA" ]; then
+            die "SHA-256 yaxlitlik xatosi! Kutilgan: $EXPECTED_SHA, Amaldagi: $ACTUAL_SHA"
+        fi
+        ok "SHA-256 nazorat summasi mos keldi (${ACTUAL_SHA:0:16}...)"
+    fi
+fi
+
 gunzip -t "$DUMP" || die "The archive is corrupt — gzip integrity check failed"
 LINES=$(gunzip -c "$DUMP" | head -200 | grep -c 'PostgreSQL database dump' || true)
 [ "$LINES" -gt 0 ] || die "This does not look like a pg_dump output"
@@ -80,11 +92,18 @@ if [ "$MODE" = "--drill" ]; then
 
     say "4/5  Comparing against production"
     printf '  %-22s %10s %10s\n' TABLE DRILL LIVE
-    for t in users jobs applications transactions chats messages; do
-        d=$(docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DRILL_DB" \
-              -c "select count(*) from $t" 2>/dev/null | tr -d '\r' || echo '-')
-        l=$(docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" \
-              -c "select count(*) from $t" 2>/dev/null | tr -d '\r' || echo '-')
+    for t in users jobs applications transactions chats messages media_files alembic_version; do
+        if [ "$t" = "alembic_version" ]; then
+            d=$(docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DRILL_DB" \
+                  -c "select version_num from alembic_version limit 1" 2>/dev/null | tr -d '\r' || echo '-')
+            l=$(docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" \
+                  -c "select version_num from alembic_version limit 1" 2>/dev/null | tr -d '\r' || echo '-')
+        else
+            d=$(docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DRILL_DB" \
+                  -c "select count(*) from $t" 2>/dev/null | tr -d '\r' || echo '-')
+            l=$(docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" \
+                  -c "select count(*) from $t" 2>/dev/null | tr -d '\r' || echo '-')
+        fi
         printf '  %-22s %10s %10s\n' "$t" "$d" "$l"
     done
 

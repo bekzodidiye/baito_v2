@@ -1,7 +1,7 @@
 # Graph Report - baito-v3-  (2026-10-11)
 
 ## Corpus Check
-- 1039 files · ~673,512 words
+- 1039 files · ~673,550 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 43 file(s) not represented in the graph (top: (none) 13, .xml 10, .css 6)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d7a809f3`
+- Built from commit: `2e065e89`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1415,7 +1415,7 @@ Cohesion: 0.67
 Nodes (3): 8.1 OWASP LLM Top 10 (2026) — concrete tests, 8.2 Classic application security, 8. Security testing
 
 ## Knowledge Gaps
-- **1297 isolated node(s):** `EmployerJobDetailModalProps`, `DateTimePickerModalProps`, `JobPostStepTwoProps`, `Lang`, `ChatSocket` (+1292 more)
+- **1297 isolated node(s):** `ChatSocket`, `JobDetailModalProps`, `statusLabels`, `appStatusLabels`, `txnTypeLabels` (+1292 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 2293 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **124 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -1423,16 +1423,16 @@ Nodes (3): 8.1 OWASP LLM Top 10 (2026) — concrete tests, 8.2 Classic applicati
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `refresh()` connect `refresh` to `typing`, `_set_auth_cookies`, `ActiveSession`?**
-  _High betweenness centrality (0.317) - this node is a cross-community bridge._
-- **Why does `AdminPayouts()` connect `apiClient` to `frontend/src/features/admin/AdminPanel.tsx`, `refresh`, `useAuthStore`?**
-  _High betweenness centrality (0.316) - this node is a cross-community bridge._
+  _High betweenness centrality (0.356) - this node is a cross-community bridge._
 - **Why does `[BUG-010] The admin header's "Yangilash" button does nothing on Payments & Escrow` connect `refresh` to `apiClient`?**
-  _High betweenness centrality (0.316) - this node is a cross-community bridge._
+  _High betweenness centrality (0.356) - this node is a cross-community bridge._
+- **Why does `AdminPayouts()` connect `apiClient` to `frontend/src/features/admin/AdminPanel.tsx`, `refresh`, `useAuthStore`?**
+  _High betweenness centrality (0.356) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `make_user()` (e.g. with `test_job_moderation_flow()` and `test_job_moderation_reject_flow()`) actually correct?**
   _`make_user()` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 2 inferred relationships involving `login()` (e.g. with `test_job_moderation_flow()` and `test_job_moderation_reject_flow()`) actually correct?**
   _`login()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `EmployerJobDetailModalProps`, `DateTimePickerModalProps`, `JobPostStepTwoProps` to the rest of the system?**
+- **What connects `ChatSocket`, `JobDetailModalProps`, `statusLabels` to the rest of the system?**
   _1297 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `create_job` be split into smaller, more focused modules?**
   _Cohesion score 0.13043478260869565 - nodes in this community are weakly interconnected._
