@@ -36,8 +36,10 @@ mkdir -p "$BACKUPS_DIR"
 command -v docker >/dev/null || die "docker buyrug'i topilmadi"
 command -v gzip >/dev/null || die "gzip buyrug'i topilmadi"
 
+command -v openssl >/dev/null || warn "openssl buyrug'i topilmadi (.env shifrlanmasligi mumkin)"
+
 # Check if database container is running
-say "1/6 Tekshiruv: Docker va PostgreSQL xizmati holati"
+say "1/7 Tekshiruv: Docker va PostgreSQL xizmati holati"
 if ! docker compose -f "$ROOT_DIR/docker-compose.yml" ps "$DB_SERVICE" | grep -q "Up"; then
     die "PostgreSQL servisi ($DB_SERVICE) ishlamayapti! Zaxira olib bo'lmaydi."
 fi
@@ -52,9 +54,10 @@ trap 'rm -rf "$STAGE_DIR"' EXIT
 
 DB_STAGE="${STAGE_DIR}/${BUNDLE_NAME}/database"
 MEDIA_STAGE="${STAGE_DIR}/${BUNDLE_NAME}/media"
-mkdir -p "$DB_STAGE" "$MEDIA_STAGE"
+CONFIG_STAGE="${STAGE_DIR}/${BUNDLE_NAME}/config"
+mkdir -p "$DB_STAGE" "$MEDIA_STAGE" "$CONFIG_STAGE"
 
-say "2/6 PostgreSQL ma'lumotlar bazasi va rollarini eksport qilish"
+say "2/7 PostgreSQL ma'lumotlar bazasi va rollarini eksport qilish"
 DUMP_FILE="${DB_STAGE}/database.sql.gz"
 GLOBALS_FILE="${DB_STAGE}/globals.sql.gz"
 
@@ -83,7 +86,7 @@ ok "SHA-256 nazorat summasi: ${DUMP_SHA256:0:16}..."
 ALEMBIC_VERSION=$(docker compose -f "$ROOT_DIR/docker-compose.yml" exec -T -e PGPASSWORD="$POSTGRES_PASSWORD" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" -c "SELECT version_num FROM alembic_version;" 2>/dev/null || echo "unknown")
 ok "Alembic sxema versiyasi: ${ALEMBIC_VERSION:-unknown}"
 
-say "3/6 Media fayllarini zaxiralash (${MEDIA_BUCKET} & lokal uploads)"
+say "3/7 Media fayllarini zaxiralash (${MEDIA_BUCKET} & lokal uploads)"
 MEDIA_COUNT=0
 MEDIA_SIZE_BYTES=0
 
@@ -117,7 +120,70 @@ else
     warn "Hech qanday media fayl topilmadi (0 ta)"
 fi
 
-say "4/6 Zaxira Manifest (backup_manifest.json) yaratish"
+say "4/7 Konfiguratsiya va .env faylini AES-256 bilan shifrlash"
+TARGET_ENV=""
+if [ -f "$ROOT_DIR/.env" ]; then
+    TARGET_ENV="$ROOT_DIR/.env"
+elif [ -f "$ROOT_DIR/backend/.env" ]; then
+    TARGET_ENV="$ROOT_DIR/backend/.env"
+fi
+
+ENC_FILE="${CONFIG_STAGE}/env.enc"
+BLUEPRINT_FILE="${CONFIG_STAGE}/env.blueprint.json"
+ENC_SHA256=""
+
+if [ -n "$TARGET_ENV" ] && [ -f "$TARGET_ENV" ]; then
+    BACKUP_PASS="${BACKUP_ENCRYPTION_KEY:-${SECRET_KEY:-}}"
+    if [ -n "$BACKUP_PASS" ]; then
+        openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 -pass pass:"$BACKUP_PASS" -in "$TARGET_ENV" -out "$ENC_FILE"
+        ENC_SHA256=$(sha256sum "$ENC_FILE" | awk '{print $1}')
+        ok "Konfiguratsiya AES-256-CBC bilan shifrlandi (${ENC_SHA256:0:16}...)"
+    else
+        warn "BACKUP_ENCRYPTION_KEY yoki SECRET_KEY topilmadi; .env shifrlanmadi"
+    fi
+
+    # Generate sanitized blueprint
+    python3 -c "
+import json, sys
+
+env_file = sys.argv[1]
+blueprint_out = sys.argv[2]
+
+sensitive_patterns = ['SECRET', 'PASSWORD', 'KEY', 'TOKEN', 'AUTH', 'CREDENTIAL', 'PRIVATE']
+safe_blueprint = {
+    '_blueprint_note': 'Sanitized configuration template for disaster recovery without sensitive secrets',
+    'payment_systems': {
+        'uzum': {
+            'status': 'deprecated_opted_out',
+            'note': 'Uzum tolov tizimi rasman bekor qilingan va loyihadan chiqarilgan'
+        }
+    },
+    'env_vars': {}
+}
+
+with open(env_file, 'r', encoding='utf-8', errors='ignore') as f:
+    for line in f:
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        if '=' in line:
+            k, v = line.split('=', 1)
+            k = k.strip()
+            v = v.strip().strip('\"\'')
+            if any(p in k.upper() for p in sensitive_patterns):
+                safe_blueprint['env_vars'][k] = '********' if v else ''
+            else:
+                safe_blueprint['env_vars'][k] = v
+
+with open(blueprint_out, 'w', encoding='utf-8') as out_f:
+    json.dump(safe_blueprint, out_f, indent=2, ensure_ascii=False)
+" "$TARGET_ENV" "$BLUEPRINT_FILE"
+    ok "Konfiguratsiya xavfsiz blueprinti yaratildi (Uzum: deprecated_opted_out)"
+else
+    warn ".env fayli topilmadi; konfiguratsiya zaxirasi o'tkazib yuborildi"
+fi
+
+say "5/7 Zaxira Manifest (backup_manifest.json) yaratish"
 # Query table row counts
 declare -A T_COUNTS
 for t in users jobs applications transactions chats messages media_files disputes payment_orders; do
@@ -155,6 +221,15 @@ cat <<EOF > "${STAGE_DIR}/${BUNDLE_NAME}/backup_manifest.json"
     "files_count": ${MEDIA_COUNT},
     "total_size_bytes": ${MEDIA_SIZE_BYTES}
   },
+  "config": {
+    "encrypted_env": "$([ -f "$ENC_FILE" ] && echo 'config/env.enc' || echo 'none')",
+    "blueprint": "$([ -f "$BLUEPRINT_FILE" ] && echo 'config/env.blueprint.json' || echo 'none')",
+    "cipher": "$([ -f "$ENC_FILE" ] && echo 'aes-256-cbc-pbkdf2-100k' || echo 'none')",
+    "env_sha256": "${ENC_SHA256:-none}",
+    "payment_systems": {
+      "uzum": "deprecated_opted_out"
+    }
+  },
   "retention": {
     "retention_days": ${RETENTION_DAYS},
     "min_backups_kept": ${MIN_BACKUPS_TO_KEEP}
@@ -163,7 +238,7 @@ cat <<EOF > "${STAGE_DIR}/${BUNDLE_NAME}/backup_manifest.json"
 EOF
 ok "Manifest shakllantirildi (Users: ${T_COUNTS[users]}, Jobs: ${T_COUNTS[jobs]}, Applications: ${T_COUNTS[applications]})"
 
-say "5/6 Yagona ZIP arxivini yaratish va yaxlitligini tekshirish"
+say "6/7 Yagona ZIP arxivini yaratish va yaxlitligini tekshirish"
 python3 -c "
 import zipfile, os, sys
 stage_dir = sys.argv[1]
@@ -184,7 +259,7 @@ python3 -m zipfile -t "$ZIP_PATH" || die "Yaratilgan ZIP arxivi buzilgan!"
 ZIP_SIZE_HUMAN=$(du -h "$ZIP_PATH" | cut -f1)
 ok "ZIP arxiv tayyor: $ZIP_PATH ($ZIP_SIZE_HUMAN)"
 
-say "6/6 Retention siyosati: Eski zaxiralarni tozalash"
+say "7/7 Retention siyosati: Eski zaxiralarni tozalash"
 ARCHIVE_COUNT=$(find "$BACKUPS_DIR" -maxdepth 1 -name "baito_backup_*.zip" | wc -l)
 if [ "$ARCHIVE_COUNT" -gt "$MIN_BACKUPS_TO_KEEP" ]; then
     find "$BACKUPS_DIR" -maxdepth 1 -name "baito_backup_*.zip" -mtime +"$RETENTION_DAYS" | while read -r old_file; do

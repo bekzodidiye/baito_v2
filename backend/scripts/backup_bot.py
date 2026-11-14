@@ -630,10 +630,12 @@ def run_unified_backup(chat_id=None, send_to_channel=True):
     temp_stage_dir = f"/tmp/{bundle_name}"
     db_stage_dir = os.path.join(temp_stage_dir, "database")
     media_stage_dir = os.path.join(temp_stage_dir, "media")
+    config_stage_dir = os.path.join(temp_stage_dir, "config")
     
     try:
         os.makedirs(db_stage_dir, exist_ok=True)
         os.makedirs(media_stage_dir, exist_ok=True)
+        os.makedirs(config_stage_dir, exist_ok=True)
         
         # 1. Dump PostgreSQL into database/
         os.environ['PGPASSWORD'] = POSTGRES_PASSWORD
@@ -719,6 +721,96 @@ def run_unified_backup(chat_id=None, send_to_channel=True):
             with open(os.path.join(media_stage_dir, "info.txt"), "w") as f:
                 f.write(f"Baito Media Snapshot: 0 active files in '{MEDIA_BUCKET}' at {date_str}.\n")
 
+        # 2.2 Encrypt .env configuration with AES-256 and create sanitized blueprint
+        enc_env_rel = None
+        blueprint_rel = None
+        cipher_desc = None
+        env_sha256 = None
+
+        candidate_env_paths = [
+            "/app/.env",
+            "/app/backend/.env",
+            os.path.join(os.path.dirname(__file__), "../.env"),
+            os.path.join(os.path.dirname(__file__), "../../.env"),
+            ".env",
+            "backend/.env",
+        ]
+        active_env_path = next((p for p in candidate_env_paths if os.path.exists(p) and os.path.isfile(p)), None)
+        temp_reconstructed_env = None
+
+        if not active_env_path:
+            # Container fallback: Reconstruct from injected environment variables
+            temp_reconstructed_env = f"/tmp/{bundle_name}_env.tmp"
+            reconstructed_lines = []
+            env_prefixes = ("POSTGRES_", "SECRET_", "BACKUP_", "TELEGRAM_", "AWS_", "MINIO_", "OFFSITE_", "PUBLIC_APP_", "TEXTUP_", "REDIS_", "ENVIRONMENT", "TZ")
+            for k, v in sorted(os.environ.items()):
+                if any(k.startswith(pfx) or pfx in k for pfx in env_prefixes):
+                    reconstructed_lines.append(f"{k}={v}\n")
+            if reconstructed_lines:
+                with open(temp_reconstructed_env, "w", encoding="utf-8") as tef:
+                    tef.writelines(reconstructed_lines)
+                active_env_path = temp_reconstructed_env
+
+        if active_env_path:
+            sensitive_patterns = ['SECRET', 'PASSWORD', 'KEY', 'TOKEN', 'AUTH', 'CREDENTIAL', 'PRIVATE']
+            safe_blueprint = {
+                "_blueprint_note": "Sanitized configuration template for disaster recovery without sensitive secrets",
+                "payment_systems": {
+                    "uzum": {
+                        "status": "deprecated_opted_out",
+                        "note": "Uzum tolov tizimi rasman bekor qilingan va loyihadan chiqarilgan"
+                    }
+                },
+                "env_vars": {}
+            }
+            try:
+                with open(active_env_path, "r", encoding="utf-8", errors="ignore") as ef:
+                    for line in ef:
+                        line = line.strip()
+                        if not line or line.startswith("#"):
+                            continue
+                        if "=" in line:
+                            k, v = line.split("=", 1)
+                            k = k.strip()
+                            v = v.strip().strip("\"'")
+                            if any(p in k.upper() for p in sensitive_patterns):
+                                safe_blueprint["env_vars"][k] = "********" if v else ""
+                            else:
+                                safe_blueprint["env_vars"][k] = v
+                blueprint_file = os.path.join(config_stage_dir, "env.blueprint.json")
+                with open(blueprint_file, "w", encoding="utf-8") as bf:
+                    json.dump(safe_blueprint, bf, indent=2, ensure_ascii=False)
+                blueprint_rel = "config/env.blueprint.json"
+            except Exception as bpe:
+                print(f"⚠️ Blueprint yaratishda ogohlantirish: {bpe}")
+
+            # Encrypt .env using openssl AES-256-CBC PBKDF2
+            backup_pass = os.getenv("BACKUP_ENCRYPTION_KEY") or os.getenv("SECRET_KEY") or ""
+            if backup_pass:
+                enc_file = os.path.join(config_stage_dir, "env.enc")
+                try:
+                    enc_cmd = [
+                        "openssl", "enc", "-aes-256-cbc", "-salt", "-pbkdf2",
+                        "-iter", "100000", "-pass", f"pass:{backup_pass}",
+                        "-in", active_env_path, "-out", enc_file
+                    ]
+                    subprocess.run(enc_cmd, check=True)
+                    if os.path.exists(enc_file):
+                        enc_hasher = hashlib.sha256()
+                        with open(enc_file, "rb") as ef_enc:
+                            while chunk := ef_enc.read(65536):
+                                enc_hasher.update(chunk)
+                        env_sha256 = enc_hasher.hexdigest()
+                        enc_env_rel = "config/env.enc"
+                        cipher_desc = "aes-256-cbc-pbkdf2-100k"
+                except Exception as ence:
+                    print(f"⚠️ .env faylini shifrlashda ogohlantirish: {ence}")
+            if temp_reconstructed_env and os.path.exists(temp_reconstructed_env):
+                try:
+                    os.remove(temp_reconstructed_env)
+                except Exception:
+                    pass
+
         # 3. Create Manifest JSON with stats
         stats = get_system_status()
         manifest = {
@@ -747,6 +839,15 @@ def run_unified_backup(chat_id=None, send_to_channel=True):
                 "folder": "media/",
                 "files_count": media_count,
                 "total_size_bytes": media_bytes
+            },
+            "config": {
+                "encrypted_env": enc_env_rel,
+                "blueprint": blueprint_rel,
+                "cipher": cipher_desc,
+                "env_sha256": env_sha256,
+                "payment_systems": {
+                    "uzum": "deprecated_opted_out"
+                }
             },
             "retention": {
                 "retention_days": RETENTION_DAYS,
@@ -799,6 +900,7 @@ def run_unified_backup(chat_id=None, send_to_channel=True):
             f"📁 Fayl: `{zip_filename}`\n"
             f"🗄️ Baza: `PostgreSQL` ({db_size_kb:.1f} KB, rev: `{alembic_version[:8]}`)\n"
             f"🖼️ Media (`{MEDIA_BUCKET}`): `{media_count}` ta rasm/fayl\n"
+            f"🔐 Konf: `AES-256 shifrlangan .env` ({'Mavjud ✅' if enc_env_rel else 'Yo‘q'})\n"
             f"📊 Umumiy Arxiv: `{size_str}`\n"
             f"☁️ Saqlash: {'MinIO Buluti & Server Diski ✅' if s3_uploaded else 'Server Diski ✅'}\n"
             + (f"{offsite_line}\n" if offsite_line else "")

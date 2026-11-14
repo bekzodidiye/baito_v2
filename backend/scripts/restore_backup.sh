@@ -35,10 +35,15 @@ fi
 
 DB_SERVICE=db
 MINIO_SERVICE=minio
+COMPOSE_FILE="$ROOT_DIR/docker-compose.yml"
 DB_USER="${POSTGRES_USER:-admin}"
 DB_NAME="${POSTGRES_DB:-baito}"
 BUCKET="${AWS_BUCKET_NAME:-baito-bucket}"
 export PGPASSWORD="${POSTGRES_PASSWORD:-}"
+
+dc() {
+    docker compose -f "$COMPOSE_FILE" "$@"
+}
 
 say()  { printf '\n\033[1m▸ %s\033[0m\n' "$*"; }
 ok()   { printf '  \033[32m✓\033[0m %s\n' "$*"; }
@@ -60,9 +65,13 @@ else
 fi
 DUMP=$(find "$WORK" -name 'database.sql.gz' | head -1)
 MEDIA=$(find "$WORK" -type d -name media | head -1)
+ENC_CONFIG=$(find "$WORK" -name 'env.enc' | head -1)
+BLUEPRINT=$(find "$WORK" -name 'env.blueprint.json' | head -1)
 [ -n "$DUMP" ] || die "database.sql.gz not found inside the archive"
 ok "database dump: $(du -h "$DUMP" | cut -f1)"
 [ -n "$MEDIA" ] && ok "media files: $(find "$MEDIA" -type f | wc -l)"
+[ -n "$ENC_CONFIG" ] && ok "encrypted config: $(du -h "$ENC_CONFIG" | cut -f1) (AES-256)"
+[ -n "$BLUEPRINT" ] && ok "config blueprint: $(du -h "$BLUEPRINT" | cut -f1)"
 
 say "2/5  Verifying the dump and cryptographic integrity"
 MANIFEST=$(find "$WORK" -name 'backup_manifest.json' | head -1)
@@ -73,8 +82,37 @@ if [ -n "$MANIFEST" ] && [ -f "$MANIFEST" ]; then
         if [ "$EXPECTED_SHA" != "$ACTUAL_SHA" ]; then
             die "SHA-256 yaxlitlik xatosi! Kutilgan: $EXPECTED_SHA, Amaldagi: $ACTUAL_SHA"
         fi
-        ok "SHA-256 nazorat summasi mos keldi (${ACTUAL_SHA:0:16}...)"
+        ok "Database SHA-256 nazorat summasi mos keldi (${ACTUAL_SHA:0:16}...)"
     fi
+
+    EXPECTED_ENV_SHA=$(grep -o '"env_sha256": *"[^"]*"' "$MANIFEST" | cut -d'"' -f4 || true)
+    if [ -n "$EXPECTED_ENV_SHA" ] && [ "$EXPECTED_ENV_SHA" != "none" ] && [ -n "$ENC_CONFIG" ]; then
+        ACTUAL_ENV_SHA=$(sha256sum "$ENC_CONFIG" | awk '{print $1}')
+        if [ "$EXPECTED_ENV_SHA" = "$ACTUAL_ENV_SHA" ]; then
+            ok "Config SHA-256 nazorat summasi mos keldi (${ACTUAL_ENV_SHA:0:16}...)"
+        else
+            warn "Config SHA-256 farq qiladi!"
+        fi
+    fi
+fi
+
+# Test decrypt if encrypted config and key are present
+if [ -n "$ENC_CONFIG" ] && [ -f "$ENC_CONFIG" ]; then
+    BACKUP_PASS="${BACKUP_ENCRYPTION_KEY:-${SECRET_KEY:-}}"
+    if [ -n "$BACKUP_PASS" ]; then
+        if openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -pass pass:"$BACKUP_PASS" -in "$ENC_CONFIG" -out "$WORK/test_decrypted.env" 2>/dev/null; then
+            ok "AES-256 de-shifrlash muvaffaqiyatli tekshirildi (.env tiklanishi mumkin)"
+        else
+            warn "AES-256 paroli noto'g'ri yoki kalit mos kelmadi"
+        fi
+    else
+        warn "BACKUP_ENCRYPTION_KEY yoki SECRET_KEY topilmadi; shifrlangan .env tekshiruvi o'tkazib yuborildi"
+    fi
+fi
+
+if [ -n "$BLUEPRINT" ] && [ -f "$BLUEPRINT" ]; then
+    UZUM_STATUS=$(grep -o '"status": *"[^"]*"' "$BLUEPRINT" | head -1 | cut -d'"' -f4 || echo "unknown")
+    ok "Config blueprint tekshirildi (Uzum: ${UZUM_STATUS})"
 fi
 
 gunzip -t "$DUMP" || die "The archive is corrupt — gzip integrity check failed"
@@ -86,29 +124,29 @@ ok "dump readable and well-formed"
 if [ "$MODE" = "--drill" ]; then
     DRILL_DB="baito_restore_drill_$(date +%s)"
     say "3/5  DRILL — restoring into $DRILL_DB (production untouched)"
-    docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" createdb -U "$DB_USER" "$DRILL_DB"
-    gunzip -c "$DUMP" | docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -q -U "$DB_USER" -d "$DRILL_DB" >/dev/null
+    dc exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" createdb -U "$DB_USER" "$DRILL_DB"
+    gunzip -c "$DUMP" | dc exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -q -U "$DB_USER" -d "$DRILL_DB" >/dev/null
     ok "restored"
 
     say "4/5  Comparing against production"
     printf '  %-22s %10s %10s\n' TABLE DRILL LIVE
     for t in users jobs applications transactions chats messages media_files alembic_version; do
         if [ "$t" = "alembic_version" ]; then
-            d=$(docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DRILL_DB" \
+            d=$(dc exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DRILL_DB" \
                   -c "select version_num from alembic_version limit 1" 2>/dev/null | tr -d '\r' || echo '-')
-            l=$(docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" \
+            l=$(dc exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" \
                   -c "select version_num from alembic_version limit 1" 2>/dev/null | tr -d '\r' || echo '-')
         else
-            d=$(docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DRILL_DB" \
+            d=$(dc exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DRILL_DB" \
                   -c "select count(*) from $t" 2>/dev/null | tr -d '\r' || echo '-')
-            l=$(docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" \
+            l=$(dc exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" \
                   -c "select count(*) from $t" 2>/dev/null | tr -d '\r' || echo '-')
         fi
         printf '  %-22s %10s %10s\n' "$t" "$d" "$l"
     done
 
     say "5/5  Cleaning up"
-    docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" dropdb -U "$DB_USER" "$DRILL_DB"
+    dc exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" dropdb -U "$DB_USER" "$DRILL_DB"
     ok "drill database removed"
     printf '\n  \033[32mDrill passed — this archive is restorable.\033[0m\n\n'
     exit 0
@@ -119,7 +157,7 @@ say "3/5  Confirmation"
 warn "This REPLACES the live database '$DB_NAME' and overwrites media in '$BUCKET'."
 warn "Live row counts right now:"
 for t in users jobs applications transactions; do
-    c=$(docker compose exec -T "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" \
+    c=$(dc exec -T "$DB_SERVICE" psql -tA -U "$DB_USER" -d "$DB_NAME" \
           -c "select count(*) from $t" 2>/dev/null | tr -d '\r' || echo '?')
     printf '    %-16s %s\n' "$t" "$c"
 done
@@ -129,23 +167,23 @@ read -r answer
 
 say "     Taking a safety dump of the current database first"
 SAFETY="$HOME/baito-pre-restore-$(date +%Y%m%d-%H%M%S).sql.gz"
-docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" pg_dump -U "$DB_USER" "$DB_NAME" | gzip > "$SAFETY"
+dc exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" pg_dump -U "$DB_USER" "$DB_NAME" | gzip > "$SAFETY"
 chmod 600 "$SAFETY"
 ok "safety dump: $SAFETY"
 
 say "4/5  Restoring the database"
 # Recreate cleanly so the dump does not merge into existing rows.
-docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -q -U "$DB_USER" -d postgres \
+dc exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -q -U "$DB_USER" -d postgres \
   -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='$DB_NAME' AND pid<>pg_backend_pid();" >/dev/null
-docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" dropdb -U "$DB_USER" --if-exists "$DB_NAME"
-docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" createdb -U "$DB_USER" "$DB_NAME"
-gunzip -c "$DUMP" | docker compose exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -q -U "$DB_USER" -d "$DB_NAME" >/dev/null
+dc exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" dropdb -U "$DB_USER" --if-exists "$DB_NAME"
+dc exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" createdb -U "$DB_USER" "$DB_NAME"
+gunzip -c "$DUMP" | dc exec -T -e PGPASSWORD="${PGPASSWORD:-}" "$DB_SERVICE" psql -q -U "$DB_USER" -d "$DB_NAME" >/dev/null
 ok "database restored"
 
-say "5/5  Restoring media"
+say "5/5  Restoring media & configuration"
 if [ -n "$MEDIA" ] && [ "$(find "$MEDIA" -type f | wc -l)" -gt 0 ]; then
-    docker compose cp "$MEDIA/." "$MINIO_SERVICE:/tmp/restore-media"
-    docker compose exec -T "$MINIO_SERVICE" sh -c "
+    dc cp "$MEDIA/." "$MINIO_SERVICE:/tmp/restore-media"
+    dc exec -T "$MINIO_SERVICE" sh -c "
         mc alias set l http://localhost:9000 \"\$MINIO_ROOT_USER\" \"\$MINIO_ROOT_PASSWORD\" >/dev/null
         mc mirror --overwrite /tmp/restore-media l/$BUCKET >/dev/null
         rm -rf /tmp/restore-media"
@@ -154,7 +192,27 @@ else
     warn "no media in this archive; skipped"
 fi
 
+if [ -n "$ENC_CONFIG" ] && [ -f "$ENC_CONFIG" ]; then
+    BACKUP_PASS="${BACKUP_ENCRYPTION_KEY:-${SECRET_KEY:-}}"
+    if [ -n "$BACKUP_PASS" ]; then
+        read -r -p "  Arxivdagi .env konfiguratsiyasini tiklashni xohlaysizmi? (ha/yo'q): " RESTORE_ENV || RESTORE_ENV="yo'q"
+        if [ "$RESTORE_ENV" = "ha" ] || [ "$RESTORE_ENV" = "yes" ]; then
+            TARGET_RESTORE_ENV="$ROOT_DIR/.env"
+            if [ -f "$TARGET_RESTORE_ENV" ]; then
+                cp "$TARGET_RESTORE_ENV" "${TARGET_RESTORE_ENV}.backup.$(date +%s)"
+                ok "Mavjud .env zaxiralandi"
+            fi
+            if openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -pass pass:"$BACKUP_PASS" -in "$ENC_CONFIG" -out "$TARGET_RESTORE_ENV"; then
+                chmod 600 "$TARGET_RESTORE_ENV"
+                ok ".env konfiguratsiyasi muvaffaqiyatli tiklandi"
+            else
+                warn ".env de-shifrlashda xatolik yuz berdi"
+            fi
+        fi
+    fi
+fi
+
 say "Done"
-ok "Restart the application:  docker compose restart backend celery_worker"
-printf '  Rollback if this was a mistake:\n    gunzip -c %s | docker compose exec -T %s psql -U %s -d %s\n\n' \
-    "$SAFETY" "$DB_SERVICE" "$DB_USER" "$DB_NAME"
+ok "Restart the application:  docker compose -f \"$COMPOSE_FILE\" restart backend celery_worker"
+printf '  Rollback if this was a mistake:\n    gunzip -c %s | docker compose -f "%s" exec -T %s psql -U %s -d %s\n\n' \
+    "$SAFETY" "$COMPOSE_FILE" "$DB_SERVICE" "$DB_USER" "$DB_NAME"

@@ -284,12 +284,17 @@ services:
       - ./backups:/app/backups
       - ./backend/scripts/backup_bot.py:/app/backup_bot.py:ro
       - ./backend/uploads:/app/uploads:ro
+      - ./.env:/app/.env:ro
       - ./backend/.env:/app/backend/.env:ro
     env_file:
+      - path: ./.env
+        required: false
       - path: ./backend/.env
         required: false
     environment:
       - TZ=Asia/Tashkent
+      - SECRET_KEY=${SECRET_KEY:-}
+      - BACKUP_ENCRYPTION_KEY=${BACKUP_ENCRYPTION_KEY:-}
       # The bot token used to be committed here as a default value. It is now
       # supplied only from .env — and left OPTIONAL on purpose: backup_bot.py
       # exits on its own when it is missing, so an absent token stops the

@@ -10,7 +10,7 @@ FROM python:3.11-alpine
 #
 # The correct long-term fix is to move the server to a supported pairing —
 # either upgrade Postgres or build the bot on an image that has a 15 client.
-RUN apk add --no-cache postgresql16-client bash gzip
+RUN apk add --no-cache postgresql16-client bash gzip openssl
 
 # Without this Python buffers stdout and the container produces NO logs at all.
 # The bot ran for hours with an empty log, which made it impossible to diagnose.
