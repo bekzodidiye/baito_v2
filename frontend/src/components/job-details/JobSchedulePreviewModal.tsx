@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar as CalendarIcon,
@@ -189,14 +190,16 @@ export const JobSchedulePreviewModal: React.FC<JobSchedulePreviewModalProps> = (
   const startRatio = ((startHour * 60 + startMin) / 1440) * 100;
   const durationRatio = (shiftHours / 24) * 100;
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="schedule-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
         >
           {/* Backdrop blur overlay */}
           <motion.div
@@ -205,7 +208,7 @@ export const JobSchedulePreviewModal: React.FC<JobSchedulePreviewModalProps> = (
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-md"
           />
 
           {/* Modal Container */}
@@ -456,6 +459,7 @@ export const JobSchedulePreviewModal: React.FC<JobSchedulePreviewModalProps> = (
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
