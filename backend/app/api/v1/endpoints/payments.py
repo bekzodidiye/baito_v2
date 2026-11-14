@@ -1,5 +1,6 @@
 import logging
 import threading
+from contextlib import contextmanager
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
@@ -31,7 +32,14 @@ _card_locks_guard = threading.Lock()
 _user_card_locks: dict[str, threading.Lock] = {}
 
 
-def _get_card_lock_for_user(user_id: str) -> threading.Lock:
+@contextmanager
+def _get_card_lock_for_user(user_id: str, db: Optional[Session] = None):
+    """Lock on user record for cross-worker and multi-thread safety.
+
+    Combines:
+    1. In-process mutex for thread safety (essential for SQLite test environments);
+    2. PostgreSQL row-level locking (with_for_update) for cross-worker Uvicorn processes.
+    """
     with _card_locks_guard:
         if len(_user_card_locks) > 5000:
             unlocked = [k for k, v in _user_card_locks.items() if not v.locked()]
@@ -41,7 +49,11 @@ def _get_card_lock_for_user(user_id: str) -> threading.Lock:
         if lock is None:
             lock = threading.Lock()
             _user_card_locks[user_id] = lock
-        return lock
+
+    with lock:
+        if db is not None:
+            db.query(models.User).filter(models.User.id == user_id).populate_existing().with_for_update().first()
+        yield
 
 
 
@@ -63,11 +75,10 @@ def add_payment_card(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ):
-    user_lock = _get_card_lock_for_user(str(current_user.id))
-    with user_lock:
+    with _get_card_lock_for_user(str(current_user.id), db=db):
         db.expire_all()
         user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid]
-        db.query(models.User).filter(models.User.id == current_user.id).populate_existing().with_for_update().first()
+        user = db.query(models.User).filter(models.User.id == current_user.id).populate_existing().with_for_update().first()
 
         duplicate_card = (
             db.query(PaymentCard)
@@ -109,9 +120,9 @@ def add_payment_card(
             isActive=card_in.isActive,
         )
         db.add(card)
-        if not current_user.bankCardMask:
-            current_user.bankCardMask = f"**** **** **** {card_in.last4}"
-            db.add(current_user)
+        if user and not user.bankCardMask:
+            user.bankCardMask = f"**** **** **** {card_in.last4}"
+            db.add(user)
         try:
             db.commit()
         except IntegrityError:
