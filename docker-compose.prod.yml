@@ -143,6 +143,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    volumes:
+      - ./backend/uploads:/app/uploads
     logging: *default-logging
 
   celery_worker:
@@ -222,6 +224,8 @@ services:
     volumes:
       - ./backups:/app/backups
       - ./backend/scripts/backup_bot.py:/app/backup_bot.py:ro
+      - ./backend/uploads:/app/uploads:ro
+      - ./backend/.env:/app/backend/.env:ro
     environment:
       - TZ=Asia/Tashkent
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
@@ -237,6 +241,7 @@ services:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
       - AWS_REGION=${AWS_REGION:-auto}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-baito-bucket}
       - S3_BUCKET_PATH=s3://${BACKUP_BUCKET_NAME:-baito-backups}/
     logging: *default-logging
 
