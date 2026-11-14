@@ -7,7 +7,7 @@ import { getJobBannerImage } from '../employer/EmployerJobCard';
 import {
   Search, Trash2, Building2, XCircle, Briefcase,
   CheckCircle, Clock, AlertTriangle, LayoutGrid, Table, Eye,
-  Copy, Check
+  Copy, Check, X
 } from 'lucide-react';
 import { RejectJobModal } from './RejectJobModal';
 import { AdminJobsAutoDeleteBanner } from './AdminJobsAutoDeleteBanner';
@@ -68,7 +68,7 @@ const CompanyAvatar: React.FC<{ url?: string; name: string; title: string; size?
 interface AdminJobGridCardProps {
   job: AdminJob;
   language: 'uz' | 'ru' | 'en';
-  a: Record<string, string>;
+  a: Record<string, any>;
   copiedId: string | null;
   onCopyId: (e: React.MouseEvent, id: string) => void;
   onOpen: (job: AdminJob) => void;

@@ -191,7 +191,6 @@ def get_employer_applications(
         job = job_map.get(app.jobId)
         # Workers and employers must not see each other's direct phone numbers.
         # Direct phone numbers are withheld across all states; communication is kept through platform.
-        contact_unlocked = False
         result.append({
             "id": app.id,
             "jobId": app.jobId,

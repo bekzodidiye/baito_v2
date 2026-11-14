@@ -325,9 +325,9 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                   </span>
                 </div>
 
-                {(job.hiredWorkers || []).length > 0 ? (
+                {(activeJob.hiredWorkers || []).length > 0 ? (
                   <div className="space-y-2.5">
-                    {job.hiredWorkers!.map((worker) => (
+                    {activeJob.hiredWorkers!.map((worker) => (
                       <div
                         key={worker.id}
                         className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200/80 rounded-xl hover:bg-slate-100/70 transition-colors"

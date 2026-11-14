@@ -190,6 +190,18 @@ g:focus,
   z-index: 99999 !important;
 }
 
+/* Ensure Leaflet containers fill their parent elements completely and avoid partial gray rendering */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Ensure Leaflet tile images are not constrained by Tailwind preflight rules */
+.leaflet-container .leaflet-tile {
+  max-width: none !important;
+  max-height: none !important;
+}
+
 @keyframes shimmer {
   100% {
     transform: translateX(100%);

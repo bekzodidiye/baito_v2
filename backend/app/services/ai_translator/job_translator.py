@@ -7,7 +7,7 @@ from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 
 from .gemini_client import GeminiClient
-from .prompts import build_job_translation_prompt
+from .agent import JobTranslationAgent, get_translation_agent
 
 logger = logging.getLogger("ai_translator.job_translator")
 
@@ -95,10 +95,6 @@ def _detect_source_language(text: str) -> str:
     if re.search(r'[\u0400-\u04FF]', text):
         return "ru"
     return "uz"
-
-
-from .agent import JobTranslationAgent, get_translation_agent
-
 
 def translate_job_content(
     title: str,

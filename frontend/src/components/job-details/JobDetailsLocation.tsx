@@ -99,13 +99,47 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
 
       leafletMapRef.current = map;
 
-      // Invalidate size fast
-      const timer = setTimeout(() => {
-        map.invalidateSize();
-      }, 50);
+      // Progressive invalidateSize triggers during parent layout and transition animations
+      map.invalidateSize({ pan: false });
+      const t1 = setTimeout(() => map.invalidateSize({ pan: false }), 60);
+      const t2 = setTimeout(() => map.invalidateSize({ pan: false }), 150);
+      const t3 = setTimeout(() => {
+        map.invalidateSize({ pan: false });
+        map.setView([coords.lat, coords.lng], 16, { animate: false });
+      }, 350);
+      const t4 = setTimeout(() => {
+        map.invalidateSize({ pan: false });
+        map.setView([coords.lat, coords.lng], 16, { animate: false });
+      }, 600);
+
+      let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+      const handleResize = () => {
+        if (resizeTimeout) clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          if (leafletMapRef.current) {
+            leafletMapRef.current.invalidateSize({ pan: false });
+          }
+        }, 50);
+      };
+
+      let resizeObserver: ResizeObserver | null = null;
+      if (typeof ResizeObserver !== 'undefined' && mapContainerRef.current) {
+        resizeObserver = new ResizeObserver(() => {
+          handleResize();
+        });
+        resizeObserver.observe(mapContainerRef.current);
+      }
+
+      window.addEventListener('resize', handleResize);
 
       return () => {
-        clearTimeout(timer);
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+        clearTimeout(t4);
+        if (resizeTimeout) clearTimeout(resizeTimeout);
+        window.removeEventListener('resize', handleResize);
+        if (resizeObserver) resizeObserver.disconnect();
         map.remove();
         leafletMapRef.current = null;
       };

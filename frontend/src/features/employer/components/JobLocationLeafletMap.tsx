@@ -63,7 +63,42 @@ export const JobLocationLeafletMap: React.FC<JobLocationLeafletMapProps> = ({
     leafletMapRef.current = map;
     markerRef.current = marker;
 
+    // Progressive invalidations to ensure full canvas rendering inside multistep wizard
+    map.invalidateSize({ pan: false });
+    const t1 = setTimeout(() => map.invalidateSize({ pan: false }), 60);
+    const t2 = setTimeout(() => map.invalidateSize({ pan: false }), 150);
+    const t3 = setTimeout(() => {
+      map.invalidateSize({ pan: false });
+      map.setView([lat, lon], 16, { animate: false });
+    }, 400);
+
+    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+    const handleResize = () => {
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (leafletMapRef.current) {
+          leafletMapRef.current.invalidateSize({ pan: false });
+        }
+      }, 50);
+    };
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && mapRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        handleResize();
+      });
+      resizeObserver.observe(mapRef.current);
+    }
+
+    window.addEventListener('resize', handleResize);
+
     return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      window.removeEventListener('resize', handleResize);
+      if (resizeObserver) resizeObserver.disconnect();
       map.remove();
       leafletMapRef.current = null;
     };

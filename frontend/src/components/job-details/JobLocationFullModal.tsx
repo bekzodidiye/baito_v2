@@ -42,12 +42,30 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
 
-    let timer: NodeJS.Timeout;
+    let resizeObserver: ResizeObserver | null = null;
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    const handleResize = () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (leafletMapRef.current) {
+          leafletMapRef.current.invalidateSize({ pan: false });
+        }
+      }, 50);
+    };
+
     const initTimer = setTimeout(() => {
-      if (!mapContainerRef.current) return;
+      const container = mapContainerRef.current;
+      if (!container) return;
+
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
+        leafletMapRef.current = null;
+      }
 
       try {
-        const map = L.map(mapContainerRef.current, {
+        const map = L.map(container, {
           center: [coords.lat, coords.lng],
           zoom: 16,
           zoomControl: false,
@@ -84,10 +102,29 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
 
         leafletMapRef.current = map;
 
-        // Invalidate size immediately
-        timer = setTimeout(() => {
-          map.invalidateSize();
-        }, 120);
+        // Progressive invalidateSize triggers during modal entrance & spring animation
+        map.invalidateSize({ pan: false });
+        timeouts.push(setTimeout(() => map.invalidateSize({ pan: false }), 60));
+        timeouts.push(setTimeout(() => map.invalidateSize({ pan: false }), 150));
+        timeouts.push(setTimeout(() => map.invalidateSize({ pan: false }), 300));
+        timeouts.push(setTimeout(() => {
+          map.invalidateSize({ pan: false });
+          map.setView([coords.lat, coords.lng], 16, { animate: false });
+        }, 500));
+        timeouts.push(setTimeout(() => {
+          map.invalidateSize({ pan: false });
+          map.setView([coords.lat, coords.lng], 16, { animate: false });
+        }, 800));
+
+        // ResizeObserver guarantees map adjusts whenever the container resizes
+        if (typeof ResizeObserver !== 'undefined' && container) {
+          resizeObserver = new ResizeObserver(() => {
+            handleResize();
+          });
+          resizeObserver.observe(container);
+        }
+
+        window.addEventListener('resize', handleResize);
       } catch {
         // Fallback gracefully
       }
@@ -95,7 +132,10 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
 
     return () => {
       clearTimeout(initTimer);
-      clearTimeout(timer);
+      if (resizeTimer) clearTimeout(resizeTimer);
+      timeouts.forEach(clearTimeout);
+      window.removeEventListener('resize', handleResize);
+      if (resizeObserver) resizeObserver.disconnect();
       if (leafletMapRef.current) {
         leafletMapRef.current.remove();
         leafletMapRef.current = null;
@@ -106,7 +146,10 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
   const handleZoomIn = () => leafletMapRef.current?.zoomIn();
   const handleZoomOut = () => leafletMapRef.current?.zoomOut();
   const handleRecenter = () => {
-    leafletMapRef.current?.setView([coords.lat, coords.lng], 16, { animate: true });
+    if (leafletMapRef.current) {
+      leafletMapRef.current.invalidateSize({ pan: false });
+      leafletMapRef.current.setView([coords.lat, coords.lng], 16, { animate: true });
+    }
   };
 
   const handleExternalNav = () => {
@@ -139,6 +182,12 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 16 }}
           transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+          onAnimationComplete={() => {
+            if (leafletMapRef.current) {
+              leafletMapRef.current.invalidateSize({ pan: false });
+              leafletMapRef.current.setView([coords.lat, coords.lng], 16, { animate: false });
+            }
+          }}
           className="relative bg-white w-full sm:max-w-4xl h-[90vh] sm:h-[82vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden z-10 pointer-events-auto border border-slate-200/90"
         >
           {/* Modal Header */}
@@ -177,8 +226,8 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
           </div>
 
           {/* Map Canvas */}
-          <div className="relative flex-1 w-full h-full bg-slate-100 overflow-hidden">
-            <div ref={mapContainerRef} className="w-full h-full" />
+          <div className="relative flex-1 w-full min-h-0 bg-slate-100 overflow-hidden">
+            <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
 
             {/* Map Floating Zoom & Recenter Controls */}
             <div className="absolute top-4 right-4 z-[500] flex flex-col gap-2">

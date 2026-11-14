@@ -149,8 +149,6 @@ def read_jobs(
 
         from app.schemas.job import HiredWorkerInfo
 
-        employer_job_ids = {j.id for j in jobs if j.employerId in user_ids}
-
         for app in hired_apps:
             user = user_map.get(app.workerId)
             if not user:
