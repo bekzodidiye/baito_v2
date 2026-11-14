@@ -55,10 +55,10 @@ export const openChatSocket = (
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        // The server also sends {error: ...} frames for rate limits and
-        // malformed payloads; those are not messages.
-        if (data && typeof data === 'object' && data.id && data.text) {
-          onMessage(data as SocketMessage);
+        if (data && typeof data === 'object') {
+          if ((data.type === 'delete' && data.messageId) || (data.id && data.text !== undefined)) {
+            onMessage(data as SocketMessage);
+          }
         }
       } catch {
         // A frame we cannot read is not worth tearing the connection down for.

@@ -63,8 +63,12 @@ const statusLabels: Record<string, { label: string; bg: string; text: string; do
 const appStatusLabels: Record<string, { label: string; color: string }> = {
   applied: { label: 'Ariza yubordi', color: 'text-brand-primary bg-brand-primary/10 border-brand-primary/20' },
   hired: { label: 'Qabul qilindi', color: 'text-emerald-700 bg-emerald-50 border-emerald-200/60' },
+  confirmed: { label: 'Tasdiqlandi', color: 'text-emerald-700 bg-emerald-50 border-emerald-200/60' },
+  start_requested: { label: 'Boshlash so\'raldi', color: 'text-sky-700 bg-sky-50 border-sky-200/60' },
+  in_progress: { label: 'Ish jarayonida', color: 'text-indigo-700 bg-indigo-50 border-indigo-200/60' },
   completed: { label: 'Yakunlandi', color: 'text-slate-700 bg-slate-100 border-slate-200/60' },
   rejected: { label: 'Rad etildi', color: 'text-rose-700 bg-rose-50 border-rose-200/60' },
+  withdrawn: { label: 'Qaytarib olingan', color: 'text-slate-600 bg-slate-50 border-slate-200/60' },
 };
 
 const txnTypeLabels: Record<string, string> = {
@@ -713,7 +717,8 @@ const ApplicationsTab: React.FC<{ applications: AdminJobApplication[] }> = ({ ap
     ) : (
       <div className="space-y-3.5">
         {applications.map(app => {
-          const st = appStatusLabels[app.status] || { label: app.status, color: 'text-slate-600 bg-slate-50 border-slate-200' };
+          const rawStatus = (app.status || '').toLowerCase();
+          const st = appStatusLabels[rawStatus] || { label: rawStatus || 'Kutilmoqda', color: 'text-slate-600 bg-slate-50 border-slate-200' };
           return (
             <div key={app.id} className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow">
               <div className="flex items-start justify-between gap-3 mb-3">
