@@ -10,7 +10,7 @@ interface EmployerJobCardProps {
   job: Job;
   language: 'uz' | 'ru' | 'en';
   onSelect: (job: Job) => void;
-  onComplete: (jobId: string) => void;
+  onComplete?: (jobId: string) => void;
   onDelete: (jobId: string) => void;
   onConfirmStart?: (jobId: string) => void;
   /* Settlement. Optional so the card still renders on screens that have no

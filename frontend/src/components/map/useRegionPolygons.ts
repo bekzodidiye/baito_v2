@@ -18,6 +18,7 @@ interface UseRegionPolygonsProps {
   filterLocation: string;
   setFilterLocation: (loc: string) => void;
   setIsPanelExpanded: (expanded: boolean) => void;
+  isPanelExpanded?: boolean;
   geoJsonData: any;
   districtsGeoJsonData: any;
   zoomLevel: number;
@@ -34,6 +35,7 @@ export const useRegionPolygons = ({
   filterLocation,
   setFilterLocation,
   setIsPanelExpanded,
+  isPanelExpanded,
   geoJsonData,
   districtsGeoJsonData,
   zoomLevel,
@@ -50,10 +52,12 @@ export const useRegionPolygons = ({
   const regionCentersRef = useRef(new Map<string, [number, number]>());
   const setFilterLocationRef = useRef(setFilterLocation);
   const setIsPanelExpandedRef = useRef(setIsPanelExpanded);
+  const isPanelExpandedRef = useRef(isPanelExpanded ?? false);
   
   useEffect(() => { filterLocRef.current = filterLocation; }, [filterLocation]);
   useEffect(() => { setFilterLocationRef.current = setFilterLocation; }, [setFilterLocation]);
   useEffect(() => { setIsPanelExpandedRef.current = setIsPanelExpanded; }, [setIsPanelExpanded]);
+  useEffect(() => { isPanelExpandedRef.current = isPanelExpanded ?? false; }, [isPanelExpanded]);
 
   const getJobCountForLocation = (tumanName: string) => {
     if (!jobs || jobs.length === 0) return 0;
@@ -101,7 +105,8 @@ export const useRegionPolygons = ({
     lastFittedLocationRef,
     filterLocRef,
     districtsGeoJsonData,
-    findDistrictFeature
+    findDistrictFeature,
+    isPanelExpandedRef
   });
 
   useRegionPolygonStyleUpdate({

@@ -112,6 +112,7 @@ export function useMapViewScreen() {
     filterLocation,
     setFilterLocation,
     setIsPanelExpanded,
+    isPanelExpanded,
     geoJsonData,
     districtsGeoJsonData,
     zoomLevel,

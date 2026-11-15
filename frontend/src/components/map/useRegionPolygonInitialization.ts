@@ -16,6 +16,7 @@ interface UseRegionPolygonInitializationProps {
   filterLocRef: React.MutableRefObject<string>;
   districtsGeoJsonData: any;
   findDistrictFeature: (locationName: string) => any;
+  isPanelExpandedRef?: React.MutableRefObject<boolean>;
 }
 
 export const useRegionPolygonInitialization = ({
@@ -29,7 +30,8 @@ export const useRegionPolygonInitialization = ({
   lastFittedLocationRef,
   filterLocRef,
   districtsGeoJsonData,
-  findDistrictFeature
+  findDistrictFeature,
+  isPanelExpandedRef
 }: UseRegionPolygonInitializationProps) => {
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -108,7 +110,7 @@ export const useRegionPolygonInitialization = ({
       // Initial framing: ensure entire Uzbekistan is cleanly centered in the visible map area
       if (geoJsonLayer.getBounds().isValid() && filterLocRef.current === 'Barchasi') {
         const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
-        const isExpanded = isPanelExpandedRef.current && isDesktop;
+        const isExpanded = Boolean(isPanelExpandedRef?.current && isDesktop);
         map.fitBounds(geoJsonLayer.getBounds(), {
           paddingTopLeft: [20, 20],
           paddingBottomRight: [isExpanded ? 640 : 20, 20],
