@@ -54,7 +54,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
     <>
     <div
       onClick={() => handleJobSelect(job)}
-      className="group perspective-1000 snap-center shrink-0 min-w-[calc(100vw-64px)] max-w-[calc(100vw-64px)] sm:min-w-[250px] sm:max-w-[250px] h-[172px] relative cursor-pointer"
+      className="group perspective-1000 snap-center shrink-0 min-w-[calc(100vw-64px)] max-w-[calc(100vw-64px)] sm:min-w-[250px] sm:max-w-[250px] md:min-w-0 md:max-w-none md:w-full md:snap-align-none h-[172px] relative cursor-pointer"
     >
       <div className="w-full h-full preserve-3d transition-transform duration-500 group-hover:rotate-y-180 relative">
         

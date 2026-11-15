@@ -9,6 +9,7 @@ import { useMapViewScreen } from '../../hooks/useMapViewScreen';
 import { MapBreadcrumbs } from './MapBreadcrumbs';
 import { FloatingSearchBar } from './FloatingSearchBar';
 import { JobSummaryCard } from './JobSummaryCard';
+import { MapActionButtons } from './MapActionButtons';
 import { JobDetailModal } from './JobDetailModal';
 import { RegionSelector } from '../RegionSelector';
 import { MapLoadingSkeleton } from './MapLoadingSkeleton';
@@ -95,24 +96,37 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
       )}
 
       {!showRegionSelector && (
-        <JobSummaryCard 
-          isPanelExpanded={isPanelExpanded}
-          setIsPanelExpanded={setIsPanelExpanded}
-          activeCluster={activeCluster}
-          displayedJobs={getDisplayedJobs()}
-          selectedJob={selectedJob}
-          handleJobSelect={handleJobSelect}
-          toggleBookmark={toggleBookmark}
-          userLocation={userLocation}
-          filterLocation={filterLocation}
-          isRefreshing={isRefreshing}
-          handleRefresh={handleRefresh}
-          handleResetMap={handleLocationAction}
-          onZoomIn={() => mapInstanceRef.current?.zoomIn()}
-          onZoomOut={() => mapInstanceRef.current?.zoomOut()}
-          mapType={mapType}
-          setMapType={setMapType}
-        />
+        <>
+          <MapActionButtons 
+            isRefreshing={isRefreshing}
+            handleRefresh={handleRefresh}
+            handleResetMap={handleLocationAction}
+            onZoomIn={() => mapInstanceRef.current?.zoomIn()}
+            onZoomOut={() => mapInstanceRef.current?.zoomOut()}
+            mapType={mapType}
+            setMapType={setMapType}
+            isPanelExpanded={isPanelExpanded}
+          />
+
+          <JobSummaryCard 
+            isPanelExpanded={isPanelExpanded}
+            setIsPanelExpanded={setIsPanelExpanded}
+            activeCluster={activeCluster}
+            displayedJobs={getDisplayedJobs()}
+            selectedJob={selectedJob}
+            handleJobSelect={handleJobSelect}
+            toggleBookmark={toggleBookmark}
+            userLocation={userLocation}
+            filterLocation={filterLocation}
+            isRefreshing={isRefreshing}
+            handleRefresh={handleRefresh}
+            handleResetMap={handleLocationAction}
+            onZoomIn={() => mapInstanceRef.current?.zoomIn()}
+            onZoomOut={() => mapInstanceRef.current?.zoomOut()}
+            mapType={mapType}
+            setMapType={setMapType}
+          />
+        </>
       )}
 
       {/* Geolocation Toast Notice */}
