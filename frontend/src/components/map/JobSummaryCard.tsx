@@ -92,7 +92,7 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
           fixed md:absolute bottom-0 left-0 w-full
           ${isPanelExpanded ? 'translate-y-0' : 'translate-y-[calc(100%-64px)]'}
           md:translate-y-0 md:bottom-4 md:top-4 md:left-auto md:right-4
-          md:w-[380px] lg:w-[420px]
+          sm:w-[540px] md:w-[600px] lg:w-[640px]
           ${isPanelExpanded 
             ? 'md:translate-x-0 md:opacity-100 md:pointer-events-auto' 
             : 'md:translate-x-[calc(100%+2rem)] md:opacity-0 md:pointer-events-none'
@@ -177,8 +177,8 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                 <JobCardSkeleton count={3} layout="horizontal" />
               </div>
               {/* Desktop Skeleton */}
-              <div className="hidden md:flex flex-col flex-1 min-h-0 overflow-y-auto p-4 gap-3.5 no-scrollbar">
-                <JobCardSkeleton count={4} layout="vertical" />
+              <div className="hidden md:block flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar">
+                <JobCardSkeleton count={6} layout="vertical" />
               </div>
             </>
           ) : displayedJobs.length === 0 ? (
@@ -232,8 +232,8 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                 </div>
               </div>
 
-              {/* Desktop: Vertical scrollable Job Cards column */}
-              <div className="hidden md:flex flex-col flex-1 min-h-0 overflow-y-auto p-4 gap-3.5 no-scrollbar scroll-smooth">
+              {/* Desktop: 2-column scrollable Job Cards grid */}
+              <div className="hidden md:grid grid-cols-2 flex-1 min-h-0 overflow-y-auto p-4 gap-3 no-scrollbar scroll-smooth content-start">
                 {displayedJobs.map(job => (
                   <JobCardItem
                     key={job.id}

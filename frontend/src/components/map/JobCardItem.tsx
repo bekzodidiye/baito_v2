@@ -54,13 +54,13 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
     <>
     <div
       onClick={() => handleJobSelect(job)}
-      className="group perspective-1000 snap-center shrink-0 min-w-[calc(100vw-64px)] max-w-[calc(100vw-64px)] sm:min-w-[250px] sm:max-w-[250px] md:min-w-0 md:max-w-none md:w-full md:snap-align-none h-[172px] relative cursor-pointer"
+      className="group perspective-1000 snap-center shrink-0 min-w-[calc(100vw-64px)] max-w-[calc(100vw-64px)] sm:min-w-[250px] sm:max-w-[250px] md:min-w-0 md:max-w-none md:w-full md:snap-align-none h-[162px] relative cursor-pointer"
     >
       <div className="w-full h-full preserve-3d transition-transform duration-500 group-hover:rotate-y-180 relative">
         
         {/* Front Side */}
         <div
-          className={`absolute inset-0 w-full h-full backface-hidden p-3 rounded-xl flex flex-col gap-1 border ${
+          className={`absolute inset-0 w-full h-full backface-hidden p-2.5 sm:p-3 rounded-xl flex flex-col justify-between border ${
             selectedJob?.id === job.id
               ? 'bg-white border-brand-primary/30 ring-1 ring-brand-primary/20 shadow-[0_20px_25px_-5px_rgba(37,99,235,0.12),_0_10px_10px_-5px_rgba(37,99,235,0.06),_inset_0_1.5px_0_rgba(255,255,255,1),_inset_0_-2px_0_rgba(37,99,235,0.05)]'
               : 'bg-white border-slate-100 shadow-[0_10px_20px_-5px_rgba(0,0,0,0.08),_0_4px_6px_-2px_rgba(0,0,0,0.03),_inset_0_1.5px_0_rgba(255,255,255,0.9),_inset_0_-2px_0_rgba(0,0,0,0.03)]'
@@ -71,82 +71,83 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
               e.stopPropagation();
               void shareJob(job, language);
             }}
-            className="absolute top-3 right-3 w-11 h-11 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-brand-primary transition-all duration-200 cursor-pointer z-10"
+            className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-brand-primary transition-all duration-200 cursor-pointer z-10"
             title={t.share}
+            aria-label={t.share}
           >
-            <Share2 size={13} />
+            <Share2 size={12} />
           </button>
           
-          <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-lg bg-slate-50 shadow-xs flex items-center justify-center overflow-hidden shrink-0 border border-slate-100/90">
-              {job.imageUrl || job.logoUrl ? (
-                <img src={job.imageUrl || job.logoUrl} alt={job.company} className="w-full h-full object-cover"  onError={(e) => {
-        const target = e.currentTarget;
-        const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
-        if (target.src !== fallback) {
-          target.src = fallback;
-        }
-      }} />
-              ) : (
-                <Briefcase size={14} className="text-slate-400" />
+          <div>
+            <div className="flex gap-2 items-start">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-50 shadow-xs flex items-center justify-center overflow-hidden shrink-0 border border-slate-100/90 mt-0.5">
+                {job.imageUrl || job.logoUrl ? (
+                  <img src={job.imageUrl || job.logoUrl} alt={job.company} className="w-full h-full object-cover" onError={(e) => {
+                    const target = e.currentTarget;
+                    const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
+                    if (target.src !== fallback) {
+                      target.src = fallback;
+                    }
+                  }} />
+                ) : (
+                  <Briefcase size={13} className="text-slate-400" />
+                )}
+              </div>
+              <div className="min-w-0 pr-6 flex-1">
+                <h3 className="text-xs font-bold text-slate-800 leading-tight truncate">
+                  {localizedTitle}
+                </h3>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <p className="text-[10px] text-slate-400 font-medium truncate">
+                    {job.company}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-1 flex items-center justify-between">
+              <p className="font-sans font-bold text-slate-900 text-[13px] sm:text-[14px] leading-tight truncate">
+                {formatSalary(job.salary, language)}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1 mt-1">
+              <span className="px-1.5 py-0.5 bg-blue-50/80 text-brand-primary text-[9px] font-extrabold rounded flex items-center gap-1">
+                <Users size={9} className="text-brand-primary" /> {(job.hiredCount || 0)}/{(job.vacancies || (job.neededWorkers ? parseInt(job.neededWorkers) : 1))}
+              </span>
+              {userLocation && (
+                <span className="px-1.5 py-0.5 bg-indigo-50/70 text-brand-primary text-[9px] font-semibold rounded flex items-center gap-1">
+                  <Navigation size={7.5} className="rotate-45 fill-brand-primary/20" />
+                  {calculateDistance(userLocation.lat, userLocation.lng, jobLatLng.lat, jobLatLng.lng).toFixed(1)} km
+                </span>
               )}
             </div>
-            <div className="min-w-0 pr-6 flex-1">
-              <h3 className="text-xs font-bold text-slate-800 leading-tight truncate">
-                {localizedTitle}
-              </h3>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <p className="text-[11px] text-slate-400 font-medium truncate">
-                  {job.company}
-                </p>
-                <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0"></span>
-                <p className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
-                  {displayDuration}
-                </p>
+          </div>
+
+          <div>
+            <div className="h-[1px] bg-slate-100 w-full mb-1" />
+
+            <div className="flex justify-between items-end gap-1">
+              <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium truncate">
+                  <Clock size={10} className="text-slate-400 shrink-0" />
+                  <span className="truncate">{displayTime}</span>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium truncate">
+                  <MapPin size={10} className="text-slate-400 shrink-0" />
+                  <span className="truncate">{getJobLocation(job, language)}</span>
+                </div>
               </div>
-            </div>
-          </div>
-
-          <div className="mt-0.5 flex flex-col">
-            <p className="font-sans font-bold text-slate-900 text-[14px] leading-tight">
-              {formatSalary(job.salary, language)}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-1 mt-1">
-            <span className="px-2 py-0.5 bg-blue-50/80 text-brand-primary text-[10px] font-extrabold rounded flex items-center gap-1">
-              <Users size={10} className="text-brand-primary" /> {(job.hiredCount || 0)}/{(job.vacancies || (job.neededWorkers ? parseInt(job.neededWorkers) : 1))}
-            </span>
-            {userLocation && (
-              <span className="px-2 py-0.5 bg-indigo-50/70 text-brand-primary text-[10px] font-semibold rounded flex items-center gap-1">
-                <Navigation size={8} className="rotate-45 fill-brand-primary/20" />
-                {calculateDistance(userLocation.lat, userLocation.lng, jobLatLng.lat, jobLatLng.lng).toFixed(1)} km
+              <span className="text-[9.5px] font-bold text-brand-primary shrink-0 self-end">
+                {displayDuration}
               </span>
-            )}
-          </div>
-
-          <div className="h-[1px] bg-slate-100 w-full my-1.5" />
-
-          <div className="flex justify-between items-end">
-            <div className="flex flex-col gap-1 min-w-0 flex-1">
-              <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium truncate">
-                <Clock size={11} className="text-slate-400 shrink-0" />
-                <span className="truncate">{displayTime}</span>
-              </div>
-              <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium truncate">
-                <MapPin size={11} className="text-slate-400 shrink-0" />
-                <span className="truncate">{getJobLocation(job, language)}</span>
-              </div>
             </div>
-            <span className="text-[11px] font-bold text-brand-primary shrink-0 self-end mb-0.5">
-              {displayDuration}
-            </span>
           </div>
         </div>
 
         {/* Back Side */}
         <div
-          className={`absolute inset-0 w-full h-full backface-hidden rotate-y-180 p-3 rounded-xl flex flex-col justify-between border transition-all duration-300 ${
+          className={`absolute inset-0 w-full h-full backface-hidden rotate-y-180 p-2.5 sm:p-3 rounded-xl flex flex-col justify-between border transition-all duration-300 ${
             selectedJob?.id === job.id
               ? 'bg-slate-50 border-brand-primary/40 ring-1 ring-brand-primary/25 shadow-[0_12px_24px_-4px_rgba(37,99,235,0.08),_inset_0_1.5px_0_rgba(255,255,255,1)]'
               : 'bg-slate-50/70 border-slate-200/90 shadow-[0_10px_20px_-6px_rgba(0,0,0,0.06),_inset_0_1.5px_0_rgba(255,255,255,0.95)]'
@@ -154,21 +155,20 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
         >
           {/* Title / Header */}
           <div className="flex items-center justify-between gap-1">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <Info size={11} className="text-brand-primary shrink-0" />
-              <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+            <div className="flex items-center gap-1 min-w-0">
+              <Info size={10} className="text-brand-primary shrink-0" />
+              <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider truncate">
                 {language === 'uz' ? "Ish tavsifi" : language === 'ru' ? "Описание" : "Description"}
               </span>
             </div>
-            <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-100/40 text-[8px] font-bold rounded shrink-0">
+            <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-100/40 text-[7.5px] font-bold rounded shrink-0">
               {language === 'uz' ? "Kafolatlangan" : language === 'ru' ? "Проверено" : "Verified"}
             </span>
           </div>
 
           {/* Dynamic job detailed points */}
-          <div className="flex-1 my-1.5 flex flex-col justify-center min-h-0">
-            {/* Main description quote */}
-            <p className="text-[10.5px] leading-relaxed text-slate-600 font-medium line-clamp-3 overflow-hidden whitespace-pre-line">
+          <div className="flex-1 my-1 flex flex-col justify-center min-h-0">
+            <p className="text-[10px] leading-tight text-slate-600 font-medium line-clamp-3 overflow-hidden whitespace-pre-line">
               {localizedDescription || (
                 language === 'uz' ? "Kunlik ish faoliyati, barcha zaruriy jihozlar va tushlik ish beruvchi tomonidan ta'minlanadi." : language === 'ru' ? "Ежедневная работа, всё необходимое оборудование и обед предоставляются работодателем." : "Daily job, all necessary equipment and lunch are provided by the employer."
               )}
@@ -182,7 +182,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
               if (applied) return;
               setConfirmingApply(true);
             }}
-            className={`w-full min-h-[44px] py-2.5 rounded-lg text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 shrink-0 border-none ${
+            className={`w-full min-h-[38px] py-2 rounded-lg text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 shrink-0 border-none ${
               applied
                 ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-default'
                 : 'bg-brand-primary hover:bg-brand-primary/95 text-white shadow-[0_4px_10px_rgba(37,99,235,0.18)] active:scale-[0.98]'
