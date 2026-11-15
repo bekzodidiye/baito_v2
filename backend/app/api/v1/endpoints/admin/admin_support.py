@@ -125,7 +125,7 @@ def reply_to_ticket(
         userId=ticket.userId,
         title="Murojaatingizga javob",
         message=f"'{ticket.subject}' bo'yicha qo'llab-quvvatlash javob berdi.",
-        type="system",
+        type="support",
     ))
 
     record_admin_action(

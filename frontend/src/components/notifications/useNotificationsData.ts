@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchNotificationsApi, markAllNotificationsReadApi } from '../../api/queries';
+import { fetchNotificationsApi, markAllNotificationsReadApi, markNotificationReadApi } from '../../api/queries';
 import { showToast } from '../../utils/toast';
 import { translateNotification } from '../../utils/notificationTranslator';
 import { NotificationItemData } from './NotificationItem';
@@ -15,7 +15,7 @@ export const useNotificationsData = (
   const language = useAuthStore(s => s.language);
   const queryClient = useQueryClient();
 
-  const { data: apiNotifs = [], refetch } = useQuery({
+  const { data: apiNotifs = [] } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
       const res = await fetchNotificationsApi();
@@ -41,10 +41,26 @@ export const useNotificationsData = (
       timeRu: '10:00',
       timeEn: '10:00',
       isUnread: !n.isRead,
-      type: notificationKind(n.type),
+      type: notificationKind(n.type, n.title, n.message),
       group: 'today',
+      relatedJobId: n.relatedJobId,
+      rawType: n.type,
     }));
   }, [apiNotifs]);
+
+  const handleMarkOneRead = async (id: string) => {
+    try {
+      await markNotificationReadApi(id);
+      queryClient.setQueryData(['notifications'], (old: any) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((item: any) => item.id === id ? { ...item, isRead: true } : item);
+      });
+      setUnreadNotificationsCount(Math.max(0, counts.unread - 1));
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    } catch (e) {
+      console.error('Could not mark notification as read', e);
+    }
+  };
 
   const handleMarkAllRead = async () => {
     // The counter used to be zeroed whether or not the request succeeded, and
@@ -94,6 +110,7 @@ export const useNotificationsData = (
     notifications,
     filteredNotifications,
     handleMarkAllRead,
+    handleMarkOneRead,
     counts,
     unreadCount: counts.unread
   };

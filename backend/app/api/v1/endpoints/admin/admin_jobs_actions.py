@@ -105,7 +105,7 @@ def change_job_status(
                 userId=job.employerId,
                 title="E'loningiz tasdiqlandi",
                 message=f"'{job.title}' e'loningiz administrator tomonidan tasdiqlandi va faol holatga o'tkazildi.",
-                type="system",
+                type="job",
                 relatedJobId=job.id,
             ))
     elif payload.status in (JobStatus.CANCELLED, JobStatus.REJECTED):
@@ -137,7 +137,7 @@ def change_job_status(
                 userId=job.employerId,
                 title="E'loningiz rad etildi",
                 message=msg,
-                type="system",
+                type="job",
                 relatedJobId=job.id,
             ))
 
@@ -168,7 +168,7 @@ def approve_job(
         userId=job.employerId,
         title="E'loningiz tasdiqlandi",
         message=f"'{job.title}' e'loningiz administrator tomonidan tasdiqlandi va ishchilarga ko'rina boshladi.",
-        type="system",
+        type="job",
         relatedJobId=job.id,
     ))
     record_admin_action(
@@ -209,7 +209,7 @@ def reject_job(
         userId=job.employerId,
         title="E'loningiz rad etildi",
         message=msg,
-        type="system",
+        type="job",
         relatedJobId=job.id,
     ))
     record_admin_action(
@@ -347,7 +347,7 @@ def delete_job(
             userId=app.workerId,
             title="Ish e'loni bekor qilindi",
             message=f"'{job.title}' e'loni administrator tomonidan bekor qilindi.",
-            type="system",
+            type="job",
             relatedJobId=job.id,
         ))
 

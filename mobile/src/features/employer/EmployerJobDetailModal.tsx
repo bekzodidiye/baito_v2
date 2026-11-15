@@ -265,22 +265,38 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
                     {language === 'uz' ? 'Yopish' : 'Закрыть'}
                   </button>
                 </>
-              ) : job.status === 'in_progress' && onComplete ? (
-                <>
+              ) : job.status === 'in_progress' ? (
+                <div className="w-full flex flex-col gap-2.5">
+                  <div className="w-full py-3 px-4 bg-blue-50 text-blue-700 border border-blue-100 rounded-xl text-xs font-bold text-center">
+                    {language === 'uz'
+                      ? 'Ish jarayonda — smena xodim tomonidan yakunlanadi'
+                      : language === 'ru'
+                        ? 'Работа выполняется — смену завершает работник'
+                        : 'Work in progress — worker will complete the shift'}
+                  </div>
                   <button
                     onClick={onClose}
-                    className="w-1/3 py-4 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
+                    className="w-full py-4 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
                   >
                     {language === 'uz' ? 'Yopish' : 'Закрыть'}
                   </button>
+                </div>
+              ) : job.status === 'start_requested' ? (
+                <div className="w-full flex flex-col gap-2.5">
+                  <div className="w-full py-3 px-4 bg-amber-50 text-amber-700 border border-amber-200/80 rounded-xl text-xs font-bold text-center">
+                    {language === 'uz'
+                      ? 'Xodim ishni boshlashi kutilmoqda'
+                      : language === 'ru'
+                        ? 'Ожидается начало работы работником'
+                        : 'Waiting for worker to start'}
+                  </div>
                   <button
-                    onClick={() => { onComplete(job.id); onClose(); }}
-                    className="w-2/3 py-4 bg-brand-primary text-white font-black rounded-xl text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 cursor-pointer active:scale-[0.98] transition-all"
+                    onClick={onClose}
+                    className="w-full py-4 bg-slate-100 text-slate-700 font-bold rounded-xl text-[15px] cursor-pointer active:scale-[0.98] transition-all"
                   >
-                    {language === 'uz' ? 'Ishni yakunlash' : 'Завершить работу'}
-                    <ChevronRight size={20} />
+                    {language === 'uz' ? 'Yopish' : 'Закрыть'}
                   </button>
-                </>
+                </div>
               ) : (
                 <button
                   onClick={onClose}

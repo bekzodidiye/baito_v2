@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { ArrowLeft, CheckCheck, CircleDot } from 'lucide-react';
-import { NotificationItem } from './NotificationItem';
+import { NotificationItem, NotificationItemData } from './NotificationItem';
 import { notificationDestination } from './notificationKind';
 import { NotificationFilterPanel, NotificationCategory } from './NotificationFilterPanel';
 import { NotificationMobileChips } from './NotificationMobileChips';
 import { getNotificationTranslations } from './Notifications.data';
 import { useNotificationsData } from './useNotificationsData';
+import { NotificationDetailModal } from './NotificationDetailModal';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useUIStore } from "../../store/useUIStore";
 import { useAuthStore } from "../../store/useAuthStore";
@@ -13,13 +14,16 @@ import { useAuthStore } from "../../store/useAuthStore";
 export const NotificationsScreen: React.FC = () => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const language = useAuthStore(s => s.language);
-    const setUnreadNotificationsCount = useUIStore(s => s.setUnreadNotificationsCount);
+  const user = useAuthStore(s => s.userProfile);
+  const setUnreadNotificationsCount = useUIStore(s => s.setUnreadNotificationsCount);
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>('all');
+  const [selectedNotification, setSelectedNotification] = useState<NotificationItemData | null>(null);
 
   const {
     notifications,
     filteredNotifications,
     handleMarkAllRead,
+    handleMarkOneRead,
     counts,
     unreadCount
   } = useNotificationsData(activeCategory, setUnreadNotificationsCount);
@@ -29,15 +33,19 @@ export const NotificationsScreen: React.FC = () => {
   const handleNotificationClick = (id: string) => {
     const item = notifications.find(n => n.id === id);
     if (!item) return;
-    
-    // Every kind now has a destination. This used to list four types and do
-    // nothing for the rest — and since almost everything arrived typed
-    // 'system', "Tafsilotlarni ko'rish" did nothing at all.
-    const to = notificationDestination(item.type);
-    if (to !== 'notifications') setCurrentScreen(to as any);
+
+    if (item.isUnread) {
+      handleMarkOneRead(item.id);
+    }
+
+    const to = notificationDestination(item.type, user?.selectedRole, item.relatedJobId);
+    if (to !== 'notifications') {
+      setCurrentScreen(to as any);
+    } else {
+      setSelectedNotification(item);
+    }
   };
 
-  const user = useAuthStore(s => s.userProfile);
   const handleBack = () => {
     if (user?.selectedRole === 'employer') {
       setCurrentScreen('employer-dashboard');
@@ -161,6 +169,13 @@ export const NotificationsScreen: React.FC = () => {
           )}
         </div>
       </div>
+
+      <NotificationDetailModal
+        isOpen={!!selectedNotification}
+        onClose={() => setSelectedNotification(null)}
+        notification={selectedNotification}
+        language={language}
+      />
     </div>
   );
 };

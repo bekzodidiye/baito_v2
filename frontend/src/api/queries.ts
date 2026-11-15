@@ -188,6 +188,10 @@ export const markAllNotificationsReadApi = async () => {
   return await apiClient('/notifications/read-all', { method: 'POST' });
 };
 
+export const markNotificationReadApi = async (notificationId: string) => {
+  return await apiClient(`/notifications/${notificationId}/read`, { method: 'POST' });
+};
+
 export const fetchActiveSessionsApi = async () => {
   return await apiClient('/users/me/sessions');
 };

@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { Check, X, Star, Briefcase, MapPin, Clock, CheckCircle, Loader2 } from 'lucide-react';
+import { Check, X, Star, Briefcase, MapPin, Clock, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
-import { confirmStartJobApi } from '../../../api/queries';
 import { ConfirmModal } from '../../../components/common/ConfirmModal';
-import { showToast } from '../../../utils/toast';
 
 interface ApplicantCardProps {
   app: any;
@@ -24,11 +22,6 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
   // crowded list of candidates that is a lot of money to move on one stray
   // press, so it says whose shift and how much before it does anything.
   const [confirmingHire, setConfirmingHire] = useState(false);
-  // The same treatment for confirming a start. This button had none of it: one
-  // tap fired the request, a second tap fired another, and a rejection from the
-  // server surfaced only as an unhandled promise in the console.
-  const [confirmingStart, setConfirmingStart] = useState(false);
-  const [startingWork, setStartingWork] = useState(false);
 
   const wage = Number(app.wageAmount ?? 0);
   // The commission is the employer's, charged on top of the wage — the worker
@@ -70,30 +63,6 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
     },
   }[(language as 'uz' | 'ru' | 'en')] ?? {
     title: 'Yollashni tasdiqlang', message: '', confirm: 'Yollash', cancel: 'Bekor qilish',
-  };
-  
-  const handleConfirmStart = async () => {
-    setConfirmingStart(false);
-    if (startingWork) return;
-    setStartingWork(true);
-    try {
-      await confirmStartJobApi(app.jobId);
-      // Was window.location.reload(), which threw the whole page away and hid
-      // any failure behind it. The list re-reads itself instead.
-      updateApplicationStatus(app.id, 'hired');
-      showToast(language === 'ru' ? 'Работа начата' : language === 'en' ? 'Work started' : "Ish boshlandi", 'success');
-    } catch (e: any) {
-      // The server refuses a start on a job that is already finished or
-      // cancelled. That answer used to reach nobody: no catch, so it surfaced
-      // as an unhandled promise in the console and the button sat there
-      // inviting another press.
-      showToast(
-        e?.message || (language === 'ru' ? 'Не удалось начать работу' : language === 'en' ? 'Could not start the work' : "Ishni boshlab bo'lmadi"),
-        'error',
-      );
-    } finally {
-      setStartingWork(false);
-    }
   };
 
   return (
@@ -242,45 +211,26 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
       </div>
 
       {/* Action Buttons */}
-      {(app.status === 'start_requested' || app.status === 'applied')
-        && !['completed', 'cancelled', 'in_progress'].includes(app.jobStatus) && (
-        <div className="pt-1">
-          {app.status === 'start_requested' ? (
-            <button
-              type="button"
-              onClick={() => { if (!startingWork) setConfirmingStart(true); }}
-              disabled={startingWork}
-              className={`w-full py-2.5 px-4 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-2 ${
-                startingWork
-                  ? 'bg-amber-400 cursor-not-allowed opacity-80'
-                  : 'bg-amber-500 hover:bg-amber-600 active:scale-[0.98] cursor-pointer'
-              }`}
-            >
-              {startingWork ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} className="stroke-[2.5]" />}
-              <span>{language === 'uz' ? "Ishni boshlash" : language === 'ru' ? "Начать работу" : "Start the work"}</span>
-            </button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setConfirmingHire(true)}
-                className="flex-1 py-2.5 px-4 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl text-xs font-bold shadow-xs transition duration-150 active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Check size={15} className="stroke-[2.5]" />
-                <span>{language === 'uz' ? "Qabul qilish" : language === 'ru' ? "Одобрить" : "Approve"}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => updateApplicationStatus(app.id, 'rejected')}
-                aria-label={language === 'uz' ? "Rad etish" : language === 'ru' ? "Отклонить" : "Reject"}
-                title={language === 'uz' ? "Rad etish" : language === 'ru' ? "Отклонить" : "Reject"}
-                className="py-2.5 px-3.5 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-700 hover:text-rose-600 rounded-xl text-xs font-semibold transition duration-150 active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-              >
-                <X size={15} className="stroke-[2.5]" />
-                <span>{language === 'uz' ? "Rad etish" : language === 'ru' ? "Отклонить" : "Reject"}</span>
-              </button>
-            </div>
-          )}
+      {app.status === 'applied' && !['completed', 'cancelled', 'in_progress'].includes(app.jobStatus) && (
+        <div className="pt-1 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setConfirmingHire(true)}
+            className="flex-1 py-2.5 px-4 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl text-xs font-bold shadow-xs transition duration-150 active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <Check size={15} className="stroke-[2.5]" />
+            <span>{language === 'uz' ? "Qabul qilish" : language === 'ru' ? "Одобрить" : "Approve"}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => updateApplicationStatus(app.id, 'rejected')}
+            aria-label={language === 'uz' ? "Rad etish" : language === 'ru' ? "Отклонить" : "Reject"}
+            title={language === 'uz' ? "Rad etish" : language === 'ru' ? "Отклонить" : "Reject"}
+            className="py-2.5 px-3.5 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-700 hover:text-rose-600 rounded-xl text-xs font-semibold transition duration-150 active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+          >
+            <X size={15} className="stroke-[2.5]" />
+            <span>{language === 'uz' ? "Rad etish" : language === 'ru' ? "Отклонить" : "Reject"}</span>
+          </button>
         </div>
       )}
 
@@ -293,23 +243,6 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
         isDestructive={false}
         onConfirm={() => updateApplicationStatus(app.id, 'hired')}
         onCancel={() => setConfirmingHire(false)}
-      />
-
-      <ConfirmModal
-        isOpen={confirmingStart}
-        title={language === 'ru' ? 'Начать работу?' : language === 'en' ? 'Start the work?' : "Ishni boshlaysizmi?"}
-        message={
-          language === 'ru'
-            ? `Смена ${app.workerName || app.candidateName} будет отмечена как начатая.`
-            : language === 'en'
-            ? `${app.workerName || app.candidateName}'s shift will be marked as under way.`
-            : `${app.workerName || app.candidateName} smenasi boshlangan deb belgilanadi.`
-        }
-        confirmText={language === 'ru' ? 'Подтвердить' : language === 'en' ? 'Confirm' : 'Tasdiqlash'}
-        cancelText={language === 'ru' ? 'Отмена' : language === 'en' ? 'Cancel' : 'Bekor qilish'}
-        isDestructive={false}
-        onConfirm={handleConfirmStart}
-        onCancel={() => setConfirmingStart(false)}
       />
     </motion.div>
   );

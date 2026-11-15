@@ -1,16 +1,8 @@
-import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
-
-const confirmStartJobApi = vi.hoisted(() => vi.fn());
-const showToast = vi.hoisted(() => vi.fn());
-
-vi.mock('../../../api/queries', () => ({ confirmStartJobApi }));
-vi.mock('../../../utils/toast', () => ({ showToast }));
-
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/react';
 import { ApplicantCard } from './ApplicantCard';
 
 afterEach(cleanup);
-beforeEach(() => { confirmStartJobApi.mockReset(); showToast.mockReset(); });
 
 const applicant = (over: Record<string, unknown> = {}) => ({
   id: 'app-1',
@@ -36,58 +28,30 @@ const renderCard = (over: Record<string, unknown> = {}) => {
   return { updateApplicationStatus };
 };
 
-const startButton = () => screen.getByRole('button', { name: /Ishni boshlash/i });
-
-/** This button fired the request on the first tap, had no in-flight state, and
- *  no catch — so a refusal from the server reached nobody and the button sat
- *  there inviting another press. Production logged the same 400 fifteen times. */
-describe('ApplicantCard — starting a shift asks first and reports back', () => {
-  it('does not call the API on the first press', () => {
-    renderCard();
-    fireEvent.click(startButton());
-    expect(confirmStartJobApi).not.toHaveBeenCalled();
+describe('ApplicantCard — employer never starts or completes work (worker-only actions)', () => {
+  it('is not offered a start button when worker requested start', () => {
+    renderCard({ status: 'start_requested' });
+    expect(screen.queryByRole('button', { name: /Ishni boshlash/i })).toBeNull();
   });
 
-  it('names the worker in the question', () => {
-    renderCard();
-    fireEvent.click(startButton());
-    expect(screen.getByRole('dialog').textContent).toContain('Aziz Karimov');
+  it('is not offered a finish button when in progress', () => {
+    renderCard({ status: 'in_progress', jobStatus: 'in_progress' });
+    expect(screen.queryByRole('button', { name: /Ishni yakunlash/i })).toBeNull();
   });
 
-  it('cancelling starts nothing', () => {
-    renderCard();
-    fireEvent.click(startButton());
-    fireEvent.click(screen.getByRole('button', { name: /Bekor qilish/i }));
-    expect(confirmStartJobApi).not.toHaveBeenCalled();
-  });
-
-  it('starts the work once confirmed', async () => {
-    confirmStartJobApi.mockResolvedValue({ success: true });
-    renderCard();
-    fireEvent.click(startButton());
-    fireEvent.click(screen.getByRole('button', { name: /^Tasdiqlash$/i }));
-    await waitFor(() => expect(confirmStartJobApi).toHaveBeenCalledWith('job-1'));
-  });
-
-  it('shows what the server said when it refuses, instead of swallowing it', async () => {
-    // The exact refusal production returned, fifteen times, to nobody.
-    confirmStartJobApi.mockRejectedValue(new Error('Bu ish allaqachon yakunlangan'));
-    renderCard();
-    fireEvent.click(startButton());
-    fireEvent.click(screen.getByRole('button', { name: /^Tasdiqlash$/i }));
-
-    await waitFor(() =>
-      expect(showToast).toHaveBeenCalledWith('Bu ish allaqachon yakunlangan', 'error'),
-    );
-  });
-
-  it('is not offered at all once the shift has finished', () => {
+  it('is not offered a start button once the shift has finished', () => {
     renderCard({ jobStatus: 'completed' });
     expect(screen.queryByRole('button', { name: /Ishni boshlash/i })).toBeNull();
   });
 
-  it('is not offered on a cancelled shift either', () => {
+  it('is not offered a start button on a cancelled shift either', () => {
     renderCard({ jobStatus: 'cancelled' });
     expect(screen.queryByRole('button', { name: /Ishni boshlash/i })).toBeNull();
+  });
+
+  it('offers hire and reject buttons only when status is applied', () => {
+    renderCard({ status: 'applied', jobStatus: 'open' });
+    expect(screen.getByRole('button', { name: /Qabul qilish/i })).not.toBeNull();
+    expect(screen.getByRole('button', { name: /Rad etish/i })).not.toBeNull();
   });
 });

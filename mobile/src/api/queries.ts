@@ -91,6 +91,13 @@ export const confirmStartJobApi = async (jobId: string) => {
   return await apiClient(`/jobs/${jobId}/confirm-start`, { method: 'POST' });
 };
 
+export const completeJobApi = async (jobId: string, data?: { rating?: number; review?: string; bonus?: number }) => {
+  return await apiClient(`/jobs/${jobId}/complete`, {
+    method: 'POST',
+    body: data ? JSON.stringify(data) : undefined,
+  });
+};
+
 // Applications API
 export const fetchWorkerApplicationsApi = async () => {
   return await apiClient('/applications/worker');
@@ -109,6 +116,10 @@ export const fetchNotificationsApi = async () => {
 
 export const markAllNotificationsReadApi = async () => {
   return await apiClient('/notifications/read-all', { method: 'POST' });
+};
+
+export const markNotificationReadApi = async (notificationId: string) => {
+  return await apiClient(`/notifications/${notificationId}/read`, { method: 'POST' });
 };
 
 

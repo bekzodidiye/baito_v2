@@ -3,7 +3,6 @@ import { ChevronRight, Briefcase } from 'lucide-react';
 import { Language } from '../../translations';
 import { EmployerJobCard } from './EmployerJobCard';
 import { EmployerJobDetailModal } from './EmployerJobDetailModal';
-import { FinishJobModal } from './components/FinishJobModal';
 import { useEmployer } from '../../hooks/useEmployer';
 import { Job } from '../../types';
 
@@ -18,16 +17,8 @@ export const EmployerJobsList: React.FC<EmployerJobsListProps> = ({
   postedJobs,
   onViewAllJobsClick
 }) => {
-  const { completeJob, deleteJob } = useEmployer();
+  const { deleteJob } = useEmployer();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [jobToComplete, setJobToComplete] = useState<Job | null>(null);
-
-  const handleFinishConfirm = async (data: { rating: number; review: string; bonus: number }) => {
-    if (jobToComplete) {
-      await completeJob(jobToComplete.id, data);
-      setJobToComplete(null);
-    }
-  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -51,7 +42,6 @@ export const EmployerJobsList: React.FC<EmployerJobsListProps> = ({
             job={job}
             language={language as 'uz' | 'ru' | 'en'}
             onSelect={setSelectedJob}
-            onComplete={(id) => setJobToComplete(job)}
             onDelete={deleteJob}
           />
         ))}
@@ -71,22 +61,7 @@ export const EmployerJobsList: React.FC<EmployerJobsListProps> = ({
         job={selectedJob}
         onClose={() => setSelectedJob(null)}
         language={language as 'uz' | 'ru' | 'en'}
-        onComplete={(id) => {
-          setSelectedJob(null);
-          const j = postedJobs.find(x => x.id === id);
-          if (j) setJobToComplete(j);
-        }}
         onDelete={deleteJob}
-      />
-
-      {/* Finish Job Modal */}
-      <FinishJobModal
-        isOpen={!!jobToComplete}
-        onClose={() => setJobToComplete(null)}
-        onConfirm={handleFinishConfirm}
-        jobTitle={jobToComplete?.title || ''}
-        jobId={jobToComplete?.id}
-        language={language as 'uz' | 'ru' | 'en'}
       />
     </div>
   );

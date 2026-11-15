@@ -121,17 +121,16 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
               <CheckCircle2 size={14} />
               {language === 'uz' ? "Yopildi" : language === 'ru' ? "Завершено" : "Closed"}
             </span>
-          ) : job.status === 'in_progress' || job.status === 'start_requested' ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onComplete(job.id);
-              }}
-              className="w-full py-2 rounded-lg bg-brand-primary hover:bg-brand-primary/90 text-white text-[12px] font-black transition-all cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <CheckCircle2 size={14} />
-              {language === 'uz' ? "Yakunlash" : language === 'ru' ? "Завершить" : "Complete"}
-            </button>
+          ) : job.status === 'in_progress' ? (
+            <span className="w-full py-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 text-[12px] font-bold flex items-center justify-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+              {language === 'uz' ? "Jarayonda" : language === 'ru' ? "В процессе" : "In Progress"}
+            </span>
+          ) : job.status === 'start_requested' ? (
+            <span className="w-full py-2 rounded-lg bg-amber-50 text-amber-700 border border-amber-200/80 text-[12px] font-bold flex items-center justify-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              {language === 'uz' ? "Boshlanishi kutilmoqda" : language === 'ru' ? "Ожидание начала" : "Start Pending"}
+            </span>
           ) : job.status === 'confirmed' ? (
             <span className="w-full py-2 rounded-lg bg-brand-primary/10 text-brand-primary text-[12px] font-black flex items-center justify-center gap-1.5">
               <CheckCircle2 size={14} />

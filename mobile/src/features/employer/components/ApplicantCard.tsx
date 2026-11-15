@@ -1,7 +1,6 @@
 import React from 'react';
 import { Check, X, Star, Briefcase, MapPin, Clock, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
-import { confirmStartJobApi } from '../../../api/queries';
 
 interface ApplicantCardProps {
   app: any;
@@ -170,36 +169,21 @@ export const ApplicantCard: React.FC<ApplicantCardProps> = ({
       </div>
 
       {/* Action Buttons */}
-      {(app.status === 'start_requested' || app.status === 'applied') && (
+      {app.status === 'applied' && (
         <div className="mt-1 flex gap-2">
-          {app.status === 'start_requested' ? (
-            <button
-              onClick={async () => {
-                await confirmStartJobApi(app.jobId);
-                window.location.reload();
-              }}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow-[0_4px_12px_rgba(245,158,11,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer animate-pulse"
-            >
-              <Check size={16} className="stroke-[3]" />
-              <span>{language === 'uz' ? "Ishni boshlashni tasdiqlash" : language === 'ru' ? "Подтвердить начало работы" : "Confirm Start Job"}</span>
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={() => updateApplicationStatus(app.id, 'hired')}
-                className="flex-1 py-3 bg-gradient-to-r from-brand-primary to-blue-600 hover:from-brand-primary/90 hover:to-blue-600/90 text-white rounded-xl text-xs font-bold shadow-[0_4px_12px_rgba(0,6,102,0.15)] hover:shadow-[0_6px_16px_rgba(0,6,102,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Check size={16} className="stroke-[2.5]" />
-                <span>{language === 'uz' ? "Qabul qilish" : language === 'ru' ? "Одобрить" : "Approve"}</span>
-              </button>
-              <button
-                onClick={() => updateApplicationStatus(app.id, 'rejected')}
-                className="w-12 h-11 bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-500 rounded-xl transition-all active:scale-95 flex items-center justify-center cursor-pointer flex-shrink-0"
-              >
-                <X size={18} className="stroke-[2.5]" />
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => updateApplicationStatus(app.id, 'hired')}
+            className="flex-1 py-3 bg-gradient-to-r from-brand-primary to-blue-600 hover:from-brand-primary/90 hover:to-blue-600/90 text-white rounded-xl text-xs font-bold shadow-[0_4px_12px_rgba(0,6,102,0.15)] hover:shadow-[0_6px_16px_rgba(0,6,102,0.2)] transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Check size={16} className="stroke-[2.5]" />
+            <span>{language === 'uz' ? "Qabul qilish" : language === 'ru' ? "Одобрить" : "Approve"}</span>
+          </button>
+          <button
+            onClick={() => updateApplicationStatus(app.id, 'rejected')}
+            className="w-12 h-11 bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-500 rounded-xl transition-all active:scale-95 flex items-center justify-center cursor-pointer flex-shrink-0"
+          >
+            <X size={18} className="stroke-[2.5]" />
+          </button>
         </div>
       )}
     </motion.div>

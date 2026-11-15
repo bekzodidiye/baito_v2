@@ -7,7 +7,6 @@ import { EmployerPageHeader } from './EmployerPageHeader';
 import { EmployerJobDetailModal } from './EmployerJobDetailModal';
 import { EmployerJobCard } from './EmployerJobCard';
 import { EmployerPayInvoiceModal } from './EmployerPayInvoiceModal';
-import { FinishJobModal } from './components/FinishJobModal';
 import { Orb } from "@/components/ui/thinking-orbs";
 import { Job } from '../../types';
 
@@ -16,21 +15,13 @@ interface EmployerJobsProps {
 }
 
 export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) => {
-  const { postedJobs, language, completeJob, deleteJob, confirmStartJob } = useEmployer();
+  const { postedJobs, language, deleteJob } = useEmployer();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<
     'open' | 'active' | 'awaiting_payment' | 'awaiting_confirmation' | 'history'
   >('open');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [jobToComplete, setJobToComplete] = useState<Job | null>(null);
   const [jobToPay, setJobToPay] = useState<Job | null>(null);
-
-  const handleFinishConfirm = async (data: { rating: number; review: string; bonus: number }) => {
-    if (jobToComplete) {
-      await completeJob(jobToComplete.id, data);
-      setJobToComplete(null);
-    }
-  };
 
   const [visibleCount, setVisibleCount] = useState(12);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -256,9 +247,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
                   job={job}
                   language={language}
                   onSelect={setSelectedJob}
-                  onComplete={() => setJobToComplete(job)}
                   onDelete={deleteJob}
-                  onConfirmStart={() => confirmStartJob(job.id)}
                   onPayInvoice={setJobToPay}
                 />
               ))}
@@ -279,26 +268,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
         job={selectedJob}
         onClose={() => setSelectedJob(null)}
         language={language}
-        onComplete={(id) => {
-          setSelectedJob(null);
-          const j = postedJobs.find(x => x.id === id);
-          if (j) setJobToComplete(j);
-        }}
         onDelete={deleteJob}
-        onConfirmStart={(id) => {
-          confirmStartJob(id);
-          setSelectedJob(null);
-        }}
-      />
-
-      {/* Finish Job Modal */}
-      <FinishJobModal
-        isOpen={!!jobToComplete}
-        onClose={() => setJobToComplete(null)}
-        onConfirm={handleFinishConfirm}
-        jobTitle={jobToComplete?.title || ''}
-        jobId={jobToComplete?.id}
-        language={language}
       />
 
       {/* Settling an invoice. Refetching employer-jobs on success is what moves

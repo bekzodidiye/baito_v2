@@ -16,6 +16,8 @@ export interface NotificationItemData {
   timeEn: string;
   isUnread: boolean;
   group: 'today' | 'yesterday';
+  relatedJobId?: string | null;
+  rawType?: string | null;
 }
 
 interface NotificationItemProps {

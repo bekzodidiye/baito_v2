@@ -205,18 +205,12 @@ export const EmployerJobCard: React.FC<EmployerJobCardProps> = ({
               </span>
             </span>
           ) : job.status === 'start_requested' ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onConfirmStart) onConfirmStart(job.id);
-              }}
-              className="w-full min-w-0 h-11 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[12px] font-black transition-all cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <CheckCircle2 size={14} />
+            <span className="w-full min-w-0 h-11 rounded-lg bg-amber-50 text-amber-700 border border-amber-200/80 text-[12px] font-bold flex items-center justify-center gap-1.5">
+              <Hourglass size={14} className="text-amber-600" />
               <span className="truncate">
-                {language === 'uz' ? "Tasdiqlash" : language === 'ru' ? "Подтвердить" : "Confirm"}
+                {language === 'uz' ? "Boshlanishi kutilmoqda" : language === 'ru' ? "Ожидание начала" : "Start Pending"}
               </span>
-            </button>
+            </span>
           ) : job.status === 'confirmed' ? (
             <span className="w-full min-w-0 h-11 rounded-lg bg-brand-primary/10 text-brand-primary text-[12px] font-black flex items-center justify-center gap-1.5">
               <CheckCircle2 size={14} />

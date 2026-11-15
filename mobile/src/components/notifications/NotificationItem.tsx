@@ -1,10 +1,10 @@
 import React from 'react';
-import { Briefcase, CheckCircle2, MessageSquare, AlertCircle, Sparkles, ArrowRight, Check } from 'lucide-react';
+import { Briefcase, CheckCircle2, MessageSquare, AlertCircle, Sparkles, ArrowRight, Check, Wallet, LifeBuoy, Bell } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export interface NotificationItemData {
   id: string;
-  type: 'job' | 'apply' | 'message' | 'profile' | 'system';
+  type: 'job' | 'apply' | 'message' | 'payment' | 'support' | 'profile' | 'system';
   titleUz: string;
   titleRu: string;
   titleEn: string;
@@ -16,6 +16,8 @@ export interface NotificationItemData {
   timeEn: string;
   isUnread: boolean;
   group: 'today' | 'yesterday';
+  relatedJobId?: string | null;
+  rawType?: string | null;
 }
 
 interface NotificationItemProps {
@@ -51,11 +53,23 @@ const getIcon = (type: NotificationItemData['type']) => {
           <AlertCircle size={16} className="stroke-[2.2]" />
         </div>
       );
+    case 'payment':
+      return (
+        <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0 text-emerald-600 border border-emerald-100/50">
+          <Wallet size={16} className="stroke-[2.2]" />
+        </div>
+      );
+    case 'support':
+      return (
+        <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center shrink-0 text-violet-600 border border-violet-100/50">
+          <LifeBuoy size={16} className="stroke-[2.2]" />
+        </div>
+      );
     case 'system':
     default:
       return (
         <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 text-slate-500 border border-slate-200/50">
-          <Sparkles size={16} className="stroke-[2.2]" />
+          <Bell size={16} className="stroke-[2.2]" />
         </div>
       );
   }
@@ -71,6 +85,10 @@ const getTypeBadge = (type: NotificationItemData['type'], t: any) => {
       return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-600">{t.badgeMessage || 'Xabar'}</span>;
     case 'profile':
       return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-600">{t.badgeProfile || 'Profil'}</span>;
+    case 'payment':
+      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">{t.badgePayment || "To'lov"}</span>;
+    case 'support':
+      return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-violet-50 text-violet-600">{t.badgeSupport || 'Yordam'}</span>;
     case 'system':
     default:
       return <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-500">{t.badgeSystem || 'Tizim'}</span>;

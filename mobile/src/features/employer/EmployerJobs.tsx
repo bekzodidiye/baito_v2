@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { EmployerPageHeader } from './EmployerPageHeader';
 import { EmployerJobDetailModal } from './EmployerJobDetailModal';
 import { EmployerJobCard } from './EmployerJobCard';
-import { FinishJobModal } from './components/FinishJobModal';
 import { Job } from '../../types';
 
 interface EmployerJobsProps {
@@ -13,17 +12,9 @@ interface EmployerJobsProps {
 }
 
 export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) => {
-  const { postedJobs, language, completeJob, deleteJob } = useEmployer();
+  const { postedJobs, language, deleteJob } = useEmployer();
   const [activeTab, setActiveTab] = useState<'open' | 'active' | 'history'>('open');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [jobToComplete, setJobToComplete] = useState<Job | null>(null);
-
-  const handleFinishConfirm = async (data: { rating: number; review: string; bonus: number }) => {
-    if (jobToComplete) {
-      await completeJob(jobToComplete.id, data);
-      setJobToComplete(null);
-    }
-  };
 
   const [visibleCount, setVisibleCount] = useState(12);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -167,7 +158,6 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
                   job={job}
                   language={language}
                   onSelect={setSelectedJob}
-                  onComplete={(id) => setJobToComplete(job)}
                   onDelete={deleteJob}
                 />
               ))}
@@ -188,21 +178,7 @@ export const EmployerJobs: React.FC<EmployerJobsProps> = ({ onPostJobClick }) =>
         job={selectedJob}
         onClose={() => setSelectedJob(null)}
         language={language}
-        onComplete={(id) => {
-          setSelectedJob(null);
-          const j = postedJobs.find(x => x.id === id);
-          if (j) setJobToComplete(j);
-        }}
         onDelete={deleteJob}
-      />
-
-      {/* Finish Job Modal */}
-      <FinishJobModal
-        isOpen={!!jobToComplete}
-        onClose={() => setJobToComplete(null)}
-        onConfirm={handleFinishConfirm}
-        jobTitle={jobToComplete?.title || ''}
-        language={language}
       />
     </div>
   );

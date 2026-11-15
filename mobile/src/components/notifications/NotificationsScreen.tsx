@@ -1,22 +1,28 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ArrowLeft, CheckCheck, CircleDot } from 'lucide-react';
-import { NotificationItem } from './NotificationItem';
+import { NotificationItem, NotificationItemData } from './NotificationItem';
+import { notificationDestination } from './notificationKind';
+import { NotificationDetailModal } from './NotificationDetailModal';
 import { NotificationFilterPanel, NotificationCategory } from './NotificationFilterPanel';
 import { NotificationMobileChips } from './NotificationMobileChips';
 import { getNotificationTranslations } from './Notifications.data';
 import { useNotificationsData } from './useNotificationsData';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export const NotificationsScreen: React.FC = () => {
   const { setCurrentScreen } = useCurrentScreen();
   const { language, setUnreadNotificationsCount } = useApp();
+  const user = useAuthStore(s => s.userProfile);
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>('all');
+  const [selectedNotification, setSelectedNotification] = useState<NotificationItemData | null>(null);
 
   const {
     notifications,
     filteredNotifications,
     handleMarkAllRead,
+    handleMarkOneRead,
     counts,
     unreadCount
   } = useNotificationsData(activeCategory, setUnreadNotificationsCount);
@@ -26,15 +32,24 @@ export const NotificationsScreen: React.FC = () => {
   const handleNotificationClick = (id: string) => {
     const item = notifications.find(n => n.id === id);
     if (!item) return;
-    
-    if (item.type === 'message') {
-      setCurrentScreen('messages');
-    } else if (item.type === 'job') {
-      setCurrentScreen('jobs');
-    } else if (item.type === 'apply') {
+
+    if (item.isUnread) {
+      handleMarkOneRead(item.id);
+    }
+
+    const to = notificationDestination(item.type, user?.selectedRole, item.relatedJobId);
+    if (to !== 'notifications') {
+      setCurrentScreen(to as any);
+    } else {
+      setSelectedNotification(item);
+    }
+  };
+
+  const handleBack = () => {
+    if (user?.selectedRole === 'employer') {
+      setCurrentScreen('employer-dashboard');
+    } else {
       setCurrentScreen('calendar');
-    } else if (item.type === 'profile') {
-      setCurrentScreen('profile');
     }
   };
 
@@ -153,6 +168,13 @@ export const NotificationsScreen: React.FC = () => {
           )}
         </div>
       </div>
+
+      <NotificationDetailModal
+        isOpen={!!selectedNotification}
+        onClose={() => setSelectedNotification(null)}
+        notification={selectedNotification}
+        language={language}
+      />
     </div>
   );
 };

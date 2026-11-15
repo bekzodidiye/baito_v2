@@ -394,34 +394,44 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
 
           {/* Action Footer */}
           <footer className="sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 p-3 sm:p-4 shrink-0 flex items-center gap-3">
-            {activeJob.status === 'in_progress' && onComplete ? (
-              <button
-                onClick={() => onComplete(activeJob.id)}
-                className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 active:scale-[0.98] transition-all cursor-pointer"
-              >
-                <CheckCircle2 size={18} />
-                <span>{language === 'uz' ? 'Ishni yakunlash' : language === 'ru' ? 'Завершить работу' : 'Complete Job'}</span>
-              </button>
-            ) : activeJob.status === 'start_requested' && onConfirmStart ? (
-              <>
+            {activeJob.status === 'in_progress' ? (
+              <div className="w-full flex flex-col sm:flex-row items-center gap-3">
+                <div className="flex-1 w-full py-3 px-4 bg-blue-50 text-blue-700 border border-blue-100 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+                  <Clock size={16} className="text-blue-600 animate-spin" />
+                  <span className="text-center">
+                    {language === 'uz'
+                      ? 'Ish jarayonda — smena xodim tomonidan yakunlanadi'
+                      : language === 'ru'
+                        ? 'Работа выполняется — смену завершает работник'
+                        : 'Work in progress — worker will complete the shift'}
+                  </span>
+                </div>
                 <button
                   onClick={onClose}
-                  className="w-1/3 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm cursor-pointer active:scale-[0.98] transition-all"
+                  className="w-full sm:w-auto sm:min-w-[120px] py-3 px-6 bg-brand-primary hover:bg-brand-primary/90 text-white font-bold rounded-xl text-sm cursor-pointer active:scale-[0.98] transition-all shadow-md flex items-center justify-center"
                 >
                   {language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                 </button>
+              </div>
+            ) : activeJob.status === 'start_requested' ? (
+              <div className="w-full flex flex-col sm:flex-row items-center gap-3">
+                <div className="flex-1 w-full py-3 px-4 bg-amber-50 text-amber-700 border border-amber-200/80 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+                  <Clock size={16} className="text-amber-600" />
+                  <span className="text-center">
+                    {language === 'uz'
+                      ? 'Xodim ishni boshlashi kutilmoqda'
+                      : language === 'ru'
+                        ? 'Ожидается начало работы работником'
+                        : 'Waiting for worker to start'}
+                  </span>
+                </div>
                 <button
-                  onClick={() => {
-                    onConfirmStart(activeJob.id);
-                    onClose();
-                  }}
-                  className="w-2/3 py-3.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 cursor-pointer active:scale-[0.98] transition-all"
+                  onClick={onClose}
+                  className="w-full sm:w-auto sm:min-w-[120px] py-3 px-6 bg-brand-primary hover:bg-brand-primary/90 text-white font-bold rounded-xl text-sm cursor-pointer active:scale-[0.98] transition-all shadow-md flex items-center justify-center"
                 >
-                  <Play size={16} />
-                  <span>{language === 'uz' ? 'Boshlashni tasdiqlash' : language === 'ru' ? 'Подтвердить начало' : 'Confirm start'}</span>
-                  <ChevronRight size={18} />
+                  {language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                 </button>
-              </>
+              </div>
             ) : (activeJob.status === 'open' || activeJob.status === 'pending') && onDelete ? (
               <>
                 <button
