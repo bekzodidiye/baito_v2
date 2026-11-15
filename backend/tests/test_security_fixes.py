@@ -376,5 +376,77 @@ def test_media_sent_in_chat_a_not_readable_by_chat_b_partner(client):
     assert client.get(f"/api/v1/media/{key}").status_code != 403
 
 
+def test_csrf_cookie_mutating_request_from_untrusted_origin_rejected(client):
+    """A mutating PUT request using ambient auth cookies from an untrusted origin must be rejected with 403."""
+    user = make_user(role="worker", phone="+998901234991")
+    login(client, user)
+
+    # Cross-origin attacker attempt
+    resp = client.put(
+        "/api/v1/users/me",
+        json={"bio": "hacked"},
+        headers={"Origin": "https://evil-attacker.com"},
+    )
+    assert resp.status_code == 403
+    assert "CSRF" in resp.json()["detail"]
+
+
+def test_csrf_cookie_mutating_request_from_untrusted_referer_rejected(client):
+    """A mutating PUT request using ambient auth cookies with an untrusted referer must be rejected with 403."""
+    user = make_user(role="worker", phone="+998901234992")
+    login(client, user)
+
+    resp = client.put(
+        "/api/v1/users/me",
+        json={"bio": "hacked"},
+        headers={"Referer": "https://malicious-site.com/exploit.html"},
+    )
+    assert resp.status_code == 403
+    assert "CSRF" in resp.json()["detail"]
+
+
+def test_csrf_cookie_mutating_request_from_subdomain_spoofed_referer_rejected(client):
+    """An attacker registering baito.uz.attacker.com must NOT bypass the referer check."""
+    user = make_user(role="worker", phone="+998901234995")
+    login(client, user)
+
+    resp = client.put(
+        "/api/v1/users/me",
+        json={"bio": "hacked"},
+        headers={"Referer": "https://baito.uz.attacker.com/exploit.html"},
+    )
+    assert resp.status_code == 403
+    assert "CSRF" in resp.json()["detail"]
+
+
+def test_csrf_cookie_mutating_request_from_trusted_referer_accepted(client):
+    """A mutating request from a trusted referer (e.g., https://baito.uz/profile) is accepted."""
+    user = make_user(role="worker", phone="+998901234996")
+    login(client, user)
+
+    resp = client.put(
+        "/api/v1/users/me",
+        json={"bio": "valid update from referer"},
+        headers={"Referer": "https://baito.uz/profile"},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["bio"] == "valid update from referer"
+
+
+def test_csrf_cookie_mutating_request_from_trusted_origin_accepted(client):
+    """A mutating request from a trusted origin (e.g., https://baito.uz) is accepted."""
+    user = make_user(role="worker", phone="+998901234993")
+    login(client, user)
+
+    resp = client.put(
+        "/api/v1/users/me",
+        json={"bio": "valid update"},
+        headers={"Origin": "https://baito.uz"},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["bio"] == "valid update"
+
+
+
 
 
