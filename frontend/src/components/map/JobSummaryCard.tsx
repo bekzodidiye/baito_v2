@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Briefcase, ChevronRight, ChevronLeft, LayoutList, LayoutGrid, Sparkles, TrendingUp, Clock, DollarSign, Search, X } from 'lucide-react';
+import { Briefcase, ChevronRight, ChevronLeft, Sparkles, TrendingUp, Clock, DollarSign, Search, X } from 'lucide-react';
 import { Job } from '../../types';
 import { JobCardSkeleton } from './JobCardSkeleton';
 import { useJobsData } from "../../context/useJobsData";
@@ -43,7 +43,6 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
   const language = useAuthStore(s => s.language);
   const { jobs, applyToJob } = useJobsData();
   const t = translations[language];
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [activeSort, setActiveSort] = useState<SortOption>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [, setIsAtBeginning] = useState(true);
@@ -245,44 +244,8 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                 </div>
               </div>
 
-              {/* View Switcher & Collapse */}
-              <div className="flex items-center gap-2 shrink-0 ml-3">
-                {/* Segmented View Mode Switcher */}
-                <div className="flex items-center bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/60">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setViewMode('grid');
-                    }}
-                    className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                      viewMode === 'grid'
-                        ? 'bg-white text-brand-primary shadow-2xs font-bold'
-                        : 'text-slate-400 hover:text-slate-700'
-                    }`}
-                    title={language === 'ru' ? 'Сетка (2 колонки)' : language === 'en' ? 'Grid (2 columns)' : "2 ustunli katak"}
-                    aria-label={language === 'ru' ? 'Сетка (2 колонки)' : language === 'en' ? 'Grid (2 columns)' : "2 ustunli katak"}
-                  >
-                    <LayoutGrid size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setViewMode('list');
-                    }}
-                    className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                      viewMode === 'list'
-                        ? 'bg-white text-brand-primary shadow-2xs font-bold'
-                        : 'text-slate-400 hover:text-slate-700'
-                    }`}
-                    title={language === 'ru' ? 'Список (1 колонка)' : language === 'en' ? 'List (1 column)' : "1 ustunli ro'yxat"}
-                    aria-label={language === 'ru' ? 'Список (1 колонка)' : language === 'en' ? 'List (1 column)' : "1 ustunli ro'yxat"}
-                  >
-                    <LayoutList size={15} />
-                  </button>
-                </div>
-
+              {/* Desktop Header Actions (Collapse Button) */}
+              <div className="flex items-center shrink-0 ml-3">
                 {/* Close/Collapse Icon */}
                 <button
                   type="button"
@@ -356,10 +319,8 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                 <JobCardSkeleton count={3} layout="horizontal" />
               </div>
               {/* Desktop Skeleton */}
-              <div className={`hidden flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar ${
-                viewMode === 'grid' ? 'md:grid md:grid-cols-2 gap-3' : 'md:flex md:flex-col gap-2.5'
-              }`}>
-                <JobCardSkeleton count={6} layout={viewMode} />
+              <div className="hidden flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar md:grid md:grid-cols-2 gap-3">
+                <JobCardSkeleton count={6} layout="grid" />
               </div>
             </>
           ) : sortedJobs.length === 0 ? (
@@ -413,13 +374,9 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                 </div>
               </div>
 
-              {/* Desktop: Dynamic List or Grid View */}
+              {/* Desktop: 2-Column Grid View */}
               <div 
-                className={`hidden flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar scroll-smooth ${
-                  viewMode === 'grid'
-                    ? 'md:grid md:grid-cols-2 gap-3 content-start'
-                    : 'md:flex md:flex-col gap-2.5'
-                }`}
+                className="hidden flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar scroll-smooth md:grid md:grid-cols-2 gap-3 content-start"
               >
                 {sortedJobs.map(job => (
                   <JobCardItem
@@ -431,7 +388,7 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                     userLocation={userLocation}
                     applied={appliedJobIds.has(job.id)}
                     applyToJob={applyToJob}
-                    layoutMode={viewMode}
+                    layoutMode="grid"
                   />
                 ))}
               </div>
