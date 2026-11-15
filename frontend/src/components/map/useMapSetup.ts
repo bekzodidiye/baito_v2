@@ -140,11 +140,13 @@ export const useMapSetup = ({
 
     markerGroupRef.current = (L as any).markerClusterGroup({
       showCoverageOnHover: false,
-      maxClusterRadius: 80,
+      maxClusterRadius: 60,
       spiderfyOnMaxZoom: true,
       chunkedLoading: true,
-      chunkInterval: 10,
-      chunkDelay: 5,
+      chunkInterval: 50,
+      chunkDelay: 10,
+      animate: true,
+      animateAddingMarkers: false,
       iconCreateFunction: (cluster: any) => createClusterIcon(cluster, map)
     }).addTo(map);
 
@@ -152,15 +154,13 @@ export const useMapSetup = ({
 
     setIsMapReady(true);
 
-    // Initial resize invalidations to prevent blank map issues on mount
+    // Initial resize invalidation to ensure map canvas is properly sized on mount
     map.invalidateSize();
-    const invalidate1 = setTimeout(() => map.invalidateSize(), 200);
-    const invalidate2 = setTimeout(() => map.invalidateSize(), 600);
+    const invalidate1 = setTimeout(() => map.invalidateSize(), 150);
 
     return () => {
       clearTimeout(timer);
       clearTimeout(invalidate1);
-      clearTimeout(invalidate2);
       setIsMapReady(false);
       const mapToTearDown = mapInstanceRef.current;
       if (mapToTearDown) {
@@ -199,32 +199,28 @@ export const useMapSetup = ({
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    map.invalidateSize();
-    const t1 = setTimeout(() => mapInstanceRef.current?.invalidateSize(), 150);
-    const t2 = setTimeout(() => mapInstanceRef.current?.invalidateSize(), 450);
-
     let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
-    const handleResize = () => {
+    const scheduleInvalidate = () => {
       if (resizeTimeout) clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => mapInstanceRef.current?.invalidateSize(), 100);
+      resizeTimeout = setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize({ animate: false });
+      }, 80);
     };
-    window.addEventListener('resize', handleResize);
+
+    scheduleInvalidate();
+
+    window.addEventListener('resize', scheduleInvalidate);
 
     let resizeObserver: ResizeObserver | null = null;
     if (mapContainerRef.current) {
-      resizeObserver = new ResizeObserver(() => {
-        if (resizeTimeout) clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => mapInstanceRef.current?.invalidateSize(), 100);
-      });
+      resizeObserver = new ResizeObserver(scheduleInvalidate);
       resizeObserver.observe(mapContainerRef.current);
     }
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', scheduleInvalidate);
       if (resizeObserver) resizeObserver.disconnect();
       if (resizeTimeout) clearTimeout(resizeTimeout);
-      clearTimeout(t1);
-      clearTimeout(t2);
     };
   }, [isViloyatDashboard, isPanelExpanded]);
 

@@ -104,6 +104,19 @@ export const useRegionPolygonInitialization = ({
         }
       });
       regionsGeoJsonLayerRef.current = geoJsonLayer;
+
+      // Initial framing: ensure entire Uzbekistan is cleanly centered in the visible map area
+      if (geoJsonLayer.getBounds().isValid() && filterLocRef.current === 'Barchasi') {
+        const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+        const isExpanded = isPanelExpandedRef.current && isDesktop;
+        map.fitBounds(geoJsonLayer.getBounds(), {
+          paddingTopLeft: [20, 20],
+          paddingBottomRight: [isExpanded ? 640 : 20, 20],
+          maxZoom: 6.2,
+          animate: false
+        });
+        lastFittedLocationRef.current = 'Barchasi';
+      }
     }
 
     if (regionsGeoJsonLayerRef.current && !group.hasLayer(regionsGeoJsonLayerRef.current)) {

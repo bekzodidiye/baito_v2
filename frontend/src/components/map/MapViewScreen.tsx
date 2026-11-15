@@ -92,7 +92,10 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
       )}
 
       {!showRegionSelector && !selectedJob && filterLocation === 'Barchasi' && (
-        <FloatingSearchBar setShowRegionSelector={setShowRegionSelector} />
+        <FloatingSearchBar 
+          setShowRegionSelector={setShowRegionSelector} 
+          isPanelExpanded={isPanelExpanded}
+        />
       )}
 
       {!showRegionSelector && (

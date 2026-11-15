@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import { Job } from '../../types';
 import { Language } from '../../translations';
-import { areDistrictNamesEqual, mapFeatureToRegionId } from './mapUtils';
+import { areDistrictNamesEqual, mapFeatureToRegionId, getFeatureBounds } from './mapUtils';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
 import { useRegionPolygonInitialization } from './useRegionPolygonInitialization';
 import { useRegionPolygonStyleUpdate } from './useRegionPolygonStyleUpdate';
@@ -147,15 +147,11 @@ export const useRegionPolygons = ({
       const region = UZBEKISTAN_REGIONS.find(r => r.id === regionId);
       if (!region) return;
       if (!regionCentersRef.current.has(region.id)) {
-        try {
-          const layer = L.geoJSON(feature);
-          const bounds = layer.getBounds();
-          const c = bounds.getCenter();
-          regionCentersRef.current.set(region.id, [c.lat, c.lng]);
-        } catch (e) {
-          if (region.center) {
-            regionCentersRef.current.set(region.id, region.center);
-          }
+        if (region.center) {
+          regionCentersRef.current.set(region.id, region.center);
+        } else if (feature.geometry) {
+          const b = getFeatureBounds(feature.geometry);
+          regionCentersRef.current.set(region.id, [(b.minLat + b.maxLat) / 2, (b.minLng + b.maxLng) / 2]);
         }
       }
     });
@@ -166,13 +162,9 @@ export const useRegionPolygons = ({
     districtsGeoJsonData.features.forEach((f: any) => {
       const tumanName = f.properties?.shapeName || "";
       if (!tumanName || districtCentersRef.current.has(tumanName)) return;
-      try {
-        const layer = L.geoJSON(f);
-        const bounds = layer.getBounds();
-        const c = bounds.getCenter();
-        districtCentersRef.current.set(tumanName, [c.lat, c.lng]);
-      } catch (e) {
-        // ignore
+      if (f.geometry) {
+        const b = getFeatureBounds(f.geometry);
+        districtCentersRef.current.set(tumanName, [(b.minLat + b.maxLat) / 2, (b.minLng + b.maxLng) / 2]);
       }
     });
   }, [districtsGeoJsonData]);

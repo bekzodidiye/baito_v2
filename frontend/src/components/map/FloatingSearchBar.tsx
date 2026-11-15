@@ -5,10 +5,12 @@ import { useAuthStore } from "../../store/useAuthStore";
 
 interface FloatingSearchBarProps {
   setShowRegionSelector: (show: boolean) => void;
+  isPanelExpanded?: boolean;
 }
 
 export const FloatingSearchBar: React.FC<FloatingSearchBarProps> = ({
   setShowRegionSelector,
+  isPanelExpanded = false,
 }) => {
   const language = useAuthStore(s => s.language);
   const t = translations[language];
@@ -18,7 +20,9 @@ export const FloatingSearchBar: React.FC<FloatingSearchBarProps> = ({
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onDoubleClick={(e) => e.stopPropagation()}
-      className="absolute top-3.5 left-3.5 right-3.5 z-30 max-w-md mx-auto flex items-center gap-2 pointer-events-auto"
+      className={`absolute top-3.5 left-3.5 right-3.5 z-30 max-w-md mx-auto flex items-center gap-2 pointer-events-auto transition-all duration-300 ease-in-out md:left-6 ${
+        isPanelExpanded ? 'md:right-[664px]' : 'md:right-6'
+      }`}
     >
       <div 
         onClick={() => setShowRegionSelector(true)}

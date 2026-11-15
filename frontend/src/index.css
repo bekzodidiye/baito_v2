@@ -196,10 +196,20 @@ g:focus,
   height: 100% !important;
 }
 
-/* Ensure Leaflet tile images are not constrained by Tailwind preflight rules */
+/* Ensure Leaflet tile images are not constrained by Tailwind preflight rules and use GPU compositing */
 .leaflet-container .leaflet-tile {
   max-width: none !important;
   max-height: none !important;
+  will-change: transform;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.leaflet-tile-container {
+  will-change: transform;
+}
+
+.leaflet-zoom-animated {
+  will-change: transform;
 }
 
 @keyframes shimmer {

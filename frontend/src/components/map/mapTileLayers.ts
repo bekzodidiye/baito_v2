@@ -20,7 +20,7 @@ class CachedTileLayer extends L.TileLayer {
     // Instant sync load from memory cache if available
     if (tileMemoryCache.has(url)) {
       tile.src = tileMemoryCache.get(url)!;
-      setTimeout(() => done(undefined, tile), 0);
+      done(undefined, tile);
       return tile;
     }
 
@@ -103,9 +103,9 @@ export const createTileLayers = (mapType: MapType, map: L.Map) => {
   let labelLayer: L.TileLayer | null = null;
 
   const defaultTileOptions: L.TileLayerOptions = {
-    updateWhenIdle: false,
-    updateWhenZooming: false,
-    keepBuffer: 16, // Keep up to 16 rows/cols of off-screen tiles in memory buffer
+    updateWhenIdle: true,
+    updateInterval: 100,
+    keepBuffer: 3, // Keep 3 rows/cols buffer for smooth panning without memory bloat
     tileSize: 256,
     maxNativeZoom: 19,
     maxZoom: 20,
