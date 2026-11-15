@@ -58,7 +58,7 @@ export const MapActionButtons: React.FC<MapActionButtonsProps> = ({
       <div 
         className={`absolute pointer-events-auto transition-all duration-300 ease-in-out flex flex-col gap-2 items-center right-4 md:bottom-6 ${
           isPanelExpanded
-            ? 'bottom-[252px] md:right-[624px] lg:right-[664px]'
+            ? 'bottom-[252px] md:right-[504px] lg:right-[544px]'
             : 'bottom-[72px] md:right-6'
         }`}
       >

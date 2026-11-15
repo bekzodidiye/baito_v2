@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Briefcase, ChevronRight, ChevronLeft } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Briefcase, ChevronRight, ChevronLeft, LayoutList, LayoutGrid, Sparkles, TrendingUp, Clock, DollarSign } from 'lucide-react';
 import { Job } from '../../types';
 import { JobCardSkeleton } from './JobCardSkeleton';
 import { useJobsData } from "../../context/useJobsData";
@@ -26,6 +26,8 @@ interface JobSummaryCardProps {
   setMapType?: (type: 'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro') => void;
 }
 
+type SortOption = 'all' | 'high_salary' | 'newest' | 'urgent';
+
 export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
   isPanelExpanded,
   setIsPanelExpanded,
@@ -40,15 +42,44 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
   const language = useAuthStore(s => s.language);
   const { jobs, applyToJob } = useJobsData();
   const t = translations[language];
-  const [isAtBeginning, setIsAtBeginning] = useState(true);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [activeSort, setActiveSort] = useState<SortOption>('all');
+  const [, setIsAtBeginning] = useState(true);
 
-  const appliedJobIds = React.useMemo(() => {
+  const appliedJobIds = useMemo(() => {
     const set = new Set<string>();
     for (const j of jobs) {
       if (j.applied) set.add(j.id);
     }
     return set;
   }, [jobs]);
+
+  const sortedJobs = useMemo(() => {
+    if (!displayedJobs || displayedJobs.length === 0) return [];
+    const list = [...displayedJobs];
+    if (activeSort === 'high_salary') {
+      return list.sort((a, b) => {
+        const salA = typeof a.salary === 'number' ? a.salary : parseInt(String(a.salary).replace(/\D/g, '')) || 0;
+        const salB = typeof b.salary === 'number' ? b.salary : parseInt(String(b.salary).replace(/\D/g, '')) || 0;
+        return salB - salA;
+      });
+    }
+    if (activeSort === 'newest') {
+      return list.sort((a, b) => {
+        const dateA = new Date((a as any).createdAt || a.workDate || 0).getTime();
+        const dateB = new Date((b as any).createdAt || b.workDate || 0).getTime();
+        return dateB - dateA;
+      });
+    }
+    if (activeSort === 'urgent') {
+      return list.sort((a, b) => {
+        const urgA = (a as any).urgent ? 1 : 0;
+        const urgB = (b as any).urgent ? 1 : 0;
+        return urgB - urgA;
+      });
+    }
+    return list;
+  }, [displayedJobs, activeSort]);
 
   const getJobsSummaryText = () => {
     const count = displayedJobs.length;
@@ -62,9 +93,32 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
     }
   };
 
+  const sortChips: { id: SortOption; label: string; icon: React.ReactNode }[] = [
+    {
+      id: 'all',
+      label: language === 'uz' ? 'Barchasi' : language === 'ru' ? 'Все' : 'All',
+      icon: <Sparkles size={11} />,
+    },
+    {
+      id: 'high_salary',
+      label: language === 'uz' ? 'Katta maosh' : language === 'ru' ? 'Высокая оплата' : 'High pay',
+      icon: <DollarSign size={11} />,
+    },
+    {
+      id: 'newest',
+      label: language === 'uz' ? 'Eng yangi' : language === 'ru' ? 'Свежие' : 'Newest',
+      icon: <Clock size={11} />,
+    },
+    {
+      id: 'urgent',
+      label: language === 'uz' ? 'Shoshilinch' : language === 'ru' ? 'Срочные' : 'Urgent',
+      icon: <TrendingUp size={11} />,
+    },
+  ];
+
   return (
     <>
-      {/* Floating Re-open Button for Desktop when collapsed */}
+      {/* Floating Re-open Tab for Desktop when collapsed */}
       {!isPanelExpanded && (
         <button
           type="button"
@@ -72,30 +126,32 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
             e.stopPropagation();
             setIsPanelExpanded(true);
           }}
-          className="hidden md:flex absolute top-4 right-4 z-20 items-center gap-2.5 px-4 py-2.5 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] border border-slate-200/90 text-slate-800 hover:text-brand-primary hover:border-brand-primary/40 transition-all font-semibold text-xs active:scale-95 cursor-pointer pointer-events-auto select-none"
-          title={t.clickToOpenList || "Ro'yxatni ochish"}
-          aria-label={t.clickToOpenList || "Ro'yxatni ochish"}
+          className="hidden md:flex absolute top-1/2 right-0 -translate-y-1/2 z-30 h-16 px-2.5 bg-white/95 backdrop-blur-md rounded-l-2xl border-y border-l border-slate-200/90 shadow-[-4px_2px_16px_rgba(0,0,0,0.12)] items-center gap-2 text-slate-700 hover:text-brand-primary hover:border-brand-primary/40 transition-all cursor-pointer pointer-events-auto group select-none"
+          title={language === 'ru' ? 'Показать вакансии' : language === 'en' ? 'Show jobs' : "E'lonlarni ochish"}
+          aria-label={language === 'ru' ? 'Показать вакансии' : language === 'en' ? 'Show jobs' : "E'lonlarni ochish"}
         >
-          <div className="w-6 h-6 rounded-lg bg-indigo-50 text-brand-primary flex items-center justify-center shrink-0">
-            <Briefcase size={13} className="text-brand-primary" />
+          <ChevronLeft size={16} className="text-slate-400 group-hover:text-brand-primary group-hover:-translate-x-0.5 transition-transform" />
+          <div className="flex flex-col items-center">
+            <span className="text-[12px] font-black text-brand-primary leading-none">
+              {displayedJobs.length}
+            </span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">
+              {language === 'ru' ? 'вакансий' : language === 'en' ? 'jobs' : 'ish'}
+            </span>
           </div>
-          <span className="font-bold text-xs text-brand-text-variant">
-            {displayedJobs.length} {language === 'ru' ? 'вакансий' : language === 'en' ? 'jobs' : 'ta ish'}
-          </span>
-          <ChevronLeft size={16} className="text-slate-400 group-hover:text-brand-primary transition-colors" />
         </button>
       )}
 
-      {/* Main Container: Bottom Sheet on Mobile, Floating Right Panel on Desktop */}
+      {/* Main Container: Bottom Sheet on Mobile, Docked Right Sidebar on Desktop */}
       <div 
         className={`z-20 transition-all duration-300 ease-in-out
-          fixed md:absolute bottom-0 left-0 w-full
+          fixed bottom-0 left-0 w-full
           ${isPanelExpanded ? 'translate-y-0' : 'translate-y-[calc(100%-64px)]'}
-          md:translate-y-0 md:bottom-4 md:top-4 md:left-auto md:right-4
-          sm:w-[540px] md:w-[600px] lg:w-[640px]
+          md:translate-y-0 md:top-0 md:bottom-0 md:left-auto md:right-0 md:h-full
+          sm:w-[480px] md:w-[480px] lg:w-[520px]
           ${isPanelExpanded 
             ? 'md:translate-x-0 md:opacity-100 md:pointer-events-auto' 
-            : 'md:translate-x-[calc(100%+2rem)] md:opacity-0 md:pointer-events-none'
+            : 'md:translate-x-full md:opacity-0 md:pointer-events-none'
           }
         `}
       >
@@ -105,68 +161,153 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
               setIsPanelExpanded(true);
             }
           }}
-          className="bg-white rounded-t-[20px] md:rounded-3xl shadow-[0_-8px_32px_rgba(0,0,0,0.20),_0_-4px_16px_rgba(0,0,0,0.12)] md:shadow-[0_12px_40px_rgba(0,0,0,0.14)] md:border md:border-slate-200/90 pb-2 md:pb-0 h-auto md:h-full flex flex-col overflow-hidden"
+          className="bg-white rounded-t-[24px] md:rounded-none md:border-l md:border-slate-200/90 shadow-2xl pb-2 md:pb-0 h-auto md:h-full flex flex-col overflow-hidden relative"
         >
+          {/* Desktop Left-Edge Collapse Handle (Where the red arrow in user screenshot points!) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsPanelExpanded(false);
+            }}
+            className="hidden md:flex absolute top-1/2 -left-4.5 -translate-y-1/2 z-30 w-5 h-16 bg-white hover:bg-slate-50 rounded-l-xl border-y border-l border-slate-200/90 shadow-[-4px_2px_12px_rgba(0,0,0,0.08)] items-center justify-center text-slate-400 hover:text-brand-primary transition-all cursor-pointer group pointer-events-auto"
+            title={language === 'ru' ? 'Свернуть панель' : language === 'en' ? 'Collapse panel' : "Panelni yig'ish"}
+            aria-label={language === 'ru' ? 'Свернуть панель' : language === 'en' ? 'Collapse panel' : "Panelni yig'ish"}
+          >
+            <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+          </button>
+
           {/* Mobile Drag Handle & Header */}
           <div 
             onClick={(e) => {
               e.stopPropagation();
               setIsPanelExpanded(!isPanelExpanded);
             }}
-            className="md:hidden cursor-pointer select-none pt-2 pb-1.5 w-full"
+            className="md:hidden cursor-pointer select-none pt-2.5 pb-2 w-full border-b border-slate-100"
           >
-            {/* Bottom Sheet Drag Handle */}
-            <div className="flex justify-center mb-1">
-              <div className="w-10 h-1 bg-gray-300 rounded-full"></div>
+            <div className="flex justify-center mb-1.5">
+              <div className="w-10 h-1 bg-slate-300 rounded-full" />
             </div>
 
-            {/* Result Count */}
             <div className="text-center px-4">
-              <p className="text-xs font-bold text-brand-text-variant truncate">
+              <p className="text-xs font-bold text-slate-800 truncate">
                 {getJobsSummaryText()}
               </p>
               {!isPanelExpanded && displayedJobs.length > 0 && (
-                <p className="text-[9px] text-brand-primary font-bold mt-0.5 animate-pulse">
+                <p className="text-[10px] text-brand-primary font-bold mt-0.5">
                   {t.clickToOpenList}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Desktop Header with Collapse Button */}
-          <div className="hidden md:flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white/95 backdrop-blur-xs shrink-0 select-none">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-brand-primary shrink-0">
-                  <Briefcase size={15} />
+          {/* Desktop Header */}
+          <div className="hidden md:flex flex-col border-b border-slate-100 bg-white shrink-0 select-none">
+            <div className="flex items-center justify-between px-5 pt-4 pb-2.5">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0">
+                    <Briefcase size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-slate-900 truncate">
+                      {getJobsSummaryText()}
+                    </h3>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <p className="text-[11px] text-slate-400 font-semibold">
+                        {displayedJobs.length > 0 
+                          ? (language === 'ru' 
+                              ? `${displayedJobs.length} активных вакансий` 
+                              : language === 'en' 
+                              ? `${displayedJobs.length} active jobs` 
+                              : `${displayedJobs.length} ta faol e'lon`)
+                          : (language === 'ru' ? 'Вакансии не найдены' : language === 'en' ? 'No jobs found' : "E'lonlar topilmadi")
+                        }
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-sm font-bold text-slate-800 truncate">
-                  {getJobsSummaryText()}
-                </h3>
               </div>
-              <p className="text-[11px] text-slate-400 font-medium mt-0.5 ml-9">
-                {displayedJobs.length > 0 
-                  ? (language === 'ru' 
-                      ? `${displayedJobs.length} активных вакансий` 
-                      : language === 'en' 
-                      ? `${displayedJobs.length} active jobs` 
-                      : `${displayedJobs.length} ta faol e'lon`)
-                  : (language === 'ru' ? 'Вакансии не найдены' : language === 'en' ? 'No jobs found' : "E'lonlar topilmadi")
-                }
-              </p>
+
+              {/* View Switcher & Collapse */}
+              <div className="flex items-center gap-2 shrink-0 ml-3">
+                {/* Segmented View Mode Switcher */}
+                <div className="flex items-center bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/60">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setViewMode('list');
+                    }}
+                    className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                      viewMode === 'list'
+                        ? 'bg-white text-brand-primary shadow-2xs font-bold'
+                        : 'text-slate-400 hover:text-slate-700'
+                    }`}
+                    title={language === 'ru' ? 'Список' : language === 'en' ? 'List' : "Ro'yxat"}
+                    aria-label={language === 'ru' ? 'Список' : language === 'en' ? 'List' : "Ro'yxat"}
+                  >
+                    <LayoutList size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setViewMode('grid');
+                    }}
+                    className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                      viewMode === 'grid'
+                        ? 'bg-white text-brand-primary shadow-2xs font-bold'
+                        : 'text-slate-400 hover:text-slate-700'
+                    }`}
+                    title={language === 'ru' ? 'Сетка' : language === 'en' ? 'Grid' : "Setka"}
+                    aria-label={language === 'ru' ? 'Сетка' : language === 'en' ? 'Grid' : "Setka"}
+                  >
+                    <LayoutGrid size={15} />
+                  </button>
+                </div>
+
+                {/* Close/Collapse Icon */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsPanelExpanded(false);
+                  }}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer border-none shrink-0"
+                  title={language === 'ru' ? 'Свернуть' : language === 'en' ? 'Collapse' : 'Yopish'}
+                  aria-label={language === 'ru' ? 'Свернуть' : language === 'en' ? 'Collapse' : 'Yopish'}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsPanelExpanded(false);
-              }}
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer border-none shrink-0 ml-2"
-              title={language === 'ru' ? 'Свернуть' : language === 'en' ? 'Collapse' : 'Yopish'}
-              aria-label={language === 'ru' ? 'Свернуть' : language === 'en' ? 'Collapse' : 'Yopish'}
-            >
-              <ChevronRight size={18} />
-            </button>
+
+            {/* Quick Sort / Filter Chips */}
+            <div className="flex items-center gap-1.5 px-5 pb-3 overflow-x-auto no-scrollbar">
+              {sortChips.map((chip) => {
+                const isActive = activeSort === chip.id;
+                return (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveSort(chip.id);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] flex items-center gap-1 transition-all cursor-pointer shrink-0 border ${
+                      isActive
+                        ? 'bg-brand-primary text-white font-bold border-brand-primary shadow-2xs'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-200/70 font-medium'
+                    }`}
+                  >
+                    {chip.icon}
+                    <span>{chip.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Content Area */}
@@ -178,25 +319,25 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
               </div>
               {/* Desktop Skeleton */}
               <div className="hidden md:block flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar">
-                <JobCardSkeleton count={6} layout="vertical" />
+                <JobCardSkeleton count={5} layout={viewMode} />
               </div>
             </>
-          ) : displayedJobs.length === 0 ? (
-            <div className="px-4 py-6 md:py-12 flex flex-col items-center justify-center text-center flex-1">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50/80 border border-indigo-100/60 flex items-center justify-center text-brand-primary mb-3 shadow-inner">
-                <Briefcase size={20} className="stroke-[1.8] text-brand-primary" />
+          ) : sortedJobs.length === 0 ? (
+            <div className="px-4 py-8 md:py-16 flex flex-col items-center justify-center text-center flex-1">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100/70 flex items-center justify-center text-brand-primary mb-3 shadow-inner">
+                <Briefcase size={22} className="stroke-[1.8] text-brand-primary" />
               </div>
-              <h4 className="text-xs md:text-sm font-bold text-slate-800">
+              <h4 className="text-sm font-bold text-slate-800">
                 {t.noJobsListedYet}
               </h4>
-              <p className="text-[11px] md:text-xs text-slate-500 max-w-[280px] mt-1.5 leading-normal">
+              <p className="text-xs text-slate-500 max-w-[280px] mt-1.5 leading-normal">
                 {t.noJobsListedYetDesc}
               </p>
               {filterLocation !== 'Barchasi' && (
                 <button
                   type="button"
                   onClick={handleResetMap}
-                  className="mt-4 px-4 py-2 bg-brand-primary text-white text-xs font-bold rounded-xl shadow-xs hover:bg-brand-primary/95 transition-all cursor-pointer border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+                  className="mt-4 px-4 py-2 bg-brand-primary text-white text-xs font-bold rounded-xl shadow-xs hover:bg-brand-primary/95 transition-all cursor-pointer border-none"
                 >
                   {language === 'uz' ? "Barcha hududlarni ko'rsatish" : language === 'ru' ? "Показать все регионы" : "Show all regions"}
                 </button>
@@ -206,35 +347,41 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
             <>
               {/* Mobile: Horizontal scrollable Job Cards */}
               <div className="md:hidden relative w-full overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white via-white/75 to-transparent pointer-events-none z-10" />
-                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white via-white/75 to-transparent pointer-events-none z-10" />
                 <div 
                   onScroll={(e) => {
                     const target = e.currentTarget;
                     setIsAtBeginning(target.scrollLeft < 10);
                   }}
-                  className={`px-8 pt-1.5 pb-2 overflow-x-auto no-scrollbar flex gap-4 snap-x snap-mandatory scroll-smooth w-full ${
-                    displayedJobs.length === 1 ? 'justify-center' : ''
+                  className={`px-6 pt-1.5 pb-2 overflow-x-auto no-scrollbar flex gap-3 snap-x snap-mandatory scroll-smooth w-full ${
+                    sortedJobs.length === 1 ? 'justify-center' : ''
                   }`}
                 >
-                  {displayedJobs.map(job => (
-                    <JobCardItem
-                      key={job.id}
-                      job={job}
-                      language={language}
-                      selectedJob={selectedJob}
-                      handleJobSelect={handleJobSelect}
-                      userLocation={userLocation}
-                      applied={appliedJobIds.has(job.id)}
-                      applyToJob={applyToJob}
-                    />
+                  {sortedJobs.map(job => (
+                    <div key={job.id} className="min-w-[calc(100vw-64px)] sm:min-w-[280px] shrink-0 snap-center">
+                      <JobCardItem
+                        job={job}
+                        language={language}
+                        selectedJob={selectedJob}
+                        handleJobSelect={handleJobSelect}
+                        userLocation={userLocation}
+                        applied={appliedJobIds.has(job.id)}
+                        applyToJob={applyToJob}
+                        layoutMode="list"
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
 
-              {/* Desktop: 2-column scrollable Job Cards grid */}
-              <div className="hidden md:grid grid-cols-2 flex-1 min-h-0 overflow-y-auto p-4 gap-3 no-scrollbar scroll-smooth content-start">
-                {displayedJobs.map(job => (
+              {/* Desktop: Dynamic List or Grid View */}
+              <div 
+                className={`hidden md:block flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar scroll-smooth ${
+                  viewMode === 'grid'
+                    ? 'grid grid-cols-2 gap-2.5 content-start'
+                    : 'flex flex-col gap-2.5'
+                }`}
+              >
+                {sortedJobs.map(job => (
                   <JobCardItem
                     key={job.id}
                     job={job}
@@ -244,6 +391,7 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                     userLocation={userLocation}
                     applied={appliedJobIds.has(job.id)}
                     applyToJob={applyToJob}
+                    layoutMode={viewMode}
                   />
                 ))}
               </div>

@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { Briefcase, MapPin, Navigation, Clock, Share2, Info, Users } from 'lucide-react';
+import { Briefcase, MapPin, Navigation, Clock, Share2, Users, CheckCircle2 } from 'lucide-react';
 import { Job } from '../../types';
 import { getLatLng, calculateDistance } from './mapUtils';
 import { getJobShiftTime, getJobDuration } from '../../utils/jobTimeUtils';
 import { shareJob } from '../../utils/shareJob';
 import { formatSalary } from '../../utils/money';
-import { getJobTitle, getJobDescription, getJobLocation } from '../../utils/jobTranslationUtils';
+import { getJobTitle, getJobLocation } from '../../utils/jobTranslationUtils';
 import { translations, Language } from '../../translations';
-import { ConfirmModal } from '../common/ConfirmModal';
 
 interface JobCardItemProps {
   job: Job;
@@ -17,7 +16,28 @@ interface JobCardItemProps {
   userLocation: { lat: number; lng: number } | null;
   applied: boolean;
   applyToJob: (id: string) => void;
+  layoutMode?: 'list' | 'grid';
 }
+
+const getCompanyInitial = (name: string): string => {
+  return (name || 'B').trim().charAt(0).toUpperCase();
+};
+
+const getCompanyGradient = (name: string): string => {
+  const gradients = [
+    'from-indigo-600 to-blue-500',
+    'from-blue-600 to-cyan-500',
+    'from-emerald-600 to-teal-500',
+    'from-violet-600 to-purple-500',
+    'from-amber-600 to-orange-500',
+    'from-rose-600 to-pink-500',
+  ];
+  let hash = 0;
+  for (let i = 0; i < (name || '').length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return gradients[Math.abs(hash) % gradients.length];
+};
 
 export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
   job,
@@ -26,195 +46,203 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
   handleJobSelect,
   userLocation,
   applied,
-  applyToJob,
+  layoutMode = 'list',
 }) => {
-  // This card sent the application on the first tap. Every other place a
-  // worker can apply asks first - JobDetailsFooter has done so all along - and
-  // an application cannot be withdrawn, so the one entry point that did not
-  // ask was the one that could not be taken back. Same wording as the footer,
-  // so the question reads the same wherever it is asked.
-  const [confirmingApply, setConfirmingApply] = useState(false);
-
+  const [imgError, setImgError] = useState(false);
   const t = translations[language];
   const jobLatLng = getLatLng(job);
   const displayTime = getJobShiftTime(job);
   const displayDuration = getJobDuration(job, language as 'uz' | 'ru' | 'en');
-
-  const shiftWhen = [(job as any).workDate, (job as any).workTime].filter(Boolean).join(', ');
-  const formattedSalary = formatSalary(job.salary, language);
   const localizedTitle = getJobTitle(job, language);
-  const localizedDescription = getJobDescription(job, language);
-  const applyQuestion = {
-    ru: `«${localizedTitle}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Оплата: ${formattedSalary}.` : ''} Работодатель увидит вашу заявку.`,
-    en: `"${localizedTitle}"${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `Pay: ${formattedSalary}.` : ''} The employer will see your application.`,
-    uz: `«${localizedTitle}»${shiftWhen ? ` — ${shiftWhen}` : ''}. ${formattedSalary ? `To'lov: ${formattedSalary}.` : ''} Ish beruvchi arizangizni ko'radi.`,
-  }[language as 'uz' | 'ru' | 'en'] ?? `«${localizedTitle}» uchun ariza topshirasizmi?`;
+  const localizedLocation = getJobLocation(job, language);
+  const formattedSalary = formatSalary(job.salary, language);
+  const isSelected = selectedJob?.id === job.id;
 
-  return (
-    <>
-    <div
-      onClick={() => handleJobSelect(job)}
-      className="group perspective-1000 snap-center shrink-0 min-w-[calc(100vw-64px)] max-w-[calc(100vw-64px)] sm:min-w-[250px] sm:max-w-[250px] md:min-w-0 md:max-w-none md:w-full md:snap-align-none h-[162px] relative cursor-pointer"
-    >
-      <div className="w-full h-full preserve-3d transition-transform duration-500 group-hover:rotate-y-180 relative">
-        
-        {/* Front Side */}
-        <div
-          className={`absolute inset-0 w-full h-full backface-hidden p-2.5 sm:p-3 rounded-xl flex flex-col justify-between border ${
-            selectedJob?.id === job.id
-              ? 'bg-white border-brand-primary/30 ring-1 ring-brand-primary/20 shadow-[0_20px_25px_-5px_rgba(37,99,235,0.12),_0_10px_10px_-5px_rgba(37,99,235,0.06),_inset_0_1.5px_0_rgba(255,255,255,1),_inset_0_-2px_0_rgba(37,99,235,0.05)]'
-              : 'bg-white border-slate-100 shadow-[0_10px_20px_-5px_rgba(0,0,0,0.08),_0_4px_6px_-2px_rgba(0,0,0,0.03),_inset_0_1.5px_0_rgba(255,255,255,0.9),_inset_0_-2px_0_rgba(0,0,0,0.03)]'
-          }`}
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              void shareJob(job, language);
-            }}
-            className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-brand-primary transition-all duration-200 cursor-pointer z-10"
-            title={t.share}
-            aria-label={t.share}
-          >
-            <Share2 size={12} />
-          </button>
-          
-          <div>
-            <div className="flex gap-2 items-start">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-50 shadow-xs flex items-center justify-center overflow-hidden shrink-0 border border-slate-100/90 mt-0.5">
-                {job.imageUrl || job.logoUrl ? (
-                  <img src={job.imageUrl || job.logoUrl} alt={job.company} className="w-full h-full object-cover" onError={(e) => {
-                    const target = e.currentTarget;
-                    const fallback = 'https://ui-avatars.com/api/?name=U&background=F1F5F9&color=94A3B8&size=150';
-                    if (target.src !== fallback) {
-                      target.src = fallback;
-                    }
-                  }} />
-                ) : (
-                  <Briefcase size={13} className="text-slate-400" />
-                )}
-              </div>
-              <div className="min-w-0 pr-6 flex-1">
-                <h3 className="text-xs font-bold text-slate-800 leading-tight truncate">
-                  {localizedTitle}
-                </h3>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <p className="text-[10px] text-slate-400 font-medium truncate">
-                    {job.company}
-                  </p>
-                </div>
-              </div>
-            </div>
+  const hasImage = Boolean((job.imageUrl || job.logoUrl) && !imgError);
 
-            <div className="mt-1 flex items-center justify-between">
-              <p className="font-sans font-bold text-slate-900 text-[13px] sm:text-[14px] leading-tight truncate">
-                {formatSalary(job.salary, language)}
-              </p>
-            </div>
+  const hiredCount = Number(job.hiredCount ?? 0);
+  const vacancies = Number(job.vacancies ?? (job.neededWorkers ? parseInt(job.neededWorkers) : 1));
 
-            <div className="flex flex-wrap items-center gap-1 mt-1">
-              <span className="px-1.5 py-0.5 bg-blue-50/80 text-brand-primary text-[9px] font-extrabold rounded flex items-center gap-1">
-                <Users size={9} className="text-brand-primary" /> {(job.hiredCount || 0)}/{(job.vacancies || (job.neededWorkers ? parseInt(job.neededWorkers) : 1))}
-              </span>
-              {userLocation && (
-                <span className="px-1.5 py-0.5 bg-indigo-50/70 text-brand-primary text-[9px] font-semibold rounded flex items-center gap-1">
-                  <Navigation size={7.5} className="rotate-45 fill-brand-primary/20" />
-                  {calculateDistance(userLocation.lat, userLocation.lng, jobLatLng.lat, jobLatLng.lng).toFixed(1)} km
-                </span>
-              )}
-            </div>
+  const distance = userLocation 
+    ? calculateDistance(userLocation.lat, userLocation.lng, jobLatLng.lat, jobLatLng.lng).toFixed(1)
+    : null;
+
+  // Render Avatar
+  const renderAvatar = (sizeClass: string, textClass: string) => (
+    <div className={`${sizeClass} rounded-xl overflow-hidden shrink-0 border border-slate-100/90 shadow-2xs relative`}>
+      {hasImage ? (
+        <img
+          src={job.imageUrl || job.logoUrl}
+          alt={job.company}
+          className="w-full h-full object-cover"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <div className={`w-full h-full bg-gradient-to-br ${getCompanyGradient(job.company)} flex items-center justify-center text-white font-black ${textClass}`}>
+          {getCompanyInitial(job.company)}
+        </div>
+      )}
+    </div>
+  );
+
+  // Render Grid View (2-Column compact mode)
+  if (layoutMode === 'grid') {
+    return (
+      <article
+        onClick={() => handleJobSelect(job)}
+        className={`group p-3 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between relative select-none ${
+          isSelected
+            ? 'bg-blue-50/50 border-brand-primary ring-2 ring-brand-primary/25 shadow-md'
+            : 'bg-white border-slate-200/80 hover:border-brand-primary/40 hover:shadow-md hover:-translate-y-0.5'
+        }`}
+      >
+        <div>
+          {/* Top Row: Avatar + Title & Share */}
+          <div className="flex items-start justify-between gap-2">
+            {renderAvatar('w-8 h-8', 'text-xs')}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                void shareJob(job, language);
+              }}
+              className="w-7 h-7 -mr-1 -mt-1 rounded-full flex items-center justify-center text-slate-300 hover:text-brand-primary hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+              title={t.share}
+              aria-label={t.share}
+            >
+              <Share2 size={12} />
+            </button>
           </div>
 
-          <div>
-            <div className="h-[1px] bg-slate-100 w-full mb-1" />
+          <h3 className="text-xs font-bold text-slate-900 group-hover:text-brand-primary transition-colors line-clamp-2 mt-2 leading-tight">
+            {localizedTitle}
+          </h3>
 
-            <div className="flex justify-between items-end gap-1">
-              <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium truncate">
-                  <Clock size={10} className="text-slate-400 shrink-0" />
-                  <span className="truncate">{displayTime}</span>
-                </div>
-                <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium truncate">
-                  <MapPin size={10} className="text-slate-400 shrink-0" />
-                  <span className="truncate">{getJobLocation(job, language)}</span>
-                </div>
-              </div>
-              <span className="text-[9.5px] font-bold text-brand-primary shrink-0 self-end">
-                {displayDuration}
-              </span>
-            </div>
+          <p className="text-[11px] text-slate-400 font-semibold truncate mt-0.5">
+            {job.company}
+          </p>
+
+          {/* Salary Pill */}
+          <div className="mt-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-black tracking-tight tabular-nums">
+              {formattedSalary}
+            </span>
           </div>
         </div>
 
-        {/* Back Side */}
-        <div
-          className={`absolute inset-0 w-full h-full backface-hidden rotate-y-180 p-2.5 sm:p-3 rounded-xl flex flex-col justify-between border transition-all duration-300 ${
-            selectedJob?.id === job.id
-              ? 'bg-slate-50 border-brand-primary/40 ring-1 ring-brand-primary/25 shadow-[0_12px_24px_-4px_rgba(37,99,235,0.08),_inset_0_1.5px_0_rgba(255,255,255,1)]'
-              : 'bg-slate-50/70 border-slate-200/90 shadow-[0_10px_20px_-6px_rgba(0,0,0,0.06),_inset_0_1.5px_0_rgba(255,255,255,0.95)]'
-          }`}
-        >
-          {/* Title / Header */}
-          <div className="flex items-center justify-between gap-1">
-            <div className="flex items-center gap-1 min-w-0">
-              <Info size={10} className="text-brand-primary shrink-0" />
-              <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider truncate">
-                {language === 'uz' ? "Ish tavsifi" : language === 'ru' ? "Описание" : "Description"}
-              </span>
-            </div>
-            <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-100/40 text-[7.5px] font-bold rounded shrink-0">
-              {language === 'uz' ? "Kafolatlangan" : language === 'ru' ? "Проверено" : "Verified"}
+        {/* Footer Meta Row */}
+        <div className="mt-2.5 pt-2 border-t border-slate-100/90 flex flex-col gap-1">
+          <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium">
+            <span className="flex items-center gap-1 truncate max-w-[110px]" title={localizedLocation}>
+              <MapPin size={10} className="text-slate-400 shrink-0" />
+              <span className="truncate">{localizedLocation}</span>
+            </span>
+            <span className="text-[10px] font-bold text-brand-primary shrink-0">
+              {displayDuration}
             </span>
           </div>
 
-          {/* Dynamic job detailed points */}
-          <div className="flex-1 my-1 flex flex-col justify-center min-h-0">
-            <p className="text-[10px] leading-tight text-slate-600 font-medium line-clamp-3 overflow-hidden whitespace-pre-line">
-              {localizedDescription || (
-                language === 'uz' ? "Kunlik ish faoliyati, barcha zaruriy jihozlar va tushlik ish beruvchi tomonidan ta'minlanadi." : language === 'ru' ? "Ежедневная работа, всё необходимое оборудование и обед предоставляются работодателем." : "Daily job, all necessary equipment and lunch are provided by the employer."
-              )}
-            </p>
+          <div className="flex items-center justify-between text-[10px] text-slate-400">
+            <span className="flex items-center gap-1 truncate">
+              <Clock size={10} className="text-slate-400 shrink-0" />
+              <span className="truncate">{displayTime}</span>
+            </span>
+            <span className="flex items-center gap-1 font-bold text-slate-600 shrink-0">
+              <Users size={10} className="text-slate-400" />
+              <span>{hiredCount}/{vacancies}</span>
+            </span>
           </div>
-          
-          {/* Apply/Application Status Action Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (applied) return;
-              setConfirmingApply(true);
-            }}
-            className={`w-full min-h-[38px] py-2 rounded-lg text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1.5 shrink-0 border-none ${
-              applied
-                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-default'
-                : 'bg-brand-primary hover:bg-brand-primary/95 text-white shadow-[0_4px_10px_rgba(37,99,235,0.18)] active:scale-[0.98]'
-            }`}
-          >
-            {applied ? (
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                {t.appliedLabel}
-              </span>
-            ) : t.applyNow}
-          </button>
+        </div>
+      </article>
+    );
+  }
+
+  // Render List View (1-Column spacious and highly readable mode)
+  return (
+    <article
+      onClick={() => handleJobSelect(job)}
+      className={`group p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer flex gap-3.5 items-center relative select-none ${
+        isSelected
+          ? 'bg-blue-50/50 border-brand-primary ring-2 ring-brand-primary/25 shadow-md'
+          : 'bg-white border-slate-200/80 hover:border-brand-primary/40 hover:shadow-md hover:-translate-y-0.5'
+      }`}
+    >
+      {/* Left Avatar */}
+      {renderAvatar('w-11 h-11', 'text-sm')}
+
+      {/* Middle Content */}
+      <div className="min-w-0 flex-1 pr-1">
+        <div className="flex items-center gap-1.5">
+          <h3 className="text-sm font-bold text-slate-900 group-hover:text-brand-primary transition-colors truncate">
+            {localizedTitle}
+          </h3>
+          {applied && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-600 text-[10px] font-bold shrink-0">
+              <CheckCircle2 size={10} />
+              {t.appliedLabel}
+            </span>
+          )}
         </div>
 
-      </div>
-    </div>
+        <p className="text-xs text-slate-400 font-semibold truncate mt-0.5">
+          {job.company}
+        </p>
 
-    <ConfirmModal
-      isOpen={confirmingApply}
-      title={language === 'uz' ? 'Arizani tasdiqlang' : language === 'ru' ? 'Подтвердите заявку' : 'Confirm application'}
-      message={applyQuestion}
-      confirmText={language === 'uz' ? 'Ha, topshirish' : language === 'ru' ? 'Да, отправить' : 'Yes, apply'}
-      cancelText={language === 'uz' ? 'Bekor qilish' : language === 'ru' ? 'Отмена' : 'Cancel'}
-      isDestructive={false}
-      onConfirm={() => applyToJob(job.id)}
-      onCancel={() => setConfirmingApply(false)}
-    />
-    </>
+        {/* Metadata Badges Row */}
+        <div className="flex flex-wrap items-center gap-2.5 mt-2 text-[11px] text-slate-500 font-medium">
+          <span className="inline-flex items-center gap-1 truncate max-w-[140px]" title={localizedLocation}>
+            <MapPin size={11} className="text-slate-400 shrink-0" />
+            <span className="truncate">{localizedLocation}</span>
+          </span>
+
+          <span className="inline-flex items-center gap-1 truncate">
+            <Clock size={11} className="text-slate-400 shrink-0" />
+            <span className="truncate">{displayTime}</span>
+          </span>
+
+          <span className="inline-flex items-center gap-1 font-bold text-slate-600 shrink-0">
+            <Users size={11} className="text-slate-400" />
+            <span>{hiredCount}/{vacancies}</span>
+          </span>
+
+          {distance && (
+            <span className="inline-flex items-center gap-1 text-brand-primary font-bold shrink-0">
+              <Navigation size={10} className="rotate-45 fill-brand-primary/20" />
+              <span>{distance} km</span>
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Right Column: Salary & Share & Duration */}
+      <div className="shrink-0 flex flex-col items-end justify-between self-stretch gap-1.5">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            void shareJob(job, language);
+          }}
+          className="w-7 h-7 -mr-1 -mt-1 rounded-full flex items-center justify-center text-slate-300 hover:text-brand-primary hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+          title={t.share}
+          aria-label={t.share}
+        >
+          <Share2 size={13} />
+        </button>
+
+        <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs font-black tracking-tight tabular-nums whitespace-nowrap shadow-2xs">
+          {formattedSalary}
+        </span>
+
+        <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100 shrink-0">
+          {displayDuration}
+        </span>
+      </div>
+    </article>
   );
 }, (prev, next) => {
   return prev.job.id === next.job.id &&
          prev.language === next.language &&
+         prev.layoutMode === next.layoutMode &&
          (prev.selectedJob?.id === prev.job.id) === (next.selectedJob?.id === next.job.id) &&
          prev.applied === next.applied &&
          prev.userLocation?.lat === next.userLocation?.lat &&

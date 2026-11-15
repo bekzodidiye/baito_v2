@@ -113,7 +113,7 @@ export const useRegionPolygonInitialization = ({
         const isExpanded = Boolean(isPanelExpandedRef?.current && isDesktop);
         map.fitBounds(geoJsonLayer.getBounds(), {
           paddingTopLeft: [20, 20],
-          paddingBottomRight: [isExpanded ? 640 : 20, 20],
+          paddingBottomRight: [isExpanded ? 520 : 20, 20],
           maxZoom: 6.2,
           animate: false
         });
