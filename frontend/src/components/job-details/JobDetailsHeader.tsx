@@ -38,16 +38,16 @@ export const JobDetailsHeader: React.FC<JobDetailsHeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 h-14 flex items-center px-4 justify-between shrink-0 rounded-t-3xl">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 h-14 md:h-16 flex items-center px-4 md:px-6 justify-between shrink-0 rounded-t-3xl sm:rounded-t-none sm:rounded-tl-3xl">
       <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={onClose}
           aria-label={t.goBack}
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-brand-primary transition-colors cursor-pointer active:scale-95 shrink-0"
+          className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-brand-primary transition-colors cursor-pointer active:scale-95 shrink-0"
         >
           <ArrowLeft size={20} className="stroke-[2.5]" />
         </button>
-        <h1 className="text-base font-bold text-brand-primary truncate tracking-tight">
+        <h1 className="text-base md:text-lg font-bold text-brand-primary truncate tracking-tight">
           {t.jobDetailsTitle || (language === 'uz' ? "Ish tafsilotlari" : language === 'ru' ? "Детали работы" : "Job Details")}
         </h1>
       </div>

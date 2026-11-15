@@ -131,7 +131,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
   const isHiredOrConfirmed = ['hired', 'confirmed', 'todo', 'approved'].includes(selectedJob.status) || (selectedJob as any).hired;
 
   return (
-    <footer className="sticky bottom-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/80 p-3.5 sm:p-4 flex items-center gap-4 shrink-0 mt-auto rounded-b-none sm:rounded-b-2xl">
+    <footer className="sticky bottom-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/80 p-4 md:p-6 flex items-center gap-4 shrink-0 mt-auto rounded-b-none sm:rounded-b-none sm:rounded-bl-3xl">
       {(() => {
         if (selectedJob.status === 'completed') {
           return (

@@ -38,7 +38,7 @@ export const JobDetailsHeader: React.FC<JobDetailsHeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 h-14 flex items-center px-4 justify-between shrink-0 rounded-t-3xl">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 h-14 md:h-16 flex items-center px-4 md:px-6 justify-between shrink-0 rounded-t-3xl sm:rounded-t-none sm:rounded-tl-3xl">
       <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={onClose}
