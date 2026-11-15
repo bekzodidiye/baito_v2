@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Briefcase, ChevronRight, ChevronLeft, LayoutList, LayoutGrid, Sparkles, TrendingUp, Clock, DollarSign } from 'lucide-react';
+import { Briefcase, ChevronRight, ChevronLeft, LayoutList, LayoutGrid, Sparkles, TrendingUp, Clock, DollarSign, Search, X } from 'lucide-react';
 import { Job } from '../../types';
 import { JobCardSkeleton } from './JobCardSkeleton';
 import { useJobsData } from "../../context/useJobsData";
 import { translations, translateRegion } from '../../translations';
 import { JobCardItem } from './JobCardItem';
 import { useAuthStore } from "../../store/useAuthStore";
+import { getJobTitle, getJobLocation } from '../../utils/jobTranslationUtils';
 
 interface JobSummaryCardProps {
   isPanelExpanded: boolean;
@@ -42,8 +43,9 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
   const language = useAuthStore(s => s.language);
   const { jobs, applyToJob } = useJobsData();
   const t = translations[language];
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [activeSort, setActiveSort] = useState<SortOption>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [, setIsAtBeginning] = useState(true);
 
   const appliedJobIds = useMemo(() => {
@@ -56,7 +58,20 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
 
   const sortedJobs = useMemo(() => {
     if (!displayedJobs || displayedJobs.length === 0) return [];
-    const list = [...displayedJobs];
+    let list = [...displayedJobs];
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(j => {
+        const rawTitle = (j.title || '').toLowerCase();
+        const locTitle = getJobTitle(j, language).toLowerCase();
+        const comp = (j.company || '').toLowerCase();
+        const rawLoc = (j.location || '').toLowerCase();
+        const locLoc = getJobLocation(j, language).toLowerCase();
+        return rawTitle.includes(q) || locTitle.includes(q) || comp.includes(q) || rawLoc.includes(q) || locLoc.includes(q);
+      });
+    }
+
     if (activeSort === 'high_salary') {
       return list.sort((a, b) => {
         const salA = typeof a.salary === 'number' ? a.salary : parseInt(String(a.salary).replace(/\D/g, '')) || 0;
@@ -79,7 +94,7 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
       });
     }
     return list;
-  }, [displayedJobs, activeSort]);
+  }, [displayedJobs, activeSort, searchQuery]);
 
   const getJobsSummaryText = () => {
     const count = displayedJobs.length;
@@ -148,7 +163,7 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
           fixed bottom-0 left-0 w-full
           ${isPanelExpanded ? 'translate-y-0' : 'translate-y-[calc(100%-64px)]'}
           md:translate-y-0 md:top-0 md:bottom-0 md:left-auto md:right-0 md:h-full
-          sm:w-[480px] md:w-[480px] lg:w-[520px]
+          sm:w-[540px] md:w-[600px] lg:w-[640px]
           ${isPanelExpanded 
             ? 'md:translate-x-0 md:opacity-100 md:pointer-events-auto' 
             : 'md:translate-x-full md:opacity-0 md:pointer-events-none'
@@ -163,18 +178,18 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
           }}
           className="bg-white rounded-t-[24px] md:rounded-none md:border-l md:border-slate-200/90 shadow-2xl pb-2 md:pb-0 h-auto md:h-full flex flex-col overflow-hidden relative"
         >
-          {/* Desktop Left-Edge Collapse Handle (Where the red arrow in user screenshot points!) */}
+          {/* Desktop Left-Edge Collapse Handle */}
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               setIsPanelExpanded(false);
             }}
-            className="hidden md:flex absolute top-1/2 -left-4.5 -translate-y-1/2 z-30 w-5 h-16 bg-white hover:bg-slate-50 rounded-l-xl border-y border-l border-slate-200/90 shadow-[-4px_2px_12px_rgba(0,0,0,0.08)] items-center justify-center text-slate-400 hover:text-brand-primary transition-all cursor-pointer group pointer-events-auto"
+            className="hidden md:flex absolute top-1/2 -left-5 -translate-y-1/2 z-30 w-5 h-16 bg-white hover:bg-slate-50 rounded-l-xl border-y border-l border-slate-200/90 shadow-[-4px_2px_12px_rgba(0,0,0,0.08)] items-center justify-center text-slate-400 hover:text-brand-primary transition-all cursor-pointer group pointer-events-auto"
             title={language === 'ru' ? 'Свернуть панель' : language === 'en' ? 'Collapse panel' : "Panelni yig'ish"}
             aria-label={language === 'ru' ? 'Свернуть панель' : language === 'en' ? 'Collapse panel' : "Panelni yig'ish"}
           >
-            <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
           </button>
 
           {/* Mobile Drag Handle & Header */}
@@ -203,7 +218,7 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
 
           {/* Desktop Header */}
           <div className="hidden md:flex flex-col border-b border-slate-100 bg-white shrink-0 select-none">
-            <div className="flex items-center justify-between px-5 pt-4 pb-2.5">
+            <div className="flex items-center justify-between px-5 pt-4 pb-2">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0">
@@ -216,12 +231,12 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       <p className="text-[11px] text-slate-400 font-semibold">
-                        {displayedJobs.length > 0 
+                        {sortedJobs.length > 0 
                           ? (language === 'ru' 
-                              ? `${displayedJobs.length} активных вакансий` 
+                              ? `${sortedJobs.length} активных вакансий` 
                               : language === 'en' 
-                              ? `${displayedJobs.length} active jobs` 
-                              : `${displayedJobs.length} ta faol e'lon`)
+                              ? `${sortedJobs.length} active jobs` 
+                              : `${sortedJobs.length} ta faol e'lon`)
                           : (language === 'ru' ? 'Вакансии не найдены' : language === 'en' ? 'No jobs found' : "E'lonlar topilmadi")
                         }
                       </p>
@@ -238,22 +253,6 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setViewMode('list');
-                    }}
-                    className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                      viewMode === 'list'
-                        ? 'bg-white text-brand-primary shadow-2xs font-bold'
-                        : 'text-slate-400 hover:text-slate-700'
-                    }`}
-                    title={language === 'ru' ? 'Список' : language === 'en' ? 'List' : "Ro'yxat"}
-                    aria-label={language === 'ru' ? 'Список' : language === 'en' ? 'List' : "Ro'yxat"}
-                  >
-                    <LayoutList size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
                       setViewMode('grid');
                     }}
                     className={`p-1.5 rounded-md transition-all cursor-pointer ${
@@ -261,10 +260,26 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                         ? 'bg-white text-brand-primary shadow-2xs font-bold'
                         : 'text-slate-400 hover:text-slate-700'
                     }`}
-                    title={language === 'ru' ? 'Сетка' : language === 'en' ? 'Grid' : "Setka"}
-                    aria-label={language === 'ru' ? 'Сетка' : language === 'en' ? 'Grid' : "Setka"}
+                    title={language === 'ru' ? 'Сетка (2 колонки)' : language === 'en' ? 'Grid (2 columns)' : "2 ustunli katak"}
+                    aria-label={language === 'ru' ? 'Сетка (2 колонки)' : language === 'en' ? 'Grid (2 columns)' : "2 ustunli katak"}
                   >
                     <LayoutGrid size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setViewMode('list');
+                    }}
+                    className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                      viewMode === 'list'
+                        ? 'bg-white text-brand-primary shadow-2xs font-bold'
+                        : 'text-slate-400 hover:text-slate-700'
+                    }`}
+                    title={language === 'ru' ? 'Список (1 колонка)' : language === 'en' ? 'List (1 column)' : "1 ustunli ro'yxat"}
+                    aria-label={language === 'ru' ? 'Список (1 колонка)' : language === 'en' ? 'List (1 column)' : "1 ustunli ro'yxat"}
+                  >
+                    <LayoutList size={15} />
                   </button>
                 </div>
 
@@ -281,6 +296,29 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                 >
                   <ChevronRight size={18} />
                 </button>
+              </div>
+            </div>
+
+            {/* In-Panel Quick Search */}
+            <div className="px-5 pt-1 pb-2">
+              <div className="relative flex items-center">
+                <Search size={14} className="absolute left-3 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={language === 'uz' ? "Kassir, haydovchi, kompaniya..." : language === 'ru' ? "Кассир, водитель, компания..." : "Search title, company..."}
+                  className="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white text-xs text-slate-800 placeholder-slate-400 pl-8.5 pr-8 py-1.5 rounded-xl border border-slate-200/80 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 transition-all outline-none"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 p-0.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer border-none"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -318,8 +356,10 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                 <JobCardSkeleton count={3} layout="horizontal" />
               </div>
               {/* Desktop Skeleton */}
-              <div className="hidden md:block flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar">
-                <JobCardSkeleton count={5} layout={viewMode} />
+              <div className={`hidden flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar ${
+                viewMode === 'grid' ? 'md:grid md:grid-cols-2 gap-3' : 'md:flex md:flex-col gap-2.5'
+              }`}>
+                <JobCardSkeleton count={6} layout={viewMode} />
               </div>
             </>
           ) : sortedJobs.length === 0 ? (
@@ -331,7 +371,7 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                 {t.noJobsListedYet}
               </h4>
               <p className="text-xs text-slate-500 max-w-[280px] mt-1.5 leading-normal">
-                {t.noJobsListedYetDesc}
+                {searchQuery ? (language === 'uz' ? `"${searchQuery}" bo'yicha hech qanday e'lon topilmadi` : `Ничего не найдено по запросу "${searchQuery}"`) : t.noJobsListedYetDesc}
               </p>
               {filterLocation !== 'Barchasi' && (
                 <button
@@ -375,10 +415,10 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
 
               {/* Desktop: Dynamic List or Grid View */}
               <div 
-                className={`hidden md:block flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar scroll-smooth ${
+                className={`hidden flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar scroll-smooth ${
                   viewMode === 'grid'
-                    ? 'grid grid-cols-2 gap-2.5 content-start'
-                    : 'flex flex-col gap-2.5'
+                    ? 'md:grid md:grid-cols-2 gap-3 content-start'
+                    : 'md:flex md:flex-col gap-2.5'
                 }`}
               >
                 {sortedJobs.map(job => (

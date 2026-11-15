@@ -63,7 +63,9 @@ export function useMapViewScreen() {
     isViloyatDashboard: filterLocation !== 'Barchasi' && UZBEKISTAN_REGIONS.some(r => filterLocation.toLowerCase().includes(r.id.toLowerCase())),
     onMapClick: () => {
       setSelectedJob(null);
-      setIsPanelExpanded(false);
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        setIsPanelExpanded(false);
+      }
     },
     mapType
   });

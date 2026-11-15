@@ -40,7 +40,9 @@ export const createDistrictOnEachFeature = (
   layer.on('click', (e) => {
     L.DomEvent.stopPropagation(e);
     setFilterLocation(tumanName);
-    setIsPanelExpanded(false);
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setIsPanelExpanded(false);
+    }
     
     if ((layer as any).getBounds) {
       map.fitBounds((layer as any).getBounds(), {

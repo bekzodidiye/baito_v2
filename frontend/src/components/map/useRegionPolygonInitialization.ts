@@ -56,7 +56,9 @@ export const useRegionPolygonInitialization = ({
           layer.on('click', (e) => {
             L.DomEvent.stopPropagation(e);
             setFilterLocationRef.current(region.id);
-            setIsPanelExpandedRef.current(false);
+            if (typeof window !== 'undefined' && window.innerWidth < 768) {
+              setIsPanelExpandedRef.current(false);
+            }
             if ((layer as any).getBounds) {
               map.fitBounds((layer as any).getBounds(), {
                 paddingTopLeft: [15, 80],

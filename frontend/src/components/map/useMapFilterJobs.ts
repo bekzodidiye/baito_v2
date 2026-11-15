@@ -87,14 +87,15 @@ export function useMapFilterJobs({
   }, [availableJobs, filterLocation, activeCluster, cluster1Jobs, cluster2Jobs]);
 
   useEffect(() => {
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
     if (filterLocation === 'Barchasi') {
       setActiveCluster('all');
       panToCoords(41.2, 64.0, 5.1);
-      setIsPanelExpanded(false);
+      if (!isDesktop) setIsPanelExpanded(false);
       return;
     }
 
-    setIsPanelExpanded(false);
+    if (!isDesktop) setIsPanelExpanded(false);
 
     if (isRegionName(filterLocation)) {
       setActiveCluster('all');

@@ -21,7 +21,7 @@ export const FloatingSearchBar: React.FC<FloatingSearchBarProps> = ({
       onMouseDown={(e) => e.stopPropagation()}
       onDoubleClick={(e) => e.stopPropagation()}
       className={`absolute top-3.5 left-3.5 right-3.5 z-30 max-w-md mx-auto flex items-center gap-2 pointer-events-auto transition-all duration-300 ease-in-out md:left-6 ${
-        isPanelExpanded ? 'md:right-[544px]' : 'md:right-6'
+        isPanelExpanded ? 'md:right-[620px] lg:right-[660px]' : 'md:right-6'
       }`}
     >
       <div 

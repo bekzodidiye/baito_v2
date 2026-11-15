@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Briefcase, MapPin, Navigation, Clock, Share2, Users, CheckCircle2 } from 'lucide-react';
+import { MapPin, Navigation, Clock, Share2, Users, CheckCircle2, Flame } from 'lucide-react';
 import { Job } from '../../types';
 import { getLatLng, calculateDistance } from './mapUtils';
 import { getJobShiftTime, getJobDuration } from '../../utils/jobTimeUtils';
@@ -58,10 +58,11 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
   const formattedSalary = formatSalary(job.salary, language);
   const isSelected = selectedJob?.id === job.id;
 
-  const hasImage = Boolean((job.imageUrl || job.logoUrl) && !imgError);
+  const hasImage = Boolean((job.logoUrl || job.imageUrl) && !imgError);
 
   const hiredCount = Number(job.hiredCount ?? 0);
   const vacancies = Number(job.vacancies ?? (job.neededWorkers ? parseInt(job.neededWorkers) : 1));
+  const isUrgent = Boolean((job as any).urgent);
 
   const distance = userLocation 
     ? calculateDistance(userLocation.lat, userLocation.lng, jobLatLng.lat, jobLatLng.lng).toFixed(1)
@@ -72,7 +73,7 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
     <div className={`${sizeClass} rounded-xl overflow-hidden shrink-0 border border-slate-100/90 shadow-2xs relative`}>
       {hasImage ? (
         <img
-          src={job.imageUrl || job.logoUrl}
+          src={job.logoUrl || job.imageUrl}
           alt={job.company}
           className="w-full h-full object-cover"
           onError={() => setImgError(true)}
@@ -90,23 +91,37 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
     return (
       <article
         onClick={() => handleJobSelect(job)}
-        className={`group p-3 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between relative select-none ${
+        className={`group p-3 sm:p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between relative select-none ${
           isSelected
             ? 'bg-blue-50/50 border-brand-primary ring-2 ring-brand-primary/25 shadow-md'
             : 'bg-white border-slate-200/80 hover:border-brand-primary/40 hover:shadow-md hover:-translate-y-0.5'
         }`}
       >
         <div>
-          {/* Top Row: Avatar + Title & Share */}
-          <div className="flex items-start justify-between gap-2">
-            {renderAvatar('w-8 h-8', 'text-xs')}
+          {/* Top Row: Avatar + Company Name + Badges & Share */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              {renderAvatar('w-8 h-8', 'text-xs')}
+              <div className="min-w-0">
+                <p className="text-[11px] text-slate-500 font-semibold truncate leading-tight">
+                  {job.company}
+                </p>
+                {isUrgent && (
+                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-amber-600 mt-0.5">
+                    <Flame size={9} className="text-amber-500 fill-amber-500" />
+                    <span>{language === 'ru' ? 'Срочно' : language === 'en' ? 'Urgent' : 'Shoshilinch'}</span>
+                  </span>
+                )}
+              </div>
+            </div>
+
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 void shareJob(job, language);
               }}
-              className="w-7 h-7 -mr-1 -mt-1 rounded-full flex items-center justify-center text-slate-300 hover:text-brand-primary hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+              className="w-7 h-7 -mr-1 -mt-1 rounded-lg flex items-center justify-center text-slate-300 hover:text-brand-primary hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
               title={t.share}
               aria-label={t.share}
             >
@@ -114,26 +129,28 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
             </button>
           </div>
 
-          <h3 className="text-xs font-bold text-slate-900 group-hover:text-brand-primary transition-colors line-clamp-2 mt-2 leading-tight">
+          <h3 className="text-xs sm:text-[13px] font-bold text-slate-900 group-hover:text-brand-primary transition-colors line-clamp-2 mt-2 leading-snug tracking-tight min-h-[32px]">
             {localizedTitle}
           </h3>
 
-          <p className="text-[11px] text-slate-400 font-semibold truncate mt-0.5">
-            {job.company}
-          </p>
-
           {/* Salary Pill */}
-          <div className="mt-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-black tracking-tight tabular-nums">
+          <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-black tracking-tight tabular-nums shadow-2xs">
               {formattedSalary}
             </span>
+            {applied && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-600 text-[9px] font-bold">
+                <CheckCircle2 size={9} />
+                {t.appliedLabel}
+              </span>
+            )}
           </div>
         </div>
 
         {/* Footer Meta Row */}
         <div className="mt-2.5 pt-2 border-t border-slate-100/90 flex flex-col gap-1">
           <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium">
-            <span className="flex items-center gap-1 truncate max-w-[110px]" title={localizedLocation}>
+            <span className="flex items-center gap-1 truncate max-w-[130px]" title={localizedLocation}>
               <MapPin size={10} className="text-slate-400 shrink-0" />
               <span className="truncate">{localizedLocation}</span>
             </span>
@@ -147,9 +164,17 @@ export const JobCardItem: React.FC<JobCardItemProps> = React.memo(({
               <Clock size={10} className="text-slate-400 shrink-0" />
               <span className="truncate">{displayTime}</span>
             </span>
-            <span className="flex items-center gap-1 font-bold text-slate-600 shrink-0">
-              <Users size={10} className="text-slate-400" />
-              <span>{hiredCount}/{vacancies}</span>
+            <span className="flex items-center gap-1.5 shrink-0">
+              {distance && (
+                <span className="inline-flex items-center gap-0.5 text-brand-primary font-bold">
+                  <Navigation size={8} className="rotate-45 fill-brand-primary/20" />
+                  <span>{distance}km</span>
+                </span>
+              )}
+              <span className="flex items-center gap-0.5 font-bold text-slate-600">
+                <Users size={10} className="text-slate-400" />
+                <span>{hiredCount}/{vacancies}</span>
+              </span>
             </span>
           </div>
         </div>
