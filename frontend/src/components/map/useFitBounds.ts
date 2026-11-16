@@ -11,6 +11,7 @@ interface UseFitBoundsProps {
   lastFittedLocationRef: React.MutableRefObject<string>;
   geoJsonData: any;
   districtsGeoJsonData: any;
+  isPanelExpanded?: boolean;
 }
 
 export const useFitBounds = ({
@@ -21,17 +22,35 @@ export const useFitBounds = ({
   filterLocation,
   lastFittedLocationRef,
   geoJsonData,
-  districtsGeoJsonData
+  districtsGeoJsonData,
+  isPanelExpanded = false
 }: UseFitBoundsProps) => {
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map || filterLocation === 'Barchasi') return;
+    if (!map) return;
     
     if (lastFittedLocationRef.current !== filterLocation) {
       const fitTimer = setTimeout(() => {
         if (!mapInstanceRef.current) return;
         const currentMap = mapInstanceRef.current;
         let foundAndFitted = false;
+        
+        const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+        const paddingRight = (isPanelExpanded && isDesktop) ? 650 : 25;
+        
+        if (filterLocation === 'Barchasi') {
+          if (regionsGeoJsonLayerRef.current && regionsGeoJsonLayerRef.current.getBounds().isValid()) {
+            currentMap.fitBounds(regionsGeoJsonLayerRef.current.getBounds(), {
+              paddingTopLeft: [25, 75],
+              paddingBottomRight: [paddingRight, 40],
+              maxZoom: 6.2,
+              animate: true,
+              duration: 0.8
+            });
+            lastFittedLocationRef.current = 'Barchasi';
+          }
+          return;
+        }
         
         if (regionsGeoJsonLayerRef.current) {
           const layers = regionsGeoJsonLayerRef.current.getLayers();
@@ -47,11 +66,11 @@ export const useFitBounds = ({
             if (mappedRegionId && isMatch) {
               if ((layer as any).getBounds) {
                 currentMap.fitBounds((layer as any).getBounds(), {
-                  paddingTopLeft: [15, 80],
-                  paddingBottomRight: [15, 110],
+                  paddingTopLeft: [25, 75],
+                  paddingBottomRight: [paddingRight, 40],
                   maxZoom: 9.8,
                   animate: true,
-                  duration: 1.0
+                  duration: 0.8
                 });
                 lastFittedLocationRef.current = filterLocation;
                 foundAndFitted = true;
@@ -69,8 +88,8 @@ export const useFitBounds = ({
             if (areDistrictNamesEqual(filterLocation, tumanName)) {
               if ((layer as any).getBounds) {
                 currentMap.fitBounds((layer as any).getBounds(), {
-                  paddingTopLeft: [15, 80],
-                  paddingBottomRight: [15, 110],
+                  paddingTopLeft: [25, 75],
+                  paddingBottomRight: [paddingRight, 40],
                   maxZoom: 12.0,
                   animate: true,
                   duration: 0.8
@@ -86,5 +105,5 @@ export const useFitBounds = ({
 
       return () => clearTimeout(fitTimer);
     }
-  }, [isMapReady, filterLocation, mapInstanceRef, lastFittedLocationRef, geoJsonData, districtsGeoJsonData, regionsGeoJsonLayerRef, districtsGeoJsonLayerRef]);
+  }, [isMapReady, filterLocation, mapInstanceRef, lastFittedLocationRef, geoJsonData, districtsGeoJsonData, regionsGeoJsonLayerRef, districtsGeoJsonLayerRef, isPanelExpanded]);
 };

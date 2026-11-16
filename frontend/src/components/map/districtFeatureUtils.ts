@@ -12,7 +12,8 @@ export const createDistrictOnEachFeature = (
   setIsPanelExpanded: (expanded: boolean) => void,
   map: L.Map,
   lastFittedLocationRef: React.MutableRefObject<string>,
-  filterLocRef: React.MutableRefObject<string>
+  filterLocRef: React.MutableRefObject<string>,
+  isPanelExpandedRef?: React.MutableRefObject<boolean>
 ) => (feature: any, layer: L.Layer) => {
   const tumanName = feature.properties.shapeName || "Tuman";
   const count = districtJobsCount.get(tumanName) || 0;
@@ -45,9 +46,12 @@ export const createDistrictOnEachFeature = (
     }
     
     if ((layer as any).getBounds) {
+      const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+      const isExpanded = Boolean(isPanelExpandedRef?.current && isDesktop);
+      const paddingRight = isExpanded ? 650 : 25;
       map.fitBounds((layer as any).getBounds(), {
-        paddingTopLeft: [15, 80],
-        paddingBottomRight: [15, 110],
+        paddingTopLeft: [25, 75],
+        paddingBottomRight: [paddingRight, 40],
         maxZoom: 12.0,
         animate: true,
         duration: 0.8

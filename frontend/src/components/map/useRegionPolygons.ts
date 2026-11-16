@@ -131,7 +131,8 @@ export const useRegionPolygons = ({
     language,
     findDistrictFeature,
     getJobCountForLocation,
-    filterLocRef
+    filterLocRef,
+    isPanelExpandedRef
   });
 
   useFitBounds({
@@ -142,7 +143,8 @@ export const useRegionPolygons = ({
     filterLocation,
     lastFittedLocationRef,
     geoJsonData,
-    districtsGeoJsonData
+    districtsGeoJsonData,
+    isPanelExpanded
   });
 
   useEffect(() => {

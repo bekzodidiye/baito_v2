@@ -60,9 +60,12 @@ export const useRegionPolygonInitialization = ({
               setIsPanelExpandedRef.current(false);
             }
             if ((layer as any).getBounds) {
+              const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+              const isExpanded = Boolean(isPanelExpandedRef?.current && isDesktop);
+              const paddingRight = isExpanded ? 650 : 25;
               map.fitBounds((layer as any).getBounds(), {
-                paddingTopLeft: [15, 80],
-                paddingBottomRight: [15, 110],
+                paddingTopLeft: [25, 75],
+                paddingBottomRight: [paddingRight, 40],
                 maxZoom: 9.8,
                 animate: true,
                 duration: 1.0
@@ -113,9 +116,10 @@ export const useRegionPolygonInitialization = ({
       if (geoJsonLayer.getBounds().isValid() && filterLocRef.current === 'Barchasi') {
         const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
         const isExpanded = Boolean(isPanelExpandedRef?.current && isDesktop);
+        const paddingRight = isExpanded ? 650 : 25;
         map.fitBounds(geoJsonLayer.getBounds(), {
-          paddingTopLeft: [20, 20],
-          paddingBottomRight: [isExpanded ? 520 : 20, 20],
+          paddingTopLeft: [25, 75],
+          paddingBottomRight: [paddingRight, 40],
           maxZoom: 6.2,
           animate: false
         });

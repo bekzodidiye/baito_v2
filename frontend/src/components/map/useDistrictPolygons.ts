@@ -22,6 +22,7 @@ interface UseDistrictPolygonsProps {
   findDistrictFeature: (locationName: string) => any;
   getJobCountForLocation: (tumanName: string) => number;
   filterLocRef: React.MutableRefObject<string>;
+  isPanelExpandedRef?: React.MutableRefObject<boolean>;
 }
 
 export const useDistrictPolygons = ({
@@ -38,7 +39,8 @@ export const useDistrictPolygons = ({
   language,
   findDistrictFeature,
   getJobCountForLocation,
-  filterLocRef
+  filterLocRef,
+  isPanelExpandedRef
 }: UseDistrictPolygonsProps) => {
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -122,7 +124,8 @@ export const useDistrictPolygons = ({
         setIsPanelExpanded,
         map,
         lastFittedLocationRef,
-        filterLocRef
+        filterLocRef,
+        isPanelExpandedRef
       )
     });
     
