@@ -101,36 +101,43 @@ export const useDistrictPolygons = ({
       districtsGeoJsonLayerRef.current = null;
     }
 
-    const filteredFeatures = districtsGeoJsonData.features.filter((f: any) => f.properties && f.properties.regionId === selectedRegion.id);
-    
-    if (filteredFeatures.length === 0) return;
+    const timer = setTimeout(() => {
+      if (!mapInstanceRef.current || !regionsGroupRef.current) return;
+      const currentGroup = regionsGroupRef.current;
 
-    const districtJobsCount = new Map<string, number>();
-    filteredFeatures.forEach((f: any) => {
-      const tumanName = f.properties?.shapeName || "";
-      if (!tumanName) return;
-      districtJobsCount.set(tumanName, getJobCountForLocation(tumanName));
-    });
-    
-    const districtsLayer = L.geoJSON({
-      type: "FeatureCollection",
-      features: filteredFeatures
-    } as any, {
-      style: getDistrictStyle,
-      onEachFeature: createDistrictOnEachFeature(
-        language,
-        districtJobsCount,
-        setFilterLocation,
-        setIsPanelExpanded,
-        map,
-        lastFittedLocationRef,
-        filterLocRef,
-        isPanelExpandedRef
-      )
-    });
-    
-    districtsGeoJsonLayerRef.current = districtsLayer;
-    currentDistrictsRegionIdRef.current = selectedRegion.id;
-    districtsLayer.addTo(group);
+      const filteredFeatures = districtsGeoJsonData.features.filter((f: any) => f.properties && f.properties.regionId === selectedRegion.id);
+      
+      if (filteredFeatures.length === 0) return;
+
+      const districtJobsCount = new Map<string, number>();
+      filteredFeatures.forEach((f: any) => {
+        const tumanName = f.properties?.shapeName || "";
+        if (!tumanName) return;
+        districtJobsCount.set(tumanName, getJobCountForLocation(tumanName));
+      });
+      
+      const districtsLayer = L.geoJSON({
+        type: "FeatureCollection",
+        features: filteredFeatures
+      } as any, {
+        style: getDistrictStyle,
+        onEachFeature: createDistrictOnEachFeature(
+          language,
+          districtJobsCount,
+          setFilterLocation,
+          setIsPanelExpanded,
+          map,
+          lastFittedLocationRef,
+          filterLocRef,
+          isPanelExpandedRef
+        )
+      });
+      
+      districtsGeoJsonLayerRef.current = districtsLayer;
+      currentDistrictsRegionIdRef.current = selectedRegion.id;
+      districtsLayer.addTo(currentGroup);
+    }, 40);
+
+    return () => clearTimeout(timer);
   }, [filterLocation, districtsGeoJsonData, jobs, language, mapInstanceRef, regionsGroupRef]);
 };

@@ -90,7 +90,6 @@ export function useMapFilterJobs({
     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
     if (filterLocation === 'Barchasi') {
       setActiveCluster('all');
-      panToCoords(41.2, 64.0, 5.1);
       if (!isDesktop) setIsPanelExpanded(false);
       return;
     }

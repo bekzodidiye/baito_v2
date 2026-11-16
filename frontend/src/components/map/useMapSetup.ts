@@ -219,8 +219,16 @@ export const useMapSetup = ({
     const scheduleInvalidate = () => {
       if (resizeTimeout) clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        mapInstanceRef.current?.invalidateSize({ animate: false });
-      }, 80);
+        const currentMap = mapInstanceRef.current;
+        if (!currentMap) return;
+        if ((currentMap as any)._animatingZoom) {
+          currentMap.once('zoomend', () => {
+            currentMap.invalidateSize({ animate: false });
+          });
+          return;
+        }
+        currentMap.invalidateSize({ animate: false });
+      }, 100);
     };
 
     scheduleInvalidate();
@@ -238,7 +246,7 @@ export const useMapSetup = ({
       if (resizeObserver) resizeObserver.disconnect();
       if (resizeTimeout) clearTimeout(resizeTimeout);
     };
-  }, [isViloyatDashboard, isPanelExpanded, jobsView]);
+  }, [isPanelExpanded, jobsView]);
 
   useEffect(() => {
     if (jobsView === 'map' && mapInstanceRef.current) {

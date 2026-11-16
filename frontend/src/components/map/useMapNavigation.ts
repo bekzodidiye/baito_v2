@@ -60,7 +60,6 @@ export const useMapNavigation = ({
 
     if (isRegion) {
       setFilterLocation('Barchasi');
-      panToCoords(41.2, 64.0, 5.1);
       return;
     }
 
@@ -72,7 +71,6 @@ export const useMapNavigation = ({
 
     if (isTashkentCityDistrict) {
       setFilterLocation('Toshkent shahri');
-      panToCoords(41.311081, 69.275, 11);
       return;
     }
 
@@ -84,15 +82,11 @@ export const useMapNavigation = ({
       const parentRegion = UZBEKISTAN_REGIONS.find(r => r.id === matchedDistrict.properties.regionId);
       if (parentRegion) {
         setFilterLocation(parentRegion.id);
-        if (parentRegion.center) {
-          panToCoords(parentRegion.center[0], parentRegion.center[1], parentRegion.zoom);
-        }
         return;
       }
     }
     
     setFilterLocation('Barchasi');
-    panToCoords(41.2, 64.0, 5.1);
   };
 
   return {

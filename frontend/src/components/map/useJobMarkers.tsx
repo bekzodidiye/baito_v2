@@ -75,6 +75,8 @@ export const useJobMarkers = ({
     const maxPinsToRender = 120;
     const truncatedJobs = displayedJobs.slice(0, maxPinsToRender);
 
+    const markersToAdd: L.Marker[] = [];
+
     truncatedJobs.forEach(job => {
       const coords = getLatLng(job, districtsGeoJsonData);
       
@@ -161,8 +163,16 @@ export const useJobMarkers = ({
         }
       });
 
-      marker.addTo(group);
+      markersToAdd.push(marker);
     });
+
+    if (markersToAdd.length > 0) {
+      if (typeof (group as any).addLayers === 'function') {
+        (group as any).addLayers(markersToAdd);
+      } else {
+        markersToAdd.forEach(m => m.addTo(group));
+      }
+    }
 
     const handleMoveEnd = () => {
       setTimeout(() => {
