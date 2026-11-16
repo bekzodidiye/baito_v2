@@ -903,6 +903,9 @@ jobs:
           # without the growth being open-ended.
           docker builder prune --force --filter 'until=168h' >/dev/null 2>&1 || true
 
+          # Prune anonymous dangling volumes left behind by CI test service containers (e.g. postgres).
+          docker volume prune --force >/dev/null 2>&1 || true
+
       - name: 📣 Report a failed deploy
         # Deploys used to fail — or never run at all — with no signal anywhere.
         # The backup bot already owns a Telegram channel; reuse it so a broken
