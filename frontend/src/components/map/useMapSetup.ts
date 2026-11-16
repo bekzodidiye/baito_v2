@@ -124,7 +124,7 @@ export const useMapSetup = ({
 
     const map = L.map(container, {
       center: [41.2, 64.0],
-      zoom: 5.1,
+      zoom: 5.0,
       // Pin the zoom range on the map itself. Without it Leaflet derives the
       // range from whatever tile layer happens to be attached, and a map with
       // none attached answers getMaxZoom() with Infinity — see the cluster
@@ -133,7 +133,7 @@ export const useMapSetup = ({
       maxZoom: MAP_MAX_ZOOM,
       zoomControl: false,
       attributionControl: true,
-      preferCanvas: true,
+      preferCanvas: false,
       fadeAnimation: true,
       zoomAnimation: true,
     });

@@ -41,9 +41,11 @@ export const useMapLabels = ({
     const map = mapInstanceRef.current;
     if (!map || !labelsGroupRef.current) return;
     
-    let animationFrameId: number;
+    let animationFrameId: number = 0;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let zoomEndHandler: (() => void) | null = null;
 
-    animationFrameId = requestAnimationFrame(() => {
+    const renderLabels = () => {
       if (!labelsGroupRef.current) return;
       labelsGroupRef.current.clearLayers();
       
@@ -185,10 +187,22 @@ export const useMapLabels = ({
           }).addTo(labelsGroupRef.current!);
         });
       }
-    });
+    };
+
+    if ((map as any)._animatingZoom) {
+      zoomEndHandler = () => {
+        timer = setTimeout(renderLabels, 30);
+      };
+      map.once('zoomend', zoomEndHandler);
+      timer = setTimeout(renderLabels, 850);
+    } else {
+      animationFrameId = requestAnimationFrame(renderLabels);
+    }
 
     return () => {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (timer) clearTimeout(timer);
+      if (zoomEndHandler) map.off('zoomend', zoomEndHandler);
     };
   }, [isMapReady, filterLocation, zoomLevel, geoJsonData, districtsGeoJsonData, language, jobs]);
 };

@@ -101,8 +101,9 @@ export const useDistrictPolygons = ({
       districtsGeoJsonLayerRef.current = null;
     }
 
-    const timer = setTimeout(() => {
+    const attachDistricts = () => {
       if (!mapInstanceRef.current || !regionsGroupRef.current) return;
+      const currentMap = mapInstanceRef.current;
       const currentGroup = regionsGroupRef.current;
 
       const filteredFeatures = districtsGeoJsonData.features.filter((f: any) => f.properties && f.properties.regionId === selectedRegion.id);
@@ -126,7 +127,7 @@ export const useDistrictPolygons = ({
           districtJobsCount,
           setFilterLocation,
           setIsPanelExpanded,
-          map,
+          currentMap,
           lastFittedLocationRef,
           filterLocRef,
           isPanelExpandedRef
@@ -136,8 +137,24 @@ export const useDistrictPolygons = ({
       districtsGeoJsonLayerRef.current = districtsLayer;
       currentDistrictsRegionIdRef.current = selectedRegion.id;
       districtsLayer.addTo(currentGroup);
-    }, 40);
+    };
 
-    return () => clearTimeout(timer);
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let zoomEndHandler: (() => void) | null = null;
+
+    if ((map as any)._animatingZoom) {
+      zoomEndHandler = () => {
+        timer = setTimeout(attachDistricts, 40);
+      };
+      map.once('zoomend', zoomEndHandler);
+      timer = setTimeout(attachDistricts, 850);
+    } else {
+      timer = setTimeout(attachDistricts, 40);
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      if (zoomEndHandler) map.off('zoomend', zoomEndHandler);
+    };
   }, [filterLocation, districtsGeoJsonData, jobs, language, mapInstanceRef, regionsGroupRef]);
 };

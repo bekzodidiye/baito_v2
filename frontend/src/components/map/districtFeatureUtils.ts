@@ -25,19 +25,6 @@ export const createDistrictOnEachFeature = (
     .replace(" Rayon", " R.")
     .replace(" district", " dist.");
   
-  const tooltipContent = `
-    <div class="flex flex-col items-center">
-      <span class="font-bold text-xs" style="color: ${BOUNDARY_COLOUR}">${tumanLabelText}</span>
-      <span class="text-[10px] font-medium text-slate-500">${count} ${language === 'ru' ? 'вакансий' : language === 'en' ? 'jobs' : 'ta ish'}</span>
-    </div>
-  `;
-  
-  layer.bindTooltip(tooltipContent, {
-    permanent: false,
-    direction: 'center',
-    className: 'district-hover-tooltip'
-  });
-  
   layer.on('click', (e) => {
     L.DomEvent.stopPropagation(e);
     setFilterLocation(tumanName);
