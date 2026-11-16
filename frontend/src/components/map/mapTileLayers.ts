@@ -38,6 +38,14 @@ class CachedTileLayer extends L.TileLayer {
     };
 
     tile.onerror = (e) => {
+      if (!tile.dataset.fallbackTried) {
+        const fallbackUrl = osmFallbackUrl(coords);
+        if (fallbackUrl) {
+          tile.dataset.fallbackTried = 'true';
+          tile.src = fallbackUrl;
+          return;
+        }
+      }
       done(e as any, tile);
     };
 

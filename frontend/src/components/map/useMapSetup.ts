@@ -57,6 +57,7 @@ interface UseMapSetupProps {
   isViloyatDashboard: boolean;
   onMapClick: () => void;
   mapType: MapType;
+  jobsView?: 'map' | 'list';
 }
 
 export const useMapSetup = ({
@@ -64,6 +65,7 @@ export const useMapSetup = ({
   isViloyatDashboard,
   onMapClick,
   mapType,
+  jobsView,
 }: UseMapSetupProps) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -104,9 +106,23 @@ export const useMapSetup = ({
   }, [mapType]);
 
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    const container = mapContainerRef.current;
+    if (!container) return;
 
-    const map = L.map(mapContainerRef.current, {
+    // Prevent "Map container is already initialized" crashes during fast remounts
+    if ((container as any)._leaflet_id) {
+      delete (container as any)._leaflet_id;
+    }
+    if (mapInstanceRef.current) {
+      try {
+        mapInstanceRef.current.remove();
+      } catch (e) {
+        /* ignore dead instance error */
+      }
+      mapInstanceRef.current = null;
+    }
+
+    const map = L.map(container, {
       center: [41.2, 64.0],
       zoom: 5.1,
       // Pin the zoom range on the map itself. Without it Leaflet derives the
@@ -222,7 +238,21 @@ export const useMapSetup = ({
       if (resizeObserver) resizeObserver.disconnect();
       if (resizeTimeout) clearTimeout(resizeTimeout);
     };
-  }, [isViloyatDashboard, isPanelExpanded]);
+  }, [isViloyatDashboard, isPanelExpanded, jobsView]);
+
+  useEffect(() => {
+    if (jobsView === 'map' && mapInstanceRef.current) {
+      mapInstanceRef.current.invalidateSize({ animate: false });
+      const t1 = setTimeout(() => mapInstanceRef.current?.invalidateSize({ animate: false }), 60);
+      const t2 = setTimeout(() => mapInstanceRef.current?.invalidateSize({ animate: false }), 180);
+      const t3 = setTimeout(() => mapInstanceRef.current?.invalidateSize({ animate: false }), 350);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
+    }
+  }, [jobsView]);
 
   return {
     mapContainerRef,

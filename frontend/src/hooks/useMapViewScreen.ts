@@ -19,6 +19,7 @@ import { useAuthStore } from "../store/useAuthStore";
 
 export function useMapViewScreen() {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const jobsView = useUIStore(s => s.jobsView);
   const filterLocation = useUIStore(s => s.filterLocation);
     const setFilterLocation = useUIStore(s => s.setFilterLocation);
     const showRegionSelector = useUIStore(s => s.showRegionSelector);
@@ -67,7 +68,8 @@ export function useMapViewScreen() {
         setIsPanelExpanded(false);
       }
     },
-    mapType
+    mapType,
+    jobsView
   });
 
   const panToCoords = useCallback((lat: number, lng: number, zoom: number) => {

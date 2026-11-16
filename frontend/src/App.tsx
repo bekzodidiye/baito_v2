@@ -151,7 +151,7 @@ function AppContent() {
               However, it unmounts when leaving the jobs screen to prevent memory leaks. */}
           {shouldMountMap && (
             <ErrorBoundary>
-              <div className={currentScreen === 'jobs' && jobsView === 'map' ? 'block' : 'hidden'}>
+              <div className={currentScreen === 'jobs' && jobsView === 'map' ? 'block w-full h-full' : 'hidden'}>
                 <Suspense fallback={<MapLoadingSkeleton />}>
                   <MapViewScreen />
                 </Suspense>
