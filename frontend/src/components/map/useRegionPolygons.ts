@@ -189,6 +189,10 @@ export const useRegionPolygons = ({
     regionCentersRef,
     districtCentersRef,
     findDistrictFeature,
-    getJobCountForLocation
+    getJobCountForLocation,
+    setFilterLocation: (loc: string) => setFilterLocationRef.current(loc),
+    setIsPanelExpanded: (expanded: boolean) => setIsPanelExpandedRef.current(expanded),
+    lastFittedLocationRef,
+    isPanelExpandedRef
   });
 };

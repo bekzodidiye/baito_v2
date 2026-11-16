@@ -88,7 +88,11 @@ export const useDistrictPolygons = ({
         isFiltering: isAnyDistrictOfThisRegionSelected,
         isActive: isSelected,
       });
-      return { ...base, weight: base.weight * 0.8 };
+      return { 
+        ...base, 
+        weight: base.weight * 0.8,
+        className: 'leaflet-interactive-district'
+      };
     };
 
     if (districtsGeoJsonLayerRef.current && currentDistrictsRegionIdRef.current === selectedRegion.id) {

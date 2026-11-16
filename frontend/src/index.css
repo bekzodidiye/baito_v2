@@ -190,6 +190,21 @@ g:focus,
   z-index: 99999 !important;
 }
 
+/* Ensure the full interior and border of region and district polygons are clickable and interactive */
+path.leaflet-interactive,
+path.leaflet-interactive-region,
+path.leaflet-interactive-district {
+  pointer-events: all !important;
+  cursor: pointer !important;
+}
+
+/* Ensure region and district label badges are clickable and show pointer cursor */
+.region-center-label-container,
+.district-center-label-container {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
 /* Ensure Leaflet containers fill their parent elements completely and avoid partial gray rendering */
 .leaflet-container {
   width: 100% !important;

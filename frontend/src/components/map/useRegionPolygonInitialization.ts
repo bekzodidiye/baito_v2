@@ -45,7 +45,7 @@ export const useRegionPolygonInitialization = ({
           const region = UZBEKISTAN_REGIONS.find(r => r.id === regionId);
           return {
             ...RESTING,
-            className: region ? `region-polygon-${region.id}` : ''
+            className: region ? `region-polygon-${region.id} leaflet-interactive-region` : 'leaflet-interactive-region'
           };
         },
         onEachFeature: (feature, layer) => {

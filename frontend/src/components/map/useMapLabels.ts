@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import L from 'leaflet';
 import { Job } from '../../types';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
-import { mapFeatureToRegionId, areDistrictNamesEqual } from './mapUtils';
+import { mapFeatureToRegionId, areDistrictNamesEqual, getFeatureBounds } from './mapUtils';
 import { BOUNDARY_COLOUR } from './regionOutlineStyle';
 import { translateRegion, Language } from '../../translations';
 
@@ -20,6 +20,10 @@ interface UseMapLabelsProps {
   districtCentersRef: React.MutableRefObject<Map<string, [number, number]>>;
   findDistrictFeature: (locationName: string) => any;
   getJobCountForLocation: (name: string) => number;
+  setFilterLocation?: (loc: string) => void;
+  setIsPanelExpanded?: (expanded: boolean) => void;
+  lastFittedLocationRef?: React.MutableRefObject<string>;
+  isPanelExpandedRef?: React.MutableRefObject<boolean>;
 }
 
 export const useMapLabels = ({
@@ -35,7 +39,11 @@ export const useMapLabels = ({
   regionCentersRef,
   districtCentersRef,
   findDistrictFeature,
-  getJobCountForLocation
+  getJobCountForLocation,
+  setFilterLocation,
+  setIsPanelExpanded,
+  lastFittedLocationRef,
+  isPanelExpandedRef
 }: UseMapLabelsProps) => {
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -102,19 +110,47 @@ export const useMapLabels = ({
           
           const icon = L.divIcon({
             className: 'region-center-label-container',
-            html: `<div class="flex items-center -translate-x-1/2 -translate-y-1/2 whitespace-nowrap bg-white/95 rounded-full pointer-events-none ${containerPadding}">
+            html: `<div class="flex items-center -translate-x-1/2 -translate-y-1/2 whitespace-nowrap bg-white/95 rounded-full cursor-pointer hover:shadow-lg hover:scale-105 active:scale-95 transition-all select-none ${containerPadding}">
               <span class="${isRegionActive ? 'font-black text-blue-700' : 'font-extrabold text-slate-800'} ${textSizeClass} tracking-wide">${translatedName}</span>
               ${countBadge}
             </div>`,
             iconSize: null as any,
           });
           
-          L.marker(center as [number, number], { 
+          const marker = L.marker(center as [number, number], { 
             icon, 
-            interactive: false,
+            interactive: true,
             pane: "tooltipPane",
             zIndexOffset: isRegionActive ? 1000 : 800
-          }).addTo(labelsGroupRef.current!);
+          });
+
+          if (setFilterLocation) {
+            marker.on('click', (e) => {
+              L.DomEvent.stopPropagation(e);
+              setFilterLocation(region.id);
+              if (typeof window !== 'undefined' && window.innerWidth < 768 && setIsPanelExpanded) {
+                setIsPanelExpanded(false);
+              }
+              if (feature?.geometry) {
+                const b = getFeatureBounds(feature.geometry);
+                const bounds = L.latLngBounds([b.minLat, b.minLng], [b.maxLat, b.maxLng]);
+                const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+                const isExpanded = Boolean(isPanelExpandedRef?.current && isDesktop);
+                const paddingRight = isExpanded ? 650 : 25;
+                map.fitBounds(bounds, {
+                  paddingTopLeft: [25, 75],
+                  paddingBottomRight: [paddingRight, 40],
+                  maxZoom: 9.5,
+                  animate: true,
+                  duration: 0.8
+                });
+                if (lastFittedLocationRef) {
+                  lastFittedLocationRef.current = region.id;
+                }
+              }
+            });
+          }
+          marker.addTo(labelsGroupRef.current!);
         });
       }
       
@@ -172,19 +208,47 @@ export const useMapLabels = ({
 
           const icon = L.divIcon({
             className: 'district-center-label-container',
-            html: `<div class="flex flex-col items-center -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            html: `<div class="flex flex-col items-center -translate-x-1/2 -translate-y-1/2 cursor-pointer hover:scale-105 active:scale-95 transition-all select-none">
               <span class="font-bold ${fontSizeClass} whitespace-nowrap" style="color: ${BOUNDARY_COLOUR}; text-shadow: 1px 1px 0px white, -1px -1px 0px white, 1px -1px 0px white, -1px 1px 0px white;">${tumanLabelText}</span>
               ${badgeHtml}
             </div>`,
             iconSize: null as any,
           });
           
-          L.marker(center as [number, number], { 
+          const marker = L.marker(center as [number, number], { 
             icon, 
-            interactive: false,
+            interactive: true,
             pane: "tooltipPane",
             zIndexOffset: isSelected ? 1000 : 800
-          }).addTo(labelsGroupRef.current!);
+          });
+
+          if (setFilterLocation) {
+            marker.on('click', (e) => {
+              L.DomEvent.stopPropagation(e);
+              setFilterLocation(tumanName);
+              if (typeof window !== 'undefined' && window.innerWidth < 768 && setIsPanelExpanded) {
+                setIsPanelExpanded(false);
+              }
+              if (f?.geometry) {
+                const b = getFeatureBounds(f.geometry);
+                const bounds = L.latLngBounds([b.minLat, b.minLng], [b.maxLat, b.maxLng]);
+                const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+                const isExpanded = Boolean(isPanelExpandedRef?.current && isDesktop);
+                const paddingRight = isExpanded ? 650 : 25;
+                map.fitBounds(bounds, {
+                  paddingTopLeft: [25, 75],
+                  paddingBottomRight: [paddingRight, 40],
+                  maxZoom: 12.0,
+                  animate: true,
+                  duration: 0.8
+                });
+                if (lastFittedLocationRef) {
+                  lastFittedLocationRef.current = tumanName;
+                }
+              }
+            });
+          }
+          marker.addTo(labelsGroupRef.current!);
         });
       }
     };
