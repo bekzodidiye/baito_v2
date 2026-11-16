@@ -37,12 +37,7 @@ export function useMapViewScreen() {
 
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isPanelExpanded, setIsPanelExpanded] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth >= 768;
-    }
-    return false;
-  });
+  const [isPanelExpanded, setIsPanelExpanded] = useState(false);
   const [mapType, setMapType] = useState<'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro'>('jobs');
   
   const lastFittedLocationRef = useRef<string>('Barchasi');

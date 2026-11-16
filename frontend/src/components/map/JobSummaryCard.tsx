@@ -7,6 +7,7 @@ import { translations, translateRegion } from '../../translations';
 import { JobCardItem } from './JobCardItem';
 import { useAuthStore } from "../../store/useAuthStore";
 import { getJobTitle, getJobLocation } from '../../utils/jobTranslationUtils';
+import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface JobSummaryCardProps {
   isPanelExpanded: boolean;
@@ -40,6 +41,9 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
   isRefreshing,
   handleResetMap,
 }) => {
+  const { currentScreen } = useCurrentScreen();
+  if (currentScreen === 'landing') return null;
+
   const language = useAuthStore(s => s.language);
   const { jobs, applyToJob } = useJobsData();
   const t = translations[language];

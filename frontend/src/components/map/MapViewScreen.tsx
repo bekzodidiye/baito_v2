@@ -18,6 +18,7 @@ import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
 interface MapViewScreenProps {
   className?: string;
+  preview?: boolean;
 }
 
 export const MapViewScreen: React.FC<MapViewScreenProps> = ({ 
@@ -26,9 +27,11 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
   // sidebar and `BottomNav` is `md:hidden`, so subtracting the nav's 64px left
   // a strip of empty white across the bottom of the screen and stopped the
   // collapsed job sheet 64px short of the edge it is meant to sit on.
-  className = "h-[calc(100vh-56px-64px)] md:h-screen mt-14 md:mt-0" 
+  className = "h-[calc(100vh-56px-64px)] md:h-screen mt-14 md:mt-0",
+  preview = false
 }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
+  const isPreview = preview || currentScreen === 'landing';
   
   const {
     language,
@@ -80,25 +83,25 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
       </AnimatePresence>
 
       {/* Embedded Region/District Selector in Map Box */}
-      {showRegionSelector && (
+      {!isPreview && showRegionSelector && (
         <RegionSelector embedded />
       )}
 
-      {!showRegionSelector && !selectedJob && filterLocation !== 'Barchasi' && (
+      {!isPreview && !showRegionSelector && !selectedJob && filterLocation !== 'Barchasi' && (
         <MapBreadcrumbs 
           breadcrumbItems={breadcrumbItems} 
           handleBreadcrumbBack={handleBreadcrumbBack} 
         />
       )}
 
-      {!showRegionSelector && !selectedJob && filterLocation === 'Barchasi' && (
+      {!isPreview && !showRegionSelector && !selectedJob && filterLocation === 'Barchasi' && (
         <FloatingSearchBar 
           setShowRegionSelector={setShowRegionSelector} 
           isPanelExpanded={isPanelExpanded}
         />
       )}
 
-      {!showRegionSelector && (
+      {!isPreview && !showRegionSelector && (
         <>
           <MapActionButtons 
             isRefreshing={isRefreshing}

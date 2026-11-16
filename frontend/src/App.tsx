@@ -49,8 +49,11 @@ function AppContent() {
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
 
   useEffect(() => {
-    if (currentScreen === 'jobs' && jobsView === 'map') {
-      setHasOpenedMap(true);
+    if (currentScreen === 'jobs') {
+      useUIStore.getState().setDesktopSidebarCollapsed(true);
+      if (jobsView === 'map') {
+        setHasOpenedMap(true);
+      }
     }
 
     // Scroll window to top when navigating

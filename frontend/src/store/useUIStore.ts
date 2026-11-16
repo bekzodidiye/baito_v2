@@ -42,6 +42,8 @@ interface UIState {
   jobsView: 'map' | 'list';
   setJobsView: (view: 'map' | 'list') => void;
   setHasSeenTour: (seen: boolean) => void;
+  desktopSidebarCollapsed: boolean;
+  setDesktopSidebarCollapsed: (collapsed: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -108,7 +110,10 @@ export const useUIStore = create<UIState>((set) => ({
   setHasSeenTour: (seen) => {
     safeSetItem('baito_has_seen_tour', String(seen));
     set({ hasSeenTour: seen });
-  }
+  },
+
+  desktopSidebarCollapsed: true,
+  setDesktopSidebarCollapsed: (collapsed) => set({ desktopSidebarCollapsed: collapsed }),
 }));
 
 if (typeof window !== 'undefined') {

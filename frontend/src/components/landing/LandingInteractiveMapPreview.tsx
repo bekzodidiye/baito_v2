@@ -103,7 +103,7 @@ export const LandingInteractiveMapPreview: React.FC<LandingInteractiveMapPreview
           {/* Left Column: Interactive Map & Live Pins */}
           <div className="lg:col-span-8 bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-2.5 sm:p-4 flex flex-col justify-between shadow-xl w-full">
             <div className="rounded-xl sm:rounded-2xl overflow-hidden border border-slate-200 shadow-inner relative h-[480px] sm:h-[530px] w-full">
-              <MapViewScreen className="h-full w-full rounded-xl sm:rounded-2xl" />
+              <MapViewScreen preview className="h-full w-full rounded-xl sm:rounded-2xl" />
             </div>
           </div>
 

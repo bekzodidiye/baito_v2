@@ -4,7 +4,7 @@ import { useApp, ScreenType } from '../context/AppContext';
 import { 
   Map, Calendar, MessageCircle, Bell, User, Settings, HelpCircle, 
   ShieldCheck, LogOut, Briefcase, FileText, 
-  LayoutDashboard, PlusCircle, ChevronRight, ClipboardList 
+  LayoutDashboard, PlusCircle, ChevronRight, ChevronLeft, Menu, ClipboardList 
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { translations } from '../translations';
@@ -39,12 +39,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
     const unreadNotificationsCount = useUIStore(s => s.unreadNotificationsCount);
     const activeModal = useUIStore(s => s.activeModal);
     const activeSettingsTab = useUIStore(s => s.activeSettingsTab);
+    const desktopSidebarCollapsed = useUIStore(s => s.desktopSidebarCollapsed);
+    const setDesktopSidebarCollapsed = useUIStore(s => s.setDesktopSidebarCollapsed);
     const { pendingApplications, unreadMessages } = useSidebarBadges();
     const requireAuth = useApp().requireAuth;
 
   const t = translations[language];
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
   const isAdmin = isLoggedIn && userProfile?.selectedRole === 'admin';
+  const isMapScreen = currentScreen === 'jobs';
+  const isCollapsed = isMapScreen && desktopSidebarCollapsed;
 
   const handleLogout = () => {
     logout();
@@ -65,23 +69,39 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
     { id: 'employer-post', label: language === 'uz' ? "E'lon joylash" : language === 'ru' ? "Новое объявление" : "Post Job", icon: PlusCircle, screen: 'employer-post' as ScreenType, active: currentScreen === 'employer-post' },
     { id: 'employer-applicants', label: language === 'uz' ? "Arizalar" : language === 'ru' ? "Заявки" : "Applicants", icon: FileText, screen: 'employer-applicants' as ScreenType, active: currentScreen === 'employer-applicants', badge: pendingApplications },
     { id: 'employer-chats', label: language === 'uz' ? "Xabarlar" : language === 'ru' ? "Сообщения" : "Messages", icon: MessageCircle, screen: 'employer-chats' as ScreenType, active: currentScreen === 'employer-chats', badge: unreadMessages },
-    // An employer gets notified about the same things a worker does - someone
-    // applied, a shift was confirmed, an invoice was issued - and the screen
-    // and its unread count were already built and already reachable at
-    // /notifications for any signed-in role. Only the way in was missing.
     { id: 'notifications', label: language === 'uz' ? "Bildirishnomalar" : language === 'ru' ? "Уведомления" : "Notifications", icon: Bell, screen: 'notifications' as ScreenType, active: currentScreen === 'notifications', badge: unreadNotificationsCount },
   ];
 
   const activeNavItems = isEmployer ? employerNav : workerNav;
 
   return (
-    <aside className="hidden md:flex flex-col w-64 shrink-0 bg-white border-r border-slate-200/80 min-h-screen sticky top-0 h-screen overflow-y-auto z-40 select-none">
-      <div className="p-4 flex items-center justify-between border-b border-slate-100">
-        <div {...clickable(() => setCurrentScreen(isEmployer ? 'employer-dashboard' : 'jobs'))} className="cursor-pointer group flex items-center">
-          <Logo sizeClassName="text-xl" className="group-hover:scale-[1.02] transition-transform origin-left duration-300" />
+    <>
+      <aside 
+        className={`hidden md:flex flex-col shrink-0 bg-white border-r border-slate-200/80 min-h-screen sticky top-0 h-screen overflow-y-auto z-40 select-none transition-all duration-300 ease-in-out ${
+          isCollapsed 
+            ? 'w-0 -translate-x-full opacity-0 pointer-events-none overflow-hidden border-none' 
+            : 'w-64 translate-x-0 opacity-100'
+        }`}
+      >
+        <div className="p-4 flex items-center justify-between border-b border-slate-100">
+          <div {...clickable(() => setCurrentScreen(isEmployer ? 'employer-dashboard' : 'jobs'))} className="cursor-pointer group flex items-center">
+            <Logo sizeClassName="text-xl" className="group-hover:scale-[1.02] transition-transform origin-left duration-300" />
+          </div>
+          <div className="flex items-center gap-1">
+            <LanguageSelector align="right" />
+            {isMapScreen && (
+              <button
+                type="button"
+                onClick={() => setDesktopSidebarCollapsed(true)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer ml-1"
+                title={language === 'ru' ? 'Свернуть меню' : language === 'en' ? 'Collapse menu' : "Menyuni yig'ish"}
+                aria-label={language === 'ru' ? 'Свернуть меню' : language === 'en' ? 'Collapse menu' : "Menyuni yig'ish"}
+              >
+                <ChevronLeft size={18} />
+              </button>
+            )}
+          </div>
         </div>
-        <LanguageSelector align="right" />
-      </div>
 
       <div className="flex-1 px-4 py-5 flex flex-col justify-between">
         <div className="space-y-6">
@@ -236,6 +256,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
         </div>
       </div>
     </aside>
+
+    {/* Floating Re-open Sidebar Tab on Desktop when collapsed in jobs view */}
+    {isCollapsed && (
+      <button
+        type="button"
+        onClick={() => setDesktopSidebarCollapsed(false)}
+        className="hidden md:flex fixed top-1/2 left-0 -translate-y-1/2 z-30 h-16 px-2.5 bg-white/95 backdrop-blur-md rounded-r-2xl border-y border-r border-slate-200/90 shadow-[4px_2px_16px_rgba(0,0,0,0.12)] items-center gap-2 text-slate-700 hover:text-brand-primary hover:border-brand-primary/40 transition-all cursor-pointer pointer-events-auto group select-none"
+        title={language === 'ru' ? 'Показать меню' : language === 'en' ? 'Show menu' : "Menyuni ochish"}
+        aria-label={language === 'ru' ? 'Показать меню' : language === 'en' ? 'Show menu' : "Menyuni ochish"}
+      >
+        <div className="flex flex-col items-center">
+          <Menu size={16} className="text-slate-400 group-hover:text-brand-primary" />
+          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-1">
+            {language === 'ru' ? 'Меню' : language === 'en' ? 'Menu' : 'Menyu'}
+          </span>
+        </div>
+        <ChevronRight size={16} className="text-slate-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-transform" />
+      </button>
+    )}
+  </>
   );
 };
 
