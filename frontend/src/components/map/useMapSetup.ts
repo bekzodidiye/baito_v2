@@ -225,13 +225,20 @@ export const useMapSetup = ({
           currentMap.once('zoomend', () => {
             currentMap.invalidateSize({ animate: false });
           });
+          // Fallback in case zoomend fired or was skipped
+          setTimeout(() => {
+            currentMap.invalidateSize({ animate: false });
+          }, 400);
           return;
         }
         currentMap.invalidateSize({ animate: false });
-      }, 100);
+      }, 80);
     };
 
     scheduleInvalidate();
+    const postTransitionTimer = setTimeout(() => {
+      mapInstanceRef.current?.invalidateSize({ animate: false });
+    }, 350);
 
     window.addEventListener('resize', scheduleInvalidate);
 
@@ -245,6 +252,7 @@ export const useMapSetup = ({
       window.removeEventListener('resize', scheduleInvalidate);
       if (resizeObserver) resizeObserver.disconnect();
       if (resizeTimeout) clearTimeout(resizeTimeout);
+      clearTimeout(postTransitionTimer);
     };
   }, [isPanelExpanded, jobsView]);
 

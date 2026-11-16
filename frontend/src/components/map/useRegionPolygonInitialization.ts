@@ -66,9 +66,9 @@ export const useRegionPolygonInitialization = ({
               map.fitBounds((layer as any).getBounds(), {
                 paddingTopLeft: [25, 75],
                 paddingBottomRight: [paddingRight, 40],
-                maxZoom: 9.8,
+                maxZoom: 9.5,
                 animate: true,
-                duration: 1.0
+                duration: 0.8
               });
               lastFittedLocationRef.current = region.id;
             }

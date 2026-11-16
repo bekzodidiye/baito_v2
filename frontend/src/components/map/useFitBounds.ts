@@ -25,11 +25,17 @@ export const useFitBounds = ({
   districtsGeoJsonData,
   isPanelExpanded = false
 }: UseFitBoundsProps) => {
+  const prevPanelExpandedRef = React.useRef(isPanelExpanded);
+
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
     
-    if (lastFittedLocationRef.current !== filterLocation) {
+    const locationChanged = lastFittedLocationRef.current !== filterLocation;
+    const panelToggled = prevPanelExpandedRef.current !== isPanelExpanded;
+    prevPanelExpandedRef.current = isPanelExpanded;
+
+    if (locationChanged || panelToggled) {
       const fitTimer = setTimeout(() => {
         if (!mapInstanceRef.current) return;
         const currentMap = mapInstanceRef.current;
@@ -37,6 +43,7 @@ export const useFitBounds = ({
         
         const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
         const paddingRight = (isPanelExpanded && isDesktop) ? 650 : 25;
+        const animDuration = panelToggled && !locationChanged ? 0.5 : 0.75;
         
         if (filterLocation === 'Barchasi') {
           if (regionsGeoJsonLayerRef.current && regionsGeoJsonLayerRef.current.getBounds().isValid()) {
@@ -45,7 +52,7 @@ export const useFitBounds = ({
               paddingBottomRight: [paddingRight, 40],
               maxZoom: 6.2,
               animate: true,
-              duration: 0.8
+              duration: animDuration
             });
             lastFittedLocationRef.current = 'Barchasi';
           }
@@ -68,9 +75,9 @@ export const useFitBounds = ({
                 currentMap.fitBounds((layer as any).getBounds(), {
                   paddingTopLeft: [25, 75],
                   paddingBottomRight: [paddingRight, 40],
-                  maxZoom: 9.8,
+                  maxZoom: 9.5,
                   animate: true,
-                  duration: 0.8
+                  duration: animDuration
                 });
                 lastFittedLocationRef.current = filterLocation;
                 foundAndFitted = true;
@@ -92,7 +99,7 @@ export const useFitBounds = ({
                   paddingBottomRight: [paddingRight, 40],
                   maxZoom: 12.0,
                   animate: true,
-                  duration: 0.8
+                  duration: animDuration
                 });
                 lastFittedLocationRef.current = filterLocation;
                 foundAndFitted = true;

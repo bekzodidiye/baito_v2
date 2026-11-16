@@ -57,9 +57,9 @@ export const createTileLayers = (mapType: MapType, map: L.Map) => {
   let labelLayer: L.TileLayer | null = null;
 
   const defaultTileOptions: L.TileLayerOptions = {
-    updateWhenIdle: false,
-    updateInterval: 100,
-    keepBuffer: 4,
+    updateWhenIdle: true,
+    updateInterval: 150,
+    keepBuffer: 2,
     tileSize: 256,
     maxNativeZoom: 19,
     maxZoom: 20,
