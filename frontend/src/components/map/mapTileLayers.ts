@@ -2,61 +2,7 @@ import L from 'leaflet';
 
 export type MapType = 'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro';
 
-// Global memory cache for tile images to eliminate network latency when filtering or panning
-const tileMemoryCache = new Map<string, string>();
-const MAX_TILE_CACHE = 800;
-
-class CachedTileLayer extends L.TileLayer {
-  createTile(coords: L.Coords, done: L.DoneCallback): HTMLElement {
-    const tile = document.createElement('img');
-    L.DomEvent.on(tile, 'selectstart', L.DomEvent.preventDefault);
-    L.DomEvent.on(tile, 'dragstart', L.DomEvent.preventDefault);
-
-    tile.alt = '';
-    tile.setAttribute('role', 'presentation');
-
-    const url = this.getTileUrl(coords);
-
-    // Instant sync load from memory cache if available
-    if (tileMemoryCache.has(url)) {
-      tile.src = tileMemoryCache.get(url)!;
-      done(undefined, tile);
-      return tile;
-    }
-
-    tile.onload = () => {
-      try {
-        if (tileMemoryCache.size > MAX_TILE_CACHE) {
-          const firstKey = tileMemoryCache.keys().next().value;
-          if (firstKey) tileMemoryCache.delete(firstKey);
-        }
-        tileMemoryCache.set(url, tile.src);
-      } catch (e) {
-        // Fallback gracefully
-      }
-      done(undefined, tile);
-    };
-
-    tile.onerror = (e) => {
-      if (!tile.dataset.fallbackTried) {
-        const fallbackUrl = osmFallbackUrl(coords);
-        if (fallbackUrl) {
-          tile.dataset.fallbackTried = 'true';
-          tile.src = fallbackUrl;
-          return;
-        }
-      }
-      done(e as any, tile);
-    };
-
-    if (this.options.crossOrigin || this.options.crossOrigin === '') {
-      tile.crossOrigin = this.options.crossOrigin === true ? '' : this.options.crossOrigin;
-    }
-
-    tile.src = url;
-    return tile;
-  }
-}
+class CachedTileLayer extends L.TileLayer {}
 
 export const createCachedTileLayer = (urlTemplate: string, options: L.TileLayerOptions): L.TileLayer => {
   return new CachedTileLayer(urlTemplate, options);
@@ -111,13 +57,12 @@ export const createTileLayers = (mapType: MapType, map: L.Map) => {
   let labelLayer: L.TileLayer | null = null;
 
   const defaultTileOptions: L.TileLayerOptions = {
-    updateWhenIdle: true,
+    updateWhenIdle: false,
     updateInterval: 100,
-    keepBuffer: 3, // Keep 3 rows/cols buffer for smooth panning without memory bloat
+    keepBuffer: 4,
     tileSize: 256,
     maxNativeZoom: 19,
     maxZoom: 20,
-    crossOrigin: 'anonymous',
   };
 
   if (mapType === 'sputnik') {

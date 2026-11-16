@@ -110,3 +110,7 @@ export const useUIStore = create<UIState>((set) => ({
     set({ hasSeenTour: seen });
   }
 }));
+
+if (typeof window !== 'undefined') {
+  (window as any).__BAITO_UI_STORE__ = useUIStore;
+}
