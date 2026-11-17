@@ -14,6 +14,7 @@ from app.services import job_days
 
 from .admin_users import get_admin_user
 from .audit import record_admin_action
+from app.core.map_cache import invalidate_map_cache
 
 router = APIRouter()
 
@@ -147,6 +148,7 @@ def change_job_status(
         request=request, note=payload.reason,
     )
     db.commit()
+    invalidate_map_cache()
     return {"success": True, "status": job.status}
 
 
@@ -177,6 +179,7 @@ def approve_job(
         request=request, note="Admin e'lonni tasdiqladi",
     )
     db.commit()
+    invalidate_map_cache()
     return {"success": True, "status": job.status, "message": "E'lon muvaffaqiyatli tasdiqlandi"}
 
 
@@ -218,6 +221,7 @@ def reject_job(
         request=request, note=reason,
     )
     db.commit()
+    invalidate_map_cache()
     return {"success": True, "status": job.status, "message": "E'lon rad etildi"}
 
 
@@ -358,4 +362,5 @@ def delete_job(
         details={"affectedApplications": len(affected)}, request=request,
     )
     db.commit()
+    invalidate_map_cache()
     return {"success": True, "status": JobStatus.CANCELLED}

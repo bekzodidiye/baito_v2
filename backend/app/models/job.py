@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, JSON, Integer
+from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, JSON, Integer, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base_class import Base
@@ -104,3 +104,9 @@ class Job(Base):
     @longitude.setter
     def longitude(self, val):
         self.coordinateY = val
+
+    __table_args__ = (
+        Index("idx_jobs_spatial_open", "coordinateX", "coordinateY"),
+        Index("idx_jobs_location_open", "location", "coordinateX", "coordinateY"),
+        Index("idx_jobs_category_spatial", "category", "coordinateX", "coordinateY"),
+    )

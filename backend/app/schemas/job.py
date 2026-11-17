@@ -253,6 +253,11 @@ class JobMapPin(BaseModel):
     bookmarked: bool = False
     hiredCount: int = 0
     vacancies: int = 1
+    isCluster: Optional[bool] = False
+    count: Optional[int] = 1
+    salaryMin: Optional[int] = None
+    salaryMax: Optional[int] = None
+    pinIds: Optional[List[str]] = None
 
     model_config = ConfigDict(from_attributes=True)
 

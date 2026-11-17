@@ -140,3 +140,90 @@ def test_location_counts_endpoint(client):
     if etag:
         res2 = client.get("/api/v1/jobs/location-counts", headers={"If-None-Match": etag})
         assert res2.status_code == 304
+
+
+def test_map_pins_spatial_bounding_box(client):
+    """Test spatial bounding box filtering queries using partial spatial index."""
+    with SessionLocal() as db_session:
+        employer = db_session.query(models.User).filter_by(id="test-employer-id").first()
+        if not employer:
+            employer = models.User(
+                id="test-employer-id",
+                phone="+998901112233",
+                role="employer",
+                name="Test Employer",
+            )
+            db_session.add(employer)
+            db_session.flush()
+
+        # Job in Samarkand
+        job_samarkand = models.Job(
+            title="Samarkand Barista",
+            company="Registan Cafe",
+            location="Samarqand, Markaz",
+            coordinateX=39.65,
+            coordinateY=66.96,
+            salary=220000,
+            description="Tavsif",
+            status=JobStatus.OPEN,
+            employerId="test-employer-id",
+        )
+        # Job in Tashkent
+        job_tashkent = models.Job(
+            title="Tashkent Oshpaz",
+            company="Chorsu Osh",
+            location="Toshkent, Shayxontohur",
+            coordinateX=41.32,
+            coordinateY=69.24,
+            salary=300000,
+            description="Tavsif",
+            status=JobStatus.OPEN,
+            employerId="test-employer-id",
+        )
+        db_session.add(job_samarkand)
+        db_session.add(job_tashkent)
+        db_session.commit()
+
+    # Query bounding box covering ONLY Tashkent (lat 41..42, lng 69..70)
+    res = client.get("/api/v1/jobs/map?min_lat=41.0&max_lat=42.0&min_lng=69.0&max_lng=70.0")
+    assert res.status_code == 200
+    pins = res.json()
+    pin_titles = [p["title"] for p in pins]
+    assert "Tashkent Oshpaz" in pin_titles
+    assert "Samarkand Barista" not in pin_titles
+
+    # Query bounding box covering ONLY Samarkand (lat 39..40, lng 66..68)
+    res_sam = client.get("/api/v1/jobs/map?min_lat=39.0&max_lat=40.0&min_lng=66.0&max_lng=68.0")
+    assert res_sam.status_code == 200
+    pins_sam = res_sam.json()
+    sam_titles = [p["title"] for p in pins_sam]
+    assert "Samarkand Barista" in sam_titles
+    assert "Tashkent Oshpaz" not in sam_titles
+
+
+def test_map_pins_atomic_cache_invalidation(client):
+    """Test that invalidate_map_cache instantly increments version and refreshes data."""
+    from app.core.map_cache import get_map_cache_version, invalidate_map_cache
+    v1 = get_map_cache_version()
+    invalidate_map_cache()
+    v2 = get_map_cache_version()
+    assert v2 > v1
+
+
+def test_nearby_jobs_with_commute_estimates(client):
+    """Test /api/v1/jobs/nearby returns jobs within radius with commute calculation."""
+    res = client.get("/api/v1/jobs/nearby?lat=41.32&lng=69.24&radius_km=10")
+    assert res.status_code == 200
+    data = res.json()
+    assert isinstance(data, list)
+    if data:
+        item = data[0]
+        assert "job" in item
+        assert "distance_km" in item
+        assert "commute_estimate" in item
+        commute = item["commute_estimate"]
+        assert "walking_time_min" in commute
+        assert "transit_time_min" in commute
+        assert "driving_time_min" in commute
+        assert "recommended_mode" in commute
+

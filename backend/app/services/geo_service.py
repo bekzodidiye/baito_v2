@@ -1,3 +1,4 @@
+import functools
 import json
 import logging
 import math
@@ -85,6 +86,38 @@ class GeoSpatialService:
         return s.replace("ʻ", "'").replace("`", "'").replace("’", "'").replace("‘", "'")
 
     @classmethod
+    @functools.lru_cache(maxsize=8192)
+    def _resolve_string_location(cls, combined_clean: str) -> Tuple[Optional[str], Optional[str]]:
+        cls._init_district_map()
+        if not combined_clean:
+            return None, None
+
+        matched_region: Optional[str] = None
+        matched_district: Optional[str] = None
+
+        parts = [p.strip() for p in combined_clean.split(",") if p.strip()]
+        for part in reversed(parts):
+            if cls._DISTRICT_MAP:
+                for dist_key, (shape_name, reg_id) in cls._DISTRICT_MAP.items():
+                    if dist_key in part or part in dist_key:
+                        matched_district = shape_name
+                        matched_region = reg_id
+                        break
+            if matched_district:
+                break
+
+        if not matched_region:
+            for part in parts:
+                for alias, reg_id in cls.REGION_ALIASES.items():
+                    if alias in part:
+                        matched_region = reg_id
+                        break
+                if matched_region:
+                    break
+
+        return matched_region, matched_district
+
+    @classmethod
     def resolve_location(
         cls,
         location_str: Optional[str] = None,
@@ -92,32 +125,9 @@ class GeoSpatialService:
         lat: Optional[float] = None,
         lng: Optional[float] = None,
     ) -> Tuple[Optional[str], Optional[str]]:
-        """Resolves region ID and district name for any job location string or GPS coordinates."""
-        cls._init_district_map()
-        combined = f"{raw_location_str or ''} {location_str or ''}".strip()
-        matched_region: Optional[str] = None
-        matched_district: Optional[str] = None
-
-        if combined:
-            parts = [cls._clean_str(p) for p in combined.split(",") if p.strip()]
-            for part in reversed(parts):
-                if cls._DISTRICT_MAP:
-                    for dist_key, (shape_name, reg_id) in cls._DISTRICT_MAP.items():
-                        if dist_key in part or part in dist_key:
-                            matched_district = shape_name
-                            matched_region = reg_id
-                            break
-                if matched_district:
-                    break
-
-            if not matched_region:
-                for part in parts:
-                    for alias, reg_id in cls.REGION_ALIASES.items():
-                        if alias in part:
-                            matched_region = reg_id
-                            break
-                    if matched_region:
-                        break
+        """Resolves region ID and district name for any job location string or GPS coordinates with LRU caching."""
+        combined = cls._clean_str(f"{raw_location_str or ''} {location_str or ''}")
+        matched_region, matched_district = cls._resolve_string_location(combined)
 
         # Fallback to closest regional centroid if coordinates exist
         if not matched_region and lat is not None and lng is not None:
@@ -226,3 +236,67 @@ class GeoSpatialService:
         
         nearby_jobs.sort(key=lambda x: x["distance_km"])
         return nearby_jobs
+
+    @classmethod
+    def cluster_pins(cls, pins: List[Dict[str, Any]], grid_size: float = 0.4) -> List[Dict[str, Any]]:
+        """
+        Server-side dynamic spatial clustering for high-zoom-out views.
+        Groups nearby pins into clusters to eliminate DOM overload and browser freezes.
+        Pins are aggregated by geographic grid snapping (O(N) single-pass bucket aggregation).
+        """
+        if not pins or len(pins) <= 20:
+            return pins
+
+        buckets: Dict[Tuple[int, int], List[Dict[str, Any]]] = {}
+        for pin in pins:
+            lat = pin.get("coordinateX") or pin.get("latitude")
+            lng = pin.get("coordinateY") or pin.get("longitude")
+            if lat is None or lng is None:
+                continue
+            key = (int(round(lat / grid_size)), int(round(lng / grid_size)))
+            if key not in buckets:
+                buckets[key] = []
+            buckets[key].append(pin)
+
+        clustered_result = []
+        for (g_lat, g_lng), group in buckets.items():
+            if len(group) == 1:
+                clustered_result.append(group[0])
+            else:
+                avg_lat = round(sum(p.get("coordinateX") or p.get("latitude") for p in group) / len(group), 5)
+                avg_lng = round(sum(p.get("coordinateY") or p.get("longitude") for p in group) / len(group), 5)
+                salaries = [p["salary"] for p in group if p.get("salary")]
+                min_sal = min(salaries) if salaries else 0
+                max_sal = max(salaries) if salaries else 0
+                avg_sal = int(sum(salaries) / len(salaries)) if salaries else 0
+
+                loc_company = group[0].get("location") or "O'zbekiston"
+                clustered_result.append({
+                    "isCluster": True,
+                    "id": f"cluster_{g_lat}_{g_lng}",
+                    "count": len(group),
+                    "coordinateX": avg_lat,
+                    "coordinateY": avg_lng,
+                    "latitude": avg_lat,
+                    "longitude": avg_lng,
+                    "title": f"{len(group)} ta bo'sh ish o'rni",
+                    "company": loc_company,
+                    "location": group[0].get("location") or "",
+                    "rawLocation": group[0].get("rawLocation") or "",
+                    "salary": avg_sal,
+                    "salaryCurrency": "UZS",
+                    "salaryMin": min_sal,
+                    "salaryMax": max_sal,
+                    "urgent": any(p.get("urgent") for p in group),
+                    "status": "open",
+                    "category": group[0].get("category") or "Barchasi",
+                    "tags": list({t for p in group for t in (p.get("tags") or [])})[:5],
+                    "workDate": group[0].get("workDate") or "",
+                    "workTime": group[0].get("workTime") or "",
+                    "vacancies": sum(p.get("vacancies", 1) for p in group),
+                    "hiredCount": sum(p.get("hiredCount", 0) for p in group),
+                    "applied": any(p.get("applied") for p in group),
+                    "bookmarked": any(p.get("bookmarked") for p in group),
+                    "pinIds": [p["id"] for p in group],
+                })
+        return clustered_result

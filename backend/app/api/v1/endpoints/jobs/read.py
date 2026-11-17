@@ -4,11 +4,16 @@ import logging
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, func
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
+from app.core.map_cache import (
+    get_map_cache_version,
+    build_map_pins_cache_key,
+    CACHE_LOCATION_COUNTS_PREFIX,
+)
 from app.models.job import JobStatus
 from app.redis_client import redis_client
 from app.services.geo_service import GeoSpatialService
@@ -235,10 +240,11 @@ def get_job_location_counts(
     db: Session = Depends(deps.get_db),
 ) -> Any:
     """Aggregated open job counts per region and district for map labels and badges.
-    Caches calculation in Redis with 30s TTL and HTTP ETag / Cache-Control headers
-    to completely eliminate repetitive client-side string-matching loops.
+    Caches calculation in Redis with atomic versioning and HTTP ETag / Cache-Control headers
+    to completely eliminate repetitive client-side string-matching loops and database load.
     """
-    cache_key = "cache:jobs:location_counts"
+    version = get_map_cache_version()
+    cache_key = f"{CACHE_LOCATION_COUNTS_PREFIX}:v{version}"
     cached = None
     try:
         cached = redis_client.get(cache_key)
@@ -248,7 +254,6 @@ def get_job_location_counts(
     if cached:
         try:
             raw_text = cached.decode("utf-8") if isinstance(cached, bytes) else str(cached)
-            data = json.loads(raw_text)
             etag = f'"{hashlib.md5(raw_text.encode("utf-8")).hexdigest()}"'
             response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
             response.headers["ETag"] = etag
@@ -260,7 +265,14 @@ def get_job_location_counts(
                         "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
                     },
                 )
-            return data
+            return Response(
+                content=raw_text,
+                media_type="application/json",
+                headers={
+                    "ETag": etag,
+                    "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+                },
+            )
         except Exception as e:
             logger.warning("Failed to decode cached location counts: %s", e)
 
@@ -279,7 +291,7 @@ def get_job_location_counts(
     payload_str = json.dumps(counts)
 
     try:
-        redis_client.set(cache_key, payload_str, ex=30)
+        redis_client.set(cache_key, payload_str, ex=300)
     except Exception as e:
         logger.warning("Redis store failed in location-counts: %s", e)
 
@@ -295,7 +307,14 @@ def get_job_location_counts(
             },
         )
 
-    return counts
+    return Response(
+        content=payload_str,
+        media_type="application/json",
+        headers={
+            "ETag": etag,
+            "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+        },
+    )
 
 
 @router.get("/map", response_model=List[schemas.JobMapPin])
@@ -312,13 +331,80 @@ def get_map_jobs(
     category: Optional[str] = Query(None, max_length=100),
     search: Optional[str] = Query(None, max_length=200),
     limit: int = Query(500, ge=1, le=1000),
+    clustered: bool = Query(False, description="Server-side spatial cluster aggregation for low zoom"),
 ) -> Any:
     """High-performance lightweight map pins for interactive GIS map and clustering.
     Excludes heavy text columns (description, requirements, etc.) and unneeded user profiles,
     reducing payload size by >80% to eliminate UI freezing during panning/zooming.
-    Supports spatial bounding-box filtering and HTTP caching with ETag.
+    Supports spatial bounding-box filtering, Redis coordinate quantization caching, and HTTP 304 ETag.
     """
-    query = db.query(models.Job)
+    version = get_map_cache_version()
+    cache_key = build_map_pins_cache_key(
+        version=version,
+        min_lat=min_lat,
+        max_lat=max_lat,
+        min_lng=min_lng,
+        max_lng=max_lng,
+        location=location,
+        category=category,
+        search=search,
+        limit=limit,
+    )
+    if clustered:
+        cache_key += ":clustered"
+
+    # Fast path for unauthenticated users (public map browsing / guests):
+    # Returns pre-serialized JSON directly from Redis in <1ms without touching DB or Pydantic.
+    if not current_user:
+        try:
+            cached_bytes = redis_client.get(cache_key)
+            if cached_bytes:
+                cached_str = cached_bytes.decode("utf-8") if isinstance(cached_bytes, bytes) else str(cached_bytes)
+                etag = f'"{hashlib.md5(cached_str.encode("utf-8")).hexdigest()}"'
+                response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
+                response.headers["ETag"] = etag
+                if request.headers.get("if-none-match") == etag:
+                    return Response(
+                        status_code=304,
+                        headers={
+                            "ETag": etag,
+                            "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+                        },
+                    )
+                return Response(
+                    content=cached_str,
+                    media_type="application/json",
+                    headers={
+                        "ETag": etag,
+                        "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+                    },
+                )
+        except Exception as e:
+            logger.warning("Redis read error in get_map_jobs: %s", e)
+
+    # Base pins query: select ONLY lightweight columns to bypass large TOAST text columns
+    query = db.query(
+        models.Job.id,
+        models.Job.title,
+        models.Job.company,
+        models.Job.salary,
+        models.Job.salaryCurrency,
+        models.Job.location,
+        models.Job.rawLocation,
+        models.Job.logoUrl,
+        models.Job.imageUrl,
+        models.Job.tags,
+        models.Job.category,
+        models.Job.workDate,
+        models.Job.workTime,
+        models.Job.neededWorkers,
+        models.Job.coordinateX,
+        models.Job.coordinateY,
+        models.Job.urgent,
+        models.Job.status,
+        models.Job.hiredWorkerId,
+        models.Job.createdAt,
+    )
 
     if search:
         term = f"%{search.strip()}%"
@@ -357,18 +443,28 @@ def get_map_jobs(
         .all()
     )
 
-    response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
-
     if not jobs:
-        return []
-
-    etag_source = f"{len(jobs)}-{jobs[0].id}-{getattr(jobs[0], 'createdAt', '')}"
-    etag = f'"{hashlib.md5(etag_source.encode()).hexdigest()}"'
-    if request.headers.get("if-none-match") == etag:
-        return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "public, max-age=15, stale-while-revalidate=30"})
-    response.headers["ETag"] = etag
+        empty_str = "[]"
+        if not current_user:
+            try:
+                redis_client.set(cache_key, empty_str, ex=60)
+            except Exception:
+                pass
+        return Response(content=empty_str, media_type="application/json")
 
     job_ids = [j.id for j in jobs]
+
+    # Aggregated hired applications count via SQL GROUP BY (uses index idx_apps_job_status)
+    hired_counts_query = (
+        db.query(models.Application.jobId, func.count(models.Application.id))
+        .filter(
+            models.Application.jobId.in_(job_ids),
+            models.Application.status.in_(HIRED_STATUSES),
+        )
+        .group_by(models.Application.jobId)
+        .all()
+    )
+    hired_counts: dict[str, int] = {job_id: cnt for job_id, cnt in hired_counts_query}
 
     worker_apps_map = {}
     bookmarked_ids: set[str] = set()
@@ -393,27 +489,15 @@ def get_map_jobs(
             .all()
         }
 
-    hired_apps = (
-        db.query(models.Application.jobId)
-        .filter(
-            models.Application.jobId.in_(job_ids),
-            models.Application.status.in_(HIRED_STATUSES),
-        )
-        .all()
-    )
-    hired_counts: dict[str, int] = {}
-    for app in hired_apps:
-        hired_counts[app.jobId] = hired_counts.get(app.jobId, 0) + 1
-
-    result = []
+    pins = []
     for job in jobs:
         app_item = worker_apps_map.get(job.id)
         job_status = job.status
-        if app_item:
-            if app_item.status in ('in_progress', 'completed', 'start_requested', 'hired', 'applied'):
-                job_status = app_item.status
+        if app_item and app_item.status in ('in_progress', 'completed', 'start_requested', 'hired', 'applied'):
+            job_status = app_item.status
 
-        vacancies_num = job.vacancies
+        raw_needed = (job.neededWorkers or "1").strip()
+        vacancies_num = int(raw_needed) if raw_needed.isdigit() and int(raw_needed) > 0 else 1
         hired_cnt = hired_counts.get(job.id, 0)
         if job.status == JobStatus.OPEN and job.hiredWorkerId is None and vacancies_num <= 1:
             hired_cnt = 0
@@ -425,34 +509,67 @@ def get_map_jobs(
         if is_filled and not app_item:
             continue
 
-        result.append(schemas.JobMapPin(
-            id=job.id,
-            title=job.title,
-            company=job.company,
-            salary=job.salary,
-            salaryCurrency=job.salaryCurrency or 'UZS',
-            location=job.location,
-            rawLocation=job.rawLocation,
-            logoUrl=job.logoUrl,
-            imageUrl=job.imageUrl,
-            tags=job.tags,
-            category=job.category,
-            workDate=job.workDate,
-            workTime=job.workTime,
-            neededWorkers=job.neededWorkers or '1',
-            coordinateX=job.coordinateX,
-            coordinateY=job.coordinateY,
-            latitude=job.coordinateX,
-            longitude=job.coordinateY,
-            urgent=job.urgent or False,
-            status=job_status,
-            applied=bool(app_item),
-            bookmarked=job.id in bookmarked_ids,
-            hiredCount=hired_cnt,
-            vacancies=vacancies_num,
-        ))
+        pins.append({
+            "id": job.id,
+            "title": job.title,
+            "company": job.company,
+            "salary": job.salary,
+            "salaryCurrency": job.salaryCurrency or "UZS",
+            "location": job.location,
+            "rawLocation": job.rawLocation,
+            "logoUrl": job.logoUrl,
+            "imageUrl": job.imageUrl,
+            "tags": job.tags or [],
+            "category": job.category,
+            "workDate": job.workDate,
+            "workTime": job.workTime,
+            "neededWorkers": job.neededWorkers or "1",
+            "coordinateX": job.coordinateX,
+            "coordinateY": job.coordinateY,
+            "latitude": job.coordinateX,
+            "longitude": job.coordinateY,
+            "urgent": job.urgent or False,
+            "status": job_status,
+            "applied": bool(app_item),
+            "bookmarked": job.id in bookmarked_ids,
+            "hiredCount": hired_cnt,
+            "vacancies": vacancies_num,
+            "isCluster": False,
+            "count": 1,
+        })
 
-    return result
+    if clustered:
+        pins = GeoSpatialService.cluster_pins(pins, grid_size=0.4)
+
+    payload_str = json.dumps(pins)
+
+    # Cache public pins for unauthenticated visitors
+    if not current_user:
+        try:
+            redis_client.set(cache_key, payload_str, ex=180)
+        except Exception as e:
+            logger.warning("Redis store failed in get_map_jobs: %s", e)
+
+    etag = f'"{hashlib.md5(payload_str.encode("utf-8")).hexdigest()}"'
+    response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
+    response.headers["ETag"] = etag
+    if request.headers.get("if-none-match") == etag:
+        return Response(
+            status_code=304,
+            headers={
+                "ETag": etag,
+                "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+            },
+        )
+
+    return Response(
+        content=payload_str,
+        media_type="application/json",
+        headers={
+            "ETag": etag,
+            "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+        },
+    )
 
 
 @router.get("/{job_id}", response_model=schemas.JobWithApplicationStatus)

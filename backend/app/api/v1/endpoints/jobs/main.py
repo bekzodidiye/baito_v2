@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.core.limiter import limiter
 from app.models.job import JobStatus
 from app.redis_client import redis_client
+from app.core.map_cache import invalidate_map_cache
 from app.services import job_days
 from app.models.job_day import JobDayStatus
 from app.services.spam_detector import SpamFraudDetector, keywords_from_settings
@@ -119,10 +120,7 @@ def create_job(
 
     db.commit()
     db.refresh(db_job)
-    try:
-        redis_client.delete("cache:jobs:location_counts")
-    except Exception:
-        pass
+    invalidate_map_cache()
     background_tasks.add_task(_trigger_job_translation, db_job.id)
     return db_job
 
@@ -199,11 +197,7 @@ def update_job(
         db.flush()
         job_days.sync_days(db, job)
     db.commit()
-    db.refresh(job)
-    try:
-        redis_client.delete("cache:jobs:location_counts")
-    except Exception:
-        pass
+    invalidate_map_cache()
     if {"title", "description", "responsibilities", "requirements", "importantNote"} & set(update_data):
         background_tasks.add_task(_trigger_job_translation, job.id)
     return job
@@ -322,10 +316,7 @@ def delete_job(
             db.add(day)
 
     db.commit()
-    try:
-        redis_client.delete("cache:jobs:location_counts")
-    except Exception:
-        pass
+    invalidate_map_cache()
     return {
         "success": True,
         "status": JobStatus.CANCELLED,
