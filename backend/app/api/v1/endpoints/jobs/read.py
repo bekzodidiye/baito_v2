@@ -1,4 +1,5 @@
 import hashlib
+import json
 import logging
 from typing import Any, List, Optional
 
@@ -9,6 +10,8 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 from app.models.job import JobStatus
+from app.redis_client import redis_client
+from app.services.geo_service import GeoSpatialService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -223,6 +226,76 @@ def read_jobs(
         result.append(job_dict)
 
     return result
+
+
+@router.get("/location-counts", response_model=schemas.JobLocationCounts)
+def get_job_location_counts(
+    response: Response,
+    request: Request,
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """Aggregated open job counts per region and district for map labels and badges.
+    Caches calculation in Redis with 30s TTL and HTTP ETag / Cache-Control headers
+    to completely eliminate repetitive client-side string-matching loops.
+    """
+    cache_key = "cache:jobs:location_counts"
+    cached = None
+    try:
+        cached = redis_client.get(cache_key)
+    except Exception as e:
+        logger.warning("Redis lookup failed in location-counts: %s", e)
+
+    if cached:
+        try:
+            raw_text = cached.decode("utf-8") if isinstance(cached, bytes) else str(cached)
+            data = json.loads(raw_text)
+            etag = f'"{hashlib.md5(raw_text.encode("utf-8")).hexdigest()}"'
+            response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
+            response.headers["ETag"] = etag
+            if request.headers.get("if-none-match") == etag:
+                return Response(
+                    status_code=304,
+                    headers={
+                        "ETag": etag,
+                        "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+                    },
+                )
+            return data
+        except Exception as e:
+            logger.warning("Failed to decode cached location counts: %s", e)
+
+    open_jobs = (
+        db.query(
+            models.Job.location,
+            models.Job.rawLocation,
+            models.Job.coordinateX,
+            models.Job.coordinateY,
+        )
+        .filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
+        .all()
+    )
+
+    counts = GeoSpatialService.aggregate_location_counts(open_jobs)
+    payload_str = json.dumps(counts)
+
+    try:
+        redis_client.set(cache_key, payload_str, ex=30)
+    except Exception as e:
+        logger.warning("Redis store failed in location-counts: %s", e)
+
+    etag = f'"{hashlib.md5(payload_str.encode("utf-8")).hexdigest()}"'
+    response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
+    response.headers["ETag"] = etag
+    if request.headers.get("if-none-match") == etag:
+        return Response(
+            status_code=304,
+            headers={
+                "ETag": etag,
+                "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+            },
+        )
+
+    return counts
 
 
 @router.get("/map", response_model=List[schemas.JobMapPin])

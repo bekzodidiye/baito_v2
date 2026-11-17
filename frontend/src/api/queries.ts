@@ -40,6 +40,16 @@ export const fetchMapJobs = async (query: MapJobQuery = {}): Promise<Job[]> => {
   return await apiClient(qs ? `/jobs/map?${qs}` : '/jobs/map');
 };
 
+export interface LocationCounts {
+  total: number;
+  regions: Record<string, number>;
+  districts: Record<string, number>;
+}
+
+export const fetchLocationCounts = async (): Promise<LocationCounts> => {
+  return await apiClient('/jobs/location-counts');
+};
+
 export const fetchJobById = async (jobId: string): Promise<Job> => {
   return await apiClient(`/jobs/${jobId}`);
 };

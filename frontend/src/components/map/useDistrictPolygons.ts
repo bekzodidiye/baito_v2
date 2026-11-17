@@ -42,6 +42,16 @@ export const useDistrictPolygons = ({
   filterLocRef,
   isPanelExpandedRef
 }: UseDistrictPolygonsProps) => {
+  const getJobCountRef = React.useRef(getJobCountForLocation);
+  useEffect(() => {
+    getJobCountRef.current = getJobCountForLocation;
+  }, [getJobCountForLocation]);
+
+  const jobsCountSignature = React.useMemo(() => {
+    if (!jobs || jobs.length === 0) return '0';
+    return `${jobs.length}-${jobs.filter(j => j.status === 'open').length}`;
+  }, [jobs]);
+
   useEffect(() => {
     const map = mapInstanceRef.current;
     const group = regionsGroupRef.current;
@@ -118,7 +128,7 @@ export const useDistrictPolygons = ({
       filteredFeatures.forEach((f: any) => {
         const tumanName = f.properties?.shapeName || "";
         if (!tumanName) return;
-        districtJobsCount.set(tumanName, getJobCountForLocation(tumanName));
+        districtJobsCount.set(tumanName, getJobCountRef.current(tumanName));
       });
       
       const districtsLayer = L.geoJSON({
@@ -160,5 +170,5 @@ export const useDistrictPolygons = ({
       if (timer) clearTimeout(timer);
       if (zoomEndHandler) map.off('zoomend', zoomEndHandler);
     };
-  }, [filterLocation, districtsGeoJsonData, jobs, language, mapInstanceRef, regionsGroupRef]);
+  }, [filterLocation, districtsGeoJsonData, jobsCountSignature, language, mapInstanceRef, regionsGroupRef]);
 };

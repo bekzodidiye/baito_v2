@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import { Job } from '../../types';
 import { Language } from '../../translations';
 import { areDistrictNamesEqual, mapFeatureToRegionId, getFeatureBounds } from './mapUtils';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
+import { useLocationCountsQuery } from '../../context/useJobsData';
 import { useRegionPolygonInitialization } from './useRegionPolygonInitialization';
 import { useRegionPolygonStyleUpdate } from './useRegionPolygonStyleUpdate';
 import { useDistrictPolygons } from './useDistrictPolygons';
@@ -59,18 +60,59 @@ export const useRegionPolygons = ({
   useEffect(() => { setIsPanelExpandedRef.current = setIsPanelExpanded; }, [setIsPanelExpanded]);
   useEffect(() => { isPanelExpandedRef.current = isPanelExpanded ?? false; }, [isPanelExpanded]);
 
-  const getJobCountForLocation = (tumanName: string) => {
-    if (!jobs || jobs.length === 0) return 0;
-    const lowerName = tumanName.toLowerCase();
-    let count = 0;
-    jobs.forEach(j => {
-      const loc = (j.rawLocation || j.location || "").toLowerCase();
-      if (loc && (loc.includes(lowerName) || areDistrictNamesEqual(loc, tumanName))) {
-        count++;
+  const { data: locationCounts } = useLocationCountsQuery();
+
+  const fallbackJobCountsMap = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!jobs || jobs.length === 0) return map;
+    for (const j of jobs) {
+      const loc = (j.rawLocation || j.location || '').toLowerCase();
+      if (!loc) continue;
+      const parts = loc.split(/[,;\s]+/).filter(Boolean);
+      for (const p of parts) {
+        map.set(p, (map.get(p) || 0) + 1);
       }
-    });
-    return count;
-  };
+      map.set(loc, (map.get(loc) || 0) + 1);
+    }
+    return map;
+  }, [jobs]);
+
+  const getJobCountForLocation = useCallback((tumanName: string): number => {
+    if (!tumanName) return 0;
+    const cleanName = tumanName.trim();
+    if (locationCounts) {
+      if (locationCounts.districts && locationCounts.districts[cleanName] !== undefined) {
+        return locationCounts.districts[cleanName];
+      }
+      if (locationCounts.regions && locationCounts.regions[cleanName] !== undefined) {
+        return locationCounts.regions[cleanName];
+      }
+      const lower = cleanName.toLowerCase();
+      if (locationCounts.districts && locationCounts.districts[lower] !== undefined) {
+        return locationCounts.districts[lower];
+      }
+      if (locationCounts.regions && locationCounts.regions[lower] !== undefined) {
+        return locationCounts.regions[lower];
+      }
+    }
+    const lowerName = cleanName.toLowerCase();
+    const cached = fallbackJobCountsMap.get(lowerName);
+    if (cached !== undefined) return cached;
+
+    if (jobs && jobs.length > 0) {
+      let matched = 0;
+      for (let i = 0; i < jobs.length; i++) {
+        const j = jobs[i];
+        const loc = (j.rawLocation || j.location || "").toLowerCase();
+        if (loc && (loc.includes(lowerName) || areDistrictNamesEqual(loc, tumanName))) {
+          matched++;
+        }
+      }
+      fallbackJobCountsMap.set(lowerName, matched);
+      return matched;
+    }
+    return 0;
+  }, [locationCounts, fallbackJobCountsMap, jobs]);
   
   const districtFeatureMap = useMemo(() => {
     const map = new Map<string, any>();

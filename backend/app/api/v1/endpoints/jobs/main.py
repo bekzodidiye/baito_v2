@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
+from app.core.config import settings
 from app.core.limiter import limiter
 from app.models.job import JobStatus
 from app.redis_client import redis_client
@@ -24,6 +25,8 @@ VIEW_DEDUPE_TTL_SECONDS = 3600
 
 def _trigger_job_translation(job_id: str):
     """Trigger background job translation via Celery with direct thread fallback."""
+    if settings.ENVIRONMENT == "test":
+        return
     try:
         from app.tasks import translate_job_task
         translate_job_task.delay(job_id)
@@ -116,6 +119,10 @@ def create_job(
 
     db.commit()
     db.refresh(db_job)
+    try:
+        redis_client.delete("cache:jobs:location_counts")
+    except Exception:
+        pass
     background_tasks.add_task(_trigger_job_translation, db_job.id)
     return db_job
 
@@ -193,6 +200,10 @@ def update_job(
         job_days.sync_days(db, job)
     db.commit()
     db.refresh(job)
+    try:
+        redis_client.delete("cache:jobs:location_counts")
+    except Exception:
+        pass
     if {"title", "description", "responsibilities", "requirements", "importantNote"} & set(update_data):
         background_tasks.add_task(_trigger_job_translation, job.id)
     return job
@@ -311,6 +322,10 @@ def delete_job(
             db.add(day)
 
     db.commit()
+    try:
+        redis_client.delete("cache:jobs:location_counts")
+    except Exception:
+        pass
     return {
         "success": True,
         "status": JobStatus.CANCELLED,

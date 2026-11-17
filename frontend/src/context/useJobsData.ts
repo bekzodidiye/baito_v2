@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchJobs, fetchMapJobs, JobQuery, bookmarkJobApi, applyToJobApi, requestStartJobApi, confirmStartJobApi } from '../api/queries';
+import { fetchJobs, fetchMapJobs, fetchLocationCounts, JobQuery, bookmarkJobApi, applyToJobApi, requestStartJobApi, confirmStartJobApi } from '../api/queries';
 
 import { Job } from '../types';
 import { useCallback } from 'react';
@@ -112,4 +112,14 @@ export function useJobsData(query: JobQuery = {}) {
   }, [setJobs, queryClient]);
 
   return { jobs, isLoading, setJobs, toggleBookmark, applyToJob, requestStartJob, confirmStartJob };
+}
+
+export function useLocationCountsQuery() {
+  return useQuery({
+    queryKey: ['jobs', 'location-counts'],
+    queryFn: fetchLocationCounts,
+    staleTime: 30000,
+    refetchInterval: 60000,
+    refetchOnWindowFocus: false,
+  });
 }

@@ -255,3 +255,10 @@ class JobMapPin(BaseModel):
     vacancies: int = 1
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class JobLocationCounts(BaseModel):
+    """Aggregated job counts per administrative region and district for instant map badge rendering."""
+    total: int
+    regions: Dict[str, int]
+    districts: Dict[str, int]

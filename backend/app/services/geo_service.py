@@ -1,12 +1,169 @@
+import json
+import logging
 import math
-from typing import List, Dict, Any
+import re
+from pathlib import Path
+from typing import List, Dict, Any, Optional, Tuple
+
+logger = logging.getLogger(__name__)
+
 
 class GeoSpatialService:
     """
     Geo-Spatial & GIS Navigation Service for Baito.
-    Computes precise GPS distances, commute times and spatial radius filtering.
+    Computes precise GPS distances, commute times, spatial radius filtering,
+    and server-side administrative location aggregations.
     """
     EARTH_RADIUS_KM = 6371.0
+
+    _DISTRICT_MAP: Optional[Dict[str, Tuple[str, str]]] = None
+    _INITIALIZED = False
+
+    REGIONS = [
+        "Qoraqalpog'iston", "Xorazm", "Navoiy", "Buxoro", "Samarqand",
+        "Qashqadaryo", "Surxondaryo", "Jizzax", "Sirdaryo", "Toshkent",
+        "Namangan", "Farg'ona", "Andijon"
+    ]
+
+    REGION_ALIASES = {
+        'toshkent': 'Toshkent', 'tashkent': 'Toshkent', 'ташкент': 'Toshkent',
+        'samarqand': 'Samarqand', 'samarkand': 'Samarqand', 'самарканд': 'Samarqand',
+        'buxoro': 'Buxoro', 'bukhara': 'Buxoro', 'бухара': 'Buxoro',
+        'andijon': 'Andijon', 'andijan': 'Andijon', 'андижан': 'Andijon',
+        "farg'ona": "Farg'ona", 'fargona': "Farg'ona", 'fergana': "Farg'ona", 'фергана': "Farg'ona",
+        'namangan': 'Namangan', 'наманган': 'Namangan',
+        'qashqadaryo': 'Qashqadaryo', 'kashkadarya': 'Qashqadaryo', 'кашкадарья': 'Qashqadaryo', 'qarshi': 'Qashqadaryo',
+        'surxondaryo': 'Surxondaryo', 'surkhandarya': 'Surxondaryo', 'сурхандарья': 'Surxondaryo', 'termiz': 'Surxondaryo',
+        'jizzax': 'Jizzax', 'jizzakh': 'Jizzax', 'джизак': 'Jizzax',
+        'sirdaryo': 'Sirdaryo', 'syrdarya': 'Sirdaryo', 'сырдарья': 'Sirdaryo', 'guliston': 'Sirdaryo',
+        'navoiy': 'Navoiy', 'navoi': 'Navoiy', 'навои': 'Navoiy',
+        'xorazm': 'Xorazm', 'khorezm': 'Xorazm', 'хорезм': 'Xorazm', 'urganch': 'Xorazm', 'xiva': 'Xorazm',
+        "qoraqalpog'iston": "Qoraqalpog'iston", 'qoraqalpoq': "Qoraqalpog'iston", 'karakalpakstan': "Qoraqalpog'iston", 'каракалпакстан': "Qoraqalpog'iston", 'nukus': "Qoraqalpog'iston"
+    }
+
+    REGION_CENTROIDS: Dict[str, Tuple[float, float]] = {
+        "Toshkent": (41.3111, 69.2406),
+        "Samarqand": (39.6542, 66.9597),
+        "Buxoro": (39.7747, 64.4286),
+        "Andijon": (40.7821, 72.3442),
+        "Farg'ona": (40.3842, 71.7843),
+        "Namangan": (41.0011, 71.6683),
+        "Qashqadaryo": (38.8606, 65.7891),
+        "Surxondaryo": (37.2242, 67.2783),
+        "Jizzax": (40.1158, 67.8422),
+        "Sirdaryo": (40.4897, 68.7842),
+        "Navoiy": (40.0844, 65.3792),
+        "Xorazm": (41.5503, 60.6317),
+        "Qoraqalpog'iston": (42.4619, 59.6166),
+    }
+
+    @classmethod
+    def _init_district_map(cls) -> None:
+        if cls._INITIALIZED:
+            return
+        cls._DISTRICT_MAP = {}
+        meta_file = Path(__file__).resolve().parent.parent / "data" / "uzbekistan_districts_meta.json"
+        if meta_file.exists():
+            try:
+                with open(meta_file, encoding="utf-8") as f:
+                    districts_meta = json.load(f)
+                for d in districts_meta:
+                    raw_name = d.get("shapeName", "")
+                    clean_name = cls._clean_str(raw_name)
+                    reg_id = d.get("regionId", "")
+                    cls._DISTRICT_MAP[clean_name] = (raw_name, reg_id)
+                    base = re.sub(r"\s+(tumani|shahri|rayon|dist|city)$", "", clean_name).strip()
+                    if base and base not in cls._DISTRICT_MAP:
+                        cls._DISTRICT_MAP[base] = (raw_name, reg_id)
+            except Exception as e:
+                logger.warning("Could not load districts metadata: %s", e)
+        cls._INITIALIZED = True
+
+    @staticmethod
+    def _clean_str(s: str) -> str:
+        s = s.lower().strip()
+        return s.replace("ʻ", "'").replace("`", "'").replace("’", "'").replace("‘", "'")
+
+    @classmethod
+    def resolve_location(
+        cls,
+        location_str: Optional[str] = None,
+        raw_location_str: Optional[str] = None,
+        lat: Optional[float] = None,
+        lng: Optional[float] = None,
+    ) -> Tuple[Optional[str], Optional[str]]:
+        """Resolves region ID and district name for any job location string or GPS coordinates."""
+        cls._init_district_map()
+        combined = f"{raw_location_str or ''} {location_str or ''}".strip()
+        matched_region: Optional[str] = None
+        matched_district: Optional[str] = None
+
+        if combined:
+            parts = [cls._clean_str(p) for p in combined.split(",") if p.strip()]
+            for part in reversed(parts):
+                if cls._DISTRICT_MAP:
+                    for dist_key, (shape_name, reg_id) in cls._DISTRICT_MAP.items():
+                        if dist_key in part or part in dist_key:
+                            matched_district = shape_name
+                            matched_region = reg_id
+                            break
+                if matched_district:
+                    break
+
+            if not matched_region:
+                for part in parts:
+                    for alias, reg_id in cls.REGION_ALIASES.items():
+                        if alias in part:
+                            matched_region = reg_id
+                            break
+                    if matched_region:
+                        break
+
+        # Fallback to closest regional centroid if coordinates exist
+        if not matched_region and lat is not None and lng is not None:
+            min_dist = float("inf")
+            for reg, (c_lat, c_lng) in cls.REGION_CENTROIDS.items():
+                d = cls.haversine_distance(lat, lng, c_lat, c_lng)
+                if d < min_dist:
+                    min_dist = d
+                    matched_region = reg
+
+        return matched_region, matched_district
+
+    @classmethod
+    def aggregate_location_counts(cls, jobs: List[Any]) -> Dict[str, Any]:
+        """High performance single-pass location counter for open jobs.
+        Generates $O(1)$ lookup maps for region and district badges.
+        """
+        regions: Dict[str, int] = {r: 0 for r in cls.REGIONS}
+        districts: Dict[str, int] = {}
+        total = 0
+
+        for job in jobs:
+            loc = getattr(job, "location", None) or ""
+            raw_loc = getattr(job, "rawLocation", None) or ""
+            lat = getattr(job, "coordinateX", None)
+            lng = getattr(job, "coordinateY", None)
+
+            reg, dist = cls.resolve_location(loc, raw_loc, lat, lng)
+            total += 1
+            if reg:
+                regions[reg] = regions.get(reg, 0) + 1
+            if dist:
+                districts[dist] = districts.get(dist, 0) + 1
+                # Populate variant keys so frontend can look up by either format
+                base = re.sub(r"\s+(tumani|shahri|rayon|dist|city)$", "", dist, flags=re.I).strip()
+                if base != dist:
+                    districts[base] = districts.get(dist, 0)
+                tumani_variant = f"{base} tumani"
+                if tumani_variant not in districts:
+                    districts[tumani_variant] = districts.get(dist, 0)
+
+        return {
+            "total": total,
+            "regions": regions,
+            "districts": districts,
+        }
 
     @staticmethod
     def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:

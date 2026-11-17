@@ -81,3 +81,62 @@ def test_map_pins_etag_caching(client):
     if etag:
         res2 = client.get("/api/v1/jobs/map", headers={"If-None-Match": etag})
         assert res2.status_code == 304
+
+
+def test_location_counts_endpoint(client):
+    with SessionLocal() as db_session:
+        employer = db_session.query(models.User).filter_by(id="test-employer-id").first()
+        if not employer:
+            employer = models.User(
+                id="test-employer-id",
+                phone="+998901112233",
+                role="employer",
+                name="Test Employer",
+            )
+            db_session.add(employer)
+            db_session.flush()
+
+        job = models.Job(
+            title="Location Counts Test Job",
+            company="Count Co",
+            location="Toshkent, Chilonzor",
+            rawLocation="Chilonzor tumani",
+            coordinateX=41.28,
+            coordinateY=69.21,
+            salary=200000,
+            salaryCurrency="UZS",
+            description="Tavsif matni",
+            status=JobStatus.OPEN,
+            employerId="test-employer-id",
+            neededWorkers="1",
+        )
+        db_session.add(job)
+        db_session.commit()
+
+    # Clear cached counts to ensure fresh calculation from DB
+    from app.redis_client import redis_client
+    try:
+        redis_client.delete("cache:jobs:location_counts")
+    except Exception:
+        pass
+
+    res1 = client.get("/api/v1/jobs/location-counts")
+    assert res1.status_code == 200
+    assert "public" in res1.headers.get("Cache-Control", "")
+    assert "max-age" in res1.headers.get("Cache-Control", "")
+    
+    data = res1.json()
+    assert "total" in data
+    assert "regions" in data
+    assert "districts" in data
+    assert isinstance(data["regions"], dict)
+    assert isinstance(data["districts"], dict)
+    assert "Toshkent" in data["regions"]
+    assert data["regions"]["Toshkent"] >= 1
+    assert "Chilonzor" in data["districts"]
+    assert data["districts"]["Chilonzor"] >= 1
+
+    etag = res1.headers.get("ETag")
+    if etag:
+        res2 = client.get("/api/v1/jobs/location-counts", headers={"If-None-Match": etag})
+        assert res2.status_code == 304
