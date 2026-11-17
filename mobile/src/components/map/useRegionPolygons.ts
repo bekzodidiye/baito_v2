@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import L from 'leaflet';
 import { Job } from '../../types';
 import { Language } from '../../translations';
@@ -18,6 +18,7 @@ interface UseRegionPolygonsProps {
   filterLocation: string;
   setFilterLocation: (loc: string) => void;
   setIsPanelExpanded: (expanded: boolean) => void;
+  isPanelExpanded?: boolean;
   geoJsonData: any;
   districtsGeoJsonData: any;
   zoomLevel: number;
@@ -34,6 +35,7 @@ export const useRegionPolygons = ({
   filterLocation,
   setFilterLocation,
   setIsPanelExpanded,
+  isPanelExpanded = false,
   geoJsonData,
   districtsGeoJsonData,
   zoomLevel,
@@ -45,6 +47,12 @@ export const useRegionPolygons = ({
   const districtsGeoJsonLayerRef = useRef<L.GeoJSON | null>(null);
   const currentDistrictsRegionIdRef = useRef<string | null>(null);
   
+  const [settledLocation, setSettledLocation] = useState<string>(filterLocation);
+
+  const handleCameraSettle = useCallback((loc: string) => {
+    setSettledLocation(loc);
+  }, []);
+
   const filterLocRef = useRef(filterLocation);
   const districtCentersRef = useRef(new Map<string, [number, number]>());
   const regionCentersRef = useRef(new Map<string, [number, number]>());
@@ -118,6 +126,7 @@ export const useRegionPolygons = ({
     districtsGeoJsonLayerRef,
     currentDistrictsRegionIdRef,
     filterLocation,
+    settledLocation,
     setFilterLocation: setFilterLocationRef.current,
     setIsPanelExpanded: setIsPanelExpandedRef.current,
     districtsGeoJsonData,
@@ -137,7 +146,9 @@ export const useRegionPolygons = ({
     filterLocation,
     lastFittedLocationRef,
     geoJsonData,
-    districtsGeoJsonData
+    districtsGeoJsonData,
+    isPanelExpanded,
+    onCameraSettle: handleCameraSettle
   });
 
   useEffect(() => {
@@ -174,6 +185,7 @@ export const useRegionPolygons = ({
     mapInstanceRef,
     labelsGroupRef,
     filterLocation,
+    settledLocation,
     zoomLevel,
     geoJsonData,
     districtsGeoJsonData,
@@ -184,4 +196,6 @@ export const useRegionPolygons = ({
     findDistrictFeature,
     getJobCountForLocation
   });
+
+  return { settledLocation };
 };

@@ -62,6 +62,11 @@ export const useMapLabels = ({
     const map = mapInstanceRef.current;
     if (!map || !labelsGroupRef.current) return;
     
+    // Do not tear down and reconstruct label DOM elements while camera is actively flying
+    if (settledLocation !== undefined && filterLocation !== settledLocation) {
+      return;
+    }
+
     let animationFrameId: number = 0;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let zoomEndHandler: (() => void) | null = null;

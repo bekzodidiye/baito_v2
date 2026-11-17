@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { Job } from '../../types';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
@@ -12,6 +12,7 @@ interface UseDistrictPolygonsProps {
   districtsGeoJsonLayerRef: React.MutableRefObject<L.GeoJSON | null>;
   currentDistrictsRegionIdRef: React.MutableRefObject<string | null>;
   filterLocation: string;
+  settledLocation?: string;
   setFilterLocation: (loc: string) => void;
   setIsPanelExpanded: (expanded: boolean) => void;
   districtsGeoJsonData: any;
@@ -29,6 +30,7 @@ export const useDistrictPolygons = ({
   districtsGeoJsonLayerRef,
   currentDistrictsRegionIdRef,
   filterLocation,
+  settledLocation,
   setFilterLocation,
   setIsPanelExpanded,
   districtsGeoJsonData,
@@ -39,6 +41,104 @@ export const useDistrictPolygons = ({
   getJobCountForLocation,
   filterLocRef
 }: UseDistrictPolygonsProps) => {
+  const getJobCountRef = useRef(getJobCountForLocation);
+  useEffect(() => {
+    getJobCountRef.current = getJobCountForLocation;
+  }, [getJobCountForLocation]);
+
+  const jobsCountSignature = React.useMemo(() => {
+    if (!jobs || jobs.length === 0) return '0';
+    return `${jobs.length}-${jobs.filter(j => j.status === 'open').length}`;
+  }, [jobs]);
+
+  const districtLayersCacheRef = useRef<Map<string, L.GeoJSON>>(new Map());
+
+  // Pre-warm district layers in the background during browser idle time
+  // so that future region transitions take < 1ms
+  useEffect(() => {
+    if (!districtsGeoJsonData?.features || !mapInstanceRef.current) return;
+    const currentMap = mapInstanceRef.current;
+    let cancelled = false;
+    let currentIndex = 0;
+
+    const buildRegion = (region: typeof UZBEKISTAN_REGIONS[0]) => {
+      if (districtLayersCacheRef.current.has(region.id)) return;
+      const features = districtsGeoJsonData.features.filter(
+        (f: any) => f.properties && f.properties.regionId === region.id
+      );
+      if (features.length > 0) {
+        const onEach = createDistrictOnEachFeature(
+          language,
+          new Map(),
+          setFilterLocation,
+          setIsPanelExpanded,
+          currentMap,
+          lastFittedLocationRef,
+          filterLocRef
+        );
+        const layer = L.geoJSON({
+          type: "FeatureCollection",
+          features
+        } as any, {
+          style: (feature: any) => {
+            const tumanName = feature?.properties?.shapeName || "";
+            const districtColor = getDistrictColor(tumanName);
+            return {
+              color: districtColor,
+              weight: 1.2,
+              opacity: 0.6,
+              fillColor: districtColor,
+              fillOpacity: 0.18,
+              fillRule: 'nonzero' as L.FillRule,
+              fill: true
+            };
+          },
+          onEachFeature: onEach
+        });
+        districtLayersCacheRef.current.set(region.id, layer);
+      }
+    };
+
+    const runChunk = (deadline?: IdleDeadline) => {
+      if (cancelled) return;
+      const start = performance.now();
+      while (currentIndex < UZBEKISTAN_REGIONS.length) {
+        buildRegion(UZBEKISTAN_REGIONS[currentIndex]);
+        currentIndex++;
+        if (deadline && typeof deadline.timeRemaining === 'function') {
+          if (deadline.timeRemaining() < 4) break;
+        } else if (performance.now() - start > 12) {
+          break;
+        }
+      }
+
+      if (currentIndex < UZBEKISTAN_REGIONS.length && !cancelled) {
+        scheduleNext();
+      }
+    };
+
+    let idleId: any = null;
+    let timeoutId: any = null;
+
+    const scheduleNext = () => {
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        idleId = (window as any).requestIdleCallback(runChunk, { timeout: 300 });
+      } else {
+        timeoutId = setTimeout(() => runChunk(), 0);
+      }
+    };
+
+    timeoutId = setTimeout(scheduleNext, 50);
+
+    return () => {
+      cancelled = true;
+      if (idleId && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        (window as any).cancelIdleCallback(idleId);
+      }
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [districtsGeoJsonData, language, mapInstanceRef]);
+
   useEffect(() => {
     const map = mapInstanceRef.current;
     const group = regionsGroupRef.current;
@@ -115,37 +215,65 @@ export const useDistrictPolygons = ({
     if (districtsGeoJsonLayerRef.current) {
       group.removeLayer(districtsGeoJsonLayerRef.current);
       districtsGeoJsonLayerRef.current = null;
+      currentDistrictsRegionIdRef.current = null;
     }
 
-    const filteredFeatures = districtsGeoJsonData.features.filter((f: any) => f.properties && f.properties.regionId === selectedRegion.id);
-    
-    if (filteredFeatures.length === 0) return;
+    // Defer heavy district SVG construction until camera settles on the new region
+    const activeLocation = settledLocation || filterLocation;
+    const isSettledOnThisRegion = activeLocation.toLowerCase().includes(selectedRegion.id.toLowerCase()) ||
+      (findDistrictFeature(activeLocation)?.properties?.regionId === selectedRegion.id);
 
-    const districtJobsCount = new Map<string, number>();
-    filteredFeatures.forEach((f: any) => {
-      const tumanName = f.properties?.shapeName || "";
-      if (!tumanName) return;
-      districtJobsCount.set(tumanName, getJobCountForLocation(tumanName));
-    });
-    
-    const districtsLayer = L.geoJSON({
-      type: "FeatureCollection",
-      features: filteredFeatures
-    } as any, {
-      style: getDistrictStyle,
-      onEachFeature: createDistrictOnEachFeature(
-        language,
-        districtJobsCount,
-        setFilterLocation,
-        setIsPanelExpanded,
-        map,
-        lastFittedLocationRef,
-        filterLocRef
-      )
-    });
-    
-    districtsGeoJsonLayerRef.current = districtsLayer;
-    currentDistrictsRegionIdRef.current = selectedRegion.id;
-    districtsLayer.addTo(group);
-  }, [filterLocation, districtsGeoJsonData, jobs, language, mapInstanceRef, regionsGroupRef]);
+    if (!isSettledOnThisRegion && settledLocation !== undefined) {
+      return;
+    }
+
+    const attachDistricts = () => {
+      if (!mapInstanceRef.current || !regionsGroupRef.current) return;
+      const currentMap = mapInstanceRef.current;
+      const currentGroup = regionsGroupRef.current;
+
+      let districtsLayer = districtLayersCacheRef.current.get(selectedRegion.id);
+
+      if (!districtsLayer) {
+        const filteredFeatures = districtsGeoJsonData.features.filter((f: any) => f.properties && f.properties.regionId === selectedRegion.id);
+        if (filteredFeatures.length === 0) return;
+
+        const onEach = createDistrictOnEachFeature(
+          language,
+          new Map(),
+          setFilterLocation,
+          setIsPanelExpanded,
+          currentMap,
+          lastFittedLocationRef,
+          filterLocRef
+        );
+        districtsLayer = L.geoJSON({
+          type: "FeatureCollection",
+          features: filteredFeatures
+        } as any, {
+          style: getDistrictStyle,
+          onEachFeature: onEach
+        });
+        districtLayersCacheRef.current.set(selectedRegion.id, districtsLayer);
+      } else {
+        districtsLayer.setStyle(getDistrictStyle);
+      }
+      
+      districtsGeoJsonLayerRef.current = districtsLayer;
+      currentDistrictsRegionIdRef.current = selectedRegion.id;
+      if (!currentGroup.hasLayer(districtsLayer)) {
+        districtsLayer.addTo(currentGroup);
+      }
+    };
+
+    attachDistricts();
+  }, [
+    filterLocation,
+    settledLocation,
+    districtsGeoJsonData,
+    jobsCountSignature,
+    language,
+    mapInstanceRef,
+    regionsGroupRef
+  ]);
 };

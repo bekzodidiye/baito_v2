@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import { Job } from '../../types';
 import { getLatLng } from './mapUtils';
@@ -18,6 +18,7 @@ interface UseJobMarkersProps {
   setSelectedJob: (job: Job | null) => void;
   userLocation: { lat: number; lng: number } | null;
   filterLocation: string;
+  settledLocation?: string;
   setIsPanelExpanded: (expanded: boolean) => void;
   getDisplayedJobs: () => Job[];
   language: Language;
@@ -35,6 +36,7 @@ export const useJobMarkers = ({
   setSelectedJob,
   userLocation,
   filterLocation,
+  settledLocation,
   setIsPanelExpanded,
   getDisplayedJobs,
   language,
@@ -45,6 +47,12 @@ export const useJobMarkers = ({
   useEffect(() => {
     selectedJobRef.current = selectedJob;
   }, [selectedJob]);
+
+  // Compute a stable signature so that background polling of jobs does NOT
+  // tear down all Leaflet markers unless job details actually changed.
+  const jobsSignature = useMemo(() => {
+    return jobs.map(j => `${j.id}:${j.status}:${j.bookmarked}:${j.applied}`).join('|');
+  }, [jobs]);
 
   const activeRootsRef = useRef<Map<string, import('react-dom/client').Root>>(new Map());
 
@@ -71,6 +79,11 @@ export const useJobMarkers = ({
       userGroup.clearLayers();
     }
 
+    // Do not tear down and reconstruct marker DOM elements while camera is flying
+    if (settledLocation !== undefined && filterLocation !== settledLocation) {
+      return;
+    }
+
     const displayedJobs = getDisplayedJobs();
     const maxPinsToRender = 120;
     const truncatedJobs = displayedJobs.slice(0, maxPinsToRender);
@@ -88,8 +101,9 @@ export const useJobMarkers = ({
       const borderColor = isSelected ? '#000666' : category.hexColor;
       const pointerColor = isSelected ? '#000666' : category.hexColor;
 
+      const fallbackSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='20' height='14' x='2' y='7' rx='2' ry='2'/%3E%3Cpath d='M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'/%3E%3C/svg%3E";
       const logoHtml = job.logoUrl
-        ? `<img src="${job.logoUrl}" alt="${job.company}" class="marker-logo-img" />`
+        ? `<img src="${job.logoUrl}" alt="${job.company}" class="marker-logo-img" onerror="this.onerror=null; this.src='${fallbackSvg}';" />`
         : `<div class="marker-logo-placeholder bg-slate-100 text-slate-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>`;
 
       const jobHtml = `
@@ -171,7 +185,7 @@ export const useJobMarkers = ({
     return () => {
       map.off('moveend', handleMoveEnd);
     };
-  }, [activeCluster, jobs, filterLocation, mapInstanceRef, markerGroupRef, language, districtsGeoJsonData, setSelectedJob, isVisible]);
+  }, [activeCluster, jobsSignature, filterLocation, settledLocation, mapInstanceRef, markerGroupRef, language, districtsGeoJsonData, setSelectedJob, isVisible]);
 
   useUserLocationMarker({
     userGroupRef,

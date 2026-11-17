@@ -92,7 +92,7 @@ export function useMapViewScreen() {
     setSelectedJob,
   });
 
-  useRegionPolygons({
+  const { settledLocation } = useRegionPolygons({
     isMapReady,
     mapInstanceRef,
     regionsGroupRef,
@@ -100,6 +100,7 @@ export function useMapViewScreen() {
     filterLocation,
     setFilterLocation,
     setIsPanelExpanded,
+    isPanelExpanded,
     geoJsonData,
     districtsGeoJsonData,
     zoomLevel,
@@ -118,6 +119,7 @@ export function useMapViewScreen() {
     setSelectedJob,
     userLocation,
     filterLocation,
+    settledLocation,
     setIsPanelExpanded,
     getDisplayedJobs,
     language,
