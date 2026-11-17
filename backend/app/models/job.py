@@ -109,4 +109,6 @@ class Job(Base):
         Index("idx_jobs_spatial_open", "coordinateX", "coordinateY"),
         Index("idx_jobs_location_open", "location", "coordinateX", "coordinateY"),
         Index("idx_jobs_category_spatial", "category", "coordinateX", "coordinateY"),
+        Index("idx_jobs_location_trgm", "location", postgresql_using="gin", postgresql_ops={"location": "gin_trgm_ops"}),
+        Index("idx_jobs_title_trgm", "title", postgresql_using="gin", postgresql_ops={"title": "gin_trgm_ops"}),
     )

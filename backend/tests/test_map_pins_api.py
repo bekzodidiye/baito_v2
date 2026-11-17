@@ -227,3 +227,32 @@ def test_nearby_jobs_with_commute_estimates(client):
         assert "driving_time_min" in commute
         assert "recommended_mode" in commute
 
+
+def test_map_geojson_feature_collection(client):
+    """Test /api/v1/jobs/map/geojson returns valid GeoJSON FeatureCollection."""
+    res = client.get("/api/v1/jobs/map/geojson")
+    assert res.status_code == 200
+    assert "application/geo+json" in res.headers.get("content-type", "")
+    data = res.json()
+    assert data["type"] == "FeatureCollection"
+    assert "features" in data
+    assert isinstance(data["features"], list)
+    if data["features"]:
+        feat = data["features"][0]
+        assert feat["type"] == "Feature"
+        assert "geometry" in feat
+        assert feat["geometry"]["type"] == "Point"
+        assert len(feat["geometry"]["coordinates"]) == 2
+        assert "properties" in feat
+        assert "title" in feat["properties"]
+
+
+def test_map_tile_endpoint(client):
+    """Test /api/v1/jobs/map/tile/{z}/{x}/{y} converts slippy tile to bounds and returns pins."""
+    res = client.get("/api/v1/jobs/map/tile/7/77/46")
+    assert res.status_code == 200
+    assert "public" in res.headers.get("Cache-Control", "")
+    data = res.json()
+    assert isinstance(data, list)
+
+

@@ -59,9 +59,16 @@ def build_map_pins_cache_key(
     q_max_lat = f"{round(max_lat, 2):.2f}" if max_lat is not None else "_"
     q_min_lng = f"{round(min_lng, 2):.2f}" if min_lng is not None else "_"
     q_max_lng = f"{round(max_lng, 2):.2f}" if max_lng is not None else "_"
-    loc_clean = (location or "").strip().lower()
-    cat_clean = (category or "").strip().lower()
-    search_clean = (search or "").strip().lower()
+    def _clean_str(val: Optional[str]) -> str:
+        if val is None or hasattr(val, "default"):
+            return ""
+        if isinstance(val, str):
+            return val.strip().lower()
+        return str(val).strip().lower()
+
+    loc_clean = _clean_str(location)
+    cat_clean = _clean_str(category)
+    search_clean = _clean_str(search)
 
     return (
         f"{CACHE_MAP_PINS_PREFIX}:v{version}:"

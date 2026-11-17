@@ -1,6 +1,7 @@
 import hashlib
 import json
 import logging
+import math
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
@@ -338,6 +339,17 @@ def get_map_jobs(
     reducing payload size by >80% to eliminate UI freezing during panning/zooming.
     Supports spatial bounding-box filtering, Redis coordinate quantization caching, and HTTP 304 ETag.
     """
+    # Unwrap FastAPI Query defaults if called directly from other functions
+    min_lat = min_lat.default if hasattr(min_lat, "default") else min_lat
+    max_lat = max_lat.default if hasattr(max_lat, "default") else max_lat
+    min_lng = min_lng.default if hasattr(min_lng, "default") else min_lng
+    max_lng = max_lng.default if hasattr(max_lng, "default") else max_lng
+    location = location.default if hasattr(location, "default") else location
+    category = category.default if hasattr(category, "default") else category
+    search = search.default if hasattr(search, "default") else search
+    limit = limit.default if hasattr(limit, "default") else (limit or 500)
+    clustered = clustered.default if hasattr(clustered, "default") else bool(clustered)
+
     version = get_map_cache_version()
     cache_key = build_map_pins_cache_key(
         version=version,
@@ -450,7 +462,11 @@ def get_map_jobs(
                 redis_client.set(cache_key, empty_str, ex=60)
             except Exception:
                 pass
-        return Response(content=empty_str, media_type="application/json")
+        return Response(
+            content=empty_str,
+            media_type="application/json",
+            headers={"Cache-Control": "public, max-age=15, stale-while-revalidate=30"},
+        )
 
     job_ids = [j.id for j in jobs]
 
@@ -570,6 +586,184 @@ def get_map_jobs(
             "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
         },
     )
+
+
+def tile_to_bbox(z: int, x: int, y: int) -> tuple[float, float, float, float]:
+    """Converts Web Mercator tile coordinates (z, x, y) to WGS84 bounding box (min_lat, max_lat, min_lng, max_lng)."""
+    n = 2.0 ** z
+    min_lng = x / n * 360.0 - 180.0
+    max_lng = (x + 1) / n * 360.0 - 180.0
+    max_lat_rad = math.atan(math.sinh(math.pi * (1.0 - 2.0 * y / n)))
+    min_lat_rad = math.atan(math.sinh(math.pi * (1.0 - 2.0 * (y + 1) / n)))
+    min_lat = math.degrees(min_lat_rad)
+    max_lat = math.degrees(max_lat_rad)
+    return min_lat, max_lat, min_lng, max_lng
+
+
+@router.get("/map/geojson")
+def get_map_geojson(
+    response: Response,
+    request: Request,
+    db: Session = Depends(deps.get_db),
+    current_user: Optional[models.User] = Depends(deps.get_current_user_optional),
+    min_lat: Optional[float] = Query(None, ge=-90.0, le=90.0),
+    max_lat: Optional[float] = Query(None, ge=-90.0, le=90.0),
+    min_lng: Optional[float] = Query(None, ge=-180.0, le=180.0),
+    max_lng: Optional[float] = Query(None, ge=-180.0, le=180.0),
+    location: Optional[str] = Query(None, max_length=200),
+    category: Optional[str] = Query(None, max_length=100),
+    search: Optional[str] = Query(None, max_length=200),
+    limit: int = Query(500, ge=1, le=1000),
+) -> Any:
+    """GeoJSON FeatureCollection projection for standard GIS map clients.
+    Pre-formats coordinates as GeoJSON Point geometries for sub-millisecond layer ingestion.
+    """
+    version = get_map_cache_version()
+    q_min_lat = f"{round(min_lat, 2):.2f}" if min_lat is not None else "_"
+    q_max_lat = f"{round(max_lat, 2):.2f}" if max_lat is not None else "_"
+    q_min_lng = f"{round(min_lng, 2):.2f}" if min_lng is not None else "_"
+    q_max_lng = f"{round(max_lng, 2):.2f}" if max_lng is not None else "_"
+    cache_key = (
+        f"cache:jobs:geojson:v{version}:"
+        f"{q_min_lat}:{q_max_lat}:{q_min_lng}:{q_max_lng}:"
+        f"{location or ''}:{category or ''}:{search or ''}:{limit}"
+    )
+
+    if not current_user:
+        try:
+            cached = redis_client.get(cache_key)
+            if cached:
+                cached_str = cached.decode("utf-8") if isinstance(cached, bytes) else str(cached)
+                etag = f'"{hashlib.md5(cached_str.encode("utf-8")).hexdigest()}"'
+                response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
+                response.headers["ETag"] = etag
+                if request.headers.get("if-none-match") == etag:
+                    return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "public, max-age=15, stale-while-revalidate=30"})
+                return Response(content=cached_str, media_type="application/geo+json", headers={"ETag": etag, "Cache-Control": "public, max-age=15, stale-while-revalidate=30"})
+        except Exception as e:
+            logger.warning("Redis lookup failed in map geojson: %s", e)
+
+    # Re-use get_map_jobs logic
+    raw_pins_res = get_map_jobs(
+        response=response,
+        request=request,
+        db=db,
+        current_user=current_user,
+        min_lat=min_lat,
+        max_lat=max_lat,
+        min_lng=min_lng,
+        max_lng=max_lng,
+        location=location,
+        category=category,
+        search=search,
+        limit=limit,
+        clustered=False,
+    )
+    if isinstance(raw_pins_res, Response) and hasattr(raw_pins_res, "body"):
+        pins = json.loads(raw_pins_res.body.decode("utf-8"))
+    elif isinstance(raw_pins_res, list):
+        pins = raw_pins_res
+    else:
+        pins = []
+
+    features = []
+    for pin in pins:
+        lat = pin.get("coordinateX") or pin.get("latitude")
+        lng = pin.get("coordinateY") or pin.get("longitude")
+        if lat is not None and lng is not None:
+            features.append({
+                "type": "Feature",
+                "id": pin.get("id"),
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [lng, lat],
+                },
+                "properties": pin,
+            })
+
+    geojson_doc = {
+        "type": "FeatureCollection",
+        "features": features,
+    }
+    geojson_str = json.dumps(geojson_doc)
+
+    if not current_user:
+        try:
+            redis_client.set(cache_key, geojson_str, ex=180)
+        except Exception:
+            pass
+
+    etag = f'"{hashlib.md5(geojson_str.encode("utf-8")).hexdigest()}"'
+    response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
+    response.headers["ETag"] = etag
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "public, max-age=15, stale-while-revalidate=30"})
+
+    return Response(
+        content=geojson_str,
+        media_type="application/geo+json",
+        headers={"ETag": etag, "Cache-Control": "public, max-age=15, stale-while-revalidate=30"},
+    )
+
+
+@router.get("/map/tile/{z}/{x}/{y}")
+def get_map_tile(
+    z: int,
+    x: int,
+    y: int,
+    response: Response,
+    request: Request,
+    db: Session = Depends(deps.get_db),
+    category: Optional[str] = Query(None, max_length=100),
+    limit: int = Query(200, ge=1, le=500),
+) -> Any:
+    """Standard Slippy Map (TMS/XYZ) tile endpoint for high-speed spatial vector partitioning.
+    Converts (z, x, y) coordinates to spatial bounds and returns pre-partitioned pins with tile caching.
+    """
+    version = get_map_cache_version()
+    cache_key = f"cache:jobs:tile:v{version}:{z}:{x}:{y}:{category or ''}:{limit}"
+
+    try:
+        cached = redis_client.get(cache_key)
+        if cached:
+            cached_str = cached.decode("utf-8") if isinstance(cached, bytes) else str(cached)
+            etag = f'"{hashlib.md5(cached_str.encode("utf-8")).hexdigest()}"'
+            response.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=60"
+            response.headers["ETag"] = etag
+            if request.headers.get("if-none-match") == etag:
+                return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "public, max-age=30, stale-while-revalidate=60"})
+            return Response(content=cached_str, media_type="application/json", headers={"ETag": etag, "Cache-Control": "public, max-age=30, stale-while-revalidate=60"})
+    except Exception as e:
+        logger.warning("Redis lookup failed in tile: %s", e)
+
+    min_lat, max_lat, min_lng, max_lng = tile_to_bbox(z, x, y)
+
+    res = get_map_jobs(
+        response=response,
+        request=request,
+        db=db,
+        current_user=None,
+        min_lat=min_lat,
+        max_lat=max_lat,
+        min_lng=min_lng,
+        max_lng=max_lng,
+        location=None,
+        category=category,
+        search=None,
+        limit=limit,
+        clustered=False,
+    )
+    if isinstance(res, Response):
+        if hasattr(res, "body"):
+            content_str = res.body.decode("utf-8")
+            try:
+                redis_client.set(cache_key, content_str, ex=300)
+            except Exception:
+                pass
+        res.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=60"
+        return res
+
+    return res
 
 
 @router.get("/{job_id}", response_model=schemas.JobWithApplicationStatus)
