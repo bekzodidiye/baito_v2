@@ -256,3 +256,53 @@ def test_map_tile_endpoint(client):
     assert isinstance(data, list)
 
 
+def test_authenticated_user_map_caching_and_etag(client):
+    """Test that authenticated users get personalized private cached map pins with ETag and 304 support."""
+    from tests.conftest import make_user, login
+    user = make_user(role="worker")
+    login(client, user)
+
+    # First request: generates and caches user pins
+    res1 = client.get("/api/v1/jobs/map")
+    assert res1.status_code == 200
+    assert "private" in res1.headers.get("Cache-Control", "")
+    etag = res1.headers.get("ETag")
+    assert etag is not None
+
+    # Second request with If-None-Match: must return 304 Not Modified
+    res2 = client.get("/api/v1/jobs/map", headers={"If-None-Match": etag})
+    assert res2.status_code == 304
+    assert res2.headers.get("ETag") == etag
+
+
+def test_user_cache_invalidation_on_bookmark(client):
+    """Test that toggling a bookmark invalidates user cache and updates bookmarked status on map."""
+    from tests.conftest import make_user, make_job, login
+    emp = make_user(role="employer", phone="+998909998877")
+    worker = make_user(role="worker", phone="+998908887766")
+    job = make_job(employer_id=emp.id, coordinateX=41.31, coordinateY=69.24)
+
+    login(client, worker)
+
+    # Seed cache
+    res1 = client.get("/api/v1/jobs/map")
+    assert res1.status_code == 200
+    etag1 = res1.headers.get("ETag")
+
+    # Bookmark the job
+    bm_res = client.post(f"/api/v1/jobs/{job.id}/bookmark")
+    assert bm_res.status_code == 200
+    assert bm_res.json()["bookmarked"] is True
+
+    # Fetch map again: user version must have incremented, returning updated data
+    res2 = client.get("/api/v1/jobs/map")
+    assert res2.status_code == 200
+    etag2 = res2.headers.get("ETag")
+    # ETags must differ because bookmarked flag changed
+    assert etag1 != etag2
+    pins = res2.json()
+    bookmarked_pin = next((p for p in pins if p["id"] == job.id), None)
+    assert bookmarked_pin is not None
+    assert bookmarked_pin["bookmarked"] is True
+
+

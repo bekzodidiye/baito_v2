@@ -18,6 +18,7 @@ from app.core.exceptions import (
     InvalidJobStateError,
     ApplicationError,
 )
+from app.core.map_cache import invalidate_user_map_cache
 
 logger = logging.getLogger(__name__)
 
@@ -167,6 +168,10 @@ class JobService:
             ))
         db.commit()
         db.refresh(db_app)
+        try:
+            invalidate_user_map_cache(current_user.id)
+        except Exception:
+            pass
         return {"success": True, "id": db_app.id, "jobId": db_app.jobId, "status": db_app.status}
 
 

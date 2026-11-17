@@ -40,6 +40,36 @@ def invalidate_map_cache() -> None:
         logger.warning("Failed to invalidate map cache: %s", e)
 
 
+def get_user_map_cache_version(user_id: str) -> int:
+    """Returns the atomic version for a specific user's personalized map cache (applications/bookmarks)."""
+    if not user_id:
+        return 1
+    key = f"cache:user:{user_id}:map_version"
+    try:
+        ver = redis_client.get(key)
+        if ver is not None:
+            return int(ver)
+        redis_client.set(key, 1, ex=86400)
+        return 1
+    except Exception as e:
+        logger.warning("Redis read user cache version failed: %s", e)
+        return 1
+
+
+def invalidate_user_map_cache(user_id: str) -> None:
+    """Instantly invalidates a specific user's personalized map cache in O(1).
+    Called when a user applies to a job, withdraws an application, or toggles bookmarks.
+    """
+    if not user_id:
+        return
+    key = f"cache:user:{user_id}:map_version"
+    try:
+        redis_client.incr(key)
+        logger.debug("User %s map cache invalidated.", user_id)
+    except Exception as e:
+        logger.warning("Failed to invalidate user map cache: %s", e)
+
+
 def build_map_pins_cache_key(
     version: int,
     min_lat: Optional[float] = None,

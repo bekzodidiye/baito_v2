@@ -14,6 +14,7 @@ from app.services.earnings_service import WorkerEarnings
 from app.models.job import JobStatus
 from app.models.job_payout import PayoutStatus
 from datetime import datetime, timezone
+from app.core.map_cache import invalidate_user_map_cache
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -340,10 +341,12 @@ def toggle_bookmark(
     if existing:
         db.delete(existing)
         db.commit()
+        invalidate_user_map_cache(current_user.id)
         return {"success": True, "bookmarked": False}
 
     db.add(models.Bookmark(jobId=id, userId=current_user.id))
     db.commit()
+    invalidate_user_map_cache(current_user.id)
     return {"success": True, "bookmarked": True}
 
 

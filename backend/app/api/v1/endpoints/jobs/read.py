@@ -10,8 +10,10 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
+from app.db.session import SessionLocal
 from app.core.map_cache import (
     get_map_cache_version,
+    get_user_map_cache_version,
     build_map_pins_cache_key,
     CACHE_LOCATION_COUNTS_PREFIX,
 )
@@ -238,11 +240,12 @@ def read_jobs(
 def get_job_location_counts(
     response: Response,
     request: Request,
-    db: Session = Depends(deps.get_db),
+    db: Optional[Session] = Depends(deps.get_db_optional),
 ) -> Any:
     """Aggregated open job counts per region and district for map labels and badges.
     Caches calculation in Redis with atomic versioning and HTTP ETag / Cache-Control headers
     to completely eliminate repetitive client-side string-matching loops and database load.
+    Zero database connections are acquired when served from Redis cache.
     """
     version = get_map_cache_version()
     cache_key = f"{CACHE_LOCATION_COUNTS_PREFIX}:v{version}"
@@ -277,19 +280,27 @@ def get_job_location_counts(
         except Exception as e:
             logger.warning("Failed to decode cached location counts: %s", e)
 
-    open_jobs = (
-        db.query(
-            models.Job.location,
-            models.Job.rawLocation,
-            models.Job.coordinateX,
-            models.Job.coordinateY,
+    own_db = False
+    active_db = db
+    if active_db is None:
+        active_db = SessionLocal()
+        own_db = True
+    try:
+        open_jobs = (
+            active_db.query(
+                models.Job.location,
+                models.Job.rawLocation,
+                models.Job.coordinateX,
+                models.Job.coordinateY,
+            )
+            .filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
+            .all()
         )
-        .filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
-        .all()
-    )
-
-    counts = GeoSpatialService.aggregate_location_counts(open_jobs)
-    payload_str = json.dumps(counts)
+        counts = GeoSpatialService.aggregate_location_counts(open_jobs)
+        payload_str = json.dumps(counts)
+    finally:
+        if own_db and active_db:
+            active_db.close()
 
     try:
         redis_client.set(cache_key, payload_str, ex=300)
@@ -322,7 +333,7 @@ def get_job_location_counts(
 def get_map_jobs(
     response: Response,
     request: Request,
-    db: Session = Depends(deps.get_db),
+    db: Optional[Session] = Depends(deps.get_db_optional),
     current_user: Optional[models.User] = Depends(deps.get_current_user_optional),
     min_lat: Optional[float] = Query(None, ge=-90.0, le=90.0),
     max_lat: Optional[float] = Query(None, ge=-90.0, le=90.0),
@@ -337,7 +348,8 @@ def get_map_jobs(
     """High-performance lightweight map pins for interactive GIS map and clustering.
     Excludes heavy text columns (description, requirements, etc.) and unneeded user profiles,
     reducing payload size by >80% to eliminate UI freezing during panning/zooming.
-    Supports spatial bounding-box filtering, Redis coordinate quantization caching, and HTTP 304 ETag.
+    Supports multi-tier Redis caching (base pins + user personalization), zero-DB fast path,
+    spatial bounding-box filtering, coordinate quantization, and HTTP 304 ETag.
     """
     # Unwrap FastAPI Query defaults if called directly from other functions
     min_lat = min_lat.default if hasattr(min_lat, "default") else min_lat
@@ -351,7 +363,7 @@ def get_map_jobs(
     clustered = clustered.default if hasattr(clustered, "default") else bool(clustered)
 
     version = get_map_cache_version()
-    cache_key = build_map_pins_cache_key(
+    base_cache_key = build_map_pins_cache_key(
         version=version,
         min_lat=min_lat,
         max_lat=max_lat,
@@ -363,218 +375,335 @@ def get_map_jobs(
         limit=limit,
     )
     if clustered:
-        cache_key += ":clustered"
+        base_cache_key += ":clustered"
 
-    # Fast path for unauthenticated users (public map browsing / guests):
-    # Returns pre-serialized JSON directly from Redis in <1ms without touching DB or Pydantic.
-    if not current_user:
-        try:
-            cached_bytes = redis_client.get(cache_key)
-            if cached_bytes:
-                cached_str = cached_bytes.decode("utf-8") if isinstance(cached_bytes, bytes) else str(cached_bytes)
-                etag = f'"{hashlib.md5(cached_str.encode("utf-8")).hexdigest()}"'
-                response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
-                response.headers["ETag"] = etag
-                if request.headers.get("if-none-match") == etag:
-                    return Response(
-                        status_code=304,
-                        headers={
-                            "ETag": etag,
-                            "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
-                        },
-                    )
+    user_id = None
+    if current_user:
+        user_id = current_user.id
+    else:
+        token = deps.get_access_token(request)
+        if token:
+            t_data = deps._decode(token, "access")
+            if t_data and t_data.sub:
+                user_id = t_data.sub
+
+    if user_id:
+        user_ver = get_user_map_cache_version(user_id)
+        effective_cache_key = f"{base_cache_key}:u:{user_id}:uv{user_ver}"
+        cache_control = "private, max-age=15, stale-while-revalidate=30"
+    else:
+        effective_cache_key = base_cache_key
+        cache_control = "public, max-age=15, stale-while-revalidate=30"
+
+    # 1. FAST PATH: Check effective cache key (works for BOTH authenticated and guest visitors)
+    try:
+        cached_bytes = redis_client.get(effective_cache_key)
+        if cached_bytes:
+            cached_str = cached_bytes.decode("utf-8") if isinstance(cached_bytes, bytes) else str(cached_bytes)
+            etag = f'"{hashlib.md5(cached_str.encode("utf-8")).hexdigest()}"'
+            response.headers["Cache-Control"] = cache_control
+            response.headers["ETag"] = etag
+            if request.headers.get("if-none-match") == etag:
                 return Response(
-                    content=cached_str,
-                    media_type="application/json",
+                    status_code=304,
                     headers={
                         "ETag": etag,
-                        "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+                        "Cache-Control": cache_control,
                     },
                 )
-        except Exception as e:
-            logger.warning("Redis read error in get_map_jobs: %s", e)
-
-    # Base pins query: select ONLY lightweight columns to bypass large TOAST text columns
-    query = db.query(
-        models.Job.id,
-        models.Job.title,
-        models.Job.company,
-        models.Job.salary,
-        models.Job.salaryCurrency,
-        models.Job.location,
-        models.Job.rawLocation,
-        models.Job.logoUrl,
-        models.Job.imageUrl,
-        models.Job.tags,
-        models.Job.category,
-        models.Job.workDate,
-        models.Job.workTime,
-        models.Job.neededWorkers,
-        models.Job.coordinateX,
-        models.Job.coordinateY,
-        models.Job.urgent,
-        models.Job.status,
-        models.Job.hiredWorkerId,
-        models.Job.createdAt,
-    )
-
-    if search:
-        term = f"%{search.strip()}%"
-        query = query.filter(
-            or_(
-                models.Job.title.ilike(term),
-                models.Job.company.ilike(term),
-                models.Job.location.ilike(term),
+            return Response(
+                content=cached_str,
+                media_type="application/json",
+                headers={
+                    "ETag": etag,
+                    "Cache-Control": cache_control,
+                },
             )
-        )
-    if location:
-        query = query.filter(models.Job.location.ilike(f"%{location.strip()}%"))
-    if category:
-        query = query.filter(models.Job.category == category)
+    except Exception as e:
+        logger.warning("Redis lookup error in get_map_jobs: %s", e)
 
-    if min_lat is not None and max_lat is not None:
-        query = query.filter(models.Job.coordinateX.between(min_lat, max_lat))
-    if min_lng is not None and max_lng is not None:
-        query = query.filter(models.Job.coordinateY.between(min_lng, max_lng))
+    # 2. FAST ASSEMBLY PATH FOR AUTHENTICATED USERS:
+    # If public base pins are already cached in Redis, we do NOT query the jobs table at all.
+    # We only query the user's specific applications and bookmarks (indexed, <0.2ms).
+    cached_base = None
+    if user_id:
+        try:
+            cached_base = redis_client.get(base_cache_key)
+        except Exception:
+            pass
 
-    visible = models.Job.status.in_(JobStatus.OPEN_STATUSES)
-    user_ids = [uid for uid in [current_user.id, getattr(current_user, 'uid', None)] if uid] if current_user else []
+    if user_id and cached_base:
+        try:
+            base_str = cached_base.decode("utf-8") if isinstance(cached_base, bytes) else str(cached_base)
+            base_pins = json.loads(base_str)
+            user_ids = [user_id]
+            if current_user and getattr(current_user, 'uid', None):
+                user_ids.append(current_user.uid)
 
-    if current_user:
-        own = (
-            db.query(models.Application.jobId)
-            .filter(models.Application.workerId.in_(user_ids))
-            .subquery()
-        )
-        visible = or_(visible, models.Job.id.in_(select(own.c.jobId)))
-    query = query.filter(visible)
-
-    jobs = (
-        query.order_by(models.Job.createdAt.desc(), models.Job.id.desc())
-        .limit(limit)
-        .all()
-    )
-
-    if not jobs:
-        empty_str = "[]"
-        if not current_user:
+            own_db = False
+            active_db = db
+            if active_db is None:
+                active_db = SessionLocal()
+                own_db = True
             try:
-                redis_client.set(cache_key, empty_str, ex=60)
+                worker_apps = (
+                    active_db.query(models.Application.jobId, models.Application.status)
+                    .filter(models.Application.workerId.in_(user_ids))
+                    .all()
+                )
+                worker_apps_map = {a[0]: a[1] for a in worker_apps}
+                bookmarked_ids = {
+                    b[0]
+                    for b in active_db.query(models.Bookmark.jobId)
+                    .filter(models.Bookmark.userId.in_(user_ids))
+                    .all()
+                }
+            finally:
+                if own_db and active_db:
+                    active_db.close()
+
+            if not worker_apps_map and not bookmarked_ids:
+                user_payload_str = base_str
+            else:
+                user_pins = []
+                for p in base_pins:
+                    up = dict(p)
+                    jid = up.get("id")
+                    app_status = worker_apps_map.get(jid)
+                    if app_status:
+                        up["applied"] = True
+                        if app_status in ('in_progress', 'completed', 'start_requested', 'hired', 'applied'):
+                            up["status"] = app_status
+                    if jid in bookmarked_ids:
+                        up["bookmarked"] = True
+                    user_pins.append(up)
+                user_payload_str = json.dumps(user_pins)
+
+            try:
+                redis_client.set(effective_cache_key, user_payload_str, ex=120)
             except Exception:
                 pass
-        return Response(
-            content=empty_str,
-            media_type="application/json",
-            headers={"Cache-Control": "public, max-age=15, stale-while-revalidate=30"},
+
+            etag = f'"{hashlib.md5(user_payload_str.encode("utf-8")).hexdigest()}"'
+            response.headers["Cache-Control"] = cache_control
+            response.headers["ETag"] = etag
+            if request.headers.get("if-none-match") == etag:
+                return Response(
+                    status_code=304,
+                    headers={
+                        "ETag": etag,
+                        "Cache-Control": cache_control,
+                    },
+                )
+            return Response(
+                content=user_payload_str,
+                media_type="application/json",
+                headers={
+                    "ETag": etag,
+                    "Cache-Control": cache_control,
+                },
+            )
+        except Exception as e:
+            logger.warning("Fast personalization failed in get_map_jobs, falling back: %s", e)
+
+    # 3. DATABASE COLD START PATH (only when base pins are not in Redis)
+    own_db = False
+    active_db = db
+    if active_db is None:
+        active_db = SessionLocal()
+        own_db = True
+    try:
+        query = active_db.query(
+            models.Job.id,
+            models.Job.title,
+            models.Job.company,
+            models.Job.salary,
+            models.Job.salaryCurrency,
+            models.Job.location,
+            models.Job.rawLocation,
+            models.Job.logoUrl,
+            models.Job.imageUrl,
+            models.Job.tags,
+            models.Job.category,
+            models.Job.workDate,
+            models.Job.workTime,
+            models.Job.neededWorkers,
+            models.Job.coordinateX,
+            models.Job.coordinateY,
+            models.Job.urgent,
+            models.Job.status,
+            models.Job.hiredWorkerId,
+            models.Job.createdAt,
         )
 
-    job_ids = [j.id for j in jobs]
+        if search:
+            term = f"%{search.strip()}%"
+            query = query.filter(
+                or_(
+                    models.Job.title.ilike(term),
+                    models.Job.company.ilike(term),
+                    models.Job.location.ilike(term),
+                )
+            )
+        if location:
+            query = query.filter(models.Job.location.ilike(f"%{location.strip()}%"))
+        if category:
+            query = query.filter(models.Job.category == category)
 
-    # Aggregated hired applications count via SQL GROUP BY (uses index idx_apps_job_status)
-    hired_counts_query = (
-        db.query(models.Application.jobId, func.count(models.Application.id))
-        .filter(
-            models.Application.jobId.in_(job_ids),
-            models.Application.status.in_(HIRED_STATUSES),
+        if min_lat is not None and max_lat is not None:
+            query = query.filter(models.Job.coordinateX.between(min_lat, max_lat))
+        if min_lng is not None and max_lng is not None:
+            query = query.filter(models.Job.coordinateY.between(min_lng, max_lng))
+
+        visible = models.Job.status.in_(JobStatus.OPEN_STATUSES)
+        query = query.filter(visible)
+
+        jobs = (
+            query.order_by(models.Job.createdAt.desc(), models.Job.id.desc())
+            .limit(limit)
+            .all()
         )
-        .group_by(models.Application.jobId)
-        .all()
-    )
-    hired_counts: dict[str, int] = {job_id: cnt for job_id, cnt in hired_counts_query}
 
-    worker_apps_map = {}
-    bookmarked_ids: set[str] = set()
-    if current_user:
-        worker_apps = (
-            db.query(models.Application)
+        if not jobs:
+            empty_str = "[]"
+            try:
+                redis_client.set(base_cache_key, empty_str, ex=60)
+                if user_id:
+                    redis_client.set(effective_cache_key, empty_str, ex=60)
+            except Exception:
+                pass
+            empty_etag = f'"{hashlib.md5(empty_str.encode("utf-8")).hexdigest()}"'
+            return Response(
+                content=empty_str,
+                media_type="application/json",
+                headers={"Cache-Control": cache_control, "ETag": empty_etag},
+            )
+
+        job_ids = [j.id for j in jobs]
+
+        # Aggregated hired applications count via SQL GROUP BY (uses index idx_apps_job_status)
+        hired_counts_query = (
+            active_db.query(models.Application.jobId, func.count(models.Application.id))
             .filter(
-                models.Application.workerId.in_(user_ids),
                 models.Application.jobId.in_(job_ids),
+                models.Application.status.in_(HIRED_STATUSES),
             )
+            .group_by(models.Application.jobId)
             .all()
         )
-        worker_apps_map = {a.jobId: a for a in worker_apps}
+        hired_counts: dict[str, int] = {job_id: cnt for job_id, cnt in hired_counts_query}
 
-        bookmarked_ids = {
-            b.jobId
-            for b in db.query(models.Bookmark.jobId)
-            .filter(
-                models.Bookmark.userId.in_(user_ids),
-                models.Bookmark.jobId.in_(job_ids),
+        worker_apps_map = {}
+        bookmarked_ids: set[str] = set()
+        if user_id:
+            user_ids = [user_id]
+            if current_user and getattr(current_user, 'uid', None):
+                user_ids.append(current_user.uid)
+            worker_apps = (
+                active_db.query(models.Application.jobId, models.Application.status)
+                .filter(
+                    models.Application.workerId.in_(user_ids),
+                    models.Application.jobId.in_(job_ids),
+                )
+                .all()
             )
-            .all()
-        }
+            worker_apps_map = {a[0]: a[1] for a in worker_apps}
+            bookmarked_ids = {
+                b[0]
+                for b in active_db.query(models.Bookmark.jobId)
+                .filter(
+                    models.Bookmark.userId.in_(user_ids),
+                    models.Bookmark.jobId.in_(job_ids),
+                )
+                .all()
+            }
 
-    pins = []
-    for job in jobs:
-        app_item = worker_apps_map.get(job.id)
-        job_status = job.status
-        if app_item and app_item.status in ('in_progress', 'completed', 'start_requested', 'hired', 'applied'):
-            job_status = app_item.status
+        base_pins = []
+        user_pins = []
+        for job in jobs:
+            raw_needed = (job.neededWorkers or "1").strip()
+            vacancies_num = int(raw_needed) if raw_needed.isdigit() and int(raw_needed) > 0 else 1
+            hired_cnt = hired_counts.get(job.id, 0)
+            if job.status == JobStatus.OPEN and job.hiredWorkerId is None and vacancies_num <= 1:
+                hired_cnt = 0
 
-        raw_needed = (job.neededWorkers or "1").strip()
-        vacancies_num = int(raw_needed) if raw_needed.isdigit() and int(raw_needed) > 0 else 1
-        hired_cnt = hired_counts.get(job.id, 0)
-        if job.status == JobStatus.OPEN and job.hiredWorkerId is None and vacancies_num <= 1:
-            hired_cnt = 0
+            is_filled = (
+                (job.status != JobStatus.OPEN and hired_cnt >= vacancies_num)
+                or (job.status in (JobStatus.COMPLETED, JobStatus.IN_PROGRESS))
+            )
+            if is_filled and not worker_apps_map.get(job.id):
+                continue
 
-        is_filled = (
-            (job.status != JobStatus.OPEN and hired_cnt >= vacancies_num)
-            or (job.status in (JobStatus.COMPLETED, JobStatus.IN_PROGRESS))
-        )
-        if is_filled and not app_item:
-            continue
+            base_pin = {
+                "id": job.id,
+                "title": job.title,
+                "company": job.company,
+                "salary": job.salary,
+                "salaryCurrency": job.salaryCurrency or "UZS",
+                "location": job.location,
+                "rawLocation": job.rawLocation,
+                "logoUrl": job.logoUrl,
+                "imageUrl": job.imageUrl,
+                "tags": job.tags or [],
+                "category": job.category,
+                "workDate": job.workDate,
+                "workTime": job.workTime,
+                "neededWorkers": job.neededWorkers or "1",
+                "coordinateX": job.coordinateX,
+                "coordinateY": job.coordinateY,
+                "latitude": job.coordinateX,
+                "longitude": job.coordinateY,
+                "urgent": job.urgent or False,
+                "status": job.status,
+                "applied": False,
+                "bookmarked": False,
+                "hiredCount": hired_cnt,
+                "vacancies": vacancies_num,
+                "isCluster": False,
+                "count": 1,
+            }
+            base_pins.append(base_pin)
 
-        pins.append({
-            "id": job.id,
-            "title": job.title,
-            "company": job.company,
-            "salary": job.salary,
-            "salaryCurrency": job.salaryCurrency or "UZS",
-            "location": job.location,
-            "rawLocation": job.rawLocation,
-            "logoUrl": job.logoUrl,
-            "imageUrl": job.imageUrl,
-            "tags": job.tags or [],
-            "category": job.category,
-            "workDate": job.workDate,
-            "workTime": job.workTime,
-            "neededWorkers": job.neededWorkers or "1",
-            "coordinateX": job.coordinateX,
-            "coordinateY": job.coordinateY,
-            "latitude": job.coordinateX,
-            "longitude": job.coordinateY,
-            "urgent": job.urgent or False,
-            "status": job_status,
-            "applied": bool(app_item),
-            "bookmarked": job.id in bookmarked_ids,
-            "hiredCount": hired_cnt,
-            "vacancies": vacancies_num,
-            "isCluster": False,
-            "count": 1,
-        })
+            if user_id:
+                u_pin = dict(base_pin)
+                app_item_status = worker_apps_map.get(job.id)
+                if app_item_status:
+                    u_pin["applied"] = True
+                    if app_item_status in ('in_progress', 'completed', 'start_requested', 'hired', 'applied'):
+                        u_pin["status"] = app_item_status
+                if job.id in bookmarked_ids:
+                    u_pin["bookmarked"] = True
+                user_pins.append(u_pin)
 
-    if clustered:
-        pins = GeoSpatialService.cluster_pins(pins, grid_size=0.4)
+        if clustered:
+            base_pins = GeoSpatialService.cluster_pins(base_pins, grid_size=0.4)
+            if user_id:
+                user_pins = GeoSpatialService.cluster_pins(user_pins, grid_size=0.4)
 
-    payload_str = json.dumps(pins)
+        base_str = json.dumps(base_pins)
+        user_str = json.dumps(user_pins) if user_id else base_str
 
-    # Cache public pins for unauthenticated visitors
-    if not current_user:
         try:
-            redis_client.set(cache_key, payload_str, ex=180)
+            redis_client.set(base_cache_key, base_str, ex=180)
+            if user_id:
+                redis_client.set(effective_cache_key, user_str, ex=120)
         except Exception as e:
             logger.warning("Redis store failed in get_map_jobs: %s", e)
 
+        payload_str = user_str
+    finally:
+        if own_db and active_db:
+            active_db.close()
+
     etag = f'"{hashlib.md5(payload_str.encode("utf-8")).hexdigest()}"'
-    response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
+    response.headers["Cache-Control"] = cache_control
     response.headers["ETag"] = etag
     if request.headers.get("if-none-match") == etag:
         return Response(
             status_code=304,
             headers={
                 "ETag": etag,
-                "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+                "Cache-Control": cache_control,
             },
         )
 
@@ -583,7 +712,7 @@ def get_map_jobs(
         media_type="application/json",
         headers={
             "ETag": etag,
-            "Cache-Control": "public, max-age=15, stale-while-revalidate=30",
+            "Cache-Control": cache_control,
         },
     )
 
@@ -604,7 +733,7 @@ def tile_to_bbox(z: int, x: int, y: int) -> tuple[float, float, float, float]:
 def get_map_geojson(
     response: Response,
     request: Request,
-    db: Session = Depends(deps.get_db),
+    db: Optional[Session] = Depends(deps.get_db_optional),
     current_user: Optional[models.User] = Depends(deps.get_current_user_optional),
     min_lat: Optional[float] = Query(None, ge=-90.0, le=90.0),
     max_lat: Optional[float] = Query(None, ge=-90.0, le=90.0),
@@ -713,7 +842,7 @@ def get_map_tile(
     y: int,
     response: Response,
     request: Request,
-    db: Session = Depends(deps.get_db),
+    db: Optional[Session] = Depends(deps.get_db_optional),
     category: Optional[str] = Query(None, max_length=100),
     limit: int = Query(200, ge=1, le=500),
 ) -> Any:
