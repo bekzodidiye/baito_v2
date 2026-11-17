@@ -194,9 +194,9 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
-    # Reachable through the frontend's nginx proxy; not published to the host.
-    expose:
-      - "8000"
+    # Reachable through host and the frontend's nginx proxy.
+    ports:
+      - "127.0.0.1:8000:8000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 15s
