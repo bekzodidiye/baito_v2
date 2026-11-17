@@ -222,3 +222,36 @@ class JobWithApplicationStatus(Job):
     payoutStatus: Optional[str] = None
     invoiceNumber: Optional[str] = None
     invoiceAmount: Optional[int] = None
+
+
+class JobMapPin(BaseModel):
+    """Lightweight projection for interactive maps and geo-spatial pin clustering.
+    Excludes heavy TOAST columns (description, requirements, responsibilities, translations)
+    and unneeded entities to cut network payload by >80% and prevent client-side render lag.
+    """
+    id: str
+    title: str
+    company: str
+    salary: int
+    salaryCurrency: Optional[str] = 'UZS'
+    location: str
+    rawLocation: Optional[str] = None
+    logoUrl: Optional[str] = None
+    imageUrl: Optional[str] = None
+    tags: Optional[List[str]] = None
+    category: Optional[str] = None
+    workDate: Optional[str] = None
+    workTime: Optional[str] = None
+    neededWorkers: Optional[str] = '1'
+    coordinateX: Optional[float] = None
+    coordinateY: Optional[float] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    urgent: Optional[bool] = False
+    status: str
+    applied: bool = False
+    bookmarked: bool = False
+    hiredCount: int = 0
+    vacancies: int = 1
+
+    model_config = ConfigDict(from_attributes=True)

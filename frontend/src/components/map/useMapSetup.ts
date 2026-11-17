@@ -146,7 +146,18 @@ export const useMapSetup = ({
     // Fast initial unmasking
     const timer = setTimeout(() => setIsMapLoading(false), 150);
 
-    map.on('zoomend', () => setZoomLevel(map.getZoom()));
+    // Debounce zoomLevel state updates so fitBounds animations (which fire
+    // multiple rapid zoomend events) only trigger one React re-render once the
+    // animation settles. This prevents the cascade where every intermediate
+    // zoom level triggers useMapLabels + useJobMarkers to destroy and recreate
+    // all DOM elements mid-animation.
+    let zoomDebounce: ReturnType<typeof setTimeout> | null = null;
+    map.on('zoomend', () => {
+      if (zoomDebounce) clearTimeout(zoomDebounce);
+      zoomDebounce = setTimeout(() => {
+        setZoomLevel(map.getZoom());
+      }, 120);
+    });
     map.on('click', () => onMapClickRef.current());
 
     mapInstanceRef.current = map;

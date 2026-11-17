@@ -22,7 +22,7 @@ class JobStatus:
     REJECTED = "rejected"        # rejected by admin
 
     # Statuses a job seeker may still see and apply to.
-    OPEN_STATUSES = (OPEN, CONFIRMED)
+    OPEN_STATUSES = (OPEN, CONFIRMED, "active")
     # Statuses that mean the job is done with and should stay out of listings.
     CLOSED_STATUSES = (COMPLETED, CANCELLED, REJECTED)
 
@@ -40,15 +40,15 @@ class Job(Base):
     tags = Column(JSON)
     location = Column(String, nullable=False, index=True)
     rawLocation = Column(String)
-    coordinateX = Column(Float)
-    coordinateY = Column(Float)
+    coordinateX = Column(Float, index=True)
+    coordinateY = Column(Float, index=True)
     durationLabel = Column(String)
     urgent = Column(Boolean, default=False)
     description = Column(String, nullable=False)
     status = Column(String, nullable=False, default=JobStatus.PENDING, index=True)
     views = Column(Integer, default=0)
     hiredWorkerId = Column(String, ForeignKey("users.id"))
-    createdAt = Column(DateTime(timezone=True), server_default=func.now())
+    createdAt = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     # When the work actually began. ``workTime`` is the shift the posting
     # advertised — "09:00 - 18:00" — and it says nothing about whether anyone
     # turned up at nine. This is the moment the start was confirmed, which is

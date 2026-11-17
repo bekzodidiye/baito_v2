@@ -11,6 +11,7 @@ import { JobDetailsTasks } from '../job-details/JobDetailsTasks';
 import { JobDetailsRequirements } from '../job-details/JobDetailsRequirements';
 import { JobDetailsFooter } from '../job-details/JobDetailsFooter';
 import { useAuthStore } from "../../store/useAuthStore";
+import { fetchJobById } from '../../api/queries';
 
 interface JobDetailModalProps {
   selectedJob: Job;
@@ -51,6 +52,14 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   useEffect(() => {
     if (modalScrollRef.current) {
       modalScrollRef.current.scrollTop = 0;
+    }
+    // If the job was opened from a lightweight map pin (no description), fetch full details
+    if (selectedJob?.id && !selectedJob.description) {
+      fetchJobById(selectedJob.id)
+        .then(fullJob => {
+          if (fullJob) setSelectedJob(fullJob);
+        })
+        .catch(() => {});
     }
   }, [selectedJob?.id]);
 

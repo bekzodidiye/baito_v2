@@ -45,6 +45,17 @@ export const useMapLabels = ({
   lastFittedLocationRef,
   isPanelExpandedRef
 }: UseMapLabelsProps) => {
+  const getJobCountRef = React.useRef(getJobCountForLocation);
+  useEffect(() => {
+    getJobCountRef.current = getJobCountForLocation;
+  }, [getJobCountForLocation]);
+
+  // Stable signature of job counts to avoid wiping all map label DOM nodes every 10s
+  const jobsCountSignature = React.useMemo(() => {
+    if (!jobs || jobs.length === 0) return '0';
+    return `${jobs.length}-${jobs.filter(j => j.status === 'open').length}`;
+  }, [jobs]);
+
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !labelsGroupRef.current) return;
@@ -87,7 +98,7 @@ export const useMapLabels = ({
           if (isActiveFilter && !isRegionActive && zoomLevel >= 7.8) return;
           
           const translatedName = translateRegion(region.id, language).toUpperCase();
-          const regionJobsCount = getJobCountForLocation(region.id) || getJobCountForLocation(region.name);
+          const regionJobsCount = getJobCountRef.current(region.id) || getJobCountRef.current(region.name);
 
           let textSizeClass = 'text-[9.5px] md:text-[10.5px]';
           let badgeSizeClass = 'text-[8px] h-4 min-w-[14px] px-1 ml-1 border';
@@ -197,7 +208,7 @@ export const useMapLabels = ({
             .replace(" Rayon", " R.")
             .replace(" district", " dist.");
             
-          const tumanJobsCount = getJobCountForLocation(tumanName);
+          const tumanJobsCount = getJobCountRef.current(tumanName);
 
           let badgeHtml = '';
           if (tumanJobsCount > 0) {
@@ -268,5 +279,5 @@ export const useMapLabels = ({
       if (timer) clearTimeout(timer);
       if (zoomEndHandler) map.off('zoomend', zoomEndHandler);
     };
-  }, [isMapReady, filterLocation, zoomLevel, geoJsonData, districtsGeoJsonData, language, jobs]);
+  }, [isMapReady, filterLocation, zoomLevel, geoJsonData, districtsGeoJsonData, language, jobsCountSignature]);
 };

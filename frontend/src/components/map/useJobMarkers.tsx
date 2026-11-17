@@ -46,6 +46,18 @@ export const useJobMarkers = ({
     selectedJobRef.current = selectedJob;
   }, [selectedJob]);
 
+  const jobsRef = useRef(jobs);
+  useEffect(() => {
+    jobsRef.current = jobs;
+  }, [jobs]);
+
+  // Compute a stable signature so that background polling of jobs (which creates
+  // new array references every 10s) does NOT tear down all Leaflet markers unless
+  // the job IDs, statuses, bookmarks, or applications actually changed.
+  const jobsSignature = React.useMemo(() => {
+    return jobs.map(j => `${j.id}:${j.status}:${j.bookmarked}:${j.applied}`).join('|');
+  }, [jobs]);
+
   const activeRootsRef = useRef<Map<string, import('react-dom/client').Root>>(new Map());
 
   useEffect(() => {
@@ -185,7 +197,7 @@ export const useJobMarkers = ({
     return () => {
       map.off('moveend', handleMoveEnd);
     };
-  }, [activeCluster, jobs, filterLocation, mapInstanceRef, markerGroupRef, language, districtsGeoJsonData, setSelectedJob, isVisible]);
+  }, [activeCluster, jobsSignature, filterLocation, mapInstanceRef, markerGroupRef, language, districtsGeoJsonData, setSelectedJob, isVisible]);
 
   useUserLocationMarker({
     userGroupRef,

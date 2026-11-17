@@ -1,5 +1,5 @@
 from .user import User, UserCreate, UserUpdate, PasswordChange
-from .job import Job, JobCreate, JobUpdate, JobWithApplicationStatus
+from .job import Job, JobCreate, JobUpdate, JobWithApplicationStatus, JobMapPin
 from .token import Token, TokenPayload
 from .application import Application, ApplicationCreate, ApplicationUpdate
 from .payment_card import (

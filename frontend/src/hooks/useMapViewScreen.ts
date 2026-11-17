@@ -27,7 +27,7 @@ export function useMapViewScreen() {
     const mapFocusedJobId = useUIStore(s => s.mapFocusedJobId);
     const setMapFocusedJobId = useUIStore(s => s.setMapFocusedJobId);
     const language = useAuthStore(s => s.language);
-  const { jobs: rawJobs, toggleBookmark, applyToJob } = useJobsData();
+  const { jobs: rawJobs, toggleBookmark, applyToJob } = useJobsData({ isMap: true });
 
   const jobs = useMemo(() => {
     return rawJobs.map(j => getTranslatedJob(j, language));

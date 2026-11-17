@@ -5,6 +5,7 @@ export interface JobQuery {
   /** Free text. Matched server-side against title, company, description and
    *  location, so a posting past the first page is still reachable. */
   search?: string;
+  isMap?: boolean;
 }
 
 export const fetchJobs = async (query: JobQuery = {}): Promise<Job[]> => {
@@ -12,6 +13,35 @@ export const fetchJobs = async (query: JobQuery = {}): Promise<Job[]> => {
   if (query.search?.trim()) params.set('search', query.search.trim());
   const qs = params.toString();
   return await apiClient(qs ? `/jobs?${qs}` : '/jobs');
+};
+
+export interface MapJobQuery {
+  search?: string;
+  location?: string;
+  category?: string;
+  minLat?: number;
+  maxLat?: number;
+  minLng?: number;
+  maxLng?: number;
+  limit?: number;
+}
+
+export const fetchMapJobs = async (query: MapJobQuery = {}): Promise<Job[]> => {
+  const params = new URLSearchParams();
+  if (query.search?.trim()) params.set('search', query.search.trim());
+  if (query.location?.trim()) params.set('location', query.location.trim());
+  if (query.category?.trim()) params.set('category', query.category.trim());
+  if (query.minLat !== undefined) params.set('min_lat', String(query.minLat));
+  if (query.maxLat !== undefined) params.set('max_lat', String(query.maxLat));
+  if (query.minLng !== undefined) params.set('min_lng', String(query.minLng));
+  if (query.maxLng !== undefined) params.set('max_lng', String(query.maxLng));
+  if (query.limit !== undefined) params.set('limit', String(query.limit));
+  const qs = params.toString();
+  return await apiClient(qs ? `/jobs/map?${qs}` : '/jobs/map');
+};
+
+export const fetchJobById = async (jobId: string): Promise<Job> => {
+  return await apiClient(`/jobs/${jobId}`);
 };
 
 export const fetchChats = async () => {

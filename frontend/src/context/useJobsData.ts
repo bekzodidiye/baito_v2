@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchJobs, JobQuery, bookmarkJobApi, applyToJobApi, requestStartJobApi, confirmStartJobApi } from '../api/queries';
+import { fetchJobs, fetchMapJobs, JobQuery, bookmarkJobApi, applyToJobApi, requestStartJobApi, confirmStartJobApi } from '../api/queries';
 
 import { Job } from '../types';
 import { useCallback } from 'react';
@@ -7,20 +7,22 @@ import { useCallback } from 'react';
 export function useJobsData(query: JobQuery = {}) {
   const queryClient = useQueryClient();
 
-  // Screens that show every job (map, calendar, landing) call this with no
-  // argument and keep sharing one cache entry; a search gets its own. Every
-  // key starts with 'jobs', so the invalidations below still reach them all.
+  const isMap = query.isMap ?? false;
   const search = query.search?.trim() ?? '';
-  const queryKey = search ? ['jobs', { search }] : ['jobs'];
+  const queryKey = isMap ? ['jobs', 'map'] : search ? ['jobs', { search }] : ['jobs'];
 
   const { data: jobs = [], isLoading } = useQuery({
     queryKey,
     queryFn: async () => {
+      if (isMap) {
+        const res = await fetchMapJobs();
+        return Array.isArray(res) ? res : [];
+      }
       const res = await fetchJobs({ search });
       return Array.isArray(res) ? res : [];
     },
-    refetchInterval: 10000,
-    staleTime: 5000,
+    refetchInterval: isMap ? 30000 : 10000,
+    staleTime: isMap ? 15000 : 5000,
     refetchOnWindowFocus: true,
     // Keep the previous results on screen while the next search loads, so the
     // list does not blank out on every keystroke.
