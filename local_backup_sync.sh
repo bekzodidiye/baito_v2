@@ -6,12 +6,18 @@
 # backuplarni darhol noutbukka yuklaydi va 
 # ekranga desktop bildirishnoma chiqaradi.
 
-LOCAL_BACKUP_DIR="$HOME/baito_local_backups"
-AWS_ENDPOINT_URL="http://100.109.46.108:9000"
-AWS_ACCESS_KEY_ID="minioadmin"
-AWS_SECRET_ACCESS_KEY="minioadmin"
-AWS_DEFAULT_REGION="us-east-1"
-S3_BUCKET_PATH="s3://baito-bucket/backups/"
+LOCAL_BACKUP_DIR="${LOCAL_BACKUP_DIR:-$HOME/baito_local_backups}"
+AWS_ENDPOINT_URL="${AWS_ENDPOINT_URL:-http://127.0.0.1:9000}"
+AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-}"
+AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-}"
+AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-1}"
+S3_BUCKET_PATH="${S3_BUCKET_PATH:-s3://baito-bucket/backups/}"
+
+if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+    # Agar maxfiy kalitlar berilmagan bo'lsa, xavfsizlik uchun to'xtatiladi
+    echo "⚠️ AWS_ACCESS_KEY_ID va AWS_SECRET_ACCESS_KEY muhit o'zgaruvchilarida ko'rsatilishi shart."
+    exit 0
+fi
 
 export AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY
@@ -21,7 +27,7 @@ mkdir -p "$LOCAL_BACKUP_DIR"
 cd "$LOCAL_BACKUP_DIR" || exit 1
 
 # Server bilan aloqani tezkor tekshirish (1 soniya timeout)
-if ! curl -s --connect-timeout 2 http://100.109.46.108:9000/minio/health/live > /dev/null; then
+if ! curl -s --connect-timeout 2 "${AWS_ENDPOINT_URL}/minio/health/live" > /dev/null; then
     # Server o'chiq yoki tarmoq yo'q bo'lsa indamay chiqib ketadi
     exit 0
 fi

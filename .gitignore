@@ -8,7 +8,11 @@ coverage/
 !.env.example
 firebase-applet-config.json
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
+*.sqlite-shm
+*.sqlite-wal
 *.sqlite3
 
 # Python
