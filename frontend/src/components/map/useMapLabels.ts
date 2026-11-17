@@ -11,6 +11,7 @@ interface UseMapLabelsProps {
   mapInstanceRef: React.MutableRefObject<L.Map | null>;
   labelsGroupRef: React.MutableRefObject<L.LayerGroup | null>;
   filterLocation: string;
+  settledLocation?: string;
   zoomLevel: number;
   geoJsonData: any;
   districtsGeoJsonData: any;
@@ -31,6 +32,7 @@ export const useMapLabels = ({
   mapInstanceRef,
   labelsGroupRef,
   filterLocation,
+  settledLocation,
   zoomLevel,
   geoJsonData,
   districtsGeoJsonData,
@@ -70,7 +72,8 @@ export const useMapLabels = ({
       
       if (zoomLevel < 3.5) return;
 
-      const isActiveFilter = filterLocation !== 'Barchasi';
+      const activeLoc = settledLocation || filterLocation;
+      const isActiveFilter = activeLoc !== 'Barchasi';
 
       if (zoomLevel < 7.8 && geoJsonData) {
         geoJsonData.features.forEach((feature: any) => {
@@ -81,11 +84,11 @@ export const useMapLabels = ({
           const center = regionCentersRef.current.get(region.id) || region.center;
           if (!center) return;
           
-          const isSelected = filterLocation.toLowerCase().includes(region.id.toLowerCase());
+          const isSelected = activeLoc.toLowerCase().includes(region.id.toLowerCase());
           
           let activeRegionIdForDistrict: string | null = null;
           if (districtsGeoJsonData && isActiveFilter) {
-            const matchedDistrict = findDistrictFeature(filterLocation);
+            const matchedDistrict = findDistrictFeature(activeLoc);
             if (matchedDistrict?.properties?.regionId) {
               activeRegionIdForDistrict = matchedDistrict.properties.regionId;
             }
@@ -138,27 +141,10 @@ export const useMapLabels = ({
           if (setFilterLocation) {
             marker.on('click', (e) => {
               L.DomEvent.stopPropagation(e);
-              setFilterLocation(region.id);
               if (typeof window !== 'undefined' && window.innerWidth < 768 && setIsPanelExpanded) {
                 setIsPanelExpanded(false);
               }
-              if (feature?.geometry) {
-                const b = getFeatureBounds(feature.geometry);
-                const bounds = L.latLngBounds([b.minLat, b.minLng], [b.maxLat, b.maxLng]);
-                const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
-                const isExpanded = Boolean(isPanelExpandedRef?.current && isDesktop);
-                const paddingRight = isExpanded ? 650 : 25;
-                map.fitBounds(bounds, {
-                  paddingTopLeft: [25, 75],
-                  paddingBottomRight: [paddingRight, 40],
-                  maxZoom: 9.5,
-                  animate: true,
-                  duration: 0.8
-                });
-                if (lastFittedLocationRef) {
-                  lastFittedLocationRef.current = region.id;
-                }
-              }
+              setFilterLocation(region.id);
             });
           }
           marker.addTo(labelsGroupRef.current!);
@@ -168,10 +154,10 @@ export const useMapLabels = ({
       const shouldShowDistricts = (zoomLevel >= 7.8) || (zoomLevel >= 6.5 && isActiveFilter);
 
       if (shouldShowDistricts && districtsGeoJsonData) {
-        let selectedRegion = UZBEKISTAN_REGIONS.find(r => filterLocation.toLowerCase().includes(r.id.toLowerCase()));
+        let selectedRegion = UZBEKISTAN_REGIONS.find(r => activeLoc.toLowerCase().includes(r.id.toLowerCase()));
         
         if (!selectedRegion && isActiveFilter) {
-          const matchedDistrict = findDistrictFeature(filterLocation);
+          const matchedDistrict = findDistrictFeature(activeLoc);
           if (matchedDistrict?.properties?.regionId) {
             selectedRegion = UZBEKISTAN_REGIONS.find(r => r.id === matchedDistrict.properties.regionId);
           }
@@ -191,11 +177,11 @@ export const useMapLabels = ({
           if (!center) return;
           
           const isRegionFilterSelected = UZBEKISTAN_REGIONS.some(r => 
-            filterLocation.toLowerCase() === r.id.toLowerCase() ||
-            filterLocation.toLowerCase() === r.name.toLowerCase()
+            activeLoc.toLowerCase() === r.id.toLowerCase() ||
+            activeLoc.toLowerCase() === r.name.toLowerCase()
           );
           
-          const isSelected = !isRegionFilterSelected && areDistrictNamesEqual(filterLocation, tumanName);
+          const isSelected = !isRegionFilterSelected && areDistrictNamesEqual(activeLoc, tumanName);
           // One colour, not one per district. The twelve-colour scheme went
           // with the polygon fills; a label is for reading, and the count
           // badge is the one thing worth picking out.
@@ -236,27 +222,10 @@ export const useMapLabels = ({
           if (setFilterLocation) {
             marker.on('click', (e) => {
               L.DomEvent.stopPropagation(e);
-              setFilterLocation(tumanName);
               if (typeof window !== 'undefined' && window.innerWidth < 768 && setIsPanelExpanded) {
                 setIsPanelExpanded(false);
               }
-              if (f?.geometry) {
-                const b = getFeatureBounds(f.geometry);
-                const bounds = L.latLngBounds([b.minLat, b.minLng], [b.maxLat, b.maxLng]);
-                const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
-                const isExpanded = Boolean(isPanelExpandedRef?.current && isDesktop);
-                const paddingRight = isExpanded ? 650 : 25;
-                map.fitBounds(bounds, {
-                  paddingTopLeft: [25, 75],
-                  paddingBottomRight: [paddingRight, 40],
-                  maxZoom: 12.0,
-                  animate: true,
-                  duration: 0.8
-                });
-                if (lastFittedLocationRef) {
-                  lastFittedLocationRef.current = tumanName;
-                }
-              }
+              setFilterLocation(tumanName);
             });
           }
           marker.addTo(labelsGroupRef.current!);
@@ -279,5 +248,5 @@ export const useMapLabels = ({
       if (timer) clearTimeout(timer);
       if (zoomEndHandler) map.off('zoomend', zoomEndHandler);
     };
-  }, [isMapReady, filterLocation, zoomLevel, geoJsonData, districtsGeoJsonData, language, jobsCountSignature]);
+  }, [isMapReady, filterLocation, settledLocation, zoomLevel, geoJsonData, districtsGeoJsonData, language, jobsCountSignature]);
 };

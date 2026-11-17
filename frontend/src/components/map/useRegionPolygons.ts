@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import L from 'leaflet';
 import { Job } from '../../types';
 import { Language } from '../../translations';
@@ -47,6 +47,12 @@ export const useRegionPolygons = ({
   const regionsGeoJsonLayerRef = useRef<L.GeoJSON | null>(null);
   const districtsGeoJsonLayerRef = useRef<L.GeoJSON | null>(null);
   const currentDistrictsRegionIdRef = useRef<string | null>(null);
+  
+  const [settledLocation, setSettledLocation] = useState<string>(filterLocation);
+
+  const handleCameraSettle = useCallback((loc: string) => {
+    setSettledLocation(loc);
+  }, []);
   
   const filterLocRef = useRef(filterLocation);
   const districtCentersRef = useRef(new Map<string, [number, number]>());
@@ -165,6 +171,7 @@ export const useRegionPolygons = ({
     districtsGeoJsonLayerRef,
     currentDistrictsRegionIdRef,
     filterLocation,
+    settledLocation,
     setFilterLocation: setFilterLocationRef.current,
     setIsPanelExpanded: setIsPanelExpandedRef.current,
     districtsGeoJsonData,
@@ -186,7 +193,8 @@ export const useRegionPolygons = ({
     lastFittedLocationRef,
     geoJsonData,
     districtsGeoJsonData,
-    isPanelExpanded
+    isPanelExpanded,
+    onCameraSettle: handleCameraSettle
   });
 
   useEffect(() => {
@@ -223,6 +231,7 @@ export const useRegionPolygons = ({
     mapInstanceRef,
     labelsGroupRef,
     filterLocation,
+    settledLocation,
     zoomLevel,
     geoJsonData,
     districtsGeoJsonData,
@@ -237,4 +246,6 @@ export const useRegionPolygons = ({
     lastFittedLocationRef,
     isPanelExpandedRef
   });
+
+  return { settledLocation };
 };

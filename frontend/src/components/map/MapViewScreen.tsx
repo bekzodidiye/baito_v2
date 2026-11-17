@@ -22,17 +22,14 @@ interface MapViewScreenProps {
 }
 
 export const MapViewScreen: React.FC<MapViewScreenProps> = ({ 
-  // 56px of header and 64px of bottom navigation are taken off the phone's
-  // height because both are there. On a desktop neither is: the header is the
-  // sidebar and `BottomNav` is `md:hidden`, so subtracting the nav's 64px left
-  // a strip of empty white across the bottom of the screen and stopped the
-  // collapsed job sheet 64px short of the edge it is meant to sit on.
   className = "h-[calc(100vh-56px-64px)] md:h-screen mt-14 md:mt-0",
   preview = false
 }) => {
   const { currentScreen, setCurrentScreen } = useCurrentScreen();
   const isPreview = preview || currentScreen === 'landing';
   
+  const mapScreenData = useMapViewScreen();
+
   const {
     language,
     t,
@@ -65,7 +62,7 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
     handleJobSelect,
     handleLocationAction,
     panToCoords
-  } = useMapViewScreen();
+  } = mapScreenData;
 
   return (
     <div className={`relative w-full overflow-hidden bg-slate-100 z-0 isolate ${className}`}>

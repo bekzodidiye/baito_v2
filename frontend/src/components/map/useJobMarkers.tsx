@@ -18,6 +18,7 @@ interface UseJobMarkersProps {
   setSelectedJob: (job: Job | null) => void;
   userLocation: { lat: number; lng: number } | null;
   filterLocation: string;
+  settledLocation?: string;
   setIsPanelExpanded: (expanded: boolean) => void;
   getDisplayedJobs: () => Job[];
   language: Language;
@@ -35,6 +36,7 @@ export const useJobMarkers = ({
   setSelectedJob,
   userLocation,
   filterLocation,
+  settledLocation,
   setIsPanelExpanded,
   getDisplayedJobs,
   language,
@@ -81,6 +83,10 @@ export const useJobMarkers = ({
 
     if (userGroup) {
       userGroup.clearLayers();
+    }
+
+    if (settledLocation !== undefined && filterLocation !== settledLocation) {
+      return;
     }
 
     const displayedJobs = getDisplayedJobs();
@@ -185,19 +191,7 @@ export const useJobMarkers = ({
         markersToAdd.forEach(m => m.addTo(group));
       }
     }
-
-    const handleMoveEnd = () => {
-      setTimeout(() => {
-        if (mapInstanceRef.current && filterLocation === 'Barchasi') {
-        }
-      }, 100);
-    };
-
-    map.on('moveend', handleMoveEnd);
-    return () => {
-      map.off('moveend', handleMoveEnd);
-    };
-  }, [activeCluster, jobsSignature, filterLocation, mapInstanceRef, markerGroupRef, language, districtsGeoJsonData, setSelectedJob, isVisible]);
+  }, [activeCluster, jobsSignature, filterLocation, settledLocation, mapInstanceRef, markerGroupRef, language, districtsGeoJsonData, setSelectedJob, isVisible]);
 
   useUserLocationMarker({
     userGroupRef,

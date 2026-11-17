@@ -55,23 +55,10 @@ export const useRegionPolygonInitialization = ({
           
           layer.on('click', (e) => {
             L.DomEvent.stopPropagation(e);
-            setFilterLocationRef.current(region.id);
             if (typeof window !== 'undefined' && window.innerWidth < 768) {
               setIsPanelExpandedRef.current(false);
             }
-            if ((layer as any).getBounds) {
-              const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
-              const isExpanded = Boolean(isPanelExpandedRef?.current && isDesktop);
-              const paddingRight = isExpanded ? 650 : 25;
-              map.fitBounds((layer as any).getBounds(), {
-                paddingTopLeft: [25, 75],
-                paddingBottomRight: [paddingRight, 40],
-                maxZoom: 9.5,
-                animate: true,
-                duration: 0.8
-              });
-              lastFittedLocationRef.current = region.id;
-            }
+            setFilterLocationRef.current(region.id);
           });
           
           layer.on('mouseover', () => {

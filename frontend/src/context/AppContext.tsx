@@ -12,8 +12,10 @@ export { getJobDates, safeGetItem, safeSetItem } from './utils';
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const uiState = useUIStore();
-  const authState = useAuthStore();
+  const isLoggedIn = useAuthStore(s => s.isLoggedIn);
+  const setUserProfile = useAuthStore(s => s.setUserProfile);
+  const clearSession = useAuthStore(s => s.clearSession);
+
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -29,7 +31,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [pendingRedirect]);
 
   const requireAuth = useCallback((targetScreen?: ScreenType, action?: () => void) => {
-    if (!authState.isLoggedIn) {
+    if (!useAuthStore.getState().isLoggedIn) {
       setPendingRedirect(() => () => {
         if (action) action();
         else if (targetScreen) {
@@ -48,17 +50,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       action();
     }
     return true;
-  }, [authState.isLoggedIn, navigate]);
+  }, [navigate]);
 
   const logout = useCallback(async () => {
     await logoutApi();
-    authState.clearSession();
+    clearSession();
     queryClient.clear();
     navigate('/');
-  }, [authState, navigate, queryClient]);
+  }, [clearSession, navigate, queryClient]);
 
   useEffect(() => {
-    if (authState.isLoggedIn) {
+    if (isLoggedIn) {
       fetchUserProfileApi()
         .then(data => {
             if (data) {
@@ -72,7 +74,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 lName = rest.join(' ') || '';
               }
 
-              authState.setUserProfile({
+              setUserProfile({
                 id: data.id || '',
                 firstName: fName,
                 lastName: lName,
@@ -104,25 +106,65 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           })
           .catch(() => {});
     }
-  }, [authState.isLoggedIn, authState.setUserProfile]);
+  }, [isLoggedIn, setUserProfile]);
 
   useEffect(() => {
     const handleUnauthorized = () => {
-      authState.clearSession();
+      clearSession();
       queryClient.clear();
       navigate('/login');
     };
     window.addEventListener('auth:unauthorized', handleUnauthorized);
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
-  }, [authState, navigate, queryClient]);
+  }, [clearSession, navigate, queryClient]);
 
+  // Decoupled context value: uses getters delegating to Zustand stores so AppProvider
+  // NEVER re-renders when UI store values (like filterLocation, searchTerm) change.
   const value: AppContextType = useMemo(() => ({
-    ...uiState,
-    ...authState,
+    get selectedChatId() { return useUIStore.getState().selectedChatId; },
+    setSelectedChatId: (id: string | null) => useUIStore.getState().setSelectedChatId(id),
+    get employerSelectedChatId() { return useUIStore.getState().employerSelectedChatId; },
+    setEmployerSelectedChatId: (id: string | null) => useUIStore.getState().setEmployerSelectedChatId(id),
+    get drawerOpen() { return useUIStore.getState().drawerOpen; },
+    setDrawerOpen: (open: boolean) => useUIStore.getState().setDrawerOpen(open),
+    get searchTerm() { return useUIStore.getState().searchTerm; },
+    setSearchTerm: (term: string) => useUIStore.getState().setSearchTerm(term),
+    get filterLocation() { return useUIStore.getState().filterLocation; },
+    setFilterLocation: (loc: string) => useUIStore.getState().setFilterLocation(loc),
+    get filterType() { return useUIStore.getState().filterType; },
+    setFilterType: (type: string) => useUIStore.getState().setFilterType(type),
+    get filterCategory() { return useUIStore.getState().filterCategory; },
+    setFilterCategory: (cat: string) => useUIStore.getState().setFilterCategory(cat),
+    get sortBy() { return useUIStore.getState().sortBy; },
+    setSortBy: (sort: 'yangilari' | 'maosh') => useUIStore.getState().setSortBy(sort),
+    get unreadNotificationsCount() { return useUIStore.getState().unreadNotificationsCount; },
+    setUnreadNotificationsCount: (count: number) => useUIStore.getState().setUnreadNotificationsCount(count),
+    get activeCalendarFilter() { return useUIStore.getState().activeCalendarFilter; },
+    setActiveCalendarFilter: (f: any) => useUIStore.getState().setActiveCalendarFilter(f),
+    get activeCalendarDay() { return useUIStore.getState().activeCalendarDay; },
+    setActiveCalendarDay: (d: string) => useUIStore.getState().setActiveCalendarDay(d),
+    get showRegionSelector() { return useUIStore.getState().showRegionSelector; },
+    setShowRegionSelector: (show: boolean) => useUIStore.getState().setShowRegionSelector(show),
+    get mapFocusedJobId() { return useUIStore.getState().mapFocusedJobId; },
+    setMapFocusedJobId: (id: string | null) => useUIStore.getState().setMapFocusedJobId(id),
+    get messagesSearchOpen() { return useUIStore.getState().messagesSearchOpen; },
+    setMessagesSearchOpen: (open: boolean) => useUIStore.getState().setMessagesSearchOpen(open),
+    get hasSeenTour() { return useUIStore.getState().hasSeenTour; },
+    setHasSeenTour: (seen: boolean) => useUIStore.getState().setHasSeenTour(seen),
+    get jobsView() { return useUIStore.getState().jobsView; },
+    setJobsView: (v: 'map' | 'list') => useUIStore.getState().setJobsView(v),
+
+    get language() { return useAuthStore.getState().language; },
+    setLanguage: (lang: 'uz' | 'ru' | 'en') => useAuthStore.getState().setLanguage(lang),
+    get isLoggedIn() { return useAuthStore.getState().isLoggedIn; },
+    setIsLoggedIn: (inVal: boolean) => useAuthStore.getState().setIsLoggedIn(inVal),
+    get userProfile() { return useAuthStore.getState().userProfile; },
+    setUserProfile: (prof: any) => useAuthStore.getState().setUserProfile(prof),
+
     executePendingRedirect,
     requireAuth,
     logout
-  }), [uiState, authState, executePendingRedirect, requireAuth, logout]);
+  }), [executePendingRedirect, requireAuth, logout]);
 
   return (
     <AppContext.Provider value={value}>

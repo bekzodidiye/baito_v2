@@ -27,24 +27,10 @@ export const createDistrictOnEachFeature = (
   
   layer.on('click', (e) => {
     L.DomEvent.stopPropagation(e);
-    setFilterLocation(tumanName);
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       setIsPanelExpanded(false);
     }
-    
-    if ((layer as any).getBounds) {
-      const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
-      const isExpanded = Boolean(isPanelExpandedRef?.current && isDesktop);
-      const paddingRight = isExpanded ? 650 : 25;
-      map.fitBounds((layer as any).getBounds(), {
-        paddingTopLeft: [25, 75],
-        paddingBottomRight: [paddingRight, 40],
-        maxZoom: 12.0,
-        animate: true,
-        duration: 0.8
-      });
-      lastFittedLocationRef.current = tumanName;
-    }
+    setFilterLocation(tumanName);
   });
   
   layer.on('mouseover', function (this: L.Path) {

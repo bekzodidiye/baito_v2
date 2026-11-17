@@ -41,17 +41,6 @@ export const createDistrictOnEachFeature = (
     L.DomEvent.stopPropagation(e);
     setFilterLocation(tumanName);
     setIsPanelExpanded(false);
-    
-    if ((layer as any).getBounds) {
-      map.fitBounds((layer as any).getBounds(), {
-        paddingTopLeft: [15, 80],
-        paddingBottomRight: [15, 110],
-        maxZoom: 12.0,
-        animate: true,
-        duration: 0.8
-      });
-      lastFittedLocationRef.current = tumanName;
-    }
   });
   
   layer.on('mouseover', function () {

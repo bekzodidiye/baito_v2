@@ -60,16 +60,6 @@ export const useRegionPolygonInitialization = ({
             L.DomEvent.stopPropagation(e);
             setFilterLocationRef.current(region.id);
             setIsPanelExpandedRef.current(false);
-            if ((layer as any).getBounds) {
-              map.fitBounds((layer as any).getBounds(), {
-                paddingTopLeft: [15, 80],
-                paddingBottomRight: [15, 110],
-                maxZoom: 9.8,
-                animate: true,
-                duration: 1.0
-              });
-              lastFittedLocationRef.current = region.id;
-            }
           });
           
           layer.on('mouseover', () => {
