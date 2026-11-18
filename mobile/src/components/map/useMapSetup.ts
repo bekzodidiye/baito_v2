@@ -120,6 +120,7 @@ export const useMapSetup = ({
       preferCanvas: true,
       fadeAnimation: true,
       zoomAnimation: true,
+      zoomAnimationThreshold: 12,
     });
 
     const { baseLayer } = createTileLayers(mapType, map);

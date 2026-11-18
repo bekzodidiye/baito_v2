@@ -7,8 +7,18 @@ const tileMemoryCache = new Map<string, string>();
 const MAX_TILE_CACHE = 800;
 
 class CachedTileLayer extends L.TileLayer {
+  // @ts-expect-error - internal Leaflet method override for edge buffering
+  _pxBoundsToTileRange(bounds: L.Bounds): L.Bounds {
+    const tileSize = this.getTileSize();
+    const edgeBuffer = (this.options as any).edgeBufferTiles ?? 3;
+    const min = bounds.min.unscaleBy(tileSize).floor().subtract([edgeBuffer, edgeBuffer]);
+    const max = bounds.max.unscaleBy(tileSize).ceil().subtract([1, 1]).add([edgeBuffer, edgeBuffer]);
+    return new L.Bounds(min, max);
+  }
+
   createTile(coords: L.Coords, done: L.DoneCallback): HTMLElement {
     const tile = document.createElement('img');
+    tile.decoding = 'async';
     L.DomEvent.on(tile, 'selectstart', L.DomEvent.preventDefault);
     L.DomEvent.on(tile, 'dragstart', L.DomEvent.preventDefault);
 
@@ -73,10 +83,12 @@ export const createTileLayers = (mapType: MapType, map: L.Map) => {
   let baseLayer: L.TileLayer;
   let labelLayer: L.TileLayer | null = null;
 
-  const defaultTileOptions: L.TileLayerOptions = {
+  const defaultTileOptions: L.TileLayerOptions & { edgeBufferTiles?: number } = {
     updateWhenIdle: false,
-    updateWhenZooming: false,
+    updateWhenZooming: true,
+    updateInterval: 30,
     keepBuffer: 16, // Keep up to 16 rows/cols of off-screen tiles in memory buffer
+    edgeBufferTiles: 3,
     tileSize: 256,
     maxNativeZoom: 19,
     maxZoom: 20,

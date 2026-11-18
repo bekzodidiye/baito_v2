@@ -136,6 +136,7 @@ export const useMapSetup = ({
       preferCanvas: false,
       fadeAnimation: true,
       zoomAnimation: true,
+      zoomAnimationThreshold: 12,
     });
 
     const { baseLayer } = createTileLayers(mapType, map);
@@ -228,22 +229,26 @@ export const useMapSetup = ({
 
     let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
     const scheduleInvalidate = () => {
+      const currentMap = mapInstanceRef.current;
+      if (currentMap && !(currentMap as any)._animatingZoom) {
+        currentMap.invalidateSize({ animate: false, pan: false });
+      }
       if (resizeTimeout) clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        const currentMap = mapInstanceRef.current;
-        if (!currentMap) return;
-        if ((currentMap as any)._animatingZoom) {
-          currentMap.once('zoomend', () => {
-            currentMap.invalidateSize({ animate: false });
+        const m = mapInstanceRef.current;
+        if (!m) return;
+        if ((m as any)._animatingZoom) {
+          m.once('zoomend', () => {
+            m.invalidateSize({ animate: false, pan: false });
           });
           // Fallback in case zoomend fired or was skipped
           setTimeout(() => {
-            currentMap.invalidateSize({ animate: false });
-          }, 400);
+            m.invalidateSize({ animate: false, pan: false });
+          }, 350);
           return;
         }
-        currentMap.invalidateSize({ animate: false });
-      }, 80);
+        m.invalidateSize({ animate: false, pan: false });
+      }, 50);
     };
 
     scheduleInvalidate();
