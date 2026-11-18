@@ -107,7 +107,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
             <button
               onClick={handleCompleteJob}
               disabled={isSubmitting}
-              aria-label={t.completeJob || "Ishni yakunlash"}
+              aria-label={(t as any).completeJob || "Ishni yakunlash"}
               className={`flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-lg transition-all flex items-center justify-center gap-2 ${
                 isSubmitting
                   ? 'bg-emerald-400 cursor-not-allowed'
@@ -115,7 +115,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
               }`}
             >
               <CheckCircle2 size={18} />
-              {t.completeJob || "Ishni yakunlash"}
+              {(t as any).completeJob || "Ishni yakunlash"}
             </button>
           );
         } else if (isHiredOrConfirmed || selectedJob.status === 'start_requested') {
@@ -123,7 +123,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
             <button
               onClick={handleStartJob}
               disabled={isSubmitting}
-              aria-label={t.startJob || "Ishni boshlash"}
+              aria-label={(t as any).startJob || "Ishni boshlash"}
               className={`flex-1 text-white h-13 sm:h-14 rounded-xl text-sm font-extrabold shadow-lg transition-all flex items-center justify-center gap-2 ${
                 isSubmitting
                   ? 'bg-emerald-400 cursor-not-allowed'
@@ -131,7 +131,7 @@ export const JobDetailsFooter: React.FC<JobDetailsFooterProps> = ({
               }`}
             >
               <PlayCircle size={18} />
-              {t.startJob || "Ishni boshlash"}
+              {(t as any).startJob || "Ishni boshlash"}
             </button>
           );
         } else if (selectedJob.status === 'applied' || selectedJob.applied) {

@@ -18,21 +18,27 @@ import {
 } from 'lucide-react';
 import { RouteInfo, RouteStep } from '../../services/routingService';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useUIStore } from '../../store/useUIStore';
 
 interface MapRouteCardProps {
   route: RouteInfo;
   onClose: () => void;
   className?: string;
+  onStepClick?: (step: RouteStep) => void;
+  onFitRoute?: () => void;
 }
 
 export const MapRouteCard: React.FC<MapRouteCardProps> = ({
   route,
   onClose,
   className = '',
+  onStepClick,
+  onFitRoute,
 }) => {
   const language = useAuthStore(s => s.language);
+  const activeRouteMode = useUIStore(s => s.activeRouteMode) || 'car';
+  const setActiveRouteMode = useUIStore(s => s.setActiveRouteMode);
   const [showSteps, setShowSteps] = useState(false);
-  const [selectedMode, setSelectedMode] = useState<'car' | 'transit' | 'walking'>('car');
 
   const t = {
     uz: {
@@ -49,6 +55,7 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
       openYandex: "Yandex Navigator",
       close: "Marshrutni yopish",
       stepList: "qadam",
+      fitRoute: "Butun marshrutni ko'rish",
     },
     ru: {
       title: "Маршрут и направление",
@@ -64,6 +71,7 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
       openYandex: "Яндекс Навигатор",
       close: "Закрыть маршрут",
       stepList: "шагов",
+      fitRoute: "Показать весь маршрут",
     },
     en: {
       title: "Route & Directions",
@@ -79,6 +87,7 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
       openYandex: "Yandex Navigator",
       close: "Close route",
       stepList: "steps",
+      fitRoute: "Fit whole route",
     },
   }[language] || {
     title: "Marshrut va Yo'nalish",
@@ -94,6 +103,7 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
     openYandex: "Yandex Navigator",
     close: "Marshrutni yopish",
     stepList: "qadam",
+    fitRoute: "Butun marshrutni ko'rish",
   };
 
   const getStepIcon = (step: RouteStep) => {
@@ -112,6 +122,24 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
     return <ArrowUp size={14} className="text-blue-600 shrink-0 mt-0.5" />;
   };
 
+  const currentDuration = activeRouteMode === 'transit'
+    ? route.transitDurationText
+    : activeRouteMode === 'walking'
+    ? route.walkingDurationText
+    : route.durationText;
+
+  const dynamicGoogleMapsUrl = activeRouteMode === 'walking'
+    ? `https://www.google.com/maps/dir/?api=1&origin=${route.origin.lat},${route.origin.lng}&destination=${route.destination.lat},${route.destination.lng}&travelmode=walking`
+    : activeRouteMode === 'transit'
+    ? `https://www.google.com/maps/dir/?api=1&origin=${route.origin.lat},${route.origin.lng}&destination=${route.destination.lat},${route.destination.lng}&travelmode=transit`
+    : `https://www.google.com/maps/dir/?api=1&origin=${route.origin.lat},${route.origin.lng}&destination=${route.destination.lat},${route.destination.lng}&travelmode=driving`;
+
+  const dynamicYandexMapsUrl = activeRouteMode === 'walking'
+    ? `https://yandex.com/maps/?rtext=${route.origin.lat},${route.origin.lng}~${route.destination.lat},${route.destination.lng}&rtt=pd`
+    : activeRouteMode === 'transit'
+    ? `https://yandex.com/maps/?rtext=${route.origin.lat},${route.origin.lng}~${route.destination.lat},${route.destination.lng}&rtt=mt`
+    : `https://yandex.com/maps/?rtext=${route.origin.lat},${route.origin.lng}~${route.destination.lat},${route.destination.lng}&rtt=auto`;
+
   return (
     <div 
       onClick={(e) => e.stopPropagation()}
@@ -119,8 +147,13 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
     >
       {/* Top Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50/80 to-slate-50/60 border-b border-slate-100">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-brand-primary text-white flex items-center justify-center shadow-xs">
+        <button
+          type="button"
+          onClick={onFitRoute}
+          className="flex items-center gap-2 text-left bg-transparent border-none cursor-pointer p-0 group"
+          title={t.fitRoute}
+        >
+          <div className="w-7 h-7 rounded-lg bg-brand-primary text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
             <Compass size={16} />
           </div>
           <div>
@@ -128,10 +161,10 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
               {t.title}
             </span>
             <span className="text-xs font-black text-slate-900 leading-tight">
-              {route.distanceText}
+              {route.distanceText} • {currentDuration}
             </span>
           </div>
-        </div>
+        </button>
 
         <button
           type="button"
@@ -191,9 +224,9 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
             {/* By Car */}
             <button
               type="button"
-              onClick={() => setSelectedMode('car')}
+              onClick={() => setActiveRouteMode('car')}
               className={`p-2 rounded-xl text-center transition-all cursor-pointer border ${
-                selectedMode === 'car'
+                activeRouteMode === 'car'
                   ? 'bg-blue-50/90 border-brand-primary text-brand-primary ring-2 ring-brand-primary/10 shadow-xs'
                   : 'bg-slate-50 border-slate-200/70 text-slate-600 hover:bg-slate-100/70'
               }`}
@@ -208,10 +241,10 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
             {/* By Transit */}
             <button
               type="button"
-              onClick={() => setSelectedMode('transit')}
+              onClick={() => setActiveRouteMode('transit')}
               className={`p-2 rounded-xl text-center transition-all cursor-pointer border ${
-                selectedMode === 'transit'
-                  ? 'bg-blue-50/90 border-brand-primary text-brand-primary ring-2 ring-brand-primary/10 shadow-xs'
+                activeRouteMode === 'transit'
+                  ? 'bg-emerald-50/90 border-emerald-600 text-emerald-700 ring-2 ring-emerald-600/10 shadow-xs'
                   : 'bg-slate-50 border-slate-200/70 text-slate-600 hover:bg-slate-100/70'
               }`}
             >
@@ -225,9 +258,9 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
             {/* By Foot */}
             <button
               type="button"
-              onClick={() => setSelectedMode('walking')}
+              onClick={() => setActiveRouteMode('walking')}
               className={`p-2 rounded-xl text-center transition-all cursor-pointer border ${
-                selectedMode === 'walking'
+                activeRouteMode === 'walking'
                   ? 'bg-blue-50/90 border-brand-primary text-brand-primary ring-2 ring-brand-primary/10 shadow-xs'
                   : 'bg-slate-50 border-slate-200/70 text-slate-600 hover:bg-slate-100/70'
               }`}
@@ -260,9 +293,16 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
             </button>
 
             {showSteps && (
-              <div className="p-2.5 bg-white space-y-2 border-t border-slate-100 max-h-48 overflow-y-auto">
+              <div className="p-2.5 bg-white space-y-1 border-t border-slate-100 max-h-48 overflow-y-auto">
                 {route.steps.map((step, idx) => (
-                  <div key={idx} className="flex items-start gap-2 text-xs py-1 border-b border-slate-50 last:border-b-0">
+                  <div 
+                    key={idx} 
+                    onClick={() => onStepClick?.(step)}
+                    className={`flex items-start gap-2 text-xs py-1.5 px-2 rounded-lg border-b border-slate-50 last:border-b-0 transition-colors ${
+                      step.location ? 'cursor-pointer hover:bg-blue-50/80 active:bg-blue-100/70' : ''
+                    }`}
+                    title={step.location ? "Xaritada bu burilishni ko'rish" : undefined}
+                  >
                     {getStepIcon(step)}
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-semibold text-slate-800 leading-snug">
@@ -274,6 +314,9 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
                         </p>
                       )}
                     </div>
+                    {step.location && (
+                      <MapPin size={12} className="text-slate-300 shrink-0 mt-0.5" />
+                    )}
                   </div>
                 ))}
               </div>
@@ -285,7 +328,7 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
         <div className="pt-1 flex flex-col sm:flex-row gap-2">
           {/* Google Maps Button */}
           <a
-            href={route.googleMapsUrl}
+            href={dynamicGoogleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 h-9 px-3 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer no-underline active:scale-[0.98]"
@@ -297,7 +340,7 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
 
           {/* Yandex Maps Button */}
           <a
-            href={route.yandexMapsUrl}
+            href={dynamicYandexMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 h-9 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer no-underline active:scale-[0.98]"

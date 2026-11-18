@@ -9,6 +9,7 @@ import { useCurrentScreen } from '../hooks/useCurrentScreen';
 export interface AttachedFileData {
   name: string;
   previewUrl: string; // blob: URL from createObjectURL
+  file?: File;
 }
 
 export function useChatScreen() {

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { RouteInfo } from '../../services/routingService';
+import { useUIStore } from '../../store/useUIStore';
 
 interface UseMapRouteProps {
   mapInstanceRef: React.MutableRefObject<L.Map | null>;
@@ -17,6 +18,7 @@ export const useMapRoute = ({
 }: UseMapRouteProps) => {
   const localRouteGroupRef = useRef<L.LayerGroup | null>(null);
   const routeGroupRef = externalRouteGroupRef || localRouteGroupRef;
+  const activeRouteMode = useUIStore(s => s.activeRouteMode) || 'car';
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -42,22 +44,44 @@ export const useMapRoute = ({
       return;
     }
 
-    // 3. Casing / Shadow Polyline for depth and contrast
+    // 3. Dynamic styling based on selected travel mode
+    let coreColor = '#2563eb';
+    let shadowColor = '#1e3a8a';
+    let coreWeight = 5;
+    let shadowWeight = 8;
+    let dashArray: string | undefined = undefined;
+
+    if (activeRouteMode === 'walking') {
+      coreColor = '#2563eb';
+      shadowColor = '#1e3a8a';
+      coreWeight = 5;
+      shadowWeight = 8;
+      dashArray = '5, 8'; // Pedestrian dotted/dashed navigation path
+    } else if (activeRouteMode === 'transit') {
+      coreColor = '#059669'; // Emerald transit line
+      shadowColor = '#064e3b';
+      coreWeight = 6;
+      shadowWeight = 9;
+    }
+
+    // Casing / Shadow Polyline for depth and contrast
     const shadowLine = L.polyline(activeRoute.coordinates, {
       pane: 'routePane',
-      color: '#1e3a8a',
-      weight: 8,
+      color: shadowColor,
+      weight: shadowWeight,
       opacity: 0.45,
+      dashArray,
       lineCap: 'round',
       lineJoin: 'round',
     }).addTo(routeGroup);
 
-    // 4. Vibrant Primary Route Line
+    // Vibrant Primary Route Line
     const coreLine = L.polyline(activeRoute.coordinates, {
       pane: 'routePane',
-      color: '#2563eb',
-      weight: 5,
+      color: coreColor,
+      weight: coreWeight,
       opacity: 1.0,
+      dashArray,
       lineCap: 'round',
       lineJoin: 'round',
     }).addTo(routeGroup);
@@ -89,7 +113,7 @@ export const useMapRoute = ({
         <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; transform: translate(-50%, -100%); pointer-events: none;">
           <div style="position: absolute; width: 40px; height: 40px; background: rgba(5, 150, 105, 0.25); border-radius: 50%; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
           <div style="position: relative; width: 36px; height: 36px; background: #059669; border: 3px solid #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2); color: white;">
-            <svg width="18" height="18" viewBox="24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
               <circle cx="12" cy="10" r="3" />
             </svg>
@@ -120,7 +144,7 @@ export const useMapRoute = ({
         duration: 0.8,
       });
     }
-  }, [activeRoute, isPanelExpanded, mapInstanceRef]);
+  }, [activeRoute, activeRouteMode, isPanelExpanded, mapInstanceRef]);
 
   // Clear layers when route is dismissed
   useEffect(() => {

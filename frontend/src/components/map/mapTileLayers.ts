@@ -3,8 +3,10 @@ import L from 'leaflet';
 export type MapType = 'jobs' | 'sputnik' | 'gibrid' | 'tungi' | 'relyef' | 'retro';
 
 class CachedTileLayer extends L.TileLayer {
-  // @ts-expect-error - internal Leaflet method override for edge buffering
   _pxBoundsToTileRange(bounds: L.Bounds): L.Bounds {
+    if (!bounds || !bounds.min || !bounds.max) {
+      return new L.Bounds([0, 0], [0, 0]);
+    }
     const tileSize = this.getTileSize();
     const edgeBuffer = (this.options as any).edgeBufferTiles ?? 3;
     const min = bounds.min.unscaleBy(tileSize).floor().subtract([edgeBuffer, edgeBuffer]);

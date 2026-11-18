@@ -5,6 +5,8 @@ import { RouteInfo } from '../services/routingService';
 interface UIState {
   activeRoute: RouteInfo | null;
   setActiveRoute: (route: RouteInfo | null) => void;
+  activeRouteMode: 'car' | 'transit' | 'walking';
+  setActiveRouteMode: (mode: 'car' | 'transit' | 'walking') => void;
   isRouteLoading: boolean;
   setIsRouteLoading: (loading: boolean) => void;
   selectedChatId: string | null;
@@ -54,6 +56,8 @@ interface UIState {
 export const useUIStore = create<UIState>((set) => ({
   activeRoute: null,
   setActiveRoute: (route) => set({ activeRoute: route }),
+  activeRouteMode: 'car',
+  setActiveRouteMode: (mode) => set({ activeRouteMode: mode }),
   isRouteLoading: false,
   setIsRouteLoading: (loading) => set({ isRouteLoading: loading }),
   activeModal: null,

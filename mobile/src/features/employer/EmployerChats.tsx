@@ -122,6 +122,7 @@ export const EmployerChats: React.FC<EmployerChatsProps> = ({
       let textToSend = typed;
       if (pendingFiles.length > 0) {
         for (const pending of pendingFiles) {
+          if (!pending.file) continue;
           try {
             const url = await uploadFileApi(pending.file, 'chat');
             textToSend = `[Img:${url}]` + (textToSend ? ` ${textToSend}` : '');

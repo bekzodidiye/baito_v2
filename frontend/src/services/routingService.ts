@@ -10,6 +10,7 @@ export interface RouteStep {
   streetName: string;
   type: string;
   modifier?: string;
+  location?: [number, number]; // [lat, lng]
 }
 
 export interface RouteInfo {
@@ -178,16 +179,24 @@ export async function fetchRoute(
         const walkingDurationText = formatDuration(walkingSec, lang);
 
         const rawSteps = route.legs?.[0]?.steps || [];
-        const steps: RouteStep[] = rawSteps.map((s: any) => ({
-          instruction: getStepInstruction(s, lang),
-          distanceMeters: Math.round(s.distance || 0),
-          distanceText: formatDistance(s.distance || 0, lang),
-          durationSeconds: Math.round(s.duration || 0),
-          durationText: formatDuration(s.duration || 0, lang),
-          streetName: s.name || '',
-          type: s.maneuver?.type || '',
-          modifier: s.maneuver?.modifier || '',
-        }));
+        const steps: RouteStep[] = rawSteps.map((s: any) => {
+          const stepLocation: [number, number] | undefined =
+            Array.isArray(s.maneuver?.location) && s.maneuver.location.length >= 2
+              ? [s.maneuver.location[1], s.maneuver.location[0]]
+              : undefined;
+
+          return {
+            instruction: getStepInstruction(s, lang),
+            distanceMeters: Math.round(s.distance || 0),
+            distanceText: formatDistance(s.distance || 0, lang),
+            durationSeconds: Math.round(s.duration || 0),
+            durationText: formatDuration(s.duration || 0, lang),
+            streetName: s.name || '',
+            type: s.maneuver?.type || '',
+            modifier: s.maneuver?.modifier || '',
+            location: stepLocation,
+          };
+        });
 
         return {
           origin: { ...origin, name: originName },
@@ -244,6 +253,7 @@ export async function fetchRoute(
       durationText: formatDuration(carDurationSec * 0.2, lang),
       streetName: '',
       type: 'depart',
+      location: [origin.lat, origin.lng],
     },
     {
       instruction: lang === 'ru' ? `Направляйтесь в сторону: ${destinationName}` : lang === 'en' ? `Head towards: ${destinationName}` : `${destinationName} tomon harakatlaning`,
@@ -253,6 +263,10 @@ export async function fetchRoute(
       durationText: formatDuration(carDurationSec * 0.8, lang),
       streetName: destinationName,
       type: 'continue',
+      location: [
+        Number(((origin.lat + destination.lat) / 2).toFixed(6)),
+        Number(((origin.lng + destination.lng) / 2).toFixed(6)),
+      ],
     },
     {
       instruction: lang === 'ru' ? 'Вы прибыли в пункт назначения' : lang === 'en' ? 'You have arrived at your destination' : 'Belgilangan manzilga yetib keldingiz',
@@ -262,6 +276,7 @@ export async function fetchRoute(
       durationText: formatDuration(0, lang),
       streetName: destinationName,
       type: 'arrive',
+      location: [destination.lat, destination.lng],
     },
   ];
 
