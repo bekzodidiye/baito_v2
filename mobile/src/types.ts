@@ -39,6 +39,14 @@ export interface Job {
   importantNote?: string;
   createdAt?: string;
   appliedDate?: string;
+  translations?: Record<string, {
+    title?: string;
+    description?: string;
+    responsibilities?: string;
+    requirements?: string;
+    importantNote?: string;
+    location?: string;
+  }>;
 }
 
 export interface Message {

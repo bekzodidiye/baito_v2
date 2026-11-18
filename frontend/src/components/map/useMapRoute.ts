@@ -19,6 +19,7 @@ export const useMapRoute = ({
   const localRouteGroupRef = useRef<L.LayerGroup | null>(null);
   const routeGroupRef = externalRouteGroupRef || localRouteGroupRef;
   const activeRouteMode = useUIStore(s => s.activeRouteMode) || 'car';
+  const activeRouteStep = useUIStore(s => s.activeRouteStep);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -56,7 +57,7 @@ export const useMapRoute = ({
       shadowColor = '#1e3a8a';
       coreWeight = 5;
       shadowWeight = 8;
-      dashArray = '5, 8'; // Pedestrian dotted/dashed navigation path
+      dashArray = '5, 8'; // Pedestrian dotted navigation path
     } else if (activeRouteMode === 'transit') {
       coreColor = '#059669'; // Emerald transit line
       shadowColor = '#064e3b';
@@ -89,48 +90,133 @@ export const useMapRoute = ({
     shadowLine.bringToFront();
     coreLine.bringToFront();
 
-    // 5. User Origin Marker (Pulsing Radar Pin)
+    // 4. Doorstep / Off-road Access Connector Lines (Google & Yandex Maps style)
+    const firstRoadPoint = activeRoute.coordinates[0];
+    const lastRoadPoint = activeRoute.coordinates[activeRoute.coordinates.length - 1];
+    const originPoint: [number, number] = [activeRoute.origin.lat, activeRoute.origin.lng];
+    const destPoint: [number, number] = [activeRoute.destination.lat, activeRoute.destination.lng];
+
+    // From user origin to road entry
+    const originDist = map.distance(originPoint, firstRoadPoint);
+    if (originDist > 6) {
+      L.polyline([originPoint, firstRoadPoint], {
+        pane: 'routePane',
+        color: '#2563eb',
+        weight: 3.5,
+        opacity: 0.85,
+        dashArray: '4, 6',
+        lineCap: 'round',
+      }).addTo(routeGroup);
+    }
+
+    // From road exit into exact building doorstep
+    const destDist = map.distance(lastRoadPoint, destPoint);
+    if (destDist > 6) {
+      L.polyline([lastRoadPoint, destPoint], {
+        pane: 'routePane',
+        color: '#dc2626',
+        weight: 3.5,
+        opacity: 0.85,
+        dashArray: '4, 6',
+        lineCap: 'round',
+      }).addTo(routeGroup);
+    }
+
+    // 5. Origin Marker "A" (Premier Start Point)
     const originIcon = L.divIcon({
       className: 'route-origin-pin',
       html: `
-        <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transform: translate(-50%, -50%); pointer-events: none;">
-          <span style="position: absolute; width: 34px; height: 34px; border-radius: 50%; background: rgba(37, 99, 235, 0.4); animation: ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
-          <div style="width: 16px; height: 16px; border-radius: 50%; background: #2563eb; border: 3px solid #ffffff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35); z-index: 2;"></div>
+        <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+          <span style="position: absolute; width: 34px; height: 34px; border-radius: 50%; background: rgba(37, 99, 235, 0.35); animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+          <div style="width: 26px; height: 26px; border-radius: 50%; background: #2563eb; border: 2.5px solid #ffffff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 900; font-size: 13px; font-family: system-ui, -apple-system, sans-serif; z-index: 2;">
+            A
+          </div>
         </div>
       `,
       iconSize: [36, 36],
       iconAnchor: [18, 18],
     });
 
-    L.marker([activeRoute.origin.lat, activeRoute.origin.lng], { icon: originIcon, zIndexOffset: 1000 })
+    L.marker(originPoint, { icon: originIcon, zIndexOffset: 1000 })
       .bindTooltip(activeRoute.origin.name, { direction: 'top', permanent: false })
       .addTo(routeGroup);
 
-    // 6. Job Destination Marker (Emerald Pin)
+    // 6. Destination Marker "B" (Premier Teardrop Pin touching ground)
+    const rawDestName = activeRoute.destination.company || activeRoute.destination.name || '';
+    const cleanDestLabel = rawDestName.replace(/[<>"']/g, '').trim();
+    const truncatedLabel = cleanDestLabel.length > 20 ? `${cleanDestLabel.slice(0, 18)}…` : cleanDestLabel;
+
     const destinationIcon = L.divIcon({
       className: 'route-destination-pin',
       html: `
-        <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; transform: translate(-50%, -100%); pointer-events: none;">
-          <div style="position: absolute; width: 40px; height: 40px; background: rgba(5, 150, 105, 0.25); border-radius: 50%; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-          <div style="position: relative; width: 36px; height: 36px; background: #059669; border: 3px solid #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2); color: white;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
+        <div style="position: relative; width: 40px; height: 48px; display: flex; flex-direction: column; align-items: center; pointer-events: none;">
+          ${truncatedLabel ? `
+            <div style="position: absolute; top: -18px; white-space: nowrap; background: #0f172a; color: #ffffff; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; box-shadow: 0 3px 8px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); z-index: 10;">
+              ${truncatedLabel}
+            </div>
+          ` : ''}
+          <div style="position: relative; width: 34px; height: 34px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border: 2.5px solid #ffffff; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 18px rgba(220, 38, 38, 0.45); z-index: 2;">
+            <div style="transform: rotate(45deg); color: #ffffff; font-weight: 900; font-size: 13px; font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center;">
+              B
+            </div>
           </div>
-          <div style="position: absolute; bottom: 2px; width: 8px; height: 8px; background: #059669; transform: rotate(45deg); border-right: 2px solid white; border-bottom: 2px solid white;"></div>
+          <div style="position: absolute; bottom: 0; width: 14px; height: 5px; background: rgba(0, 0, 0, 0.28); border-radius: 50%; filter: blur(0.8px); z-index: 1;"></div>
         </div>
       `,
-      iconSize: [44, 44],
-      iconAnchor: [22, 44],
+      iconSize: [40, 48],
+      iconAnchor: [20, 48],
     });
 
-    L.marker([activeRoute.destination.lat, activeRoute.destination.lng], { icon: destinationIcon, zIndexOffset: 1000 })
+    L.marker(destPoint, { icon: destinationIcon, zIndexOffset: 1000 })
       .bindTooltip(activeRoute.destination.name, { direction: 'top', permanent: false })
       .addTo(routeGroup);
 
-    // 7. Fit bounds to the route with room for the route card
-    const bounds = L.latLngBounds(activeRoute.coordinates);
+    // 7. Active Step Turn Marker (when clicking a turn in the steps accordion)
+    if (activeRouteStep && activeRouteStep.location) {
+      const stepIcon = L.divIcon({
+        className: 'route-step-focus-pin',
+        html: `
+          <div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+            <span style="position: absolute; width: 32px; height: 32px; border-radius: 50%; background: rgba(245, 158, 11, 0.4); animation: ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+            <div style="width: 20px; height: 20px; border-radius: 50%; background: #f59e0b; border: 2.5px solid #ffffff; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.6); display: flex; align-items: center; justify-content: center; color: white; z-index: 2;">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="4"/>
+              </svg>
+            </div>
+          </div>
+        `,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
+      });
+
+      const stepMarker = L.marker(activeRouteStep.location, {
+        icon: stepIcon,
+        zIndexOffset: 1200,
+        pane: 'routePane',
+      }).addTo(routeGroup);
+
+      const stepPopupContent = `
+        <div style="font-size: 11px; font-weight: 700; color: #0f172a; line-height: 1.3;">
+          ${activeRouteStep.instruction}
+        </div>
+        ${activeRouteStep.distanceText ? `
+          <div style="font-size: 10px; color: #64748b; font-weight: 500; margin-top: 2px;">
+            ${activeRouteStep.distanceText} • ${activeRouteStep.durationText}
+          </div>
+        ` : ''}
+      `;
+
+      stepMarker.bindTooltip(stepPopupContent, {
+        direction: 'top',
+        permanent: true,
+        offset: [0, -10],
+        className: 'route-step-tooltip',
+      }).openTooltip();
+    }
+
+    // 8. Fit bounds including origin, destination, and road coordinates
+    const allPoints = [originPoint, destPoint, ...activeRoute.coordinates];
+    const bounds = L.latLngBounds(allPoints);
     if (bounds.isValid()) {
       const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
       // On desktop, MapRouteCard floats at bottom-left (width ~380px), on mobile at bottom
@@ -144,7 +230,7 @@ export const useMapRoute = ({
         duration: 0.8,
       });
     }
-  }, [activeRoute, activeRouteMode, isPanelExpanded, mapInstanceRef]);
+  }, [activeRoute, activeRouteMode, activeRouteStep, isPanelExpanded, mapInstanceRef]);
 
   // Clear layers when route is dismissed
   useEffect(() => {

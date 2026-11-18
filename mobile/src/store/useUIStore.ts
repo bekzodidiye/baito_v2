@@ -1,10 +1,12 @@
 import { create } from 'zustand';
 import { safeGetItem, safeSetItem } from '../context/utils';
-import { RouteInfo } from '../services/routingService';
+import { RouteInfo, RouteStep } from '../services/routingService';
 
 interface UIState {
   activeRoute: RouteInfo | null;
   setActiveRoute: (route: RouteInfo | null) => void;
+  activeRouteStep: RouteStep | null;
+  setActiveRouteStep: (step: RouteStep | null) => void;
   activeRouteMode: 'car' | 'transit' | 'walking';
   setActiveRouteMode: (mode: 'car' | 'transit' | 'walking') => void;
   isRouteLoading: boolean;
@@ -41,7 +43,9 @@ interface UIState {
 
 export const useUIStore = create<UIState>((set) => ({
   activeRoute: null,
-  setActiveRoute: (route) => set({ activeRoute: route }),
+  setActiveRoute: (route) => set({ activeRoute: route, ...(route ? {} : { activeRouteStep: null }) }),
+  activeRouteStep: null,
+  setActiveRouteStep: (step) => set({ activeRouteStep: step }),
   activeRouteMode: 'car',
   setActiveRouteMode: (mode) => set({ activeRouteMode: mode }),
   isRouteLoading: false,

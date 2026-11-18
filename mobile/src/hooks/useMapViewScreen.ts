@@ -77,6 +77,7 @@ export function useMapViewScreen() {
     distanceToSelectedJob,
     activeRoute,
     handleCalculateDistance,
+    handleReverseRoute,
     clearRoute,
   } = useUserGeolocation({
     selectedJob,
@@ -208,6 +209,7 @@ export function useMapViewScreen() {
     activeRoute,
     clearRoute,
     handleCalculateDistance,
+    handleReverseRoute,
     displayedJobs,
     getDisplayedJobs,
     handleRefresh,

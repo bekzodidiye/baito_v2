@@ -39,6 +39,7 @@ export interface RouteInfo {
   steps: RouteStep[];
   googleMapsUrl: string;
   yandexMapsUrl: string;
+  yandexTaxiUrl: string;
 }
 
 export function formatDistance(meters: number, lang: Language): string {
@@ -141,6 +142,7 @@ export async function fetchRoute(
 
   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}&travelmode=driving`;
   const yandexMapsUrl = `https://yandex.com/maps/?rtext=${origin.lat},${origin.lng}~${destination.lat},${destination.lng}&rtt=auto`;
+  const yandexTaxiUrl = `https://3.redirect.appmetrica.yandex.com/route?start-lat=${origin.lat}&start-lon=${origin.lng}&end-lat=${destination.lat}&end-lon=${destination.lng}&app=taxi&ref=baito`;
 
   // 1. Try real road routing via OSRM public API with 4s timeout
   try {
@@ -215,6 +217,7 @@ export async function fetchRoute(
           steps,
           googleMapsUrl,
           yandexMapsUrl,
+          yandexTaxiUrl,
         };
       }
     }
@@ -300,5 +303,6 @@ export async function fetchRoute(
     steps: fallbackSteps,
     googleMapsUrl,
     yandexMapsUrl,
+    yandexTaxiUrl,
   };
 }

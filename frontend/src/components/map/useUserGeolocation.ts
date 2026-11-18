@@ -77,6 +77,24 @@ export const useUserGeolocation = ({
     }
   }, [selectedJob, userLocation, language, districtsGeoJsonData, setActiveRoute]);
 
+  const handleReverseRoute = useCallback(async () => {
+    if (!activeRoute) return;
+    setIsLocating(true);
+    try {
+      const reversed = await fetchRoute(
+        { lat: activeRoute.destination.lat, lng: activeRoute.destination.lng, name: activeRoute.destination.name },
+        { lat: activeRoute.origin.lat, lng: activeRoute.origin.lng, name: activeRoute.origin.name },
+        language
+      );
+      setActiveRoute(reversed);
+      setDistanceToSelectedJob(reversed.distanceText);
+    } catch (e) {
+      console.error('Failed to reverse route:', e);
+    } finally {
+      setIsLocating(false);
+    }
+  }, [activeRoute, language, setActiveRoute]);
+
   const clearRoute = useCallback(() => {
     setActiveRoute(null);
   }, [setActiveRoute]);
@@ -89,6 +107,7 @@ export const useUserGeolocation = ({
     activeRoute,
     handleCalculateDistance: handleCalculateRoute,
     calculateRoute: handleCalculateRoute,
+    handleReverseRoute,
     clearRoute,
   };
 };

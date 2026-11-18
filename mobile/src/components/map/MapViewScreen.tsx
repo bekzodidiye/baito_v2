@@ -51,6 +51,7 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
     distanceToSelectedJob,
     activeRoute,
     clearRoute,
+    handleReverseRoute,
     handleCalculateDistance,
     displayedJobs,
     handleRefresh,
@@ -176,6 +177,7 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
             <MapRouteCard
               route={activeRoute}
               onClose={clearRoute}
+              onReverseRoute={handleReverseRoute}
               onStepClick={(step) => {
                 if (step.location && mapInstanceRef.current) {
                   mapInstanceRef.current.flyTo(step.location, 16.5, { duration: 0.8 });

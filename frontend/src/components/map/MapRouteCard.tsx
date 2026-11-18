@@ -14,7 +14,8 @@ import {
   CornerDownLeft, 
   ArrowUp, 
   RotateCcw,
-  CheckCircle2
+  CheckCircle2,
+  ArrowUpDown
 } from 'lucide-react';
 import { RouteInfo, RouteStep } from '../../services/routingService';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -26,6 +27,7 @@ interface MapRouteCardProps {
   className?: string;
   onStepClick?: (step: RouteStep) => void;
   onFitRoute?: () => void;
+  onReverseRoute?: () => void;
 }
 
 export const MapRouteCard: React.FC<MapRouteCardProps> = ({
@@ -34,10 +36,13 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
   className = '',
   onStepClick,
   onFitRoute,
+  onReverseRoute,
 }) => {
   const language = useAuthStore(s => s.language);
   const activeRouteMode = useUIStore(s => s.activeRouteMode) || 'car';
   const setActiveRouteMode = useUIStore(s => s.setActiveRouteMode);
+  const activeRouteStep = useUIStore(s => s.activeRouteStep);
+  const setActiveRouteStep = useUIStore(s => s.setActiveRouteStep);
   const [showSteps, setShowSteps] = useState(false);
 
   const t = {
@@ -56,6 +61,8 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
       close: "Marshrutni yopish",
       stepList: "qadam",
       fitRoute: "Butun marshrutni ko'rish",
+      reverseRoute: "Yo'nalishni almashtirish (A ⇄ B)",
+      yandexTaxi: "Yandex Go (Taksi chaqirish)",
     },
     ru: {
       title: "Маршрут и направление",
@@ -72,6 +79,8 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
       close: "Закрыть маршрут",
       stepList: "шагов",
       fitRoute: "Показать весь маршрут",
+      reverseRoute: "Поменять местами (A ⇄ B)",
+      yandexTaxi: "Yandex Go (Вызвать такси)",
     },
     en: {
       title: "Route & Directions",
@@ -88,6 +97,8 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
       close: "Close route",
       stepList: "steps",
       fitRoute: "Fit whole route",
+      reverseRoute: "Reverse route (A ⇄ B)",
+      yandexTaxi: "Yandex Go (Order Taxi)",
     },
   }[language] || {
     title: "Marshrut va Yo'nalish",
@@ -104,6 +115,8 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
     close: "Marshrutni yopish",
     stepList: "qadam",
     fitRoute: "Butun marshrutni ko'rish",
+    reverseRoute: "Yo'nalishni almashtirish (A ⇄ B)",
+    yandexTaxi: "Yandex Go (Taksi chaqirish)",
   };
 
   const getStepIcon = (step: RouteStep) => {
@@ -179,39 +192,54 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
 
       <div className="p-4 space-y-3.5 max-h-[70vh] overflow-y-auto no-scrollbar">
         {/* Origin & Destination Section */}
-        <div className="bg-slate-50/90 p-3 rounded-xl border border-slate-200/70 space-y-2.5">
-          {/* Origin */}
-          <div className="flex items-start gap-2.5">
-            <div className="w-5 h-5 rounded-full bg-blue-100 text-brand-primary flex items-center justify-center shrink-0 mt-0.5">
-              <div className="w-2 h-2 rounded-full bg-brand-primary" />
+        <div className="bg-slate-50/90 p-3 rounded-xl border border-slate-200/70 relative">
+          <div className="space-y-2.5 pr-9">
+            {/* Origin (A) */}
+            <div className="flex items-start gap-2.5">
+              <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs font-black text-[11px] leading-none">
+                A
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">
+                  {t.from}
+                </p>
+                <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
+                  {route.origin.name}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">
-                {t.from}
-              </p>
-              <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
-                {route.origin.name}
-              </p>
+
+            {/* Dotted connector */}
+            <div className="ml-2.5 border-l-2 border-dashed border-slate-300 h-3" />
+
+            {/* Destination (B) */}
+            <div className="flex items-start gap-2.5">
+              <div className="w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs font-black text-[11px] leading-none">
+                B
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">
+                  {t.to}
+                </p>
+                <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
+                  {route.destination.name}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Dotted connector */}
-          <div className="ml-2.5 border-l-2 border-dashed border-slate-300 h-3" />
-
-          {/* Destination */}
-          <div className="flex items-start gap-2.5">
-            <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-              <MapPin size={12} className="fill-emerald-600 text-emerald-600" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">
-                {t.to}
-              </p>
-              <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
-                {route.destination.name}
-              </p>
-            </div>
-          </div>
+          {/* Swap Button (A ⇄ B) */}
+          {onReverseRoute && (
+            <button
+              type="button"
+              onClick={onReverseRoute}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-slate-200/90 shadow-xs flex items-center justify-center text-slate-600 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50/50 transition-all cursor-pointer active:scale-90"
+              title={t.reverseRoute}
+              aria-label={t.reverseRoute}
+            >
+              <ArrowUpDown size={15} />
+            </button>
+          )}
         </div>
 
         {/* Travel Modes (Qanday borsa bo'ladi) */}
@@ -294,61 +322,90 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
 
             {showSteps && (
               <div className="p-2.5 bg-white space-y-1 border-t border-slate-100 max-h-48 overflow-y-auto">
-                {route.steps.map((step, idx) => (
-                  <div 
-                    key={idx} 
-                    onClick={() => onStepClick?.(step)}
-                    className={`flex items-start gap-2 text-xs py-1.5 px-2 rounded-lg border-b border-slate-50 last:border-b-0 transition-colors ${
-                      step.location ? 'cursor-pointer hover:bg-blue-50/80 active:bg-blue-100/70' : ''
-                    }`}
-                    title={step.location ? "Xaritada bu burilishni ko'rish" : undefined}
-                  >
-                    {getStepIcon(step)}
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-semibold text-slate-800 leading-snug">
-                        {step.instruction}
-                      </p>
-                      {step.distanceMeters > 0 && (
-                        <p className="text-[10px] text-slate-400 font-medium">
-                          {step.distanceText} • {step.durationText}
+                {route.steps.map((step, idx) => {
+                  const isActive = activeRouteStep && (
+                    (activeRouteStep.location && step.location && 
+                      activeRouteStep.location[0] === step.location[0] && 
+                      activeRouteStep.location[1] === step.location[1]) ||
+                    activeRouteStep.instruction === step.instruction
+                  );
+                  return (
+                    <div 
+                      key={idx} 
+                      onClick={() => {
+                        setActiveRouteStep(isActive ? null : step);
+                        onStepClick?.(step);
+                      }}
+                      className={`flex items-start gap-2 text-xs py-1.5 px-2 rounded-lg border transition-all ${
+                        isActive
+                          ? 'bg-amber-50/90 border-amber-300 ring-1 ring-amber-400/50'
+                          : 'border-transparent hover:bg-blue-50/80 border-b-slate-50'
+                      } ${step.location ? 'cursor-pointer active:bg-blue-100/70' : ''}`}
+                      title={step.location ? "Xaritada bu burilishni ko'rish" : undefined}
+                    >
+                      {getStepIcon(step)}
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-[11px] font-semibold leading-snug ${isActive ? 'text-amber-950 font-bold' : 'text-slate-800'}`}>
+                          {step.instruction}
                         </p>
+                        {step.distanceMeters > 0 && (
+                          <p className="text-[10px] text-slate-400 font-medium">
+                            {step.distanceText} • {step.durationText}
+                          </p>
+                        )}
+                      </div>
+                      {step.location && (
+                        <MapPin size={12} className={isActive ? 'text-amber-500 shrink-0 mt-0.5' : 'text-slate-300 shrink-0 mt-0.5'} />
                       )}
                     </div>
-                    {step.location && (
-                      <MapPin size={12} className="text-slate-300 shrink-0 mt-0.5" />
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         )}
 
         {/* Navigation Action Buttons */}
-        <div className="pt-1 flex flex-col sm:flex-row gap-2">
-          {/* Google Maps Button */}
-          <a
-            href={dynamicGoogleMapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 h-9 px-3 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer no-underline active:scale-[0.98]"
-          >
-            <Compass size={14} />
-            <span>{t.openGoogle}</span>
-            <ExternalLink size={12} className="opacity-80" />
-          </a>
+        <div className="pt-1 space-y-2">
+          <div className="flex flex-col sm:flex-row gap-2">
+            {/* Google Maps Button */}
+            <a
+              href={dynamicGoogleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 h-9 px-3 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer no-underline active:scale-[0.98]"
+            >
+              <Compass size={14} />
+              <span>{t.openGoogle}</span>
+              <ExternalLink size={12} className="opacity-80" />
+            </a>
 
-          {/* Yandex Maps Button */}
-          <a
-            href={dynamicYandexMapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 h-9 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer no-underline active:scale-[0.98]"
-          >
-            <Navigation size={14} />
-            <span>{t.openYandex}</span>
-            <ExternalLink size={12} className="opacity-80" />
-          </a>
+            {/* Yandex Maps Button */}
+            <a
+              href={dynamicYandexMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 h-9 px-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer no-underline active:scale-[0.98]"
+            >
+              <Navigation size={14} />
+              <span>{t.openYandex}</span>
+              <ExternalLink size={12} className="opacity-80" />
+            </a>
+          </div>
+
+          {/* Yandex Go Taxi Direct Deep Link */}
+          {route.yandexTaxiUrl && (
+            <a
+              href={route.yandexTaxiUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full h-9 px-3 bg-amber-400 hover:bg-amber-500 text-slate-900 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer no-underline active:scale-[0.98] border border-amber-500/30"
+            >
+              <span className="text-sm">🚖</span>
+              <span>{t.yandexTaxi}</span>
+              <ExternalLink size={12} className="text-slate-700" />
+            </a>
+          )}
         </div>
       </div>
     </div>
