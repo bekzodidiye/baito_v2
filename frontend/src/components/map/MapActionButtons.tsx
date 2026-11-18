@@ -28,6 +28,7 @@ export const MapActionButtons: React.FC<MapActionButtonsProps> = ({
 }) => {
   const language = useAuthStore(s => s.language);
   const setJobsView = useUIStore(s => s.setJobsView);
+  const activeRoute = useUIStore(s => s.activeRoute);
   const t = translations[language];
 
   return (
@@ -37,22 +38,24 @@ export const MapActionButtons: React.FC<MapActionButtonsProps> = ({
       onDoubleClick={(e) => e.stopPropagation()}
       className="pointer-events-none z-10"
     >
-      {/* Left Bottom: Update/Refresh Button */}
-      <div 
-        className={`absolute pointer-events-auto transition-all duration-300 ease-in-out left-4 md:left-6 ${
-          isPanelExpanded 
-            ? 'bottom-[252px] md:bottom-6' 
-            : 'bottom-[72px] md:bottom-6'
-        }`}
-      >
-        <button
-          onClick={handleRefresh}
-          className="bg-brand-primary text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-[0_4px_12px_rgba(79,70,229,0.25)] flex items-center gap-2 active:translate-y-[2px] active:shadow-[0_2px_6px_rgba(79,70,229,0.2)] transition-all duration-150 hover:bg-brand-primary-container cursor-pointer border-none"
+      {/* Left Bottom: Update/Refresh Button (hidden when route navigation card is active at bottom-left) */}
+      {!activeRoute && (
+        <div 
+          className={`absolute pointer-events-auto transition-all duration-300 ease-in-out left-4 md:left-6 ${
+            isPanelExpanded 
+              ? 'bottom-[252px] md:bottom-6' 
+              : 'bottom-[72px] md:bottom-6'
+          }`}
         >
-          <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
-          <span>{isRefreshing ? t.refreshing : t.refresh}</span>
-        </button>
-      </div>
+          <button
+            onClick={handleRefresh}
+            className="bg-brand-primary text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-[0_4px_12px_rgba(79,70,229,0.25)] flex items-center gap-2 active:translate-y-[2px] active:shadow-[0_2px_6px_rgba(79,70,229,0.2)] transition-all duration-150 hover:bg-brand-primary-container cursor-pointer border-none"
+          >
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+            <span>{isRefreshing ? t.refreshing : t.refresh}</span>
+          </button>
+        </div>
+      )}
 
       {/* Right Bottom: Control Stack (MapTypeSelector + Zoom Controls + List + Compass) */}
       <div 

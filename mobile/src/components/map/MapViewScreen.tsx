@@ -165,13 +165,14 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
       </AnimatePresence>
 
       {/* Floating Road Route Direction Card */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {activeRoute && (
           <motion.div
-            initial={{ opacity: 0, y: 25, scale: 0.95 }}
+            key="map-route-card"
+            initial={{ opacity: 0, y: 20, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 15, scale: 0.95 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
+            exit={{ opacity: 0, y: 15, scale: 0.96 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             className="absolute bottom-20 sm:bottom-6 left-4 z-40 w-[calc(100vw-32px)] sm:w-[380px] max-w-[420px] pointer-events-auto"
           >
             <MapRouteCard

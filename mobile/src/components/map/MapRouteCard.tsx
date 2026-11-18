@@ -76,17 +76,26 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
     yandexTaxi: "Yandex Go (Taksi chaqirish)",
   };
 
+  const originName = route.origin?.name || t.from;
+  const destinationName = route.destination?.company || route.destination?.name || t.to;
+  const distanceText = route.distanceText || '';
+  const durationText = route.durationText || '';
+  const headerSummary = distanceText && durationText 
+    ? `${distanceText} • ${durationText}` 
+    : (distanceText || durationText || t.title);
+
   const dynamicGoogleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${route.origin.lat},${route.origin.lng}&destination=${route.destination.lat},${route.destination.lng}`;
 
   const dynamicYandexMapsUrl = `https://yandex.com/maps/?rtext=${route.origin.lat},${route.origin.lng}~${route.destination.lat},${route.destination.lng}&rtt=auto`;
 
   return (
     <div 
+      data-testid="map-route-card"
       onClick={(e) => e.stopPropagation()}
-      className={`bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.18)] border border-slate-200/90 overflow-hidden text-slate-800 transition-all ${className}`}
+      className={`bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.18)] border border-slate-200/90 overflow-hidden text-slate-800 transition-all select-none ${className}`}
     >
       {/* Top Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50/80 to-slate-50/60 border-b border-slate-100">
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50/80 to-slate-50/60 border-b border-slate-100 shrink-0">
         <button
           type="button"
           onClick={onFitRoute}
@@ -101,7 +110,7 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
               {t.title}
             </span>
             <span className="text-xs font-black text-slate-900 leading-tight">
-              {route.distanceText} • {route.durationText}
+              {headerSummary}
             </span>
           </div>
         </button>
@@ -117,7 +126,7 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
         </button>
       </div>
 
-      <div className="p-4 space-y-3.5">
+      <div className="p-4 space-y-3.5 shrink-0">
         {/* Origin & Destination Section */}
         <div className="bg-slate-50/90 p-3 rounded-xl border border-slate-200/70 relative">
           <div className="space-y-2.5 pr-9">
@@ -131,7 +140,7 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
                   {t.from}
                 </p>
                 <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
-                  {route.origin.name}
+                  {originName}
                 </p>
               </div>
             </div>
@@ -149,7 +158,7 @@ export const MapRouteCard: React.FC<MapRouteCardProps> = ({
                   {t.to}
                 </p>
                 <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
-                  {route.destination.name}
+                  {destinationName}
                 </p>
               </div>
             </div>

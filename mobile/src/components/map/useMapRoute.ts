@@ -17,6 +17,7 @@ export const useMapRoute = ({
 }: UseMapRouteProps) => {
   const localRouteGroupRef = useRef<L.LayerGroup | null>(null);
   const routeGroupRef = externalRouteGroupRef || localRouteGroupRef;
+  const lastRenderedRouteKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -36,11 +37,44 @@ export const useMapRoute = ({
     }
 
     const routeGroup = routeGroupRef.current;
-    routeGroup.clearLayers();
 
-    if (!activeRoute || !activeRoute.coordinates || activeRoute.coordinates.length < 2) {
+    const routeKey = activeRoute && activeRoute.coordinates && activeRoute.coordinates.length >= 2
+      ? `${activeRoute.origin.lat},${activeRoute.origin.lng}->${activeRoute.destination.lat},${activeRoute.destination.lng}:${activeRoute.coordinates.length}`
+      : null;
+
+    if (!routeKey || !activeRoute) {
+      if (lastRenderedRouteKeyRef.current !== null) {
+        routeGroup.clearLayers();
+        lastRenderedRouteKeyRef.current = null;
+      }
       return;
     }
+
+    const originPoint: [number, number] = [activeRoute.origin.lat, activeRoute.origin.lng];
+    const destPoint: [number, number] = [activeRoute.destination.lat, activeRoute.destination.lng];
+    const allPoints = [originPoint, destPoint, ...activeRoute.coordinates];
+    const bounds = L.latLngBounds(allPoints);
+
+    // If this route is already drawn and rendered on the map, do not destroy and rebuild layers.
+    if (lastRenderedRouteKeyRef.current === routeKey) {
+      if (bounds.isValid()) {
+        const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+        const paddingLeft = isDesktop ? 420 : 30;
+        const paddingBottom = isDesktop ? 50 : 220;
+        map.fitBounds(bounds, {
+          paddingTopLeft: [paddingLeft, 70],
+          paddingBottomRight: [50, paddingBottom],
+          maxZoom: 16,
+          animate: true,
+          duration: 0.5,
+        });
+      }
+      return;
+    }
+
+    // New route detected: clean previous layers and build solid new route
+    routeGroup.clearLayers();
+    lastRenderedRouteKeyRef.current = routeKey;
 
     // 3. Single clean primary road route polyline
     const coreColor = '#2563eb';
@@ -74,8 +108,6 @@ export const useMapRoute = ({
     // 4. Doorstep / Off-road Access Connector Lines (Google & Yandex Maps style)
     const firstRoadPoint = activeRoute.coordinates[0];
     const lastRoadPoint = activeRoute.coordinates[activeRoute.coordinates.length - 1];
-    const originPoint: [number, number] = [activeRoute.origin.lat, activeRoute.origin.lng];
-    const destPoint: [number, number] = [activeRoute.destination.lat, activeRoute.destination.lng];
 
     // From user origin to road entry
     const originDist = map.distance(originPoint, firstRoadPoint);
@@ -153,8 +185,6 @@ export const useMapRoute = ({
       .addTo(routeGroup);
 
     // 7. Fit bounds including origin, destination, and road coordinates
-    const allPoints = [originPoint, destPoint, ...activeRoute.coordinates];
-    const bounds = L.latLngBounds(allPoints);
     if (bounds.isValid()) {
       const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
       // On desktop, MapRouteCard floats at bottom-left (width ~380px), on mobile at bottom

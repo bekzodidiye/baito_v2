@@ -3,6 +3,7 @@ import { RefreshCw, Compass, Plus, Minus } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { translations } from '../../translations';
 import { MapTypeSelector } from './MapTypeSelector';
+import { useUIStore } from '../../store/useUIStore';
 
 interface MapActionButtonsProps {
   isRefreshing: boolean;
@@ -24,6 +25,7 @@ export const MapActionButtons: React.FC<MapActionButtonsProps> = ({
   setMapType,
 }) => {
   const { language } = useApp();
+  const activeRoute = useUIStore(s => s.activeRoute);
   const t = translations[language];
 
   return (
@@ -33,14 +35,16 @@ export const MapActionButtons: React.FC<MapActionButtonsProps> = ({
       onDoubleClick={(e) => e.stopPropagation()}
       className="absolute bottom-full left-0 right-0 px-4 pb-[8px] flex justify-between items-end z-10 pointer-events-none"
     >
-      {/* Update/Refresh Button */}
-      <button
-        onClick={handleRefresh}
-        className="pointer-events-auto bg-brand-primary text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-[0_4px_12px_rgba(79,70,229,0.25)] flex items-center gap-2 active:translate-y-[2px] active:shadow-[0_2px_6px_rgba(79,70,229,0.2)] transition-all duration-150 hover:bg-brand-primary-container cursor-pointer border-none"
-      >
-        <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
-        <span>{isRefreshing ? t.refreshing : t.refresh}</span>
-      </button>
+      {/* Update/Refresh Button (hidden when route navigation is active) */}
+      {!activeRoute ? (
+        <button
+          onClick={handleRefresh}
+          className="pointer-events-auto bg-brand-primary text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-[0_4px_12px_rgba(79,70,229,0.25)] flex items-center gap-2 active:translate-y-[2px] active:shadow-[0_2px_6px_rgba(79,70,229,0.2)] transition-all duration-150 hover:bg-brand-primary-container cursor-pointer border-none"
+        >
+          <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+          <span>{isRefreshing ? t.refreshing : t.refresh}</span>
+        </button>
+      ) : <div />}
 
       {/* Right Side Control Stack: MapTypeSelector + Zoom Controls + Location Button */}
       <div className="flex flex-col gap-2 items-center">

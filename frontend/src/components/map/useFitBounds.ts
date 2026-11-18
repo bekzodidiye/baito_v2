@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import L from 'leaflet';
 import { mapFeatureToRegionId, areDistrictNamesEqual, getFeatureBounds, formatDistrictName } from './mapUtils';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
+import { useUIStore } from '../../store/useUIStore';
 
 interface UseFitBoundsProps {
   isMapReady: boolean;
@@ -112,6 +113,11 @@ export const useFitBounds = ({
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !isMapReady) return;
+
+    // If a route navigation is currently active on the map, do not override
+    // camera bounds or interrupt running route animations.
+    const activeRoute = useUIStore.getState().activeRoute;
+    if (activeRoute) return;
 
     const locationChanged = lastFittedLocationRef.current !== filterLocation;
     const panelToggled = prevPanelExpandedRef.current !== isPanelExpanded;

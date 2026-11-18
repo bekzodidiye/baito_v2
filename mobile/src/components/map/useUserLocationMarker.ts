@@ -3,6 +3,7 @@ import L from 'leaflet';
 import { Job } from '../../types';
 import { getLatLng } from './mapUtils';
 import { Language } from '../../translations';
+import { useUIStore } from '../../store/useUIStore';
 
 interface UseUserLocationMarkerProps {
   userGroupRef: React.MutableRefObject<L.LayerGroup | null>;
@@ -28,6 +29,13 @@ export const useUserLocationMarker = ({
     if (!userGroup) return;
 
     userGroup.clearLayers();
+
+    // When a road route is active, useMapRoute provides the origin "A" pin
+    // and road polyline. Suppress straight dashed lines and duplicate markers.
+    const activeRoute = useUIStore.getState().activeRoute;
+    if (activeRoute) {
+      return;
+    }
 
     if (userLocation) {
       const userHtml = `
