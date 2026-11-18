@@ -178,18 +178,13 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
               route={activeRoute}
               onClose={clearRoute}
               onReverseRoute={handleReverseRoute}
-              onStepClick={(step) => {
-                if (step.location && mapInstanceRef.current) {
-                  mapInstanceRef.current.flyTo(step.location, 16.5, { duration: 0.8 });
-                }
-              }}
               onFitRoute={() => {
                 if (activeRoute?.coordinates && mapInstanceRef.current) {
                   const bounds = L.latLngBounds(activeRoute.coordinates);
                   if (bounds.isValid()) {
                     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
-                    const paddingLeft = isDesktop ? 440 : 40;
-                    const paddingBottom = isDesktop ? 60 : 320;
+                    const paddingLeft = isDesktop ? 420 : 30;
+                    const paddingBottom = isDesktop ? 50 : 220;
                     mapInstanceRef.current.fitBounds(bounds, {
                       paddingTopLeft: [paddingLeft, 80],
                       paddingBottomRight: [60, paddingBottom],

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { RouteInfo } from '../../services/routingService';
-import { useUIStore } from '../../store/useUIStore';
 
 interface UseMapRouteProps {
   mapInstanceRef: React.MutableRefObject<L.Map | null>;
@@ -18,8 +17,6 @@ export const useMapRoute = ({
 }: UseMapRouteProps) => {
   const localRouteGroupRef = useRef<L.LayerGroup | null>(null);
   const routeGroupRef = externalRouteGroupRef || localRouteGroupRef;
-  const activeRouteMode = useUIStore(s => s.activeRouteMode) || 'car';
-  const activeRouteStep = useUIStore(s => s.activeRouteStep);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -45,25 +42,11 @@ export const useMapRoute = ({
       return;
     }
 
-    // 3. Dynamic styling based on selected travel mode
-    let coreColor = '#2563eb';
-    let shadowColor = '#1e3a8a';
-    let coreWeight = 5;
-    let shadowWeight = 8;
-    let dashArray: string | undefined = undefined;
-
-    if (activeRouteMode === 'walking') {
-      coreColor = '#2563eb';
-      shadowColor = '#1e3a8a';
-      coreWeight = 5;
-      shadowWeight = 8;
-      dashArray = '5, 8'; // Pedestrian dotted navigation path
-    } else if (activeRouteMode === 'transit') {
-      coreColor = '#059669'; // Emerald transit line
-      shadowColor = '#064e3b';
-      coreWeight = 6;
-      shadowWeight = 9;
-    }
+    // 3. Single clean primary road route polyline
+    const coreColor = '#2563eb';
+    const shadowColor = '#1e3a8a';
+    const coreWeight = 5;
+    const shadowWeight = 8;
 
     // Casing / Shadow Polyline for depth and contrast
     const shadowLine = L.polyline(activeRoute.coordinates, {
@@ -71,7 +54,6 @@ export const useMapRoute = ({
       color: shadowColor,
       weight: shadowWeight,
       opacity: 0.45,
-      dashArray,
       lineCap: 'round',
       lineJoin: 'round',
     }).addTo(routeGroup);
@@ -82,7 +64,6 @@ export const useMapRoute = ({
       color: coreColor,
       weight: coreWeight,
       opacity: 1.0,
-      dashArray,
       lineCap: 'round',
       lineJoin: 'round',
     }).addTo(routeGroup);
@@ -122,7 +103,7 @@ export const useMapRoute = ({
       }).addTo(routeGroup);
     }
 
-    // 5. Origin Marker "A" (Premier Start Point)
+    // 5. Origin Marker "A" (Start Point with subtle glowing pulse)
     const originIcon = L.divIcon({
       className: 'route-origin-pin',
       html: `
@@ -141,7 +122,7 @@ export const useMapRoute = ({
       .bindTooltip(activeRoute.origin.name, { direction: 'top', permanent: false })
       .addTo(routeGroup);
 
-    // 6. Destination Marker "B" (Premier Teardrop Pin touching ground)
+    // 6. Destination Marker "B" (Teardrop Needle grounded on target coordinate)
     const rawDestName = activeRoute.destination.company || activeRoute.destination.name || '';
     const cleanDestLabel = rawDestName.replace(/[<>"']/g, '').trim();
     const truncatedLabel = cleanDestLabel.length > 20 ? `${cleanDestLabel.slice(0, 18)}…` : cleanDestLabel;
@@ -171,66 +152,23 @@ export const useMapRoute = ({
       .bindTooltip(activeRoute.destination.name, { direction: 'top', permanent: false })
       .addTo(routeGroup);
 
-    // 7. Active Step Turn Marker (when clicking a turn in the steps accordion)
-    if (activeRouteStep && activeRouteStep.location) {
-      const stepIcon = L.divIcon({
-        className: 'route-step-focus-pin',
-        html: `
-          <div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; pointer-events: none;">
-            <span style="position: absolute; width: 32px; height: 32px; border-radius: 50%; background: rgba(245, 158, 11, 0.4); animation: ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
-            <div style="width: 20px; height: 20px; border-radius: 50%; background: #f59e0b; border: 2.5px solid #ffffff; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.6); display: flex; align-items: center; justify-content: center; color: white; z-index: 2;">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="4"/>
-              </svg>
-            </div>
-          </div>
-        `,
-        iconSize: [34, 34],
-        iconAnchor: [17, 17],
-      });
-
-      const stepMarker = L.marker(activeRouteStep.location, {
-        icon: stepIcon,
-        zIndexOffset: 1200,
-        pane: 'routePane',
-      }).addTo(routeGroup);
-
-      const stepPopupContent = `
-        <div style="font-size: 11px; font-weight: 700; color: #0f172a; line-height: 1.3;">
-          ${activeRouteStep.instruction}
-        </div>
-        ${activeRouteStep.distanceText ? `
-          <div style="font-size: 10px; color: #64748b; font-weight: 500; margin-top: 2px;">
-            ${activeRouteStep.distanceText} • ${activeRouteStep.durationText}
-          </div>
-        ` : ''}
-      `;
-
-      stepMarker.bindTooltip(stepPopupContent, {
-        direction: 'top',
-        permanent: true,
-        offset: [0, -10],
-        className: 'route-step-tooltip',
-      }).openTooltip();
-    }
-
-    // 8. Fit bounds including origin, destination, and road coordinates
+    // 7. Fit bounds including origin, destination, and road coordinates
     const allPoints = [originPoint, destPoint, ...activeRoute.coordinates];
     const bounds = L.latLngBounds(allPoints);
     if (bounds.isValid()) {
       const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
       // On desktop, MapRouteCard floats at bottom-left (width ~380px), on mobile at bottom
-      const paddingLeft = isDesktop ? 440 : 40;
-      const paddingBottom = isDesktop ? 60 : 320;
+      const paddingLeft = isDesktop ? 420 : 30;
+      const paddingBottom = isDesktop ? 50 : 220;
       map.fitBounds(bounds, {
-        paddingTopLeft: [paddingLeft, 80],
-        paddingBottomRight: [60, paddingBottom],
+        paddingTopLeft: [paddingLeft, 70],
+        paddingBottomRight: [50, paddingBottom],
         maxZoom: 16,
         animate: true,
         duration: 0.8,
       });
     }
-  }, [activeRoute, activeRouteMode, activeRouteStep, isPanelExpanded, mapInstanceRef]);
+  }, [activeRoute, isPanelExpanded, mapInstanceRef]);
 
   // Clear layers when route is dismissed
   useEffect(() => {
