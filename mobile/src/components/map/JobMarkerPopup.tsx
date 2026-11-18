@@ -35,15 +35,30 @@ export const JobMarkerPopup = React.memo(({
         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-brand-primary"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
         <span className="truncate">{job.location}</span>
       </div>
-      <button 
-        className="w-full mt-2 bg-brand-primary text-white text-[10px] font-bold py-1.5 rounded active:scale-95 transition-transform cursor-pointer border-none"
-        onClick={() => {
-          setSelectedJob(job);
-          closePopup();
-        }}
-      >
-        Batafsil
-      </button>
+      <div className="flex items-center gap-1.5 mt-2">
+        <button 
+          className="flex-1 bg-brand-primary text-white text-[10px] font-bold py-1.5 rounded active:scale-95 transition-transform cursor-pointer border-none"
+          onClick={() => {
+            setSelectedJob(job);
+            closePopup();
+          }}
+        >
+          Batafsil
+        </button>
+        <button 
+          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-1.5 rounded active:scale-95 transition-transform cursor-pointer border-none flex items-center justify-center gap-1 shadow-xs"
+          onClick={() => {
+            closePopup();
+            window.dispatchEvent(new CustomEvent('calculate-job-route', { detail: job }));
+          }}
+          title="Yo'nalish"
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="rotate-45">
+            <polygon points="3 11 22 2 13 21 11 13 3 11" />
+          </svg>
+          <span>Yo'nalish</span>
+        </button>
+      </div>
     </div>
   );
 });

@@ -1,7 +1,12 @@
 import { create } from 'zustand';
 import { safeGetItem, safeSetItem } from '../context/utils';
+import { RouteInfo } from '../services/routingService';
 
 interface UIState {
+  activeRoute: RouteInfo | null;
+  setActiveRoute: (route: RouteInfo | null) => void;
+  isRouteLoading: boolean;
+  setIsRouteLoading: (loading: boolean) => void;
   selectedChatId: string | null;
   setSelectedChatId: (id: string | null) => void;
   employerSelectedChatId: string | null;
@@ -33,6 +38,10 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
+  activeRoute: null,
+  setActiveRoute: (route) => set({ activeRoute: route }),
+  isRouteLoading: false,
+  setIsRouteLoading: (loading) => set({ isRouteLoading: loading }),
   selectedChatId: null,
   setSelectedChatId: (id) => set({ selectedChatId: id }),
   

@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { useJobsData } from "../context/useJobsData";
 import { Job } from '../types';
@@ -11,6 +11,7 @@ import { useRegionPolygons } from '../components/map/useRegionPolygons';
 import { useJobMarkers } from '../components/map/useJobMarkers';
 import { useMapNavigation } from '../components/map/useMapNavigation';
 import { useUserGeolocation } from '../components/map/useUserGeolocation';
+import { useMapRoute } from '../components/map/useMapRoute';
 import { useMapFilterJobs } from '../components/map/useMapFilterJobs';
 import { useMapLocationAction } from '../components/map/useMapLocationAction';
 import { useOpenJobDetail } from '../components/map/useOpenJobDetail';
@@ -73,11 +74,34 @@ export function useMapViewScreen() {
     userLocation,
     isLocating,
     distanceToSelectedJob,
+    activeRoute,
     handleCalculateDistance,
+    clearRoute,
   } = useUserGeolocation({
     selectedJob,
     mapInstanceRef,
   });
+
+  useMapRoute({
+    mapInstanceRef,
+    activeRoute,
+    isPanelExpanded,
+  });
+
+  // Global custom event listener to trigger road route calculation
+  useEffect(() => {
+    const handleRouteRequest = (e: CustomEvent<Job>) => {
+      if (e.detail) {
+        handleCalculateDistance(e.detail);
+        setSelectedJob(null);
+        setIsPanelExpanded(false);
+      }
+    };
+    window.addEventListener('calculate-job-route', handleRouteRequest as EventListener);
+    return () => {
+      window.removeEventListener('calculate-job-route', handleRouteRequest as EventListener);
+    };
+  }, [handleCalculateDistance, setSelectedJob, setIsPanelExpanded]);
 
   const { activeCluster, displayedJobs, getDisplayedJobs, setActiveCluster } = useMapFilterJobs({
     jobs,
@@ -179,6 +203,8 @@ export function useMapViewScreen() {
     isLocating,
     isLocatingUser,
     distanceToSelectedJob,
+    activeRoute,
+    clearRoute,
     handleCalculateDistance,
     displayedJobs,
     getDisplayedJobs,

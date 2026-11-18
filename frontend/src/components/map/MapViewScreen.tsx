@@ -13,6 +13,7 @@ import { MapActionButtons } from './MapActionButtons';
 import { JobDetailModal } from './JobDetailModal';
 import { RegionSelector } from '../RegionSelector';
 import { MapLoadingSkeleton } from './MapLoadingSkeleton';
+import { MapRouteCard } from './MapRouteCard';
 
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 
@@ -56,6 +57,8 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
     userLocation,
     isLocating,
     distanceToSelectedJob,
+    activeRoute,
+    clearRoute,
     handleCalculateDistance,
     getDisplayedJobs,
     handleRefresh,
@@ -162,7 +165,13 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
             toggleBookmark={toggleBookmark}
             applyToJob={applyToJob}
             distanceToSelectedJob={distanceToSelectedJob}
-            handleCalculateDistance={handleCalculateDistance}
+            handleCalculateDistance={() => {
+              if (selectedJob) {
+                handleCalculateDistance(selectedJob);
+                setSelectedJob(null);
+                setIsPanelExpanded(false);
+              }
+            }}
             isLocating={isLocating}
             onOpenOnMap={() => {
               const district = selectedJob.location.includes(',') 
@@ -175,6 +184,24 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
               setIsPanelExpanded(false);
             }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Floating Road Route Direction Card */}
+      <AnimatePresence>
+        {!isPreview && activeRoute && (
+          <motion.div
+            initial={{ opacity: 0, y: 25, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 15, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="absolute bottom-20 sm:bottom-6 left-4 z-40 w-[calc(100vw-32px)] sm:w-[380px] max-w-[420px] pointer-events-auto"
+          >
+            <MapRouteCard
+              route={activeRoute}
+              onClose={clearRoute}
+            />
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

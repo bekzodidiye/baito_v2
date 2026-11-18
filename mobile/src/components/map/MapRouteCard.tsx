@@ -1,0 +1,313 @@
+import React, { useState } from 'react';
+import { 
+  Navigation, 
+  MapPin, 
+  Car, 
+  Bus, 
+  Footprints, 
+  X, 
+  ChevronDown, 
+  ChevronUp, 
+  ExternalLink, 
+  Compass, 
+  CornerDownRight, 
+  CornerDownLeft, 
+  ArrowUp, 
+  RotateCcw,
+  CheckCircle2
+} from 'lucide-react';
+import { RouteInfo, RouteStep } from '../../services/routingService';
+import { useAuthStore } from '../../store/useAuthStore';
+
+interface MapRouteCardProps {
+  route: RouteInfo;
+  onClose: () => void;
+  className?: string;
+}
+
+export const MapRouteCard: React.FC<MapRouteCardProps> = ({
+  route,
+  onClose,
+  className = '',
+}) => {
+  const language = useAuthStore(s => s.language);
+  const [showSteps, setShowSteps] = useState(false);
+  const [selectedMode, setSelectedMode] = useState<'car' | 'transit' | 'walking'>('car');
+
+  const t = {
+    uz: {
+      title: "Marshrut va Yo'nalish",
+      from: "Qayerdan",
+      to: "Qayergacha",
+      distance: "Masofa",
+      howToGet: "Qanday borsa bo'ladi",
+      byCar: "Avtomobilda",
+      byTransit: "Jamoat transporti",
+      byFoot: "Piyoda",
+      steps: "Yo'l ko'rsatmalari",
+      openGoogle: "Google Xaritalar",
+      openYandex: "Yandex Navigator",
+      close: "Marshrutni yopish",
+      stepList: "qadam",
+    },
+    ru: {
+      title: "Маршрут и направление",
+      from: "Откуда",
+      to: "Куда",
+      distance: "Расстояние",
+      howToGet: "Как добраться",
+      byCar: "На автомобиле",
+      byTransit: "Общ. транспорт",
+      byFoot: "Пешком",
+      steps: "Инструкции маршрута",
+      openGoogle: "Google Карты",
+      openYandex: "Яндекс Навигатор",
+      close: "Закрыть маршрут",
+      stepList: "шагов",
+    },
+    en: {
+      title: "Route & Directions",
+      from: "From",
+      to: "To",
+      distance: "Distance",
+      howToGet: "How to get there",
+      byCar: "By Car",
+      byTransit: "Public Transit",
+      byFoot: "Walking",
+      steps: "Turn-by-turn steps",
+      openGoogle: "Google Maps",
+      openYandex: "Yandex Navigator",
+      close: "Close route",
+      stepList: "steps",
+    },
+  }[language] || {
+    title: "Marshrut va Yo'nalish",
+    from: "Qayerdan",
+    to: "Qayergacha",
+    distance: "Masofa",
+    howToGet: "Qanday borsa bo'ladi",
+    byCar: "Avtomobilda",
+    byTransit: "Jamoat transporti",
+    byFoot: "Piyoda",
+    steps: "Yo'l ko'rsatmalari",
+    openGoogle: "Google Xaritalar",
+    openYandex: "Yandex Navigator",
+    close: "Marshrutni yopish",
+    stepList: "qadam",
+  };
+
+  const getStepIcon = (step: RouteStep) => {
+    if (step.type === 'arrive') {
+      return <CheckCircle2 size={14} className="text-emerald-600 shrink-0 mt-0.5" />;
+    }
+    if (step.modifier?.includes('left')) {
+      return <CornerDownLeft size={14} className="text-blue-600 shrink-0 mt-0.5" />;
+    }
+    if (step.modifier?.includes('right')) {
+      return <CornerDownRight size={14} className="text-blue-600 shrink-0 mt-0.5" />;
+    }
+    if (step.modifier === 'uturn') {
+      return <RotateCcw size={14} className="text-amber-600 shrink-0 mt-0.5" />;
+    }
+    return <ArrowUp size={14} className="text-blue-600 shrink-0 mt-0.5" />;
+  };
+
+  return (
+    <div 
+      onClick={(e) => e.stopPropagation()}
+      className={`bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.18)] border border-slate-200/90 overflow-hidden text-slate-800 transition-all ${className}`}
+    >
+      {/* Top Header */}
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50/80 to-slate-50/60 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-brand-primary text-white flex items-center justify-center shadow-xs">
+            <Compass size={16} />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-brand-primary block leading-none">
+              {t.title}
+            </span>
+            <span className="text-xs font-black text-slate-900 leading-tight">
+              {route.distanceText}
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer border-none"
+          title={t.close}
+          aria-label={t.close}
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      <div className="p-4 space-y-3.5 max-h-[70vh] overflow-y-auto no-scrollbar">
+        {/* Origin & Destination Section */}
+        <div className="bg-slate-50/90 p-3 rounded-xl border border-slate-200/70 space-y-2.5">
+          {/* Origin */}
+          <div className="flex items-start gap-2.5">
+            <div className="w-5 h-5 rounded-full bg-blue-100 text-brand-primary flex items-center justify-center shrink-0 mt-0.5">
+              <div className="w-2 h-2 rounded-full bg-brand-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">
+                {t.from}
+              </p>
+              <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
+                {route.origin.name}
+              </p>
+            </div>
+          </div>
+
+          {/* Dotted connector */}
+          <div className="ml-2.5 border-l-2 border-dashed border-slate-300 h-3" />
+
+          {/* Destination */}
+          <div className="flex items-start gap-2.5">
+            <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+              <MapPin size={12} className="fill-emerald-600 text-emerald-600" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">
+                {t.to}
+              </p>
+              <p className="text-xs font-bold text-slate-800 truncate mt-0.5">
+                {route.destination.name}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Travel Modes (Qanday borsa bo'ladi) */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center justify-between">
+            <span>{t.howToGet}</span>
+            <span className="text-brand-primary font-black">{route.distanceText}</span>
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {/* By Car */}
+            <button
+              type="button"
+              onClick={() => setSelectedMode('car')}
+              className={`p-2 rounded-xl text-center transition-all cursor-pointer border ${
+                selectedMode === 'car'
+                  ? 'bg-blue-50/90 border-brand-primary text-brand-primary ring-2 ring-brand-primary/10 shadow-xs'
+                  : 'bg-slate-50 border-slate-200/70 text-slate-600 hover:bg-slate-100/70'
+              }`}
+            >
+              <Car size={16} className="mx-auto mb-1 text-inherit" />
+              <div className="text-[10px] font-bold truncate">{t.byCar}</div>
+              <div className="text-[11px] font-black text-slate-900 mt-0.5 truncate">
+                {route.durationText}
+              </div>
+            </button>
+
+            {/* By Transit */}
+            <button
+              type="button"
+              onClick={() => setSelectedMode('transit')}
+              className={`p-2 rounded-xl text-center transition-all cursor-pointer border ${
+                selectedMode === 'transit'
+                  ? 'bg-blue-50/90 border-brand-primary text-brand-primary ring-2 ring-brand-primary/10 shadow-xs'
+                  : 'bg-slate-50 border-slate-200/70 text-slate-600 hover:bg-slate-100/70'
+              }`}
+            >
+              <Bus size={16} className="mx-auto mb-1 text-inherit" />
+              <div className="text-[10px] font-bold truncate">{t.byTransit}</div>
+              <div className="text-[11px] font-black text-slate-900 mt-0.5 truncate">
+                {route.transitDurationText}
+              </div>
+            </button>
+
+            {/* By Foot */}
+            <button
+              type="button"
+              onClick={() => setSelectedMode('walking')}
+              className={`p-2 rounded-xl text-center transition-all cursor-pointer border ${
+                selectedMode === 'walking'
+                  ? 'bg-blue-50/90 border-brand-primary text-brand-primary ring-2 ring-brand-primary/10 shadow-xs'
+                  : 'bg-slate-50 border-slate-200/70 text-slate-600 hover:bg-slate-100/70'
+              }`}
+            >
+              <Footprints size={16} className="mx-auto mb-1 text-inherit" />
+              <div className="text-[10px] font-bold truncate">{t.byFoot}</div>
+              <div className="text-[11px] font-black text-slate-900 mt-0.5 truncate">
+                {route.walkingDurationText}
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Turn-by-Turn Steps Accordion */}
+        {route.steps && route.steps.length > 0 && (
+          <div className="border border-slate-200/80 rounded-xl overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowSteps(!showSteps)}
+              className="w-full px-3 py-2.5 bg-slate-50/80 hover:bg-slate-100/80 flex items-center justify-between text-xs font-bold text-slate-700 transition-colors cursor-pointer border-none"
+            >
+              <div className="flex items-center gap-1.5">
+                <Navigation size={13} className="text-brand-primary rotate-45" />
+                <span>{t.steps}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-600 font-bold">
+                  {route.steps.length} {t.stepList}
+                </span>
+              </div>
+              {showSteps ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+            </button>
+
+            {showSteps && (
+              <div className="p-2.5 bg-white space-y-2 border-t border-slate-100 max-h-48 overflow-y-auto">
+                {route.steps.map((step, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-xs py-1 border-b border-slate-50 last:border-b-0">
+                    {getStepIcon(step)}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-semibold text-slate-800 leading-snug">
+                        {step.instruction}
+                      </p>
+                      {step.distanceMeters > 0 && (
+                        <p className="text-[10px] text-slate-400 font-medium">
+                          {step.distanceText} • {step.durationText}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Navigation Action Buttons */}
+        <div className="pt-1 flex flex-col sm:flex-row gap-2">
+          {/* Google Maps Button */}
+          <a
+            href={route.googleMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 h-9 px-3 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer no-underline active:scale-[0.98]"
+          >
+            <Compass size={14} />
+            <span>{t.openGoogle}</span>
+            <ExternalLink size={12} className="opacity-80" />
+          </a>
+
+          {/* Yandex Maps Button */}
+          <a
+            href={route.yandexMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 h-9 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer no-underline active:scale-[0.98]"
+          >
+            <Navigation size={14} />
+            <span>{t.openYandex}</span>
+            <ExternalLink size={12} className="opacity-80" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
