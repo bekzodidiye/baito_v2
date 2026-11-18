@@ -52,6 +52,7 @@ export function useMapViewScreen() {
     regionsGroupRef,
     userGroupRef,
     labelsGroupRef,
+    routeGroupRef,
     zoomLevel,
     isMapLoading,
     isMapReady,
@@ -95,6 +96,7 @@ export function useMapViewScreen() {
 
   useMapRoute({
     mapInstanceRef,
+    routeGroupRef,
     activeRoute,
     isPanelExpanded,
   });

@@ -73,6 +73,7 @@ export const useMapSetup = ({
   const regionsGroupRef = useRef<L.LayerGroup | null>(null);
   const userGroupRef = useRef<L.LayerGroup | null>(null);
   const labelsGroupRef = useRef<L.LayerGroup | null>(null);
+  const routeGroupRef = useRef<L.LayerGroup | null>(null);
   const tileLayerRef = useRef<L.Layer | null>(null);
   const [zoomLevel, setZoomLevel] = useState(5.1);
   const [isMapLoading, setIsMapLoading] = useState(true);
@@ -179,6 +180,7 @@ export const useMapSetup = ({
     }).addTo(map);
 
     userGroupRef.current = L.layerGroup().addTo(map);
+    routeGroupRef.current = L.layerGroup().addTo(map);
 
     setIsMapReady(true);
 
@@ -202,7 +204,7 @@ export const useMapSetup = ({
         // drawing into a map that is on its way out. Detach each group first:
         // clearLayers() on a group that is still attached makes markercluster
         // rebuild its per-zoom grid, which is wasted work on teardown.
-        for (const ref of [markerGroupRef, regionsGroupRef, userGroupRef, labelsGroupRef]) {
+        for (const ref of [markerGroupRef, regionsGroupRef, userGroupRef, labelsGroupRef, routeGroupRef]) {
           try {
             const group = ref.current;
             if (!group) continue;
@@ -219,6 +221,7 @@ export const useMapSetup = ({
         regionsGroupRef.current = null;
         userGroupRef.current = null;
         labelsGroupRef.current = null;
+        routeGroupRef.current = null;
       }
     };
   }, []);
@@ -293,6 +296,7 @@ export const useMapSetup = ({
     regionsGroupRef,
     userGroupRef,
     labelsGroupRef,
+    routeGroupRef,
     tileLayerRef,
     zoomLevel,
     setZoomLevel,
