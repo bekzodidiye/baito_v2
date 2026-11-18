@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import { createTileLayers, MapType } from './mapTileLayers';
+import { createTileLayers, MapType, healMapTiles } from './mapTileLayers';
 import { createClusterIcon } from './clusterIconFunction';
 
 // Leaflet's canvas renderer repaints on a queued animation frame. When a map
@@ -160,7 +160,29 @@ export const useMapSetup = ({
     const invalidate1 = setTimeout(() => map.invalidateSize(), 200);
     const invalidate2 = setTimeout(() => map.invalidateSize(), 600);
 
+    // Automatic tile healing on network recovery, tab focus, and visibility changes
+    const handleOnline = () => {
+      healMapTiles(mapInstanceRef.current);
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        healMapTiles(mapInstanceRef.current);
+      }
+    };
+
+    const handleFocus = () => {
+      healMapTiles(mapInstanceRef.current);
+    };
+
+    window.addEventListener('online', handleOnline);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleFocus);
+
     return () => {
+      window.removeEventListener('online', handleOnline);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleFocus);
       clearTimeout(timer);
       clearTimeout(invalidate1);
       clearTimeout(invalidate2);

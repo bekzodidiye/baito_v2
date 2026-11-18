@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useJobsData } from "../context/useJobsData";
 import { Job } from '../types';
 import { getTranslatedJob } from '../jobTranslations';
@@ -6,6 +7,7 @@ import { translations } from '../translations';
 import { UZBEKISTAN_REGIONS } from '../components/map/mapConstants';
 import { useUzbekistanGeoJson } from '../components/map/useUzbekistanGeoJson';
 import { useMapSetup } from '../components/map/useMapSetup';
+import { healMapTiles } from '../components/map/mapTileLayers';
 import { useRegionPolygons } from '../components/map/useRegionPolygons';
 import { useJobMarkers } from '../components/map/useJobMarkers';
 import { useMapNavigation } from '../components/map/useMapNavigation';
@@ -165,10 +167,16 @@ export function useMapViewScreen() {
     isVisible: currentScreen === 'jobs'
   });
 
-  const handleRefresh = () => {
+  const queryClient = useQueryClient();
+
+  const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1200);
-  };
+    queryClient.invalidateQueries({ queryKey: ['jobs'] });
+    if (mapInstanceRef.current) {
+      healMapTiles(mapInstanceRef.current);
+    }
+    setTimeout(() => setIsRefreshing(false), 800);
+  }, [queryClient, mapInstanceRef]);
 
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job);

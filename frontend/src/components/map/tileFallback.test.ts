@@ -12,8 +12,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import type L from 'leaflet';
-import { osmFallbackUrl, tileErrorFallback } from './mapTileLayers';
+import { osmFallbackUrl, cartoFallbackUrl, tileErrorFallback, healMapTiles } from './mapTileLayers';
 
 const coords = (x: number, y: number, z: number) => ({ x, y, z }) as L.Coords;
 
@@ -99,5 +98,78 @@ describe('the source itself', () => {
   it('still hands every layer the fallback', () => {
     const src = fs.readFileSync(path.resolve(__dirname, 'mapTileLayers.ts'), 'utf8');
     expect(src.match(/\.on\('tileerror', tileErrorFallback\)/g)).toHaveLength(2);
+  });
+});
+
+describe('cartoFallbackUrl secondary fallback', () => {
+  it('generates a valid CartoDB Voyager raster URL for valid coords', () => {
+    const url = cartoFallbackUrl(coords(21, 11, 5));
+    expect(url).toMatch(/^https:\/\/[abcd]\.basemaps\.cartocdn\.com\/rastertiles\/voyager\/5\/21\/11\.png$/);
+  });
+
+  it('distributes across subdomains', () => {
+    const u1 = cartoFallbackUrl(coords(1, 1, 5));
+    const u2 = cartoFallbackUrl(coords(2, 1, 5));
+    expect(u1).not.toBeNull();
+    expect(u2).not.toBeNull();
+  });
+
+  it('returns null for zoom past 20 or invalid coordinates', () => {
+    expect(cartoFallbackUrl(coords(1, 1, 21))).toBeNull();
+    expect(cartoFallbackUrl(null)).toBeNull();
+    expect(cartoFallbackUrl(undefined)).toBeNull();
+    expect(cartoFallbackUrl({ x: NaN, y: 1, z: 5 } as L.Coords)).toBeNull();
+  });
+});
+
+describe('healMapTiles resilient tile recovery', () => {
+  it('safely handles null or undefined map instances', () => {
+    expect(healMapTiles(null)).toBe(0);
+    expect(healMapTiles(undefined)).toBe(0);
+  });
+
+  it('identifies broken images in map container and clears fallbackTried flags for reloading', () => {
+    const brokenTile = {
+      src: 'https://tile.openstreetmap.org/5/21/11.png',
+      complete: true,
+      naturalWidth: 0,
+      dataset: { fallbackTried: 'true', secondaryTried: 'true' },
+    } as unknown as HTMLImageElement;
+
+    const healthyTile = {
+      src: 'https://tile.openstreetmap.org/5/22/11.png',
+      complete: true,
+      naturalWidth: 256,
+      dataset: {},
+    } as unknown as HTMLImageElement;
+
+    const mockContainer = {
+      querySelectorAll: (sel: string) => {
+        if (sel === 'img.leaflet-tile') return [brokenTile, healthyTile];
+        return [];
+      },
+    };
+
+    let redrawCalled = false;
+    const mockTileLayer = {
+      _tiles: {
+        '5:21:11': { el: brokenTile },
+      },
+      redraw: () => {
+        redrawCalled = true;
+      },
+    };
+
+    const mockMap = {
+      getContainer: () => mockContainer,
+      eachLayer: (cb: (l: any) => void) => {
+        cb(mockTileLayer);
+      },
+    } as unknown as L.Map;
+
+    const healed = healMapTiles(mockMap);
+    expect(healed).toBe(1);
+    expect(brokenTile.dataset.fallbackTried).toBeUndefined();
+    expect(brokenTile.dataset.secondaryTried).toBeUndefined();
   });
 });
