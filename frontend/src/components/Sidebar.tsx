@@ -257,22 +257,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
       </div>
     </aside>
 
-    {/* Floating Re-open Sidebar Tab on Desktop when collapsed in jobs view */}
+    {/* Floating Re-open Sidebar Button on Desktop when collapsed in jobs view */}
     {isCollapsed && (
       <button
         type="button"
         onClick={() => setDesktopSidebarCollapsed(false)}
-        className="hidden md:flex fixed top-1/2 left-0 -translate-y-1/2 z-30 h-16 px-2.5 bg-white/95 backdrop-blur-md rounded-r-2xl border-y border-r border-slate-200/90 shadow-[4px_2px_16px_rgba(0,0,0,0.12)] items-center gap-2 text-slate-700 hover:text-brand-primary hover:border-brand-primary/40 transition-all cursor-pointer pointer-events-auto group select-none"
+        className="hidden md:flex fixed top-3.5 left-6 z-40 h-11 w-11 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-[0_6px_20px_rgba(0,0,0,0.10)] items-center justify-center text-slate-700 hover:text-brand-primary hover:border-brand-primary/40 active:scale-95 transition-all cursor-pointer pointer-events-auto select-none group"
         title={language === 'ru' ? 'Показать меню' : language === 'en' ? 'Show menu' : "Menyuni ochish"}
         aria-label={language === 'ru' ? 'Показать меню' : language === 'en' ? 'Show menu' : "Menyuni ochish"}
       >
-        <div className="flex flex-col items-center">
-          <Menu size={16} className="text-slate-400 group-hover:text-brand-primary" />
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-1">
-            {language === 'ru' ? 'Меню' : language === 'en' ? 'Menu' : 'Menyu'}
-          </span>
-        </div>
-        <ChevronRight size={16} className="text-slate-400 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-transform" />
+        <Menu size={20} className="text-slate-700 group-hover:text-brand-primary transition-colors" />
       </button>
     )}
   </>

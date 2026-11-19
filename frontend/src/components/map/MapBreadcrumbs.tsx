@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { translateRegion } from '../../translations';
 import { useAuthStore } from "../../store/useAuthStore";
+import { useUIStore } from "../../store/useUIStore";
 
 interface MapBreadcrumbsProps {
   breadcrumbItems: string[];
@@ -13,12 +14,15 @@ export const MapBreadcrumbs: React.FC<MapBreadcrumbsProps> = ({
   handleBreadcrumbBack,
 }) => {
   const language = useAuthStore(s => s.language);
+  const desktopSidebarCollapsed = useUIStore(s => s.desktopSidebarCollapsed);
   return (
     <div 
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onDoubleClick={(e) => e.stopPropagation()}
-      className="absolute top-4 left-4 z-30 flex items-center gap-2 bg-white/95 text-slate-800 px-3.5 py-2 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.10)] backdrop-blur-md animate-fade-in max-w-[calc(100%-32px)] overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] border-none"
+      className={`absolute top-3.5 left-3.5 z-30 flex items-center gap-2 bg-white/95 text-slate-800 px-3.5 rounded-2xl shadow-[0_6px_20px_rgba(0,0,0,0.10)] backdrop-blur-md animate-fade-in max-w-[calc(100%-32px)] overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] border border-slate-200/90 transition-all duration-300 ease-in-out h-11 ${
+        desktopSidebarCollapsed ? 'md:left-[80px]' : 'md:left-6'
+      }`}
     >
       <button 
         onClick={handleBreadcrumbBack}

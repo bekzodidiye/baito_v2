@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, MapPin } from 'lucide-react';
 import { translations } from '../../translations';
 import { useAuthStore } from "../../store/useAuthStore";
+import { useUIStore } from "../../store/useUIStore";
 
 interface FloatingSearchBarProps {
   setShowRegionSelector: (show: boolean) => void;
@@ -13,6 +14,7 @@ export const FloatingSearchBar: React.FC<FloatingSearchBarProps> = ({
   isPanelExpanded = false,
 }) => {
   const language = useAuthStore(s => s.language);
+  const desktopSidebarCollapsed = useUIStore(s => s.desktopSidebarCollapsed);
   const t = translations[language];
 
   return (
@@ -20,7 +22,9 @@ export const FloatingSearchBar: React.FC<FloatingSearchBarProps> = ({
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onDoubleClick={(e) => e.stopPropagation()}
-      className={`absolute top-3.5 left-3.5 right-3.5 z-30 max-w-md mx-auto flex items-center gap-2 pointer-events-auto transition-all duration-300 ease-in-out md:left-6 ${
+      className={`absolute top-3.5 left-3.5 right-3.5 z-30 max-w-md mx-auto flex items-center gap-2 pointer-events-auto transition-all duration-300 ease-in-out ${
+        desktopSidebarCollapsed ? 'md:left-[80px]' : 'md:left-6'
+      } ${
         isPanelExpanded ? 'md:right-[620px] lg:right-[660px]' : 'md:right-6'
       }`}
     >
