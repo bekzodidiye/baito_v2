@@ -256,3 +256,47 @@ def test_worker_detail_never_has_invoices_and_orders_reflect_completion(client):
     assert employer_data["invoices"][0]["invoiceNumber"] == "INV-2026-TEST"
     assert employer_data["invoices"][0]["amount"] == 310_000
 
+
+def test_admin_users_list_pii_excluded_and_detail_included(client):
+    admin = make_user(role="admin", phone=_phone())
+    worker = make_user(role="worker", phone=_phone())
+    with SessionLocal() as db:
+        w = db.query(User).filter(User.id == worker.id).first()
+        w.passportSeries = "AA 1234567"
+        w.passportJshshir = "12345678901234"
+        w.passportDocFront = "https://example.com/front.jpg"
+        w.passportDocBack = "https://example.com/back.jpg"
+        w.selfieWithDoc = "https://example.com/selfie.jpg"
+        db.commit()
+
+    login(client, admin)
+
+    # 1. Bulk list must NOT contain sensitive PII
+    res_list = client.get("/api/v1/admin/users")
+    assert res_list.status_code == 200
+    items = res_list.json()["items"]
+    worker_item = next(u for u in items if u["id"] == worker.id)
+    assert "passportSeries" not in worker_item
+    assert "passportJshshir" not in worker_item
+    assert "passportDocFront" not in worker_item
+    assert "passportDocBack" not in worker_item
+    assert "selfieWithDoc" not in worker_item
+    assert worker_item["hasVerificationDocs"] is True
+
+    # 2. Detail view MUST contain PII for verification
+    res_detail = client.get(f"/api/v1/admin/users/{worker.id}/detail")
+    assert res_detail.status_code == 200
+    u_detail = res_detail.json()["user"]
+    assert u_detail["passportSeries"] == "AA 1234567"
+    assert u_detail["passportJshshir"] == "12345678901234"
+    assert u_detail["passportDocFront"] == "https://example.com/front.jpg"
+
+    # 3. Dedicated verification endpoint MUST contain PII
+    res_verif = client.get(f"/api/v1/admin/users/{worker.id}/verification")
+    assert res_verif.status_code == 200
+    v_data = res_verif.json()
+    assert v_data["passportSeries"] == "AA 1234567"
+    assert v_data["passportJshshir"] == "12345678901234"
+    assert v_data["passportDocFront"] == "https://example.com/front.jpg"
+    assert v_data["hasVerificationDocs"] is True
+

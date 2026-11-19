@@ -377,7 +377,12 @@ export const PaymentsScreen: React.FC = () => {
           <div className="bg-white rounded-xl shadow-[0px_4px_20px_rgba(26,35,126,0.04)] divide-y divide-slate-100 overflow-hidden border border-slate-100">
             {filteredTransactions.length > 0 ? (
               filteredTransactions.map((tx: any) => (
-                <div key={tx.id} onClick={() => setSelectedTx(tx)} className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer">
+                <button
+                  type="button"
+                  key={tx.id}
+                  onClick={() => setSelectedTx(tx)}
+                  className="w-full text-left p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer border-0 bg-transparent"
+                >
                   <div className="flex items-center gap-4">
                     {tx.type === 'withdraw' ? (
                        <div className="w-12 h-12 rounded-xl bg-brand-primary/5 flex items-center justify-center shadow-sm">
@@ -420,7 +425,7 @@ export const PaymentsScreen: React.FC = () => {
                     </div>
                     <ChevronRight className="text-slate-300 group-hover:text-brand-primary transition-colors w-6 h-6" />
                   </div>
-                </div>
+                </button>
               ))
             ) : (
               <div className="p-8 flex flex-col items-center text-center">

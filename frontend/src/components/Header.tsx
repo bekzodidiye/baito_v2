@@ -51,8 +51,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
     switch (currentScreen) {
       case 'calendar':
         return (
-          <div 
+          <button 
+            type="button"
             onClick={() => setCurrentScreen('notifications')}
+            aria-label={language === 'uz' ? 'Bildirishnomalar' : language === 'ru' ? 'Уведомления' : 'Notifications'}
             className="relative w-11 h-11 flex items-center justify-center cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
           >
             <Bell size={22} />
@@ -61,7 +63,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
                 {unreadNotificationsCount}
               </span>
             )}
-          </div>
+          </button>
         );
       case 'employer-chats':
       case 'messages':
