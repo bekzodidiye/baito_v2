@@ -133,6 +133,6 @@ export const useUIStore = create<UIState>((set) => ({
   setDesktopSidebarCollapsed: (collapsed) => set({ desktopSidebarCollapsed: collapsed }),
 }));
 
-if (typeof window !== 'undefined') {
+if (import.meta.env.DEV && typeof window !== 'undefined') {
   (window as any).__BAITO_UI_STORE__ = useUIStore;
 }

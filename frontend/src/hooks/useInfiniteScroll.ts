@@ -15,34 +15,58 @@ export function useInfiniteScroll({
   rootMargin = '200px',
   threshold = 0.1,
 }: UseInfiniteScrollOptions) {
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const elementsRef = useRef<Set<HTMLElement>>(new Set());
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
-      const [entry] = entries;
-      if (entry && entry.isIntersecting && hasMore && !isLoading) {
+      const hasIntersecting = entries.some(
+        (entry) => entry.isIntersecting && (entry.intersectionRatio > 0 || entry.boundingClientRect.height > 0)
+      );
+      if (hasIntersecting && hasMore && !isLoading) {
         onLoadMore();
       }
     },
     [hasMore, isLoading, onLoadMore]
   );
 
+  const sentinelRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      elementsRef.current.add(node);
+      observerRef.current?.observe(node);
+      return () => {
+        elementsRef.current.delete(node);
+        observerRef.current?.unobserve(node);
+      };
+    }
+  }, []);
+
   useEffect(() => {
-    const node = sentinelRef.current;
-    if (!node || !hasMore) return;
+    if (!hasMore) {
+      observerRef.current?.disconnect();
+      return;
+    }
 
     const observer = new IntersectionObserver(handleObserver, {
       root: null,
       rootMargin,
       threshold,
     });
+    observerRef.current = observer;
 
-    observer.observe(node);
+    elementsRef.current.forEach((el) => {
+      if (el.isConnected) {
+        observer.observe(el);
+      } else {
+        elementsRef.current.delete(el);
+      }
+    });
 
     return () => {
       observer.disconnect();
+      observerRef.current = null;
     };
   }, [handleObserver, hasMore, rootMargin, threshold]);
 
-  return { sentinelRef };
+  return { sentinelRef, mobileSentinelRef: sentinelRef, desktopSentinelRef: sentinelRef };
 }

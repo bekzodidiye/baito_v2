@@ -13,8 +13,8 @@ class Transaction(Base):
     jobDayId = Column(String, ForeignKey("job_days.id"), nullable=True, index=True)
     employerId = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     workerId = Column(String, ForeignKey("users.id"), index=True)
-    amount = Column(Integer, nullable=False)
-    platformFee = Column(Integer, nullable=False, default=0)
+    amount = Column(BigInteger, nullable=False)
+    platformFee = Column(BigInteger, nullable=False, default=0)
     # The commission rate this hold was taken under. An administrator can change
     # the rate, and the worker is quoted their net wage when they apply — so the
     # rate has to be the one in force when the money was frozen, not whatever it
