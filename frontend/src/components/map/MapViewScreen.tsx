@@ -63,6 +63,7 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
     handleReverseRoute,
     handleCalculateDistance,
     getDisplayedJobs,
+    displayedJobs,
     handleRefresh,
     handleJobSelect,
     handleLocationAction,
@@ -93,6 +94,8 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
         <MapBreadcrumbs 
           breadcrumbItems={breadcrumbItems} 
           handleBreadcrumbBack={handleBreadcrumbBack} 
+          filterLocation={filterLocation}
+          setFilterLocation={setFilterLocation}
         />
       )}
 
@@ -120,7 +123,7 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
             isPanelExpanded={isPanelExpanded}
             setIsPanelExpanded={setIsPanelExpanded}
             activeCluster={activeCluster}
-            displayedJobs={getDisplayedJobs()}
+            displayedJobs={displayedJobs}
             selectedJob={selectedJob}
             handleJobSelect={handleJobSelect}
             applyToJob={applyToJob}

@@ -124,10 +124,15 @@ export const useMapSetup = ({
       zoomAnimationThreshold: 12,
     });
 
-    const { baseLayer } = createTileLayers(mapType, map);
+    const { baseLayer, labelLayer } = createTileLayers(mapType, map);
     baseLayer.once('load', () => setIsMapLoading(false));
     baseLayer.addTo(map);
     tileLayerRef.current = baseLayer;
+
+    if (labelLayer) {
+      labelLayer.addTo(map);
+      (map as any)._labelLayer = labelLayer;
+    }
 
     // Fast initial unmasking
     const timer = setTimeout(() => setIsMapLoading(false), 150);
@@ -223,36 +228,43 @@ export const useMapSetup = ({
 
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map) return;
+    const container = mapContainerRef.current;
+    if (!map || !container) return;
 
-    map.invalidateSize();
-    const t1 = setTimeout(() => mapInstanceRef.current?.invalidateSize(), 150);
-    const t2 = setTimeout(() => mapInstanceRef.current?.invalidateSize(), 450);
+    let rafId: number | null = null;
+    let lastWidth = container.clientWidth;
+    let lastHeight = container.clientHeight;
 
-    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
-    const handleResize = () => {
-      if (resizeTimeout) clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => mapInstanceRef.current?.invalidateSize(), 100);
-    };
-    window.addEventListener('resize', handleResize);
+    const onResize = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        const m = mapInstanceRef.current;
+        const c = mapContainerRef.current;
+        if (!m || !c) return;
 
-    let resizeObserver: ResizeObserver | null = null;
-    if (mapContainerRef.current) {
-      resizeObserver = new ResizeObserver(() => {
-        if (resizeTimeout) clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => mapInstanceRef.current?.invalidateSize(), 100);
+        const newWidth = c.clientWidth;
+        const newHeight = c.clientHeight;
+        if (Math.abs(newWidth - lastWidth) > 2 || Math.abs(newHeight - lastHeight) > 2) {
+          lastWidth = newWidth;
+          lastHeight = newHeight;
+          if (!(m as any)._animatingZoom) {
+            m.invalidateSize({ animate: false, pan: false });
+          }
+        }
       });
-      resizeObserver.observe(mapContainerRef.current);
-    }
+    };
+
+    const resizeObserver = new ResizeObserver(onResize);
+    resizeObserver.observe(container);
+    window.addEventListener('resize', onResize, { passive: true });
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      if (resizeObserver) resizeObserver.disconnect();
-      if (resizeTimeout) clearTimeout(resizeTimeout);
-      clearTimeout(t1);
-      clearTimeout(t2);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', onResize);
     };
-  }, [isViloyatDashboard, isPanelExpanded]);
+  }, []);
 
   return {
     mapContainerRef,

@@ -6,6 +6,15 @@ import { mapFeatureToRegionId, areDistrictNamesEqual, getFeatureBounds, isRegion
 import { BOUNDARY_COLOUR } from './regionOutlineStyle';
 import { translateRegion, Language } from '../../translations';
 
+const getZoomTier = (zoom: number, hasActiveFilter: boolean): string => {
+  if (zoom < 3.5) return 'hidden';
+  if (zoom < 4.2) return 'micro';
+  if (zoom < 5.5) return 'small';
+  if (zoom < 6.5) return 'medium';
+  if (zoom < 7.8) return hasActiveFilter ? 'districts-filter' : 'large';
+  return 'districts-all';
+};
+
 interface UseMapLabelsProps {
   isMapReady: boolean;
   mapInstanceRef: React.MutableRefObject<L.Map | null>;
@@ -57,6 +66,10 @@ export const useMapLabels = ({
     if (!jobs || jobs.length === 0) return '0';
     return `${jobs.length}-${jobs.filter(j => j.status === 'open').length}`;
   }, [jobs]);
+
+  const activeLoc = settledLocation || filterLocation;
+  const isActiveFilter = activeLoc !== 'Barchasi';
+  const currentTier = React.useMemo(() => getZoomTier(zoomLevel, isActiveFilter), [zoomLevel, isActiveFilter]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -256,5 +269,5 @@ export const useMapLabels = ({
       if (timer) clearTimeout(timer);
       if (zoomEndHandler) map.off('zoomend', zoomEndHandler);
     };
-  }, [isMapReady, filterLocation, settledLocation, zoomLevel, geoJsonData, districtsGeoJsonData, language, jobsCountSignature]);
+  }, [isMapReady, filterLocation, settledLocation, currentTier, geoJsonData, districtsGeoJsonData, language, jobsCountSignature]);
 };

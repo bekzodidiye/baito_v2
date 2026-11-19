@@ -84,6 +84,8 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
         <MapBreadcrumbs 
           breadcrumbItems={breadcrumbItems} 
           handleBreadcrumbBack={handleBreadcrumbBack} 
+          filterLocation={filterLocation}
+          setFilterLocation={setFilterLocation}
         />
       )}
 

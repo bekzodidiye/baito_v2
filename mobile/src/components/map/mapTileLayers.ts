@@ -57,6 +57,32 @@ class CachedTileLayer extends L.TileLayer {
       tile.crossOrigin = this.options.crossOrigin === true ? '' : this.options.crossOrigin;
     }
 
+    // Hanging tile guard: if a tile server drops or hangs TCP connection,
+    // prevent tab from spinning "Loading..." forever by failing over to reliable OSM
+    const timeout = setTimeout(() => {
+      if (!tile.complete || tile.naturalWidth === 0) {
+        if (!tile.dataset.fallbackTried) {
+          tile.dataset.fallbackTried = 'true';
+          const fallback = osmFallbackUrl(coords);
+          if (fallback && tile.src !== fallback) {
+            tile.src = fallback;
+          }
+        }
+      }
+    }, 2500);
+
+    const origOnload = tile.onload;
+    tile.onload = (e) => {
+      clearTimeout(timeout);
+      if (typeof origOnload === 'function') origOnload.call(tile, e);
+    };
+
+    const origOnerror = tile.onerror;
+    tile.onerror = (e) => {
+      clearTimeout(timeout);
+      if (typeof origOnerror === 'function') origOnerror.call(tile, e);
+    };
+
     tile.src = url;
     return tile;
   }
@@ -108,10 +134,20 @@ export const cartoFallbackUrl = (coords?: L.Coords | null): string | null => {
   return `https://${s}.basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}.png`;
 };
 
+export const osmSecondaryFallbackUrl = (coords?: L.Coords | null): string | null => {
+  if (!coords || coords.z > OSM_MAX_ZOOM) return null;
+  const { x, y, z } = coords;
+  if ([x, y, z].some(n => typeof n !== 'number' || !Number.isFinite(n))) return null;
+  const subdomains = ['a', 'b', 'c'];
+  const s = subdomains[Math.abs(x + y) % subdomains.length];
+  return `https://${s}.tile.openstreetmap.fr/osmfr/${z}/${x}/${y}.png`;
+};
+
 export const tileErrorFallback = (e: L.TileErrorEvent): void => {
   const target = e.tile as HTMLImageElement | undefined;
   if (!target || target.dataset.fallbackTried) return;
-  const url = osmFallbackUrl(e.coords);
+  const isAlreadyOsm = target.src && target.src.includes('tile.openstreetmap.org');
+  const url = isAlreadyOsm ? (osmSecondaryFallbackUrl(e.coords) || cartoFallbackUrl(e.coords)) : osmFallbackUrl(e.coords);
   if (!url) return;
   target.dataset.fallbackTried = 'true';
 
@@ -120,7 +156,7 @@ export const tileErrorFallback = (e: L.TileErrorEvent): void => {
       target.removeEventListener('error', onOsmError);
       if (!target.dataset.secondaryTried) {
         target.dataset.secondaryTried = 'true';
-        const backupUrl = cartoFallbackUrl(e.coords);
+        const backupUrl = osmSecondaryFallbackUrl(e.coords) || cartoFallbackUrl(e.coords);
         if (backupUrl) {
           target.src = backupUrl;
         }
@@ -202,8 +238,8 @@ export const createTileLayers = (mapType: MapType, map: L.Map) => {
 
   const defaultTileOptions: L.TileLayerOptions & { edgeBufferTiles?: number } = {
     updateWhenIdle: false,
-    updateWhenZooming: true,
-    updateInterval: 30,
+    updateWhenZooming: false,
+    updateInterval: 100,
     keepBuffer: 8,
     edgeBufferTiles: 2,
     tileSize: 256,
@@ -257,10 +293,9 @@ export const createTileLayers = (mapType: MapType, map: L.Map) => {
       attribution: '&copy; Google Maps'
     });
   } else {
-    baseLayer = createCachedTileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    baseLayer = createCachedTileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       ...defaultTileOptions,
-      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; Google Maps'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     });
   }
 

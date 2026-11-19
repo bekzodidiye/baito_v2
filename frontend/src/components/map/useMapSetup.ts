@@ -134,16 +134,21 @@ export const useMapSetup = ({
       maxZoom: MAP_MAX_ZOOM,
       zoomControl: false,
       attributionControl: true,
-      preferCanvas: false,
+      preferCanvas: true,
       fadeAnimation: true,
       zoomAnimation: true,
       zoomAnimationThreshold: 12,
     });
 
-    const { baseLayer } = createTileLayers(mapType, map);
+    const { baseLayer, labelLayer } = createTileLayers(mapType, map);
     baseLayer.once('load', () => setIsMapLoading(false));
     baseLayer.addTo(map);
     tileLayerRef.current = baseLayer;
+
+    if (labelLayer) {
+      labelLayer.addTo(map);
+      (map as any)._labelLayer = labelLayer;
+    }
 
     // Fast initial unmasking
     const timer = setTimeout(() => setIsMapLoading(false), 150);
@@ -250,66 +255,43 @@ export const useMapSetup = ({
 
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map) return;
+    const container = mapContainerRef.current;
+    if (!map || !container) return;
 
-    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
-    const scheduleInvalidate = () => {
-      const currentMap = mapInstanceRef.current;
-      if (currentMap && !(currentMap as any)._animatingZoom) {
-        currentMap.invalidateSize({ animate: false, pan: false });
-      }
-      if (resizeTimeout) clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
+    let rafId: number | null = null;
+    let lastWidth = container.clientWidth;
+    let lastHeight = container.clientHeight;
+
+    const onResize = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
         const m = mapInstanceRef.current;
-        if (!m) return;
-        if ((m as any)._animatingZoom) {
-          m.once('zoomend', () => {
+        const c = mapContainerRef.current;
+        if (!m || !c) return;
+
+        const newWidth = c.clientWidth;
+        const newHeight = c.clientHeight;
+        if (Math.abs(newWidth - lastWidth) > 2 || Math.abs(newHeight - lastHeight) > 2) {
+          lastWidth = newWidth;
+          lastHeight = newHeight;
+          if (!(m as any)._animatingZoom) {
             m.invalidateSize({ animate: false, pan: false });
-          });
-          // Fallback in case zoomend fired or was skipped
-          setTimeout(() => {
-            m.invalidateSize({ animate: false, pan: false });
-          }, 350);
-          return;
+          }
         }
-        m.invalidateSize({ animate: false, pan: false });
-      }, 50);
+      });
     };
 
-    scheduleInvalidate();
-    const postTransitionTimer = setTimeout(() => {
-      mapInstanceRef.current?.invalidateSize({ animate: false });
-    }, 350);
-
-    window.addEventListener('resize', scheduleInvalidate);
-
-    let resizeObserver: ResizeObserver | null = null;
-    if (mapContainerRef.current) {
-      resizeObserver = new ResizeObserver(scheduleInvalidate);
-      resizeObserver.observe(mapContainerRef.current);
-    }
+    const resizeObserver = new ResizeObserver(onResize);
+    resizeObserver.observe(container);
+    window.addEventListener('resize', onResize, { passive: true });
 
     return () => {
-      window.removeEventListener('resize', scheduleInvalidate);
-      if (resizeObserver) resizeObserver.disconnect();
-      if (resizeTimeout) clearTimeout(resizeTimeout);
-      clearTimeout(postTransitionTimer);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', onResize);
     };
-  }, [isPanelExpanded, jobsView]);
-
-  useEffect(() => {
-    if (jobsView === 'map' && mapInstanceRef.current) {
-      mapInstanceRef.current.invalidateSize({ animate: false });
-      const t1 = setTimeout(() => mapInstanceRef.current?.invalidateSize({ animate: false }), 60);
-      const t2 = setTimeout(() => mapInstanceRef.current?.invalidateSize({ animate: false }), 180);
-      const t3 = setTimeout(() => mapInstanceRef.current?.invalidateSize({ animate: false }), 350);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-        clearTimeout(t3);
-      };
-    }
-  }, [jobsView]);
+  }, []);
 
   return {
     mapContainerRef,
