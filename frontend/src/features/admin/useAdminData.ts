@@ -10,21 +10,45 @@ export function useAdminData() {
 
   const { data, isLoading: loading, refetch: fetchAllData } = useQuery({
     queryKey: ['adminData'],
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
     queryFn: async () => {
-      const [sData, uData, jData, tData, tckData, cfgData, catData, regData, promoData, dispData] = await Promise.all([
-        apiClient('/admin/stats').catch(() => null),
-        apiClient('/admin/users').catch(() => null),
-        apiClient('/admin/jobs').catch(() => null),
-        apiClient('/admin/transactions').catch(() => null),
-        apiClient('/admin/support-tickets').catch(() => null),
-        apiClient('/admin/settings').catch(() => null),
-        apiClient('/admin/categories').catch(() => null),
-        apiClient('/admin/regions').catch(() => null),
-        apiClient('/admin/promotions').catch(() => null),
-        apiClient('/admin/disputes').catch(() => null),
-      ]);
+      const endpoints = [
+        apiClient('/admin/stats'),
+        apiClient('/admin/users'),
+        apiClient('/admin/jobs'),
+        apiClient('/admin/transactions'),
+        apiClient('/admin/support-tickets'),
+        apiClient('/admin/settings'),
+        apiClient('/admin/categories'),
+        apiClient('/admin/regions'),
+        apiClient('/admin/promotions'),
+        apiClient('/admin/disputes'),
+      ];
+
+      const results = await Promise.allSettled(endpoints);
+
+      const unpack = <T>(res: PromiseSettledResult<any>, name: string): T | null => {
+        if (res.status === 'fulfilled') {
+          return res.value as T;
+        }
+        console.warn(`[useAdminData] Failed to fetch ${name}:`, res.reason);
+        return null;
+      };
+
+      const sData = unpack<AdminStats>(results[0], '/admin/stats');
+      const uData = unpack<any>(results[1], '/admin/users');
+      const jData = unpack<any>(results[2], '/admin/jobs');
+      const tData = unpack<any>(results[3], '/admin/transactions');
+      const tckData = unpack<any>(results[4], '/admin/support-tickets');
+      const cfgData = unpack<SystemSettings>(results[5], '/admin/settings');
+      const catData = unpack<any>(results[6], '/admin/categories');
+      const regData = unpack<any>(results[7], '/admin/regions');
+      const promoData = unpack<any>(results[8], '/admin/promotions');
+      const dispData = unpack<any>(results[9], '/admin/disputes');
+
       return {
-        stats: sData as AdminStats | null,
+        stats: sData,
         users: unwrapList<AdminUser>(uData),
         jobs: unwrapList<AdminJob>(jData),
         transactions: unwrapList<AdminTransaction>(tData),
@@ -33,7 +57,7 @@ export function useAdminData() {
         regions: unwrapList<any>(regData),
         promotions: unwrapList<any>(promoData),
         disputes: unwrapList<any>(dispData),
-        settings: cfgData as SystemSettings || {
+        settings: cfgData || {
           platformFeePercent: 10,
           minHourlyRate: 15000,
           maintenanceMode: false,

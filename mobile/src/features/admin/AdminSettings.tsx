@@ -158,8 +158,12 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-extrabold text-slate-900 text-sm">Tizim Adminlari</h3>
-            <button onClick={handleAddAdmin} className="px-3 py-1.5 bg-blue-600 text-white font-bold rounded-xl flex items-center gap-1 cursor-pointer">
-              <Plus size={14} /> Qo'shish
+            <button 
+              type="button"
+              onClick={handleAddAdmin} 
+              className="px-3 py-1.5 bg-brand-primary hover:bg-brand-primary/90 text-white font-bold rounded-xl flex items-center gap-1 cursor-pointer"
+            >
+              <Plus size={14} aria-hidden="true" /> Qo'shish
             </button>
           </div>
           <div className="space-y-2">

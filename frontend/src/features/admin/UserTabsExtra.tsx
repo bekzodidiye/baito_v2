@@ -85,7 +85,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
         );
       case 'payment_declared':
         return (
-          <span className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200/80 text-[10px] font-bold rounded-lg flex items-center gap-1">
+          <span className="px-2 py-0.5 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 text-[10px] font-bold rounded-lg flex items-center gap-1">
             <Clock size={10} /> To'lov bildirildi
           </span>
         );
@@ -363,10 +363,10 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
           {/* 1. Faol E'lonlar Byudjeti (Ish beruvchi) yoki Faol Ishlar Byudjeti (Ishchi) */}
           <div className="p-3.5 sm:p-4 bg-white rounded-3xl border border-slate-200/80 shadow-2xs relative overflow-hidden">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600">
+              <span className="text-[10px] font-black uppercase tracking-wider text-brand-primary">
                 {isEmployer ? "Faol E'lonlar Byudjeti" : "Faol Ishlar Byudjeti"}
               </span>
-              <div className="w-7 h-7 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+              <div className="w-7 h-7 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center border border-brand-primary/20">
                 <Briefcase size={14} />
               </div>
             </div>
@@ -520,7 +520,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
                   onClick={() => setFinanceFilter('invoices')}
                   className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                     financeFilter === 'invoices'
-                      ? 'bg-blue-600 text-white shadow-2xs'
+                      ? 'bg-brand-primary text-white shadow-2xs'
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
@@ -531,7 +531,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
                   onClick={() => setFinanceFilter('transactions')}
                   className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                     financeFilter === 'transactions'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      ? 'bg-brand-primary text-white shadow-2xs'
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
@@ -567,7 +567,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
                   onClick={() => setFinanceFilter('payout')}
                   className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                     financeFilter === 'payout'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      ? 'bg-brand-primary text-white shadow-2xs'
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
@@ -593,7 +593,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
                     <div
                       className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
                         item.kind === 'invoice'
-                          ? 'bg-blue-50 text-blue-600 border-blue-100'
+                          ? 'bg-brand-primary/10 text-brand-primary border-brand-primary/20'
                           : item.isIncome
                           ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                           : 'bg-red-50 text-red-600 border-red-100'
@@ -624,7 +624,7 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
                     <span
                       className={`text-xs font-mono font-black ${
                         item.kind === 'invoice'
-                          ? 'text-blue-700'
+                          ? 'text-brand-primary'
                           : item.isIncome
                           ? 'text-emerald-600'
                           : 'text-slate-900'

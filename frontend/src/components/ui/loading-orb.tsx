@@ -71,7 +71,7 @@ export const LoadingOrb: React.FC<LoadingOrbProps> = ({
   fullScreen = false,
   card = false,
   className = '',
-  colorClassName = 'text-brand-primary dark:text-blue-400',
+  colorClassName = 'text-brand-primary dark:text-brand-primary',
 }) => {
   const pixelSize = typeof size === 'number' ? size : SIZE_MAP[size] || 32;
   const look = getLook(variant);

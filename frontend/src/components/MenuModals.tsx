@@ -8,6 +8,7 @@ import { HelpContent } from './menu/HelpContent';
 import { useAuthStore } from "../store/useAuthStore";
 import { useUIStore } from "../store/useUIStore";
 import { Orb } from "@/components/ui/thinking-orbs";
+import { useFocusTrap } from './common/useFocusTrap';
 
 const LoginPromptScreen = React.lazy(() => import('./login/LoginPromptScreen').then(m => ({ default: m.LoginPromptScreen })));
 
@@ -27,6 +28,8 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
   const currentType = type || lastTypeRef.current;
   const showModal = isOpen && Boolean(currentType);
 
+  const modalRef = useFocusTrap<HTMLDivElement>(Boolean(showModal), onClose);
+
   const t = MODAL_TRANSLATIONS[language];
 
   return (
@@ -45,8 +48,10 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
 
           {/* Modal Sheet */}
           <motion.div
+            ref={modalRef}
             role="dialog"
             aria-modal="true"
+            aria-label={currentType === 'auth' ? (language === 'uz' ? 'Kirish' : language === 'ru' ? 'Вход' : 'Login') : (currentType === 'profile' ? t.profileTitle : currentType === 'settings' ? t.settingsTitle : t.helpTitle)}
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -143,6 +148,7 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
                 </h3>
                 <button
                   onClick={onClose}
+                  aria-label={language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                   className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-none bg-transparent"
                 >
                   <X size={18} />

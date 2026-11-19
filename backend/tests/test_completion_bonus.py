@@ -183,3 +183,34 @@ def test_earned_amount_equals_what_the_worker_was_paid(finished_job):
     assert res.status_code == 200, res.text
     row = next(a for a in res.json() if a["jobId"] == ctx["job"].id)
     assert row["earnedAmount"] == paid
+
+
+def test_worker_cannot_self_rate_or_grant_self_bonus(finished_job):
+    ctx = finished_job
+    login(ctx["client"], ctx["worker"])
+
+    res = ctx["client"].post(
+        f"/api/v1/jobs/{ctx['job'].id}/complete",
+        json={"rating": 5, "review": "Ajoyib ishchi o'zim", "bonus": 500_000},
+    )
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body.get("bonus_paid_workers", 0) == 0
+
+    # Worker only receives the basic wage, no bonus
+    assert _balance(ctx["worker"].id) == NET_WAGE
+
+    with SessionLocal() as db:
+        app = db.query(models.Application).filter(
+            models.Application.jobId == ctx["job"].id,
+            models.Application.workerId == ctx["worker"].id,
+        ).first()
+        assert app is not None
+        assert app.rating is None
+        assert app.review is None
+        assert app.bonus == 0 or app.bonus is None
+
+        worker_user = db.query(models.User).filter(models.User.id == ctx["worker"].id).first()
+        # Rating should remain 0/None or uninflated by self review
+        assert worker_user.rating != 5.0 or worker_user.completedJobsCount == 0
+

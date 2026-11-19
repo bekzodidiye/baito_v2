@@ -187,7 +187,7 @@ export const AddCardScreen: React.FC = () => {
           <div className="flex flex-col gap-3 z-10 mt-6">
             <div className="flex items-center gap-3">
               {/* EMV Chip */}
-              <svg className="w-11 h-9 opacity-90 drop-shadow-sm" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-11 h-9 opacity-90 drop-shadow-sm" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <rect width="48" height="36" rx="6" fill="url(#chip-gradient)"/>
                 <path d="M0 12h14v12H0zM34 12h14v12H34z" fill="#000" fillOpacity=".1"/>
                 <path d="M14 0v36M34 0v36M0 18h48" stroke="#000" strokeOpacity=".2" strokeWidth="1.5"/>
@@ -339,7 +339,7 @@ export const AddCardScreen: React.FC = () => {
 
         {/* Security Notice */}
         <div className="flex items-center gap-3 px-2 justify-center text-slate-500 bg-slate-50 p-4 rounded-lg border border-slate-100">
-          <Lock size={20} className="text-[#4858ab] shrink-0" />
+          <Lock size={20} className="text-brand-primary shrink-0" aria-hidden="true" />
           <p className="text-xs leading-snug">
             Barcha to'lov ma'lumotlari xavfsiz shifrlangan. Biz sizning CVV kodingizni saqlamaymiz.
           </p>
@@ -352,13 +352,13 @@ export const AddCardScreen: React.FC = () => {
           type="submit"
           form="add-card-form"
           disabled={isSubmitDisabled}
-          className="w-full bg-[#010766] text-white font-bold text-lg py-4 rounded-xl shadow-lg shadow-[#010766]/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100 disabled:active:scale-100"
+          className="w-full bg-brand-primary text-white font-bold text-lg py-4 rounded-xl shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100 disabled:active:scale-100"
         >
           {addCardMutation.isPending ? (
             <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             <>
-              <PlusCircle size={24} />
+              <PlusCircle size={24} aria-hidden="true" />
               Kartani bog'lash
             </>
           )}

@@ -168,3 +168,52 @@ def test_admin_resolves_dispute_employer_wins(client):
         assert w.completedJobsCount == 0
         app = db.query(Application).filter(Application.id == app_id).first()
         assert app.status == "cancelled"
+
+
+def test_admin_resolves_dispute_worker_credit_failure_aborts_transaction(client, monkeypatch):
+    employer = make_user(role="employer", phone=_phone(), balance=2_000_000)
+    worker = make_user(role="worker", phone=_phone())
+    admin = make_user(role="admin", phone=_phone())
+    job = make_job(employer.id, title="Elekrtik", salary="300000")
+
+    with SessionLocal() as db:
+        app = Application(jobId=job.id, workerId=worker.id, status="applied")
+        db.add(app)
+        db.commit()
+        app_id = app.id
+
+    login(client, employer)
+    assert client.post(f"/api/v1/applications/{app_id}/hire").status_code == 200
+    res_dispute = client.post(f"/api/v1/jobs/{job.id}/dispute", json={"reason": "Nizo sababi ko'rsatildi"})
+    assert res_dispute.status_code == 200
+
+    with SessionLocal() as db:
+        dispute = db.query(Dispute).filter(Dispute.jobId == job.id).first()
+        dispute_id = dispute.id
+
+    # Mock WorkerEarnings.credit_worker to simulate failure
+    from app.services.earnings_service import WorkerEarnings
+
+    def mock_credit(*args, **kwargs):
+        raise RuntimeError("Simulated database failure during crediting")
+
+    monkeypatch.setattr(WorkerEarnings, "credit_worker", mock_credit)
+
+    login(client, admin)
+    res_resolve = client.post(
+        f"/api/v1/admin/disputes/{dispute_id}/resolve",
+        json={"winner": "worker", "reason": "Ishchi yutdi"},
+    )
+    assert res_resolve.status_code == 500
+    assert "Ishchiga haq to'lashda xatolik yuz berdi" in res_resolve.json()["detail"]
+
+    # Verify transaction was rolled back: dispute is still open, job is still dispute
+    with SessionLocal() as db:
+        d = db.query(Dispute).filter(Dispute.id == dispute_id).first()
+        assert d.status == "open"
+        j = db.query(Job).filter(Job.id == job.id).first()
+        assert j.status == "dispute"
+        w = db.query(User).filter(User.id == worker.id).first()
+        assert w.balance == 0
+        assert w.completedJobsCount == 0
+

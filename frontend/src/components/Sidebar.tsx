@@ -136,7 +136,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon size={18} className="stroke-[2.2]" />
+                      <Icon size={18} aria-hidden="true" className="stroke-[2.2]" />
                       <span>{item.label}</span>
                     </div>
                     {item.badge ? (
@@ -165,7 +165,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <User size={18} className="stroke-[2.2]" />
+                    <User size={18} aria-hidden="true" className="stroke-[2.2]" />
                     <span>{t.profile}</span>
                   </div>
                 </motion.button>
@@ -177,10 +177,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
                   className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-extrabold text-[13px] bg-brand-primary text-white hover:bg-brand-primary/95 transition-all duration-200 cursor-pointer shadow-sm"
                 >
                   <div className="flex items-center gap-3">
-                    <User size={18} className="stroke-[2.2]" />
+                    <User size={18} aria-hidden="true" className="stroke-[2.2]" />
                     <span>{t.login}</span>
                   </div>
-                  <ChevronRight size={16} />
+                  <ChevronRight size={16} aria-hidden="true" />
                 </motion.button>
               )}
 
@@ -197,7 +197,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Settings size={18} className="stroke-[2.2]" />
+                  <Settings size={18} aria-hidden="true" className="stroke-[2.2]" />
                   <span>{t.settings}</span>
                 </div>
               </motion.button>
@@ -212,7 +212,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenModal }) => {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <ShieldCheck size={18} className="stroke-[2.2]" />
+                    <ShieldCheck size={18} aria-hidden="true" className="stroke-[2.2]" />
                     <span>{t.adminPanel}</span>
                   </div>
                 </motion.button>

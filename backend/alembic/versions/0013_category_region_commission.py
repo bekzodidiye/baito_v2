@@ -41,7 +41,7 @@ import re
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from alembic import op
+from alembic import context, op
 from sqlalchemy import inspect
 
 revision: str = "0013_category_region_commission"
@@ -116,7 +116,16 @@ def upgrade() -> None:
     _seed(bind)
 
 
+def _is_offline() -> bool:
+    try:
+        return context.is_offline_mode()
+    except Exception:
+        return False
+
+
 def _seed(bind) -> None:
+    if _is_offline():
+        return
     """Fill both tables in, row by row, matching on the natural key.
 
     Not "insert everything if the table is empty". Downgrading drops the two new

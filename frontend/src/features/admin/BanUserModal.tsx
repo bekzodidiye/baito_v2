@@ -3,6 +3,7 @@ import { ADMIN_TEXTS } from './admin.i18n';
 import { useAuthStore } from '../../store/useAuthStore';
 import { AlertTriangle, X, Ban } from 'lucide-react';
 import { PortalSelect } from './AdminCustomControls';
+import { useFocusTrap } from '../../components/common/useFocusTrap';
 
 interface BanUserModalProps {
   userName: string;
@@ -19,6 +20,7 @@ export const BanUserModal: React.FC<BanUserModalProps> = ({
   const a = ADMIN_TEXTS[language] || ADMIN_TEXTS.uz;
   const [reason, setReason] = useState<string>('Qoidabuzarlik');
   const [details, setDetails] = useState<string>('');
+  const trapRef = useFocusTrap<HTMLDivElement>({ isOpen: true, onClose });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,13 +29,24 @@ export const BanUserModal: React.FC<BanUserModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+      <div
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Foydalanuvchini Bloklash"
+        className="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150"
+      >
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2 text-red-600 font-extrabold text-sm">
             <AlertTriangle size={18} />
             <span>Foydalanuvchini Bloklash</span>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
+            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer border-0 bg-transparent"
+          >
             <X size={18} />
           </button>
         </div>

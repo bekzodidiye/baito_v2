@@ -57,21 +57,23 @@ export const PaymentsScreen: React.FC = () => {
       <header className="fixed top-0 w-full max-w-4xl z-50 bg-brand-background flex items-center justify-between px-5 h-16 shadow-[0px_4px_20px_rgba(26,35,126,0.04)]">
         <div className="flex items-center gap-4">
           <button 
+            type="button"
             onClick={handleBack}
             aria-label={language === 'uz' ? 'Orqaga' : 'Назад'}
             className="active:scale-95 duration-200 p-2 hover:bg-slate-200 transition-colors rounded-full cursor-pointer"
           >
-            <ArrowLeft className="text-brand-primary w-6 h-6" />
+            <ArrowLeft className="text-brand-primary w-6 h-6" aria-hidden="true" />
           </button>
           <h1 className="text-[18px] font-bold tracking-tight text-brand-primary">
             {language === 'uz' ? "To'lovlar" : language === 'ru' ? "Платежи" : "Payments"}
           </h1>
         </div>
         <button 
+          type="button"
           aria-label={language === 'uz' ? 'Qidirish' : 'Поиск'}
           className="active:scale-95 duration-200 p-2 hover:bg-slate-200 transition-colors rounded-full cursor-pointer"
         >
-          <Search className="text-brand-primary w-6 h-6" />
+          <Search className="text-brand-primary w-6 h-6" aria-hidden="true" />
         </button>
       </header>
 
@@ -248,11 +250,11 @@ export const PaymentsScreen: React.FC = () => {
                   <div className="flex items-center gap-4">
                     {tx.type === 'withdraw' ? (
                        <div className="w-12 h-12 rounded-xl bg-brand-primary/5 flex items-center justify-center shadow-sm">
-                         <Landmark className="text-brand-primary w-6 h-6" />
+                         <Landmark className="text-brand-primary w-6 h-6" aria-hidden="true" />
                        </div>
                     ) : (
-                      <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center shadow-sm text-blue-600">
-                        <Briefcase className="w-6 h-6" />
+                      <div className="w-12 h-12 rounded-xl bg-brand-primary/10 flex items-center justify-center shadow-sm text-brand-primary">
+                        <Briefcase className="w-6 h-6" aria-hidden="true" />
                       </div>
                     )}
                     

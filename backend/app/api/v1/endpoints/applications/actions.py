@@ -72,7 +72,13 @@ def hire_applicant(
             detail=f"Bu ish bo'yicha barcha {vacancies} ta o'rin to'lgan",
         )
 
-    worker = db.query(models.User).filter((models.User.id == app.workerId) | (models.User.uid == app.workerId)).first()
+    worker = (
+        db.query(models.User)
+        .filter((models.User.id == app.workerId) | (models.User.uid == app.workerId))
+        .populate_existing()
+        .with_for_update()
+        .first()
+    )
     worker_ids = [uid for uid in ([worker.id, getattr(worker, 'uid', None)] if worker else [app.workerId]) if uid]
     job_dates = get_job_dates_set(job)
     if job_dates:

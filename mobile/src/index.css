@@ -57,6 +57,13 @@ body {
   }
 }
 
+/* Enforce cursor: not-allowed on all disabled interactive controls */
+button:disabled,
+[role="button"][aria-disabled="true"],
+[disabled] {
+  cursor: not-allowed !important;
+}
+
 /* Custom scrollbar - hidden but scrollable */
 ::-webkit-scrollbar {
   display: none !important;
@@ -233,7 +240,25 @@ g:focus,
     background-color: #4858ab;
 }
 
+/* Touch targets on mobile */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+  }
+}
 
+/* Enforce cursor: not-allowed on all disabled interactive controls */
+button:disabled,
+[role="button"][aria-disabled="true"],
+[disabled] {
+  cursor: not-allowed !important;
+}
 
-
-
+/* Keyboard focus must be visible — WCAG 2.1 AA */
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}

@@ -124,11 +124,11 @@ export const CustomDatePicker = ({
       {isOpen && (
         <div className="absolute z-50 mt-2 p-4 bg-white rounded-2xl shadow-xl border border-slate-100 w-[280px] animate-in fade-in zoom-in-95 duration-100">
           <div className="flex items-center justify-between mb-4">
-            <button onClick={prevMonth} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500"><ChevronLeft size={18} /></button>
+            <button type="button" onClick={prevMonth} aria-label="Oldingi oy" className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 cursor-pointer"><ChevronLeft size={18} /></button>
             <div className="font-bold text-slate-800 text-sm">
               {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
             </div>
-            <button onClick={nextMonth} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500"><ChevronRight size={18} /></button>
+            <button type="button" onClick={nextMonth} aria-label="Keyingi oy" className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 cursor-pointer"><ChevronRight size={18} /></button>
           </div>
           <div className="grid grid-cols-7 gap-1 text-center mb-2">
             {['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'].map(d => (

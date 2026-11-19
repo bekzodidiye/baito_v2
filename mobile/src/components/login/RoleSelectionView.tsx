@@ -44,11 +44,11 @@ export const RoleSelectionView: React.FC<RoleSelectionViewProps> = ({
           onClick={() => setSelectedRole('worker')}
           className={`w-full text-left p-4 rounded-xl border transition-all duration-200 cursor-pointer flex items-start gap-3.5 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
             selectedRole === 'worker'
-              ? 'border-[#000666] bg-blue-50/60 shadow-xs'
+              ? 'border-brand-primary bg-brand-primary/10 shadow-xs'
               : 'border-slate-200/80 bg-white hover:border-slate-300'
           }`}
         >
-          <div className="w-10 h-10 rounded-xl bg-blue-100/80 text-[#000666] flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0">
             <Briefcase size={20} className="stroke-[2.2]" />
           </div>
           <div className="flex-1 pr-6">
@@ -59,7 +59,7 @@ export const RoleSelectionView: React.FC<RoleSelectionViewProps> = ({
           </div>
           <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
             <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
-              selectedRole === 'worker' ? 'border-[#000666] bg-[#000666]' : 'border-slate-300 bg-transparent'
+              selectedRole === 'worker' ? 'border-brand-primary bg-brand-primary' : 'border-slate-300 bg-transparent'
             }`}>
               {selectedRole === 'worker' && (
                 <div className="w-2 h-2 rounded-full bg-white" />
@@ -74,7 +74,7 @@ export const RoleSelectionView: React.FC<RoleSelectionViewProps> = ({
           onClick={() => setSelectedRole('employer')}
           className={`w-full text-left p-4 rounded-xl border transition-all duration-200 cursor-pointer flex items-start gap-3.5 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 ${
             selectedRole === 'employer'
-              ? 'border-brand-primary bg-brand-primary/10/60 shadow-xs'
+              ? 'border-brand-primary bg-brand-primary/10 shadow-xs'
               : 'border-slate-200/80 bg-white hover:border-slate-300'
           }`}
         >
@@ -114,7 +114,7 @@ export const RoleSelectionView: React.FC<RoleSelectionViewProps> = ({
           onClick={handleRoleContinue}
           className={`w-full py-3 px-6 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 active:scale-[0.99] ${
             selectedRole
-              ? 'bg-[#000666] hover:bg-[#000444] text-white shadow-md cursor-pointer'
+              ? 'bg-brand-primary hover:bg-brand-primary-container text-white shadow-md cursor-pointer'
               : 'bg-slate-200 text-slate-400 cursor-not-allowed'
           }`}
         >
@@ -127,7 +127,7 @@ export const RoleSelectionView: React.FC<RoleSelectionViewProps> = ({
             <button
               type="button"
               onClick={() => setMode('login')}
-              className="text-[#000666] hover:underline font-extrabold bg-transparent border-0 p-0 cursor-pointer ml-1"
+              className="text-brand-primary hover:underline font-extrabold bg-transparent border-0 p-0 cursor-pointer ml-1"
             >
               {t.loginTitle || 'Tizimga kirish'}
             </button>

@@ -1,5 +1,6 @@
 import datetime
 from typing import Any, Optional
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
@@ -283,6 +284,16 @@ def add_balance(
         description=f"Administrator tuzatishi: {payload.reason}",
     ))
 
+    db.add(models.Transaction(
+        id=str(uuid.uuid4()),
+        employerId=user.id if user.role == 'employer' else admin.id,
+        workerId=user.id if user.role == 'worker' else None,
+        amount=abs(payload.amount) * 100,
+        platformFee=0,
+        type="admin_adjustment",
+        status="paid" if payload.amount >= 0 else "deducted",
+    ))
+
     record_admin_action(
         db, admin, "user.balance", target_type="user", target_id=user.id,
         details={"amount": payload.amount, "balanceAfter": new_balance},
@@ -368,11 +379,19 @@ def get_user_detail(
                 j.id: j
                 for j in db.query(models.Job).filter(models.Job.id.in_(job_ids)).all()
             }
-            employer_ids = {j.employerId for j in job_map.values()}
-            employer_map = {
-                u.id: u
-                for u in db.query(models.User).filter(models.User.id.in_(employer_ids)).all()
-            }
+            employer_ids = {j.employerId for j in job_map.values() if j.employerId}
+            employer_map = {}
+            if employer_ids:
+                employers = (
+                    db.query(models.User)
+                    .filter(or_(models.User.id.in_(employer_ids), models.User.uid.in_(employer_ids)))
+                    .all()
+                )
+                for u in employers:
+                    if u.id:
+                        employer_map[u.id] = u
+                    if getattr(u, "uid", None):
+                        employer_map[u.uid] = u
         else:
             employer_map = {}
 

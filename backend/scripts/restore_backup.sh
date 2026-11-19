@@ -22,6 +22,13 @@ set -euo pipefail
 ARCHIVE="${1:-}"
 MODE="${2:-}"
 
+AUTO_CONFIRM=0
+for arg in "$@"; do
+    if [ "$arg" = "-y" ] || [ "$arg" = "--yes" ]; then
+        AUTO_CONFIRM=1
+    fi
+done
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
@@ -161,9 +168,13 @@ for t in users jobs applications transactions; do
           -c "select count(*) from $t" 2>/dev/null | tr -d '\r' || echo '?')
     printf '    %-16s %s\n' "$t" "$c"
 done
-printf '\n  Type RESTORE to proceed: '
-read -r answer
-[ "$answer" = "RESTORE" ] || die "Aborted."
+if [ "$AUTO_CONFIRM" = "1" ]; then
+    ok "Avtomatik tasdiqlash yoqilgan (-y/--yes). RESTORE davom etmoqda."
+else
+    printf '\n  Type RESTORE to proceed: '
+    read -r answer
+    [ "$answer" = "RESTORE" ] || die "Aborted."
+fi
 
 say "     Taking a safety dump of the current database first"
 SAFETY="$HOME/baito-pre-restore-$(date +%Y%m%d-%H%M%S).sql.gz"
@@ -195,7 +206,11 @@ fi
 if [ -n "$ENC_CONFIG" ] && [ -f "$ENC_CONFIG" ]; then
     BACKUP_PASS="${BACKUP_ENCRYPTION_KEY:-${SECRET_KEY:-}}"
     if [ -n "$BACKUP_PASS" ]; then
-        read -r -p "  Arxivdagi .env konfiguratsiyasini tiklashni xohlaysizmi? (ha/yo'q): " RESTORE_ENV || RESTORE_ENV="yo'q"
+        if [ "$AUTO_CONFIRM" = "1" ]; then
+            RESTORE_ENV="ha"
+        else
+            read -r -p "  Arxivdagi .env konfiguratsiyasini tiklashni xohlaysizmi? (ha/yo'q): " RESTORE_ENV || RESTORE_ENV="yo'q"
+        fi
         if [ "$RESTORE_ENV" = "ha" ] || [ "$RESTORE_ENV" = "yes" ]; then
             TARGET_RESTORE_ENV="$ROOT_DIR/.env"
             if [ -f "$TARGET_RESTORE_ENV" ]; then

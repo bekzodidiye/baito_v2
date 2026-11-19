@@ -11,6 +11,7 @@ import { showToast } from '../utils/toast';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
 import { useUIStore } from "../store/useUIStore";
 import { useAuthStore } from "../store/useAuthStore";
+import { useFocusTrap } from './common/useFocusTrap';
 
 interface DrawerProps {
   onOpenModal: (type: 'profile' | 'settings' | 'help' | 'auth') => void;
@@ -29,6 +30,8 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
   const { pendingApplications, unreadMessages } = useSidebarBadges();
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
   const isAdmin = isLoggedIn && userProfile?.selectedRole === 'admin';
+
+  const drawerRef = useFocusTrap<HTMLElement>(drawerOpen, () => setDrawerOpen(false));
 
   const handleMeningArizalarim = () => {
     setCurrentScreen('calendar');
@@ -185,6 +188,7 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
 
           {/* Drawer content */}
           <motion.nav
+            ref={drawerRef}
             role="dialog"
             aria-modal="true"
             aria-label={t.sidebarMenu}
@@ -202,10 +206,11 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
                   <LanguageSelector align="right" />
                   <button
                     onClick={() => setDrawerOpen(false)}
+                    aria-label={t.close}
                     className="p-1.5 rounded-full hover:bg-slate-200/65 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer border-0 bg-transparent active:scale-95"
                     type="button"
                   >
-                    <X size={18} className="stroke-[2.5]" />
+                    <X size={18} aria-hidden="true" className="stroke-[2.5]" />
                   </button>
                 </div>
               </div>

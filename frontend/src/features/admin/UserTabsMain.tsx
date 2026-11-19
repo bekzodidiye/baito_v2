@@ -151,7 +151,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
           {/* Company (if employer or companyName exists) */}
           {(user.companyName || user.role === 'employer') && (
             <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/20 flex items-center justify-center shrink-0">
                 <Building2 size={16} />
               </div>
               <div className="min-w-0">

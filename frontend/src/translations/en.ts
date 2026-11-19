@@ -309,5 +309,31 @@ export const en = {
   noPhoneOnFile: "No phone number on file",
   unknownDevice: "Unknown device",
   unknownIp: "Unknown IP",
-  activeNow: "Active now"
+  activeNow: "Active now",
+
+  // Offline banner
+  offlineBanner: "No internet connection. Please check your network!",
+
+  // Payment cards & management
+  cardAddedSuccess: "Card added successfully!",
+  cardAddError: "Failed to add card. Please try again.",
+  cardDeletedSuccess: "Card successfully deleted",
+  cardDeleteError: "Failed to delete card",
+  cardFrozenSuccess: "Card frozen",
+  cardUnfrozenSuccess: "Card reactivated",
+  cardTermsAgreement: "I agree to the card storage terms",
+  cardTermsSubtitle: "Card details are securely stored and not shared with third parties.",
+  cardSecurityNotice: "All payment details are securely encrypted. We never store your CVV.",
+  linkCard: "Link card",
+  deleteCardConfirmTitle: "Delete card",
+  deleteCardConfirmDesc: "Are you sure you want to delete this card? This action cannot be undone.",
+  freezeCard: "Freeze card",
+  unfreezeCard: "Reactivate card",
+  freezeCardConfirmDesc: "Temporarily freeze this card?",
+  unfreezeCardConfirmDesc: "Reactivate this card?",
+  cardStatusActive: "Active",
+  cardStatusFrozen: "Frozen",
+  cardBank: "Bank name",
+  cardDetails: "Card details",
+  cvvHint: "3-digit code on the back of the card"
 };

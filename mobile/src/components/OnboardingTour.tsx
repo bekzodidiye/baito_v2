@@ -63,13 +63,15 @@ export const OnboardingTour: React.FC = () => {
         {/* Decorative Background Elements */}
         <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-brand-primary/5 to-transparent z-0 pointer-events-none" />
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-brand-primary/10 rounded-full blur-3xl z-0 pointer-events-none" />
-        <div className="absolute top-12 -left-12 w-32 h-32 bg-blue-400/10 rounded-full blur-2xl z-0 pointer-events-none" />
+        <div className="absolute top-12 -left-12 w-32 h-32 bg-brand-primary/10 rounded-full blur-2xl z-0 pointer-events-none" />
 
         <button 
+          type="button"
           onClick={handleSkip}
+          aria-label="Yopish"
           className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center bg-white/80 hover:bg-slate-100 text-slate-500 rounded-full transition-colors z-10 shadow-sm"
         >
-          <X size={18} />
+          <X size={18} aria-hidden="true" />
         </button>
 
         <div className="p-8 pt-12 pb-6 flex flex-col items-center text-center relative z-10">
@@ -115,15 +117,17 @@ export const OnboardingTour: React.FC = () => {
 
           <div className="flex flex-col w-full gap-3">
             <button 
+              type="button"
               onClick={handleNext}
-              className="w-full bg-brand-primary hover:bg-brand-primary/95 text-white text-[15px] font-bold py-4 px-6 rounded-2xl transition-all shadow-[0_8px_20px_rgba(37,99,235,0.25)] flex items-center justify-center gap-2 group active:scale-[0.98]"
+              className="w-full bg-brand-primary hover:bg-brand-primary/95 text-white text-[15px] font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-brand-primary/25 flex items-center justify-center gap-2 group active:scale-[0.98]"
             >
               {currentStep === steps.length - 1 ? t.start : t.next}
               {currentStep !== steps.length - 1 && (
-                <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" aria-hidden="true" />
               )}
             </button>
             <button 
+              type="button"
               onClick={handleSkip}
               className="w-full text-[14px] font-semibold text-slate-400 hover:text-slate-600 transition-colors py-3 px-4 rounded-xl hover:bg-slate-50"
             >

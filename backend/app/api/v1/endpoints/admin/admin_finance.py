@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app import models
 from app.api import deps
 from app.models.audit_ledger import AuditLedger
+from app.models.payment_card import PaymentCard
 from app.models.transaction import Transaction
 from app.models.user import User
 
@@ -69,6 +70,13 @@ def list_withdrawals(
         if u.uid:
             user_map[u.uid] = u
 
+    cards = (
+        db.query(PaymentCard)
+        .filter(PaymentCard.userId.in_(user_ids), PaymentCard.isActive.is_(True))
+        .all()
+    ) if user_ids else []
+    card_map = {c.userId: f"**** **** **** {c.last4}" for c in cards}
+
     return {
         "total": total,
         "items": [
@@ -77,7 +85,10 @@ def list_withdrawals(
                 "userId": r.workerId or r.employerId,
                 "userName": getattr(user_map.get(r.workerId or r.employerId), "name", ""),
                 "userPhone": getattr(user_map.get(r.workerId or r.employerId), "phone", ""),
-                "bankCardMask": getattr(user_map.get(r.workerId or r.employerId), "bankCardMask", None),
+                "bankCardMask": (
+                    getattr(user_map.get(r.workerId or r.employerId), "bankCardMask", None)
+                    or card_map.get(r.workerId or r.employerId)
+                ),
                 "amountUzs": (r.amount or 0) // 100,
                 "status": r.status,
                 "reference": r.providerTransactionId,

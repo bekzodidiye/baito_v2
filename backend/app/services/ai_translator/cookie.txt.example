@@ -1,0 +1,5 @@
+# Google Session Cookies for AI Translator
+# Format: key=value; key2=value2;
+# Keep your actual cookies in cookie.txt (ignored by git)
+# Example:
+# __Secure-1PSID=...; SAPISID=...; __Secure-3PAPISID=...;

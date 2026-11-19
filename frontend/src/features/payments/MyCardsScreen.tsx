@@ -8,15 +8,21 @@ import { useCurrentScreen } from '../../hooks/useCurrentScreen';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPaymentCardsApi, deletePaymentCardApi, updatePaymentCardApi } from '../../api/queries';
 import { getBankName, getBankColors } from '../../utils/cardUtils';
+import { translations } from '../../translations';
+import { useFocusTrap } from '../../components/common/useFocusTrap';
 
 export const MyCardsScreen: React.FC = () => {
   const navigate = useNavigate();
   const { setCurrentScreen } = useCurrentScreen();
   const language = useAuthStore(s => s.language);
+  const t = translations[language];
   const user = useAuthStore(state => state.userProfile);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; type: 'delete' | 'freeze'; cardId: string | null; isActive?: boolean }>({ isOpen: false, type: 'delete', cardId: null });
   const [infoModal, setInfoModal] = useState<{ isOpen: boolean; card: any | null }>({ isOpen: false, card: null });
+
+  const infoModalRef = useFocusTrap<HTMLDivElement>(infoModal.isOpen, () => setInfoModal({ isOpen: false, card: null }));
+  const confirmModalRef = useFocusTrap<HTMLDivElement>(confirmModal.isOpen, () => setConfirmModal(prev => ({ ...prev, isOpen: false })));
 
   const { data: savedCards = [] } = useQuery({
     queryKey: ['paymentCards'],
@@ -27,11 +33,11 @@ export const MyCardsScreen: React.FC = () => {
   const deleteCardMutation = useMutation({
     mutationFn: deletePaymentCardApi,
     onSuccess: () => {
-      window.dispatchEvent(new CustomEvent('global-toast', { detail: { message: "Karta muvaffaqiyatli o'chirildi", type: 'success' } }));
+      window.dispatchEvent(new CustomEvent('global-toast', { detail: { message: t.cardDeletedSuccess, type: 'success' } }));
       queryClient.invalidateQueries({ queryKey: ['paymentCards'] });
     },
     onError: () => {
-      window.dispatchEvent(new CustomEvent('global-toast', { detail: { message: "Xatolik yuz berdi", type: 'error' } }));
+      window.dispatchEvent(new CustomEvent('global-toast', { detail: { message: t.cardDeleteError, type: 'error' } }));
     }
   });
 
@@ -40,14 +46,14 @@ export const MyCardsScreen: React.FC = () => {
     onSuccess: (data) => {
       window.dispatchEvent(new CustomEvent('global-toast', { 
         detail: { 
-          message: data.isActive === false ? "Karta muzlatildi" : "Karta faollashtirildi", 
+          message: data.isActive === false ? t.cardFrozenSuccess : t.cardUnfrozenSuccess, 
           type: 'success' 
         } 
       }));
       queryClient.invalidateQueries({ queryKey: ['paymentCards'] });
     },
     onError: () => {
-      window.dispatchEvent(new CustomEvent('global-toast', { detail: { message: "Xatolik yuz berdi", type: 'error' } }));
+      window.dispatchEvent(new CustomEvent('global-toast', { detail: { message: t.cardDeleteError, type: 'error' } }));
     }
   });
 
@@ -112,6 +118,7 @@ export const MyCardsScreen: React.FC = () => {
       <header className="w-full top-0 bg-surface/80 backdrop-blur-md shadow-[0px_4px_20px_rgba(1,7,102,0.04)] shadow-sm fixed z-40 flex items-center px-4 h-16 max-w-4xl">
         <button 
           onClick={handleBack}
+          aria-label={t.back}
           className="mr-4 text-primary active:scale-95 transition-transform p-2 rounded-full hover:bg-slate-200 cursor-pointer"
         >
           <ArrowLeft className="w-6 h-6" />
@@ -129,7 +136,7 @@ export const MyCardsScreen: React.FC = () => {
         >
           <Plus className="text-brand-primary w-5 h-5" />
           <span className="font-title-md text-[16px] text-brand-primary font-semibold">
-            {language === 'uz' ? "Yangi karta qo'shish" : language === 'ru' ? "Добавить новую карту" : "Add new card"}
+            {t.addNewCard}
           </span>
         </button>
         
@@ -142,7 +149,9 @@ export const MyCardsScreen: React.FC = () => {
               <div className="relative z-10 flex flex-col justify-between h-48">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className={`font-label-lg text-[12px] uppercase tracking-wider mb-1 font-bold ${style.textMuted}`}>Joriy balans</p>
+                    <p className={`font-label-lg text-[12px] uppercase tracking-wider mb-1 font-bold ${style.textMuted}`}>
+                      {language === 'uz' ? 'Joriy balans' : language === 'ru' ? 'Текущий баланс' : 'Current balance'}
+                    </p>
                     <p className={`font-headline-lg text-[24px] font-extrabold tracking-tight ${style.text}`}>
                       {primaryCard.balance ? primaryCard.balance.toLocaleString() : '0'} UZS
                     </p>
@@ -193,25 +202,29 @@ export const MyCardsScreen: React.FC = () => {
               onClick={() => {
                 setInfoModal({ isOpen: true, card: primaryCard });
               }}
+              aria-label={t.cardDetails}
               className="flex flex-col items-center gap-2 group cursor-pointer"
             >
-              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-800 shadow-sm group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors group-active:scale-95">
+              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-800 shadow-sm group-hover:bg-brand-primary/10 group-hover:text-brand-primary transition-colors group-active:scale-95">
                 <Info className="w-7 h-7" />
               </div>
-              <span className="text-[13px] font-bold text-slate-600">Ma'lumotlar</span>
+              <span className="text-[13px] font-bold text-slate-600">
+                {language === 'uz' ? "Ma'lumotlar" : language === 'ru' ? "Детали" : "Details"}
+              </span>
             </button>
 
             <button 
               onClick={() => {
                 setConfirmModal({ isOpen: true, type: 'delete', cardId: primaryCard.id });
               }}
+              aria-label={t.deleteAction}
               disabled={deleteCardMutation.isPending}
               className="flex flex-col items-center gap-2 group cursor-pointer"
             >
               <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center text-red-600 shadow-sm group-hover:bg-red-100 transition-colors group-active:scale-95">
                 <Trash2 className="w-7 h-7" />
               </div>
-              <span className="text-[13px] font-bold text-red-600">{language === 'ru' ? 'Удалить' : language === 'en' ? 'Delete' : "O'chirish"}</span>
+              <span className="text-[13px] font-bold text-red-600">{t.deleteAction}</span>
             </button>
           </div>
         )}
@@ -219,7 +232,9 @@ export const MyCardsScreen: React.FC = () => {
         {/* Other Cards List */}
         {otherCards.length > 0 && (
           <div className="pt-4 space-y-4">
-            <h2 className="font-semibold text-[16px] text-slate-800 px-1">Boshqa kartalar</h2>
+            <h2 className="font-semibold text-[16px] text-slate-800 px-1">
+              {language === 'uz' ? 'Boshqa kartalar' : language === 'ru' ? 'Другие карты' : 'Other cards'}
+            </h2>
             <div className="space-y-3">
               {otherCards.map((card: any) => {
                 const bankName = card.bankName || getBankName(card.cardNumber || card.last4);
@@ -249,13 +264,16 @@ export const MyCardsScreen: React.FC = () => {
         
         {/* Security Notice */}
         <div className="mt-8 mb-6 p-4 bg-slate-50 rounded-xl flex items-start gap-3 border border-slate-200/60">
-          <div className="mt-0.5 text-blue-600">
+          <div className="mt-0.5 text-brand-primary">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
           <p className="text-[14px] text-slate-600">
-            <strong className="text-slate-800">Xavfsizlik kafolati</strong> - Barcha tranzaksiyalar PCI DSS standarti asosida shifrlangan.
+            <strong className="text-slate-800">
+              {language === 'uz' ? 'Xavfsizlik kafolati' : language === 'ru' ? 'Гарантия безопасности' : 'Security guarantee'}
+            </strong>{' '}
+            - {language === 'uz' ? 'Barcha tranzaksiyalar PCI DSS standarti asosida shifrlangan.' : language === 'ru' ? 'Все транзакции зашифрованы по стандарту PCI DSS.' : 'All transactions are encrypted under PCI DSS standards.'}
           </p>
         </div>
       </main>
@@ -272,6 +290,10 @@ export const MyCardsScreen: React.FC = () => {
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-[4px]"
             />
             <motion.div
+              ref={infoModalRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={t.cardDetails}
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -279,9 +301,10 @@ export const MyCardsScreen: React.FC = () => {
             >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-bold text-slate-800">Karta ma'lumotlari</h3>
+                  <h3 className="text-xl font-bold text-slate-800">{t.cardDetails}</h3>
                   <button 
                     onClick={() => setInfoModal({ isOpen: false, card: null })}
+                    aria-label={language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
                   >
                     <X size={20} />
@@ -290,32 +313,34 @@ export const MyCardsScreen: React.FC = () => {
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                    <span className="text-slate-500 font-medium text-sm">Bank nomi</span>
+                    <span className="text-slate-500 font-medium text-sm">{t.cardBank}</span>
                     <span className="text-slate-800 font-bold capitalize">{infoModal.card.bank || infoModal.card.type || infoModal.card.cardType || 'Karta'}</span>
                   </div>
 
                   <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                    <span className="text-slate-500 font-medium text-sm">Karta egasi</span>
+                    <span className="text-slate-500 font-medium text-sm">{t.cardHolder}</span>
                     <span className="text-slate-800 font-bold uppercase">{infoModal.card.cardholderName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Foydalanuvchi'}</span>
                   </div>
                   
                   <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                    <span className="text-slate-500 font-medium text-sm">Karta raqami</span>
+                    <span className="text-slate-500 font-medium text-sm">{t.cardNumber}</span>
                     <span className="text-slate-800 font-mono font-bold tracking-wider">**** **** **** {infoModal.card.last4}</span>
                   </div>
                   
                   {infoModal.card.expiry && (
                     <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                      <span className="text-slate-500 font-medium text-sm">Amal qilish muddati</span>
+                      <span className="text-slate-500 font-medium text-sm">{t.cardExpiry}</span>
                       <span className="text-slate-800 font-mono font-bold">{infoModal.card.expiry}</span>
                     </div>
                   )}
                   
                   <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                    <span className="text-slate-500 font-medium text-sm">Holati</span>
+                    <span className="text-slate-500 font-medium text-sm">
+                      {language === 'uz' ? 'Holati' : language === 'ru' ? 'Статус' : 'Status'}
+                    </span>
                     <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
                       <CheckCircle2 size={14} className="stroke-[2.5]" />
-                      <span className="text-xs font-bold uppercase">Faol</span>
+                      <span className="text-xs font-bold uppercase">{t.cardStatusActive}</span>
                     </div>
                   </div>
                 </div>
@@ -324,7 +349,7 @@ export const MyCardsScreen: React.FC = () => {
                   onClick={() => setInfoModal({ isOpen: false, card: null })}
                   className="w-full mt-8 py-3.5 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 active:scale-95 transition-all shadow-lg shadow-slate-800/20"
                 >
-                  Yopish
+                  {language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                 </button>
               </div>
             </motion.div>
@@ -344,31 +369,37 @@ export const MyCardsScreen: React.FC = () => {
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-[4px]"
             />
             <motion.div
+              ref={confirmModalRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={confirmModal.type === 'delete' 
+                ? t.deleteCardConfirmTitle 
+                : (confirmModal.isActive === false ? t.unfreezeCard : t.freezeCard)}
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="relative bg-white w-full max-w-sm rounded-[24px] shadow-2xl overflow-hidden flex flex-col z-10"
             >
               <div className="p-6 text-center">
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmModal.type === 'delete' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${confirmModal.type === 'delete' ? 'bg-red-100 text-red-600' : 'bg-brand-primary/10 text-brand-primary'}`}>
                   {confirmModal.type === 'delete' ? <Trash2 size={32} /> : <Snowflake size={32} />}
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 mb-2">
                   {confirmModal.type === 'delete' 
-                    ? "Kartani o'chirish" 
-                    : (confirmModal.isActive === false ? "Kartani faollashtirish" : "Kartani muzlatish")}
+                    ? t.deleteCardConfirmTitle 
+                    : (confirmModal.isActive === false ? t.unfreezeCard : t.freezeCard)}
                 </h3>
                 <p className="text-slate-500 mb-6">
                   {confirmModal.type === 'delete' 
-                    ? "Rostdan ham ushbu kartani o'chirib tashlamoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi." 
-                    : (confirmModal.isActive === false ? "Karta qayta faollashtirilsinmi?" : "Karta vaqtincha muzlatib qo'yilsinmi?")}
+                    ? t.deleteCardConfirmDesc 
+                    : (confirmModal.isActive === false ? t.unfreezeCardConfirmDesc : t.freezeCardConfirmDesc)}
                 </p>
                 <div className="flex gap-3">
                   <button 
                     onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
                     className="flex-1 py-3 rounded-xl font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all"
                   >
-                    Bekor qilish
+                    {t.cancel}
                   </button>
                   <button 
                     onClick={() => {
@@ -382,10 +413,10 @@ export const MyCardsScreen: React.FC = () => {
                     className={`flex-1 py-3 rounded-xl font-semibold text-white active:scale-95 transition-all shadow-lg ${
                       confirmModal.type === 'delete' 
                         ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20' 
-                        : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
+                        : 'bg-brand-primary hover:bg-brand-primary/95 shadow-brand-primary/20'
                     }`}
                   >
-                    Tasdiqlash
+                    {language === 'uz' ? 'Tasdiqlash' : language === 'ru' ? 'Подтвердить' : 'Confirm'}
                   </button>
                 </div>
               </div>

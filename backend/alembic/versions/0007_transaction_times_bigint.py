@@ -20,7 +20,7 @@ Create Date: 2026-09-03
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from alembic import op
+from alembic import context, op
 from sqlalchemy import inspect
 
 revision: str = "0007_tx_times_bigint"
@@ -29,10 +29,19 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+def _is_offline() -> bool:
+    try:
+        return context.is_offline_mode()
+    except Exception:
+        return False
+
+
 def upgrade() -> None:
     # On a fresh database 0001's create_all has already made these BigInteger,
     # because that is what the model now says. Altering is only needed where the
     # table predates the fix.
+    if _is_offline():
+        return
     bind = op.get_bind()
     if "transactions" not in set(inspect(bind).get_table_names()):
         return

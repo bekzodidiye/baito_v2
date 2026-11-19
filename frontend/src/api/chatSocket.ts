@@ -23,24 +23,52 @@ export interface SocketMessage {
   createdAt?: string | null;
 }
 
+export interface ChatSocketOptions {
+  onMessage?: (msg: SocketMessage) => void;
+  onTyping?: (data: { userId: string; isTyping: boolean }) => void;
+  onRead?: (data: { userId: string; chatId: string }) => void;
+}
+
 export interface ChatSocket {
   close: () => void;
+  sendTyping: (isTyping: boolean) => void;
+  sendRead: () => void;
 }
+
+export const calculateBackoffDelay = (
+  attempt: number,
+  baseDelay: number = 1000,
+  maxDelay: number = 30000
+): number => {
+  return Math.min(baseDelay * 2 ** Math.min(attempt, 10), maxDelay);
+};
+
+export const getChatWebSocketUrl = (chatId: string, token?: string): string => {
+  const scheme = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const host = typeof window !== 'undefined' ? window.location.host : 'localhost';
+  const query = token ? `?token=${encodeURIComponent(token)}` : '';
+  return `${scheme}://${host}/api/v1/chats/ws/${encodeURIComponent(chatId)}${query}`;
+};
 
 /** Open a socket for one conversation. Returns a handle that closes it. */
 export const openChatSocket = (
   chatId: string,
-  onMessage: (msg: SocketMessage) => void,
+  handlerOrOptions: ((msg: SocketMessage) => void) | ChatSocketOptions,
 ): ChatSocket => {
+  const options: ChatSocketOptions =
+    typeof handlerOrOptions === 'function'
+      ? { onMessage: handlerOrOptions }
+      : (handlerOrOptions || {});
+
   let socket: WebSocket | null = null;
   let closedByUs = false;
   let retry: ReturnType<typeof setTimeout> | null = null;
+  let pingTimer: ReturnType<typeof setInterval> | null = null;
   let attempt = 0;
 
   const connect = () => {
     if (closedByUs) return;
-    const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const url = `${scheme}://${window.location.host}/api/v1/chats/ws/${encodeURIComponent(chatId)}`;
+    const url = getChatWebSocketUrl(chatId);
 
     try {
       socket = new WebSocket(url);
@@ -50,14 +78,40 @@ export const openChatSocket = (
 
     socket.onopen = () => {
       attempt = 0;
+      if (pingTimer) clearInterval(pingTimer);
+      // Keepalive ping every 25 seconds to prevent NAT/proxy drops
+      pingTimer = setInterval(() => {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          try {
+            socket.send(JSON.stringify({ type: 'ping' }));
+          } catch {
+            // Ignore send error on closed socket
+          }
+        }
+      }, 25000);
     };
 
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         if (data && typeof data === 'object') {
+          if (data.type === 'pong') {
+            return;
+          }
+          if (data.type === 'typing' && options.onTyping) {
+            const userId = data.userId || data.senderId || data.user_id;
+            const isTyping = data.isTyping !== undefined ? Boolean(data.isTyping) : Boolean(data.is_typing);
+            options.onTyping({ userId, isTyping });
+            return;
+          }
+          if (data.type === 'read' && options.onRead) {
+            const userId = data.userId || data.readerId || data.user_id;
+            const chatId = data.chatId || data.chat_id;
+            options.onRead({ userId, chatId });
+            return;
+          }
           if ((data.type === 'delete' && data.messageId) || (data.id && data.text !== undefined)) {
-            onMessage(data as SocketMessage);
+            options.onMessage?.(data as SocketMessage);
           }
         }
       } catch {
@@ -66,13 +120,16 @@ export const openChatSocket = (
     };
 
     socket.onclose = () => {
+      if (pingTimer) {
+        clearInterval(pingTimer);
+        pingTimer = null;
+      }
       socket = null;
       if (closedByUs) return;
-      // Back off, and stop trying after a while rather than hammering a
-      // server that is refusing the upgrade.
+      // Exponential backoff capped at 30 seconds with persistent reconnection
       attempt += 1;
-      if (attempt > 5) return;
-      retry = setTimeout(connect, Math.min(1000 * 2 ** attempt, 30000));
+      const delay = calculateBackoffDelay(attempt);
+      retry = setTimeout(connect, delay);
     };
 
     socket.onerror = () => {
@@ -80,12 +137,60 @@ export const openChatSocket = (
     };
   };
 
+  const handleWakeup = () => {
+    if (closedByUs) return;
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+    if (!socket || socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING) {
+      attempt = 0;
+      if (retry) {
+        clearTimeout(retry);
+        retry = null;
+      }
+      connect();
+    }
+  };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', handleWakeup);
+  }
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', handleWakeup);
+  }
+
   connect();
 
   return {
+    sendTyping: (isTyping: boolean) => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        try {
+          socket.send(JSON.stringify({ type: 'typing', isTyping, is_typing: isTyping }));
+        } catch {
+          // ignore
+        }
+      }
+    },
+    sendRead: () => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        try {
+          socket.send(JSON.stringify({ type: 'read' }));
+        } catch {
+          // ignore
+        }
+      }
+    },
     close: () => {
       closedByUs = true;
+      if (pingTimer) {
+        clearInterval(pingTimer);
+        pingTimer = null;
+      }
       if (retry) clearTimeout(retry);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleWakeup);
+      }
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleWakeup);
+      }
       socket?.close();
       socket = null;
     },

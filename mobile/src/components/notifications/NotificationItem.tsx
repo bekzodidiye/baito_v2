@@ -107,9 +107,18 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
 
   return (
     <motion.article
+      role="button"
+      tabIndex={0}
       onClick={() => handleNotificationClick(noti.id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleNotificationClick(noti.id);
+        }
+      }}
+      aria-label={`${title}: ${desc}`}
       whileHover={{ y: -1 }}
-      className={`p-4 rounded-2xl transition-all duration-200 flex gap-3.5 items-start relative cursor-pointer select-none group border ${
+      className={`p-4 rounded-2xl transition-all duration-200 flex gap-3.5 items-start relative cursor-pointer select-none group border focus-visible:ring-2 focus-visible:ring-brand-primary ${
         noti.isUnread 
           ? 'bg-white border-brand-primary/15 shadow-2xs hover:shadow-xs hover:border-brand-primary/30' 
           : 'bg-white/70 hover:bg-white border-slate-100 hover:border-slate-200'

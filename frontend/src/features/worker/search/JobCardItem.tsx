@@ -33,13 +33,22 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
 
   return (
     <motion.article
+      role="button"
+      tabIndex={0}
+      aria-label={`${job.title}, ${job.company}, ${job.salary}`}
+      onKeyDown={(e) => {
+        if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: Math.min((idx % 6) * 0.02, 0.1), ease: "easeOut" }}
       whileHover={{ y: -3 }}
       whileTap={{ scale: 0.99 }}
       onClick={onClick}
-      className={`bg-white rounded-2xl p-5 flex flex-col gap-3.5 relative transition-all duration-200 cursor-pointer ${
+      className={`bg-white rounded-2xl p-5 flex flex-col gap-3.5 relative transition-all duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-primary ${
         isActive 
           ? 'ring-2 ring-brand-primary/20 bg-brand-primary/[0.02] shadow-[0_12px_28px_rgba(0,6,102,0.08)]' 
           : 'shadow-[0_4px_16px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_24px_rgba(0,6,102,0.06)] border border-transparent hover:border-brand-primary/10'
@@ -48,15 +57,16 @@ const JobCardItemComponent: React.FC<JobCardItemProps> = ({
       {/* Interactive Action Buttons directly on card */}
       <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5">
         <button
+          type="button"
+          aria-label={t.share || "Ulashish"}
+          title={t.share}
           onClick={(e) => {
             e.stopPropagation();
             void shareJob(job, language);
           }}
           className="p-1.5 rounded-full hover:bg-brand-primary/10 text-slate-400 hover:text-brand-primary transition-colors cursor-pointer shrink-0 bg-slate-50/50 border border-slate-100"
-          type="button"
-          title={t.share}
         >
-          <Share2 size={14} />
+          <Share2 size={14} aria-hidden="true" />
         </button>
       </div>
 

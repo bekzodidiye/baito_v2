@@ -2,8 +2,10 @@ import logging
 import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Optional
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
+from sqlalchemy.exc import IntegrityError
 
 from app import models, crud
 from app.models.job import JobStatus
@@ -114,12 +116,7 @@ class JobService:
         )
 
         if existing_app and existing_app.status != "withdrawn":
-            return {
-                "success": True,
-                "id": existing_app.id,
-                "jobId": existing_app.jobId,
-                "status": existing_app.status,
-            }
+            raise HTTPException(status_code=409, detail="ALREADY_APPLIED")
 
         target_dates = JobService._get_dates_for_job(db, job)
         worker_apps = (
@@ -151,22 +148,26 @@ class JobService:
                 if same_day_count >= 2:
                     raise ApplicationError("Bir kunda ko'pi bilan 2 ta ishga ariza topshirishingiz mumkin!")
 
-        with db.begin_nested():
-            if existing_app and existing_app.status == "withdrawn":
-                db_app = existing_app
-                db_app.status = "applied"
-                db_app.appliedDate = func.now()
-            else:
-                db_app = models.Application(
-                    id=str(uuid.uuid4()), jobId=job_id, workerId=current_user.id, status="applied"
-                )
-            db.add(db_app)
-            db.add(models.Notification(
-                id=str(uuid.uuid4()), userId=job.employerId, title="Yangi ariza keldi",
-                message=f"Ishchi '{job.title}' ishiga ariza topshirdi.",
-                type="apply", relatedJobId=job_id,
-            ))
-        db.commit()
+        try:
+            with db.begin_nested():
+                if existing_app and existing_app.status == "withdrawn":
+                    db_app = existing_app
+                    db_app.status = "applied"
+                    db_app.appliedDate = func.now()
+                else:
+                    db_app = models.Application(
+                        id=str(uuid.uuid4()), jobId=job_id, workerId=current_user.id, status="applied"
+                    )
+                db.add(db_app)
+                db.add(models.Notification(
+                    id=str(uuid.uuid4()), userId=job.employerId, title="Yangi ariza keldi",
+                    message=f"Ishchi '{job.title}' ishiga ariza topshirdi.",
+                    type="apply", relatedJobId=job_id,
+                ))
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(status_code=409, detail="ALREADY_APPLIED")
         db.refresh(db_app)
         try:
             invalidate_user_map_cache(current_user.id)
@@ -382,18 +383,26 @@ class JobService:
             db.add(day)
 
             paid, unpaid = [], []
+            seen_workers = set()
             for app in apps:
-                try:
-                    WorkerEarnings.credit_worker(
-                        db, job=job, worker_id=app.workerId,
-                        amount_uzs=_wage_for_day(job, day),
-                        job_day_id=day.id,
-                        count_completed_job=is_last_day,
-                    )
-                    paid.append(app.workerId)
-                except Exception as e:
-                    logger.warning("Crediting skipped for job %s day %s / worker %s: %s",
-                                   job.id, day.workDate, app.workerId, str(e))
+                if app.workerId in seen_workers:
+                    continue
+                seen_workers.add(app.workerId)
+                wage = _wage_for_day(job, day)
+                if wage > 0:
+                    try:
+                        WorkerEarnings.credit_worker(
+                            db, job=job, worker_id=app.workerId,
+                            amount_uzs=wage,
+                            job_day_id=day.id,
+                            count_completed_job=is_last_day,
+                        )
+                        paid.append(app.workerId)
+                    except Exception as e:
+                        logger.error("Crediting failed for job %s day %s / worker %s: %s",
+                                     job.id, day.workDate, app.workerId, str(e))
+                        raise ApplicationError(f"Ishchiga haq to'lashda xatolik: {e}")
+                else:
                     unpaid.append(app.workerId)
 
                 if app.workerId in paid:
@@ -477,7 +486,12 @@ class JobService:
         if not apps:
             raise InvalidJobStateError("Yakunlash uchun yollangan ishchi yo'q")
 
-        bonus_each = (bonus or 0) if is_employer else 0
+        if not is_employer:
+            rating = None
+            review = None
+            bonus_each = 0
+        else:
+            bonus_each = (bonus or 0)
         if bonus_each > 0:
             employer = db.query(models.User).filter(or_(models.User.id == job.employerId, models.User.uid == job.employerId)).first()
             if not employer:
@@ -528,15 +542,17 @@ class JobService:
                     app.status = "confirmed"
                 else:
                     app.status = "completed"
-                    app.rating = rating
-                    app.review = review
-                    app.bonus = bonus or 0
+                    if is_employer:
+                        app.rating = rating
+                        app.review = review
+                        if bonus_each > 0 and (app.bonus or 0) == 0:
+                            app.bonus = bonus_each
                 db.add(app)
             
             db.flush()
 
             # 2. Compute avg ratings in bulk and update workers
-            if rating and not is_single_day_completion:
+            if is_employer and rating and not is_single_day_completion:
                 worker_ids = [app.workerId for app in apps]
                 avg_ratings_query = (
                     db.query(models.Application.workerId, func.avg(models.Application.rating))
@@ -559,28 +575,36 @@ class JobService:
                         db.add(worker)
                 db.flush()
 
+            seen_workers = set()
             for app in apps:
+                if app.workerId in seen_workers:
+                    continue
+                seen_workers.add(app.workerId)
 
-                try:
-                    if remaining:
-                        for index, day in enumerate(remaining):
+                wage = _wage_for_day(job, remaining[0] if remaining else None)
+                if wage > 0:
+                    try:
+                        if remaining:
+                            for index, day in enumerate(remaining):
+                                WorkerEarnings.credit_worker(
+                                    db, job=job, worker_id=app.workerId,
+                                    amount_uzs=_wage_for_day(job, day), job_day_id=day.id,
+                                    count_completed_job=(index == 0 and not is_single_day_completion),
+                                )
+                        else:
                             WorkerEarnings.credit_worker(
                                 db, job=job, worker_id=app.workerId,
-                                amount_uzs=_wage_for_day(job, day), job_day_id=day.id,
-                                count_completed_job=(index == 0 and not is_single_day_completion),
+                                amount_uzs=wage,
                             )
-                    else:
-                        WorkerEarnings.credit_worker(
-                            db, job=job, worker_id=app.workerId,
-                            amount_uzs=_wage_for_day(job, None),
-                        )
-                    paid.append(app.workerId)
-                except Exception as e:
-                    logger.warning("Crediting skipped for job %s / worker %s: %s",
-                                   job.id, app.workerId, str(e))
+                        paid.append(app.workerId)
+                    except Exception as e:
+                        logger.error("Crediting failed for job %s / worker %s: %s",
+                                     job.id, app.workerId, str(e))
+                        raise ApplicationError(f"Ishchiga haq to'lashda xatolik: {e}")
+                else:
                     unpaid.append(app.workerId)
 
-                if bonus_each > 0:
+                if is_employer and bonus_each > 0 and (app.bonus or 0) == bonus_each:
                     try:
                         WorkerEarnings.pay_completion_bonus(
                             db, job=job, worker_id=app.workerId, amount_uzs=bonus_each,

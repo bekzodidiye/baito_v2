@@ -5,6 +5,8 @@ reintroduces it fails here rather than in production.
 """
 
 
+import uuid
+
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.models import User
@@ -225,6 +227,36 @@ def test_media_endpoint_refuses_path_traversal(client):
         assert resp.status_code == 404
 
 
+def test_identity_document_is_never_readable_by_chat_partner(client):
+    """Even if users share a chat, identity documents (passports) must be 403."""
+    from app.models import MediaFile, User
+    from app.models.media_file import MediaVisibility
+
+    worker = make_user(role="worker", phone="+998901234491")
+    employer = make_user(role="employer", phone="+998901234492")
+
+    passport_key = "d" * 32 + ".webp"
+    with SessionLocal() as db:
+        w = db.query(User).filter(User.id == worker.id).first()
+        w.passportDocFront = f"/api/v1/media/{passport_key}"
+        db.add(w)
+        db.add(MediaFile(objectKey=passport_key, ownerId=worker.id,
+                         visibility=MediaVisibility.PRIVATE, contentType="image/webp"))
+        db.commit()
+
+    # Worker and employer start a chat
+    login(client, worker)
+    client.post("/api/v1/chats", json={"employerId": employer.id})
+
+    # Employer chats with worker, but attempting to fetch worker's passport is strictly forbidden (403)
+    login(client, employer)
+    assert client.get(f"/api/v1/media/{passport_key}").status_code == 403
+
+    # Worker (owner) can access it (passes auth check)
+    login(client, worker)
+    assert client.get(f"/api/v1/media/{passport_key}").status_code != 403
+
+
 # ── Privacy in job listings ────────────────────────────────────────────────
 
 def test_hired_worker_phone_is_hidden_from_anonymous_visitors(client):
@@ -268,6 +300,81 @@ def test_hired_worker_phone_is_never_exposed_to_employer(client):
     emp_apps = client.get("/api/v1/applications/employer").json()
     app_entry = next(a for a in emp_apps if a["jobId"] == job.id)
     assert app_entry["workerPhone"] is None
+
+
+def test_payout_receipt_not_readable_by_unrelated_chat_partner(client):
+    """A bank transfer receipt is strictly for payout participants/admin, not unrelated chat partners."""
+    from app.models import JobPayout, MediaFile
+    from app.models.media_file import MediaVisibility
+
+    employer = make_user(role="employer", phone="+998901234901")
+    worker1 = make_user(role="worker", phone="+998901234902")
+    worker2 = make_user(role="worker", phone="+998901234903")
+    job = make_job(employer.id)
+
+    receipt_key = "r" * 32 + ".webp"
+    with SessionLocal() as db:
+        db.add(MediaFile(objectKey=receipt_key, ownerId=employer.id,
+                         visibility=MediaVisibility.PRIVATE, contentType="image/webp"))
+        payout = JobPayout(
+            id=str(uuid.uuid4()),
+            jobId=job.id,
+            workerId=worker1.id,
+            employerId=employer.id,
+            amount=50000,
+            receiptUrl=f"/api/v1/media/{receipt_key}",
+            paidByAdminId=employer.id,
+        )
+        db.add(payout)
+        db.commit()
+
+    # Worker 2 starts a chat with the employer on an unrelated topic
+    login(client, worker2)
+    client.post("/api/v1/chats", json={"employerId": employer.id})
+
+    # Worker 2 tries to download Worker 1's payout receipt -> 403 Forbidden!
+    assert client.get(f"/api/v1/media/{receipt_key}").status_code == 403
+
+    # Worker 1 (the paid worker) can access it
+    login(client, worker1)
+    assert client.get(f"/api/v1/media/{receipt_key}").status_code != 403
+
+
+def test_media_sent_in_chat_a_not_readable_by_chat_b_partner(client):
+    """Media sent in Chat A cannot be read by a partner from Chat B even if both share a chat with owner."""
+    from app.models import MediaFile, Message
+    from app.models.media_file import MediaVisibility
+
+    employer = make_user(role="employer", phone="+998901234911")
+    worker_a = make_user(role="worker", phone="+998901234912")
+    worker_b = make_user(role="worker", phone="+998901234913")
+
+    key = "e" * 32 + ".webp"
+    with SessionLocal() as db:
+        db.add(MediaFile(objectKey=key, ownerId=employer.id,
+                         visibility=MediaVisibility.PRIVATE, contentType="image/webp"))
+        db.commit()
+
+    # Employer chats with Worker A
+    login(client, worker_a)
+    chat_a_res = client.post("/api/v1/chats", json={"employerId": employer.id}).json()
+    chat_a_id = chat_a_res["id"]
+
+    # Employer posts the media link inside Chat A
+    login(client, employer)
+    client.post(f"/api/v1/chats/{chat_a_id}/messages", json={"text": f"Here is the file: /api/v1/media/{key}"})
+
+    # Employer also has a chat with Worker B
+    login(client, worker_b)
+    client.post("/api/v1/chats", json={"employerId": employer.id})
+
+    # Worker B tries to access the file that was sent only to Worker A -> 403 Forbidden!
+    assert client.get(f"/api/v1/media/{key}").status_code == 403
+
+    # Worker A (the intended recipient in Chat A) can access it
+    login(client, worker_a)
+    assert client.get(f"/api/v1/media/{key}").status_code != 403
+
 
 
 

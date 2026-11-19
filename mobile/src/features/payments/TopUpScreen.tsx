@@ -65,10 +65,12 @@ export const TopUpScreen: React.FC = () => {
       {/* TopAppBar */}
       <header className="fixed top-0 left-0 w-full z-50 flex items-center px-4 h-header-height bg-surface/80 backdrop-blur-md shadow-[0px_4px_20px_rgba(26,35,126,0.04)]">
         <button 
+          type="button"
           onClick={handleBack}
+          aria-label={language === 'uz' ? 'Orqaga' : language === 'ru' ? 'Назад' : 'Back'}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-all duration-300 active:scale-95 text-slate-600 mr-3 cursor-pointer"
         >
-          <ArrowLeft size={24} />
+          <ArrowLeft size={24} aria-hidden="true" />
         </button>
         <h1 className="font-title-lg text-[20px] text-brand-primary flex-1 font-bold">
           {language === 'uz' ? "Balansni to'ldirish" : language === 'ru' ? 'Пополнение баланса' : 'Top up balance'}
@@ -78,10 +80,10 @@ export const TopUpScreen: React.FC = () => {
       {/* Main Canvas */}
       <main className="flex-1 pt-[100px] pb-32 px-4 space-y-6 overflow-y-auto">
         {/* Current Balance Card */}
-        <section className="bg-gradient-to-br from-[#010766] via-[#1a237e] to-[#4858ab] shadow-[0_20px_40px_rgba(1,7,102,0.15)] rounded-2xl p-6 text-white relative overflow-hidden">
+        <section className="bg-gradient-to-br from-brand-primary via-brand-primary-container to-brand-primary/80 shadow-lg shadow-brand-primary/15 rounded-2xl p-6 text-white relative overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#4858ab]/20 rounded-full blur-xl -ml-6 -mb-6"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-brand-primary/20 rounded-full blur-xl -ml-6 -mb-6"></div>
           
           <div className="relative z-10">
             <p className="font-label-lg text-[12px] text-blue-200/80 uppercase tracking-wider mb-2 font-bold">
@@ -106,6 +108,7 @@ export const TopUpScreen: React.FC = () => {
           <div className="grid grid-cols-3 gap-3">
             {[50000, 100000, 500000, 1000000].map((val) => (
               <button 
+                type="button"
                 key={val}
                 onClick={() => handleAmountSelect(val)}
                 className={`border rounded-xl py-3 text-center transition-all duration-200 active:scale-95 font-title-md text-[16px] font-semibold cursor-pointer ${
@@ -118,6 +121,7 @@ export const TopUpScreen: React.FC = () => {
               </button>
             ))}
             <button 
+              type="button"
               onClick={handleCustomAmountFocus}
               className={`border rounded-xl py-3 text-center transition-all duration-200 active:scale-95 font-title-md text-[16px] font-semibold col-span-2 cursor-pointer ${
                 ![50000, 100000, 500000, 1000000].includes(Number(amount)) && amount !== ''
@@ -198,10 +202,11 @@ export const TopUpScreen: React.FC = () => {
             )}
 
             <button 
+              type="button"
               onClick={() => navigate('/payments/add-card')}
               className="w-full flex items-center justify-center gap-2 py-4 px-6 bg-white rounded-xl border border-dashed border-slate-300 hover:bg-slate-50 hover:border-brand-primary transition-colors active:scale-[0.98] cursor-pointer mt-4"
             >
-              <Plus className="text-brand-primary w-5 h-5" />
+              <Plus className="text-brand-primary w-5 h-5" aria-hidden="true" />
               <span className="font-title-md text-[16px] text-brand-primary font-semibold">
                 {language === 'uz' ? "Yangi karta qo'shish" : language === 'ru' ? "Добавить новую карту" : "Add new card"}
               </span>
@@ -212,11 +217,11 @@ export const TopUpScreen: React.FC = () => {
         {/* Security Badges */}
         <section className="flex justify-center items-center gap-6 py-4 border-t border-slate-200/50">
           <div className="flex items-center gap-1.5 text-slate-500">
-            <Lock size={16} />
+            <Lock size={16} aria-hidden="true" />
             <span className="font-label-lg text-[10px] uppercase font-bold">Secure Payment</span>
           </div>
           <div className="flex items-center gap-1.5 text-slate-500">
-            <ShieldCheck size={16} />
+            <ShieldCheck size={16} aria-hidden="true" />
             <span className="font-label-lg text-[10px] uppercase font-bold">SSL Encrypted</span>
           </div>
         </section>
@@ -225,12 +230,13 @@ export const TopUpScreen: React.FC = () => {
       {/* Bottom Action Area */}
       <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md p-4 pb-safe border-t border-slate-200/50 shadow-[0px_-8px_20px_rgba(0,0,0,0.03)] z-40">
         <button 
+          type="button"
           onClick={handleProceed}
           disabled={!amount || Number(amount) <= 0 || !paymentMethod}
           className="w-full bg-brand-primary text-white font-title-md text-[16px] font-semibold py-4 rounded-xl shadow-lg shadow-brand-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:active:scale-100 disabled:hover:scale-100"
         >
           {language === 'uz' ? "To'lovni amalga oshirish" : language === 'ru' ? 'Выполнить платеж' : 'Proceed to payment'}
-          <ArrowRight size={20} />
+          <ArrowRight size={20} aria-hidden="true" />
         </button>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Paperclip, Smile, Send } from 'lucide-react';
 import type { AttachedFileData } from '../../hooks/useChatScreen';
 import { EmojiPicker } from './EmojiPicker';
@@ -28,6 +28,20 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showEmoji, setShowEmoji] = useState(false);
+  const createdUrlsRef = useRef<Set<string>>(new Set());
+
+  // Revoke any created URLs on component unmount
+  useEffect(() => {
+    const urls = createdUrlsRef.current;
+    return () => {
+      urls.forEach((url) => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch {}
+      });
+      urls.clear();
+    };
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0 && setAttachedFiles) {
@@ -39,6 +53,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
         if (currentLength + count >= 5) break;
         const file = e.target.files[i];
         const previewUrl = URL.createObjectURL(file);
+        createdUrlsRef.current.add(previewUrl);
         newFiles.push({ name: file.name, previewUrl, file });
         count++;
       }
@@ -58,10 +73,29 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   const handleRemoveFile = (index: number) => {
     if (setAttachedFiles) {
       const newFiles = [...attachedFiles];
-      URL.revokeObjectURL(newFiles[index].previewUrl);
+      const targetUrl = newFiles[index].previewUrl;
+      if (targetUrl) {
+        try {
+          URL.revokeObjectURL(targetUrl);
+        } catch {}
+        createdUrlsRef.current.delete(targetUrl);
+      }
       newFiles.splice(index, 1);
       setAttachedFiles(newFiles);
     }
+  };
+
+  const onSendMessage = (e?: React.FormEvent) => {
+    // Revoke object URLs on message send
+    attachedFiles.forEach((file) => {
+      if (file.previewUrl) {
+        try {
+          URL.revokeObjectURL(file.previewUrl);
+        } catch {}
+        createdUrlsRef.current.delete(file.previewUrl);
+      }
+    });
+    handleSend(e);
   };
 
   const handleEmojiSelect = (emoji: string) => {
@@ -99,6 +133,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
                 <button 
                   type="button" 
                   onClick={() => handleRemoveFile(idx)} 
+                  aria-label="Faylni o'chirish"
                   className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 bg-slate-500 text-white rounded-full flex items-center justify-center shadow-xs cursor-pointer z-10 hover:bg-slate-600 transition-colors border border-white"
                 >
                   <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -130,11 +165,12 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             type="button"
             className="p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-0 bg-transparent flex items-center justify-center shrink-0"
             title={t.attachFile}
+            aria-label={t.attachFile}
           >
             <Paperclip size={20} />
           </button>
 
-          <form onSubmit={handleSend} className="flex-1 mx-2 focus:outline-none outline-none">
+          <form onSubmit={onSendMessage} className="flex-1 mx-2 focus:outline-none outline-none">
             <input
               aria-label={t.typeMessage}
               type="text"
@@ -153,16 +189,18 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
               showEmoji ? 'text-brand-primary' : 'text-slate-400 hover:text-slate-600'
             }`}
             title={t.emoji}
+            aria-label={t.emoji}
           >
             <Smile size={20} />
           </button>
         </div>
 
         <button
-          onClick={() => handleSend()}
+          onClick={() => onSendMessage()}
           type="button"
           className="w-11 h-11 flex items-center justify-center rounded-full bg-brand-primary text-white shadow-md hover:shadow-lg active:scale-90 transition-all cursor-pointer shrink-0 border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           title={t.send}
+          aria-label={t.send}
         >
           <Send size={18} />
         </button>

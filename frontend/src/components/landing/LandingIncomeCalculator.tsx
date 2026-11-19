@@ -60,7 +60,7 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
                     onClick={() => setHourlyRate(cat.rate)}
                     className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                       hourlyRate === cat.rate
-                        ? 'bg-brand-primary text-white shadow-md shadow-blue-600/25 scale-105'
+                        ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/20 scale-105'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
                     }`}
                   >
@@ -128,8 +128,9 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
             </div>
 
             <button
+              type="button"
               onClick={() => onSelectRole('worker')}
-              className="w-full py-3.5 rounded-xl bg-brand-primary hover:bg-blue-600 text-white font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 active:scale-[0.98]"
+              className="w-full py-3.5 rounded-xl bg-brand-primary hover:bg-brand-primary-container text-white font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-brand-primary/20 active:scale-[0.98]"
             >
               <span>{t.calcCta}</span>
               <ArrowRight size={15} />

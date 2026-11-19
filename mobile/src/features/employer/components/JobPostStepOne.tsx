@@ -77,14 +77,14 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
             <img src={imageUrl} alt="Job Banner" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
               <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 bg-white text-slate-800 text-xs font-bold rounded-lg cursor-pointer">O'zgartirish</button>
-              <button type="button" onClick={() => setImageUrl && setImageUrl('')} className="p-1.5 bg-rose-600 text-white rounded-lg cursor-pointer"><X size={16} /></button>
+              <button type="button" onClick={() => setImageUrl && setImageUrl('')} aria-label={language === 'uz' ? "Rasmni o'chirish" : "Remove image"} className="p-1.5 bg-rose-600 text-white rounded-lg cursor-pointer"><X size={16} /></button>
             </div>
           </div>
         ) : (
-          <div onClick={() => fileInputRef.current?.click()} className="w-full h-32 border-2 border-dashed border-slate-200 bg-slate-50/60 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-100/50">
+          <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full h-32 border-2 border-dashed border-slate-200 bg-slate-50/60 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-slate-100/50 focus-visible:ring-2 focus-visible:ring-brand-primary">
             <Upload size={22} className="text-brand-primary/70" />
             <span className="text-xs font-bold text-slate-600">{language === 'uz' ? "Rasm yuklash uchun bosing" : "Click to upload image"}</span>
-          </div>
+          </button>
         )}
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
       </div>
@@ -111,13 +111,13 @@ export const JobPostStepOne: React.FC<JobPostStepOneProps> = ({
           {PRESET_TAGS.map(t => {
             const isSel = tags.includes(t);
             return (
-              <button key={t} type="button" onClick={() => toggleTag(t)} className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border cursor-pointer ${isSel ? 'bg-purple-600 text-white border-purple-600 shadow-xs' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}>{t}</button>
+              <button key={t} type="button" onClick={() => toggleTag(t)} className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all border cursor-pointer ${isSel ? 'bg-brand-primary text-white border-brand-primary shadow-xs' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}>{t}</button>
             );
           })}
         </div>
         <div className="flex items-center gap-2 mt-1">
-          <input type="text" placeholder={language === 'uz' ? "Yangi teg qo'shish (#Student, #Bo'shVaqt)..." : "Add custom tag..."} className="flex-1 bg-slate-50 border rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={customTag} onChange={(e) => setCustomTag(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddCustomTag(e)} />
-          <button type="button" onClick={() => handleAddCustomTag()} className="px-3.5 py-2 bg-brand-primary text-white text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer"><Plus size={14} /> {language === 'uz' ? "Qo'shish" : "Add"}</button>
+          <input type="text" placeholder={language === 'uz' ? "Yangi teg qo'shish (#Student, #Bo'shVaqt)..." : "Add custom tag..."} aria-label={language === 'uz' ? "Yangi teg qo'shish" : "Add custom tag"} className="flex-1 bg-slate-50 border rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" value={customTag} onChange={(e) => setCustomTag(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddCustomTag(e)} />
+          <button type="button" onClick={() => handleAddCustomTag()} aria-label={language === 'uz' ? "Teg qo'shish" : "Add tag"} className="px-3.5 py-2 bg-brand-primary text-white text-xs font-bold rounded-xl flex items-center gap-1 cursor-pointer"><Plus size={14} /> {language === 'uz' ? "Qo'shish" : "Add"}</button>
         </div>
       </div>
 

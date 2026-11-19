@@ -44,15 +44,16 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
           {t.address || "Manzil"}
         </h3>
         <button
+          type="button"
           onClick={handleMapButtonClick}
           className="text-brand-primary text-sm font-semibold flex items-center gap-1 hover:underline cursor-pointer"
         >
-          {t.openOnMap || "Xaritada ko'rish"} <ExternalLink size={16} />
+          {t.openOnMap || "Xaritada ko'rish"} <ExternalLink size={16} aria-hidden="true" />
         </button>
       </div>
 
       <div className="flex items-start gap-3 mb-4">
-        <MapPin size={20} className="text-brand-primary mt-0.5 shrink-0" />
+        <MapPin size={20} className="text-brand-primary mt-0.5 shrink-0" aria-hidden="true" />
         <div>
           <p className="text-sm font-semibold text-slate-800 leading-snug">
             {selectedJob.location}
@@ -77,7 +78,7 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
         />
         <div className="absolute inset-0 bg-black/5 flex items-center justify-center pointer-events-none">
           <div className="w-12 h-12 bg-brand-primary rounded-full flex items-center justify-center text-white shadow-xl ring-4 ring-brand-primary/20">
-            <MapPin size={22} />
+            <MapPin size={22} aria-hidden="true" />
           </div>
         </div>
       </div>
@@ -85,11 +86,12 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
       {handleCalculateDistance && (
         <div className="mt-3">
           <button
+            type="button"
             onClick={handleCalculateDistance}
             disabled={isLocating}
             className="w-full h-11 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl text-xs font-bold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
           >
-            <Navigation size={15} className="rotate-45" />
+            <Navigation size={15} className="rotate-45" aria-hidden="true" />
             {isLocating 
               ? (language === 'uz' ? "Yo'nalish hisoblanmoqda..." : language === 'ru' ? "Прокладывание маршрута..." : "Calculating directions...") 
               : `${t.directions || "Yo'nalish"}`

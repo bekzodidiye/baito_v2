@@ -153,11 +153,17 @@ def read_jobs(
         for app in hired_apps:
             hired_counts[app.jobId] = hired_counts.get(app.jobId, 0) + 1
 
-        hired_worker_ids = list({app.workerId for app in hired_apps})
+        hired_worker_ids = list({app.workerId for app in hired_apps if app.workerId})
         hired_users = (
-            db.query(models.User).filter(models.User.id.in_(hired_worker_ids)).all()
-        )
-        user_map = {user.id: user for user in hired_users}
+            db.query(models.User)
+            .filter(or_(models.User.id.in_(hired_worker_ids), models.User.uid.in_(hired_worker_ids)))
+            .all()
+        ) if hired_worker_ids else []
+        user_map = {}
+        for user in hired_users:
+            user_map[user.id] = user
+            if user.uid:
+                user_map[user.uid] = user
 
         from app.schemas.job import HiredWorkerInfo
 

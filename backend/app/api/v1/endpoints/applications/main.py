@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import crud, models
@@ -143,13 +144,18 @@ def get_employer_applications(
     if not apps:
         return []
 
-    worker_ids = {a.workerId for a in apps}
+    worker_ids = {a.workerId for a in apps if a.workerId}
     workers = (
         db.query(models.User)
-        .filter(models.User.id.in_(worker_ids))
+        .filter(or_(models.User.id.in_(worker_ids), models.User.uid.in_(worker_ids)))
         .all()
-    )
-    worker_map = {w.id: w for w in workers}
+    ) if worker_ids else []
+    worker_map = {}
+    for w in workers:
+        if w.id:
+            worker_map[w.id] = w
+        if getattr(w, "uid", None):
+            worker_map[w.uid] = w
 
     # Each job carries its own rate — its category's plus its region's.
     # We batch query categories and regions to avoid N+1 queries.

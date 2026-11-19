@@ -85,10 +85,10 @@ const clockTime = (iso?: string | null): string => {
     : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-const toMessage = (m: ApiMessage, myId?: string): Message => ({
+const toMessage = (m: ApiMessage, myId?: string, myUid?: string): Message => ({
   id: m.id,
   // The UI's two senders are "me" and "the other party"; the API gives ids.
-  sender: myId && m.senderId === myId ? 'user' : 'recruiter',
+  sender: (myId && m.senderId === myId) || (myUid && m.senderId === myUid) ? 'user' : 'recruiter',
   text: m.text,
   time: clockTime(m.createdAt),
   hasMap: m.hasMap ?? false,
@@ -188,7 +188,7 @@ export function useChatsData(language: 'uz' | 'ru' | 'en') {
       c,
       c.id === activeChatId
         ? (Array.isArray(apiMessages) ? apiMessages : []).map((m) =>
-            toMessage(m, userProfile?.id),
+            toMessage(m, userProfile?.id, userProfile?.uid),
           )
         : [],
       unknownName,

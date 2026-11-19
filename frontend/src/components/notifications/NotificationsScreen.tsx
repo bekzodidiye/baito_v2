@@ -56,17 +56,20 @@ export const NotificationsScreen: React.FC = () => {
 
   const todayNotifications = filteredNotifications.filter(n => n.group === 'today');
   const yesterdayNotifications = filteredNotifications.filter(n => n.group === 'yesterday');
+  const earlierNotifications = filteredNotifications.filter(n => n.group === 'earlier');
 
   return (
     <div className="flex flex-col gap-5 pb-28 pt-3 md:pt-6 max-w-6xl mx-auto font-sans animate-fade-in w-full px-4">
       <div className="flex items-center justify-between bg-white px-5 py-4 rounded-2xl border border-slate-100 shadow-3xs">
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={handleBack}
             className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-600 transition-colors active:scale-95 cursor-pointer border-0 bg-slate-50"
+            aria-label={language === 'ru' ? 'Назад' : language === 'en' ? 'Back' : 'Orqaga'}
             title={language === 'ru' ? 'Назад' : language === 'en' ? 'Back' : 'Orqaga'}
           >
-            <ArrowLeft size={18} className="stroke-[2.2]" />
+            <ArrowLeft size={18} className="stroke-[2.2]" aria-hidden="true" />
           </button>
           <div>
             <h1 className="font-display text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
@@ -82,10 +85,12 @@ export const NotificationsScreen: React.FC = () => {
 
         {unreadCount > 0 && (
           <button
+            type="button"
             onClick={handleMarkAllRead}
+            aria-label={t.markAllAsRead}
             className="px-3.5 py-2 flex items-center gap-2 rounded-xl text-xs font-bold text-brand-primary hover:bg-brand-primary/10 bg-brand-primary/5 cursor-pointer transition-all active:scale-95 border-none"
           >
-            <CheckCheck size={16} className="stroke-[2.5]" />
+            <CheckCheck size={16} className="stroke-[2.5]" aria-hidden="true" />
             <span className="hidden sm:inline">{t.markAllAsRead}</span>
           </button>
         )}
@@ -147,6 +152,25 @@ export const NotificationsScreen: React.FC = () => {
                   </h2>
                   <div className="flex flex-col gap-2.5">
                     {yesterdayNotifications.map((noti) => (
+                      <NotificationItem 
+                        key={noti.id}
+                        noti={noti}
+                        language={language}
+                        handleNotificationClick={handleNotificationClick}
+                        t={t}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {earlierNotifications.length > 0 && (
+                <div className="flex flex-col gap-2.5 mt-2">
+                  <h2 className="text-xs font-extrabold tracking-wider text-slate-400 uppercase px-1">
+                    {t.earlier}
+                  </h2>
+                  <div className="flex flex-col gap-2.5">
+                    {earlierNotifications.map((noti) => (
                       <NotificationItem 
                         key={noti.id}
                         noti={noti}

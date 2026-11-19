@@ -6,6 +6,7 @@ import { MODAL_TRANSLATIONS } from './menu/MenuTranslations';
 import { ProfileContent } from './menu/ProfileContent';
 import { SettingsContent } from './menu/SettingsContent';
 import { HelpContent } from './menu/HelpContent';
+import { useFocusTrap } from './common/useFocusTrap';
 
 const LoginPromptScreen = React.lazy(() => import('./login/LoginPromptScreen').then(m => ({ default: m.LoginPromptScreen })));
 
@@ -17,6 +18,7 @@ interface MenuModalProps {
 
 export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) => {
   const { language } = useApp();
+  const modalRef = useFocusTrap<HTMLDivElement>(Boolean(isOpen && type), onClose);
   if (!isOpen || !type) return null;
 
   const t = MODAL_TRANSLATIONS[language];
@@ -35,6 +37,10 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
 
         {/* Modal Sheet */}
         <motion.div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={type === 'auth' ? (language === 'uz' ? 'Kirish' : language === 'ru' ? 'Вход' : 'Login') : (type === 'profile' ? t.profileTitle : type === 'settings' ? t.settingsTitle : t.helpTitle)}
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -75,6 +81,7 @@ export const MenuModals: React.FC<MenuModalProps> = ({ isOpen, onClose, type }) 
                 </h3>
                 <button
                   onClick={onClose}
+                  aria-label={language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                   className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-none bg-transparent"
                 >
                   <X size={18} />

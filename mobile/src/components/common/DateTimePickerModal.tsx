@@ -109,14 +109,14 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
 
                 <div className="grid grid-cols-2 gap-3 text-center">
                   <div className="flex flex-col items-center gap-1">
-                    <button onClick={incHour} className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"><ChevronUp size={16} /></button>
+                    <button type="button" onClick={incHour} aria-label="Soatni oshirish" className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"><ChevronUp size={16} /></button>
                     <div className="w-full py-2.5 bg-slate-50 border rounded-xl font-black text-lg text-slate-800">{String(curHour).padStart(2, '0')}</div>
-                    <button onClick={decHour} className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"><ChevronDown size={16} /></button>
+                    <button type="button" onClick={decHour} aria-label="Soatni kamaytirish" className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"><ChevronDown size={16} /></button>
                   </div>
                   <div className="flex flex-col items-center gap-1">
-                    <button onClick={incMin} className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"><ChevronUp size={16} /></button>
+                    <button type="button" onClick={incMin} aria-label="Daqiqani oshirish" className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"><ChevronUp size={16} /></button>
                     <div className="w-full py-2.5 bg-slate-50 border rounded-xl font-black text-lg text-slate-800">{String(curMin).padStart(2, '0')}</div>
-                    <button onClick={decMin} className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"><ChevronDown size={16} /></button>
+                    <button type="button" onClick={decMin} aria-label="Daqiqani kamaytirish" className="w-full py-1 bg-slate-100 hover:bg-slate-200 rounded-lg flex justify-center cursor-pointer"><ChevronDown size={16} /></button>
                   </div>
                 </div>
               </div>

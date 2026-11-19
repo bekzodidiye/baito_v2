@@ -55,6 +55,18 @@ export function useChatScreen(displayedChatId?: string | null) {
     scrollToBottom();
   }, [activeChat?.messages, isTyping]);
 
+  useEffect(() => {
+    return () => {
+      attachedFiles.forEach(file => {
+        if (file.previewUrl) {
+          try {
+            URL.revokeObjectURL(file.previewUrl);
+          } catch {}
+        }
+      });
+    };
+  }, []);
+
   const handleSend = (e?: React.FormEvent) => {
     // The form calls this with an event; the send button calls it with none,
     // and `e.preventDefault()` on the button path threw a TypeError.
@@ -71,6 +83,11 @@ export function useChatScreen(displayedChatId?: string | null) {
       let textToSend = typed;
       if (pendingFiles.length > 0) {
         for (const pending of pendingFiles) {
+          if (pending.previewUrl) {
+            try {
+              URL.revokeObjectURL(pending.previewUrl);
+            } catch {}
+          }
           try {
             const url = await uploadFileApi(pending.file, 'chat');
             textToSend = `[Img:${url}]` + (textToSend ? ` ${textToSend}` : '');

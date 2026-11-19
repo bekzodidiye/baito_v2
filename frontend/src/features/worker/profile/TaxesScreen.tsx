@@ -90,7 +90,12 @@ export const TaxesScreen: React.FC = () => {
                 </div>
 
                 {doc.status === 'ready' && (
-                  <button className="w-10 h-10 rounded-full bg-slate-50 text-slate-500 flex items-center justify-center group-hover:bg-brand-primary group-hover:text-white transition-colors shrink-0">
+                  <button
+                    type="button"
+                    title={t.download}
+                    aria-label={`${t.download}: ${doc.title}`}
+                    className="w-10 h-10 rounded-full bg-slate-50 text-slate-500 flex items-center justify-center group-hover:bg-brand-primary group-hover:text-white transition-colors shrink-0 cursor-pointer"
+                  >
                     <Download size={18} />
                   </button>
                 )}

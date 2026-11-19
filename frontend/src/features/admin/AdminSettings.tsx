@@ -258,10 +258,11 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
               <p className="text-slate-500 text-xs mt-0.5">Admin paneliga to'liq yoki cheklangan huquqqa ega xodimlar</p>
             </div>
             <button
+              type="button"
               onClick={() => setIsAddAdminOpen(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs transition"
+              className="px-3.5 py-2 bg-brand-primary hover:bg-brand-primary/95 text-white font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs shadow-brand-primary/20 transition"
             >
-              <Plus size={14} /> Yangi Admin
+              <Plus size={14} aria-hidden="true" /> Yangi Admin
             </button>
           </div>
 
@@ -392,7 +393,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onUpdate
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 font-extrabold text-white text-xs shadow-xs cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-brand-primary hover:bg-brand-primary/95 font-extrabold text-white text-xs shadow-xs shadow-brand-primary/20 cursor-pointer"
                 >
                   Qo'shish
                 </button>

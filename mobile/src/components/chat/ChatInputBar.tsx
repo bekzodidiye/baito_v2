@@ -87,9 +87,10 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
                 <button 
                   type="button" 
                   onClick={() => handleRemoveFile(idx)} 
+                  aria-label="Faylni o'chirish"
                   className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 bg-slate-500 text-white rounded-full flex items-center justify-center shadow-xs cursor-pointer z-10 hover:bg-slate-600 transition-colors border border-white"
                 >
-                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                  <svg aria-hidden="true" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
               </div>
               <span className="text-[12px] font-normal text-slate-500 truncate max-w-[220px]">
@@ -108,6 +109,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             onClick={() => fileInputRef.current?.click()} 
             type="button"
             className="p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-0 bg-transparent flex items-center justify-center shrink-0"
+            aria-label={t.attachFile || "Fayl biriktirish"}
             title={t.attachFile}
           >
             <Paperclip size={20} />
@@ -119,6 +121,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
               style={{ outline: 'none', boxShadow: 'none' }}
               className="w-full bg-transparent text-slate-800 text-xs sm:text-sm placeholder:text-slate-400 border-none outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 p-0 shadow-none"
               placeholder="Xabar yozing..."
+              aria-label="Xabar yozing"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
             />
@@ -130,6 +133,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             className={`p-1 transition-colors cursor-pointer border-0 bg-transparent flex items-center justify-center shrink-0 ${
               showEmoji ? 'text-brand-primary' : 'text-slate-400 hover:text-slate-600'
             }`}
+            aria-label={t.emoji || "Emoji"}
             title={t.emoji}
           >
             <Smile size={20} />
@@ -140,6 +144,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
           onClick={() => handleSend()}
           type="button"
           className="w-11 h-11 flex items-center justify-center rounded-full bg-brand-primary text-white shadow-md hover:shadow-lg active:scale-90 transition-all cursor-pointer shrink-0 border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+          aria-label={t.send || "Yuborish"}
           title={t.send}
         >
           <Send size={18} />

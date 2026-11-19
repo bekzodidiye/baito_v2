@@ -57,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
             aria-label={language === 'uz' ? 'Bildirishnomalar' : language === 'ru' ? 'Уведомления' : 'Notifications'}
             className="relative w-11 h-11 flex items-center justify-center cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
           >
-            <Bell size={22} />
+            <Bell size={22} aria-hidden="true" />
             {unreadNotificationsCount > 0 && (
               <span className="absolute top-1 right-1 bg-red-600 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
                 {unreadNotificationsCount}
@@ -69,6 +69,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
       case 'messages':
         return (
           <button 
+            type="button"
+            aria-label={language === 'uz' ? 'Qidiruv' : language === 'ru' ? 'Поиск' : 'Search'}
             onClick={() => setMessagesSearchOpen(!messagesSearchOpen)}
             className={`p-2 cursor-pointer rounded-full transition-all duration-300 ${
               messagesSearchOpen 
@@ -76,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
                 : 'text-brand-primary hover:bg-brand-surface-low'
             }`}
           >
-            <Search size={22} />
+            <Search size={22} aria-hidden="true" />
           </button>
         );
       case 'jobs':
@@ -86,23 +88,26 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
         return (
           <div className="flex items-center gap-1">
             <button
+              type="button"
               onClick={() => setJobsView(jobsView === 'map' ? 'list' : 'map')}
               className="w-11 h-11 flex items-center justify-center cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
               title={jobsView === 'map' ? t.listView : t.mapView}
               aria-label={jobsView === 'map' ? t.listView : t.mapView}
             >
-              {jobsView === 'map' ? <LayoutList size={22} /> : <Map size={22} />}
+              {jobsView === 'map' ? <LayoutList size={22} aria-hidden="true" /> : <Map size={22} aria-hidden="true" />}
             </button>
           </div>
         );
       default:
         return (
           <button
+            type="button"
             onClick={() => setCurrentScreen('jobs')}
             className="w-11 h-11 flex items-center justify-center cursor-pointer text-brand-primary hover:bg-brand-surface-low rounded-full transition-colors"
             title={t.mapView}
+            aria-label={t.mapView}
           >
-            <Map size={22} />
+            <Map size={22} aria-hidden="true" />
           </button>
         );
     }
@@ -114,11 +119,12 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
       {currentScreen !== 'chat' && currentScreen !== 'notifications' && currentScreen !== 'profile' && currentScreen !== 'reviews' && currentScreen !== 'applications' && currentScreen !== 'payments' && !((currentScreen === 'messages' || currentScreen === 'employer-chats') && (selectedChatId || employerSelectedChatId)) && (
         <header className="flex md:hidden justify-between items-center px-4 h-14 w-full z-50 bg-white shadow-[0_0_24px_rgba(0,0,0,0.08),_0_4px_12px_rgba(0,0,0,0.04)] fixed top-0 left-0">
           <button
+            type="button"
             aria-label={t.openMenu}
             onClick={() => setDrawerOpen(true)}
             className="flex items-center justify-center p-2 rounded-full hover:bg-brand-surface-low transition-colors text-brand-primary cursor-pointer"
           >
-            <Menu size={22} />
+            <Menu size={22} aria-hidden="true" />
           </button>
           <h1 className="font-display text-lg font-bold text-brand-primary truncate flex-1 text-center">
             {getMobileTitle()}

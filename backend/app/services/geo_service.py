@@ -152,8 +152,12 @@ class GeoSpatialService:
         for job in jobs:
             loc = getattr(job, "location", None) or ""
             raw_loc = getattr(job, "rawLocation", None) or ""
-            lat = getattr(job, "coordinateX", None)
-            lng = getattr(job, "coordinateY", None)
+            lat = getattr(job, "latitude", None)
+            if lat is None:
+                lat = getattr(job, "coordinateX", None)
+            lng = getattr(job, "longitude", None)
+            if lng is None:
+                lng = getattr(job, "coordinateY", None)
 
             reg, dist = cls.resolve_location(loc, raw_loc, lat, lng)
             total += 1

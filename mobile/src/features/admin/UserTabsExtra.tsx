@@ -287,8 +287,8 @@ export const UserTabsExtra: React.FC<UserTabsExtraProps> = ({ detail, activeTab,
         <div className="bg-white rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50 overflow-hidden flex flex-col h-[400px]">
           <div className="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
             <span className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                <FileText size={14} />
+              <div className="w-6 h-6 rounded-md bg-brand-primary/10 text-brand-primary flex items-center justify-center">
+                <FileText size={14} aria-hidden="true" />
               </div>
               Adminning Ichki Izohlari
             </span>

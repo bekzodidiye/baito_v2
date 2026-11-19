@@ -37,7 +37,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from alembic import op
+from alembic import context, op
 
 revision: str = "0019_close_idle_sessions"
 down_revision: Union[str, None] = "0018_refund_held_escrow"
@@ -50,7 +50,16 @@ depends_on: Union[str, Sequence[str], None] = None
 IDLE_DAYS = 7
 
 
+def _is_offline() -> bool:
+    try:
+        return context.is_offline_mode()
+    except Exception:
+        return False
+
+
 def upgrade() -> None:
+    if _is_offline():
+        return
     conn = op.get_bind()
     cutoff = datetime.now(timezone.utc) - timedelta(days=IDLE_DAYS)
 

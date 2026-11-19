@@ -60,11 +60,12 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
               <div className="flex flex-wrap gap-2">
                 {categories.map((cat) => (
                   <button
+                    type="button"
                     key={cat.name}
                     onClick={() => setHourlyRate(cat.rate)}
                     className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                       hourlyRate === cat.rate
-                        ? 'bg-brand-primary text-white shadow-md shadow-blue-600/25 scale-105'
+                        ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/25 scale-105'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
                     }`}
                   >
@@ -130,11 +131,12 @@ export const LandingIncomeCalculator: React.FC<LandingIncomeCalculatorProps> = (
             </div>
 
             <button
+              type="button"
               onClick={() => onSelectRole('worker')}
-              className="w-full py-3.5 rounded-xl bg-brand-primary hover:bg-blue-600 text-white font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 active:scale-[0.98]"
+              className="w-full py-3.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-brand-primary/30 active:scale-[0.98]"
             >
               <span>Ushbu daromadni topishni boshlash</span>
-              <ArrowRight size={15} />
+              <ArrowRight size={15} aria-hidden="true" />
             </button>
           </div>
         </div>

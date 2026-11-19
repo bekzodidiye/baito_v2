@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { X, FileText, CheckCircle2 } from 'lucide-react';
 import { money } from '../../utils/money';
+import { useFocusTrap } from '../../components/common/useFocusTrap';
 
 interface TxReceiptModalProps {
   tx: any;
@@ -15,6 +16,7 @@ export const TxReceiptModal: React.FC<TxReceiptModalProps> = ({ tx, onClose, lan
   const isIncoming = tx.type === 'deposit' || tx.type === 'payout' || (tx.type !== 'withdraw' && tx.workerId);
 
   const t = (uz: string, ru: string, en: string) => language === 'uz' ? uz : language === 'ru' ? ru : en;
+  const modalRef = useFocusTrap<HTMLDivElement>(true, onClose);
 
   return (
     <>
@@ -27,6 +29,10 @@ export const TxReceiptModal: React.FC<TxReceiptModalProps> = ({ tx, onClose, lan
       />
       
       <motion.div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("To'lov cheki", 'Чек об оплате', 'Payment receipt')}
         initial={{ opacity: 0, y: "100%" }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: "100%" }}
@@ -42,6 +48,7 @@ export const TxReceiptModal: React.FC<TxReceiptModalProps> = ({ tx, onClose, lan
           </h3>
           <button
             onClick={onClose}
+            aria-label={t('Yopish', 'Закрыть', 'Close')}
             className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
           >
             <X size={18} />

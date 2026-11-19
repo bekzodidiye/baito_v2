@@ -52,19 +52,45 @@ def _is_identity_document(db: Session, object_key: str) -> Optional[str]:
     return owner[0] if owner else None
 
 
-def _shares_a_chat(db: Session, viewer_id: str, owner_id: str) -> bool:
+def _shares_a_chat(db: Session, viewer_ids: list[str], owner_id: str) -> bool:
     """Are these two people in a conversation together?"""
     return (
         db.query(models.Chat.id)
         .filter(
             or_(
-                (models.Chat.workerId == viewer_id) & (models.Chat.employerId == owner_id),
-                (models.Chat.employerId == viewer_id) & (models.Chat.workerId == owner_id),
+                models.Chat.workerId.in_(viewer_ids) & (models.Chat.employerId == owner_id),
+                models.Chat.employerId.in_(viewer_ids) & (models.Chat.workerId == owner_id),
             )
         )
         .first()
         is not None
     )
+
+
+def _get_payout_for_media(db: Session, object_key: str) -> Optional[models.JobPayout]:
+    url_variants = [
+        f"/{settings.AWS_BUCKET_NAME}/{object_key}",
+        f"{settings.API_V1_STR}/media/{object_key}",
+        object_key,
+    ]
+    return (
+        db.query(models.JobPayout)
+        .filter(models.JobPayout.receiptUrl.in_(url_variants))
+        .first()
+    )
+
+
+def _is_media_in_another_chat(db: Session, viewer_ids: list[str], object_key: str) -> bool:
+    """If the file was posted to any chat, ensure the viewer is a participant in that chat."""
+    chat_messages = (
+        db.query(models.Chat)
+        .join(models.Message, models.Message.chatId == models.Chat.id)
+        .filter(models.Message.text.contains(object_key))
+        .all()
+    )
+    if not chat_messages:
+        return False
+    return not any(c.workerId in viewer_ids or c.employerId in viewer_ids for c in chat_messages)
 
 
 def _stream_body(body_obj):
@@ -102,15 +128,36 @@ def get_media(
         owner_id = _is_identity_document(db, object_key)
         visibility = MediaVisibility.PRIVATE if owner_id else MediaVisibility.PUBLIC
 
+    is_identity_doc = bool(_is_identity_document(db, object_key))
+    if is_identity_doc:
+        visibility = MediaVisibility.PRIVATE
+
+    payout = _get_payout_for_media(db, object_key)
+    if payout is not None:
+        visibility = MediaVisibility.PRIVATE
+
     if visibility != MediaVisibility.PUBLIC:
         if not current_user:
             raise HTTPException(status_code=401, detail="Tizimga kiring")
-        is_owner = owner_id is not None and current_user.id == owner_id
+        user_ids = [uid for uid in [current_user.id, getattr(current_user, "uid", None)] if uid]
+        is_owner = owner_id is not None and owner_id in user_ids
         if not is_owner and current_user.role != "admin":
-            # An image sent in a chat has to be readable by the person it was
-            # sent to. Ownership alone would mean only the sender could open it.
-            if not (owner_id and _shares_a_chat(db, current_user.id, owner_id)):
+            # 1. Identity documents (passports, selfies) are strictly owner/admin only.
+            if is_identity_doc:
                 raise HTTPException(status_code=403, detail="Bu faylni ko'rish huquqingiz yo'q")
+
+            # 2. Bank transfer payout receipts are strictly payable worker, billed employer, or admin only.
+            if payout is not None:
+                if payout.workerId not in user_ids and payout.employerId not in user_ids:
+                    raise HTTPException(status_code=403, detail="Bu faylni ko'rish huquqingiz yo'q")
+            else:
+                # 3. If the media was sent in another chat, viewer must be a participant in that conversation.
+                if _is_media_in_another_chat(db, user_ids, object_key):
+                    raise HTTPException(status_code=403, detail="Bu faylni ko'rish huquqingiz yo'q")
+
+                # 4. Otherwise, viewer must at least share a conversation with the owner.
+                if not (owner_id and _shares_a_chat(db, user_ids, owner_id)):
+                    raise HTTPException(status_code=403, detail="Bu faylni ko'rish huquqingiz yo'q")
 
     try:
         obj = get_s3_client().get_object(Bucket=settings.AWS_BUCKET_NAME, Key=object_key)

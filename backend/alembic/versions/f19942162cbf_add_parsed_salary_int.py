@@ -7,7 +7,7 @@ Create Date: 2026-09-22 11:13:46.089246
 """
 from typing import Sequence, Union
 
-from alembic import op
+from alembic import context, op
 import sqlalchemy as sa
 import re
 from sqlalchemy import text
@@ -39,6 +39,13 @@ def _parse_to_int(salary: str | None) -> int:
         return 0
     return min(amounts)
 
+def _is_offline() -> bool:
+    try:
+        return context.is_offline_mode()
+    except Exception:
+        return False
+
+
 def upgrade() -> None:
     bind = op.get_bind()
     from sqlalchemy import inspect
@@ -57,19 +64,20 @@ def upgrade() -> None:
         op.create_index(op.f('ix_jobs_salaryInt'), 'jobs', ['salaryInt'], unique=False)
 
     # Data migration
-    conn = op.get_bind()
-    result = conn.execute(text("SELECT id, salary, \"hourlyRate\", \"transportRate\" FROM jobs"))
-    jobs = result.fetchall()
-    
-    for job in jobs:
-        s_int = _parse_to_int(job[1])
-        h_int = _parse_to_int(job[2]) if job[2] else None
-        t_int = _parse_to_int(job[3]) if job[3] else None
-        
-        conn.execute(
-            text('UPDATE jobs SET "salaryInt" = :s, "hourlyRateInt" = :h, "transportRateInt" = :t WHERE id = :id'),
-            {"s": s_int, "h": h_int, "t": t_int, "id": job[0]}
-        )
+    if not _is_offline():
+        conn = op.get_bind()
+        result = conn.execute(text("SELECT id, salary, \"hourlyRate\", \"transportRate\" FROM jobs"))
+        if result:
+            jobs = result.fetchall()
+            for job in jobs:
+                s_int = _parse_to_int(job[1])
+                h_int = _parse_to_int(job[2]) if job[2] else None
+                t_int = _parse_to_int(job[3]) if job[3] else None
+                
+                conn.execute(
+                    text('UPDATE jobs SET "salaryInt" = :s, "hourlyRateInt" = :h, "transportRateInt" = :t WHERE id = :id'),
+                    {"s": s_int, "h": h_int, "t": t_int, "id": job[0]}
+                )
 
 def downgrade() -> None:
     bind = op.get_bind()

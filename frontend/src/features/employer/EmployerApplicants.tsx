@@ -114,7 +114,7 @@ export const EmployerApplicants: React.FC<EmployerApplicantsProps> = ({ onChatCl
         >
           {displayedApps.length === 0 ? (
             <div className="bg-gradient-to-b from-slate-50 to-white rounded-3xl border border-slate-100 py-20 px-6 flex flex-col items-center justify-center text-center mt-4 shadow-[inset_0_2px_10px_rgba(0,0,0,0.01)]">
-              <div className="w-20 h-20 bg-blue-50/80 rounded-full flex items-center justify-center mb-6 shadow-sm border border-blue-100/50 relative">
+              <div className="w-20 h-20 bg-brand-primary/10 rounded-full flex items-center justify-center mb-6 shadow-sm border border-brand-primary/20 relative">
                 <div className="absolute inset-0 bg-brand-primary/5 rounded-full animate-ping opacity-75"></div>
                 <ClipboardCheck size={36} className="text-brand-primary stroke-[1.5] relative z-10" />
               </div>

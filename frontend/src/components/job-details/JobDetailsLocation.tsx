@@ -190,10 +190,16 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
       {/* Interactive Map Preview Box - Enlarged Height */}
       <div
         onClick={handleMapButtonClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleMapButtonClick();
+          }
+        }}
         role="button"
         tabIndex={0}
         aria-label={t.openOnMap || "Xaritada ochish"}
-        className="w-full h-72 sm:h-80 rounded-2xl overflow-hidden border border-slate-200/90 relative shadow-sm bg-slate-100 cursor-pointer group hover:border-brand-primary hover:shadow-md transition-all"
+        className="w-full h-72 sm:h-80 rounded-2xl overflow-hidden border border-slate-200/90 relative shadow-sm bg-slate-100 cursor-pointer group hover:border-brand-primary hover:shadow-md transition-all focus-visible:outline-2 focus-visible:outline-brand-primary"
       >
         <div ref={mapContainerRef} className="w-full h-full" />
 
@@ -204,20 +210,21 @@ export const JobDetailsLocation: React.FC<JobDetailsLocationProps> = ({
         </div>
 
         {/* Click to open badge on bottom right */}
-        <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-bold text-brand-primary shadow-md border border-blue-100 flex items-center gap-1.5 group-hover:bg-brand-primary group-hover:text-white transition-all pointer-events-none">
+        <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-bold text-brand-primary shadow-md border border-brand-primary/20 flex items-center gap-1.5 group-hover:bg-brand-primary group-hover:text-white transition-all pointer-events-none">
           <span>{t.openOnMap || "Xaritada ochish"}</span>
-          <ExternalLink size={13} />
+          <ExternalLink size={13} aria-hidden="true" />
         </div>
       </div>
 
       {handleCalculateDistance && (
         <div className="mt-3">
           <button
+            type="button"
             onClick={handleCalculateDistance}
             disabled={isLocating}
             className="w-full h-11 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl text-xs font-bold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
           >
-            <Navigation size={15} className="rotate-45" />
+            <Navigation size={15} className="rotate-45" aria-hidden="true" />
             {isLocating 
               ? (language === 'uz' ? "Yo'nalish hisoblanmoqda..." : language === 'ru' ? "Прокладывание маршрута..." : "Calculating directions...") 
               : `${t.directions || "Yo'nalish"}`

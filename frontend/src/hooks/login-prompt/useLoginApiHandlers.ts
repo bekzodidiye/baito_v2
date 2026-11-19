@@ -144,7 +144,7 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
         if (!redirected) setCurrentScreen('verification');
       }
     } catch (err: any) {
-      const msg = err?.message || (language === 'uz' ? "Xatolik yuz berdi. Balki bu raqam ro'yxatdan o'tgandir?" : "Произошла ошибка при регистрации");
+      const msg = err?.message || (language === 'uz' ? "Xatolik yuz berdi. Balki bu raqam ro'yxatdan o'tgandir?" : language === 'ru' ? "Произошла ошибка при регистрации" : "An error occurred during registration. Perhaps this phone number is already registered?");
       showToast(msg);
     }
   };

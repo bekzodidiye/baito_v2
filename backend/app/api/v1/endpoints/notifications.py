@@ -1,11 +1,12 @@
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
+from app.core.limiter import limiter
 
 router = APIRouter()
 
@@ -44,7 +45,9 @@ def unread_count(
 
 
 @router.post("/read-all")
+@limiter.limit("60/minute")
 def mark_all_read(
+    request: Request,
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
@@ -55,7 +58,9 @@ def mark_all_read(
 
 
 @router.post("/{notification_id}/read")
+@limiter.limit("120/minute")
 def mark_one_read(
+    request: Request,
     notification_id: str,
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),

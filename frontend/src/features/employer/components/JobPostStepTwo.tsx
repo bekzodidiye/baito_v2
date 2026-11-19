@@ -57,8 +57,17 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
             {language === 'uz' ? "Ish sanasi *" : language === 'ru' ? "Дата работы *" : "Work Date *"}
           </label>
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={language === 'uz' ? "Ish sanasini tanlash" : language === 'ru' ? "Выбрать дату работы" : "Select work date"}
             onClick={() => setIsPickerOpen(true)}
-            className="w-full bg-slate-50 border border-slate-200 hover:border-brand-primary/60 rounded-xl px-3.5 py-3 text-sm font-extrabold text-slate-800 cursor-pointer flex items-center justify-between transition-colors"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsPickerOpen(true);
+              }
+            }}
+            className="w-full bg-slate-50 border border-slate-200 hover:border-brand-primary/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-xl px-3.5 py-3 text-sm font-extrabold text-slate-800 cursor-pointer flex items-center justify-between transition-colors"
           >
             <span className="truncate pr-2">{formattedDateText}</span>
             <CalendarIcon size={16} className="text-slate-400 shrink-0" />
@@ -72,8 +81,17 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
             {language === 'uz' ? "Ish muddati *" : language === 'ru' ? "Продолжительность *" : "Duration *"}
           </label>
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={language === 'uz' ? "Ish muddatini tanlash" : language === 'ru' ? "Выбрать продолжительность" : "Select duration"}
             onClick={() => setIsPickerOpen(true)}
-            className="w-full bg-slate-50 border border-slate-200 hover:border-brand-primary/60 rounded-xl px-3.5 py-3 text-sm font-extrabold text-slate-800 cursor-pointer flex items-center justify-between transition-colors"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsPickerOpen(true);
+              }
+            }}
+            className="w-full bg-slate-50 border border-slate-200 hover:border-brand-primary/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-xl px-3.5 py-3 text-sm font-extrabold text-slate-800 cursor-pointer flex items-center justify-between transition-colors"
           >
             <span>{dayCount > 0
               ? (language === 'ru' ? `${dayCount} дн.` : language === 'en' ? (dayCount === 1 ? '1 day' : `${dayCount} days`) : `${dayCount} kunlik`)
@@ -91,8 +109,17 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
             {language === 'uz' ? "Boshlanish vaqti *" : language === 'ru' ? "Время начала *" : "Start Time *"}
           </label>
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={language === 'uz' ? "Boshlanish vaqtini tanlash" : language === 'ru' ? "Выбрать время начала" : "Select start time"}
             onClick={() => setIsPickerOpen(true)}
-            className="w-full bg-slate-50 border border-slate-200 hover:border-brand-primary/60 rounded-xl px-3.5 py-3 text-sm font-extrabold text-slate-800 cursor-pointer flex items-center justify-between transition-colors"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsPickerOpen(true);
+              }
+            }}
+            className="w-full bg-slate-50 border border-slate-200 hover:border-brand-primary/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-xl px-3.5 py-3 text-sm font-extrabold text-slate-800 cursor-pointer flex items-center justify-between transition-colors"
           >
             <span>{startTime || '09:00'}</span>
             <Clock size={16} className="text-slate-400 shrink-0" />
@@ -105,8 +132,17 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
             {language === 'uz' ? "Tugash vaqti *" : language === 'ru' ? "Время окончания *" : "End Time *"}
           </label>
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={language === 'uz' ? "Tugash vaqtini tanlash" : language === 'ru' ? "Выбрать время окончания" : "Select end time"}
             onClick={() => setIsPickerOpen(true)}
-            className="w-full bg-slate-50 border border-slate-200 hover:border-brand-primary/60 rounded-xl px-3.5 py-3 text-sm font-extrabold text-slate-800 cursor-pointer flex items-center justify-between transition-colors"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsPickerOpen(true);
+              }
+            }}
+            className="w-full bg-slate-50 border border-slate-200 hover:border-brand-primary/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary rounded-xl px-3.5 py-3 text-sm font-extrabold text-slate-800 cursor-pointer flex items-center justify-between transition-colors"
           >
             <span>{endTime || '18:00'}</span>
             <Clock size={16} className="text-slate-400 shrink-0" />
@@ -122,9 +158,23 @@ export const JobPostStepTwo: React.FC<JobPostStepTwoProps> = (props) => {
             {language === 'uz' ? "Kerakli ishchilar soni *" : language === 'ru' ? "Количество работников *" : "Workers needed *"}
           </label>
           <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-1.5 w-max">
-            <button type="button" onClick={() => setNeededWorkers(String(Math.max(1, parseInt(neededWorkers || '1') - 1)))} className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-600 active:scale-95">-</button>
-            <span className="font-display font-black text-base w-6 text-center text-slate-900">{neededWorkers || '1'}</span>
-            <button type="button" onClick={() => setNeededWorkers(String(parseInt(neededWorkers || '1') + 1))} className="w-8 h-8 rounded-lg bg-brand-primary text-white flex items-center justify-center font-bold active:scale-95 border-none">+</button>
+            <button
+              type="button"
+              aria-label={language === 'uz' ? "Ishchilar sonini kamaytirish" : language === 'ru' ? "Уменьшить количество работников" : "Decrease workers"}
+              onClick={() => setNeededWorkers(String(Math.max(1, parseInt(neededWorkers || '1') - 1)))}
+              className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-600 active:scale-95 cursor-pointer"
+            >
+              -
+            </button>
+            <span className="font-extrabold text-sm text-slate-800 px-2 min-w-[20px] text-center">{neededWorkers}</span>
+            <button
+              type="button"
+              aria-label={language === 'uz' ? "Ishchilar sonini oshirish" : language === 'ru' ? "Увеличить количество работников" : "Increase workers"}
+              onClick={() => setNeededWorkers(String(parseInt(neededWorkers || '1') + 1))}
+              className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-600 active:scale-95 cursor-pointer"
+            >
+              +
+            </button>
           </div>
         </div>
 

@@ -17,8 +17,8 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
         {/* Personal Info Grid */}
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="flex items-center gap-3 bg-white p-4 rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50">
-            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
-              <Phone size={18} />
+            <div className="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary border border-brand-primary/20 flex items-center justify-center shrink-0">
+              <Phone size={18} aria-hidden="true" />
             </div>
             <div>
               <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">Telefon raqam</span>
@@ -28,7 +28,7 @@ export const UserTabsMain: React.FC<UserTabsMainProps> = ({ user, activeTab }) =
           
           <div className="flex items-center gap-3 bg-white p-4 rounded-[16px] border border-slate-100 shadow-sm shadow-slate-100/50">
             <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 shrink-0">
-              <Mail size={18} />
+              <Mail size={18} aria-hidden="true" />
             </div>
             <div>
               <span className="text-[11px] font-bold text-slate-400 block mb-0.5 uppercase tracking-wider">Email manzil</span>

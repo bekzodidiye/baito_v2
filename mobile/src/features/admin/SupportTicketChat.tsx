@@ -52,8 +52,13 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
           >
             <CheckCircle size={14} /> Hal etildi
           </button>
-          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 cursor-pointer">
-            <X size={18} />
+          <button 
+            type="button"
+            onClick={onClose} 
+            aria-label="Yopish"
+            className="p-1.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+          >
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -62,10 +67,10 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
         {ticket.messages.map((m, idx) => (
           <div key={idx} className={`flex ${m.sender === 'admin' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[80%] p-3 rounded-2xl ${
-              m.sender === 'admin' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-xs'
+              m.sender === 'admin' ? 'bg-brand-primary text-white rounded-tr-none shadow-xs shadow-brand-primary/20' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-xs'
             }`}>
               <p className="font-medium leading-relaxed">{m.text}</p>
-              <span className={`text-[10px] block text-right mt-1 font-bold ${m.sender === 'admin' ? 'text-blue-200' : 'text-slate-400'}`}>{m.timestamp}</span>
+              <span className={`text-[10px] block text-right mt-1 font-bold ${m.sender === 'admin' ? 'text-white/80' : 'text-slate-400'}`}>{m.timestamp}</span>
             </div>
           </div>
         ))}
@@ -74,21 +79,27 @@ export const SupportTicketChat: React.FC<SupportTicketChatProps> = ({
       <div className="p-3 border-t border-slate-200/80 bg-white rounded-b-2xl space-y-2">
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
           {quickReplies.map((qr, i) => (
-            <button key={i} onClick={() => setReplyText(qr)} className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold shrink-0 cursor-pointer">
+            <button 
+              type="button"
+              key={i} 
+              onClick={() => setReplyText(qr)} 
+              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold shrink-0 cursor-pointer"
+            >
               {qr.slice(0, 30)}...
             </button>
           ))}
         </div>
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
+            aria-label="Javob matni"
             type="text"
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="Javobingizni yozing..."
             className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
           />
-          <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer">
-            <Send size={14} /> Yuborish
+          <button type="submit" className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/90 text-white font-bold rounded-xl text-xs flex items-center gap-1 cursor-pointer shadow-xs shadow-brand-primary/20">
+            <Send size={14} aria-hidden="true" /> Yuborish
           </button>
         </form>
       </div>

@@ -2,6 +2,7 @@ import logging
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -60,8 +61,16 @@ def get_my_jobs(
 
         worker_ids = list({a.workerId for a in apps if a.workerId})
         if worker_ids:
-            hired_users = db.query(models.User).filter(models.User.id.in_(worker_ids)).all()
-            user_map = {u.id: u for u in hired_users}
+            hired_users = (
+                db.query(models.User)
+                .filter(or_(models.User.id.in_(worker_ids), models.User.uid.in_(worker_ids)))
+                .all()
+            )
+            user_map = {}
+            for u in hired_users:
+                user_map[u.id] = u
+                if u.uid:
+                    user_map[u.uid] = u
             for a in apps:
                 u = user_map.get(a.workerId)
                 if u:

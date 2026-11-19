@@ -309,5 +309,31 @@ export const ru = {
   noPhoneOnFile: "Номер телефона не указан",
   unknownDevice: "Неизвестное устройство",
   unknownIp: "Неизвестный IP",
-  activeNow: "Активно сейчас"
+  activeNow: "Активно сейчас",
+
+  // Offline banner
+  offlineBanner: "Нет подключения к интернету. Пожалуйста, проверьте связь!",
+
+  // Payment cards & management
+  cardAddedSuccess: "Карта успешно добавлена!",
+  cardAddError: "Произошла ошибка при добавлении карты",
+  cardDeletedSuccess: "Карта успешно удалена",
+  cardDeleteError: "Ошибка при удалении карты",
+  cardFrozenSuccess: "Карта заморожена",
+  cardUnfrozenSuccess: "Карта разморожена",
+  cardTermsAgreement: "Согласен с правилами сохранения карты",
+  cardTermsSubtitle: "Данные карты надежно защищены и не передаются третьим лицам.",
+  cardSecurityNotice: "Все платежные данные безопасно зашифрованы. Мы не храним ваш CVV код.",
+  linkCard: "Привязать карту",
+  deleteCardConfirmTitle: "Удалить карту",
+  deleteCardConfirmDesc: "Вы уверены, что хотите удалить эту карту? Это действие нельзя отменить.",
+  freezeCard: "Заморозить карту",
+  unfreezeCard: "Разморозить карту",
+  freezeCardConfirmDesc: "Временно заморозить карту?",
+  unfreezeCardConfirmDesc: "Разморозить и активировать карту?",
+  cardStatusActive: "Активна",
+  cardStatusFrozen: "Заморожена",
+  cardBank: "Название банка",
+  cardDetails: "Детали карты",
+  cvvHint: "3-значный код на обороте карты"
 };

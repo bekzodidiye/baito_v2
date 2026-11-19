@@ -396,8 +396,8 @@ export const EmployerJobDetailModal: React.FC<EmployerJobDetailModalProps> = ({
           <footer className="sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 p-3 sm:p-4 shrink-0 flex items-center gap-3">
             {activeJob.status === 'in_progress' ? (
               <div className="w-full flex flex-col sm:flex-row items-center gap-3">
-                <div className="flex-1 w-full py-3 px-4 bg-blue-50 text-blue-700 border border-blue-100 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
-                  <Clock size={16} className="text-blue-600 animate-spin" />
+                <div className="flex-1 w-full py-3 px-4 bg-brand-primary/5 text-brand-primary border border-brand-primary/15 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+                  <Clock size={16} className="text-brand-primary animate-spin" />
                   <span className="text-center">
                     {language === 'uz'
                       ? 'Ish jarayonda — smena xodim tomonidan yakunlanadi'

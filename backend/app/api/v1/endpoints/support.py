@@ -15,6 +15,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
@@ -57,13 +58,16 @@ def _serialise(db: Session, ticket: models.SupportTicket | None) -> dict:
         .all()
     )
     # Who said it matters to the client only as "me" or "support".
-    admin_ids = {
-        row[0]
-        for row in db.query(models.User.id)
-        .filter(models.User.id.in_({m.senderId for m in messages} or {""}),
-                models.User.role == "admin")
+    sender_ids = {m.senderId for m in messages if m.senderId}
+    admin_users = (
+        db.query(models.User)
+        .filter(
+            or_(models.User.id.in_(sender_ids), models.User.uid.in_(sender_ids)),
+            models.User.role == "admin",
+        )
         .all()
-    }
+    ) if sender_ids else []
+    admin_ids = {u.id for u in admin_users} | {u.uid for u in admin_users if getattr(u, "uid", None)}
     return {
         "ticketId": ticket.id,
         "status": ticket.status,

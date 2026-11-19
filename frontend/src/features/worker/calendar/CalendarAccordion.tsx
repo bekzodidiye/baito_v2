@@ -143,14 +143,14 @@ export const CalendarAccordion: React.FC<CalendarAccordionProps> = ({
         toggleAccordion={toggleAccordion}
         count={allMissedJobs.length}
         title={language === 'ru' ? 'Пропущенные' : language === 'en' ? 'Missed Jobs' : 'O\'tkazib yuborilgan'}
-        badgeClass="bg-gray-500 shadow-[inset_0_1px_2px_rgba(255,255,255,0.45),_inset_0_-1.5px_2.5px_rgba(55,65,81,0.4),_0_2px_6px_rgba(107,114,128,0.3)]"
-        colorClass="bg-gray-50 text-gray-500 border-gray-100/30"
+        badgeClass="bg-slate-500 shadow-[inset_0_1px_2px_rgba(255,255,255,0.45),_inset_0_-1.5px_2.5px_rgba(55,65,81,0.4),_0_2px_6px_rgba(107,114,128,0.3)]"
+        colorClass="bg-slate-50 text-slate-500 border-slate-100/30"
         emptyIcon={<AlertCircle size={13} className="stroke-[2.5]" />}
         emptyText={language === 'ru' ? 'Нет пропущенных работ.' : language === 'en' ? 'No missed jobs.' : 'O\'tkazib yuborilgan ishlar mavjud emas.'}
         jobs={allMissedJobs}
         setSelectedJob={setSelectedJob}
         renderBadge={() => (
-          <span className="shrink-0 bg-gray-100 text-gray-800 border border-gray-200 font-bold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1">
+          <span className="shrink-0 bg-slate-100 text-slate-800 border border-slate-200 font-bold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1">
             <AlertCircle size={10} />
             {language === 'ru' ? 'Пропущено' : language === 'en' ? 'Missed' : 'O\'tkazib yuborildi'}
           </span>

@@ -41,7 +41,7 @@ export const DrawerMenuItem: React.FC<DrawerMenuItemProps> = ({ item, index }) =
     >
       <div className="flex items-center gap-3.5">
         <span className={`p-1.5 rounded-lg transition-colors flex items-center justify-center ${iconWrapperClass}`}>
-          <Icon size={16} className="stroke-[2.2]" />
+          <Icon size={16} aria-hidden="true" className="stroke-[2.2]" />
         </span>
         <span>{item.label}</span>
         {item.badge ? (
@@ -52,6 +52,7 @@ export const DrawerMenuItem: React.FC<DrawerMenuItemProps> = ({ item, index }) =
       </div>
       <ChevronRight 
         size={14} 
+        aria-hidden="true" 
         className={`transition-all duration-200 ${
           isHighlight
             ? 'text-white/80 group-hover:translate-x-0.5'

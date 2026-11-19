@@ -8,6 +8,7 @@ import { LanguageSelector } from './LanguageSelector';
 import { DrawerMenuItem } from './DrawerMenuItem';
 import { showToast } from '../utils/toast';
 import { useCurrentScreen } from '../hooks/useCurrentScreen';
+import { useFocusTrap } from './common/useFocusTrap';
 
 interface DrawerProps {
   onOpenModal: (type: 'profile' | 'settings' | 'help' | 'auth') => void;
@@ -18,6 +19,8 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
   const { drawerOpen, setDrawerOpen, setActiveCalendarFilter, language, isLoggedIn, logout, userProfile } = useApp();
   const t = translations[language];
   const isEmployer = isLoggedIn && userProfile?.selectedRole === 'employer';
+
+  const drawerRef = useFocusTrap<HTMLElement>(drawerOpen, () => setDrawerOpen(false));
 
   const handleMeningArizalarim = () => {
     setCurrentScreen('calendar');
@@ -153,6 +156,10 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
 
           {/* Drawer content */}
           <motion.nav
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={language === 'uz' ? 'Yon menyu' : language === 'ru' ? 'Боковое меню' : 'Sidebar menu'}
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
@@ -167,6 +174,7 @@ export const Drawer: React.FC<DrawerProps> = ({ onOpenModal }) => {
                   <LanguageSelector align="right" />
                   <button
                     onClick={() => setDrawerOpen(false)}
+                    aria-label={language === 'uz' ? 'Yopish' : language === 'ru' ? 'Закрыть' : 'Close'}
                     className="p-1.5 rounded-full hover:bg-slate-200/65 text-slate-400 hover:text-slate-800 transition-colors cursor-pointer border-0 bg-transparent active:scale-95"
                     type="button"
                   >

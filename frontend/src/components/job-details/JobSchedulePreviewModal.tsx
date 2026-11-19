@@ -62,6 +62,17 @@ export const JobSchedulePreviewModal: React.FC<JobSchedulePreviewModalProps> = (
     }
   }, [isOpen, initialDate]);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   // 2. Parse shift times
   const shiftTimeStr = getJobShiftTime(job);
   const shiftHours = getJobShiftHours(job);

@@ -121,7 +121,11 @@ export const useEmployerChat = (
       id: m.id,
       senderId: m.senderId,
       // These components call the employer "recruiter" and the other party "user".
-      sender: employer?.id && m.senderId === employer.id ? 'recruiter' : 'user',
+      sender:
+        (employer?.id && m.senderId === employer.id) ||
+        (Boolean((employer as any)?.uid) && m.senderId === (employer as any).uid)
+          ? 'recruiter'
+          : 'user',
       text: m.text,
       time: clockTime(m.createdAt),
       hasMap: m.hasMap ?? false,

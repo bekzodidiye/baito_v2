@@ -13,6 +13,8 @@
  * connects, polling still carries the conversation.
  */
 
+import { getApiBaseUrl, getStoredToken } from './client';
+
 export interface SocketMessage {
   id: string;
   chatId: string;
@@ -27,6 +29,25 @@ export interface ChatSocket {
   close: () => void;
 }
 
+/** Constructs the WebSocket URL using configured backend API host and auth token */
+export const getChatWebSocketUrl = (chatId: string): string => {
+  const baseUrl = getApiBaseUrl().replace(/\/$/, '');
+  let wsBase = baseUrl;
+  if (wsBase.startsWith('https://')) {
+    wsBase = 'wss://' + wsBase.slice(8);
+  } else if (wsBase.startsWith('http://')) {
+    wsBase = 'ws://' + wsBase.slice(7);
+  } else {
+    const scheme = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const host = typeof window !== 'undefined' ? window.location.host : 'localhost';
+    wsBase = `${scheme}://${host}${wsBase.startsWith('/') ? '' : '/'}${wsBase}`;
+  }
+
+  const token = getStoredToken();
+  const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : '';
+  return `${wsBase}/chats/ws/${encodeURIComponent(chatId)}${tokenQuery}`;
+};
+
 /** Open a socket for one conversation. Returns a handle that closes it. */
 export const openChatSocket = (
   chatId: string,
@@ -39,8 +60,7 @@ export const openChatSocket = (
 
   const connect = () => {
     if (closedByUs) return;
-    const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const url = `${scheme}://${window.location.host}/api/v1/chats/ws/${encodeURIComponent(chatId)}`;
+    const url = getChatWebSocketUrl(chatId);
 
     try {
       socket = new WebSocket(url);
@@ -68,11 +88,9 @@ export const openChatSocket = (
     socket.onclose = () => {
       socket = null;
       if (closedByUs) return;
-      // Back off, and stop trying after a while rather than hammering a
-      // server that is refusing the upgrade.
       attempt += 1;
-      if (attempt > 5) return;
-      retry = setTimeout(connect, Math.min(1000 * 2 ** attempt, 30000));
+      const delay = Math.min(1000 * 2 ** Math.min(attempt, 5), 30000);
+      retry = setTimeout(connect, delay);
     };
 
     socket.onerror = () => {
@@ -80,12 +98,38 @@ export const openChatSocket = (
     };
   };
 
+  const handleWakeup = () => {
+    if (closedByUs) return;
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+    if (!socket || socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING) {
+      attempt = 0;
+      if (retry) {
+        clearTimeout(retry);
+        retry = null;
+      }
+      connect();
+    }
+  };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', handleWakeup);
+  }
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', handleWakeup);
+  }
+
   connect();
 
   return {
     close: () => {
       closedByUs = true;
       if (retry) clearTimeout(retry);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleWakeup);
+      }
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleWakeup);
+      }
       socket?.close();
       socket = null;
     },

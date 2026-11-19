@@ -101,7 +101,9 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({ embedded = false
             />
             {searchText && (
               <button 
+                type="button"
                 onClick={() => setSearchText('')} 
+                aria-label={language === 'ru' ? 'Очистить поиск' : language === 'en' ? 'Clear search' : "Qidiruvni tozalash"}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-brand-outline hover:text-brand-text cursor-pointer"
               >
                 <X size={14} />
