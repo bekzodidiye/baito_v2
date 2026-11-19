@@ -338,6 +338,7 @@ export const AdminTransactions: React.FC<AdminTransactionsProps> = ({ transactio
               onClick={onRefresh}
               className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
               title="Yangilash"
+              aria-label="Yangilash"
             >
               <RefreshCw size={15} />
             </button>

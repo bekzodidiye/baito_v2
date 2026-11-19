@@ -130,7 +130,7 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
             <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
             <div className="flex flex-col gap-3 relative z-10">
               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/90">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
               </div>
               <div>
                 <p className="text-3xl md:text-4xl font-black tracking-tight">{avgFillRate}%</p>
@@ -143,6 +143,7 @@ export const EmployerStatsBanner: React.FC<EmployerStatsBannerProps> = ({
         </div>
 
         <motion.button
+          type="button"
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
           onClick={onPostJobClick}

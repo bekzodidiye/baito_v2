@@ -1,5 +1,4 @@
 import uuid
-import pytest
 from app import models
 from app.models.job import JobStatus
 from app.db.session import SessionLocal

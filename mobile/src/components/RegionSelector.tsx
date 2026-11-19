@@ -75,9 +75,11 @@ export const RegionSelector: React.FC<RegionSelectorProps> = ({ embedded = false
             </h1>
           </div>
           <button 
+            type="button"
             onClick={closeSelector}
             className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-full flex items-center justify-center cursor-pointer transition-colors"
             title={language === 'ru' ? 'Закрыть' : language === 'en' ? 'Close' : 'Yopish'}
+            aria-label={language === 'ru' ? 'Закрыть' : language === 'en' ? 'Close' : 'Yopish'}
           >
             <X size={18} />
           </button>

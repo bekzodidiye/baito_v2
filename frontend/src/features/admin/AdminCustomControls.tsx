@@ -527,13 +527,13 @@ export const CustomDatePicker = ({
       {isOpen && (
         <div className="absolute z-50 mt-1.5 p-3.5 bg-white rounded-2xl shadow-xl border border-slate-200/90 w-[280px] animate-in fade-in zoom-in-95 duration-100">
           <div className="flex items-center justify-between mb-3">
-            <button onClick={prevMonth} className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors cursor-pointer" type="button">
+            <button onClick={prevMonth} aria-label="Oldingi oy" className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors cursor-pointer" type="button">
               <ChevronLeft size={16} />
             </button>
             <div className="font-extrabold text-slate-900 text-xs">
               {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
             </div>
-            <button onClick={nextMonth} className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors cursor-pointer" type="button">
+            <button onClick={nextMonth} aria-label="Keyingi oy" className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors cursor-pointer" type="button">
               <ChevronRight size={16} />
             </button>
           </div>

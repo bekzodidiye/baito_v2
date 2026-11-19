@@ -232,7 +232,7 @@ export const JobSchedulePreviewModal: React.FC<JobSchedulePreviewModalProps> = (
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="relative px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-blue-50/30 flex items-center justify-between">
+            <div className="relative px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-brand-primary/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold shadow-inner">
                   <CalendarIcon className="w-5 h-5" />
@@ -323,7 +323,7 @@ export const JobSchedulePreviewModal: React.FC<JobSchedulePreviewModalProps> = (
                             isWorkDay
                               ? 'bg-brand-primary text-white font-black shadow-md shadow-brand-primary/20 scale-105'
                               : isToday
-                              ? 'border border-brand-primary/40 text-brand-primary font-bold bg-blue-50/50'
+                              ? 'border border-brand-primary/40 text-brand-primary font-bold bg-brand-primary/10'
                               : 'text-slate-700 hover:bg-slate-100 font-medium'
                           }`}
                         >
@@ -420,8 +420,8 @@ export const JobSchedulePreviewModal: React.FC<JobSchedulePreviewModalProps> = (
                     </span>
                   </div>
 
-                  <div className="bg-blue-50/80 border border-blue-200/60 rounded-xl p-2.5 text-center">
-                    <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-blue-800 mb-0.5">
+                  <div className="bg-brand-primary/5 border border-brand-primary/20 rounded-xl p-2.5 text-center">
+                    <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-brand-primary mb-0.5">
                       <div className="w-2 h-2 rounded-full bg-brand-primary" />
                       {modalTexts.endTime}
                     </div>

@@ -11,6 +11,7 @@ import {
   ChevronRight, Image as ImageIcon, Banknote 
 } from 'lucide-react';
 import { PaymentModals, PaymentModalType } from './PaymentModals';
+import { clickable } from '../../utils/clickable';
 
 export const PaymentsScreen: React.FC = () => {
   const { setCurrentScreen } = useCurrentScreen();
@@ -90,11 +91,11 @@ export const PaymentsScreen: React.FC = () => {
               {formatMoney(currentBalance)} {language === 'uz' ? "so'm" : "UZS"}
             </h2>
             <div className="flex items-center gap-3 w-full mt-2">
-              <button onClick={() => navigate('/payments/top-up')} className="flex-1 bg-white text-brand-primary font-bold py-3.5 rounded-lg active:scale-95 transition-transform duration-150 flex items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 shadow-sm border border-transparent">
+              <button type="button" onClick={() => navigate('/payments/top-up')} className="flex-1 bg-white text-brand-primary font-bold py-3.5 rounded-lg active:scale-95 transition-transform duration-150 flex items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 shadow-sm border border-transparent">
                 <PlusCircle size={20} className="fill-current" />
                 {language === 'uz' ? "To'ldirish" : language === 'ru' ? 'Пополнить' : 'Deposit'}
               </button>
-              <button onClick={() => setModalType('withdraw')} className="flex-1 bg-white/20 text-white font-bold py-3.5 rounded-lg border border-white/30 active:scale-95 transition-transform duration-150 flex items-center justify-center gap-2 cursor-pointer hover:bg-white/30 backdrop-blur-sm shadow-sm">
+              <button type="button" onClick={() => setModalType('withdraw')} className="flex-1 bg-white/20 text-white font-bold py-3.5 rounded-lg border border-white/30 active:scale-95 transition-transform duration-150 flex items-center justify-center gap-2 cursor-pointer hover:bg-white/30 backdrop-blur-sm shadow-sm">
                 <Wallet size={20} className="fill-current" />
                 {language === 'uz' ? 'Yechish' : language === 'ru' ? 'Снять' : 'Withdraw'}
               </button>
@@ -114,7 +115,7 @@ export const PaymentsScreen: React.FC = () => {
             <p className="text-slate-500 text-[10px] uppercase font-bold tracking-tighter mb-1">
               {language === 'uz' ? 'Kutilmoqda' : language === 'ru' ? 'Ожидается' : 'Pending'}
             </p>
-            <p className="text-blue-600 font-bold text-sm">450k</p>
+            <p className="text-brand-primary font-bold text-sm">450k</p>
           </div>
           <div className="bg-white p-3 rounded-xl shadow-[0px_4px_20px_rgba(26,35,126,0.04)] text-center border border-slate-200">
             <p className="text-slate-500 text-[10px] uppercase font-bold tracking-tighter mb-1">
@@ -137,13 +138,13 @@ export const PaymentsScreen: React.FC = () => {
           </div>
           
           <div className="min-w-[160px] bg-white p-4 rounded-xl shadow-[0px_4px_12px_rgba(26,35,126,0.04)] border border-slate-200">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-              <CreditCard size={18} className="text-blue-600" />
+            <div className="w-8 h-8 bg-brand-primary/10 rounded-full flex items-center justify-center mb-3">
+              <CreditCard size={18} className="text-brand-primary" />
             </div>
             <p className="text-slate-500 text-xs font-medium">
               {language === 'uz' ? 'Aktiv kartalar' : language === 'ru' ? 'Активные карты' : 'Active Cards'}
             </p>
-            <p className="text-blue-600 font-bold text-lg">{savedCards.length} {language === 'uz' ? 'ta' : 'шт'}</p>
+            <p className="text-brand-primary font-bold text-lg">{savedCards.length} {language === 'uz' ? 'ta' : 'шт'}</p>
           </div>
           
           <div className="min-w-[160px] bg-white p-4 rounded-xl shadow-[0px_4px_12px_rgba(26,35,126,0.04)] border border-slate-200">
@@ -159,7 +160,7 @@ export const PaymentsScreen: React.FC = () => {
 
         {/* Quick Actions */}
         <section className="grid grid-cols-2 gap-4">
-          <button onClick={() => navigate('/payments/top-up')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
+          <button type="button" onClick={() => navigate('/payments/top-up')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
             <div className="p-2 bg-emerald-100 rounded-lg">
               <PlusCircle className="text-emerald-600 w-6 h-6" />
             </div>
@@ -168,7 +169,7 @@ export const PaymentsScreen: React.FC = () => {
             </span>
           </button>
 
-          <button onClick={() => setModalType('withdraw')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
+          <button type="button" onClick={() => setModalType('withdraw')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
             <div className="p-2 bg-brand-primary/10 rounded-lg">
               <Banknote className="text-brand-primary w-6 h-6" />
             </div>
@@ -177,16 +178,16 @@ export const PaymentsScreen: React.FC = () => {
             </span>
           </button>
           
-          <button onClick={() => navigate('/payments/my-cards')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <CreditCard className="text-blue-600 w-6 h-6" />
+          <button type="button" onClick={() => navigate('/payments/my-cards')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
+            <div className="p-2 bg-brand-primary/10 rounded-lg">
+              <CreditCard className="text-brand-primary w-6 h-6" />
             </div>
             <span className="font-semibold text-brand-primary text-sm tracking-tight">
               {language === 'uz' ? 'Kartalarim' : language === 'ru' ? 'Мои карты' : 'My Cards'}
             </span>
           </button>
           
-          <button onClick={() => navigate('/payments/add-card')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
+          <button type="button" onClick={() => navigate('/payments/add-card')} className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.03)] hover:bg-slate-50 transition-all active:scale-95 cursor-pointer border border-slate-100">
             <div className="p-2 bg-brand-primary-container/20 rounded-lg">
               <PlusCircle className="text-brand-primary w-6 h-6" />
             </div>
@@ -203,6 +204,7 @@ export const PaymentsScreen: React.FC = () => {
               {language === 'uz' ? "So'nggi operatsiyalar" : language === 'ru' ? 'Последние операции' : 'Recent Transactions'}
             </h3>
             <button 
+              type="button"
               onClick={() => setTxFilter('all')}
               className="text-brand-primary text-sm font-bold cursor-pointer"
             >
@@ -212,6 +214,7 @@ export const PaymentsScreen: React.FC = () => {
           
           <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
             <button 
+              type="button"
               onClick={() => setTxFilter('all')}
               className={`px-4 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap cursor-pointer transition-colors ${
                 txFilter === 'all' 
@@ -222,6 +225,7 @@ export const PaymentsScreen: React.FC = () => {
               {language === 'uz' ? 'Hammasi' : language === 'ru' ? 'Все' : 'All'}
             </button>
             <button 
+              type="button"
               onClick={() => setTxFilter('in')}
               className={`px-4 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap cursor-pointer transition-colors ${
                 txFilter === 'in' 
@@ -232,6 +236,7 @@ export const PaymentsScreen: React.FC = () => {
               {language === 'uz' ? 'Kirim' : language === 'ru' ? 'Приход' : 'Income'}
             </button>
             <button 
+              type="button"
               onClick={() => setTxFilter('out')}
               className={`px-4 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap cursor-pointer transition-colors ${
                 txFilter === 'out' 
@@ -309,7 +314,10 @@ export const PaymentsScreen: React.FC = () => {
             {filteredTransactions.length === 0 && (
               <>
                 {/* Transaction 1 */}
-                <div className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer">
+                <div
+                  {...clickable(() => {})}
+                  className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer"
+                >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shadow-sm flex items-center justify-center">
                       <ImageIcon className="text-slate-400 w-6 h-6" />
@@ -332,7 +340,10 @@ export const PaymentsScreen: React.FC = () => {
                   </div>
                 </div>
                 {/* Transaction 2 */}
-                <div className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer">
+                <div
+                  {...clickable(() => {})}
+                  className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer"
+                >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-brand-primary/5 flex items-center justify-center shadow-sm">
                       <Landmark className="text-brand-primary w-6 h-6" />

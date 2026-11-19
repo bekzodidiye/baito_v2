@@ -7,6 +7,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPaymentCardsApi, deletePaymentCardApi, updatePaymentCardApi } from '../../api/queries';
 import { useApp } from '../../context/AppContext';
 import { getBankName, getBankColors } from '../../utils/cardUtils';
+import { clickable } from '../../utils/clickable';
+import { useFocusTrap } from '../../components/common/useFocusTrap';
 
 export const MyCardsScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +17,9 @@ export const MyCardsScreen: React.FC = () => {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; type: 'delete' | 'freeze'; cardId: string | null; isActive?: boolean }>({ isOpen: false, type: 'delete', cardId: null });
   const [infoModal, setInfoModal] = useState<{ isOpen: boolean; card: any | null }>({ isOpen: false, card: null });
+
+  const infoModalRef = useFocusTrap<HTMLDivElement>(infoModal.isOpen, () => setInfoModal({ isOpen: false, card: null }));
+  const confirmModalRef = useFocusTrap<HTMLDivElement>(confirmModal.isOpen, () => setConfirmModal(prev => ({ ...prev, isOpen: false })));
 
   const { data: savedCards = [] } = useQuery({
     queryKey: ['paymentCards'],
@@ -109,7 +114,9 @@ export const MyCardsScreen: React.FC = () => {
       {/* TopAppBar */}
       <header className="w-full top-0 bg-surface/80 backdrop-blur-md shadow-[0px_4px_20px_rgba(1,7,102,0.04)] shadow-sm fixed z-40 flex items-center px-4 h-16 max-w-4xl">
         <button 
+          type="button"
           onClick={handleBack}
+          aria-label={language === 'uz' ? 'Orqaga' : language === 'ru' ? 'Назад' : 'Back'}
           className="mr-4 text-primary active:scale-95 transition-transform p-2 rounded-full hover:bg-slate-200 cursor-pointer"
         >
           <ArrowLeft className="w-6 h-6" />
@@ -122,6 +129,7 @@ export const MyCardsScreen: React.FC = () => {
       <main className="pt-24 px-4 space-y-6">
         {/* Add New Card CTA */}
         <button 
+          type="button"
           onClick={handleAddCard}
           className="w-full flex items-center justify-center gap-2 py-4 px-6 bg-white rounded-xl border border-dashed border-slate-300 hover:bg-slate-50 hover:border-brand-primary transition-colors active:scale-[0.98] cursor-pointer"
         >
@@ -235,7 +243,7 @@ export const MyCardsScreen: React.FC = () => {
                 const bankName = card.bankName || getBankName(card.cardNumber || card.last4);
                 
                 return (
-                  <div key={card.id} onClick={() => setSelectedCardId(card.id)} className="flex items-center justify-between p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.04)] border border-slate-100 active:scale-[0.98] transition-transform cursor-pointer hover:border-brand-primary/30">
+                  <div key={card.id} {...clickable(() => setSelectedCardId(card.id))} className="flex items-center justify-between p-4 bg-white rounded-xl shadow-[0px_2px_8px_rgba(0,0,0,0.04)] border border-slate-100 active:scale-[0.98] transition-transform cursor-pointer hover:border-brand-primary/30">
                     <div className="flex items-center gap-4">
                       <div className={`w-12 h-8 bg-slate-100 flex items-center justify-center rounded border border-slate-200 text-[10px] font-bold ${card.cardType === 'VISA' ? 'text-blue-800 italic' : 'text-slate-600'}`}>
                         {card.cardType || bankName.substring(0, 4) || 'CARD'}
@@ -259,8 +267,8 @@ export const MyCardsScreen: React.FC = () => {
         
         {/* Security Notice */}
         <div className="mt-8 mb-6 p-4 bg-slate-50 rounded-xl flex items-start gap-3 border border-slate-200/60">
-          <div className="mt-0.5 text-blue-600">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <div className="mt-0.5 text-brand-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
@@ -282,6 +290,7 @@ export const MyCardsScreen: React.FC = () => {
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-[4px]"
             />
             <motion.div
+              ref={infoModalRef}
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -291,8 +300,10 @@ export const MyCardsScreen: React.FC = () => {
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-bold text-slate-800">Karta ma'lumotlari</h3>
                   <button 
+                    type="button"
                     onClick={() => setInfoModal({ isOpen: false, card: null })}
-                    className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
+                    aria-label="Yopish"
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer"
                   >
                     <X size={20} />
                   </button>
@@ -331,8 +342,9 @@ export const MyCardsScreen: React.FC = () => {
                 </div>
 
                 <button 
+                  type="button"
                   onClick={() => setInfoModal({ isOpen: false, card: null })}
-                  className="w-full mt-8 py-3.5 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 active:scale-95 transition-all shadow-lg shadow-slate-800/20"
+                  className="w-full mt-8 py-3.5 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 active:scale-95 transition-all shadow-lg shadow-slate-800/20 cursor-pointer"
                 >
                   Yopish
                 </button>
@@ -354,6 +366,7 @@ export const MyCardsScreen: React.FC = () => {
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-[4px]"
             />
             <motion.div
+              ref={confirmModalRef}
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -375,12 +388,14 @@ export const MyCardsScreen: React.FC = () => {
                 </p>
                 <div className="flex gap-3">
                   <button 
+                    type="button"
                     onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
-                    className="flex-1 py-3 rounded-xl font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all"
+                    className="flex-1 py-3 rounded-xl font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all cursor-pointer"
                   >
                     Bekor qilish
                   </button>
                   <button 
+                    type="button"
                     onClick={() => {
                       if (confirmModal.type === 'delete') {
                         deleteCardMutation.mutate(confirmModal.cardId!);
@@ -389,10 +404,10 @@ export const MyCardsScreen: React.FC = () => {
                       }
                       setConfirmModal({ ...confirmModal, isOpen: false });
                     }}
-                    className={`flex-1 py-3 rounded-xl font-semibold text-white active:scale-95 transition-all shadow-lg ${
+                    className={`flex-1 py-3 rounded-xl font-semibold text-white active:scale-95 transition-all shadow-lg cursor-pointer ${
                       confirmModal.type === 'delete' 
                         ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20' 
-                        : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
+                        : 'bg-brand-primary hover:bg-brand-primary/90 shadow-brand-primary/20'
                     }`}
                   >
                     Tasdiqlash

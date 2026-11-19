@@ -233,6 +233,7 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
             <div className="absolute top-4 right-4 z-[500] flex flex-col gap-2">
               <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden flex flex-col">
                 <button
+                  type="button"
                   onClick={handleZoomIn}
                   aria-label="Zoom in"
                   className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 text-slate-700 transition-colors border-b border-slate-100 cursor-pointer"
@@ -240,6 +241,7 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
                   <ZoomIn size={18} />
                 </button>
                 <button
+                  type="button"
                   onClick={handleZoomOut}
                   aria-label="Zoom out"
                   className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer"
@@ -249,8 +251,10 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
               </div>
 
               <button
+                type="button"
                 onClick={handleRecenter}
                 title={language === 'uz' ? 'Markazga qaytish' : language === 'ru' ? 'К маркеру' : 'Recenter'}
+                aria-label={language === 'uz' ? 'Markazga qaytish' : language === 'ru' ? 'К маркеру' : 'Recenter'}
                 className="w-10 h-10 bg-white rounded-xl shadow-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-brand-primary transition-colors cursor-pointer"
               >
                 <MapPin size={18} />
@@ -270,7 +274,9 @@ export const JobLocationFullModal: React.FC<JobLocationFullModalProps> = ({
                 </div>
 
                 <button
+                  type="button"
                   onClick={handleExternalNav}
+                  aria-label={language === 'uz' ? 'Navigatsiyani ochish' : language === 'ru' ? 'Открыть навигацию' : 'Open navigation'}
                   className="inline-flex sm:hidden items-center justify-center w-10 h-10 rounded-xl bg-brand-primary text-white shrink-0 shadow-md cursor-pointer"
                 >
                   <Navigation size={18} className="rotate-45" />

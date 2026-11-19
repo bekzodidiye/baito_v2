@@ -8,7 +8,6 @@ Create Date: 2026-10-17 18:20:00.000000
 from typing import Sequence, Union
 
 from alembic import context, op
-import sqlalchemy as sa
 
 
 revision: str = '0022_add_app_unique_constraint'

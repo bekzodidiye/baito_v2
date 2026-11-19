@@ -75,6 +75,7 @@ const SearchSidebarComponent: React.FC<SearchSidebarProps> = ({
             
             return (
               <button
+                type="button"
                 key={cat.id}
                 onClick={() => setFilterCategory(cat.id)}
                 className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-between cursor-pointer transition-all ${
@@ -109,7 +110,7 @@ const SearchSidebarComponent: React.FC<SearchSidebarProps> = ({
             ))}
           </select>
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            <svg aria-hidden="true" className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
           </div>
         </div>
       </div>
@@ -122,6 +123,7 @@ const SearchSidebarComponent: React.FC<SearchSidebarProps> = ({
         <div className="flex flex-col gap-1.5">
           {SCHEDULE_FILTERS.map(type => (
             <button
+              type="button"
               key={type.key}
               onClick={() => setFilterType(type.key)}
               className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-between cursor-pointer transition-all ${
@@ -141,17 +143,17 @@ const SearchSidebarComponent: React.FC<SearchSidebarProps> = ({
         <h3 className="font-display font-bold text-sm text-brand-primary uppercase tracking-wider mb-3">{t.sortBy}</h3>
         <div className="flex flex-col gap-2">
           <div className="flex gap-2">
-            <button onClick={() => setSortBy('yangilari')} className={`flex-1 text-center py-2 rounded-lg text-xs font-bold cursor-pointer transition-all ${sortBy === 'yangilari' ? 'bg-brand-primary text-white shadow-xs' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+            <button type="button" onClick={() => setSortBy('yangilari')} className={`flex-1 text-center py-2 rounded-lg text-xs font-bold cursor-pointer transition-all ${sortBy === 'yangilari' ? 'bg-brand-primary text-white shadow-xs' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
               {t.latest}
             </button>
-            <button onClick={() => setSortBy('maosh')} className={`flex-1 text-center py-2 rounded-lg text-xs font-bold cursor-pointer transition-all ${sortBy === 'maosh' ? 'bg-brand-primary text-white shadow-xs' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+            <button type="button" onClick={() => setSortBy('maosh')} className={`flex-1 text-center py-2 rounded-lg text-xs font-bold cursor-pointer transition-all ${sortBy === 'maosh' ? 'bg-brand-primary text-white shadow-xs' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
               {t.maxSalary}
             </button>
           </div>
-          <button onClick={() => setSortBy('mos')} className={`w-full text-center py-2 rounded-lg text-xs font-bold cursor-pointer transition-all ${sortBy === 'mos' ? 'bg-brand-primary text-white shadow-xs' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+          <button type="button" onClick={() => setSortBy('mos')} className={`w-full text-center py-2 rounded-lg text-xs font-bold cursor-pointer transition-all ${sortBy === 'mos' ? 'bg-brand-primary text-white shadow-xs' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
             {t.mostRelevant}
           </button>
-          <button onClick={requestLocation} disabled={isRequestingLocation} className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all ${sortBy === 'yaqin' ? 'bg-brand-primary/10 text-brand-primary shadow-xs border border-brand-primary/20' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-transparent'}`}>
+          <button type="button" onClick={requestLocation} disabled={isRequestingLocation} className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold cursor-pointer transition-all ${sortBy === 'yaqin' ? 'bg-brand-primary/10 text-brand-primary shadow-xs border border-brand-primary/20' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-transparent'}`}>
             {isRequestingLocation ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
             {language === 'uz' ? 'Yaqinimdagi ishlar' : language === 'ru' ? 'Рядом со мной' : "Jobs near me"}
           </button>
@@ -161,7 +163,7 @@ const SearchSidebarComponent: React.FC<SearchSidebarProps> = ({
       {(searchTerm || filterLocation !== 'Barchasi' || filterType !== 'Barchasi' || filterCategory !== 'Barchasi') && (
         <>
           <div className="h-[1px] bg-slate-100" />
-          <button onClick={clearFilters} className="w-full text-center py-2 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50 hover:text-red-600 transition-all cursor-pointer">
+          <button type="button" onClick={clearFilters} className="w-full text-center py-2 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50 hover:text-red-600 transition-all cursor-pointer">
             {t.clearFilters}
           </button>
         </>

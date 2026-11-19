@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useFocusTrap } from './useFocusTrap';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -15,11 +16,17 @@ interface ConfirmModalProps {
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isOpen, title, message, confirmText, cancelText, onConfirm, onCancel, isDestructive = true
 }) => {
+  const trapRef = useFocusTrap<HTMLDivElement>({ isOpen, onClose: onCancel });
+
   return (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" onClick={(e) => { e.stopPropagation(); onCancel(); }}>
           <motion.div
+            ref={trapRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
@@ -31,12 +38,14 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             <p className="text-slate-600 mb-6 font-medium text-[15px]">{message}</p>
             <div className="flex gap-3">
               <button 
+                type="button"
                 onClick={(e) => { e.stopPropagation(); onCancel(); }} 
                 className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors cursor-pointer"
               >
                 {cancelText}
               </button>
               <button 
+                type="button"
                 onClick={(e) => { e.stopPropagation(); onConfirm(); onCancel(); }} 
                 className={`flex-1 py-3 rounded-xl font-bold text-white transition-colors cursor-pointer ${
                   isDestructive ? 'bg-rose-500 hover:bg-rose-600' : 'bg-brand-primary hover:bg-brand-primary/90'

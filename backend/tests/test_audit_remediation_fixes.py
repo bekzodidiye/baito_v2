@@ -11,7 +11,7 @@ import uuid
 from app.core import security
 from app.core.phone import issue_verification_grant
 from app.db.session import SessionLocal
-from app.models import ActiveSession, Application, Job, JobPayout, Transaction, User
+from app.models import ActiveSession, Application, JobPayout, Transaction, User
 from app.models.job import JobStatus
 from app.api.v1.endpoints.chats.websocket import _authenticate_socket
 from .conftest import login, make_job, make_user
@@ -304,7 +304,6 @@ def test_admin_users_list_pii_excluded_and_detail_included(client):
 def test_transaction_amount_bigint_no_overflow(client):
     from app.models.transaction import Transaction
     from app.services.earnings_service import WorkerEarnings
-    from app.models.job import Job
 
     worker = make_user(role="worker", phone=_phone())
     employer = make_user(role="employer", phone=_phone())
@@ -340,7 +339,7 @@ def test_admin_stats_aggregated_queries(client):
     worker = make_user(role="worker", phone=_phone(), balance=250_000)
 
     job1 = make_job(employer.id, status=JobStatus.OPEN)
-    job2 = make_job(employer.id, status=JobStatus.IN_PROGRESS)
+    make_job(employer.id, status=JobStatus.IN_PROGRESS)
     job3 = make_job(employer.id, status=JobStatus.COMPLETED)
 
     with SessionLocal() as db:

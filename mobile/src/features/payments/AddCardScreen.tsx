@@ -103,7 +103,7 @@ export const AddCardScreen: React.FC = () => {
     }
     if (cleanNum.startsWith('5')) {
       return (
-        <svg width="44" height="26" viewBox="0 0 40 24" fill="none" className="drop-shadow-sm">
+        <svg aria-hidden="true" width="44" height="26" viewBox="0 0 40 24" fill="none" className="drop-shadow-sm">
           <circle cx="12" cy="12" r="12" fill="#EB001B"/>
           <circle cx="28" cy="12" r="12" fill="#F79E1B"/>
           <path d="M20 20.3C18 18.5 16.8 15.6 16.8 12c0-3.6 1.2-6.5 3.2-8.3 2 1.8 3.2 4.7 3.2 8.3 0 3.6-1.2 6.5-3.2 8.3z" fill="#FF5F00"/>

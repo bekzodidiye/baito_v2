@@ -1,12 +1,11 @@
 """Tests for AI Translator service."""
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from app.services.ai_translator.job_translator import (
     _parse_json_from_response,
     _build_fallback_translations,
     translate_job_content,
-    translate_and_save_job,
 )
 from app.services.ai_translator.gemini_client import GeminiClient
 

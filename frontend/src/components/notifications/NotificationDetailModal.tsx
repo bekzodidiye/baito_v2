@@ -120,6 +120,7 @@ export const NotificationDetailModal: React.FC<NotificationDetailModalProps> = (
               </div>
             </div>
             <button
+              type="button"
               onClick={onClose}
               aria-label={closeText}
               className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors border-0 cursor-pointer"
@@ -136,6 +137,7 @@ export const NotificationDetailModal: React.FC<NotificationDetailModalProps> = (
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-1">
             <button
+              type="button"
               onClick={onClose}
               className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all border-0 cursor-pointer active:scale-95"
             >
@@ -144,6 +146,7 @@ export const NotificationDetailModal: React.FC<NotificationDetailModalProps> = (
 
             {onActionClick && actionLabel && (
               <button
+                type="button"
                 onClick={() => {
                   onClose();
                   onActionClick();

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { MONTH_NAMES_UZ, WEEKDAYS_UZ, parseInitial24hTime, getDaysInMonth, getFirstDayOfWeek } from './DateTimePickerModal.utils';
+import { useFocusTrap } from './useFocusTrap';
 
 interface DateTimePickerModalProps {
   isOpen: boolean;
@@ -16,7 +17,7 @@ interface DateTimePickerModalProps {
 export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
   isOpen, onClose, workDateValue, startTimeValue, endTimeValue, onSave
 }) => {
-
+  const trapRef = useFocusTrap<HTMLDivElement>({ isOpen, onClose });
 
   const initialDates = workDateValue ? workDateValue.split(', ').filter(Boolean) : [new Date().toISOString().split('T')[0]];
   const [selectedDates, setSelectedDates] = useState<string[]>(initialDates);
@@ -66,23 +67,53 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-3xl shadow-2xl border w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-          <div className="p-4 px-6 bg-gradient-to-r from-purple-50 to-indigo-50 border-b flex items-center justify-between shrink-0">
+        <motion.div
+          ref={trapRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Sana va vaqt tanlash"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="bg-white rounded-3xl shadow-2xl border w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        >
+          <div className="p-4 px-6 bg-gradient-to-r from-brand-primary/10 to-brand-primary/5 border-b flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 bg-brand-primary text-white text-[10px] font-black uppercase rounded-full">{selectedDates.length} KUNLIK ISH</span>
               <span className="text-xs font-black text-slate-800 flex items-center gap-2">
                 <CalendarIcon size={15} className="text-brand-primary" /> {selectedDates.length} ta kun | <Clock size={15} className="text-brand-primary" /> {String(startHour).padStart(2, '0')}:{String(startMin).padStart(2, '0')} - {String(endHour).padStart(2, '0')}:{String(endMin).padStart(2, '0')}
               </span>
             </div>
-            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-200 text-slate-400 cursor-pointer shrink-0 ml-2"><X size={18} /></button>
+            <button
+              type="button"
+              aria-label="Yopish"
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-slate-200 text-slate-400 cursor-pointer shrink-0 ml-2"
+            >
+              <X size={18} />
+            </button>
           </div>
 
           <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-12 gap-6 overflow-y-auto">
             <div className="md:col-span-7 flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <button onClick={() => setCurrMonth(m => (m === 0 ? 11 : m - 1))} className="p-1.5 rounded-xl hover:bg-slate-100 cursor-pointer"><ChevronLeft size={18} /></button>
+                <button
+                  type="button"
+                  aria-label="Oldingi oy"
+                  onClick={() => setCurrMonth(m => (m === 0 ? 11 : m - 1))}
+                  className="p-1.5 rounded-xl hover:bg-slate-100 cursor-pointer"
+                >
+                  <ChevronLeft size={18} />
+                </button>
                 <span className="font-extrabold text-slate-800 text-sm">{MONTH_NAMES_UZ[currMonth]} {currYear}</span>
-                <button onClick={() => setCurrMonth(m => (m === 11 ? 0 : m + 1))} className="p-1.5 rounded-xl hover:bg-slate-100 cursor-pointer"><ChevronRight size={18} /></button>
+                <button
+                  type="button"
+                  aria-label="Keyingi oy"
+                  onClick={() => setCurrMonth(m => (m === 11 ? 0 : m + 1))}
+                  className="p-1.5 rounded-xl hover:bg-slate-100 cursor-pointer"
+                >
+                  <ChevronRight size={18} />
+                </button>
               </div>
 
               <div className="grid grid-cols-7 gap-1 text-center">
@@ -93,7 +124,15 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
                   const dateStr = `${currYear}-${String(currMonth + 1).padStart(2, '0')}-${String(dNum).padStart(2, '0')}`;
                   const isSel = selectedDates.includes(dateStr);
                   return (
-                    <button key={dNum} onClick={() => toggleDate(dateStr)} className={`h-8 w-8 mx-auto rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center ${isSel ? 'bg-brand-primary text-white shadow-md' : 'hover:bg-slate-100 text-slate-700'}`}>{dNum}</button>
+                    <button
+                      key={dNum}
+                      type="button"
+                      aria-label={dateStr}
+                      onClick={() => toggleDate(dateStr)}
+                      className={`h-8 w-8 mx-auto rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center ${isSel ? 'bg-brand-primary text-white shadow-md' : 'hover:bg-slate-100 text-slate-700'}`}
+                    >
+                      {dNum}
+                    </button>
                   );
                 })}
               </div>
@@ -103,8 +142,20 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
               <div>
                 <span className="text-[10px] font-extrabold uppercase text-slate-400 block mb-2">Ish vaqti (24-soat)</span>
                 <div className="flex p-1 bg-slate-100 rounded-xl mb-4">
-                  <button onClick={() => setTimeTab('start')} className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg ${timeTab === 'start' ? 'bg-white text-brand-primary shadow-xs' : 'text-slate-500'}`}>Boshlanish ({String(startHour).padStart(2, '0')}:{String(startMin).padStart(2, '0')})</button>
-                  <button onClick={() => setTimeTab('end')} className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg ${timeTab === 'end' ? 'bg-white text-brand-primary shadow-xs' : 'text-slate-500'}`}>Tugash ({String(endHour).padStart(2, '0')}:{String(endMin).padStart(2, '0')})</button>
+                  <button
+                    type="button"
+                    onClick={() => setTimeTab('start')}
+                    className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg ${timeTab === 'start' ? 'bg-white text-brand-primary shadow-xs' : 'text-slate-500'}`}
+                  >
+                    Boshlanish ({String(startHour).padStart(2, '0')}:{String(startMin).padStart(2, '0')})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTimeTab('end')}
+                    className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg ${timeTab === 'end' ? 'bg-white text-brand-primary shadow-xs' : 'text-slate-500'}`}
+                  >
+                    Tugash ({String(endHour).padStart(2, '0')}:{String(endMin).padStart(2, '0')})
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-center">
@@ -121,7 +172,13 @@ export const DateTimePickerModal: React.FC<DateTimePickerModalProps> = ({
                 </div>
               </div>
 
-              <button onClick={handleDone} className="mt-6 md:mt-5 w-full py-3.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-black text-xs rounded-2xl shadow-md cursor-pointer shrink-0">Saqlash</button>
+              <button
+                type="button"
+                onClick={handleDone}
+                className="mt-6 md:mt-5 w-full py-3.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-black text-xs rounded-2xl shadow-md cursor-pointer shrink-0"
+              >
+                Saqlash
+              </button>
             </div>
           </div>
         </motion.div>

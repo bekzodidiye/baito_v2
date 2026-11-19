@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from app.db.session import SessionLocal
-from app.models import Job, Application, SystemSetting
+from app.models import Job, SystemSetting
 from app.models.job import JobStatus
 from app.tasks import expire_stale_jobs
 from tests.conftest import make_job, make_user

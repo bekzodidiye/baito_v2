@@ -342,7 +342,7 @@ def test_payout_receipt_not_readable_by_unrelated_chat_partner(client):
 
 def test_media_sent_in_chat_a_not_readable_by_chat_b_partner(client):
     """Media sent in Chat A cannot be read by a partner from Chat B even if both share a chat with owner."""
-    from app.models import MediaFile, Message
+    from app.models import MediaFile
     from app.models.media_file import MediaVisibility
 
     employer = make_user(role="employer", phone="+998901234911")

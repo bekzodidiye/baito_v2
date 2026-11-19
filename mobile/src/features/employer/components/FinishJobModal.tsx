@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Star, MessageSquare, PlusCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useFocusTrap } from '../../../components/common/useFocusTrap';
 
 interface FinishJobModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
   jobTitle,
   language
 }) => {
+  const trapRef = useFocusTrap<HTMLDivElement>({ isOpen, onClose });
   const [rating, setRating] = useState(5);
   const [review, setReview] = useState('');
   const [bonus, setBonus] = useState('');
@@ -33,6 +35,8 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
     });
   };
 
+  const title = language === 'uz' ? 'Ishni yakunlash' : language === 'ru' ? 'Завершить работу' : 'Complete Job';
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -44,6 +48,10 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
           className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
         />
         <motion.div
+          ref={trapRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -53,13 +61,15 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
           <div className="p-5 flex items-center justify-between border-b border-slate-100 bg-white sticky top-0 z-10">
             <div>
               <h3 className="font-display font-black text-lg text-slate-800">
-                {language === 'uz' ? 'Ishni yakunlash' : language === 'ru' ? 'Завершить работу' : 'Complete Job'}
+                {title}
               </h3>
               <p className="text-xs text-brand-primary font-bold mt-1 truncate max-w-[280px]">
                 {jobTitle}
               </p>
             </div>
             <button
+              type="button"
+              aria-label={language === 'uz' ? 'Yopish' : 'Закрыть'}
               onClick={onClose}
               className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
@@ -80,6 +90,7 @@ export const FinishJobModal: React.FC<FinishJobModalProps> = ({
                     <button
                       key={star}
                       type="button"
+                      aria-label={`${star} yulduz`}
                       onClick={() => setRating(star)}
                       onMouseEnter={() => setHoveredStar(star)}
                       onMouseLeave={() => setHoveredStar(null)}
