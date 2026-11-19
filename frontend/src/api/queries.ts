@@ -12,7 +12,7 @@ export const fetchJobs = async (query: JobQuery = {}): Promise<Job[]> => {
   const params = new URLSearchParams();
   if (query.search?.trim()) params.set('search', query.search.trim());
   const qs = params.toString();
-  return await apiClient(qs ? `/jobs?${qs}` : '/jobs');
+  return await apiClient(qs ? `/jobs/?${qs}` : '/jobs/');
 };
 
 export interface MapJobQuery {
@@ -55,7 +55,7 @@ export const fetchJobById = async (jobId: string): Promise<Job> => {
 };
 
 export const fetchChats = async () => {
-  return await apiClient('/chats');
+  return await apiClient('/chats/');
 };
 
 export const fetchChatMessages = async (chatId: string) => {
@@ -168,7 +168,7 @@ export const confirmStartJobApi = async (jobId: string) => {
 };
 
 export const fetchNotificationsApi = async () => {
-  return await apiClient('/notifications');
+  return await apiClient('/notifications/');
 };
 
 export const fetchWorkerApplicationsApi = async () => {

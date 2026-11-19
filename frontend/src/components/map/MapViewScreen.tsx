@@ -123,6 +123,7 @@ export const MapViewScreen: React.FC<MapViewScreenProps> = ({
             displayedJobs={getDisplayedJobs()}
             selectedJob={selectedJob}
             handleJobSelect={handleJobSelect}
+            applyToJob={applyToJob}
             toggleBookmark={toggleBookmark}
             userLocation={userLocation}
             filterLocation={filterLocation}

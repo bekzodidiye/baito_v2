@@ -329,6 +329,7 @@ def get_job_location_counts(
     )
 
 
+@router.get("/map/", include_in_schema=False)
 @router.get("/map", response_model=List[schemas.JobMapPin])
 def get_map_jobs(
     response: Response,

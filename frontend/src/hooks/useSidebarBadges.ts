@@ -35,7 +35,7 @@ export const useSidebarBadges = () => {
     enabled: isLoggedIn,
     refetchInterval: 30_000,
     queryFn: async () => {
-      const rows = await apiClient('/chats');
+      const rows = await apiClient('/chats/');
       const list = Array.isArray(rows) ? rows : (rows?.items ?? []);
       return list.reduce(
         (total: number, c: { unreadCount?: number }) => total + (Number(c.unreadCount) || 0),

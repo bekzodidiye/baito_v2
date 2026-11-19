@@ -8,7 +8,7 @@ class CachedTileLayer extends L.TileLayer {
       return new L.Bounds([0, 0], [0, 0]);
     }
     const tileSize = this.getTileSize();
-    const edgeBuffer = (this.options as any).edgeBufferTiles ?? 2;
+    const edgeBuffer = (this.options as any).edgeBufferTiles ?? 0;
     const min = bounds.min.unscaleBy(tileSize).floor().subtract([edgeBuffer, edgeBuffer]);
     const max = bounds.max.unscaleBy(tileSize).ceil().subtract([1, 1]).add([edgeBuffer, edgeBuffer]);
     return new L.Bounds(min, max);
@@ -25,16 +25,17 @@ class CachedTileLayer extends L.TileLayer {
     const tiles = (this as any)._tiles;
     if (!tiles) return;
 
-    let hasBroken = false;
     for (const key in tiles) {
       const el = tiles[key]?.el as HTMLImageElement | undefined;
       if (el && (!el.complete || el.naturalWidth === 0)) {
-        hasBroken = true;
-        break;
+        delete el.dataset.fallbackTried;
+        delete el.dataset.secondaryTried;
+        const currentSrc = el.src;
+        if (currentSrc) {
+          el.src = '';
+          el.src = currentSrc;
+        }
       }
-    }
-    if (hasBroken) {
-      this.redraw();
     }
   }
 
@@ -138,16 +139,17 @@ export const healMapTiles = (map?: L.Map | null): number => {
       } else if (layer instanceof L.TileLayer) {
         const tiles = (layer as any)._tiles;
         if (tiles) {
-          let brokenInLayer = false;
           for (const key in tiles) {
             const el = tiles[key]?.el as HTMLImageElement | undefined;
             if (el && (!el.complete || el.naturalWidth === 0)) {
-              brokenInLayer = true;
-              break;
+              delete el.dataset.fallbackTried;
+              delete el.dataset.secondaryTried;
+              const currentSrc = el.src;
+              if (currentSrc) {
+                el.src = '';
+                el.src = currentSrc;
+              }
             }
-          }
-          if (brokenInLayer) {
-            layer.redraw();
           }
         }
       }
@@ -182,8 +184,8 @@ export const createTileLayers = (mapType: MapType, map: L.Map) => {
     updateWhenIdle: false,
     updateWhenZooming: true,
     updateInterval: 30,
-    keepBuffer: 8,
-    edgeBufferTiles: 2,
+    keepBuffer: 4,
+    edgeBufferTiles: 0,
     tileSize: 256,
     maxNativeZoom: 19,
     maxZoom: 20,

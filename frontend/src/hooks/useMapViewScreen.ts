@@ -178,11 +178,11 @@ export function useMapViewScreen() {
     setTimeout(() => setIsRefreshing(false), 800);
   }, [queryClient, mapInstanceRef]);
 
-  const handleJobSelect = (job: Job) => {
+  const handleJobSelect = useCallback((job: Job) => {
     setSelectedJob(job);
     setIsPanelExpanded(true);
     window.dispatchEvent(new CustomEvent('open-job-detail', { detail: job.id }));
-  };
+  }, [setSelectedJob, setIsPanelExpanded]);
 
   const { isLocatingUser, locationToast, handleLocationAction } = useMapLocationAction({
     filterLocation,

@@ -21,9 +21,9 @@ export function useJobsData(query: JobQuery = {}) {
       const res = await fetchJobs({ search });
       return Array.isArray(res) ? res : [];
     },
-    refetchInterval: isMap ? 30000 : 10000,
-    staleTime: isMap ? 15000 : 5000,
-    refetchOnWindowFocus: true,
+    refetchInterval: isMap ? 45000 : 30000,
+    staleTime: isMap ? 30000 : 15000,
+    refetchOnWindowFocus: false,
     // Keep the previous results on screen while the next search loads, so the
     // list does not blank out on every keystroke.
     placeholderData: (previous) => previous,

@@ -46,10 +46,8 @@ export const NotificationWatcher: React.FC = () => {
       return Array.isArray(res) ? res : [];
     },
     enabled: isLoggedIn,
-    refetchInterval: 20000,
-    // A notification that arrived while the tab was in the background should
-    // be waiting when the user comes back to it.
-    refetchOnWindowFocus: true,
+    refetchInterval: 45000,
+    refetchOnWindowFocus: false,
   });
 
   const items = data ?? NONE;

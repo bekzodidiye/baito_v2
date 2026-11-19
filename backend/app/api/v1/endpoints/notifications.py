@@ -10,6 +10,7 @@ from app.api import deps
 router = APIRouter()
 
 
+@router.get("", response_model=List[schemas.Notification], include_in_schema=False)
 @router.get("/", response_model=List[schemas.Notification])
 def read_notifications(
     db: Session = Depends(deps.get_db),

@@ -1,13 +1,26 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Briefcase, ChevronRight, ChevronLeft, Sparkles, TrendingUp, Clock, DollarSign, Search, X } from 'lucide-react';
 import { Job } from '../../types';
 import { JobCardSkeleton } from './JobCardSkeleton';
-import { useJobsData } from "../../context/useJobsData";
 import { translations, translateRegion } from '../../translations';
 import { JobCardItem } from './JobCardItem';
 import { useAuthStore } from "../../store/useAuthStore";
 import { getJobTitle, getJobLocation } from '../../utils/jobTranslationUtils';
 import { useCurrentScreen } from '../../hooks/useCurrentScreen';
+
+const useIsDesktop = () => {
+  const [isDesktop, setIsDesktop] = useState(() => 
+    typeof window !== 'undefined' ? window.innerWidth >= 768 : false
+  );
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mql = window.matchMedia('(min-width: 768px)');
+    const onChange = () => setIsDesktop(mql.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+  return isDesktop;
+};
 
 interface JobSummaryCardProps {
   isPanelExpanded: boolean;
@@ -16,6 +29,7 @@ interface JobSummaryCardProps {
   displayedJobs: Job[];
   selectedJob: Job | null;
   handleJobSelect: (job: Job) => void;
+  applyToJob?: (id: string) => Promise<boolean> | void;
   toggleBookmark?: (id: string) => void;
   userLocation: { lat: number; lng: number } | null;
   filterLocation: string;
@@ -36,6 +50,7 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
   displayedJobs,
   selectedJob,
   handleJobSelect,
+  applyToJob = () => {},
   userLocation,
   filterLocation,
   isRefreshing,
@@ -44,8 +59,8 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
   const { currentScreen } = useCurrentScreen();
   if (currentScreen === 'landing') return null;
 
+  const isDesktop = useIsDesktop();
   const language = useAuthStore(s => s.language);
-  const { jobs, applyToJob } = useJobsData();
   const t = translations[language];
   const [activeSort, setActiveSort] = useState<SortOption>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -53,11 +68,11 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
 
   const appliedJobIds = useMemo(() => {
     const set = new Set<string>();
-    for (const j of jobs) {
+    for (const j of displayedJobs) {
       if (j.applied) set.add(j.id);
     }
     return set;
-  }, [jobs]);
+  }, [displayedJobs]);
 
   const sortedJobs = useMemo(() => {
     if (!displayedJobs || displayedJobs.length === 0) return [];
@@ -317,16 +332,17 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
 
           {/* Content Area */}
           {isRefreshing ? (
-            <>
-              {/* Mobile Skeleton */}
-              <div className="md:hidden relative w-full overflow-hidden">
-                <JobCardSkeleton count={3} layout="horizontal" />
-              </div>
-              {/* Desktop Skeleton */}
-              <div className="hidden flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar md:grid md:grid-cols-2 gap-3">
+            isDesktop ? (
+              /* Desktop Skeleton */
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar grid grid-cols-2 gap-3">
                 <JobCardSkeleton count={6} layout="grid" />
               </div>
-            </>
+            ) : (
+              /* Mobile Skeleton */
+              <div className="relative w-full overflow-hidden">
+                <JobCardSkeleton count={3} layout="horizontal" />
+              </div>
+            )
           ) : sortedJobs.length === 0 ? (
             <div className="px-4 py-8 md:py-16 flex flex-col items-center justify-center text-center flex-1">
               <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100/70 flex items-center justify-center text-brand-primary mb-3 shadow-inner">
@@ -348,55 +364,53 @@ export const JobSummaryCard: React.FC<JobSummaryCardProps> = ({
                 </button>
               )}
             </div>
+          ) : isDesktop ? (
+            /* Desktop: 2-Column Grid View */
+            <div 
+              className="flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar scroll-smooth grid grid-cols-2 gap-3 content-start"
+            >
+              {sortedJobs.map(job => (
+                <JobCardItem
+                  key={job.id}
+                  job={job}
+                  language={language}
+                  selectedJob={selectedJob}
+                  handleJobSelect={handleJobSelect}
+                  userLocation={userLocation}
+                  applied={appliedJobIds.has(job.id)}
+                  applyToJob={applyToJob}
+                  layoutMode="grid"
+                />
+              ))}
+            </div>
           ) : (
-            <>
-              {/* Mobile: Horizontal scrollable Job Cards */}
-              <div className="md:hidden relative w-full overflow-hidden">
-                <div 
-                  onScroll={(e) => {
-                    const target = e.currentTarget;
-                    setIsAtBeginning(target.scrollLeft < 10);
-                  }}
-                  className={`px-6 pt-1.5 pb-2 overflow-x-auto no-scrollbar flex gap-3 snap-x snap-mandatory scroll-smooth w-full ${
-                    sortedJobs.length === 1 ? 'justify-center' : ''
-                  }`}
-                >
-                  {sortedJobs.map(job => (
-                    <div key={job.id} className="min-w-[calc(100vw-64px)] sm:min-w-[280px] shrink-0 snap-center">
-                      <JobCardItem
-                        job={job}
-                        language={language}
-                        selectedJob={selectedJob}
-                        handleJobSelect={handleJobSelect}
-                        userLocation={userLocation}
-                        applied={appliedJobIds.has(job.id)}
-                        applyToJob={applyToJob}
-                        layoutMode="list"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Desktop: 2-Column Grid View */}
+            /* Mobile: Horizontal scrollable Job Cards */
+            <div className="relative w-full overflow-hidden">
               <div 
-                className="hidden flex-1 min-h-0 overflow-y-auto p-4 no-scrollbar scroll-smooth md:grid md:grid-cols-2 gap-3 content-start"
+                onScroll={(e) => {
+                  const target = e.currentTarget;
+                  setIsAtBeginning(target.scrollLeft < 10);
+                }}
+                className={`px-6 pt-1.5 pb-2 overflow-x-auto no-scrollbar flex gap-3 snap-x snap-mandatory scroll-smooth w-full ${
+                  sortedJobs.length === 1 ? 'justify-center' : ''
+                }`}
               >
                 {sortedJobs.map(job => (
-                  <JobCardItem
-                    key={job.id}
-                    job={job}
-                    language={language}
-                    selectedJob={selectedJob}
-                    handleJobSelect={handleJobSelect}
-                    userLocation={userLocation}
-                    applied={appliedJobIds.has(job.id)}
-                    applyToJob={applyToJob}
-                    layoutMode="grid"
-                  />
+                  <div key={job.id} className="min-w-[calc(100vw-64px)] sm:min-w-[280px] shrink-0 snap-center">
+                    <JobCardItem
+                      job={job}
+                      language={language}
+                      selectedJob={selectedJob}
+                      handleJobSelect={handleJobSelect}
+                      userLocation={userLocation}
+                      applied={appliedJobIds.has(job.id)}
+                      applyToJob={applyToJob}
+                      layoutMode="list"
+                    />
+                  </div>
                 ))}
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

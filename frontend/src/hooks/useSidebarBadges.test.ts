@@ -27,7 +27,7 @@ vi.mock('../store/useAuthStore', () => ({
 vi.mock('../api/client', () => ({
   apiClient: vi.fn(async (path: string) => {
     if (path === '/applications/employer') return state.applications;
-    if (path === '/chats') return state.chats;
+    if (path === '/chats' || path === '/chats/') return state.chats;
     throw new Error('unexpected path ' + path);
   }),
 }));
