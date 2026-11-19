@@ -1,5 +1,5 @@
 import L from 'leaflet';
-import { areDistrictNamesEqual } from './mapUtils';
+import { areDistrictNamesEqual, isRegionName } from './mapUtils';
 import { translateRegion, Language } from '../../translations';
 import { BOUNDARY_COLOUR, HOVERED, outlineFor } from './regionOutlineStyle';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
@@ -35,10 +35,7 @@ export const createDistrictOnEachFeature = (
   
   layer.on('mouseover', function (this: L.Path) {
     const currentFilter = filterLocRef.current;
-    const isRegionFilt = UZBEKISTAN_REGIONS.some(r => 
-      currentFilter.toLowerCase() === r.id.toLowerCase() ||
-      currentFilter.toLowerCase() === r.name.toLowerCase()
-    );
+    const isRegionFilt = isRegionName(currentFilter);
     const isSelected = !isRegionFilt && areDistrictNamesEqual(currentFilter, tumanName);
     
     if (!isSelected) {
@@ -48,14 +45,12 @@ export const createDistrictOnEachFeature = (
   
   layer.on('mouseout', function (this: L.Path) {
     const currentFilter = filterLocRef.current;
-    const isRegionFilt = UZBEKISTAN_REGIONS.some(r => 
-      currentFilter.toLowerCase() === r.id.toLowerCase() ||
-      currentFilter.toLowerCase() === r.name.toLowerCase()
-    );
+    const isRegionFilt = isRegionName(currentFilter);
     const isAnyDistFilt = !isRegionFilt && currentFilter !== 'Barchasi';
     const isSelected = !isRegionFilt && areDistrictNamesEqual(currentFilter, tumanName);
     
     const base = outlineFor({ isFiltering: isAnyDistFilt, isActive: isSelected });
     this.setStyle({ ...base, weight: base.weight * 0.8 });
   });
+
 };

@@ -3,7 +3,7 @@ import L from 'leaflet';
 import { Job } from '../../types';
 import { outlineFor } from './regionOutlineStyle';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
-import { areDistrictNamesEqual } from './mapUtils';
+import { areDistrictNamesEqual, isRegionName } from './mapUtils';
 import { Language } from '../../translations';
 import { createDistrictOnEachFeature } from './districtFeatureUtils';
 
@@ -139,7 +139,13 @@ export const useDistrictPolygons = ({
     const group = regionsGroupRef.current;
     if (!map || !group || !districtsGeoJsonData) return;
     
-    let selectedRegion = UZBEKISTAN_REGIONS.find(r => filterLocation.toLowerCase().includes(r.id.toLowerCase()));
+    let selectedRegion = isRegionName(filterLocation)
+      ? UZBEKISTAN_REGIONS.find(r => 
+          filterLocation.toLowerCase() === r.id.toLowerCase() ||
+          filterLocation.toLowerCase() === r.name.toLowerCase() ||
+          filterLocation.toLowerCase().includes(r.id.toLowerCase())
+        )
+      : null;
     
     if (!selectedRegion) {
       const matchedDistrict = findDistrictFeature(filterLocation);
@@ -157,12 +163,7 @@ export const useDistrictPolygons = ({
       return;
     }
 
-    const isRegionFilterSelected = UZBEKISTAN_REGIONS.some(r => 
-      filterLocation.toLowerCase() === r.id.toLowerCase() ||
-      filterLocation.toLowerCase() === r.name.toLowerCase() ||
-      filterLocation.toLowerCase().includes(r.id.toLowerCase() + ' viloyati') ||
-      filterLocation.toLowerCase().includes(r.name.toLowerCase() + ' viloyati')
-    );
+    const isRegionFilterSelected = isRegionName(filterLocation);
     
     const isAnyDistrictOfThisRegionSelected = !isRegionFilterSelected && districtsGeoJsonData.features.some((f: any) => 
       f.properties && 

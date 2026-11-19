@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import L from 'leaflet';
 import { Job } from '../../types';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
-import { mapFeatureToRegionId, areDistrictNamesEqual, getFeatureBounds } from './mapUtils';
+import { mapFeatureToRegionId, areDistrictNamesEqual, getFeatureBounds, isRegionName } from './mapUtils';
 import { BOUNDARY_COLOUR } from './regionOutlineStyle';
 import { translateRegion, Language } from '../../translations';
 
@@ -159,7 +159,13 @@ export const useMapLabels = ({
       const shouldShowDistricts = (zoomLevel >= 7.8) || (zoomLevel >= 6.5 && isActiveFilter);
 
       if (shouldShowDistricts && districtsGeoJsonData) {
-        let selectedRegion = UZBEKISTAN_REGIONS.find(r => activeLoc.toLowerCase().includes(r.id.toLowerCase()));
+        let selectedRegion = isRegionName(activeLoc)
+          ? UZBEKISTAN_REGIONS.find(r => 
+              activeLoc.toLowerCase() === r.id.toLowerCase() ||
+              activeLoc.toLowerCase() === r.name.toLowerCase() ||
+              activeLoc.toLowerCase().includes(r.id.toLowerCase())
+            )
+          : null;
         
         if (!selectedRegion && isActiveFilter) {
           const matchedDistrict = findDistrictFeature(activeLoc);
@@ -181,10 +187,7 @@ export const useMapLabels = ({
           const center = districtCentersRef.current.get(tumanName);
           if (!center) return;
           
-          const isRegionFilterSelected = UZBEKISTAN_REGIONS.some(r => 
-            activeLoc.toLowerCase() === r.id.toLowerCase() ||
-            activeLoc.toLowerCase() === r.name.toLowerCase()
-          );
+          const isRegionFilterSelected = isRegionName(activeLoc);
           
           const isSelected = !isRegionFilterSelected && areDistrictNamesEqual(activeLoc, tumanName);
           // One colour, not one per district. The twelve-colour scheme went

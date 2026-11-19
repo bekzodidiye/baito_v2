@@ -14,12 +14,17 @@ export const useMapNavigation = ({
   districtsGeoJsonData,
   panToCoords,
 }: UseMapNavigationProps) => {
-  const selectedRegion = filterLocation === 'Toshkent shahri'
-    ? undefined
-    : UZBEKISTAN_REGIONS.find(r => 
-        filterLocation.toLowerCase().includes(r.id.toLowerCase()) ||
+  const isRegion = isRegionName(filterLocation);
+
+  const selectedRegion = (isRegion && filterLocation !== 'Toshkent shahri')
+    ? UZBEKISTAN_REGIONS.find(r => 
+        filterLocation.toLowerCase() === r.id.toLowerCase() ||
+        filterLocation.toLowerCase() === r.name.toLowerCase() ||
+        filterLocation.toLowerCase().replace(/['’'`‘]/g, '') === r.id.toLowerCase().replace(/['’'`‘]/g, '') ||
+        filterLocation.toLowerCase().includes(r.id.toLowerCase() + ' viloyati') ||
         filterLocation.toLowerCase().includes(r.name.toLowerCase())
-      );
+      )
+    : undefined;
 
   const breadcrumbItems = (() => {
     if (filterLocation === 'Barchasi') return [];
@@ -27,7 +32,7 @@ export const useMapNavigation = ({
 
     if (filterLocation === 'Toshkent shahri') {
       items.push('Toshkent shahri');
-    } else if (selectedRegion) {
+    } else if (isRegion && selectedRegion) {
       items.push(selectedRegion.name);
     } else {
       const matchedDistrict = districtsGeoJsonData?.features?.find((f: any) => 
@@ -56,9 +61,7 @@ export const useMapNavigation = ({
   })();
 
   const handleBreadcrumbBack = () => {
-    const isRegion = isRegionName(filterLocation) || filterLocation.toLowerCase() === 'toshkent shahri';
-
-    if (isRegion) {
+    if (isRegion || filterLocation.toLowerCase() === 'toshkent shahri') {
       setFilterLocation('Barchasi');
       return;
     }
@@ -81,7 +84,7 @@ export const useMapNavigation = ({
     if (matchedDistrict?.properties?.regionId) {
       const parentRegion = UZBEKISTAN_REGIONS.find(r => r.id === matchedDistrict.properties.regionId);
       if (parentRegion) {
-        setFilterLocation(parentRegion.id);
+        setFilterLocation(parentRegion.name || parentRegion.id);
         return;
       }
     }

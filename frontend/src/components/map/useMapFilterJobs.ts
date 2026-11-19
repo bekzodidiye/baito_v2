@@ -62,11 +62,12 @@ export function useMapFilterJobs({
       if (activeCluster === 'cluster1') list = cluster1Jobs.filter(j => availableJobs.some(a => a.id === j.id));
       else if (activeCluster === 'cluster2') list = cluster2Jobs.filter(j => availableJobs.some(a => a.id === j.id));
     } else {
-      const matchedRegion = UZBEKISTAN_REGIONS.find(r => 
+      const isRegion = isRegionName(filterLocation);
+      const matchedRegion = isRegion ? UZBEKISTAN_REGIONS.find(r => 
         filterLocation.toLowerCase() === r.id.toLowerCase() ||
         filterLocation.toLowerCase() === r.name.toLowerCase() ||
         filterLocation.toLowerCase().includes(r.id.toLowerCase())
-      );
+      ) : null;
 
       if (matchedRegion) {
         list = list.filter(j => {

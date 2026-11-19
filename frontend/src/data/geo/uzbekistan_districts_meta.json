@@ -1,261 +1,346 @@
 [
   {
-    "shapeName": "Yashnobod",
+    "shapeName": "Yashnobod Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent shahri"
   },
   {
-    "shapeName": "Qoʻngʻirot",
+    "shapeName": "Qoʻngʻirot Tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Moynoq",
+    "shapeName": "Moynoq Tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Shumanay",
+    "shapeName": "Shumanay Tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Qonlikoʻl",
+    "shapeName": "Qonlikoʻl Tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Xo'jayli",
+    "shapeName": "Xo'jayli Tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Nukus",
+    "shapeName": "Nukus Tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Kegeili",
+    "shapeName": "Kegeili Tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Chimboy",
+    "shapeName": "Chimboy Tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Qoraoʻzak",
+    "shapeName": "Qoraoʻzak tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Amudaryo",
+    "shapeName": "Amudaryo Tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Taxtakoʻpir",
+    "shapeName": "Taxtakoʻpir tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Beruniy",
+    "shapeName": "Beruniy Tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Toʻrtkoʻl",
+    "shapeName": "Toʻrtkoʻl tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Ellikqalʼa",
+    "shapeName": "Ellikqalʼa tumani",
     "regionId": "Qoraqalpog'iston",
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Gurlan",
+    "shapeName": "Gurlan Tumani",
     "regionId": "Xorazm",
     "parentRegion": "Xorazm viloyati"
   },
   {
-    "shapeName": "Showot",
+    "shapeName": "Showot Tumani",
     "regionId": "Xorazm",
     "parentRegion": "Xorazm viloyati"
   },
   {
-    "shapeName": "Yangibozor",
+    "shapeName": "Yangibozor Tumani",
     "regionId": "Xorazm",
     "parentRegion": "Xorazm viloyati"
   },
   {
-    "shapeName": "Qoshkopir",
+    "shapeName": "Qoshkopir Tumani",
     "regionId": "Xorazm",
     "parentRegion": "Xorazm viloyati"
   },
   {
-    "shapeName": "Urganch",
+    "shapeName": "Urganch Tumani",
     "regionId": "Xorazm",
     "parentRegion": "Xorazm viloyati"
   },
   {
-    "shapeName": "Xiva",
+    "shapeName": "Xiva Tumani",
     "regionId": "Xorazm",
     "parentRegion": "Xorazm viloyati"
   },
   {
-    "shapeName": "Yangiariq",
+    "shapeName": "Yangiariq Tumani",
     "regionId": "Xorazm",
     "parentRegion": "Xorazm viloyati"
   },
   {
-    "shapeName": "Bog‘ot",
+    "shapeName": "Bog‘ot Tumani",
     "regionId": "Xorazm",
     "parentRegion": "Xorazm viloyati"
   },
   {
-    "shapeName": "Xonqa",
+    "shapeName": "Xonqa Tumani",
     "regionId": "Xorazm",
     "parentRegion": "Xorazm viloyati"
   },
   {
-    "shapeName": "Hazorasp",
+    "shapeName": "Hazorasp Tumani",
     "regionId": "Xorazm",
     "parentRegion": "Xorazm viloyati"
   },
   {
-    "shapeName": "Bo'stonliq",
+    "shapeName": "Bo'stonliq Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Konimex",
+    "shapeName": "Konimex tumani",
     "regionId": "Navoiy",
     "parentRegion": "Navoiy viloyati"
   },
   {
-    "shapeName": "Tomdi",
+    "shapeName": "Tomdi tumani",
     "regionId": "Navoiy",
     "parentRegion": "Navoiy viloyati"
   },
   {
-    "shapeName": "Uchquduq",
+    "shapeName": "Uchquduq tumani",
     "regionId": "Navoiy",
     "parentRegion": "Navoiy viloyati"
   },
   {
-    "shapeName": "Uchtepa",
+    "shapeName": "Uchtepa Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent shahri"
   },
   {
-    "shapeName": "Shayhontohur",
-    "regionId": "Toshkent",
-    "parentRegion": "Toshkent viloyati"
-  },
-  {
-    "shapeName": "Olmazor",
+    "shapeName": "Shayhontohur Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent shahri"
   },
   {
-    "shapeName": "Chilonzor",
+    "shapeName": "Olmazor Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent shahri"
   },
   {
-    "shapeName": "Yakkasaroy",
+    "shapeName": "Chilonzor Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent shahri"
   },
   {
-    "shapeName": "Sergeli",
+    "shapeName": "Yakkasaroy Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent shahri"
   },
   {
-    "shapeName": "Bektemir",
+    "shapeName": "Sergeli tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent shahri"
   },
   {
-    "shapeName": "Mirobod",
+    "shapeName": "Bektemir Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent shahri"
   },
   {
-    "shapeName": "Yunusobod",
+    "shapeName": "Mirobod Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent shahri"
   },
   {
-    "shapeName": "Soʻx",
+    "shapeName": "Yunusobod Tumani",
+    "regionId": "Toshkent",
+    "parentRegion": "Toshkent shahri"
+  },
+  {
+    "shapeName": "Soʻx tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Zangiota",
+    "shapeName": "Zangiota Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Mirzo Ulug‘bek",
+    "shapeName": "Mirzo Ulug‘bek Tumani",
+    "regionId": "Toshkent",
+    "parentRegion": "Toshkent shahri"
+  },
+  {
+    "shapeName": "Qibray Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Qibray",
+    "shapeName": "Parkent Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Parkent",
+    "shapeName": "Yuqorichirchiq Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Yuqorichirchiq",
+    "shapeName": "Ohangaron Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Ohangaron",
+    "shapeName": "O'rtachirchiq Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "O'rtachirchiq",
+    "shapeName": "Yangiyo'l Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Yangiyo'l",
+    "shapeName": "Chinoz Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Chinoz",
+    "shapeName": "Quyichirchiq Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Quyichirchiq",
+    "shapeName": "Oqqoʻrgʻon Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Oqqoʻrgʻon",
+    "shapeName": "Piskent Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Piskent",
+    "shapeName": "Bo'ka Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Bo'ka",
+    "shapeName": "Bekobod Tumani",
+    "regionId": "Toshkent",
+    "parentRegion": "Toshkent viloyati"
+  },
+  {
+    "shapeName": "Zafarobod Tumani",
+    "regionId": "Jizzax",
+    "parentRegion": "Jizzax viloyati"
+  },
+  {
+    "shapeName": "Arnasoy Tumani",
+    "regionId": "Jizzax",
+    "parentRegion": "Jizzax viloyati"
+  },
+  {
+    "shapeName": "Do'stlik Tumani",
+    "regionId": "Jizzax",
+    "parentRegion": "Jizzax viloyati"
+  },
+  {
+    "shapeName": "Yangiyo'l shahri",
+    "regionId": "Toshkent",
+    "parentRegion": "Toshkent viloyati"
+  },
+  {
+    "shapeName": "Nukus shahri hokimiyati",
+    "regionId": "Qoraqalpog'iston",
+    "parentRegion": "Qoraqalpog'iston Respublikasi"
+  },
+  {
+    "shapeName": "Taxiatosh tumani",
+    "regionId": "Qoraqalpog'iston",
+    "parentRegion": "Qoraqalpog'iston Respublikasi"
+  },
+  {
+    "shapeName": "Baxmal tumani",
+    "regionId": "Jizzax",
+    "parentRegion": "Jizzax viloyati"
+  },
+  {
+    "shapeName": "Zomin Tumani",
+    "regionId": "Jizzax",
+    "parentRegion": "Jizzax viloyati"
+  },
+  {
+    "shapeName": "Yangiobod Tumani",
+    "regionId": "Jizzax",
+    "parentRegion": "Jizzax viloyati"
+  },
+  {
+    "shapeName": "Zarbdor Tumani",
+    "regionId": "Jizzax",
+    "parentRegion": "Jizzax viloyati"
+  },
+  {
+    "shapeName": "G'allaorol Tumani",
+    "regionId": "Jizzax",
+    "parentRegion": "Jizzax viloyati"
+  },
+  {
+    "shapeName": "Sharof Rashidov Tumani",
+    "regionId": "Jizzax",
+    "parentRegion": "Jizzax viloyati"
+  },
+  {
+    "shapeName": "Mirzacho`l Tumani",
+    "regionId": "Jizzax",
+    "parentRegion": "Jizzax viloyati"
+  },
+  {
+    "shapeName": "Paxtakor Tumani",
+    "regionId": "Jizzax",
+    "parentRegion": "Jizzax viloyati"
+  },
+  {
+    "shapeName": "Forish Tumani",
+    "regionId": "Jizzax",
+    "parentRegion": "Jizzax viloyati"
+  },
+  {
+    "shapeName": "Chirchiq shahri",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
@@ -265,82 +350,7 @@
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Zafarobod",
-    "regionId": "Jizzax",
-    "parentRegion": "Jizzax viloyati"
-  },
-  {
-    "shapeName": "Arnasoy",
-    "regionId": "Jizzax",
-    "parentRegion": "Jizzax viloyati"
-  },
-  {
-    "shapeName": "Do'stlik",
-    "regionId": "Jizzax",
-    "parentRegion": "Jizzax viloyati"
-  },
-  {
-    "shapeName": "Nukus shahri hokimiyati",
-    "regionId": "Qoraqalpog'iston",
-    "parentRegion": "Qoraqalpog'iston Respublikasi"
-  },
-  {
-    "shapeName": "Taxiatosh",
-    "regionId": "Qoraqalpog'iston",
-    "parentRegion": "Qoraqalpog'iston Respublikasi"
-  },
-  {
-    "shapeName": "Baxmal",
-    "regionId": "Jizzax",
-    "parentRegion": "Jizzax viloyati"
-  },
-  {
-    "shapeName": "Zomin",
-    "regionId": "Jizzax",
-    "parentRegion": "Jizzax viloyati"
-  },
-  {
-    "shapeName": "Yangiobod",
-    "regionId": "Jizzax",
-    "parentRegion": "Jizzax viloyati"
-  },
-  {
-    "shapeName": "Zarbdor",
-    "regionId": "Jizzax",
-    "parentRegion": "Jizzax viloyati"
-  },
-  {
-    "shapeName": "G'allaorol",
-    "regionId": "Jizzax",
-    "parentRegion": "Jizzax viloyati"
-  },
-  {
-    "shapeName": "Sharof Rashidov",
-    "regionId": "Jizzax",
-    "parentRegion": "Jizzax viloyati"
-  },
-  {
-    "shapeName": "Mirzacho`l",
-    "regionId": "Jizzax",
-    "parentRegion": "Jizzax viloyati"
-  },
-  {
-    "shapeName": "Paxtakor",
-    "regionId": "Jizzax",
-    "parentRegion": "Jizzax viloyati"
-  },
-  {
-    "shapeName": "Forish",
-    "regionId": "Jizzax",
-    "parentRegion": "Jizzax viloyati"
-  },
-  {
-    "shapeName": "Chirchiq",
-    "regionId": "Toshkent",
-    "parentRegion": "Toshkent viloyati"
-  },
-  {
-    "shapeName": "Olmaliq",
+    "shapeName": "Olmaliq shahri",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
@@ -350,27 +360,27 @@
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Guliston",
+    "shapeName": "Guliston shahri",
     "regionId": "Sirdaryo",
     "parentRegion": "Sirdaryo viloyati"
   },
   {
-    "shapeName": "Kitob",
+    "shapeName": "Kitob tumani",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
   {
-    "shapeName": "Shahrisabz",
+    "shapeName": "Shahrisabz tumani",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
   {
-    "shapeName": "Yakkabog'",
+    "shapeName": "Yakkabog' tumani",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
   {
-    "shapeName": "Qamashi",
+    "shapeName": "Qamashi tumani",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
@@ -380,572 +390,622 @@
     "parentRegion": "Qoraqalpog'iston Respublikasi"
   },
   {
-    "shapeName": "Nishon",
+    "shapeName": "Nishon tumani",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
   {
-    "shapeName": "Toshkent",
+    "shapeName": "Toshkent Tumani",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },
   {
-    "shapeName": "Boyovut",
+    "shapeName": "Boyovut Tumani",
     "regionId": "Sirdaryo",
     "parentRegion": "Sirdaryo viloyati"
   },
   {
-    "shapeName": "Yangiyer",
+    "shapeName": "Yangiyer shahri",
     "regionId": "Sirdaryo",
     "parentRegion": "Sirdaryo viloyati"
   },
   {
-    "shapeName": "Xovos",
+    "shapeName": "Xovos Tumani",
     "regionId": "Sirdaryo",
     "parentRegion": "Sirdaryo viloyati"
   },
   {
-    "shapeName": "Mirzaobod",
+    "shapeName": "Mirzaobod Tumani",
     "regionId": "Sirdaryo",
     "parentRegion": "Sirdaryo viloyati"
   },
   {
-    "shapeName": "Oqoltin",
+    "shapeName": "Oqoltin Tumani",
     "regionId": "Sirdaryo",
     "parentRegion": "Sirdaryo viloyati"
   },
   {
-    "shapeName": "Sardoba",
+    "shapeName": "Sardoba Tumani",
     "regionId": "Sirdaryo",
     "parentRegion": "Sirdaryo viloyati"
   },
   {
-    "shapeName": "Sayxunobod",
+    "shapeName": "Guliston Tumani",
     "regionId": "Sirdaryo",
     "parentRegion": "Sirdaryo viloyati"
   },
   {
-    "shapeName": "Sirdaryo",
+    "shapeName": "Sayxunobod Tumani",
     "regionId": "Sirdaryo",
     "parentRegion": "Sirdaryo viloyati"
   },
   {
-    "shapeName": "Sariosiyo",
+    "shapeName": "Sirdaryo Tumani",
+    "regionId": "Sirdaryo",
+    "parentRegion": "Sirdaryo viloyati"
+  },
+  {
+    "shapeName": "Sariosiyo Tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Boysun",
+    "shapeName": "Boysun Tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Qumqoʻrgʻon",
+    "shapeName": "Qumqoʻrgʻon tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Termiz",
+    "shapeName": "Termiz Tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Oltinsoy",
+    "shapeName": "Oltinsoy Tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Navbahor",
+    "shapeName": "Navbahor tumani",
     "regionId": "Navoiy",
     "parentRegion": "Navoiy viloyati"
   },
   {
-    "shapeName": "Xatirchi",
+    "shapeName": "Xatirchi tumani",
     "regionId": "Navoiy",
     "parentRegion": "Navoiy viloyati"
   },
   {
-    "shapeName": "Nurota",
+    "shapeName": "Nurota tumani",
     "regionId": "Navoiy",
     "parentRegion": "Navoiy viloyati"
   },
   {
-    "shapeName": "Qiziltepa",
+    "shapeName": "Qiziltepa tumani",
     "regionId": "Navoiy",
     "parentRegion": "Navoiy viloyati"
   },
   {
-    "shapeName": "Karmana",
+    "shapeName": "Karmana tumani",
     "regionId": "Navoiy",
     "parentRegion": "Navoiy viloyati"
   },
   {
-    "shapeName": "Qorovulbozor",
+    "shapeName": "Qorovulbozor tumani",
     "regionId": "Buxoro",
     "parentRegion": "Buxoro viloyati"
   },
   {
-    "shapeName": "Kogon",
+    "shapeName": "Kogon tumani",
     "regionId": "Buxoro",
     "parentRegion": "Buxoro viloyati"
   },
   {
-    "shapeName": "Olot",
+    "shapeName": "Olot tumani",
     "regionId": "Buxoro",
     "parentRegion": "Buxoro viloyati"
   },
   {
-    "shapeName": "Denov",
+    "shapeName": "Denov Tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Shoʻrchi",
+    "shapeName": "Shoʻrchi Tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Buxoro",
+    "shapeName": "Buxoro tumani",
     "regionId": "Buxoro",
     "parentRegion": "Buxoro viloyati"
   },
   {
-    "shapeName": "Uzun",
+    "shapeName": "Uzun tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Bandixon",
+    "shapeName": "Bandixon Tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Qiziriq",
+    "shapeName": "Qiziriq Tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Jarqoʻrgʻon",
+    "shapeName": "Jarqoʻrgʻon Tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Angor",
+    "shapeName": "Angor Tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Muzrabot",
+    "shapeName": "Muzrabot Tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Sherobod",
+    "shapeName": "Sherobod Tumani",
     "regionId": "Surxondaryo",
     "parentRegion": "Surxondaryo viloyati"
   },
   {
-    "shapeName": "Kasbi",
+    "shapeName": "Kasbi tumani",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
   {
-    "shapeName": "Mirishkor",
+    "shapeName": "Mirishkor tumani",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
   {
-    "shapeName": "Tuproqqalʼa",
+    "shapeName": "Tuproqqalʼa Tumani",
     "regionId": "Xorazm",
     "parentRegion": "Xorazm viloyati"
   },
   {
-    "shapeName": "Yangi hayot",
+    "shapeName": "Yangi hayot tumani",
     "regionId": "Toshkent",
-    "parentRegion": "Toshkent viloyati"
+    "parentRegion": "Toshkent shahri"
   },
   {
-    "shapeName": "Paxtachi",
+    "shapeName": "Paxtachi tumani",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Chiroqchi",
+    "shapeName": "Buxoro shahri",
+    "regionId": "Buxoro",
+    "parentRegion": "Buxoro viloyati"
+  },
+  {
+    "shapeName": "Chiroqchi tumani",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
   {
-    "shapeName": "Qarshi",
+    "shapeName": "Qarshi tumani",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
   {
-    "shapeName": "Davlatobod",
+    "shapeName": "Davlatobod tumani",
     "regionId": "Namangan",
     "parentRegion": "Namangan viloyati"
   },
   {
-    "shapeName": "Yangi Namangan",
+    "shapeName": "Yangi Namangan tumani",
     "regionId": "Namangan",
     "parentRegion": "Namangan viloyati"
   },
   {
-    "shapeName": "Ulug’nor",
+    "shapeName": "Ulug’nor tumani",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Xonobod",
+    "shapeName": "Xonobod shahri",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Boʻston",
+    "shapeName": "Boʻston tumani",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Qoʻrgʻontepa",
+    "shapeName": "Qoʻrgʻontepa tumani",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Baliqchi",
+    "shapeName": "Baliqchi tumani",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Andijon",
+    "shapeName": "Andijon shahri",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Jalaquduq",
+    "shapeName": "Andijon tumani",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Izboskan",
+    "shapeName": "Jalaquduq tumani",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Paxtaobod",
+    "shapeName": "Izboskan tumani",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Buloqboshi",
+    "shapeName": "Paxtaobod tumani",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Xoʻjaobod",
+    "shapeName": "Buloqboshi tumani",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Oltinkoʻl",
+    "shapeName": "Xoʻjaobod tumani",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Shahrixon",
+    "shapeName": "Oltinkoʻl tumani",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Marhamat",
+    "shapeName": "Shahrixon tumani",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Asaka",
+    "shapeName": "Marhamat tumani",
     "regionId": "Andijon",
     "parentRegion": "Andijon viloyati"
   },
   {
-    "shapeName": "Beshariq",
+    "shapeName": "Asaka tumani",
+    "regionId": "Andijon",
+    "parentRegion": "Andijon viloyati"
+  },
+  {
+    "shapeName": "Beshariq tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Qoʻqon",
+    "shapeName": "Qoʻqon shahri",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Furqat",
+    "shapeName": "Furqat tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Oʻzbekiston",
+    "shapeName": "Oʻzbekiston tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Dangʻara",
+    "shapeName": "Dangʻara tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Uchkoʻprik",
+    "shapeName": "Uchkoʻprik tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Buvayda",
+    "shapeName": "Buvayda tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Fargʻona",
+    "shapeName": "Fargʻona tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Quvasoy",
+    "shapeName": "Fargʻona shahri",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Quva",
+    "shapeName": "Quvasoy shahri",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Marg'ilon",
+    "shapeName": "Quva tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Toshloq",
+    "shapeName": "Marg'ilon shahri",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Yozyovon",
+    "shapeName": "Toshloq tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Qoʻshtepa",
+    "shapeName": "Yozyovon tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Bagʻdod",
+    "shapeName": "Qoʻshtepa tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Rishton",
+    "shapeName": "Bagʻdod tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Oltiariq",
+    "shapeName": "Rishton tumani",
     "regionId": "Farg'ona",
     "parentRegion": "Farg'ona viloyati"
   },
   {
-    "shapeName": "Uchqoʻrgʻon",
+    "shapeName": "Oltiariq tumani",
+    "regionId": "Farg'ona",
+    "parentRegion": "Farg'ona viloyati"
+  },
+  {
+    "shapeName": "Uchqoʻrgʻon tumani",
     "regionId": "Namangan",
     "parentRegion": "Namangan viloyati"
   },
   {
-    "shapeName": "Norin",
+    "shapeName": "Norin tumani",
     "regionId": "Namangan",
     "parentRegion": "Namangan viloyati"
   },
   {
-    "shapeName": "Mingbuloq",
+    "shapeName": "Mingbuloq tumani",
     "regionId": "Namangan",
     "parentRegion": "Namangan viloyati"
   },
   {
-    "shapeName": "Uychi",
+    "shapeName": "Uychi tumani",
     "regionId": "Namangan",
     "parentRegion": "Namangan viloyati"
   },
   {
-    "shapeName": "Namangan",
+    "shapeName": "Namangan tumani",
     "regionId": "Namangan",
     "parentRegion": "Namangan viloyati"
   },
   {
-    "shapeName": "Chortoq",
+    "shapeName": "Chortoq tumani",
     "regionId": "Namangan",
     "parentRegion": "Namangan viloyati"
   },
   {
-    "shapeName": "Yangiqoʻrgʻon",
+    "shapeName": "Yangiqoʻrgʻon tumani",
     "regionId": "Namangan",
     "parentRegion": "Namangan viloyati"
   },
   {
-    "shapeName": "Toʻraqoʻrgʻon",
+    "shapeName": "Toʻraqoʻrgʻon tumani",
     "regionId": "Namangan",
     "parentRegion": "Namangan viloyati"
   },
   {
-    "shapeName": "Kosonsoy",
+    "shapeName": "Kosonsoy tumani",
     "regionId": "Namangan",
     "parentRegion": "Namangan viloyati"
   },
   {
-    "shapeName": "Chust",
+    "shapeName": "Chust tumani",
     "regionId": "Namangan",
     "parentRegion": "Namangan viloyati"
   },
   {
-    "shapeName": "Pop",
+    "shapeName": "Pop tumani",
     "regionId": "Namangan",
     "parentRegion": "Namangan viloyati"
   },
   {
-    "shapeName": "Samarqand",
+    "shapeName": "Samarqand shahri",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Past Dargʻom",
+    "shapeName": "Samarqand tumani",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Toyloq",
+    "shapeName": "Past Dargʻom tumani",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Ugrut",
+    "shapeName": "Toyloq tumani",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Bulungʻur",
+    "shapeName": "Ugrut tumani",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Jomboy",
+    "shapeName": "Bulungʻur tumani",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Oqdaryo",
+    "shapeName": "Jomboy tumani",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Payariq",
+    "shapeName": "Oqdaryo tumani",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Kattaqo'rg'on",
+    "shapeName": "Payariq tumani",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Ishtixon",
+    "shapeName": "Kattaqo'rg'on shahri",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Qoʻshrabot",
+    "shapeName": "Ishtixon tumani",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Narpay",
+    "shapeName": "Qoʻshrabot tumani",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Nurobod",
+    "shapeName": "Kattaqo'rg'on tumani",
     "regionId": "Samarqand",
     "parentRegion": "Samarqand viloyati"
   },
   {
-    "shapeName": "Ko'kdala",
+    "shapeName": "Narpay tumani",
+    "regionId": "Samarqand",
+    "parentRegion": "Samarqand viloyati"
+  },
+  {
+    "shapeName": "Nurobod tumani",
+    "regionId": "Samarqand",
+    "parentRegion": "Samarqand viloyati"
+  },
+  {
+    "shapeName": "Shahrisabz shahri",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
   {
-    "shapeName": "Dehqonobod",
+    "shapeName": "Ko'kdala tumani",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
   {
-    "shapeName": "Gʻuzor",
+    "shapeName": "Qarshi shahri",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
   {
-    "shapeName": "Koson",
+    "shapeName": "Dehqonobod tumani",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
   {
-    "shapeName": "Muborak",
+    "shapeName": "Gʻuzor tumani",
     "regionId": "Qashqadaryo",
     "parentRegion": "Qashqadaryo viloyati"
   },
   {
-    "shapeName": "Navoiy",
+    "shapeName": "Koson tumani",
+    "regionId": "Qashqadaryo",
+    "parentRegion": "Qashqadaryo viloyati"
+  },
+  {
+    "shapeName": "Muborak tumani",
+    "regionId": "Qashqadaryo",
+    "parentRegion": "Qashqadaryo viloyati"
+  },
+  {
+    "shapeName": "Navoiy shahri",
     "regionId": "Navoiy",
     "parentRegion": "Navoiy viloyati"
   },
   {
-    "shapeName": "G'ozg'on",
+    "shapeName": "G'ozg'on shahri",
     "regionId": "Navoiy",
     "parentRegion": "Navoiy viloyati"
   },
   {
-    "shapeName": "Zarafshon",
+    "shapeName": "Zarafshon shahri",
     "regionId": "Navoiy",
     "parentRegion": "Navoiy viloyati"
   },
   {
-    "shapeName": "Vobkent",
+    "shapeName": "Kogon shahri",
     "regionId": "Buxoro",
     "parentRegion": "Buxoro viloyati"
   },
   {
-    "shapeName": "G'ijduvon",
+    "shapeName": "Vobkent tumani",
     "regionId": "Buxoro",
     "parentRegion": "Buxoro viloyati"
   },
   {
-    "shapeName": "Shofirkon",
+    "shapeName": "G'ijduvon tumani",
     "regionId": "Buxoro",
     "parentRegion": "Buxoro viloyati"
   },
   {
-    "shapeName": "Romitan",
+    "shapeName": "Shofirkon tumani",
     "regionId": "Buxoro",
     "parentRegion": "Buxoro viloyati"
   },
   {
-    "shapeName": "Peshku",
+    "shapeName": "Romitan tumani",
     "regionId": "Buxoro",
     "parentRegion": "Buxoro viloyati"
   },
   {
-    "shapeName": "Jondor",
+    "shapeName": "Peshku tumani",
     "regionId": "Buxoro",
     "parentRegion": "Buxoro viloyati"
   },
   {
-    "shapeName": "Qorako’l",
+    "shapeName": "Jondor tumani",
     "regionId": "Buxoro",
     "parentRegion": "Buxoro viloyati"
   },
   {
-    "shapeName": "Yangi Toshkent",
+    "shapeName": "Qorako’l tumani",
+    "regionId": "Buxoro",
+    "parentRegion": "Buxoro viloyati"
+  },
+  {
+    "shapeName": "Yangi Toshkent Tumani",
+    "regionId": "Toshkent",
+    "parentRegion": "Toshkent shahri"
+  },
+  {
+    "shapeName": "Ohangaron",
     "regionId": "Toshkent",
     "parentRegion": "Toshkent viloyati"
   },

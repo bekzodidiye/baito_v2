@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import L from 'leaflet';
-import { mapFeatureToRegionId, areDistrictNamesEqual, getFeatureBounds, formatDistrictName } from './mapUtils';
+import { mapFeatureToRegionId, areDistrictNamesEqual, getFeatureBounds, formatDistrictName, isRegionName } from './mapUtils';
 import { UZBEKISTAN_REGIONS } from './mapConstants';
 import { useUIStore } from '../../store/useUIStore';
 
@@ -131,12 +131,14 @@ export const useFitBounds = ({
 
     let target: BoundsTarget | null = null;
 
+    const isRegion = isRegionName(filterLocation);
+
     if (filterLocation === 'Barchasi') {
       const b = fullUzbekistanBounds || (regionsGeoJsonLayerRef.current?.getBounds().isValid() ? regionsGeoJsonLayerRef.current.getBounds() : null);
       if (b) {
         target = { bounds: b, maxZoom: 6.2 };
       }
-    } else {
+    } else if (isRegion) {
       const lower = filterLocation.toLowerCase().trim();
       const noQuotes = lower.replace(/['`ʻ’]/g, '');
 
@@ -152,13 +154,18 @@ export const useFitBounds = ({
           }
         }
       }
+    } else {
+      // 3. District / City lookup
+      const lower = filterLocation.toLowerCase().trim();
+      const noQuotes = lower.replace(/['`ʻ’]/g, '');
+      const formatted = formatDistrictName(filterLocation).toLowerCase();
 
-      // 3. Direct district lookup
-      if (!target) {
-        target = districtBoundsMap.get(lower) || districtBoundsMap.get(noQuotes) || null;
-      }
+      target = districtBoundsMap.get(lower) || 
+               districtBoundsMap.get(noQuotes) || 
+               districtBoundsMap.get(formatted) || 
+               null;
 
-      // 4. District matching helper
+      // 4. District matching helper across GeoJSON features
       if (!target && districtsGeoJsonData?.features) {
         for (const f of districtsGeoJsonData.features) {
           const tumanName = f.properties?.shapeName || "";
@@ -171,6 +178,11 @@ export const useFitBounds = ({
             break;
           }
         }
+      }
+
+      // Safety fallback: if no district boundary was matched, check region bounds
+      if (!target) {
+        target = regionBoundsMap.get(lower) || regionBoundsMap.get(noQuotes) || null;
       }
     }
 

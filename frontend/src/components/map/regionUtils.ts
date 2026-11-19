@@ -29,9 +29,32 @@ export const mapFeatureToRegionId = (adm1En: string): string => {
 
 export const isRegionName = (locationName: string): boolean => {
   if (!locationName) return false;
-  const lower = locationName.toLowerCase();
+  const lower = locationName.toLowerCase().trim();
   
-  if (lower.includes('shahri') && !lower.includes('toshkent')) {
+  if (lower === 'barchasi') {
+    return false;
+  }
+
+  // City or district designations are NOT regions (except the capital city "Toshkent shahri")
+  if (
+    (lower.includes('shahri') || lower.includes('city') || lower.endsWith(' sh.') || lower.includes(' sh. ')) && 
+    !lower.includes('toshkent')
+  ) {
+    return false;
+  }
+
+  if (
+    lower.includes('tumani') || 
+    lower.includes('district') || 
+    lower.includes('rayon') || 
+    lower.endsWith(' t.') || 
+    lower.includes(' t. ')
+  ) {
+    return false;
+  }
+
+  // Addresses containing commas (e.g. "Samarqand, Samarqand shahri") are not region names
+  if (lower.includes(',')) {
     return false;
   }
   
@@ -48,3 +71,4 @@ export const isRegionName = (locationName: string): boolean => {
            lower.replace(/['’'`‘]/g, '') === `${rId.replace(/['’'`‘]/g, '')} viloyati`;
   });
 };
+
