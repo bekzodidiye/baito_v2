@@ -58,20 +58,173 @@ class GeoSpatialService:
         "Qoraqalpog'iston": (42.4619, 59.6166),
     }
 
-    UZBEKISTAN_BOUNDS: Dict[str, float] = {
+    # Coarse rectangular bounding box of Uzbekistan for fast preliminary filtering
+    UZBEKISTAN_BBOX: Dict[str, float] = {
         "min_lat": 37.0,
         "max_lat": 45.8,
         "min_lng": 55.9,
         "max_lng": 73.5,
     }
+    # Backward-compatible alias for bounding box
+    UZBEKISTAN_BOUNDS = UZBEKISTAN_BBOX
+
+    _POLYGONS_LOADED = False
+    _LOGGED_FAIL_CLOSED_WARNING = False
+    _PREPARED_POLYGONS: List[
+        Tuple[
+            float, float, float, float,  # ext_min_x, ext_max_x, ext_min_y, ext_max_y
+            List[Tuple[float, float]],   # ext_ring
+            List[Tuple[float, float, float, float, List[Tuple[float, float]]]],  # holes
+        ]
+    ] = []
+
+    @classmethod
+    def _prepare_polygon(
+        cls, rings: List[List[Any]]
+    ) -> Optional[
+        Tuple[
+            float, float, float, float,
+            List[Tuple[float, float]],
+            List[Tuple[float, float, float, float, List[Tuple[float, float]]]],
+        ]
+    ]:
+        """Prepares a polygon's exterior ring and any interior rings (holes) with bounding boxes for fast ray-casting."""
+        if not rings or not rings[0]:
+            return None
+        ext_ring = rings[0]
+        ext_min_x = min(pt[0] for pt in ext_ring)
+        ext_max_x = max(pt[0] for pt in ext_ring)
+        ext_min_y = min(pt[1] for pt in ext_ring)
+        ext_max_y = max(pt[1] for pt in ext_ring)
+
+        prepared_holes = []
+        for h_ring in rings[1:]:
+            if h_ring:
+                h_min_x = min(pt[0] for pt in h_ring)
+                h_max_x = max(pt[0] for pt in h_ring)
+                h_min_y = min(pt[1] for pt in h_ring)
+                h_max_y = max(pt[1] for pt in h_ring)
+                prepared_holes.append((h_min_x, h_max_x, h_min_y, h_max_y, h_ring))
+
+        return (ext_min_x, ext_max_x, ext_min_y, ext_max_y, ext_ring, prepared_holes)
+
+    @classmethod
+    def _init_polygons(cls) -> None:
+        if cls._POLYGONS_LOADED:
+            return
+        cls._PREPARED_POLYGONS = []
+        candidates = [
+            Path(__file__).resolve().parent.parent / "data" / "uzbekistan_regions.json",
+            Path(__file__).resolve().parents[3] / "frontend" / "src" / "data" / "geo" / "uzbekistan_regions.json",
+            Path(__file__).resolve().parents[3] / "mobile" / "public" / "uzbekistan_regions_std.json",
+        ]
+        geojson_path = None
+        for p in candidates:
+            if p.exists():
+                geojson_path = p
+                break
+
+        if not geojson_path:
+            logger.error(
+                "CRITICAL: Uzbekistan boundary GeoJSON file could not be found among candidates %s. "
+                "Point-in-polygon verification will fail-closed (reject coordinates) to protect against foreign coordinate ingestion.",
+                [str(c) for c in candidates],
+            )
+            cls._POLYGONS_LOADED = True
+            return
+
+        try:
+            with open(geojson_path, encoding="utf-8") as f:
+                data = json.load(f)
+            for feat in data.get("features", []):
+                geom = feat.get("geometry", {})
+                gtype = geom.get("type")
+                coords = geom.get("coordinates", [])
+                if gtype == "Polygon" and coords:
+                    poly_prep = cls._prepare_polygon(coords)
+                    if poly_prep:
+                        cls._PREPARED_POLYGONS.append(poly_prep)
+                elif gtype == "MultiPolygon":
+                    for poly in coords:
+                        poly_prep = cls._prepare_polygon(poly)
+                        if poly_prep:
+                            cls._PREPARED_POLYGONS.append(poly_prep)
+            if not cls._PREPARED_POLYGONS:
+                logger.error(
+                    "CRITICAL: GeoJSON file at %s contained no valid Polygon or MultiPolygon features. "
+                    "Failing closed to prevent foreign coordinate ingestion.",
+                    geojson_path,
+                )
+        except Exception as e:
+            logger.error(
+                "CRITICAL: Failed to load uzbekistan_regions geojson from %s: %s. "
+                "Failing closed to prevent foreign coordinate ingestion.",
+                geojson_path,
+                e,
+            )
+        if cls._PREPARED_POLYGONS:
+            cls._LOGGED_FAIL_CLOSED_WARNING = False
+        cls._POLYGONS_LOADED = True
+
+    @staticmethod
+    def _point_in_ring(lng: float, lat: float, ring: List[Any]) -> bool:
+        """Ray-casting algorithm to test whether point (lng, lat) is inside polygon ring."""
+        inside = False
+        n = len(ring)
+        p1x, p1y = ring[0]
+        for i in range(1, n + 1):
+            p2x, p2y = ring[i % n]
+            if lat > min(p1y, p2y):
+                if lat <= max(p1y, p2y):
+                    if lng <= max(p1x, p2x):
+                        if p1y != p2y:
+                            xinters = (lat - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                        if p1x == p2x or lng <= xinters:
+                            inside = not inside
+            p1x, p1y = p2x, p2y
+        return inside
+
+    @classmethod
+    @functools.lru_cache(maxsize=16384)
+    def _is_inside_polygon_cached(cls, lat_round: float, lng_round: float) -> bool:
+        cls._init_polygons()
+        if not cls._PREPARED_POLYGONS:
+            # Fail closed: reject coordinate to prevent ingestion of foreign or invalid coordinates
+            # Log once to prevent flood of log messages during batch coordinate queries
+            if not cls._LOGGED_FAIL_CLOSED_WARNING:
+                logger.error(
+                    "Uzbekistan boundary polygons unavailable. Rejecting coordinates in fail-closed safety mode."
+                )
+                cls._LOGGED_FAIL_CLOSED_WARNING = True
+            return False
+
+        for ext_min_x, ext_max_x, ext_min_y, ext_max_y, ext_ring, holes in cls._PREPARED_POLYGONS:
+            if ext_min_x <= lng_round <= ext_max_x and ext_min_y <= lat_round <= ext_max_y:
+                if cls._point_in_ring(lng_round, lat_round, ext_ring):
+                    in_hole = False
+                    for h_min_x, h_max_x, h_min_y, h_max_y, h_ring in holes:
+                        if h_min_x <= lng_round <= h_max_x and h_min_y <= lat_round <= h_max_y:
+                            if cls._point_in_ring(lng_round, lat_round, h_ring):
+                                in_hole = True
+                                break
+                    if not in_hole:
+                        return True
+        return False
 
     @classmethod
     def is_inside_uzbekistan(cls, lat: float, lng: float) -> bool:
-        """Validates if coordinates fall strictly inside Uzbekistan territorial bounds."""
-        return (
-            cls.UZBEKISTAN_BOUNDS["min_lat"] <= lat <= cls.UZBEKISTAN_BOUNDS["max_lat"]
-            and cls.UZBEKISTAN_BOUNDS["min_lng"] <= lng <= cls.UZBEKISTAN_BOUNDS["max_lng"]
-        )
+        """
+        Validates if coordinates fall within Uzbekistan territory.
+        Uses coarse bounding box for O(1) early rejection, followed by exact
+        point-in-polygon evaluation against state administrative boundary GeoJSON polygons.
+        """
+        if not (
+            cls.UZBEKISTAN_BBOX["min_lat"] <= lat <= cls.UZBEKISTAN_BBOX["max_lat"]
+            and cls.UZBEKISTAN_BBOX["min_lng"] <= lng <= cls.UZBEKISTAN_BBOX["max_lng"]
+        ):
+            return False
+
+        return cls._is_inside_polygon_cached(round(lat, 4), round(lng, 4))
 
     @classmethod
     def _init_district_map(cls) -> None:
