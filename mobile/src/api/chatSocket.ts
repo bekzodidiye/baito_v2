@@ -13,7 +13,7 @@
  * connects, polling still carries the conversation.
  */
 
-import { getApiBaseUrl, getStoredToken } from './client';
+import { getApiBaseUrl, apiClient } from './client';
 
 export interface SocketMessage {
   id: string;
@@ -29,8 +29,23 @@ export interface ChatSocket {
   close: () => void;
 }
 
-/** Constructs the WebSocket URL using configured backend API host and auth token */
-export const getChatWebSocketUrl = (chatId: string): string => {
+/** Request a short-lived (60s) single-use connection ticket for WebSocket authentication */
+export const fetchWsTicket = async (chatId: string): Promise<string | null> => {
+  try {
+    const res = await apiClient(`/chats/${encodeURIComponent(chatId)}/ws-ticket`, {
+      method: 'POST',
+    });
+    if (res && typeof res.ticket === 'string' && res.ticket.trim().length > 0) {
+      return res.ticket.trim();
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+/** Constructs the WebSocket URL using configured backend API host and single-use connection ticket */
+export const getChatWebSocketUrl = (chatId: string, ticket?: string | null): string => {
   const baseUrl = getApiBaseUrl().replace(/\/$/, '');
   let wsBase = baseUrl;
   if (wsBase.startsWith('https://')) {
@@ -43,9 +58,8 @@ export const getChatWebSocketUrl = (chatId: string): string => {
     wsBase = `${scheme}://${host}${wsBase.startsWith('/') ? '' : '/'}${wsBase}`;
   }
 
-  const token = getStoredToken();
-  const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : '';
-  return `${wsBase}/chats/ws/${encodeURIComponent(chatId)}${tokenQuery}`;
+  const ticketQuery = ticket ? `?ticket=${encodeURIComponent(ticket)}` : '';
+  return `${wsBase}/chats/ws/${encodeURIComponent(chatId)}${ticketQuery}`;
 };
 
 /** Open a socket for one conversation. Returns a handle that closes it. */
@@ -57,10 +71,34 @@ export const openChatSocket = (
   let closedByUs = false;
   let retry: ReturnType<typeof setTimeout> | null = null;
   let attempt = 0;
+  let connectEpoch = 0;
 
-  const connect = () => {
+  const connect = async () => {
     if (closedByUs) return;
-    const url = getChatWebSocketUrl(chatId);
+    const currentEpoch = ++connectEpoch;
+
+    // Acquire fresh single-use ticket over authenticated HTTPS
+    let ticket: string | null = null;
+    try {
+      ticket = await fetchWsTicket(chatId);
+    } catch {
+      ticket = null;
+    }
+
+    // In-flight guard: user closed chat or another connect triggered while fetching ticket
+    if (closedByUs || currentEpoch !== connectEpoch) {
+      return;
+    }
+
+    if (!ticket) {
+      // Ticket acquisition failed: schedule exponential backoff reconnect. Polling remains fallback.
+      attempt += 1;
+      const delay = Math.min(1000 * 2 ** Math.min(attempt, 5), 30000);
+      retry = setTimeout(connect, delay);
+      return;
+    }
+
+    const url = getChatWebSocketUrl(chatId, ticket);
 
     try {
       socket = new WebSocket(url);
@@ -123,6 +161,7 @@ export const openChatSocket = (
   return {
     close: () => {
       closedByUs = true;
+      connectEpoch += 1;
       if (retry) clearTimeout(retry);
       if (typeof window !== 'undefined') {
         window.removeEventListener('online', handleWakeup);

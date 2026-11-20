@@ -5,10 +5,15 @@ export interface Job {
   logoUrl?: string;
   imageUrl?: string;
   salary: string;
+  salaryCurrency?: string;
   tags: string[];
   location: string;
   rawLocation?: string;
   coordinates: { x: number; y: number }; // Percentage coordinate on custom map (0-100)
+  coordinateX?: number;
+  coordinateY?: number;
+  latitude?: number;
+  longitude?: number;
   time: string;
   urgent: boolean;
   applied: boolean;

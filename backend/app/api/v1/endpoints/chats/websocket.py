@@ -11,6 +11,7 @@ from app import crud, models
 from app.api import deps
 from app.core.config import settings
 from app.db.session import SessionLocal
+from app.redis_client import redis_client
 from app.schemas.chat import MAX_MESSAGE_LENGTH
 from app.services.session_window import is_live
 from .manager import manager
@@ -31,6 +32,108 @@ MSG_RATE_WINDOW_SECONDS = 10
 
 
 
+
+
+def _consume_ticket_atomic(ticket_key: str) -> Optional[str]:
+    """Atomically retrieves and deletes a connection ticket.
+    Fails closed if atomic consumption is not supported or fails.
+    Never uses a non-atomic get-then-delete fallback.
+    """
+    # 1. Native Redis GETDEL (Redis >= 6.2)
+    getdel_fn = getattr(redis_client, "getdel", None)
+    if callable(getdel_fn):
+        try:
+            val = getdel_fn(ticket_key)
+            if val is not None:
+                return val.decode("utf-8") if isinstance(val, bytes) else str(val)
+            return None
+        except Exception as e:
+            logger.debug("Redis getdel failed or unsupported, trying Lua fallback: %s", type(e).__name__)
+
+    # 2. Atomic Lua script (supported across all Redis versions)
+    eval_fn = getattr(redis_client, "eval", None)
+    if callable(eval_fn):
+        try:
+            lua_script = """
+            local val = redis.call('GET', KEYS[1])
+            if val then
+                redis.call('DEL', KEYS[1])
+            end
+            return val
+            """
+            val = eval_fn(lua_script, 1, ticket_key)
+            if val is not None:
+                return val.decode("utf-8") if isinstance(val, bytes) else str(val)
+            return None
+        except Exception as e:
+            logger.debug("Redis Lua atomic consumption failed: %s", type(e).__name__)
+
+    # 3. Transactional pipeline (MULTI / EXEC)
+    pipeline_fn = getattr(redis_client, "pipeline", None)
+    if callable(pipeline_fn):
+        try:
+            pipe = pipeline_fn(transaction=True)
+            pipe.get(ticket_key)
+            pipe.delete(ticket_key)
+            results = pipe.execute()
+            if results and results[0] is not None:
+                val = results[0]
+                return val.decode("utf-8") if isinstance(val, bytes) else str(val)
+            return None
+        except Exception as e:
+            logger.debug("Redis transactional pipeline consumption failed: %s", type(e).__name__)
+
+    # Fail closed: non-atomic consumption is strictly forbidden for security tickets.
+    logger.error("No verified atomic Redis consumption method available; failing closed for ticket consumption.")
+    return None
+
+
+def _authenticate_ticket(ticket: Optional[str], chat_id: str) -> Optional[dict]:
+    """Validate and consume a single-use connection ticket for this chat.
+    Enforces atomic consumption, chat binding, user status, and session validity.
+    Never logs ticket values.
+    """
+    if not ticket or not isinstance(ticket, str):
+        return None
+    ticket_clean = ticket.strip()
+    if not ticket_clean or len(ticket_clean) > 128:
+        return None
+
+    ticket_key = f"chat:ws_ticket:{ticket_clean}"
+    try:
+        raw_val = _consume_ticket_atomic(ticket_key)
+        if not raw_val:
+            return None
+
+        data = json.loads(raw_val)
+        if not isinstance(data, dict):
+            return None
+
+        if data.get("chat_id") != chat_id:
+            return None
+
+        user_uid = data.get("user_uid")
+        session_id = data.get("session_id")
+
+        with SessionLocal() as db:
+            user = crud.user.get_by_uid(db, uid=user_uid)
+            if not user or user.isBanned:
+                return None
+
+            # Revalidate session revocation if session ID was attached at issuance
+            if session_id:
+                session_record = (
+                    db.query(models.ActiveSession)
+                    .filter(models.ActiveSession.id == session_id)
+                    .first()
+                )
+                if not is_live(session_record):
+                    return None
+
+            return {"id": user.id, "uid": getattr(user, "uid", None), "role": user.role}
+    except Exception as e:
+        logger.warning("Ticket authentication error: %s", type(e).__name__)
+        return None
 
 
 def _authenticate_socket(token: Optional[str]) -> Optional[dict]:
@@ -59,14 +162,21 @@ def _authenticate_socket(token: Optional[str]) -> Optional[dict]:
 
 @router.websocket("/ws/{chat_id}")
 async def websocket_endpoint(websocket: WebSocket, chat_id: str):
-    # The socket carries the same httpOnly session cookie as REST calls.
-    # Native clients that use bearer tokens can pass one via ?token=.
+    # Support short-lived single-use connection ticket (avoids reusable JWT in URL query string)
+    ticket = websocket.query_params.get("ticket")
+    query_token = websocket.query_params.get("token")
+    if query_token:
+        logger.warning("Deprecated: WebSocket connected via ?token= query parameter; client should migrate to ?ticket=")
+
     token = (
         websocket.cookies.get(settings.ACCESS_COOKIE_NAME)
-        or websocket.query_params.get("token")
+        or query_token
     )
 
-    user_info = await run_in_threadpool(_authenticate_socket, token)
+    if ticket:
+        user_info = await run_in_threadpool(_authenticate_ticket, ticket, chat_id)
+    else:
+        user_info = await run_in_threadpool(_authenticate_socket, token)
     if not user_info:
         await websocket.close(code=1008)
         return

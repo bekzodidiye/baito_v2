@@ -5,7 +5,7 @@ import math
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from sqlalchemy import or_, and_, select, func
+from sqlalchemy import or_, select, func
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -14,11 +14,9 @@ from app.db.session import SessionLocal
 from app.core.map_cache import (
     get_map_cache_version,
     get_user_map_cache_version,
-    build_map_pins_cache_key,
     get_map_cache_key_for_request,
+    build_map_geojson_cache_key,
     CACHE_LOCATION_COUNTS_PREFIX,
-    compute_cluster_signature,
-    verify_cluster_signature,
     compute_pin_signature,
     verify_pin_signature,
     make_response_envelope,
@@ -964,7 +962,6 @@ def get_map_jobs(
                 )
 
         job_ids = [j.id for j in jobs]
-        job_ids_set = set(job_ids)
 
         # Aggregated hired applications count via SQL GROUP BY (chunked in 500 to stay within SQL variable limits)
         hired_counts: dict[str, int] = {}
@@ -1262,15 +1259,24 @@ def get_map_geojson(
     Pre-formats coordinates as GeoJSON Point geometries for sub-millisecond layer ingestion.
     """
     version = get_map_cache_version()
-    q_min_lat = f"{round(min_lat, 2):.2f}" if min_lat is not None else "_"
-    q_max_lat = f"{round(max_lat, 2):.2f}" if max_lat is not None else "_"
-    q_min_lng = f"{round(min_lng, 2):.2f}" if min_lng is not None else "_"
-    q_max_lng = f"{round(max_lng, 2):.2f}" if max_lng is not None else "_"
-    cache_key = (
-        f"cache:jobs:geojson:v{version}:"
-        f"{q_min_lat}:{q_max_lat}:{q_min_lng}:{q_max_lng}:"
-        f"{location or ''}:{category or ''}:{search or ''}:{limit}"
+    cache_key = build_map_geojson_cache_key(
+        version=version,
+        min_lat=min_lat,
+        max_lat=max_lat,
+        min_lng=min_lng,
+        max_lng=max_lng,
+        location=location,
+        category=category,
+        search=search,
+        limit=limit,
     )
+
+    cache_control = (
+        "private, no-cache"
+        if current_user
+        else "public, max-age=15, stale-while-revalidate=30"
+    )
+    vary_header = "Cookie, Authorization, Accept-Encoding"
 
     if not current_user:
         try:
@@ -1278,18 +1284,28 @@ def get_map_geojson(
             if cached:
                 cached_str = cached.decode("utf-8") if isinstance(cached, bytes) else str(cached)
                 etag = f'"{hashlib.md5(cached_str.encode("utf-8")).hexdigest()}"'
-                response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
+                response.headers["Cache-Control"] = cache_control
                 response.headers["ETag"] = etag
+                response.headers["Vary"] = vary_header
                 if request.headers.get("if-none-match") == etag:
-                    return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "public, max-age=15, stale-while-revalidate=30"})
-                return Response(content=cached_str, media_type="application/geo+json", headers={"ETag": etag, "Cache-Control": "public, max-age=15, stale-while-revalidate=30"})
+                    return Response(status_code=304, headers={"ETag": etag, "Cache-Control": cache_control, "Vary": vary_header})
+                return Response(content=cached_str, media_type="application/geo+json", headers={"ETag": etag, "Cache-Control": cache_control, "Vary": vary_header})
         except Exception as e:
             logger.warning("Redis lookup failed in map geojson: %s", e)
 
-    # Re-use get_map_jobs logic
+    # Re-use get_map_jobs logic with isolated request/response to prevent internal 304 or header pollution
+    internal_scope = dict(request.scope)
+    if "headers" in internal_scope:
+        internal_scope["headers"] = [
+            (k, v) for k, v in internal_scope["headers"]
+            if k.lower() not in (b"if-none-match", b"if-modified-since")
+        ]
+    internal_request = Request(internal_scope)
+    internal_response = Response()
+
     raw_pins_res = get_map_jobs(
-        response=response,
-        request=request,
+        response=internal_response,
+        request=internal_request,
         db=db,
         current_user=current_user,
         min_lat=min_lat,
@@ -1302,12 +1318,42 @@ def get_map_geojson(
         limit=limit,
         clustered=False,
     )
-    if isinstance(raw_pins_res, Response) and hasattr(raw_pins_res, "body"):
-        pins = json.loads(raw_pins_res.body.decode("utf-8"))
+    pins = []
+    if isinstance(raw_pins_res, Response):
+        if raw_pins_res.status_code != 200:
+            logger.error(
+                "Internal get_map_jobs failed with status %d in get_map_geojson",
+                raw_pins_res.status_code,
+            )
+            return Response(
+                content=raw_pins_res.body,
+                status_code=raw_pins_res.status_code,
+                media_type=raw_pins_res.media_type or "application/json",
+            )
+        try:
+            pins = json.loads(raw_pins_res.body.decode("utf-8"))
+            if not isinstance(pins, list):
+                logger.error("Internal get_map_jobs response JSON is not a list in get_map_geojson")
+                raise HTTPException(
+                    status_code=502,
+                    detail="Xarita ma'lumotlarini yuklashda xatolik yuz berdi",
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("Failed to decode pins body in get_map_geojson: %s", e)
+            raise HTTPException(
+                status_code=502,
+                detail="Xarita ma'lumotlarini yuklashda xatolik yuz berdi",
+            ) from e
     elif isinstance(raw_pins_res, list):
         pins = raw_pins_res
     else:
-        pins = []
+        logger.error("Unexpected return type from get_map_jobs in get_map_geojson: %s", type(raw_pins_res))
+        raise HTTPException(
+            status_code=500,
+            detail="Xarita ma'lumotlarini yuklashda kutilmagan xatolik yuz berdi",
+        )
 
     features = []
     for pin in pins:
@@ -1337,15 +1383,17 @@ def get_map_geojson(
             pass
 
     etag = f'"{hashlib.md5(geojson_str.encode("utf-8")).hexdigest()}"'
-    response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=30"
+    response.headers["Cache-Control"] = cache_control
     response.headers["ETag"] = etag
+    response.headers["Vary"] = vary_header
+
     if request.headers.get("if-none-match") == etag:
-        return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "public, max-age=15, stale-while-revalidate=30"})
+        return Response(status_code=304, headers={"ETag": etag, "Cache-Control": cache_control, "Vary": vary_header})
 
     return Response(
         content=geojson_str,
         media_type="application/geo+json",
-        headers={"ETag": etag, "Cache-Control": "public, max-age=15, stale-while-revalidate=30"},
+        headers={"ETag": etag, "Cache-Control": cache_control, "Vary": vary_header},
     )
 
 
@@ -1381,9 +1429,18 @@ def get_map_tile(
 
     min_lat, max_lat, min_lng, max_lng = tile_to_bbox(z, x, y)
 
+    internal_scope = dict(request.scope)
+    if "headers" in internal_scope:
+        internal_scope["headers"] = [
+            (k, v) for k, v in internal_scope["headers"]
+            if k.lower() not in (b"if-none-match", b"if-modified-since")
+        ]
+    internal_request = Request(internal_scope)
+    internal_response = Response()
+
     res = get_map_jobs(
-        response=response,
-        request=request,
+        response=internal_response,
+        request=internal_request,
         db=db,
         current_user=None,
         min_lat=min_lat,
@@ -1397,7 +1454,7 @@ def get_map_tile(
         clustered=False,
     )
     if isinstance(res, Response):
-        if hasattr(res, "body"):
+        if res.status_code == 200 and res.body:
             content_str = res.body.decode("utf-8")
             try:
                 redis_client.set(cache_key, content_str, ex=300)

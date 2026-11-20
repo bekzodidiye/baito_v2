@@ -83,6 +83,45 @@ class MockRedis:
     def ping(self):
         return True
 
+    def getdel(self, name):
+        item = self.store.pop(name, None)
+        if not item:
+            return None
+        if self._expired(item):
+            return None
+        return item["value"]
+
+    def eval(self, script, numkeys, *keys_and_args):
+        if "GET" in script and "DEL" in script and numkeys >= 1:
+            key = keys_and_args[0]
+            return self.getdel(key)
+        return None
+
+    def pipeline(self, transaction=True):
+        class _MockPipeline:
+            def __init__(self, mock):
+                self._mock = mock
+                self._ops = []
+
+            def get(self, name):
+                self._ops.append(("get", name))
+                return self
+
+            def delete(self, *names):
+                self._ops.append(("delete", names))
+                return self
+
+            def execute(self):
+                res = []
+                for op, args in self._ops:
+                    if op == "get":
+                        res.append(self._mock.get(args))
+                    elif op == "delete":
+                        res.append(self._mock.delete(*args))
+                return res
+
+        return _MockPipeline(self)
+
 
 def _build_client():
     try:
