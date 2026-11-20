@@ -37,6 +37,9 @@ INDEXES = [
 
 def upgrade() -> None:
     bind = op.get_bind()
+    dialect_name = bind.dialect.name if bind is not None else getattr(getattr(context.get_context(), "dialect", None), "name", None)
+    if dialect_name == "postgresql":
+        op.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
 
     # Import here so the metadata is populated with every model.
     from app.db.base import Base

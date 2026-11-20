@@ -21,15 +21,37 @@ def upgrade() -> None:
     dialect_name = bind.dialect.name if bind else "postgresql"
 
     if dialect_name == "postgresql":
-        op.create_unique_constraint(
-            "uq_application_job_worker", "applications", ["jobId", "workerId"]
+        from sqlalchemy import inspect
+        inspector = inspect(bind) if bind is not None else None
+        existing_apps = (
+            {c["name"] for c in inspector.get_unique_constraints("applications")}
+            | {ix["name"] for ix in inspector.get_indexes("applications")}
+            if inspector else set()
         )
-        op.create_unique_constraint(
-            "uq_job_payout_job_worker", "job_payouts", ["jobId", "workerId"]
+        if "uq_application_job_worker" not in existing_apps:
+            op.create_unique_constraint(
+                "uq_application_job_worker", "applications", ["jobId", "workerId"]
+            )
+
+        existing_payouts = (
+            {c["name"] for c in inspector.get_unique_constraints("job_payouts")}
+            | {ix["name"] for ix in inspector.get_indexes("job_payouts")}
+            if inspector else set()
         )
-        op.create_unique_constraint(
-            "uq_payment_card_user_last4_bank", "payment_cards", ["userId", "last4", "bank"]
+        if "uq_job_payout_job_worker" not in existing_payouts:
+            op.create_unique_constraint(
+                "uq_job_payout_job_worker", "job_payouts", ["jobId", "workerId"]
+            )
+
+        existing_cards = (
+            {c["name"] for c in inspector.get_unique_constraints("payment_cards")}
+            | {ix["name"] for ix in inspector.get_indexes("payment_cards")}
+            if inspector else set()
         )
+        if "uq_payment_card_user_last4_bank" not in existing_cards:
+            op.create_unique_constraint(
+                "uq_payment_card_user_last4_bank", "payment_cards", ["userId", "last4", "bank"]
+            )
     elif context.is_offline_mode():
         op.create_index("uq_application_job_worker", "applications", ["jobId", "workerId"], unique=True)
         op.create_index("uq_job_payout_job_worker", "job_payouts", ["jobId", "workerId"], unique=True)
