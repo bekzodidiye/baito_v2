@@ -58,6 +58,21 @@ class GeoSpatialService:
         "Qoraqalpog'iston": (42.4619, 59.6166),
     }
 
+    UZBEKISTAN_BOUNDS: Dict[str, float] = {
+        "min_lat": 37.0,
+        "max_lat": 45.8,
+        "min_lng": 55.9,
+        "max_lng": 73.5,
+    }
+
+    @classmethod
+    def is_inside_uzbekistan(cls, lat: float, lng: float) -> bool:
+        """Validates if coordinates fall strictly inside Uzbekistan territorial bounds."""
+        return (
+            cls.UZBEKISTAN_BOUNDS["min_lat"] <= lat <= cls.UZBEKISTAN_BOUNDS["max_lat"]
+            and cls.UZBEKISTAN_BOUNDS["min_lng"] <= lng <= cls.UZBEKISTAN_BOUNDS["max_lng"]
+        )
+
     @classmethod
     def _init_district_map(cls) -> None:
         if cls._INITIALIZED:
@@ -266,7 +281,7 @@ class GeoSpatialService:
                 continue
             if f_lat == 0.0 and f_lng == 0.0:
                 continue
-            if not (-90.0 <= f_lat <= 90.0 and -180.0 <= f_lng <= 180.0):
+            if not cls.is_inside_uzbekistan(f_lat, f_lng):
                 continue
             key = (int(math.floor(f_lat / grid_size)), int(math.floor(f_lng / grid_size)))
             if key not in buckets:

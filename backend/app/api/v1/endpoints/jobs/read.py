@@ -466,11 +466,106 @@ def get_map_jobs(
                     .filter(models.Bookmark.userId.in_(user_ids))
                     .all()
                 }
+
+                # Find any jobs the user applied to that are not in public base_pins (e.g. filled/in_progress jobs)
+                base_job_ids = set()
+                for p in base_pins:
+                    if p.get("isCluster"):
+                        base_job_ids.update(p.get("pinIds") or [])
+                    else:
+                        if p.get("id"):
+                            base_job_ids.add(p.get("id"))
+
+                missing_app_job_ids = [jid for jid in worker_apps_map if jid not in base_job_ids]
+                extra_user_pins = []
+                if missing_app_job_ids:
+                    extra_query = active_db.query(
+                        models.Job.id,
+                        models.Job.title,
+                        models.Job.company,
+                        models.Job.salary,
+                        models.Job.salaryCurrency,
+                        models.Job.location,
+                        models.Job.rawLocation,
+                        models.Job.logoUrl,
+                        models.Job.imageUrl,
+                        models.Job.tags,
+                        models.Job.category,
+                        models.Job.workDate,
+                        models.Job.workTime,
+                        models.Job.neededWorkers,
+                        models.Job.coordinateX,
+                        models.Job.coordinateY,
+                        models.Job.urgent,
+                        models.Job.status,
+                        models.Job.hiredWorkerId,
+                        models.Job.createdAt,
+                    ).filter(
+                        models.Job.id.in_(missing_app_job_ids),
+                        models.Job.status != JobStatus.CANCELLED,
+                        models.Job.coordinateX.isnot(None),
+                        models.Job.coordinateY.isnot(None),
+                        or_(models.Job.coordinateX != 0.0, models.Job.coordinateY != 0.0),
+                    )
+                    if search:
+                        term = f"%{search.strip()}%"
+                        extra_query = extra_query.filter(
+                            or_(
+                                models.Job.title.ilike(term),
+                                models.Job.company.ilike(term),
+                                models.Job.location.ilike(term),
+                            )
+                        )
+                    if location:
+                        extra_query = extra_query.filter(models.Job.location.ilike(f"%{location.strip()}%"))
+                    if category:
+                        extra_query = extra_query.filter(models.Job.category == category)
+                    if min_lat is not None and max_lat is not None:
+                        extra_query = extra_query.filter(models.Job.coordinateX.between(min_lat, max_lat))
+                    if min_lng is not None and max_lng is not None:
+                        extra_query = extra_query.filter(models.Job.coordinateY.between(min_lng, max_lng))
+
+                    extra_jobs = extra_query.all()
+                    for ej in extra_jobs:
+                        f_lat = float(ej.coordinateX)
+                        f_lng = float(ej.coordinateY)
+                        if not GeoSpatialService.is_inside_uzbekistan(f_lat, f_lng):
+                            continue
+                        app_st = worker_apps_map.get(ej.id)
+                        extra_user_pins.append({
+                            "id": ej.id,
+                            "title": ej.title,
+                            "company": ej.company,
+                            "salary": ej.salary,
+                            "salaryCurrency": ej.salaryCurrency or "UZS",
+                            "location": ej.location,
+                            "rawLocation": ej.rawLocation,
+                            "logoUrl": ej.logoUrl,
+                            "imageUrl": ej.imageUrl,
+                            "tags": ej.tags or [],
+                            "category": ej.category,
+                            "workDate": ej.workDate,
+                            "workTime": ej.workTime,
+                            "neededWorkers": ej.neededWorkers or "1",
+                            "coordinateX": ej.coordinateX,
+                            "coordinateY": ej.coordinateY,
+                            "latitude": ej.coordinateX,
+                            "longitude": ej.coordinateY,
+                            "urgent": ej.urgent or False,
+                            "status": app_st if app_st in ('in_progress', 'completed', 'start_requested', 'hired', 'applied') else ej.status,
+                            "applied": True,
+                            "bookmarked": ej.id in bookmarked_ids,
+                            "hiredCount": 0,
+                            "vacancies": 1,
+                            "isCluster": False,
+                            "count": 1,
+                            "pinIds": [ej.id],
+                        })
             finally:
                 if own_db and active_db:
                     active_db.close()
 
-            if not worker_apps_map and not bookmarked_ids:
+            if not worker_apps_map and not bookmarked_ids and not extra_user_pins:
                 user_payload_str = base_str
             else:
                 user_pins = []
@@ -490,6 +585,9 @@ def get_map_jobs(
                         if jid in bookmarked_ids:
                             up["bookmarked"] = True
                     user_pins.append(up)
+
+                if extra_user_pins:
+                    user_pins.extend(extra_user_pins)
                 user_payload_str = json.dumps(user_pins)
 
             try:
@@ -569,16 +667,32 @@ def get_map_jobs(
             query = query.filter(models.Job.coordinateY.between(min_lng, max_lng))
 
         visible = models.Job.status.in_(JobStatus.OPEN_STATUSES)
+        if user_id:
+            user_ids = [user_id]
+            if current_user and getattr(current_user, 'uid', None):
+                user_ids.append(current_user.uid)
+            own_apps_subquery = (
+                active_db.query(models.Application.jobId)
+                .filter(models.Application.workerId.in_(user_ids))
+                .subquery()
+            )
+            visible = or_(visible, models.Job.id.in_(select(own_apps_subquery.c.jobId)))
         query = query.filter(visible)
 
         if clustered:
-            # Clustered nationwide view: include all matching active jobs with valid geographic coordinates.
+            # Clustered nationwide view: include all matching active jobs with valid geographic coordinates inside Uzbekistan.
             # Do NOT apply .limit() so clustering aggregates the entire dataset across the nation.
             query = query.filter(
                 models.Job.coordinateX.isnot(None),
                 models.Job.coordinateY.isnot(None),
-                models.Job.coordinateX.between(-90.0, 90.0),
-                models.Job.coordinateY.between(-180.0, 180.0),
+                models.Job.coordinateX.between(
+                    GeoSpatialService.UZBEKISTAN_BOUNDS["min_lat"],
+                    GeoSpatialService.UZBEKISTAN_BOUNDS["max_lat"]
+                ),
+                models.Job.coordinateY.between(
+                    GeoSpatialService.UZBEKISTAN_BOUNDS["min_lng"],
+                    GeoSpatialService.UZBEKISTAN_BOUNDS["max_lng"]
+                ),
                 or_(models.Job.coordinateX != 0.0, models.Job.coordinateY != 0.0),
             )
             jobs = query.order_by(models.Job.createdAt.desc(), models.Job.id.desc()).all()
@@ -657,8 +771,6 @@ def get_map_jobs(
                 (job.status != JobStatus.OPEN and hired_cnt >= vacancies_num)
                 or (job.status in (JobStatus.COMPLETED, JobStatus.IN_PROGRESS))
             )
-            if is_filled and not worker_apps_map.get(job.id):
-                continue
 
             base_pin = {
                 "id": job.id,
@@ -688,9 +800,13 @@ def get_map_jobs(
                 "isCluster": False,
                 "count": 1,
             }
-            base_pins.append(base_pin)
 
-            if user_id:
+            # Public base pins must NEVER include filled jobs or depend on user-specific applications
+            if not is_filled:
+                base_pins.append(base_pin)
+
+            # User pins include open jobs, plus any filled job the user personally applied to
+            if user_id and (not is_filled or worker_apps_map.get(job.id)):
                 u_pin = dict(base_pin)
                 app_item_status = worker_apps_map.get(job.id)
                 if app_item_status:

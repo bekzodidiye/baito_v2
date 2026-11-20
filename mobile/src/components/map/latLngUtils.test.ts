@@ -50,4 +50,31 @@ describe('mobile latLngUtils - Uzbekistan coordinates validation', () => {
     expect(coords.lng).toBeGreaterThan(59.5);
     expect(coords.lng).toBeLessThan(62.0);
   });
+
+  it('immediately returns updated coordinates when coordinateX or coordinateY change on the same job/cluster id', () => {
+    const clusterId = 'cluster_103_173';
+    const clusterInitial = {
+      id: clusterId,
+      isCluster: true,
+      count: 10,
+      coordinateX: 41.3111,
+      coordinateY: 69.2406,
+    } as unknown as Job;
+
+    const firstCoords = getLatLng(clusterInitial);
+    expect(firstCoords.lat).toBe(41.3111);
+    expect(firstCoords.lng).toBe(69.2406);
+
+    const clusterUpdated = {
+      id: clusterId,
+      isCluster: true,
+      count: 15,
+      coordinateX: 41.3255,
+      coordinateY: 69.2555,
+    } as unknown as Job;
+
+    const secondCoords = getLatLng(clusterUpdated);
+    expect(secondCoords.lat).toBe(41.3255);
+    expect(secondCoords.lng).toBe(69.2555);
+  });
 });
