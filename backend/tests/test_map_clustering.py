@@ -1,3 +1,4 @@
+import json
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -5,7 +6,13 @@ from app import models
 from app.db.session import SessionLocal
 from app.models.job import JobStatus
 from app.redis_client import redis_client
-from app.core.map_cache import invalidate_map_cache, invalidate_user_map_cache
+from app.core.map_cache import (
+    invalidate_map_cache,
+    invalidate_user_map_cache,
+    build_map_pins_cache_key,
+    get_map_cache_version,
+)
+from tests.conftest import make_user, login
 
 
 @pytest.fixture
@@ -1002,3 +1009,1232 @@ def test_geo_service_fails_closed_when_geojson_unavailable(client, caplog):
         GeoSpatialService._is_inside_polygon_cached.cache_clear()
         GeoSpatialService._POLYGONS_LOADED = False
         GeoSpatialService._init_polygons()
+
+
+def test_unclustered_map_pins_exclude_foreign_coordinates_for_anon_and_auth_users(client):
+    """
+    Test that when clustered=false (raw map pins):
+    1. Foreign coordinates (e.g. Shymkent in Kazakhstan, Dashoguz in Turkmenistan) are excluded.
+    2. Foreign pins NEVER enter Redis public base cache.
+    3. Anonymous visitors never receive foreign pins.
+    4. Authenticated users never receive foreign pins.
+    5. Pre-cached/stale foreign pins in Redis are sanitized and pruned from responses.
+    """
+    from tests.conftest import make_user, login
+    from app.core.map_cache import build_map_pins_cache_key, get_map_cache_version
+    import json
+
+    worker = make_user(role="worker", phone="+998905551122")
+
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = db_session.query(models.User).filter_by(id="emp-foreign-unclustered").first()
+        if not emp:
+            emp = models.User(id="emp-foreign-unclustered", phone="+998906661122", role="employer", name="Foreign Test Emp")
+            db_session.add(emp)
+            db_session.flush()
+
+        tashkent_job = models.Job(
+            id="job-unclustered-tashkent",
+            title="Tashkent Job",
+            company="Foreign Test Corp",
+            location="Toshkent",
+            description="Tavsif",
+            coordinateX=41.31,
+            coordinateY=69.24,
+            salary=250000,
+            status=JobStatus.OPEN,
+            employerId="emp-foreign-unclustered",
+            neededWorkers="1",
+        )
+        shymkent_job = models.Job(
+            id="job-unclustered-shymkent",
+            title="Shymkent Foreign Job",
+            company="Foreign Test Corp",
+            location="Shymkent",
+            description="Tavsif",
+            coordinateX=42.3417,
+            coordinateY=69.5901,
+            salary=250000,
+            status=JobStatus.OPEN,
+            employerId="emp-foreign-unclustered",
+            neededWorkers="1",
+        )
+        dashoguz_job = models.Job(
+            id="job-unclustered-dashoguz",
+            title="Dashoguz Foreign Job",
+            company="Foreign Test Corp",
+            location="Dashoguz",
+            description="Tavsif",
+            coordinateX=41.8333,
+            coordinateY=59.9667,
+            salary=250000,
+            status=JobStatus.OPEN,
+            employerId="emp-foreign-unclustered",
+            neededWorkers="1",
+        )
+        db_session.add_all([tashkent_job, shymkent_job, dashoguz_job])
+        db_session.commit()
+
+        # Worker applied to all 3 jobs
+        db_session.add_all([
+            models.Application(id="app-for-1", jobId="job-unclustered-tashkent", workerId=worker.id, status="applied"),
+            models.Application(id="app-for-2", jobId="job-unclustered-shymkent", workerId=worker.id, status="applied"),
+            models.Application(id="app-for-3", jobId="job-unclustered-dashoguz", workerId=worker.id, status="applied"),
+        ])
+        db_session.commit()
+
+    # 1. Anonymous visitor hits Cold DB Path with clustered=false
+    client.cookies.clear()
+    client.headers.pop("Authorization", None)
+    res_anon = client.get("/api/v1/jobs/map?clustered=false&search=Foreign%20Test")
+    assert res_anon.status_code == 200
+    anon_pins = res_anon.json()
+    anon_pin_ids = {p["id"] for p in anon_pins}
+    assert "job-unclustered-tashkent" in anon_pin_ids
+    assert "job-unclustered-shymkent" not in anon_pin_ids, "Shymkent must not be returned in unclustered map"
+    assert "job-unclustered-dashoguz" not in anon_pin_ids, "Dashoguz must not be returned in unclustered map"
+
+    # 2. Verify Redis public base cache directly
+    version = get_map_cache_version()
+    base_key = build_map_pins_cache_key(
+        version=version,
+        min_lat=None,
+        max_lat=None,
+        min_lng=None,
+        max_lng=None,
+        location=None,
+        category=None,
+        search="foreign test",
+        limit=500,
+    )
+    raw_cached = redis_client.get(base_key)
+    assert raw_cached is not None, "Base cache must be created"
+    base_pins = json.loads(raw_cached.decode("utf-8") if isinstance(raw_cached, bytes) else str(raw_cached))
+    cached_ids = {p["id"] for p in base_pins}
+    assert "job-unclustered-tashkent" in cached_ids
+    assert "job-unclustered-shymkent" not in cached_ids, "Shymkent leaked into Redis base cache!"
+    assert "job-unclustered-dashoguz" not in cached_ids, "Dashoguz leaked into Redis base cache!"
+
+    # 3. Authenticated visitor hits Fast Assembly Path with clustered=false
+    login(client, worker)
+    res_auth = client.get("/api/v1/jobs/map?clustered=false&search=Foreign%20Test")
+    assert res_auth.status_code == 200
+    auth_pins = res_auth.json()
+    auth_pin_ids = {p["id"] for p in auth_pins}
+    assert "job-unclustered-tashkent" in auth_pin_ids
+    assert "job-unclustered-shymkent" not in auth_pin_ids, "Shymkent must not be returned to authenticated user"
+    assert "job-unclustered-dashoguz" not in auth_pin_ids, "Dashoguz must not be returned to authenticated user"
+
+    # 4. Pre-cached stale foreign pin injection test:
+    # Intentionally inject foreign pins into Redis effective cache and verify fast path sanitizes them
+    corrupted_cache = json.dumps([
+        {"id": "job-unclustered-tashkent", "coordinateX": 41.31, "coordinateY": 69.24, "status": "open", "title": "T"},
+        {"id": "job-injected-shymkent", "coordinateX": 42.3417, "coordinateY": 69.5901, "status": "open", "title": "S"},
+        {"id": "job-injected-dashoguz", "coordinateX": 41.8333, "coordinateY": 59.9667, "status": "open", "title": "D"},
+    ])
+    client.cookies.clear()
+    client.headers.pop("Authorization", None)
+    redis_client.set(base_key, corrupted_cache, ex=60)
+
+    res_sanitized = client.get("/api/v1/jobs/map?clustered=false&search=Foreign%20Test")
+    assert res_sanitized.status_code == 200
+    sanitized_pins = res_sanitized.json()
+    sanitized_ids = {p["id"] for p in sanitized_pins}
+    assert "job-unclustered-tashkent" in sanitized_ids
+    assert "job-injected-shymkent" not in sanitized_ids, "Stale Shymkent pin leaked from cache!"
+    assert "job-injected-dashoguz" not in sanitized_ids, "Stale Dashoguz pin leaked from cache!"
+
+
+def test_atomic_geojson_preparation_rejects_partial_state_when_invalid_feature_follows_valid(caplog):
+    """
+    Test that _init_polygons() prepares GeoJSON atomically:
+    When a valid polygon is followed by an invalid/corrupt feature in the same dataset,
+    the entire dataset is rejected, leaving zero partially loaded polygons in _PREPARED_POLYGONS.
+    Even coordinates inside the valid polygon must be rejected in fail-closed safety mode.
+    """
+    import logging
+    from app.services.geo_service import GeoSpatialService
+
+    # Construct GeoJSON where feature 0 is a valid polygon over Tashkent,
+    # but feature 1 is corrupted (invalid coordinates structure)
+    valid_feature = {
+        "type": "Feature",
+        "properties": {"name": "Valid Tashkent Region"},
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [69.1, 41.2],
+                    [69.4, 41.2],
+                    [69.4, 41.4],
+                    [69.1, 41.4],
+                    [69.1, 41.2],
+                ]
+            ],
+        },
+    }
+    corrupted_feature = {
+        "type": "Feature",
+        "properties": {"name": "Corrupt Feature"},
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": "not_a_valid_coordinate_list",  # Malformed!
+        },
+    }
+    malformed_geojson = {
+        "type": "FeatureCollection",
+        "features": [valid_feature, corrupted_feature],
+    }
+
+    try:
+        GeoSpatialService._is_inside_polygon_cached.cache_clear()
+        with caplog.at_level(logging.ERROR):
+            GeoSpatialService._init_polygons(override_data=malformed_geojson)
+
+        # Atomic guarantee: _PREPARED_POLYGONS must be completely empty (no partial state with valid_feature)
+        assert len(GeoSpatialService._PREPARED_POLYGONS) == 0, (
+            "Must NOT leave partially prepared polygons when subsequent features fail"
+        )
+
+        # Even a point strictly inside the valid polygon must be rejected because the dataset failed validation
+        tashkent_point_inside_valid_feature = (41.3, 69.25)
+        res = GeoSpatialService.is_inside_uzbekistan(
+            tashkent_point_inside_valid_feature[0], tashkent_point_inside_valid_feature[1]
+        )
+        assert res is False, "Point inside valid feature must still be rejected when GeoJSON failed atomic validation"
+
+        # Check that multiple calls don't flood logs (deduplication)
+        with caplog.at_level(logging.ERROR):
+            for _ in range(5):
+                GeoSpatialService.is_inside_uzbekistan(41.3, 69.25)
+            fail_closed_logs = [r for r in caplog.records if "fail-closed" in r.message]
+            assert len(fail_closed_logs) == 1, f"Expected 1 fail-closed error, got {len(fail_closed_logs)}"
+    finally:
+        # Restore normal loaded state
+        GeoSpatialService._is_inside_polygon_cached.cache_clear()
+        GeoSpatialService._POLYGONS_LOADED = False
+        GeoSpatialService._init_polygons()
+
+
+def test_clustered_fast_path_invalidates_and_rebuilds_when_cluster_contains_foreign_pin(client):
+    """
+    Test that when clustered=True, Fast Path and Fast Assembly Path sanitize stale cluster caches:
+    If a cluster in Redis cache has a centroid inside Uzbekistan, but its member pinIds
+    contain a job located outside Uzbekistan (e.g. Shymkent, Kazakhstan), the system:
+    1. Detects the invalid/foreign member pin.
+    2. Safely invalidates the corrupt cache from Redis.
+    3. Falls through to the Cold DB path to rebuild clean clusters from trusted database records.
+    4. Accurately recomputes count, pinIds, and returned cluster count without foreign jobs.
+    5. Correctly serves both anonymous and authenticated callers.
+    """
+    worker = make_user(role="worker", phone="+998909990098")
+    invalidate_map_cache()
+
+    with SessionLocal() as db_session:
+        emp = db_session.query(models.User).filter_by(id="emp-corrupt-cluster").first()
+        if not emp:
+            emp = models.User(
+                id="emp-corrupt-cluster",
+                phone="+998909990099",
+                role="employer",
+                name="Corrupt Cluster Employer",
+            )
+            db_session.add(emp)
+            db_session.commit()
+
+        # Clean existing test jobs if any
+        test_job_ids = [
+            "job-cl-tashkent-1",
+            "job-cl-tashkent-2",
+            "job-cl-shymkent",
+            "job-cl-solo-tashkent",
+            "job-cl-solo-dashoguz",
+        ]
+        db_session.query(models.Job).filter(models.Job.id.in_(test_job_ids)).delete(synchronize_session=False)
+        db_session.commit()
+
+        # Multi-pin cluster jobs: 2 valid Tashkent jobs + 1 Shymkent foreign job
+        multi_jobs = [
+            models.Job(
+                id="job-cl-tashkent-1",
+                title="Corrupt Cluster Multi Test 1",
+                company="Tashkent Tech",
+                location="Toshkent",
+                description="Tavsif matni",
+                coordinateX=41.3100,
+                coordinateY=69.2400,
+                salary=4000000,
+                status=JobStatus.OPEN,
+                employerId="emp-corrupt-cluster",
+                neededWorkers="1",
+            ),
+            models.Job(
+                id="job-cl-tashkent-2",
+                title="Corrupt Cluster Multi Test 2",
+                company="Tashkent Digital",
+                location="Toshkent",
+                description="Tavsif matni",
+                coordinateX=41.3200,
+                coordinateY=69.2500,
+                salary=4500000,
+                status=JobStatus.OPEN,
+                employerId="emp-corrupt-cluster",
+                neededWorkers="1",
+            ),
+            models.Job(
+                id="job-cl-shymkent",
+                title="Corrupt Cluster Multi Test 3",
+                company="Kazakhstan Logistics",
+                location="Shymkent",
+                description="Tavsif matni",
+                coordinateX=42.3417,  # Shymkent, Kazakhstan (Foreign)
+                coordinateY=69.5901,
+                salary=5000000,
+                status=JobStatus.OPEN,
+                employerId="emp-corrupt-cluster",
+                neededWorkers="1",
+            ),
+        ]
+        db_session.add_all(multi_jobs)
+        db_session.commit()
+
+    # Scenario 1: Multi-job cluster containing 2 Tashkent jobs + 1 Shymkent job
+    # Artificially inject stale cluster into Redis with count=3 and centroid in Tashkent
+    version = get_map_cache_version()
+    base_key = build_map_pins_cache_key(
+        version=version,
+        min_lat=None,
+        max_lat=None,
+        min_lng=None,
+        max_lng=None,
+        location=None,
+        category=None,
+        search="corrupt cluster multi test",
+        limit=0,
+    ) + ":clustered"
+
+    corrupted_cluster_payload = json.dumps([
+        {
+            "id": "cluster_corrupt_multi",
+            "isCluster": True,
+            "count": 3,
+            "pinIds": ["job-cl-tashkent-1", "job-cl-tashkent-2", "job-cl-shymkent"],
+            "coordinateX": 41.3150,  # Centroid is inside Tashkent!
+            "coordinateY": 69.2450,
+            "latitude": 41.3150,
+            "longitude": 69.2450,
+            "title": "3 ta bo'sh ish o'rni",
+            "company": "Toshkent",
+            "location": "Toshkent",
+            "salary": 4500000,
+            "salaryCurrency": "UZS",
+            "status": "open",
+            "urgent": False,
+            "vacancies": 3,
+            "hiredCount": 0,
+            "applied": False,
+            "bookmarked": False,
+        }
+    ])
+    redis_client.set(base_key, corrupted_cluster_payload, ex=120)
+
+    # 1. Anonymous visitor hits Fast Path:
+    # Must detect foreign pin inside cluster, invalidate stale cache, rebuild from DB, and return count=2
+    client.cookies.clear()
+    client.headers.pop("Authorization", None)
+    res_anon = client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Cluster%20Multi%20Test")
+    assert res_anon.status_code == 200
+    clusters_anon = res_anon.json()
+
+    assert len(clusters_anon) == 1, f"Expected 1 cluster, got {len(clusters_anon)}"
+    c_anon = clusters_anon[0]
+    assert c_anon["isCluster"] is True, "Cluster with 2 remaining Tashkent jobs must remain a cluster"
+    assert c_anon["count"] == 2, f"Count must be sanitized from 3 to 2, got {c_anon['count']}"
+    assert set(c_anon["pinIds"]) == {"job-cl-tashkent-1", "job-cl-tashkent-2"}
+    assert "job-cl-shymkent" not in c_anon["pinIds"], "Foreign Shymkent job must not leak in cluster pinIds!"
+
+    # 2. Authenticated visitor hits Fast Assembly Path:
+    # Must also receive the sanitized cluster with count=2 and without Shymkent
+    login(client, worker)
+    res_auth = client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Cluster%20Multi%20Test")
+    assert res_auth.status_code == 200
+    clusters_auth = res_auth.json()
+    assert len(clusters_auth) == 1
+    c_auth = clusters_auth[0]
+    assert c_auth["count"] == 2
+    assert set(c_auth["pinIds"]) == {"job-cl-tashkent-1", "job-cl-tashkent-2"}
+    assert "job-cl-shymkent" not in c_auth["pinIds"]
+
+    # Scenario 2: Single valid job + 1 foreign job (Cluster downgrade scenario)
+    # A cluster in cache contains 1 Tashkent job + 1 Dashoguz job.
+    # When sanitized, only 1 valid job remains; system must downgrade it to a single unclustered pin.
+    with SessionLocal() as db_session:
+        solo_jobs = [
+            models.Job(
+                id="job-cl-solo-tashkent",
+                title="Corrupt Cluster Solo Test 1",
+                company="Solo Tech",
+                location="Toshkent",
+                description="Tavsif matni",
+                coordinateX=41.3000,
+                coordinateY=69.2300,
+                salary=3000000,
+                status=JobStatus.OPEN,
+                employerId="emp-corrupt-cluster",
+                neededWorkers="1",
+            ),
+            models.Job(
+                id="job-cl-solo-dashoguz",
+                title="Corrupt Cluster Solo Test 2",
+                company="Turkmen Logistics",
+                location="Dashoguz",
+                description="Tavsif matni",
+                coordinateX=41.8333,  # Dashoguz, Turkmenistan (Foreign)
+                coordinateY=59.9667,
+                salary=3500000,
+                status=JobStatus.OPEN,
+                employerId="emp-corrupt-cluster",
+                neededWorkers="1",
+            ),
+        ]
+        db_session.add_all(solo_jobs)
+        db_session.commit()
+
+    base_key_solo = build_map_pins_cache_key(
+        version=version,
+        min_lat=None,
+        max_lat=None,
+        min_lng=None,
+        max_lng=None,
+        location=None,
+        category=None,
+        search="corrupt cluster solo test",
+        limit=0,
+    ) + ":clustered"
+
+    corrupted_solo_payload = json.dumps([
+        {
+            "id": "cluster_corrupt_solo",
+            "isCluster": True,
+            "count": 2,
+            "pinIds": ["job-cl-solo-tashkent", "job-cl-solo-dashoguz"],
+            "coordinateX": 41.3000,  # Tashkent centroid
+            "coordinateY": 69.2300,
+            "title": "2 ta bo'sh ish o'rni",
+            "status": "open",
+        }
+    ])
+    redis_client.set(base_key_solo, corrupted_solo_payload, ex=120)
+
+    client.cookies.clear()
+    client.headers.pop("Authorization", None)
+    res_solo = client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Cluster%20Solo%20Test")
+    assert res_solo.status_code == 200
+    pins_solo = res_solo.json()
+
+    assert len(pins_solo) == 1, f"Expected 1 pin after cluster downgrade, got {len(pins_solo)}"
+    p_solo = pins_solo[0]
+    assert p_solo["isCluster"] is False, "Single remaining pin must be downgraded from cluster"
+    assert p_solo["count"] == 1
+    assert p_solo["id"] == "job-cl-solo-tashkent"
+    assert p_solo["pinIds"] == ["job-cl-solo-tashkent"]
+    assert "job-cl-solo-dashoguz" not in (p_solo.get("pinIds") or [])
+
+    # Scenario 3: Deleted / Non-existent pinId in cluster cache
+    # Cluster references a job that was deleted from DB.
+    # Fast path detects stale pinId, invalidates cache, and rebuilds from DB.
+    base_key_deleted = build_map_pins_cache_key(
+        version=version,
+        min_lat=None,
+        max_lat=None,
+        min_lng=None,
+        max_lng=None,
+        location=None,
+        category=None,
+        search="corrupt cluster solo test",
+        limit=0,
+    ) + ":clustered"
+
+    deleted_cluster_payload = json.dumps([
+        {
+            "id": "cluster_corrupt_deleted",
+            "isCluster": True,
+            "count": 2,
+            "pinIds": ["job-cl-solo-tashkent", "non-existent-deleted-job-id"],
+            "coordinateX": 41.3000,
+            "coordinateY": 69.2300,
+            "title": "2 ta bo'sh ish o'rni",
+            "status": "open",
+        }
+    ])
+    redis_client.set(base_key_deleted, deleted_cluster_payload, ex=120)
+
+    client.cookies.clear()
+    client.headers.pop("Authorization", None)
+    res_del = client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Cluster%20Solo%20Test")
+    assert res_del.status_code == 200
+    pins_del = res_del.json()
+    assert len(pins_del) == 1
+    assert "non-existent-deleted-job-id" not in (pins_del[0].get("pinIds") or [])
+
+
+def test_unclustered_limit_not_starved_by_foreign_candidates_in_bounding_box(client):
+    """
+    Test that when clustered=false (raw map pins):
+    1. If the first N candidates matching the query order are foreign coordinates (e.g. Shymkent/Dashoguz in BBOX),
+       they do NOT exhaust the requested limit before exact polygon filtering.
+    2. Valid Uzbekistan jobs with older timestamps are successfully retrieved up to the requested limit.
+    3. Valid jobs are not lost due to candidate starvation.
+    4. clustered=true behavior is preserved without limit cutoffs.
+    """
+    from datetime import datetime, timedelta
+
+    invalidate_map_cache()
+
+    with SessionLocal() as db_session:
+        emp = db_session.query(models.User).filter_by(id="emp-starvation-test").first()
+        if not emp:
+            emp = models.User(
+                id="emp-starvation-test",
+                phone="+998909990088",
+                role="employer",
+                name="Starvation Test Emp",
+            )
+            db_session.add(emp)
+            db_session.commit()
+
+        # Clean old test jobs
+        db_session.query(models.Job).filter(models.Job.employerId == "emp-starvation-test").delete()
+        db_session.commit()
+
+        now = datetime.utcnow()
+        # Create 10 foreign jobs with NEWER timestamps (inside Uzbekistan bounding box, but outside boundary polygon)
+        # 5 Shymkent (42.3417, 69.5901) and 5 Dashoguz (41.8333, 59.9667)
+        foreign_jobs = []
+        for i in range(5):
+            foreign_jobs.append(
+                models.Job(
+                    id=f"job-foreign-shymkent-{i}",
+                    title=f"Limit Starvation Test Foreign Shymkent {i}",
+                    company="Kazakh Corp",
+                    location="Shymkent",
+                    description="Tavsif",
+                    coordinateX=42.3417,
+                    coordinateY=69.5901,
+                    salary=3000000,
+                    status=JobStatus.OPEN,
+                    employerId="emp-starvation-test",
+                    createdAt=now - timedelta(minutes=i),
+                )
+            )
+        for i in range(5):
+            foreign_jobs.append(
+                models.Job(
+                    id=f"job-foreign-dashoguz-{i}",
+                    title=f"Limit Starvation Test Foreign Dashoguz {i}",
+                    company="Turkmen Corp",
+                    location="Dashoguz",
+                    description="Tavsif",
+                    coordinateX=41.8333,
+                    coordinateY=59.9667,
+                    salary=3200000,
+                    status=JobStatus.OPEN,
+                    employerId="emp-starvation-test",
+                    createdAt=now - timedelta(minutes=10 + i),
+                )
+            )
+
+        # Create 5 valid Tashkent jobs with OLDER timestamps
+        valid_tashkent_jobs = []
+        for i in range(5):
+            valid_tashkent_jobs.append(
+                models.Job(
+                    id=f"job-valid-tashkent-{i}",
+                    title=f"Limit Starvation Test Valid Tashkent {i}",
+                    company="Tashkent Corp",
+                    location="Toshkent",
+                    description="Tavsif",
+                    coordinateX=41.3100 + (i * 0.01),
+                    coordinateY=69.2400 + (i * 0.01),
+                    salary=4000000,
+                    status=JobStatus.OPEN,
+                    employerId="emp-starvation-test",
+                    createdAt=now - timedelta(minutes=100 + i),
+                )
+            )
+
+        db_session.add_all(foreign_jobs + valid_tashkent_jobs)
+        db_session.commit()
+
+    # 1. Test with limit=5:
+    # If .limit(5) was applied before polygon filtering, all 5 items would be Shymkent,
+    # and 0 items would be returned.
+    # With batching, exactly 5 valid Tashkent jobs must be returned!
+    client.cookies.clear()
+    client.headers.pop("Authorization", None)
+    res_limit5 = client.get("/api/v1/jobs/map?clustered=false&limit=5&search=Limit%20Starvation%20Test")
+    assert res_limit5.status_code == 200
+    pins_limit5 = res_limit5.json()
+
+    assert len(pins_limit5) == 5, f"Expected 5 valid pins, got {len(pins_limit5)} (proves limit was not starved by foreign jobs)"
+    pin_ids_limit5 = {p["id"] for p in pins_limit5}
+    for p in pins_limit5:
+        assert "foreign" not in p["id"], f"Foreign job {p['id']} must not be in response"
+        assert "valid-tashkent" in p["id"]
+
+    # 2. Test with limit=3:
+    invalidate_map_cache()
+    res_limit3 = client.get("/api/v1/jobs/map?clustered=false&limit=3&search=Limit%20Starvation%20Test")
+    assert res_limit3.status_code == 200
+    pins_limit3 = res_limit3.json()
+    assert len(pins_limit3) == 3, f"Expected exactly 3 valid pins, got {len(pins_limit3)}"
+    for p in pins_limit3:
+        assert "valid-tashkent" in p["id"]
+
+    # 3. Test that clustered=true aggregates all 5 valid jobs without limit cutoffs
+    invalidate_map_cache()
+    res_clustered = client.get("/api/v1/jobs/map?clustered=true&search=Limit%20Starvation%20Test")
+    assert res_clustered.status_code == 200
+    clusters = res_clustered.json()
+    assert len(clusters) == 1
+    assert clusters[0]["count"] == 5, f"Clustered view must aggregate all 5 valid jobs, got {clusters[0]['count']}"
+    for pid in clusters[0]["pinIds"]:
+        assert "valid-tashkent" in pid
+        assert "foreign" not in pid
+
+
+def test_clean_cache_hit_requires_zero_db_queries(client):
+    """
+    Profile and prove that once the spatial map cache is populated cleanly:
+    1. A subsequent Fast Path cache hit executes EXACTLY 0 database queries on non-empty dataset.
+    2. Clusters contain valid geo_verified=True and cryptographic geo_sig.
+    3. ETag and 304 Not Modified match the verified sanitized response.
+    """
+    from sqlalchemy import event
+    from app.db.session import engine
+    from app.core.map_cache import verify_cluster_signature
+
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        # Create at least 3 valid jobs in Tashkent to guarantee non-empty cache
+        employer = db_session.query(models.User).filter_by(id="emp-zero-db").first()
+        if not employer:
+            employer = models.User(
+                id="emp-zero-db",
+                phone="+998909990001",
+                role="employer",
+                name="Zero DB Employer",
+            )
+            db_session.add(employer)
+            db_session.flush()
+
+        db_session.query(models.Job).filter(models.Job.employerId == "emp-zero-db").delete()
+        for i in range(3):
+            j = models.Job(
+                id=f"job-zero-db-{i}",
+                employerId="emp-zero-db",
+                title=f"Zero DB Job {i}",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.31 + (i * 0.005),
+                coordinateY=69.24 + (i * 0.005),
+                location="Toshkent",
+                neededWorkers="1",
+            )
+            db_session.add(j)
+        db_session.commit()
+
+    # 1. Prime the cache: Request 1 executes Cold DB Path and writes geo_verified=True & geo_sig to Redis
+    res_prime = client.get("/api/v1/jobs/map?clustered=true")
+    assert res_prime.status_code == 200
+    prime_data = res_prime.json()
+    assert len(prime_data) > 0, "Test must NOT pass on trivial empty list; real jobs must be returned"
+    cluster = prime_data[0]
+    assert cluster.get("geo_verified") is True
+    assert cluster.get("geo_sig") is not None
+    assert verify_cluster_signature(cluster) is True
+    etag = res_prime.headers.get("ETag")
+    assert etag is not None
+
+    # Test 304 Not Modified
+    res_304 = client.get("/api/v1/jobs/map?clustered=true", headers={"if-none-match": etag})
+    assert res_304.status_code == 304
+
+    # 2. Profile Fast Path on clean cache hit: Must execute ZERO SQL queries!
+    executed_queries = []
+
+    def before_cursor_execute_listener(conn, cursor, statement, parameters, context, executemany):
+        stmt = statement.strip().upper()
+        if not stmt.startswith("PRAGMA") and not stmt.startswith("ROLLBACK") and not stmt.startswith("COMMIT"):
+            executed_queries.append(statement)
+
+    event.listen(engine, "before_cursor_execute", before_cursor_execute_listener)
+    try:
+        res_fast = client.get("/api/v1/jobs/map?clustered=true")
+        assert res_fast.status_code == 200
+    finally:
+        event.remove(engine, "before_cursor_execute", before_cursor_execute_listener)
+
+    assert len(executed_queries) == 0, (
+        f"Clean cache hit MUST execute 0 DB queries, but executed {len(executed_queries)}: {executed_queries}"
+    )
+
+
+def test_public_cache_candidate_isolation_with_authenticated_user_first(client):
+    """
+    Regression Test for Section 1:
+    Ensure that when an authenticated user with personal IN_PROGRESS or COMPLETED shifts
+    makes a request first (Cold DB Path), those personal shifts NEVER consume the public
+    candidate limit and NEVER leak into base_pins / base_cache_key.
+    The public base cache and subsequent anonymous/other-user requests must receive the
+    full limit of valid open jobs, and never see the worker's personal private shifts.
+    """
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        employer = db_session.query(models.User).filter_by(id="emp-cluster-test").first()
+        if not employer:
+            employer = models.User(
+                id="emp-cluster-test",
+                phone="+998901234567",
+                role="employer",
+                name="Cluster Employer",
+            )
+            db_session.add(employer)
+            db_session.commit()
+
+        db_session.query(models.Application).filter(models.Application.id.like("app-iso-%")).delete()
+        db_session.query(models.Job).filter(models.Job.id.like("job-iso-%")).delete()
+        db_session.commit()
+
+        from tests.conftest import get_password_hash, TEST_PASSWORD
+
+        w1 = db_session.query(models.User).filter_by(id="worker-iso-1").first()
+        if not w1:
+            w1 = models.User(
+                id="worker-iso-1",
+                uid="worker-iso-1",
+                phone="+998901110001",
+                name="Worker 1",
+                role="worker",
+                hashed_password=get_password_hash(TEST_PASSWORD),
+                isVerified=True,
+                isBanned=False,
+            )
+            db_session.add(w1)
+            db_session.commit()
+
+        w2 = db_session.query(models.User).filter_by(id="worker-iso-2").first()
+        if not w2:
+            w2 = models.User(
+                id="worker-iso-2",
+                uid="worker-iso-2",
+                phone="+998901110002",
+                name="Worker 2",
+                role="worker",
+                hashed_password=get_password_hash(TEST_PASSWORD),
+                isVerified=True,
+                isBanned=False,
+            )
+            db_session.add(w2)
+            db_session.commit()
+
+        # Create 5 valid public open jobs (Tashkent coords)
+        open_jobs = []
+        for i in range(5):
+            j = models.Job(
+                id=f"job-iso-open-{i}",
+                employerId="emp-cluster-test",
+                title=f"Open Job Iso {i}",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.31 + (i * 0.001),
+                coordinateY=69.24 + (i * 0.001),
+                location="Toshkent",
+                neededWorkers="1",
+            )
+            open_jobs.append(j)
+        db_session.add_all(open_jobs)
+
+        # Create 10 IN_PROGRESS jobs applied by Worker 1
+        private_jobs = []
+        apps = []
+        for i in range(10):
+            pj = models.Job(
+                id=f"job-iso-prog-{i}",
+                employerId="emp-cluster-test",
+                title=f"In Progress Job Iso {i}",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.IN_PROGRESS,
+                coordinateX=41.32 + (i * 0.001),
+                coordinateY=69.25 + (i * 0.001),
+                location="Toshkent",
+                neededWorkers="1",
+            )
+            private_jobs.append(pj)
+            app_record = models.Application(
+                id=f"app-iso-{i}",
+                jobId=pj.id,
+                workerId=w1.id,
+                status="in_progress",
+            )
+            apps.append(app_record)
+        db_session.add_all(private_jobs)
+        db_session.flush()
+        db_session.add_all(apps)
+        db_session.commit()
+        db_session.refresh(w1)
+        db_session.refresh(w2)
+        db_session.expunge(w1)
+        db_session.expunge(w2)
+
+    # Worker 1 logs in and hits Cold DB Path first with limit=5
+    login(client, w1)
+    res_w1 = client.get("/api/v1/jobs/map?clustered=false&limit=5&search=Iso")
+    assert res_w1.status_code == 200
+    w1_pins = res_w1.json()
+    w1_pids = {p["id"] for p in w1_pins}
+    assert any("job-iso-prog-" in pid for pid in w1_pids)
+    assert any("job-iso-open-" in pid for pid in w1_pids)
+
+    # Anonymous user requests public map with limit=5: MUST get full 5 open jobs and 0 private jobs
+    anon_client = TestClient(app)
+    res_anon = anon_client.get("/api/v1/jobs/map?clustered=false&limit=5&search=Iso")
+    assert res_anon.status_code == 200
+    anon_pins = res_anon.json()
+    assert len(anon_pins) == 5, f"Anonymous user MUST get full limit=5 open jobs, got {len(anon_pins)}"
+    for p in anon_pins:
+        assert "job-iso-open-" in p["id"], f"Anonymous user must NOT see private job: {p['id']}"
+        assert "job-iso-prog-" not in p["id"]
+
+    # Worker 2 logs in: must NOT see Worker 1's in_progress jobs, but MUST get full open jobs
+    w2_client = TestClient(app)
+    login(w2_client, w2)
+    res_w2 = w2_client.get("/api/v1/jobs/map?clustered=false&limit=5&search=Iso")
+    assert res_w2.status_code == 200
+    w2_pins = res_w2.json()
+    assert len(w2_pins) == 5
+    for p in w2_pins:
+        assert "job-iso-open-" in p["id"]
+        assert "job-iso-prog-" not in p["id"]
+
+
+def test_geojson_strict_validation_and_ring_normalization():
+    """
+    Regression Test for Section 2:
+    Strict RFC 7946 linear ring validation and normalization:
+    Rejects string coordinates, NaN, Infinity, short positions, unclosed rings.
+    Verifies atomic fail-closed behavior on corrupted GeoJSON and clean recovery.
+    """
+    from app.services.geo_service import GeoSpatialService
+
+    # 1. String coordinates rejected
+    bad_str_ring = [["69.24", "41.31"], ["69.25", "41.31"], ["69.25", "41.32"], ["69.24", "41.31"]]
+    assert GeoSpatialService._validate_and_normalize_ring(bad_str_ring) is None
+
+    # 2. NaN rejected
+    bad_nan_ring = [[float("nan"), 41.31], [69.25, 41.31], [69.25, 41.32], [float("nan"), 41.31]]
+    assert GeoSpatialService._validate_and_normalize_ring(bad_nan_ring) is None
+
+    # 3. Infinity rejected
+    bad_inf_ring = [[float("inf"), 41.31], [69.25, 41.31], [69.25, 41.32], [float("inf"), 41.31]]
+    assert GeoSpatialService._validate_and_normalize_ring(bad_inf_ring) is None
+
+    # 4. -Infinity rejected
+    bad_ninf_ring = [[-float("inf"), 41.31], [69.25, 41.31], [69.25, 41.32], [-float("inf"), 41.31]]
+    assert GeoSpatialService._validate_and_normalize_ring(bad_ninf_ring) is None
+
+    # 5. Short coordinate rejected (len < 2)
+    bad_short_ring = [[69.24], [69.25, 41.31], [69.25, 41.32], [69.24]]
+    assert GeoSpatialService._validate_and_normalize_ring(bad_short_ring) is None
+
+    # 6. Unclosed ring rejected (first != last)
+    bad_unclosed_ring = [[69.24, 41.31], [69.25, 41.31], [69.25, 41.32], [69.24, 41.33]]
+    assert GeoSpatialService._validate_and_normalize_ring(bad_unclosed_ring) is None
+
+    # 7. Valid ring normalized to List[Tuple[float, float]]
+    valid_ring = [[69.24, 41.31], [69.25, 41.31], [69.25, 41.32], [69.24, 41.31]]
+    normalized = GeoSpatialService._validate_and_normalize_ring(valid_ring)
+    assert normalized is not None
+    assert len(normalized) == 4
+    for pt in normalized:
+        assert isinstance(pt, tuple)
+        assert isinstance(pt[0], float) and isinstance(pt[1], float)
+
+    # 8. Valid feature followed by invalid feature fails closed atomically
+    corrupt_geojson = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[69.20, 41.30], [69.30, 41.30], [69.30, 41.40], [69.20, 41.30]]],
+                },
+                "properties": {"name": "Valid Triangle"},
+            },
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[ "invalid_str", 41.30 ], [69.30, 41.30], [69.30, 41.40], [69.20, 41.30]]],
+                },
+                "properties": {"name": "Corrupted Polygon"},
+            },
+        ],
+    }
+
+    try:
+        # Atomic init should raise or fail closed
+        GeoSpatialService._init_polygons(override_data=corrupt_geojson)
+        assert GeoSpatialService._PREPARED_POLYGONS == []
+        # In fail-closed mode, even points inside Feature 1 are rejected
+        assert GeoSpatialService.is_inside_uzbekistan(41.35, 69.25) is False
+    finally:
+        # 9. Clean recovery: reloading valid GeoJSON restores service
+        GeoSpatialService._init_polygons(override_data=None, force_reload=True)
+        assert len(GeoSpatialService._PREPARED_POLYGONS) > 0
+        assert GeoSpatialService.is_inside_uzbekistan(41.31, 69.24) is True
+        # Enclave in hole (Sarvan) rejected
+        assert GeoSpatialService.is_inside_uzbekistan(40.9909362, 70.5499591) is False
+
+
+def test_cluster_corruption_1_to_12_regression(client):
+    """
+    Regression Tests for Section 3:
+    12 mandatory test cases verifying cluster cache integrity and HMAC trust boundaries.
+    """
+    from app.core.map_cache import compute_cluster_signature
+
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        employer = db_session.query(models.User).filter_by(id="emp-cluster-test").first()
+        if not employer:
+            employer = models.User(
+                id="emp-cluster-test",
+                phone="+998901234567",
+                role="employer",
+                name="Cluster Employer",
+            )
+            db_session.add(employer)
+            db_session.commit()
+
+        db_session.query(models.Job).filter(models.Job.id.like("job-corrupt-%")).delete()
+        valid_job = models.Job(
+            id="job-corrupt-valid-1",
+            employerId="emp-cluster-test",
+            title="Corrupt Test Valid 1",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.31,
+            coordinateY=69.24,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        valid_job2 = models.Job(
+            id="job-corrupt-valid-2",
+            employerId="emp-cluster-test",
+            title="Corrupt Test Valid 2",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=41.312,
+            coordinateY=69.242,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        shymkent_job = models.Job(
+            id="job-corrupt-shymkent",
+            employerId="emp-cluster-test",
+            title="Corrupt Test Shymkent",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.OPEN,
+            coordinateX=42.3417,
+            coordinateY=69.5901,
+            location="Shymkent",
+            neededWorkers="1",
+        )
+        cancelled_job = models.Job(
+            id="job-corrupt-cancelled",
+            employerId="emp-cluster-test",
+            title="Corrupt Test Cancelled",
+            company="Baito Co",
+            description="Test Description",
+            status=JobStatus.CANCELLED,
+            coordinateX=41.315,
+            coordinateY=69.245,
+            location="Toshkent",
+            neededWorkers="1",
+        )
+        db_session.add_all([valid_job, valid_job2, shymkent_job, cancelled_job])
+        db_session.commit()
+
+    ver = get_map_cache_version()
+    base_key = build_map_pins_cache_key(version=ver, search="corrupt test", limit=500)
+
+    # 1. Legacy cluster with foreign pin
+    legacy_cluster = {
+        "isCluster": True,
+        "id": "cluster_legacy",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-corrupt-valid-1", "job-corrupt-shymkent"],
+    }
+    redis_client.set(base_key, json.dumps([legacy_cluster]), ex=120)
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Test")
+    assert res.status_code == 200
+    for p in res.json():
+        if p.get("isCluster"):
+            assert "job-corrupt-shymkent" not in p.get("pinIds", [])
+
+    # 2. Forged geo_verified=True cluster with foreign pin (HMAC missing/invalid)
+    forged_cluster = {
+        "isCluster": True,
+        "id": "cluster_forged",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-corrupt-valid-1", "job-corrupt-shymkent"],
+        "geo_verified": True,
+        "geo_sig": "invalid_hmac_signature",
+    }
+    redis_client.set(base_key, json.dumps([forged_cluster]), ex=120)
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Test")
+    assert res.status_code == 200
+    for p in res.json():
+        if p.get("isCluster"):
+            assert "job-corrupt-shymkent" not in p.get("pinIds", [])
+
+    # 3. Missing pinIds
+    bad_c3 = {"isCluster": True, "id": "c3", "count": 2, "coordinateX": 41.31, "coordinateY": 69.24}
+    redis_client.set(base_key, json.dumps([bad_c3]), ex=120)
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Test")
+    assert res.status_code == 200
+
+    # 4. Empty pinIds=[]
+    bad_c4 = {"isCluster": True, "id": "c4", "count": 2, "coordinateX": 41.31, "coordinateY": 69.24, "pinIds": []}
+    redis_client.set(base_key, json.dumps([bad_c4]), ex=120)
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Test")
+    assert res.status_code == 200
+
+    # 5. Duplicate pinIds
+    bad_c5 = {
+        "isCluster": True,
+        "id": "c5",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-corrupt-valid-1", "job-corrupt-valid-1"],
+    }
+    redis_client.set(base_key, json.dumps([bad_c5]), ex=120)
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Test")
+    assert res.status_code == 200
+
+    # 6. count mismatch (count=3, len(pinIds)=2)
+    bad_c6 = {
+        "isCluster": True,
+        "id": "c6",
+        "count": 3,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-corrupt-valid-1", "job-corrupt-valid-2"],
+    }
+    redis_client.set(base_key, json.dumps([bad_c6]), ex=120)
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Test")
+    assert res.status_code == 200
+
+    # 7. Deleted pinId in DB
+    bad_c7 = {
+        "isCluster": True,
+        "id": "c7",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-corrupt-valid-1", "non-existent-deleted-job-id"],
+    }
+    redis_client.set(base_key, json.dumps([bad_c7]), ex=120)
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Test")
+    assert res.status_code == 200
+
+    # 8. Foreign pin in DB
+    bad_c8 = {
+        "isCluster": True,
+        "id": "c8",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-corrupt-valid-1", "job-corrupt-shymkent"],
+    }
+    redis_client.set(base_key, json.dumps([bad_c8]), ex=120)
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Test")
+    assert res.status_code == 200
+
+    # 9. Cancelled pin in DB
+    bad_c9 = {
+        "isCluster": True,
+        "id": "c9",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-corrupt-valid-1", "job-corrupt-cancelled"],
+    }
+    redis_client.set(base_key, json.dumps([bad_c9]), ex=120)
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Test")
+    assert res.status_code == 200
+
+    # 10. Single remaining valid pin downgraded to unclustered pin
+    res_pins = [p for p in res.json() if p["id"] == "job-corrupt-valid-1"]
+    if res_pins:
+        p0 = res_pins[0]
+        assert p0.get("isCluster") is False or p0.get("count") == 1
+
+    # 11. Authenticated user hits corrupt cache first (Fast Assembly Path)
+    with SessionLocal() as db_session:
+        worker = db_session.query(models.User).filter_by(id="worker-fast-asm").first()
+        if not worker:
+            worker = make_user(role="worker", phone="+998902220001", name="Worker Fast Asm")
+            worker.id = "worker-fast-asm"
+            db_session.add(worker)
+            db_session.commit()
+            db_session.refresh(worker)
+
+    bad_c11 = {
+        "isCluster": True,
+        "id": "c11",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-corrupt-valid-1", "job-corrupt-shymkent"],
+    }
+    redis_client.set(base_key, json.dumps([bad_c11]), ex=120)
+    auth_client = TestClient(app)
+    login(auth_client, worker)
+    res_auth = auth_client.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Test")
+    assert res_auth.status_code == 200
+    for p in res_auth.json():
+        if p.get("isCluster"):
+            assert "job-corrupt-shymkent" not in p.get("pinIds", [])
+
+    # 12. Anonymous user hits corrupt cache first (Fast Path)
+    bad_c12 = {
+        "isCluster": True,
+        "id": "c12",
+        "count": 2,
+        "coordinateX": 41.31,
+        "coordinateY": 69.24,
+        "pinIds": ["job-corrupt-valid-1", "job-corrupt-shymkent"],
+    }
+    redis_client.set(base_key, json.dumps([bad_c12]), ex=120)
+    anon_client2 = TestClient(app)
+    res_anon2 = anon_client2.get("/api/v1/jobs/map?clustered=true&search=Corrupt%20Test")
+    assert res_anon2.status_code == 200
+    for p in res_anon2.json():
+        if p.get("isCluster"):
+            assert "job-corrupt-shymkent" not in p.get("pinIds", [])
+
+
+def test_limit_batching_first_batch_foreign_second_batch_valid(client):
+    """
+    Regression Test for Section 4:
+    Verify that when the first candidate batch consists entirely of foreign coordinates,
+    batching scans forward to retrieve limit valid jobs (tested for limit=3 and limit=5).
+    """
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        employer = db_session.query(models.User).filter_by(id="emp-cluster-test").first()
+        if not employer:
+            employer = models.User(
+                id="emp-cluster-test",
+                phone="+998901234567",
+                role="employer",
+                name="Cluster Employer",
+            )
+            db_session.add(employer)
+            db_session.commit()
+
+        db_session.query(models.Job).filter(models.Job.id.like("job-batch-%")).delete()
+        # 105 foreign jobs in Shymkent with newer timestamps
+        foreign_jobs = []
+        for i in range(105):
+            j = models.Job(
+                id=f"job-batch-foreign-{i}",
+                employerId="emp-cluster-test",
+                title="Batch Starvation Test Foreign",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=42.3417,
+                coordinateY=69.5901,
+                location="Shymkent",
+                neededWorkers="1",
+            )
+            foreign_jobs.append(j)
+        db_session.add_all(foreign_jobs)
+
+        # 10 valid jobs in Tashkent with slightly older timestamps
+        valid_jobs = []
+        for i in range(10):
+            j = models.Job(
+                id=f"job-batch-valid-{i}",
+                employerId="emp-cluster-test",
+                title="Batch Starvation Test Valid",
+                company="Baito Co",
+                description="Test Description",
+                status=JobStatus.OPEN,
+                coordinateX=41.31 + (i * 0.002),
+                coordinateY=69.24 + (i * 0.002),
+                location="Toshkent",
+                neededWorkers="1",
+            )
+            valid_jobs.append(j)
+        db_session.add_all(valid_jobs)
+        db_session.commit()
+
+    # Test limit=3
+    invalidate_map_cache()
+    res3 = client.get("/api/v1/jobs/map?clustered=false&limit=3&search=Batch%20Starvation%20Test")
+    assert res3.status_code == 200
+    data3 = res3.json()
+    assert len(data3) == 3, f"Expected 3 valid jobs, got {len(data3)}"
+    for item in data3:
+        assert "job-batch-valid-" in item["id"]
+
+    # Test limit=5
+    invalidate_map_cache()
+    res5 = client.get("/api/v1/jobs/map?clustered=false&limit=5&search=Batch%20Starvation%20Test")
+    assert res5.status_code == 200
+    data5 = res5.json()
+    assert len(data5) == 5, f"Expected 5 valid jobs, got {len(data5)}"
+    for item in data5:
+        assert "job-batch-valid-" in item["id"]

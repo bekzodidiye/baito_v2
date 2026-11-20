@@ -258,6 +258,8 @@ class JobMapPin(BaseModel):
     salaryMin: Optional[int] = None
     salaryMax: Optional[int] = None
     pinIds: Optional[List[str]] = None
+    geo_verified: Optional[bool] = None
+    geo_sig: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

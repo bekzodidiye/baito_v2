@@ -1,5 +1,8 @@
+import hashlib
+import hmac
 import logging
-from typing import Optional
+from typing import Optional, Dict, Any
+from app.core.config import settings
 from app.redis_client import redis_client
 
 logger = logging.getLogger(__name__)
@@ -135,3 +138,33 @@ def build_nearby_cache_key(
     q_lng = f"{round(lng, 2):.2f}"
     q_rad = f"{round(radius_km, 1):.1f}"
     return f"{CACHE_NEARBY_PREFIX}:v{version}:{q_lat}:{q_lng}:{q_rad}:{limit}"
+
+
+def compute_cluster_signature(cluster: Dict[str, Any]) -> str:
+    """Computes a cryptographically secure HMAC signature for a validated cluster.
+    Guarantees that geo_verified claims can only originate from this server's Cold DB Path,
+    preventing arbitrary cache injection or corrupted payloads from bypassing checks.
+    """
+    pids = ",".join(sorted(str(pid) for pid in (cluster.get("pinIds") or [])))
+    cid = str(cluster.get("id") or "")
+    count = str(cluster.get("count") or 0)
+    try:
+        lat = f"{float(cluster.get('coordinateX') if cluster.get('coordinateX') is not None else cluster.get('latitude') or 0.0):.5f}"
+        lng = f"{float(cluster.get('coordinateY') if cluster.get('coordinateY') is not None else cluster.get('longitude') or 0.0):.5f}"
+    except (ValueError, TypeError):
+        lat = "0.00000"
+        lng = "0.00000"
+    msg = f"{cid}:{count}:{pids}:{lat}:{lng}"
+    secret = (getattr(settings, "SECRET_KEY", None) or "baito-cluster-secret-fallback").encode("utf-8")
+    return hmac.new(secret, msg.encode("utf-8"), hashlib.sha256).hexdigest()[:16]
+
+
+def verify_cluster_signature(cluster: Dict[str, Any]) -> bool:
+    """Verifies that a cached cluster has an authentic HMAC signature produced by Cold DB Path."""
+    if not isinstance(cluster, dict) or not cluster.get("geo_verified"):
+        return False
+    sig = cluster.get("geo_sig")
+    if not sig or not isinstance(sig, str):
+        return False
+    expected = compute_cluster_signature(cluster)
+    return hmac.compare_digest(sig, expected)
