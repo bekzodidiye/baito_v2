@@ -1,7 +1,9 @@
 import hashlib
 import hmac
+import json
 import logging
-from typing import Optional, Dict, Any
+import math
+from typing import Optional, Dict, Any, List
 from app.core.config import settings
 from app.redis_client import redis_client
 
@@ -126,6 +128,44 @@ def build_map_pins_cache_key(
     )
 
 
+def get_map_cache_key_for_request(
+    version: int,
+    min_lat: Optional[float] = None,
+    max_lat: Optional[float] = None,
+    min_lng: Optional[float] = None,
+    max_lng: Optional[float] = None,
+    location: Optional[str] = None,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 500,
+    clustered: bool = False,
+    user_id: Optional[str] = None,
+    user_ver: Optional[int] = None,
+) -> str:
+    """Builds the canonical cache key for a map request, mirroring production routing exactly.
+    Handles effective_limit=0 and :clustered suffix for clustered views, and personal user keys.
+    Guarantees that test suites and API endpoints always access the exact same cache keys.
+    """
+    effective_limit = 0 if clustered else limit
+    base_key = build_map_pins_cache_key(
+        version=version,
+        min_lat=min_lat,
+        max_lat=max_lat,
+        min_lng=min_lng,
+        max_lng=max_lng,
+        location=location,
+        category=category,
+        search=search,
+        limit=effective_limit,
+    )
+    if clustered:
+        base_key += ":clustered"
+    if user_id:
+        uv = user_ver if user_ver is not None else get_user_map_cache_version(user_id)
+        return f"{base_key}:u:{user_id}:uv{uv}"
+    return base_key
+
+
 def build_nearby_cache_key(
     version: int,
     lat: float,
@@ -140,31 +180,331 @@ def build_nearby_cache_key(
     return f"{CACHE_NEARBY_PREFIX}:v{version}:{q_lat}:{q_lng}:{q_rad}:{limit}"
 
 
-def compute_cluster_signature(cluster: Dict[str, Any]) -> str:
-    """Computes a cryptographically secure HMAC signature for a validated cluster.
-    Guarantees that geo_verified claims can only originate from this server's Cold DB Path,
-    preventing arbitrary cache injection or corrupted payloads from bypassing checks.
+def _get_hmac_secret() -> bytes:
+    """Retrieves and strictly validates settings.SECRET_KEY for deterministic HMAC signing.
+    Fails closed if SECRET_KEY is not configured or empty, preventing insecure fallback secrets.
     """
-    pids = ",".join(sorted(str(pid) for pid in (cluster.get("pinIds") or [])))
-    cid = str(cluster.get("id") or "")
-    count = str(cluster.get("count") or 0)
+    secret = getattr(settings, "SECRET_KEY", None)
+    if not secret or not isinstance(secret, str) or not secret.strip():
+        raise RuntimeError("SECRET_KEY must be configured for map pin HMAC authentication")
+    return secret.strip().encode("utf-8")
+
+
+def _canonical_pin_data(pin: Dict[str, Any]) -> Dict[str, Any]:
+    """Extracts and normalizes the complete emitted pin/cluster payload into a canonical dict,
+    excluding only the signature field itself ('geo_sig').
+
+    Coordinates (coordinateX, coordinateY, latitude, longitude) are treated strictly independently
+    and never cross-aliased. Non-lossy strict type validation is enforced:
+    - Numeric coordinates must be float or int (not bool, not numeric strings, not NaN/Inf).
+      Exact finite float values are preserved.
+    - Integer fields (salary, salaryMin, salaryMax, count, vacancies, hiredCount) must be int
+      (not float like 3500000.9, not bool, not numeric strings).
+    - Boolean fields (applied, bookmarked, urgent, isCluster, geo_verified) must be bool
+      (not string like "false", not int like 1/0).
+    - String fields must be str or None.
+    - List fields (pinIds, tags) must be lists of str.
+
+    Any unexpected or malformed type raises TypeError or ValueError, causing signature verification to fail.
+    """
+    if not isinstance(pin, dict):
+        raise TypeError(f"pin must be a dict, got {type(pin).__name__}")
+
+    canonical: Dict[str, Any] = {}
+    for k, v in pin.items():
+        if k == "geo_sig":
+            continue
+
+        if k in ("coordinateX", "coordinateY", "latitude", "longitude"):
+            if v is not None:
+                if type(v) is bool or type(v) not in (float, int):
+                    raise TypeError(f"Coordinate '{k}' must be a numeric float or int, got {type(v).__name__}")
+                if type(v) is float:
+                    if math.isnan(v) or math.isinf(v):
+                        raise ValueError(f"Coordinate '{k}' must be a finite number")
+                canonical[k] = v
+            else:
+                canonical[k] = None
+
+        elif k in ("count", "vacancies", "hiredCount", "salary", "salaryMin", "salaryMax"):
+            if v is not None:
+                if type(v) is bool or type(v) is not int:
+                    raise TypeError(f"Field '{k}' must be an integer, got {type(v).__name__}")
+                canonical[k] = v
+            else:
+                canonical[k] = None
+
+        elif k in ("applied", "bookmarked", "urgent", "isCluster", "geo_verified"):
+            if v is not None:
+                if type(v) is not bool:
+                    raise TypeError(f"Field '{k}' must be a boolean, got {type(v).__name__}")
+                canonical[k] = v
+            else:
+                canonical[k] = None
+
+        elif k == "pinIds":
+            if v is not None:
+                if not isinstance(v, list):
+                    raise TypeError(f"Field '{k}' must be a list of strings, got {type(v).__name__}")
+                for pid in v:
+                    if type(pid) is not str:
+                        raise TypeError(f"pinIds element must be str, got {type(pid).__name__}")
+                canonical[k] = list(v)
+            else:
+                canonical[k] = None
+
+        elif k == "tags":
+            if v is not None:
+                if not isinstance(v, list):
+                    raise TypeError(f"Field '{k}' must be a list of strings, got {type(v).__name__}")
+                for tag in v:
+                    if type(tag) is not str:
+                        raise TypeError(f"tags element must be str, got {type(tag).__name__}")
+                canonical[k] = list(v)
+            else:
+                canonical[k] = None
+
+        elif k in (
+            "id",
+            "title",
+            "company",
+            "salaryCurrency",
+            "location",
+            "rawLocation",
+            "logoUrl",
+            "imageUrl",
+            "category",
+            "workDate",
+            "workTime",
+            "neededWorkers",
+            "status",
+        ):
+            if v is not None:
+                if type(v) is not str:
+                    raise TypeError(f"Field '{k}' must be a string, got {type(v).__name__}")
+                canonical[k] = v
+            else:
+                canonical[k] = None
+
+        else:
+            if v is None:
+                canonical[k] = None
+            elif type(v) in (str, int, float, bool):
+                canonical[k] = v
+            elif isinstance(v, list):
+                if not all(type(x) is str for x in v):
+                    raise TypeError(f"List field '{k}' elements must be str")
+                canonical[k] = list(v)
+            else:
+                raise TypeError(f"Field '{k}' has unsupported type {type(v).__name__}")
+
+    return canonical
+
+
+def compute_pin_signature(pin: Dict[str, Any]) -> str:
+    """Computes a cryptographically secure full 64-hex SHA-256 HMAC signature for any cached pin or cluster.
+    Serializes canonical fields in deterministic sorted JSON representation with separators=(',', ':').
+    Guarantees that geo_verified claims can only originate from this server's Cold DB Path,
+    preventing arbitrary cache injection, field tampering, or corrupted payloads from bypassing checks.
+    """
+    secret = _get_hmac_secret()
+    canonical_dict = _canonical_pin_data(pin)
+    canonical_json = json.dumps(canonical_dict, sort_keys=True, separators=(',', ':'))
+    return hmac.new(secret, canonical_json.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def verify_pin_signature(pin: Dict[str, Any]) -> bool:
+    """Verifies that a cached pin or cluster has an authentic HMAC signature produced by this server."""
+    if not isinstance(pin, dict) or pin.get("geo_verified") is not True:
+        return False
+    sig = pin.get("geo_sig")
+    if not sig or not isinstance(sig, str) or len(sig) != 64:
+        return False
     try:
-        lat = f"{float(cluster.get('coordinateX') if cluster.get('coordinateX') is not None else cluster.get('latitude') or 0.0):.5f}"
-        lng = f"{float(cluster.get('coordinateY') if cluster.get('coordinateY') is not None else cluster.get('longitude') or 0.0):.5f}"
-    except (ValueError, TypeError):
-        lat = "0.00000"
-        lng = "0.00000"
-    msg = f"{cid}:{count}:{pids}:{lat}:{lng}"
-    secret = (getattr(settings, "SECRET_KEY", None) or "baito-cluster-secret-fallback").encode("utf-8")
-    return hmac.new(secret, msg.encode("utf-8"), hashlib.sha256).hexdigest()[:16]
+        expected = compute_pin_signature(pin)
+        return hmac.compare_digest(sig, expected)
+    except (TypeError, ValueError, RuntimeError):
+        return False
+    except Exception:
+        return False
 
 
-def verify_cluster_signature(cluster: Dict[str, Any]) -> bool:
-    """Verifies that a cached cluster has an authentic HMAC signature produced by Cold DB Path."""
-    if not isinstance(cluster, dict) or not cluster.get("geo_verified"):
+def _canonical_response_data(
+    cache_key: str,
+    payload: List[Dict[str, Any]],
+    clustered: bool = False,
+    user_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Prepares canonical representation of a full response bound to its exact cache context.
+    Covers the complete ordered payload list, every emitted pin and all its fields,
+    the cache key, the clustered mode, and the authenticated user scope.
+    """
+    if type(cache_key) is not str or not cache_key.strip():
+        raise ValueError("cache_key must be a non-empty string")
+    if not isinstance(payload, list) or not all(isinstance(item, dict) for item in payload):
+        raise TypeError("payload must be a list of dictionaries")
+    if type(clustered) is not bool:
+        raise TypeError(f"clustered must be a boolean, got {type(clustered).__name__}")
+    if user_id is not None and (type(user_id) is not str or not user_id.strip()):
+        raise TypeError("user_id must be None or a non-empty string")
+
+    canonical_payload = [_canonical_pin_data(pin) for pin in payload]
+
+    return {
+        "cache_key": cache_key.strip(),
+        "clustered": clustered,
+        "payload": canonical_payload,
+        "user_id": user_id.strip() if user_id else None,
+    }
+
+
+def compute_response_signature(
+    cache_key: str,
+    payload: List[Dict[str, Any]],
+    clustered: bool = False,
+    user_id: Optional[str] = None,
+) -> str:
+    """Computes a cryptographically secure HMAC-SHA-256 signature for the complete cached response
+    bound to its cache context (cache_key, clustered mode, authenticated user_id).
+    """
+    secret = _get_hmac_secret()
+    data = _canonical_response_data(
+        cache_key=cache_key,
+        payload=payload,
+        clustered=clustered,
+        user_id=user_id,
+    )
+    canonical_json = json.dumps(data, sort_keys=True, separators=(',', ':'))
+    return hmac.new(secret, canonical_json.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def verify_response_signature(
+    cache_key: str,
+    payload: List[Dict[str, Any]],
+    resp_sig: str,
+    clustered: bool = False,
+    user_id: Optional[str] = None,
+) -> bool:
+    """Verifies HMAC-SHA-256 signature over the complete payload and its cache context.
+    Uses hmac.compare_digest and fails closed on any mismatch, missing signature, or malformed data.
+    """
+    if not resp_sig or type(resp_sig) is not str or len(resp_sig) != 64:
         return False
-    sig = cluster.get("geo_sig")
-    if not sig or not isinstance(sig, str):
+    try:
+        expected = compute_response_signature(
+            cache_key=cache_key,
+            payload=payload,
+            clustered=clustered,
+            user_id=user_id,
+        )
+        return hmac.compare_digest(resp_sig, expected)
+    except (TypeError, ValueError, RuntimeError):
         return False
-    expected = compute_cluster_signature(cluster)
-    return hmac.compare_digest(sig, expected)
+    except Exception:
+        return False
+
+
+def make_response_envelope(
+    cache_key: str,
+    payload: List[Dict[str, Any]],
+    clustered: bool = False,
+    user_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Wraps response payload in a signed envelope cryptographically bound to its cache context."""
+    if type(cache_key) is not str or not cache_key.strip():
+        raise ValueError("cache_key must be a non-empty string")
+    if type(clustered) is not bool:
+        raise TypeError(f"clustered must be a boolean, got {type(clustered).__name__}")
+    if user_id is not None and (type(user_id) is not str or not user_id.strip()):
+        raise TypeError("user_id must be None or a non-empty string")
+    if not isinstance(payload, list) or not all(isinstance(item, dict) for item in payload):
+        raise TypeError("payload must be a list of dictionaries")
+
+    sig = compute_response_signature(
+        cache_key=cache_key,
+        payload=payload,
+        clustered=clustered,
+        user_id=user_id,
+    )
+    return {
+        "cache_key": cache_key,
+        "clustered": clustered,
+        "user_id": user_id,
+        "payload": payload,
+        "resp_sig": sig,
+    }
+
+
+def verify_response_envelope(
+    envelope: Any,
+    expected_key: str,
+    expected_clustered: bool = False,
+    expected_user_id: Optional[str] = None,
+) -> Optional[List[Dict[str, Any]]]:
+    """Validates the signed envelope structure with strict types (FIX C):
+    - envelope must be an actual dict
+    - clustered must be an actual bool (not int 0/1 or string)
+    - cache_key must be an exact non-empty string matching expected_key
+    - user_id must match the expected verified user context (or None for public)
+    - payload must be a list of expected dictionaries
+    - resp_sig must be a valid 64-hex string
+
+    Fails closed (returns None) on any type violation or HMAC mismatch, triggering clean DB reconstruction.
+    """
+    if not isinstance(envelope, dict):
+        return None
+
+    # 1. cache_key validation: exact non-empty string
+    env_key = envelope.get("cache_key")
+    if type(env_key) is not str or not env_key.strip():
+        return None
+    if type(expected_key) is not str or not expected_key.strip() or env_key != expected_key:
+        return None
+
+    # 2. clustered validation: actual bool (strictly rejecting 0, 1, "true", "false")
+    env_clustered = envelope.get("clustered")
+    if type(env_clustered) is not bool or type(expected_clustered) is not bool:
+        return None
+    if env_clustered != expected_clustered:
+        return None
+
+    # 3. user_id validation: matches expected verified user context
+    env_user_id = envelope.get("user_id")
+    if expected_user_id is None:
+        if env_user_id is not None:
+            return None
+    else:
+        if type(expected_user_id) is not str or not expected_user_id.strip():
+            return None
+        if type(env_user_id) is not str or env_user_id != expected_user_id:
+            return None
+
+    # 4. payload validation: list of dictionaries
+    payload = envelope.get("payload")
+    if not isinstance(payload, list):
+        return None
+    if not all(isinstance(item, dict) for item in payload):
+        return None
+
+    # 5. resp_sig validation: valid 64-hex string
+    resp_sig = envelope.get("resp_sig")
+    if type(resp_sig) is not str or len(resp_sig) != 64:
+        return None
+    if not all(c in "0123456789abcdefABCDEF" for c in resp_sig):
+        return None
+
+    if not verify_response_signature(
+        cache_key=expected_key,
+        payload=payload,
+        resp_sig=resp_sig,
+        clustered=expected_clustered,
+        user_id=expected_user_id,
+    ):
+        return None
+
+    return payload
+
+
+# Aliases for backward compatibility with cluster-specific callers
+compute_cluster_signature = compute_pin_signature
+verify_cluster_signature = verify_pin_signature
