@@ -1,0 +1,462 @@
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app
+from app import models
+from app.db.session import SessionLocal
+from app.models.job import JobStatus
+from app.redis_client import redis_client
+from app.core.map_cache import invalidate_map_cache, invalidate_user_map_cache
+
+
+@pytest.fixture
+def client():
+    return TestClient(app)
+
+
+def test_map_clustering_accounts_for_over_1200_jobs_without_limit_cutoff(client):
+    """Prove that clustered=true aggregates over 1,205 jobs across Uzbekistan without being cut off by limit=500."""
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        # Create an employer
+        employer = db_session.query(models.User).filter_by(id="emp-cluster-test").first()
+        if not employer:
+            employer = models.User(
+                id="emp-cluster-test",
+                phone="+998901234567",
+                role="employer",
+                name="Cluster Employer",
+            )
+            db_session.add(employer)
+            db_session.flush()
+
+        # Clean existing jobs for deterministic count
+        db_session.query(models.Job).filter(models.Job.employerId == "emp-cluster-test").delete()
+        db_session.commit()
+
+        # Generate 1,205 jobs across 4 distinct regions:
+        # Tashkent: 500 jobs around (41.31, 69.24)
+        # Samarkand: 400 jobs around (39.65, 66.96)
+        # Bukhara: 200 jobs around (39.77, 64.42)
+        # Fergana: 105 jobs around (40.38, 71.78)
+        # Total = 500 + 400 + 200 + 105 = 1,205 jobs
+        regions = [
+            ("Toshkent", 41.31, 69.24, 500),
+            ("Samarqand", 39.65, 66.96, 400),
+            ("Buxoro", 39.77, 64.42, 200),
+            ("Farg'ona", 40.38, 71.78, 105),
+        ]
+        job_objs = []
+        for reg_name, base_lat, base_lng, count in regions:
+            for i in range(count):
+                job_objs.append(
+                    models.Job(
+                        id=f"job-{reg_name.lower()}-{i}",
+                        title=f"{reg_name} Ishchi {i}",
+                        company=f"{reg_name} Corp",
+                        location=f"{reg_name}, Markaz",
+                        coordinateX=base_lat + (i % 5) * 0.01,
+                        coordinateY=base_lng + (i % 5) * 0.01,
+                        salary=150000 + (i % 10) * 10000,
+                        salaryCurrency="UZS",
+                        description="Tavsif matni",
+                        status=JobStatus.OPEN,
+                        employerId="emp-cluster-test",
+                        neededWorkers="1",
+                    )
+                )
+
+        # Also add 10 jobs with NULL coordinates to verify they are completely excluded
+        for i in range(10):
+            job_objs.append(
+                models.Job(
+                    id=f"job-null-coord-{i}",
+                    title=f"Null Coord Job {i}",
+                    company="Ghost Corp",
+                    location="Toshkent",
+                    description="Tavsif matni",
+                    coordinateX=None,
+                    coordinateY=None,
+                    salary=100000,
+                    status=JobStatus.OPEN,
+                    employerId="emp-cluster-test",
+                )
+            )
+
+        # Also add 5 jobs with (0.0, 0.0) coordinates
+        for i in range(5):
+            job_objs.append(
+                models.Job(
+                    id=f"job-zero-coord-{i}",
+                    title=f"Zero Coord Job {i}",
+                    company="Zero Corp",
+                    location="Nowhere",
+                    description="Tavsif matni",
+                    coordinateX=0.0,
+                    coordinateY=0.0,
+                    salary=100000,
+                    status=JobStatus.OPEN,
+                    employerId="emp-cluster-test",
+                )
+            )
+
+        # Also add 10 closed/cancelled jobs to verify status filter
+        for i in range(10):
+            job_objs.append(
+                models.Job(
+                    id=f"job-cancelled-{i}",
+                    title=f"Cancelled Job {i}",
+                    company="Cancelled Corp",
+                    location="Toshkent",
+                    description="Tavsif matni",
+                    coordinateX=41.31,
+                    coordinateY=69.24,
+                    salary=100000,
+                    status=JobStatus.CANCELLED,
+                    employerId="emp-cluster-test",
+                )
+            )
+
+        db_session.bulk_save_objects(job_objs)
+        db_session.commit()
+
+    # 1. Clustered query: must include ALL 1,205 valid jobs and ignore null/zero/closed jobs
+    res_clustered = client.get("/api/v1/jobs/map?clustered=true")
+    assert res_clustered.status_code == 200
+    clusters = res_clustered.json()
+
+    total_clustered_count = sum(c.get("count", 1) for c in clusters)
+    assert total_clustered_count == 1205, f"Expected exactly 1205 jobs, got {total_clustered_count}"
+
+    # Verify that clusters returned is a small number (e.g. < 50) rather than 1205 individual pins
+    assert len(clusters) < 50
+    for c in clusters:
+        assert c["coordinateX"] is not None
+        assert c["coordinateY"] is not None
+        assert c["coordinateX"] != 0.0
+        assert c["coordinateY"] != 0.0
+        if c.get("isCluster"):
+            assert c["count"] > 1
+            assert len(c["pinIds"]) == c["count"]
+
+    # 2. Unclustered query: must strictly obey limit=500
+    res_unclustered = client.get("/api/v1/jobs/map?clustered=false&limit=500")
+    assert res_unclustered.status_code == 200
+    raw_pins = res_unclustered.json()
+    assert len(raw_pins) == 500
+
+
+def test_map_clustering_filters_preservation(client):
+    """Test that search, category, location, and status filters are strictly preserved before clustering."""
+    invalidate_map_cache()
+
+    with SessionLocal() as db_session:
+        emp = db_session.query(models.User).filter_by(id="emp-filter-test").first()
+        if not emp:
+            emp = models.User(id="emp-filter-test", phone="+998901119988", role="employer", name="Filter Emp")
+            db_session.add(emp)
+            db_session.flush()
+
+        # Create 10 Samarkand jobs and 5 Tashkent jobs
+        jobs = []
+        for i in range(10):
+            jobs.append(models.Job(
+                id=f"sam-job-{i}",
+                title=f"Samarqand Oshpaz {i}",
+                company="Samarqand Milliy",
+                location="Samarqand, Markaz",
+                description="Tavsif",
+                coordinateX=39.65 + i * 0.001,
+                coordinateY=66.96 + i * 0.001,
+                salary=200000,
+                status=JobStatus.OPEN,
+                category="Oshxona",
+                employerId="emp-filter-test",
+            ))
+        for i in range(5):
+            jobs.append(models.Job(
+                id=f"tash-job-{i}",
+                title=f"Toshkent Haydovchi {i}",
+                company="Toshkent Express",
+                location="Toshkent, Chilonzor",
+                description="Tavsif",
+                coordinateX=41.28 + i * 0.001,
+                coordinateY=69.21 + i * 0.001,
+                salary=300000,
+                status=JobStatus.OPEN,
+                category="Haydovchi",
+                employerId="emp-filter-test",
+            ))
+        db_session.bulk_save_objects(jobs)
+        db_session.commit()
+
+    # Filter by category
+    res_cat = client.get("/api/v1/jobs/map?clustered=true&category=Haydovchi")
+    assert res_cat.status_code == 200
+    haydovchi_clusters = res_cat.json()
+    haydovchi_total = sum(c.get("count", 1) for c in haydovchi_clusters)
+    assert haydovchi_total == 5
+
+    # Filter by search
+    res_search = client.get("/api/v1/jobs/map?clustered=true&search=Samarqand")
+    assert res_search.status_code == 200
+    sam_clusters = res_search.json()
+    sam_total = sum(c.get("count", 1) for c in sam_clusters)
+    assert sam_total == 10
+
+
+def test_map_clustering_cache_isolation_and_personalization(client):
+    """Test that authenticated users get correct personalization via fast cache assembly without leaking to others."""
+    from tests.conftest import make_user, login
+
+    worker1 = make_user(role="worker", phone="+998909876541")
+    worker2 = make_user(role="worker", phone="+998909876542")
+
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = db_session.query(models.User).filter_by(id="emp-cache-test").first()
+        if not emp:
+            emp = models.User(id="emp-cache-test", phone="+998905554433", role="employer", name="Cache Emp")
+            db_session.add(emp)
+            db_session.flush()
+
+        # Add 3 jobs in same grid cell to form a cluster
+        c_jobs = [
+            models.Job(
+                id=f"c-job-{i}",
+                title=f"Cluster Job {i}",
+                company="Cache Corp",
+                location="Toshkent, Yunusobod",
+                description="Tavsif",
+                coordinateX=41.36 + i * 0.002,
+                coordinateY=69.28 + i * 0.002,
+                salary=250000,
+                status=JobStatus.OPEN,
+                employerId="emp-cache-test",
+            )
+            for i in range(3)
+        ]
+        db_session.bulk_save_objects(c_jobs)
+        db_session.commit()
+
+    # Public request primes the base cache
+    res_pub = client.get("/api/v1/jobs/map?clustered=true")
+    assert res_pub.status_code == 200
+    pub_clusters = res_pub.json()
+    target_cluster = next(c for c in pub_clusters if c.get("isCluster") and "c-job-0" in c.get("pinIds", []))
+    assert target_cluster["count"] == 3
+
+    # Worker1 bookmarks one of the jobs inside the cluster
+    target_job_id = "c-job-0"
+    login(client, worker1)
+    bm_res = client.post(f"/api/v1/jobs/{target_job_id}/bookmark")
+    assert bm_res.status_code == 200
+
+    # Worker1 requests clustered map: target cluster must have bookmarked=True
+    res_w1 = client.get("/api/v1/jobs/map?clustered=true")
+    assert res_w1.status_code == 200
+    w1_clusters = res_w1.json()
+    w1_target = next(c for c in w1_clusters if c["id"] == target_cluster["id"])
+    assert w1_target["bookmarked"] is True
+
+    # Fast assembly path check: request again, served from Redis
+    res_w1_cached = client.get("/api/v1/jobs/map?clustered=true")
+    assert res_w1_cached.status_code == 200
+    w1_cached_target = next(c for c in res_w1_cached.json() if c["id"] == target_cluster["id"])
+    assert w1_cached_target["bookmarked"] is True
+
+    # User isolation check: worker2 must NOT see worker1's bookmark
+    login(client, worker2)
+    res_w2 = client.get("/api/v1/jobs/map?clustered=true")
+    assert res_w2.status_code == 200
+    w2_target = next(c for c in res_w2.json() if c["id"] == target_cluster["id"])
+    assert w2_target["bookmarked"] is False
+
+    # Public visitor must NOT see worker1's bookmark
+    client.cookies.clear()
+    client.headers.pop("Authorization", None)
+    res_anon = client.get("/api/v1/jobs/map?clustered=true")
+    assert res_anon.status_code == 200
+    anon_target = next(c for c in res_anon.json() if c["id"] == target_cluster["id"])
+    assert anon_target["bookmarked"] is False
+
+
+def test_map_clustering_deterministic_grid_assignment():
+    """Verify GeoSpatialService.cluster_pins deterministically assigns pins to exactly one bucket."""
+    from app.services.geo_service import GeoSpatialService
+
+    pins = [
+        {"id": "p1", "coordinateX": 41.3101, "coordinateY": 69.2401, "salary": 200000, "status": "open"},
+        {"id": "p2", "coordinateX": 41.3105, "coordinateY": 69.2405, "salary": 250000, "status": "open"},
+        {"id": "p3", "coordinateX": 39.6501, "coordinateY": 66.9601, "salary": 300000, "status": "open"},
+    ]
+
+    res1 = GeoSpatialService.cluster_pins(pins, grid_size=0.4)
+    res2 = GeoSpatialService.cluster_pins(pins, grid_size=0.4)
+
+    assert len(res1) == 2  # p1 and p2 together, p3 separate
+    assert len(res2) == 2
+    assert res1 == res2
+
+    cluster = next(c for c in res1 if c.get("isCluster"))
+    single = next(c for c in res1 if not c.get("isCluster"))
+
+    assert cluster["count"] == 2
+    assert set(cluster["pinIds"]) == {"p1", "p2"}
+    assert cluster["salaryMin"] == 200000
+    assert cluster["salaryMax"] == 250000
+    assert cluster["salary"] == 225000
+
+    assert single["id"] == "p3"
+    assert single["count"] == 1
+    assert single["pinIds"] == ["p3"]
+
+
+def test_map_clustering_invalid_and_out_of_range_coordinates(client):
+    """Test that coordinates like NaN, Inf, out of range (>90, >180), or (0,0) are safely ignored."""
+    invalidate_map_cache()
+
+    with SessionLocal() as db_session:
+        emp = db_session.query(models.User).filter_by(id="emp-invalid-coord").first()
+        if not emp:
+            emp = models.User(id="emp-invalid-coord", phone="+998909990011", role="employer", name="Invalid Coord Emp")
+            db_session.add(emp)
+            db_session.flush()
+
+        invalid_jobs = [
+            models.Job(
+                id="inv-job-1",
+                title="Out of range lat",
+                company="Inv Corp",
+                location="Invalid",
+                description="Tavsif",
+                coordinateX=95.0,  # > 90
+                coordinateY=69.0,
+                salary=100000,
+                status=JobStatus.OPEN,
+                employerId="emp-invalid-coord",
+            ),
+            models.Job(
+                id="inv-job-2",
+                title="Out of range lng",
+                company="Inv Corp",
+                location="Invalid",
+                description="Tavsif",
+                coordinateX=41.0,
+                coordinateY=200.0,  # > 180
+                salary=100000,
+                status=JobStatus.OPEN,
+                employerId="emp-invalid-coord",
+            ),
+            models.Job(
+                id="inv-job-3",
+                title="Zero Zero Island",
+                company="Inv Corp",
+                location="Zero Island",
+                description="Tavsif",
+                coordinateX=0.0,
+                coordinateY=0.0,
+                salary=100000,
+                status=JobStatus.OPEN,
+                employerId="emp-invalid-coord",
+            ),
+            models.Job(
+                id="valid-job-alone",
+                title="Valid Isolated Job",
+                company="Valid Corp",
+                location="Toshkent",
+                description="Tavsif",
+                coordinateX=41.31,
+                coordinateY=69.24,
+                salary=200000,
+                status=JobStatus.OPEN,
+                employerId="emp-invalid-coord",
+            ),
+        ]
+        db_session.bulk_save_objects(invalid_jobs)
+        db_session.commit()
+
+    res = client.get("/api/v1/jobs/map?clustered=true&search=Invalid")
+    assert res.status_code == 200
+    # The 3 invalid jobs must be excluded
+    assert res.json() == []
+
+    # Valid job alone must be returned with count 1
+    res_valid = client.get("/api/v1/jobs/map?clustered=true&search=Valid")
+    assert res_valid.status_code == 200
+    pins = res_valid.json()
+    assert len(pins) == 1
+    assert pins[0]["count"] == 1
+    assert pins[0]["coordinateX"] == 41.31
+    assert pins[0]["coordinateY"] == 69.24
+
+
+def test_map_clustering_application_status_personalization(client):
+    """Test that applied=True is correctly populated on a cluster when user has an active application."""
+    from tests.conftest import make_user, login
+
+    worker = make_user(role="worker", phone="+998907776655")
+    invalidate_map_cache()
+    try:
+        redis_client.flushdb()
+    except Exception:
+        pass
+
+    with SessionLocal() as db_session:
+        emp = db_session.query(models.User).filter_by(id="emp-app-test").first()
+        if not emp:
+            emp = models.User(id="emp-app-test", phone="+998906665544", role="employer", name="App Emp")
+            db_session.add(emp)
+            db_session.flush()
+
+        j1 = models.Job(
+            id="app-job-1",
+            title="App Job 1",
+            company="App Corp",
+            location="Toshkent, Mirzo Ulug'bek",
+            description="Tavsif",
+            coordinateX=41.32,
+            coordinateY=69.30,
+            salary=220000,
+            status=JobStatus.OPEN,
+            employerId="emp-app-test",
+        )
+        j2 = models.Job(
+            id="app-job-2",
+            title="App Job 2",
+            company="App Corp",
+            location="Toshkent, Mirzo Ulug'bek",
+            description="Tavsif",
+            coordinateX=41.321,
+            coordinateY=69.301,
+            salary=230000,
+            status=JobStatus.OPEN,
+            employerId="emp-app-test",
+        )
+        db_session.add_all([j1, j2])
+        db_session.commit()
+
+    login(client, worker)
+    # Apply to j1
+    apply_res = client.post("/api/v1/jobs/app-job-1/apply")
+    assert apply_res.status_code in (200, 201)
+
+    # Request map with clustered=true
+    res = client.get("/api/v1/jobs/map?clustered=true&search=App+Job")
+    assert res.status_code == 200
+    clusters = res.json()
+    assert len(clusters) == 1
+    c = clusters[0]
+    assert c["isCluster"] is True
+    assert c["count"] == 2
+    assert c["applied"] is True
+    assert c["bookmarked"] is False

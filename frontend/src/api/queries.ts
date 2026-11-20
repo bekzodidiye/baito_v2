@@ -1,11 +1,20 @@
 import { apiClient } from './client';
 import { Job } from '../types';
 
+export interface MapBounds {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
+
 export interface JobQuery {
   /** Free text. Matched server-side against title, company, description and
    *  location, so a posting past the first page is still reachable. */
   search?: string;
   isMap?: boolean;
+  bounds?: MapBounds | null;
+  enabled?: boolean;
 }
 
 export const fetchJobs = async (query: JobQuery = {}): Promise<Job[]> => {
@@ -24,18 +33,26 @@ export interface MapJobQuery {
   minLng?: number;
   maxLng?: number;
   limit?: number;
+  bounds?: MapBounds | null;
+  clustered?: boolean;
 }
 
 export const fetchMapJobs = async (query: MapJobQuery = {}): Promise<Job[]> => {
   const params = new URLSearchParams();
+  const minLat = query.bounds?.minLat ?? query.minLat;
+  const maxLat = query.bounds?.maxLat ?? query.maxLat;
+  const minLng = query.bounds?.minLng ?? query.minLng;
+  const maxLng = query.bounds?.maxLng ?? query.maxLng;
+
   if (query.search?.trim()) params.set('search', query.search.trim());
   if (query.location?.trim()) params.set('location', query.location.trim());
   if (query.category?.trim()) params.set('category', query.category.trim());
-  if (query.minLat !== undefined) params.set('min_lat', String(query.minLat));
-  if (query.maxLat !== undefined) params.set('max_lat', String(query.maxLat));
-  if (query.minLng !== undefined) params.set('min_lng', String(query.minLng));
-  if (query.maxLng !== undefined) params.set('max_lng', String(query.maxLng));
+  if (minLat !== undefined) params.set('min_lat', String(minLat));
+  if (maxLat !== undefined) params.set('max_lat', String(maxLat));
+  if (minLng !== undefined) params.set('min_lng', String(minLng));
+  if (maxLng !== undefined) params.set('max_lng', String(maxLng));
   if (query.limit !== undefined) params.set('limit', String(query.limit));
+  if (query.clustered !== undefined) params.set('clustered', String(query.clustered));
   const qs = params.toString();
   return await apiClient(qs ? `/jobs/map?${qs}` : '/jobs/map');
 };

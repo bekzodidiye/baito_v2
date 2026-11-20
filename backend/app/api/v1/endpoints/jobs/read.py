@@ -370,6 +370,7 @@ def get_map_jobs(
     clustered = clustered.default if hasattr(clustered, "default") else bool(clustered)
 
     version = get_map_cache_version()
+    effective_limit = 0 if clustered else limit
     base_cache_key = build_map_pins_cache_key(
         version=version,
         min_lat=min_lat,
@@ -379,7 +380,7 @@ def get_map_jobs(
         location=location,
         category=category,
         search=search,
-        limit=limit,
+        limit=effective_limit,
     )
     if clustered:
         base_cache_key += ":clustered"
@@ -475,14 +476,19 @@ def get_map_jobs(
                 user_pins = []
                 for p in base_pins:
                     up = dict(p)
-                    jid = up.get("id")
-                    app_status = worker_apps_map.get(jid)
-                    if app_status:
-                        up["applied"] = True
-                        if app_status in ('in_progress', 'completed', 'start_requested', 'hired', 'applied'):
-                            up["status"] = app_status
-                    if jid in bookmarked_ids:
-                        up["bookmarked"] = True
+                    if up.get("isCluster"):
+                        pin_ids = up.get("pinIds") or []
+                        up["applied"] = any(pid in worker_apps_map for pid in pin_ids)
+                        up["bookmarked"] = any(pid in bookmarked_ids for pid in pin_ids)
+                    else:
+                        jid = up.get("id")
+                        app_status = worker_apps_map.get(jid)
+                        if app_status:
+                            up["applied"] = True
+                            if app_status in ('in_progress', 'completed', 'start_requested', 'hired', 'applied'):
+                                up["status"] = app_status
+                        if jid in bookmarked_ids:
+                            up["bookmarked"] = True
                     user_pins.append(up)
                 user_payload_str = json.dumps(user_pins)
 
@@ -565,11 +571,23 @@ def get_map_jobs(
         visible = models.Job.status.in_(JobStatus.OPEN_STATUSES)
         query = query.filter(visible)
 
-        jobs = (
-            query.order_by(models.Job.createdAt.desc(), models.Job.id.desc())
-            .limit(limit)
-            .all()
-        )
+        if clustered:
+            # Clustered nationwide view: include all matching active jobs with valid geographic coordinates.
+            # Do NOT apply .limit() so clustering aggregates the entire dataset across the nation.
+            query = query.filter(
+                models.Job.coordinateX.isnot(None),
+                models.Job.coordinateY.isnot(None),
+                models.Job.coordinateX.between(-90.0, 90.0),
+                models.Job.coordinateY.between(-180.0, 180.0),
+                or_(models.Job.coordinateX != 0.0, models.Job.coordinateY != 0.0),
+            )
+            jobs = query.order_by(models.Job.createdAt.desc(), models.Job.id.desc()).all()
+        else:
+            jobs = (
+                query.order_by(models.Job.createdAt.desc(), models.Job.id.desc())
+                .limit(limit)
+                .all()
+            )
 
         if not jobs:
             empty_str = "[]"
@@ -587,18 +605,25 @@ def get_map_jobs(
             )
 
         job_ids = [j.id for j in jobs]
+        job_ids_set = set(job_ids)
 
-        # Aggregated hired applications count via SQL GROUP BY (uses index idx_apps_job_status)
-        hired_counts_query = (
-            active_db.query(models.Application.jobId, func.count(models.Application.id))
-            .filter(
-                models.Application.jobId.in_(job_ids),
-                models.Application.status.in_(HIRED_STATUSES),
-            )
-            .group_by(models.Application.jobId)
-            .all()
-        )
-        hired_counts: dict[str, int] = {job_id: cnt for job_id, cnt in hired_counts_query}
+        # Aggregated hired applications count via SQL GROUP BY (chunked in 500 to stay within SQL variable limits)
+        hired_counts: dict[str, int] = {}
+        if job_ids:
+            chunk_size = 500
+            for i in range(0, len(job_ids), chunk_size):
+                chunk = job_ids[i:i + chunk_size]
+                chunk_counts = (
+                    active_db.query(models.Application.jobId, func.count(models.Application.id))
+                    .filter(
+                        models.Application.jobId.in_(chunk),
+                        models.Application.status.in_(HIRED_STATUSES),
+                    )
+                    .group_by(models.Application.jobId)
+                    .all()
+                )
+                for jid, cnt in chunk_counts:
+                    hired_counts[jid] = cnt
 
         worker_apps_map = {}
         bookmarked_ids: set[str] = set()
@@ -608,22 +633,16 @@ def get_map_jobs(
                 user_ids.append(current_user.uid)
             worker_apps = (
                 active_db.query(models.Application.jobId, models.Application.status)
-                .filter(
-                    models.Application.workerId.in_(user_ids),
-                    models.Application.jobId.in_(job_ids),
-                )
+                .filter(models.Application.workerId.in_(user_ids))
                 .all()
             )
-            worker_apps_map = {a[0]: a[1] for a in worker_apps}
-            bookmarked_ids = {
-                b[0]
-                for b in active_db.query(models.Bookmark.jobId)
-                .filter(
-                    models.Bookmark.userId.in_(user_ids),
-                    models.Bookmark.jobId.in_(job_ids),
-                )
+            worker_apps_map = {a[0]: a[1] for a in worker_apps if a[0] in job_ids_set}
+            bookmarked_query = (
+                active_db.query(models.Bookmark.jobId)
+                .filter(models.Bookmark.userId.in_(user_ids))
                 .all()
-            }
+            )
+            bookmarked_ids = {b[0] for b in bookmarked_query if b[0] in job_ids_set}
 
         base_pins = []
         user_pins = []

@@ -18,7 +18,22 @@ export const getLatLng = (job: Job, districtsGeoJson?: any) => {
   return result;
 };
 
+export const isInsideUzbekistan = (lat: number, lng: number): boolean => {
+  return lat >= 37.0 && lat <= 45.8 && lng >= 55.9 && lng <= 73.5;
+};
+
 const calculateLatLng = (job: Job, districtsGeoJson?: any) => {
+  const anyJob = job as any;
+  if (
+    typeof anyJob.coordinateX === 'number' &&
+    typeof anyJob.coordinateY === 'number' &&
+    anyJob.coordinateX !== 0 &&
+    anyJob.coordinateY !== 0 &&
+    isInsideUzbekistan(anyJob.coordinateX, anyJob.coordinateY)
+  ) {
+    return { lat: anyJob.coordinateX, lng: anyJob.coordinateY };
+  }
+
   const x = job.coordinates ? job.coordinates.x : 50;
   const y = job.coordinates ? job.coordinates.y : 50;
 

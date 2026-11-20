@@ -27,6 +27,9 @@ export interface Job {
   category?: string;
   hiredCount?: number;
   vacancies?: number;
+  isCluster?: boolean;
+  count?: number;
+  pinIds?: string[];
   /* Invoice state, sent only on the employer's own listing (/jobs/my).
      undefined means no invoice has been raised for this job - which the card
      has to tell apart from an invoice raised and not yet paid. Values match

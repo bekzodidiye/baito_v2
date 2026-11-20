@@ -70,6 +70,22 @@ def invalidate_user_map_cache(user_id: str) -> None:
         logger.warning("Failed to invalidate user map cache: %s", e)
 
 
+def _format_coord(val: Optional[float]) -> str:
+    """Formats coordinate to exact canonical float representation without lossy rounding.
+    Preserves exact IEEE-754 float precision so that any distinct float bounds
+    produce distinct cache keys, while numerically equivalent inputs map to the same key.
+    """
+    if val is None or hasattr(val, "default"):
+        return "_"
+    try:
+        f = float(val)
+        if f == 0.0:
+            f = 0.0
+        return repr(f)
+    except (ValueError, TypeError):
+        return "_"
+
+
 def build_map_pins_cache_key(
     version: int,
     min_lat: Optional[float] = None,
@@ -81,14 +97,14 @@ def build_map_pins_cache_key(
     search: Optional[str] = None,
     limit: int = 500,
 ) -> str:
-    """Constructs a quantized cache key for map pins.
-    Coordinates are rounded to 2 decimal places (~1.1 km precision) to group
-    micro-pans into the same cache entry for high cache hit rates.
+    """Constructs a cache key for map pins with canonical float coordinates.
+    Exact float coordinates are normalized to prevent cache collisions across
+    different viewport bounding boxes while preserving high cache stability.
     """
-    q_min_lat = f"{round(min_lat, 2):.2f}" if min_lat is not None else "_"
-    q_max_lat = f"{round(max_lat, 2):.2f}" if max_lat is not None else "_"
-    q_min_lng = f"{round(min_lng, 2):.2f}" if min_lng is not None else "_"
-    q_max_lng = f"{round(max_lng, 2):.2f}" if max_lng is not None else "_"
+    q_min_lat = _format_coord(min_lat)
+    q_max_lat = _format_coord(max_lat)
+    q_min_lng = _format_coord(min_lng)
+    q_max_lng = _format_coord(max_lng)
     def _clean_str(val: Optional[str]) -> str:
         if val is None or hasattr(val, "default"):
             return ""

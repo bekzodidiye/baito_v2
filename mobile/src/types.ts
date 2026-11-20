@@ -23,6 +23,9 @@ export interface Job {
   category?: string;
   hiredCount?: number;
   vacancies?: number;
+  isCluster?: boolean;
+  count?: number;
+  pinIds?: string[];
   hiredWorkers?: {
     id: string;
     name: string;

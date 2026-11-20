@@ -248,16 +248,27 @@ class GeoSpatialService:
         Groups nearby pins into clusters to eliminate DOM overload and browser freezes.
         Pins are aggregated by geographic grid snapping (O(N) single-pass bucket aggregation).
         """
-        if not pins or len(pins) <= 20:
-            return pins
+        if not pins:
+            return []
 
         buckets: Dict[Tuple[int, int], List[Dict[str, Any]]] = {}
         for pin in pins:
-            lat = pin.get("coordinateX") or pin.get("latitude")
-            lng = pin.get("coordinateY") or pin.get("longitude")
+            lat = pin.get("coordinateX") if pin.get("coordinateX") is not None else pin.get("latitude")
+            lng = pin.get("coordinateY") if pin.get("coordinateY") is not None else pin.get("longitude")
             if lat is None or lng is None:
                 continue
-            key = (int(round(lat / grid_size)), int(round(lng / grid_size)))
+            try:
+                f_lat = float(lat)
+                f_lng = float(lng)
+            except (ValueError, TypeError):
+                continue
+            if math.isnan(f_lat) or math.isnan(f_lng) or math.isinf(f_lat) or math.isinf(f_lng):
+                continue
+            if f_lat == 0.0 and f_lng == 0.0:
+                continue
+            if not (-90.0 <= f_lat <= 90.0 and -180.0 <= f_lng <= 180.0):
+                continue
+            key = (int(math.floor(f_lat / grid_size)), int(math.floor(f_lng / grid_size)))
             if key not in buckets:
                 buckets[key] = []
             buckets[key].append(pin)
@@ -265,10 +276,28 @@ class GeoSpatialService:
         clustered_result = []
         for (g_lat, g_lng), group in buckets.items():
             if len(group) == 1:
-                clustered_result.append(group[0])
+                single_pin = dict(group[0])
+                single_pin["isCluster"] = False
+                single_pin["count"] = 1
+                single_pin["pinIds"] = [single_pin["id"]]
+                clustered_result.append(single_pin)
             else:
-                avg_lat = round(sum(p.get("coordinateX") or p.get("latitude") for p in group) / len(group), 5)
-                avg_lng = round(sum(p.get("coordinateY") or p.get("longitude") for p in group) / len(group), 5)
+                avg_lat = round(
+                    sum(
+                        float(p.get("coordinateX") if p.get("coordinateX") is not None else p.get("latitude"))
+                        for p in group
+                    )
+                    / len(group),
+                    5,
+                )
+                avg_lng = round(
+                    sum(
+                        float(p.get("coordinateY") if p.get("coordinateY") is not None else p.get("longitude"))
+                        for p in group
+                    )
+                    / len(group),
+                    5,
+                )
                 salaries = [p["salary"] for p in group if p.get("salary")]
                 min_sal = min(salaries) if salaries else 0
                 max_sal = max(salaries) if salaries else 0

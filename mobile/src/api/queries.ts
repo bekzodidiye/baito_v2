@@ -2,8 +2,55 @@ import { apiClient, getApiBaseUrl, setStoredToken, setStoredRefreshToken } from 
 import { Job, Chat } from '../types';
 
 // Jobs API
+export interface MapBounds {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
+
+export interface MapJobQuery {
+  search?: string;
+  location?: string;
+  category?: string;
+  minLat?: number;
+  maxLat?: number;
+  minLng?: number;
+  maxLng?: number;
+  limit?: number;
+  bounds?: MapBounds | null;
+  clustered?: boolean;
+}
+
+export interface JobQuery {
+  search?: string;
+  isMap?: boolean;
+  bounds?: MapBounds | null;
+  enabled?: boolean;
+}
+
 export const fetchJobs = async (): Promise<Job[]> => {
   return await apiClient('/jobs');
+};
+
+export const fetchMapJobs = async (query: MapJobQuery = {}): Promise<Job[]> => {
+  const params = new URLSearchParams();
+  const minLat = query.bounds?.minLat ?? query.minLat;
+  const maxLat = query.bounds?.maxLat ?? query.maxLat;
+  const minLng = query.bounds?.minLng ?? query.minLng;
+  const maxLng = query.bounds?.maxLng ?? query.maxLng;
+
+  if (query.search?.trim()) params.set('search', query.search.trim());
+  if (query.location?.trim()) params.set('location', query.location.trim());
+  if (query.category?.trim()) params.set('category', query.category.trim());
+  if (minLat !== undefined) params.set('min_lat', String(minLat));
+  if (maxLat !== undefined) params.set('max_lat', String(maxLat));
+  if (minLng !== undefined) params.set('min_lng', String(minLng));
+  if (maxLng !== undefined) params.set('max_lng', String(maxLng));
+  if (query.limit !== undefined) params.set('limit', String(query.limit));
+  if (query.clustered !== undefined) params.set('clustered', String(query.clustered));
+  const qs = params.toString();
+  return await apiClient(qs ? `/jobs/map?${qs}` : '/jobs/map');
 };
 
 export const fetchChats = async () => {
