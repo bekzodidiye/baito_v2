@@ -12,29 +12,32 @@ describe('mobile chatSocket utilities', () => {
     vi.restoreAllMocks();
   });
 
-  it('constructs wss URL with single-use ticket query parameter when ticket is provided', () => {
-    const url = getChatWebSocketUrl('chat-999', 'ticket-abc-123');
-    expect(url).toBe('wss://api.baito.uz/api/v1/chats/ws/chat-999?ticket=ticket-abc-123');
-    expect(url).not.toContain('?token=');
+  it('constructs clean wss URL without query parameters', () => {
+    const url = getChatWebSocketUrl('chat-999');
+    expect(url).toBe('wss://api.baito.uz/api/v1/chats/ws/chat-999');
+    expect(url).not.toContain('?');
     expect(url).not.toContain('jwt-mobile-test-token');
   });
 
-  it('constructs ws URL when backend uses http with ticket', () => {
+  it('constructs clean ws URL when backend uses http', () => {
     vi.spyOn(clientModule, 'getApiBaseUrl').mockReturnValue('http://192.168.1.5:8000/api/v1');
-    const url = getChatWebSocketUrl('chat-888', 'ticket-xyz-456');
-    expect(url).toBe('ws://192.168.1.5:8000/api/v1/chats/ws/chat-888?ticket=ticket-xyz-456');
+    const url = getChatWebSocketUrl('chat-888');
+    expect(url).toBe('ws://192.168.1.5:8000/api/v1/chats/ws/chat-888');
+    expect(url).not.toContain('?');
   });
 
-  it('omits query parameter when ticket is omitted or null', () => {
-    const url = getChatWebSocketUrl('chat-777', null);
+  it('omits query parameter completely from WebSocket URL', () => {
+    const url = getChatWebSocketUrl('chat-777');
     expect(url).toBe('wss://api.baito.uz/api/v1/chats/ws/chat-777');
     expect(url).not.toContain('?ticket=');
     expect(url).not.toContain('?token=');
   });
 
-  it('never places reusable JWT into the URL query string even when token is stored', () => {
-    const url1 = getChatWebSocketUrl('chat-001', 'ticket-1');
-    const url2 = getChatWebSocketUrl('chat-002', null);
+  it('never places reusable JWT or ticket into the URL query string', () => {
+    const url1 = getChatWebSocketUrl('chat-001');
+    const url2 = getChatWebSocketUrl('chat-002');
+    expect(url1).not.toContain('?');
+    expect(url2).not.toContain('?');
     expect(url1).not.toContain('jwt-mobile-test-token');
     expect(url2).not.toContain('jwt-mobile-test-token');
   });
@@ -56,7 +59,7 @@ describe('mobile chatSocket utilities', () => {
     expect(ticket).toBeNull();
   });
 
-  it('openChatSocket acquires ticket and connects with ticket parameter', async () => {
+  it('openChatSocket acquires ticket and connects with RFC 6455 subprotocol', async () => {
     vi.spyOn(clientModule, 'apiClient').mockResolvedValue({
       ticket: 'ticket-session-1',
       expires_in: 60,
@@ -65,13 +68,15 @@ describe('mobile chatSocket utilities', () => {
     const createdSockets: any[] = [];
     class MockWebSocket {
       url: string;
+      protocols: string | string[] | undefined;
       readyState = 0;
       onopen: any = null;
       onmessage: any = null;
       onclose: any = null;
       onerror: any = null;
-      constructor(url: string) {
+      constructor(url: string, protocols?: string | string[]) {
         this.url = url;
+        this.protocols = protocols;
         createdSockets.push(this);
       }
       close() {
@@ -87,8 +92,9 @@ describe('mobile chatSocket utilities', () => {
     await new Promise((r) => setTimeout(r, 20));
 
     expect(createdSockets.length).toBe(1);
-    expect(createdSockets[0].url).toContain('/chats/ws/chat-123?ticket=ticket-session-1');
-    expect(createdSockets[0].url).not.toContain('token=');
+    expect(createdSockets[0].url).toBe('wss://api.baito.uz/api/v1/chats/ws/chat-123');
+    expect(createdSockets[0].url).not.toContain('?');
+    expect(createdSockets[0].protocols).toEqual(['baito-ticket', 'ticket-session-1']);
 
     handle.close();
     vi.unstubAllGlobals();

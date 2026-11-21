@@ -39,21 +39,19 @@ describe('chatSocket utilities', () => {
   });
 
   describe('getChatWebSocketUrl', () => {
-    it('constructs correct ws URL based on current protocol and host', () => {
+    it('constructs correct clean ws URL based on current protocol and host', () => {
       const url = getChatWebSocketUrl('chat-123');
       expect(url).toContain('/api/v1/chats/ws/chat-123');
       expect(url.startsWith('ws://') || url.startsWith('wss://')).toBe(true);
+      expect(url).not.toContain('?');
     });
 
-    it('appends auth token as query parameter when provided', () => {
-      const url = getChatWebSocketUrl('chat-456', 'mock-jwt-token-abc');
-      expect(url).toContain('/api/v1/chats/ws/chat-456?token=mock-jwt-token-abc');
-    });
-
-    it('does not include ?token query when token is omitted or empty', () => {
-      const url = getChatWebSocketUrl('chat-789', '');
+    it('never includes token or credential query parameter in URL', () => {
+      const url = getChatWebSocketUrl('chat-456');
+      expect(url).toBe('ws://localhost:3000/api/v1/chats/ws/chat-456');
       expect(url).not.toContain('?token=');
       expect(url).not.toContain('&token=');
+      expect(url).not.toContain('?ticket=');
     });
   });
 });

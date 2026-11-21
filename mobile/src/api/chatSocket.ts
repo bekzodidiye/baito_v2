@@ -44,8 +44,8 @@ export const fetchWsTicket = async (chatId: string): Promise<string | null> => {
   }
 };
 
-/** Constructs the WebSocket URL using configured backend API host and single-use connection ticket */
-export const getChatWebSocketUrl = (chatId: string, ticket?: string | null): string => {
+/** Constructs the clean WebSocket URL using configured backend API host (no sensitive query credentials) */
+export const getChatWebSocketUrl = (chatId: string): string => {
   const baseUrl = getApiBaseUrl().replace(/\/$/, '');
   let wsBase = baseUrl;
   if (wsBase.startsWith('https://')) {
@@ -58,8 +58,7 @@ export const getChatWebSocketUrl = (chatId: string, ticket?: string | null): str
     wsBase = `${scheme}://${host}${wsBase.startsWith('/') ? '' : '/'}${wsBase}`;
   }
 
-  const ticketQuery = ticket ? `?ticket=${encodeURIComponent(ticket)}` : '';
-  return `${wsBase}/chats/ws/${encodeURIComponent(chatId)}${ticketQuery}`;
+  return `${wsBase}/chats/ws/${encodeURIComponent(chatId)}`;
 };
 
 /** Open a socket for one conversation. Returns a handle that closes it. */
@@ -98,10 +97,10 @@ export const openChatSocket = (
       return;
     }
 
-    const url = getChatWebSocketUrl(chatId, ticket);
+    const url = getChatWebSocketUrl(chatId);
 
     try {
-      socket = new WebSocket(url);
+      socket = ticket ? new WebSocket(url, ['baito-ticket', ticket]) : new WebSocket(url);
     } catch {
       return; // Polling remains the fallback.
     }

@@ -1,3 +1,4 @@
+import json
 import math
 import uuid
 import pytest
@@ -282,21 +283,21 @@ def test_chat_websocket_full_handshake_flow(client):
     assert res_ticket.status_code == 200
     ticket = res_ticket.json()["ticket"]
 
-    # 1. Connect over WebSocket with ticket
-    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={ticket}") as ws:
+    # 1. Connect over WebSocket with ticket via subprotocol
+    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", ticket]) as ws:
         ws.send_json({"type": "ping"})
         msg = ws.receive_json()
         assert msg.get("type") == "pong"
 
     # 2. Immediate reconnect attempt with consumed ticket must fail with code 1008
     with pytest.raises(WebSocketDisconnect) as exc:
-        with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={ticket}"):
+        with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", ticket]):
             pass
     assert exc.value.code == 1008
 
-    # 3. Connection with missing or invalid ticket must fail with code 1008
+    # 3. Connection with invalid ticket must fail with code 1008
     with pytest.raises(WebSocketDisconnect) as exc:
-        with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket=invalid-ticket"):
+        with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", "invalid-ticket"]):
             pass
     assert exc.value.code == 1008
 
@@ -331,7 +332,7 @@ def test_chat_websocket_session_revocation_rejects_ticket(client):
 
     # Attempting to connect with ticket issued for the now-revoked session must fail with 1008
     with pytest.raises(WebSocketDisconnect) as exc:
-        with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={ticket}"):
+        with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", ticket]):
             pass
     assert exc.value.code == 1008
 
@@ -831,7 +832,7 @@ def test_websocket_open_connection_revocation_on_session_revoked(client):
     assert res_ticket.status_code == 200
     ticket = res_ticket.json()["ticket"]
 
-    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={ticket}") as ws:
+    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", ticket]) as ws:
         # First message while session is active succeeds
         ws.send_json({"type": "ping"})
         msg = ws.receive_json()
@@ -866,7 +867,7 @@ def test_websocket_open_connection_revocation_on_user_banned(client):
     assert res_ticket.status_code == 200
     ticket = res_ticket.json()["ticket"]
 
-    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={ticket}") as ws:
+    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", ticket]) as ws:
         ws.send_json({"type": "ping"})
         assert ws.receive_json().get("type") == "pong"
 
@@ -897,8 +898,8 @@ def test_websocket_multi_socket_logout_revocation(client):
     t1 = client.post(f"/api/v1/chats/{chat_id}/ws-ticket").json()["ticket"]
     t2 = client.post(f"/api/v1/chats/{chat_id}/ws-ticket").json()["ticket"]
 
-    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={t1}") as ws1:
-        with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={t2}") as ws2:
+    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", t1]) as ws1:
+        with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", t2]) as ws2:
             ws1.send_json({"type": "ping"})
             assert ws1.receive_json().get("type") == "pong"
             ws2.send_json({"type": "ping"})
@@ -932,7 +933,7 @@ def test_websocket_flood_control_for_control_frames(client):
     login(client, worker)
     ticket = client.post(f"/api/v1/chats/{chat_id}/ws-ticket").json()["ticket"]
 
-    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={ticket}") as ws:
+    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", ticket]) as ws:
         rate_limited_observed = False
         # Send 25 pings in rapid succession
         for _ in range(25):
@@ -959,7 +960,7 @@ def test_websocket_sustained_flood_terminates_connection(client):
     login(client, worker)
     ticket = client.post(f"/api/v1/chats/{chat_id}/ws-ticket").json()["ticket"]
 
-    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={ticket}") as ws:
+    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", ticket]) as ws:
         # Exhaust CONTROL_FRAME_LIMIT (20 frames)
         for _ in range(20):
             ws.send_json({"type": "ping"})
@@ -995,7 +996,7 @@ def test_websocket_db_error_fail_closed_prevents_message_write_and_broadcast(cli
     login(client, worker)
     ticket = client.post(f"/api/v1/chats/{chat_id}/ws-ticket").json()["ticket"]
 
-    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={ticket}") as ws:
+    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", ticket]) as ws:
         # Initial ping works while DB is healthy
         ws.send_json({"type": "ping"})
         assert ws.receive_json().get("type") == "pong"
@@ -1035,8 +1036,8 @@ def test_websocket_idle_socket_outbound_revocation_drops_incoming_messages(clien
     login(client_employer, employer)
     employer_ticket = client_employer.post(f"/api/v1/chats/{chat_id}/ws-ticket").json()["ticket"]
 
-    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={worker_ticket}") as ws_worker:
-        with client_employer.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={employer_ticket}") as ws_employer:
+    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", worker_ticket]) as ws_worker:
+        with client_employer.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", employer_ticket]) as ws_employer:
             # Employer sends a ping to establish readiness
             ws_employer.send_json({"type": "ping"})
             assert ws_employer.receive_json().get("type") == "pong"
@@ -1083,7 +1084,7 @@ def test_websocket_untracked_socket_outbound_fail_closed(client):
     login(client, worker)
     ticket = client.post(f"/api/v1/chats/{chat_id}/ws-ticket").json()["ticket"]
 
-    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={ticket}") as ws:
+    with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", ticket]) as ws:
         # Simulate missing connection_meta
         for ws_key in list(manager.connection_meta.keys()):
             del manager.connection_meta[ws_key]
@@ -1134,7 +1135,7 @@ def test_websocket_cross_user_session_spoofing_rejected(client):
     redis_client.set(f"chat:ws_ticket:{spoofed_ticket}", json.dumps(ticket_payload), ex=60)
 
     with pytest.raises(WebSocketDisconnect) as exc:
-        with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={spoofed_ticket}"):
+        with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", spoofed_ticket]):
             pass
     assert exc.value.code == 1008
 
@@ -1162,8 +1163,8 @@ def test_websocket_two_devices_one_revoked_session_isolation(client):
 
     assert ticket_dev1 != ticket_dev2
 
-    with client_dev1.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={ticket_dev1}") as ws_dev1:
-        with client_dev2.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={ticket_dev2}") as ws_dev2:
+    with client_dev1.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", ticket_dev1]) as ws_dev1:
+        with client_dev2.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", ticket_dev2]) as ws_dev2:
             # Both devices can ping
             ws_dev1.send_json({"type": "ping"})
             assert ws_dev1.receive_json().get("type") == "pong"
@@ -1225,15 +1226,17 @@ def test_websocket_real_sidless_token_and_ticket_rejected_without_mocks(client):
     }
     redis_client.set(f"chat:ws_ticket:{sidless_ticket}", json.dumps(ticket_data), ex=60)
 
-    # Connecting with real sid-less ticket must fail handshake with code 1008
+    # Connecting with real sid-less ticket via subprotocol must fail handshake with code 1008
     with pytest.raises(WebSocketDisconnect) as exc2:
-        with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?ticket={sidless_ticket}"):
+        with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}", subprotocols=["baito-ticket", sidless_ticket]):
             pass
     assert exc2.value.code == 1008
 
 
-def test_websocket_query_token_strictly_rejected_for_access_log_protection(client):
-    """Passing tokens via ?token= query parameter must be strictly rejected with code 1008 to protect access logs."""
+def test_websocket_all_query_strings_strictly_forbidden_rejection(client):
+    """Any query string in WebSocket handshake must be strictly rejected with code 1008 (CWE-598).
+    Tests plain, percent-encoded, uppercase, repeated, and arbitrary query parameters.
+    """
     from app.core import security
 
     with SessionLocal() as db:
@@ -1245,12 +1248,24 @@ def test_websocket_query_token_strictly_rejected_for_access_log_protection(clien
         db.refresh(chat)
         chat_id = chat.id
 
-    # Even with a valid, session-bound JWT, ?token= query parameter is forbidden (CWE-598)
     valid_jwt = security.create_access_token(subject=worker.uid, sid=str(uuid.uuid4()))
-    with pytest.raises(WebSocketDisconnect) as exc:
-        with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?token={valid_jwt}"):
-            pass
-    assert exc.value.code == 1008
+
+    forbidden_query_urls = [
+        f"/api/v1/chats/ws/{chat_id}?token={valid_jwt}",
+        f"/api/v1/chats/ws/{chat_id}?ticket=TEST_TICKET_123",
+        f"/api/v1/chats/ws/{chat_id}?t%69cket=TEST_PERCENT_ENCODED",
+        f"/api/v1/chats/ws/{chat_id}?TICKET=TEST_UPPERCASE",
+        f"/api/v1/chats/ws/{chat_id}?secret=SECRET_KEY_999",
+        f"/api/v1/chats/ws/{chat_id}?token=FIRST&token=SECOND",
+        f"/api/v1/chats/ws/{chat_id}?foo=bar",
+        f"/api/v1/chats/ws/{chat_id}?",
+    ]
+
+    for forbidden_url in forbidden_query_urls:
+        with pytest.raises(WebSocketDisconnect) as exc:
+            with client.websocket_connect(forbidden_url):
+                pass
+        assert exc.value.code == 1008, f"Handshake with '{forbidden_url}' must be rejected with 1008"
 
 
 def test_websocket_untrusted_origin_rejected(client):
@@ -1270,8 +1285,160 @@ def test_websocket_untrusted_origin_rejected(client):
     # Connecting with untrusted evil origin must fail handshake with code 1008
     with pytest.raises(WebSocketDisconnect) as exc:
         with client.websocket_connect(
-            f"/api/v1/chats/ws/{chat_id}?ticket={ticket}",
+            f"/api/v1/chats/ws/{chat_id}",
+            subprotocols=["baito-ticket", ticket],
             headers={"Origin": "https://evil-attacker-site.com"},
         ):
             pass
     assert exc.value.code == 1008
+
+
+def test_websocket_subprotocol_ticket_authentication(client):
+    """WebSocket connection via RFC 6455 Sec-WebSocket-Protocol succeeds without query parameters.
+    Single-use ticket consumption is enforced: the same ticket cannot be re-used.
+    """
+    with SessionLocal() as db:
+        worker = make_user(role="worker", phone="+998901230055")
+        employer = make_user(role="employer", phone="+998901230056")
+        chat = models.Chat(workerId=worker.id, employerId=employer.id)
+        db.add(chat)
+        db.commit()
+        db.refresh(chat)
+        chat_id = chat.id
+
+    login(client, worker)
+    ticket = client.post(f"/api/v1/chats/{chat_id}/ws-ticket").json()["ticket"]
+
+    # 1. First connection via subprotocols on clean URL succeeds
+    clean_url = f"/api/v1/chats/ws/{chat_id}"
+    with client.websocket_connect(clean_url, subprotocols=["baito-ticket", ticket]) as ws:
+        ws.send_text(json.dumps({"type": "ping"}))
+        # Socket remains connected and functional
+
+    # 2. Re-using the consumed ticket over subprotocol must be rejected with 1008
+    with pytest.raises(WebSocketDisconnect) as exc:
+        with client.websocket_connect(clean_url, subprotocols=["baito-ticket", ticket]):
+            pass
+    assert exc.value.code == 1008
+
+
+def test_websocket_and_http_query_redaction_logging():
+    """Universal RedactQueryFilter guarantees zero query strings in access/error logs across tuple, dict, and string arguments."""
+    from app.main import RedactQueryFilter
+    import logging
+
+    log_filter = RedactQueryFilter()
+
+    # 1. Tuple args (typical Uvicorn access log: client_addr, method, full_path, http_version, status_code)
+    record_tuple = logging.LogRecord(
+        name="uvicorn.access",
+        level=logging.INFO,
+        pathname="uvicorn/protocols/http/httptools_impl.py",
+        lineno=100,
+        msg='%s - "%s %s HTTP/%s" %d',
+        args=("127.0.0.1:54321", "GET", "/api/v1/chats/ws/demo?ticket=SECRET_TICKET_99&token=SECRET_JWT_88", "1.1", 200),
+        exc_info=None,
+    )
+    log_filter.filter(record_tuple)
+    assert "SECRET_TICKET_99" not in str(record_tuple.args)
+    assert "SECRET_JWT_88" not in str(record_tuple.args)
+    assert record_tuple.args[2] == "/api/v1/chats/ws/demo"
+
+    # 2. WebSocket 2-arg log
+    record_ws = logging.LogRecord(
+        name="uvicorn.access",
+        level=logging.INFO,
+        pathname="uvicorn/protocols/websockets/websockets_impl.py",
+        lineno=50,
+        msg='"WebSocket %s" %d',
+        args=("/api/v1/chats/ws/demo?ticket=SECRET_WS_77", 1008),
+        exc_info=None,
+    )
+    log_filter.filter(record_ws)
+    assert "SECRET_WS_77" not in str(record_ws.args)
+    assert record_ws.args[0] == "/api/v1/chats/ws/demo"
+
+    # 3. Formatted msg string
+    record_msg = logging.LogRecord(
+        name="uvicorn.error",
+        level=logging.ERROR,
+        pathname="app/api/v1/endpoints/chats/websocket.py",
+        lineno=20,
+        msg='Failed request to /api/v1/chats/ws/demo?secret=VERY_SECRET_KEY',
+        args=(),
+        exc_info=None,
+    )
+    log_filter.filter(record_msg)
+    assert "VERY_SECRET_KEY" not in record_msg.msg
+    assert record_msg.msg == "Failed request to /api/v1/chats/ws/demo"
+
+
+def test_websocket_handshake_rejection_logs_no_raw_query_keys(client, caplog):
+    """When a WebSocket handshake with query parameters is rejected, logger.warning
+    must emit a static message and NEVER log raw query parameter keys or values.
+    """
+    import logging
+    with SessionLocal() as db:
+        worker = make_user(role="worker", phone="+998901230044")
+        employer = make_user(role="employer", phone="+998901230045")
+        chat = models.Chat(workerId=worker.id, employerId=employer.id)
+        db.add(chat)
+        db.commit()
+        db.refresh(chat)
+        chat_id = chat.id
+
+    secret_key = "CONFIDENTIAL_PARAM_KEY_9988"
+    secret_val = "CONFIDENTIAL_PARAM_VAL_7766"
+
+    with caplog.at_level(logging.WARNING):
+        with pytest.raises(WebSocketDisconnect) as exc:
+            with client.websocket_connect(f"/api/v1/chats/ws/{chat_id}?{secret_key}={secret_val}"):
+                pass
+        assert exc.value.code == 1008
+
+    # Assert ZERO leakage of raw query parameter key or value into logger
+    assert secret_key not in caplog.text, f"Secret parameter key '{secret_key}' leaked into backend logs!"
+    assert secret_val not in caplog.text, f"Secret parameter value '{secret_val}' leaked into backend logs!"
+    assert "Rejected WebSocket connection attempt with forbidden query parameters" in caplog.text
+
+
+def test_nginx_query_credential_and_obfuscation_rules_logic():
+    """Automated regression testing of Nginx edge-rejection regex logic.
+    Guarantees plain and percent-encoded credential keys are rejected in URL queries and Referer headers,
+    while legitimate filtering/pagination query parameters remain 100% permitted.
+    """
+    import re
+
+    # 1. Plain credential parameter names in $args
+    re_plain_args = re.compile(r"(?i)(?:^|&)(?:token|ticket|secret)(?:=|$)")
+    assert re_plain_args.search("token=SECRET_JWT")
+    assert re_plain_args.search("ticket=SECRET_TICKET")
+    assert re_plain_args.search("secret=SECRET_KEY")
+    assert re_plain_args.search("page=1&limit=20&token=SECRET")
+    assert not re_plain_args.search("skip=0&limit=50&category=IT%20Dev&search=senior%20developer")
+
+    # 2. Percent-encoded parameter names in $args (e.g. ?t%69cket=, ?t%6fken=, ?%74oken=)
+    re_encoded_args = re.compile(r"(?:^|&)[^=&]*%[^=&]*(?:=|$)")
+    assert re_encoded_args.search("t%69cket=SECRET")
+    assert re_encoded_args.search("t%6fken=SECRET")
+    assert re_encoded_args.search("%74oken=SECRET")
+    assert re_encoded_args.search("category=IT&t%69cket=SECRET")
+    # Legitimate values with % (encoded values) must NOT match because % is after =
+    assert not re_encoded_args.search("skip=0&limit=50&category=IT%20Dev&search=senior%20developer")
+    assert not re_encoded_args.search("search=100%25&category=Food%20%26%20Beverage")
+
+    # 3. Plain credential parameter names in Referer header
+    re_plain_ref = re.compile(r"(?i)(?:[?&]|%26)(?:token|ticket|secret|password|passwd|auth|bearer|jwt)(?:=|%3d|&|$)")
+    assert re_plain_ref.search("https://baito.uz/jobs?token=LEAK_REF")
+    assert re_plain_ref.search("https://baito.uz/chat?ticket=LEAK_TICKET")
+    assert not re_plain_ref.search("https://baito.uz/jobs?search=courier&category=delivery")
+
+    # 4. Percent-encoded parameter names in Referer header query string (e.g. ?%74oken=, ?t%69cket=)
+    re_encoded_ref = re.compile(r"[?&][^?&=#]*%[^?&=#]*(?:=|%3d|&|$)")
+    assert re_encoded_ref.search("https://baito.uz/chat?%74oken=LEAK_API_REF_ENC")
+    assert re_encoded_ref.search("https://baito.uz/chat?t%69cket=LEAK_REF")
+    assert re_encoded_ref.search("https://baito.uz/chat?%73ecret=LEAK")
+    assert re_encoded_ref.search("https://baito.uz/page?search=ok&%74oken=LEAK")
+    # Legitimate query values in Referer must NOT match
+    assert not re_encoded_ref.search("https://baito.uz/jobs?search=courier&category=delivery")
+    assert not re_encoded_ref.search("https://baito.uz/jobs?search=hello%20world&page=2")

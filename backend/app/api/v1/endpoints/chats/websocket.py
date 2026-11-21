@@ -193,17 +193,38 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str):
             await websocket.close(code=1008)
             return
 
-    # Strictly reject reusable JWT tokens in URL query strings (CWE-598)
-    # to prevent credential leakage into Nginx/ASGI access logs, proxy caches, and browser histories.
-    query_token = websocket.query_params.get("token")
-    if query_token:
-        logger.warning("Rejected WebSocket connection attempt via ?token= query parameter; clients must use ?ticket= or session cookies")
+    # Strictly reject ANY query string in WebSocket handshake (CWE-598).
+    # Credentials (tokens, tickets, secrets) must NEVER appear in URLs to prevent leakage
+    # into reverse proxy access/error logs, upstream headers, ASGI logs, or browser history.
+    if websocket.query_params or websocket.scope.get("query_string"):
+        logger.warning(
+            "Rejected WebSocket connection attempt with forbidden query parameters; "
+            "WebSocket endpoint strictly forbids query strings. Clients must use "
+            "Sec-WebSocket-Protocol (mobile) or HttpOnly session cookies (web)."
+        )
         await websocket.close(code=1008)
         return
 
-    # Support short-lived single-use connection ticket or HttpOnly session cookie
-    ticket = websocket.query_params.get("ticket")
+    # Extract ticket from Sec-WebSocket-Protocol (RFC 6455 subprotocol negotiation)
+    subprotocol_ticket: Optional[str] = None
+    subprotocols = websocket.scope.get("subprotocols") or []
+    if "baito-ticket" in subprotocols:
+        idx = subprotocols.index("baito-ticket")
+        if idx + 1 < len(subprotocols):
+            subprotocol_ticket = subprotocols[idx + 1].strip()
+    if not subprotocol_ticket:
+        raw_proto = websocket.headers.get("sec-websocket-protocol", "")
+        if "baito-ticket" in raw_proto:
+            parts = [p.strip() for p in raw_proto.split(",") if p.strip()]
+            if "baito-ticket" in parts:
+                idx = parts.index("baito-ticket")
+                if idx + 1 < len(parts):
+                    subprotocol_ticket = parts[idx + 1]
+
+    # Support Sec-WebSocket-Protocol ticket (mobile) or HttpOnly session cookie (web)
+    ticket = subprotocol_ticket
     token = websocket.cookies.get(settings.ACCESS_COOKIE_NAME)
+    selected_subprotocol = "baito-ticket" if subprotocol_ticket else None
 
     if ticket:
         user_info = await run_in_threadpool(_authenticate_ticket, ticket, chat_id)
@@ -234,6 +255,7 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str):
         chat_id,
         user_uid=user_info.get("uid"),
         session_id=user_info.get("session_id"),
+        subprotocol=selected_subprotocol,
     )
 
     frame_times: list[float] = []

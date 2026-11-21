@@ -43,11 +43,10 @@ export const calculateBackoffDelay = (
   return Math.min(baseDelay * 2 ** Math.min(attempt, 10), maxDelay);
 };
 
-export const getChatWebSocketUrl = (chatId: string, token?: string): string => {
+export const getChatWebSocketUrl = (chatId: string): string => {
   const scheme = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss' : 'ws';
   const host = typeof window !== 'undefined' ? window.location.host : 'localhost';
-  const query = token ? `?token=${encodeURIComponent(token)}` : '';
-  return `${scheme}://${host}/api/v1/chats/ws/${encodeURIComponent(chatId)}${query}`;
+  return `${scheme}://${host}/api/v1/chats/ws/${encodeURIComponent(chatId)}`;
 };
 
 /** Open a socket for one conversation. Returns a handle that closes it. */
