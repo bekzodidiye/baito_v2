@@ -1,15 +1,52 @@
 import asyncio
 import json
 import logging
+import time
 import uuid
 from typing import Optional
 
 from fastapi import WebSocket
 from starlette.concurrency import run_in_threadpool
 
+from app import crud, models
+from app.db.session import SessionLocal
 from app.redis_client import redis_client, redis_is_mock
+from app.services.session_window import is_live
 
 logger = logging.getLogger(__name__)
+
+
+def is_session_revoked(user_uid: Optional[str], session_id: Optional[str]) -> bool:
+    """Checks if the user has been banned or the specific active session has been terminated/revoked.
+
+    Fails closed:
+    - If user_uid or session_id is missing/None, returns True (no unverified or cross-device logout bypass).
+    - If the user is banned or does not exist, returns True.
+    - If the session record is inactive, expired, or does not belong to user_uid, returns True.
+    - On database errors, returns True.
+    """
+    if not user_uid or not session_id:
+        return True
+    try:
+        with SessionLocal() as db:
+            user = crud.user.get_by_uid(db, uid=user_uid)
+            if not user or user.isBanned:
+                return True
+
+            session_record = (
+                db.query(models.ActiveSession)
+                .filter(
+                    models.ActiveSession.id == session_id,
+                    models.ActiveSession.user_uid == user_uid,
+                )
+                .first()
+            )
+            if not session_record or session_record.user_uid != user_uid or not is_live(session_record):
+                return True
+        return False
+    except Exception as e:
+        logger.error("Error verifying session revocation in DB (failing closed): %s", e)
+        return True
 
 
 class ConnectionManager:
@@ -22,22 +59,34 @@ class ConnectionManager:
 
     def __init__(self):
         self.active_connections: dict[str, list[WebSocket]] = {}
+        self.connection_meta: dict[WebSocket, dict] = {}
         self._pubsub_task: Optional[asyncio.Task] = None
         self._instance_id = str(uuid.uuid4())
 
-    async def connect(self, websocket: WebSocket, chat_id: str):
+    async def connect(
+        self,
+        websocket: WebSocket,
+        chat_id: str,
+        user_uid: Optional[str] = None,
+        session_id: Optional[str] = None,
+    ):
         await websocket.accept()
         self.active_connections.setdefault(chat_id, []).append(websocket)
+        self.connection_meta[websocket] = {
+            "user_uid": user_uid,
+            "session_id": session_id,
+            "last_checked": time.monotonic(),
+            "is_revoked": False,
+        }
         self._ensure_pubsub()
 
     def disconnect(self, websocket: WebSocket, chat_id: str):
         conns = self.active_connections.get(chat_id)
-        if not conns:
-            return
-        if websocket in conns:
+        if conns and websocket in conns:
             conns.remove(websocket)
         if not conns:
             self.active_connections.pop(chat_id, None)
+        self.connection_meta.pop(websocket, None)
 
     def _ensure_pubsub(self):
         if redis_is_mock():
@@ -91,10 +140,48 @@ class ConnectionManager:
     async def _send_local(self, message: dict, chat_id: str):
         dead = []
         for connection in list(self.active_connections.get(chat_id, [])):
+            meta = self.connection_meta.get(connection)
+            if not meta:
+                # Requirement 3: Fail-closed: untracked or unauthenticated connection must NEVER receive private chat messages
+                dead.append(connection)
+                try:
+                    await connection.close(code=1008)
+                except Exception:
+                    pass
+                continue
+
+            # Outbound protection: do not deliver messages to revoked/banned users
+            if meta.get("is_revoked"):
+                dead.append(connection)
+                continue
+
+            user_uid = meta.get("user_uid")
+            session_id = meta.get("session_id")
+            if not user_uid or not session_id:
+                dead.append(connection)
+                try:
+                    await connection.close(code=1008)
+                except Exception:
+                    pass
+                continue
+
+            # Check revocation on outbound delivery — ZERO cache lag window
+            revoked = await run_in_threadpool(is_session_revoked, user_uid, session_id)
+            if revoked:
+                meta["is_revoked"] = True
+                dead.append(connection)
+                try:
+                    await connection.send_json({"error": "session_revoked"})
+                    await connection.close(code=1008)
+                except Exception:
+                    pass
+                continue
+
             try:
                 await connection.send_json(message)
             except Exception:
                 dead.append(connection)
+
         for connection in dead:
             self.disconnect(connection, chat_id)
 
