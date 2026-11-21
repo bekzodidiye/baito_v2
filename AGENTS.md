@@ -953,7 +953,7 @@ BUG SPRINT — TOP 5 TEZKOR (prioritet):
 
 ## 🎨 FRONTEND & UI KOMPONENTLAR ARXITEKTURASI (UNTITLED UI)
 Frontend UI komponentlarini yaratish yoki tahrirlashda quyidagi qoidalarga qat'iy amal qilinadi:
-- **Asosiy yo'riqnoma fayli**: [`public-components/CLAUDE.md`](file:///home/Bekzod/Desktop/baito-v3-/public-components/CLAUDE.md) (yoki [`docs/untitled-ui.md`](file:///home/Bekzod/Desktop/baito-v3-/docs/untitled-ui.md)).
+- **Asosiy yo'riqnoma fayli**: [`docs/untitled-ui.md`](file:///home/Bekzod/Desktop/baito-v3-/docs/untitled-ui.md).
 - **Texnologiyalar**: React 19, Tailwind CSS v4.3, React Aria Components.
 - **Import qoidasi**: `react-aria-components` dan barcha importlar `Aria*` prefiksi bilan bo'lishi shart (`import { Button as AriaButton } from "react-aria-components"`).
 - **Fayllarni nomlash**: Qat'iy **kebab-case** formatida (`date-picker.tsx`, `user-profile.tsx`).

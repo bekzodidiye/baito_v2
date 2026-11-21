@@ -47,8 +47,7 @@ Loyiha asosan tranzaksiya modeli asosida daromad qiladi:
 
 ## 6. Texnologik Stack (Tech Stack - For Tech Investors)
 Baito tizimi eng zamonaviy "Enterprise" (korporativ) darajadagi texnologiyalarda qurilgan:
-* **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4 (Juda tezkor, yengil va zamonaviy SPA).
-* **Mobile:** Ionic React 9 + Capacitor 8 (Cross-platform Android / iOS ilova, foniy xabarnomalar va haptic aloqa).
+* **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4 (Juda tezkor, yengil va zamonaviy responsive SPA / PWA).
 * **Backend:** Python FastAPI (Asinxron va yuqori unumdorlik), SQLAlchemy, Pydantic v2.
 * **Fon Vazifalari (Workers):** Celery + Celery Beat (Avtomatik vazifalar, muddati o'tgan ishlarni boshqarish).
 * **Database & Cache:** PostgreSQL 15 (Optimallashtirilgan korporativ parametrlar), Redis 7 (Kesh, sessiya, Rate-limiting).
