@@ -23,24 +23,27 @@ export const useLoginState = (isModal: boolean, initialMode?: 'login' | 'registe
 
   const setMode = (newMode: 'role-selection' | 'profile-info' | 'documents' | 'finish' | 'login') => {
     setModeState(newMode);
-    if (newMode === 'login') {
-      if (currentScreen !== 'login') {
-        setCurrentScreen('login');
-      }
-    } else {
-      if (currentScreen !== 'register') {
-        setCurrentScreen('register');
+    if (!isModal) {
+      if (newMode === 'login') {
+        if (currentScreen !== 'login') {
+          setCurrentScreen('login');
+        }
+      } else {
+        if (currentScreen !== 'register') {
+          setCurrentScreen('register');
+        }
       }
     }
   };
 
   useEffect(() => {
+    if (isModal) return;
     if (currentScreen === 'register' && mode === 'login') {
       setModeState('role-selection');
     } else if (currentScreen === 'login' && mode !== 'login') {
       setModeState('login');
     }
-  }, [currentScreen]);
+  }, [currentScreen, isModal, mode]);
 
   // Registration states
   const [selectedRole, setSelectedRole] = useState<'worker' | 'employer' | null>(() => {

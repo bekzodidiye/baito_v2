@@ -118,7 +118,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
         {/* Submit Button */}
         <button
-          type="button"
+          type="submit"
+          data-testid="login-submit-btn"
           onClick={(e) => handleLoginSubmit(e)}
           className="w-full mt-4 py-3 px-6 bg-brand-primary hover:bg-brand-primary active:scale-[0.98] text-white rounded-[16px] text-xs font-bold transition-all flex items-center justify-center gap-1.5 border-0 shadow-lg shadow-brand-primary/20 cursor-pointer"
         >
