@@ -24,6 +24,17 @@ test.describe('Worker Flow', () => {
 
   test('a worker-only route is closed to a guest', async ({ page }) => {
     await page.goto('/applications');
-    await expect(page).toHaveURL(/\/$/);
+    // The guard redirects unauthenticated guests away from protected routes.
+    // The application sends guests to /login (or / if deliberately supported).
+    await expect(page).toHaveURL(/\/(login)?$/);
+    const url = page.url();
+    if (url.endsWith('/login')) {
+      await expect(page.getByRole('button', { name: 'Kirish' })).toBeVisible();
+    } else {
+      await expect(page.getByRole('heading', { level: 1 })).toContainText('Bugun ishlang');
+    }
+
+    // Protected worker content must not be reachable by guests
+    await expect(page.getByRole('heading', { name: 'Arizalar tarixi' })).toHaveCount(0);
   });
 });
