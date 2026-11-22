@@ -1,5 +1,5 @@
 
-FROM python:3.11-alpine
+FROM python:3.15-alpine
 
 # The unversioned postgresql-client tracks Alpine's newest (18.x) against a
 # PostgreSQL 15 server, which is unsupported and already produced
