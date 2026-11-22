@@ -9,7 +9,7 @@ test.describe('Authentication Flow', () => {
 
     await page.getByPlaceholder('+998 (90) 123-45-67').fill('+998901112233');
     await page.getByPlaceholder('Parolingizni kiriting').fill('definitely-not-the-password');
-    await page.getByRole('button', { name: 'Kirish' }).click();
+    await page.locator('#login-form').getByRole('button', { name: 'Kirish' }).click();
 
     // Staying on /login was the whole of the old assertion, which a blank page
     // would also satisfy. What the user must actually get is a reason.
@@ -28,7 +28,7 @@ test.describe('Authentication Flow', () => {
     await page.goto('/login');
     await page.getByPlaceholder('+998 (90) 123-45-67').fill(PHONE!);
     await page.getByPlaceholder('Parolingizni kiriting').fill(PASSWORD!);
-    await page.getByRole('button', { name: 'Kirish' }).click();
+    await page.locator('#login-form').getByRole('button', { name: 'Kirish' }).click();
 
     await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
     expect(await page.evaluate(() => localStorage.getItem('baito_is_logged_in'))).toBe('true');

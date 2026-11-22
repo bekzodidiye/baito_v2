@@ -29,7 +29,7 @@ test.describe('Worker Flow', () => {
     await expect(page).toHaveURL(/\/(login)?$/);
     const url = page.url();
     if (url.endsWith('/login')) {
-      await expect(page.getByRole('button', { name: 'Kirish' })).toBeVisible();
+      await expect(page.locator('#login-form').getByRole('button', { name: 'Kirish' })).toBeVisible();
     } else {
       await expect(page.getByRole('heading', { level: 1 })).toContainText('Bugun ishlang');
     }
