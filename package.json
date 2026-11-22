@@ -15,7 +15,7 @@
     "lint": "npm run lint:frontend"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.2.5"
   },
   "overrides": {
     "source-map-js": "^1.2.2"
