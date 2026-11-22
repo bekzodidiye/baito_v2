@@ -21,6 +21,7 @@ from __future__ import annotations
 import hashlib
 import html
 import logging
+import re
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
@@ -37,6 +38,39 @@ _pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="err-report")
 # Telegram caps a message at 4096 characters.
 _MAX_MESSAGE = 3800
 _DEDUPE_TTL_SECONDS = 3600
+
+# Sensitive patterns for redacting authorization tokens, passwords, cookies, and PII
+_SENSITIVE_PATTERNS = [
+    # JWT tokens: eyJ...
+    (re.compile(r'\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b'), '[REDACTED_JWT]'),
+    # Authorization / Proxy-Authorization headers
+    (re.compile(r'(?i)(["\']?(?:authorization|proxy-authorization)["\']?\s*[:=]\s*)(["\']?)((?:Bearer\s+)?)[^\r\n"\'<>,;{}]+\2'), r'\1\2\3[REDACTED]\2'),
+    # Standalone Bearer tokens
+    (re.compile(r'(?i)\b(bearer\s+)[^\s"\'<>,;{}]+'), r'\1[REDACTED]'),
+    # Passwords, secrets, tokens, api keys (quoted with possible spaces, or unquoted)
+    (re.compile(r'(?i)(["\']?(?:password|passwd|pwd|secret|access_token|refresh_token|api_key|private_key|client_secret)["\']?\s*[:=]\s*)(["\'])(?:(?!\2).)*\2'), r'\1\2[REDACTED]\2'),
+    (re.compile(r'(?i)(["\']?(?:password|passwd|pwd|secret|access_token|refresh_token|api_key|private_key|client_secret)["\']?\s*[:=]\s*)([^\s"\'<>,;{}]+)'), r'\1[REDACTED]'),
+    # Cookies & Session tokens
+    (re.compile(r'(?i)(["\']?cookie["\']?\s*[:=]\s*["\']?)[^"\'\r\n]+(["\']?)'), r'\1[REDACTED]\2'),
+    (re.compile(r'(?i)(baito_sid=)[^;\s&]+'), r'\1[REDACTED]'),
+    (re.compile(r'(?i)(session_token=)[^;\s&]+'), r'\1[REDACTED]'),
+    # Bank card numbers (16 digits with optional spaces or hyphens)
+    (re.compile(r'\b(?:\d{4}[ -]?){3}\d{4}\b'), '[REDACTED_CARD]'),
+    # Uzbekistan phone numbers (+998...)
+    (re.compile(r'(?:\+?998)[ -]?(?:\(?\d{2}\)?)[ -]?\d{3}[ -]?\d{2}[ -]?\d{2}\b'), '[REDACTED_PHONE]'),
+    # URL query string sensitive parameters (?token=..., &key=..., &password=...)
+    (re.compile(r'(?i)([?&](?:token|key|password|access_token|secret)=)[^&\s]+'), r'\1[REDACTED]'),
+]
+
+
+def sanitize_sensitive_data(text: str) -> str:
+    """Redact sensitive authorization tokens, passwords, cookies, cards, and PII."""
+    if not text:
+        return text
+    sanitized = text
+    for pattern, replacement in _SENSITIVE_PATTERNS:
+        sanitized = pattern.sub(replacement, sanitized)
+    return sanitized
 
 
 def _fingerprint(exc: BaseException, where: str) -> str:
@@ -103,18 +137,22 @@ def report_exception(
             return
 
         tb = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+        tb = sanitize_sensitive_data(tb)
         # The tail is the useful end — the frames nearest the failure.
         if len(tb) > _MAX_MESSAGE:
             tb = "…\n" + tb[-_MAX_MESSAGE:]
 
         location = f"{method} {path}" if method and path else where
+        location = sanitize_sensitive_data(location)
+        exc_str = sanitize_sensitive_data(str(exc)[:200])
         header = (
             f"🔴 <b>Baito xatosi</b>\n"
-            f"<b>{html.escape(type(exc).__name__)}</b>: {html.escape(str(exc)[:200])}\n"
+            f"<b>{html.escape(type(exc).__name__)}</b>: {html.escape(exc_str)}\n"
             f"<code>{html.escape(location)}</code>\n"
         )
         if user_id:
-            header += f"foydalanuvchi: <code>{html.escape(user_id)}</code>\n"
+            safe_user_id = sanitize_sensitive_data(user_id)
+            header += f"foydalanuvchi: <code>{html.escape(safe_user_id)}</code>\n"
         header += f"id: <code>{fingerprint}</code>\n"
 
         message = header + f"\n<pre>{html.escape(tb)}</pre>"
@@ -134,7 +172,9 @@ def report_message(title: str, body: str) -> None:
     try:
         if not _should_send(hashlib.sha256(title.encode()).hexdigest()[:16]):
             return
-        text = f"⚠️ <b>{html.escape(title)}</b>\n\n{html.escape(body[:_MAX_MESSAGE])}"
+        safe_title = sanitize_sensitive_data(title)
+        safe_body = sanitize_sensitive_data(body[:_MAX_MESSAGE])
+        text = f"⚠️ <b>{html.escape(safe_title)}</b>\n\n{html.escape(safe_body)}"
         _pool.submit(_post, text)
     except Exception as e:
         logger.warning("Error reporter itself failed: %s", e)

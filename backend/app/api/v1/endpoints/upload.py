@@ -149,6 +149,10 @@ async def upload_file(
         _sniff_and_normalise, raw_contents, declared_type
     )
 
+    # Security: PDFs and identity documents must ALWAYS be PRIVATE, regardless of caller's purpose parameter.
+    if declared_type == "application/pdf" or ext == ".pdf":
+        visibility = MediaVisibility.PRIVATE
+
     object_key = f"{uuid.uuid4().hex}{ext}"
 
     def _save_to_s3_and_db():

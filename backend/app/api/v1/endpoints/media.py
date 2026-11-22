@@ -80,14 +80,48 @@ def _get_payout_for_media(db: Session, object_key: str) -> Optional[models.JobPa
     )
 
 
-def _is_media_in_another_chat(db: Session, viewer_ids: list[str], object_key: str) -> bool:
-    """If the file was posted to any chat, ensure the viewer is a participant in that chat."""
-    chat_messages = (
-        db.query(models.Chat)
-        .join(models.Message, models.Message.chatId == models.Chat.id)
-        .filter(models.Message.text.contains(object_key))
-        .all()
-    )
+def _is_media_in_another_chat(
+    db: Session,
+    viewer_ids: list[str],
+    object_key: str,
+    owner_id: Optional[str] = None,
+) -> bool:
+    """If the file was posted to any chat, ensure the viewer is a participant in that chat.
+
+    Avoids unbounded full table scans on Message by scoping to the owner's active chats
+    (which use the foreign key indexes) and bounding the scan.
+    """
+    if owner_id:
+        owner_chat_ids = [
+            c_id
+            for (c_id,) in db.query(models.Chat.id)
+            .filter(or_(models.Chat.workerId == owner_id, models.Chat.employerId == owner_id))
+            .all()
+        ]
+        if not owner_chat_ids:
+            return False
+
+        chat_messages = (
+            db.query(models.Chat)
+            .join(models.Message, models.Message.chatId == models.Chat.id)
+            .filter(
+                models.Message.chatId.in_(owner_chat_ids),
+                models.Message.text.contains(object_key),
+            )
+            .distinct()
+            .limit(50)
+            .all()
+        )
+    else:
+        chat_messages = (
+            db.query(models.Chat)
+            .join(models.Message, models.Message.chatId == models.Chat.id)
+            .filter(models.Message.text.contains(object_key))
+            .distinct()
+            .limit(50)
+            .all()
+        )
+
     if not chat_messages:
         return False
     return not any(c.workerId in viewer_ids or c.employerId in viewer_ids for c in chat_messages)
@@ -152,7 +186,7 @@ def get_media(
                     raise HTTPException(status_code=403, detail="Bu faylni ko'rish huquqingiz yo'q")
             else:
                 # 3. If the media was sent in another chat, viewer must be a participant in that conversation.
-                if _is_media_in_another_chat(db, user_ids, object_key):
+                if _is_media_in_another_chat(db, user_ids, object_key, owner_id=owner_id):
                     raise HTTPException(status_code=403, detail="Bu faylni ko'rish huquqingiz yo'q")
 
                 # 4. Otherwise, viewer must at least share a conversation with the owner.
