@@ -533,6 +533,9 @@ jobs:
           else
             echo "no API process to stop"
           fi
+          # Prune dangling volumes and build cache so self-hosted runner disk does not fill
+          docker volume prune -f >/dev/null 2>&1 || true
+          docker builder prune -f --filter 'until=24h' >/dev/null 2>&1 || true
 
       - name: Upload Report on Failure
         if: failure()
