@@ -237,12 +237,17 @@ export const useLoginApiHandlers = (state: any, isModal: boolean, onClose?: () =
     }
     state.setIsSendingCode(true);
     try {
-      await apiClient('/auth/send-sms', {
+      const res = await apiClient('/auth/send-sms', {
         method: 'POST',
         body: JSON.stringify({ phone: state.regPhone })
       });
       state.setIsCodeSent(true);
-      showToast(language === 'uz' ? "Tasdiqlash kodi telefoningizga yuborildi!" : language === 'ru' ? "Код подтверждения отправлен на ваш телефон!" : 'The verification code was sent to your phone!');
+      if (res?.dev_code) {
+        state.setRegCode(res.dev_code);
+        showToast(language === 'uz' ? `Tasdiqlash kodi kiritildi: ${res.dev_code}` : language === 'ru' ? `Код подтверждения: ${res.dev_code}` : `Verification code: ${res.dev_code}`);
+      } else {
+        showToast(language === 'uz' ? "Tasdiqlash kodi telefoningizga yuborildi!" : language === 'ru' ? "Код подтверждения отправлен на ваш телефон!" : 'The verification code was sent to your phone!');
+      }
     } catch (err) {
       showToast(language === 'uz' ? "Kodni yuborishda xatolik yuz berdi" : language === 'ru' ? "Ошибка при отправке кода" : 'The code could not be sent');
     } finally {

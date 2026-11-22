@@ -2,8 +2,9 @@ import React, { Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { SettingsLayout } from './settings/SettingsLayout';
+import { LandingScreen } from './landing/LandingScreen';
+import { LoginPromptScreen } from './login/LoginPromptScreen';
 
-const LandingScreen = React.lazy(() => import('./landing/LandingScreen').then(m => ({ default: m.LandingScreen })));
 const JobSearchScreen = React.lazy(() => import('../features/worker/search/JobSearchScreen').then(m => ({ default: m.JobSearchScreen })));
 const CalendarScreen = React.lazy(() => import('../features/worker/calendar/CalendarScreen').then(m => ({ default: m.CalendarScreen })));
 const MessagesScreen = React.lazy(() => import('./messages/MessagesScreen').then(m => ({ default: m.MessagesScreen })));
@@ -28,7 +29,6 @@ const QollanmaScreen = React.lazy(() => import('./settings/QollanmaScreen').then
 const ShartlarScreen = React.lazy(() => import('./settings/ShartlarScreen').then(m => ({ default: m.ShartlarScreen })));
 const PrivacyScreen = React.lazy(() => import('./settings/PrivacyScreen').then(m => ({ default: m.PrivacyScreen })));
 const SupportChatScreen = React.lazy(() => import('./settings/SupportChatScreen').then(m => ({ default: m.SupportChatScreen })));
-const LoginPromptScreen = React.lazy(() => import('./login/LoginPromptScreen').then(m => ({ default: m.LoginPromptScreen })));
 const EmployerPanel = React.lazy(() => import('../features/employer/EmployerPanel').then(m => ({ default: m.EmployerPanel })));
 const NotFoundScreen = React.lazy(() => import('./NotFoundScreen').then(m => ({ default: m.NotFoundScreen })));
 const AdminPanel = React.lazy(() => import('../features/admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
@@ -66,17 +66,23 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
 
 const AuthGuestRoute = ({ mode }: { mode: 'login' | 'register' }) => {
   const isLoggedIn = useAuthStore(s => s.isLoggedIn);
-    const userProfile = useAuthStore(s => s.userProfile);
+  const userProfile = useAuthStore(s => s.userProfile);
   if (isLoggedIn) {
     if (userProfile?.selectedRole === 'employer') return <Navigate to="/employer-dashboard" replace />;
     if (userProfile?.selectedRole === 'admin') return <Navigate to="/admin" replace />;
     return <Navigate to="/jobs" replace />;
   }
-  return <LoginPromptScreen initialMode={mode} />;
+  return (
+    <div className="relative w-full min-h-screen">
+      <LandingScreen />
+      <LoginPromptScreen initialMode={mode} />
+    </div>
+  );
 };
 
 const getScreenKey = (pathname: string) => {
   const segment = pathname.slice(1).split('/')[0] || 'landing';
+  if (segment === 'login' || segment === 'register') return 'landing';
   if (segment.startsWith('employer-')) return 'employer';
   if (segment === 'admin') return 'admin';
   return segment;

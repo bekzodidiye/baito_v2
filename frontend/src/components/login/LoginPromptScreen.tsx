@@ -22,10 +22,26 @@ export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = ({
   const p = useLoginPrompt({ isModal, onClose, initialMode });
   const { mode, setMode, handleBack, t } = p;
 
+  React.useEffect(() => {
+    if (isModal) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleBack();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isModal, handleBack]);
+
   return (
     <div
       ref={p.outerScreenRef}
       data-allow-guest="true"
+      onClick={(e) => {
+        if (!isModal && e.target === p.outerScreenRef.current) {
+          handleBack();
+        }
+      }}
       className={`${
         isModal
           ? 'w-full h-full bg-white'
@@ -33,6 +49,7 @@ export const LoginPromptScreen: React.FC<LoginPromptScreenProps> = ({
       } font-sans text-slate-755`}
     >
       <div
+        onClick={(e) => e.stopPropagation()}
         className={`w-full flex flex-col overflow-hidden relative bg-white/95 backdrop-blur-xl mx-auto ${
           isModal
             ? 'h-full rounded-[24px]'

@@ -131,6 +131,7 @@ const EXACT: Record<string, { ru: string; en: string }> = {
   'Qabul qiluvchi pochtasi noto\'g\'ri': { ru: 'Неверный адрес получателя', en: 'The recipient\'s email address is wrong' },
   'Rasm ishlovchisi mavjud emas': { ru: 'Обработчик изображений недоступен', en: 'The image processor is unavailable' },
   'Rasmni qayta ishlashda xatolik': { ru: 'Ошибка при обработке изображения', en: 'The image could not be processed' },
+  'Ruxsat etilmagan so\'rov manbasi (CSRF)': { ru: 'Недопустимый источник запроса (CSRF)', en: 'Forbidden request origin (CSRF)' },
   'Sessiya bekor qilingan': { ru: 'Сессия отменена', en: 'The session was cancelled' },
   'Sessiya muddati tugagan yoki yaroqsiz': { ru: 'Срок сессии истёк или она недействительна', en: 'The session has expired, or is not valid' },
   'Sessiya muddati tugagan, qayta kiring': { ru: 'Срок сессии истёк, войдите снова', en: 'The session has expired; sign in again' },
