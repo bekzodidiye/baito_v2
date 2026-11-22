@@ -12,6 +12,6 @@ class Notification(Base):
     title = Column(String, nullable=False)
     message = Column(String, nullable=False)
     type = Column(String, default="system") # apply, hire, start_request, start_confirmed, completed, system
-    relatedJobId = Column(String, nullable=True)
+    relatedJobId = Column(String, nullable=True, index=True)
     isRead = Column(Boolean, default=False)
     createdAt = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

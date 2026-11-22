@@ -1,5 +1,6 @@
 import logging
 import re
+from urllib.parse import urlsplit
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response, status
@@ -190,6 +191,64 @@ CSP = (
     "base-uri 'none'; "
     "form-action 'none'"
 )
+
+
+@app.middleware("http")
+async def csrf_origin_protection(request: Request, call_next):
+    """CSRF protection for cookie-authenticated mutating requests.
+
+    Requests authenticated via httpOnly cookies without explicit Authorization
+    headers must originate from a trusted origin or referer. Cross-origin
+    mutations (POST, PUT, PATCH, DELETE) from unauthorized origins are rejected.
+    """
+    if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+        has_auth_header = bool(
+            request.headers.get("authorization")
+            or request.headers.get("Authorization")
+            or request.headers.get("HTTP_AUTHORIZATION")
+        )
+        has_auth_cookie = bool(
+            request.cookies.get(settings.ACCESS_COOKIE_NAME)
+            or (request.url.path.endswith("/auth/refresh") and request.cookies.get(settings.REFRESH_COOKIE_NAME))
+        )
+
+        if has_auth_cookie and not has_auth_header:
+            origin = request.headers.get("origin") or request.headers.get("Origin")
+            referer = request.headers.get("referer") or request.headers.get("Referer")
+
+            allowed = {o.rstrip("/") for o in settings.cors_origins}
+            host = request.headers.get("host")
+            if host:
+                allowed.add(f"http://{host}")
+                allowed.add(f"https://{host}")
+
+            if origin:
+                if origin.rstrip("/") not in allowed:
+                    return JSONResponse(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        content={"detail": "Ruxsat etilmagan so'rov manbasi (CSRF)"},
+                    )
+            elif referer:
+                try:
+                    ref = urlsplit(referer)
+                    ref_origin = f"{ref.scheme}://{ref.netloc}".rstrip("/")
+                    if not ref.scheme or not ref.netloc or ref_origin not in allowed:
+                        return JSONResponse(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            content={"detail": "Ruxsat etilmagan so'rov manbasi (CSRF)"},
+                        )
+                except Exception:
+                    return JSONResponse(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        content={"detail": "Ruxsat etilmagan so'rov manbasi (CSRF)"},
+                    )
+            elif settings.is_production:
+                return JSONResponse(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    content={"detail": "Ruxsat etilmagan so'rov manbasi (CSRF)"},
+                )
+
+    return await call_next(request)
 
 
 @app.middleware("http")

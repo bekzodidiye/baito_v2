@@ -15,11 +15,12 @@ the reader.
 from typing import Any
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import and_, case, func
 from sqlalchemy.orm import Session
 
 from app import models
 from app.api import deps
-from app.core.money import parse_salary_amounts
+from app.core.money import MAX_REASONABLE_SALARY_UZS
 from app.models.job import JobStatus
 
 router = APIRouter()
@@ -38,24 +39,36 @@ def list_categories(db: Session = Depends(deps.get_db)) -> Any:
     if not rows:
         return []
 
-    # One pass over the open postings rather than two queries per category.
-    open_jobs = (
-        db.query(models.Job.category, models.Job.salary)
+    # SQL GROUP BY aggregation: runs in the database engine rather than loading
+    # all open jobs into application RAM.
+    valid_salary = and_(
+        models.Job.salary > 0,
+        models.Job.salary <= MAX_REASONABLE_SALARY_UZS,
+    )
+    job_stats = (
+        db.query(
+            models.Job.category,
+            func.count(models.Job.id).label("count"),
+            func.min(case((valid_salary, models.Job.salary), else_=None)).label("min_salary"),
+            func.max(case((valid_salary, models.Job.salary), else_=None)).label("max_salary"),
+        )
         .filter(models.Job.status.in_(JobStatus.OPEN_STATUSES))
+        .group_by(models.Job.category)
         .all()
     )
+
     counts: dict[str, int] = {}
-    wages: dict[str, list[int]] = {}
-    for category, salary in open_jobs:
+    min_wages: dict[str, int] = {}
+    max_wages: dict[str, int] = {}
+    for category, count, min_sal, max_sal in job_stats:
         key = (category or "").strip()
         if not key:
             continue
-        counts[key] = counts.get(key, 0) + 1
-        # Both ends of a range, not just the lower one: the card shows a span,
-        # and salary_to_uzs deliberately reports only the guaranteed figure.
-        amounts = parse_salary_amounts(salary)
-        if amounts:
-            wages.setdefault(key, []).extend(amounts)
+        counts[key] = counts.get(key, 0) + (count or 0)
+        if min_sal is not None:
+            min_wages[key] = min(min_wages.get(key, min_sal), int(min_sal))
+        if max_sal is not None:
+            max_wages[key] = max(max_wages.get(key, max_sal), int(max_sal))
 
     result = []
     for c in rows:
@@ -64,12 +77,10 @@ def list_categories(db: Session = Depends(deps.get_db)) -> Any:
         # Rows added through the admin panel before slugs existed have none; the
         # id keeps them selectable rather than dropping them off the form.
         slug = c.slug or c.id
-        amounts = wages.get(slug, []) or wages.get(c.id, []) or wages.get(c.name, [])
-        cat_count = counts.get(slug, 0)
-        if c.id and c.id != slug:
-            cat_count += counts.get(c.id, 0)
-        if c.name and c.name != slug and c.name != c.id:
-            cat_count += counts.get(c.name, 0)
+        keys = [k for k in {slug, c.id, c.name} if k]
+        cat_count = sum(counts.get(k, 0) for k in keys)
+        mins = [min_wages[k] for k in keys if k in min_wages]
+        maxs = [max_wages[k] for k in keys if k in max_wages]
 
         result.append({
             "id": c.id,
@@ -80,8 +91,8 @@ def list_categories(db: Session = Depends(deps.get_db)) -> Any:
             "activeJobsCount": cat_count,
             # Null rather than zero when nothing is posted — the card has to be
             # able to tell "no work here" from "work that pays nothing".
-            "salaryFrom": min(amounts) if amounts else None,
-            "salaryTo": max(amounts) if amounts else None,
+            "salaryFrom": min(mins) if mins else None,
+            "salaryTo": max(maxs) if maxs else None,
         })
     return result
 

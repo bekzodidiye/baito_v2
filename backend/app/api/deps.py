@@ -8,6 +8,49 @@ from app import crud, models, schemas
 from app.core.config import settings
 from app.services.session_window import is_live
 from app.db.session import SessionLocal
+from sqlalchemy import event
+
+
+def invalidate_session_cache(sid: str) -> None:
+    """Evict session liveness from Redis cache immediately."""
+    try:
+        from app.redis_client import redis_client
+        redis_client.delete(f"session:live:{sid}")
+    except Exception:
+        pass
+
+
+@event.listens_for(models.ActiveSession, "after_update")
+@event.listens_for(models.ActiveSession, "after_delete")
+def _on_session_model_change(mapper, connection, target):
+    if hasattr(target, "id") and target.id:
+        invalidate_session_cache(str(target.id))
+
+
+def check_session_liveness_cached(db: Session, sid: str) -> bool:
+    """Fast Redis caching for session liveness.
+
+    Avoids 2x PostgreSQL queries per authenticated request.
+    Caches active state for a short TTL (60s). If the session is revoked or idle,
+    the cache key is invalidated or evaluated to False.
+    """
+    cache_key = f"session:live:{sid}"
+    try:
+        from app.redis_client import redis_client
+        cached = redis_client.get(cache_key)
+        if cached is not None:
+            return cached == "1"
+    except Exception:
+        pass
+
+    session_record = db.query(models.ActiveSession).filter(models.ActiveSession.id == sid).first()
+    live = is_live(session_record)
+    try:
+        from app.redis_client import redis_client
+        redis_client.setex(cache_key, 60 if live else 10, "1" if live else "0")
+    except Exception:
+        pass
+    return live
 
 def get_db() -> Generator:
     db = SessionLocal()
@@ -69,8 +112,7 @@ def get_current_user(
             detail="Sessiya muddati tugagan yoki yaroqsiz",
         )
     if token_data.sid:
-        session_record = db.query(models.ActiveSession).filter(models.ActiveSession.id == token_data.sid).first()
-        if not is_live(session_record):
+        if not check_session_liveness_cached(db, token_data.sid):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Sessiya bekor qilingan",
@@ -108,8 +150,7 @@ def get_current_user_optional(
         return None
 
     if token_data.sid:
-        session_record = db.query(models.ActiveSession).filter(models.ActiveSession.id == token_data.sid).first()
-        if not is_live(session_record):
+        if not check_session_liveness_cached(db, token_data.sid):
             return None
 
     user = crud.user.get_by_uid(db, uid=token_data.sub)
