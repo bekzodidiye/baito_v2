@@ -80,7 +80,7 @@ jobs:
       # it, that is worth failing loudly for rather than quietly testing a
       # different Python than we ship.
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         continue-on-error: true
         with:
           python-version: '3.11'
@@ -179,7 +179,7 @@ jobs:
 
 
       - name: Set up Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20
 
@@ -334,7 +334,7 @@ jobs:
       # it, that is worth failing loudly for rather than quietly testing a
       # different Python than we ship.
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         continue-on-error: true
         with:
           python-version: '3.11'
@@ -449,7 +449,7 @@ jobs:
           exit 1
 
       - name: Set up Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 20
           # No cache: input. On a hosted runner the VM is thrown away, so
